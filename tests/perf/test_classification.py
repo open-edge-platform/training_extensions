@@ -279,14 +279,38 @@ class TestPerfSemiSLMultiClass(PerfTestBase):
     """Benchmark single-label classification for Semi-SL task."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.Model(task="classification/multi_class_cls/semisl", name="efficientnet_b0_semisl", category="balance"),
-        Benchmark.Model(task="classification/multi_class_cls/semisl", name="mobilenet_v3_large_semisl", category="speed"),
-        Benchmark.Model(task="classification/multi_class_cls/semisl", name="efficientnet_v2_semisl", category="accuracy"),
+        Benchmark.Model(
+            task="classification/multi_class_cls/semisl",
+            name="efficientnet_b0_semisl",
+            category="balance",
+        ),
+        Benchmark.Model(
+            task="classification/multi_class_cls/semisl",
+            name="mobilenet_v3_large_semisl",
+            category="speed",
+        ),
+        Benchmark.Model(
+            task="classification/multi_class_cls/semisl",
+            name="efficientnet_v2_semisl",
+            category="accuracy",
+        ),
         Benchmark.Model(task="classification/multi_class_cls/semisl", name="deit_tiny_semisl", category="other"),
         Benchmark.Model(task="classification/multi_class_cls/semisl", name="dino_v2_semisl", category="other"),
-        Benchmark.Model(task="classification/multi_class_cls/semisl", name="tv_efficientnet_b3_semisl", category="other"),
-        Benchmark.Model(task="classification/multi_class_cls/semisl", name="tv_efficientnet_v2_l_semisl", category="other"),
-        Benchmark.Model(task="classification/multi_class_cls/semisl", name="tv_mobilenet_v3_small_semisl", category="other"),
+        Benchmark.Model(
+            task="classification/multi_class_cls/semisl",
+            name="tv_efficientnet_b3_semisl",
+            category="other",
+        ),
+        Benchmark.Model(
+            task="classification/multi_class_cls/semisl",
+            name="tv_efficientnet_v2_l_semisl",
+            category="other",
+        ),
+        Benchmark.Model(
+            task="classification/multi_class_cls/semisl",
+            name="tv_mobilenet_v3_small_semisl",
+            category="other",
+        ),
     ]
 
     DATASET_TEST_CASES = (
