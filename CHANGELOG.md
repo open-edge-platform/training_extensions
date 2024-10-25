@@ -20,7 +20,6 @@ All notable changes to this project will be documented in this file.
 - Fix MaskRCNN/RTMDet-Inst/MaskRCNNTV Explain Mode
   (https://github.com/openvinotoolkit/training_extensions/pull/4053)
 
-
 ## \[2.3.0\]
 
 ### New features
