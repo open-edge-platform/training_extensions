@@ -162,6 +162,7 @@ class MaskDINOModule(BaseModule):
         self,
         batch_inputs: torch.Tensor,
         batch_img_metas: list[dict],
+        explain_mode: bool = False,
     ) -> tuple[list[torch.Tensor], list[torch.LongTensor], list[tv_tensors.Mask]]:
         """Export the model."""
         if len(batch_inputs) != 1:
