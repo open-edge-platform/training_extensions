@@ -15,6 +15,10 @@ All notable changes to this project will be documented in this file.
 
 - Update visual prompting pipeline for multi-label zero-shot learning support
   (https://github.com/openvinotoolkit/training_extensions/pull/3993)
+- Update to work torch compile in detection
+  (https://github.com/openvinotoolkit/training_extensions/pull/4003)
+- Fix MaskRCNN/RTMDet-Inst/MaskRCNNTV Explain Mode
+  (https://github.com/openvinotoolkit/training_extensions/pull/4053)
 
 ## \[2.3.0\]
 
@@ -73,6 +77,8 @@ All notable changes to this project will be documented in this file.
   (https://github.com/openvinotoolkit/training_extensions/pull/3810)
 - Support configurable input size
   (https://github.com/openvinotoolkit/training_extensions/pull/3788)
+- Add diffusion task
+  (https://github.com/openvinotoolkit/training_extensions/pull/3875)
 
 ### Enhancements
 
