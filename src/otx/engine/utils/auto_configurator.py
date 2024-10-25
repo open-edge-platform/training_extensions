@@ -41,12 +41,14 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
     OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
     OTXTaskType.ACTION_CLASSIFICATION: RECIPE_PATH / "action_classification" / "x3d.yaml",
+    OTXTaskType.ANOMALY: RECIPE_PATH / "anomaly" / "padim.yaml",
     OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification" / "padim.yaml",
     OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
     OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection" / "padim.yaml",
     OTXTaskType.VISUAL_PROMPTING: RECIPE_PATH / "visual_prompting" / "sam_tiny_vit.yaml",
     OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING: RECIPE_PATH / "zero_shot_visual_prompting" / "sam_tiny_vit.yaml",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
+    OTXTaskType.OBJECT_DETECTION_3D: RECIPE_PATH / "object_detection_3d" / "monodetr3d.yaml",
 }
 
 TASK_PER_DATA_FORMAT = {
@@ -66,7 +68,12 @@ TASK_PER_DATA_FORMAT = {
     ],
     "common_semantic_segmentation_with_subset_dirs": [OTXTaskType.SEMANTIC_SEGMENTATION],
     "kinetics": [OTXTaskType.ACTION_CLASSIFICATION],
-    "mvtec": [OTXTaskType.ANOMALY_CLASSIFICATION, OTXTaskType.ANOMALY_DETECTION, OTXTaskType.ANOMALY_SEGMENTATION],
+    "mvtec": [
+        OTXTaskType.ANOMALY,
+        OTXTaskType.ANOMALY_CLASSIFICATION,
+        OTXTaskType.ANOMALY_DETECTION,
+        OTXTaskType.ANOMALY_SEGMENTATION,
+    ],
 }
 
 OVMODEL_PER_TASK = {
@@ -80,9 +87,12 @@ OVMODEL_PER_TASK = {
     OTXTaskType.VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVVisualPromptingModel",
     OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVZeroShotVisualPromptingModel",
     OTXTaskType.ACTION_CLASSIFICATION: "otx.core.model.action_classification.OVActionClsModel",
+    OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_SEGMENTATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
+    OTXTaskType.KEYPOINT_DETECTION: "otx.core.model.keypoint_detection.OVKeypointDetectionModel",
+    OTXTaskType.OBJECT_DETECTION_3D: "otx.core.model.detection_3d.OV3DDetectionModel",
 }
 
 

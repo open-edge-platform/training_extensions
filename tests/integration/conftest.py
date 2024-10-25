@@ -59,13 +59,24 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     elif task == "zero_shot_visual_prompting":
         tasks = [OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING]
     elif task == "anomaly":
-        tasks = [OTXTaskType.ANOMALY_CLASSIFICATION, OTXTaskType.ANOMALY_DETECTION, OTXTaskType.ANOMALY_SEGMENTATION]
+        tasks = [
+            OTXTaskType.ANOMALY,
+            OTXTaskType.ANOMALY_CLASSIFICATION,
+            OTXTaskType.ANOMALY_DETECTION,
+            OTXTaskType.ANOMALY_SEGMENTATION,
+        ]
+    elif task == "anomaly":
+        tasks = [OTXTaskType.ANOMALY]
     elif task == "anomaly_classification":
         tasks = [OTXTaskType.ANOMALY_CLASSIFICATION]
     elif task == "anomaly_detection":
         tasks = [OTXTaskType.ANOMALY_DETECTION]
     elif task == "anomaly_segmentation":
         tasks = [OTXTaskType.ANOMALY_SEGMENTATION]
+    elif task == "keypoint_detection":
+        tasks = [OTXTaskType.KEYPOINT_DETECTION]
+    elif task == "object_detection_3d":
+        tasks = [OTXTaskType.OBJECT_DETECTION_3D]
     else:
         tasks = [OTXTaskType(task.upper())]
     return tasks
@@ -128,9 +139,13 @@ def fxt_target_dataset_per_task() -> dict:
         "action_classification": "tests/assets/action_classification_dataset/",
         "visual_prompting": "tests/assets/car_tree_bug",
         "zero_shot_visual_prompting": "tests/assets/car_tree_bug_zero_shot",
+        "anomaly": "tests/assets/anomaly_hazelnut",
         "anomaly_classification": "tests/assets/anomaly_hazelnut",
         "anomaly_detection": "tests/assets/anomaly_hazelnut",
         "anomaly_segmentation": "tests/assets/anomaly_hazelnut",
+        "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
+        "object_detection_3d": "tests/assets/kitti3d",
+        "tiling_detection": "tests/assets/tiling_small_objects",
     }
 
 
@@ -147,7 +162,10 @@ def fxt_cli_override_command_per_task() -> dict:
         "action_classification": [],
         "visual_prompting": [],
         "zero_shot_visual_prompting": [],
+        "anomaly": [],
         "anomaly_classification": [],
         "anomaly_detection": [],
         "anomaly_segmentation": [],
+        "keypoint_detection": [],
+        "object_detection_3d": [],
     }

@@ -159,6 +159,10 @@ def test_otx_e2e(
             ExportCase2Test("OPENVINO", False, "exported_model_decoder.xml"),
         ]  # TODO (sungchul): EXPORTABLE_CODE will be supported
 
+    if task == "object_detection_3d":
+        # exportable code and demo package are not supported for OD 3D
+        fxt_export_list.pop(-1)
+
     overrides = fxt_cli_override_command_per_task[task]
 
     tmp_path_test = tmp_path / f"otx_test_{model_name}"
@@ -251,6 +255,17 @@ def test_otx_e2e(
     if "rtdetr" in model_name:
         return  # RT-DETR currently is not supported.
 
+    if "yolov9" in model_name:
+        return  # RT-DETR currently is not supported.
+
+    if "keypoint" in recipe:
+        print("Explain is not supported for keypoint detection")
+        return
+
+    if "monodetr3d" in recipe:
+        print("Explain is not supported for object detection 3d")
+        return
+
     tmp_path_test = tmp_path / f"otx_export_xai_{model_name}"
     for export_case in fxt_export_list:
         command_cfg = [
@@ -318,9 +333,12 @@ def test_otx_explain_e2e(
 
     if "maskrcnn_r50_tv" in model_name:
         pytest.skip("MaskRCNN R50 Torchvision model doesn't support explain.")
-
-    if "rtdetr" in recipe:
+    elif "rtdetr" in recipe:
         pytest.skip("rtdetr model is not supported yet with explain.")
+    elif "keypoint" in recipe:
+        pytest.skip("keypoint detection models don't support explain.")
+    elif "yolov9" in recipe:
+        pytest.skip("yolov9 model is not supported yet with explain.")
 
     # otx explain
     tmp_path_explain = tmp_path / f"otx_explain_{model_name}"
@@ -390,6 +408,7 @@ def test_otx_ov_test(
         "h_label_cls",
         "visual_prompting",
         "zero_shot_visual_prompting",
+        "anomaly",
         "anomaly_classification",
         "anomaly_detection",
         "anomaly_segmentation",
@@ -577,7 +596,7 @@ def test_otx_configurable_input_size_e2e(
     if task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
         pytest.skip(f"{task} doesn't support configurable input size.")
     if task == OTXTaskType.KEYPOINT_DETECTION:
-        pytest.skip(f"{task} isn't prepared to run integration test.")
+        pytest.skip(f"{task} doesn't support configurable input size.")
 
     task = task.lower()
     tmp_path_cfg_ipt_size = tmp_path / f"otx_configurable_input_size_{task}"

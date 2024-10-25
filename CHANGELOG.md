@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.3.0\]
+
+### New features
+
+- Add YOLOv9 model for Object Detection
+  (https://github.com/openvinotoolkit/training_extensions/pull/3917, https://github.com/openvinotoolkit/training_extensions/pull/4026)
+- Add OV inference for keypoint detection
+  (https://github.com/openvinotoolkit/training_extensions/pull/3970)
+- Add tiling for semantic segmentation
+  (https://github.com/openvinotoolkit/training_extensions/pull/3954)
+- Add 3D Object Detection task with MonoDETR model
+  (https://github.com/openvinotoolkit/training_extensions/pull/3979)
+- Add OpenVINO inference for 3D Object Detection task
+  (https://github.com/openvinotoolkit/training_extensions/pull/4017)
+
+### Enhancements
+
+- Upgrade OV, MAPI, and NNCF dependencies
+  (https://github.com/openvinotoolkit/training_extensions/pull/3967)
+- Instance Segmentation Model refactoring
+  (https://github.com/openvinotoolkit/training_extensions/pull/3865)
+- Bump torch and lightning to 2.4.0 versions
+  (https://github.com/openvinotoolkit/training_extensions/pull/3843)
+- Add mAP metric to evaluate multilabel classification
+  (https://github.com/openvinotoolkit/training_extensions/pull/3985)
+
+### Bug fixes
+
+- Fix a wrong HPO log
+  (https://github.com/openvinotoolkit/training_extensions/pull/3972)
+- Update model name in rotated detection recipes
+  (https://github.com/openvinotoolkit/training_extensions/pull/4028)
+
 ## \[2.2.0\]
 
 ### New features
@@ -45,7 +78,11 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3783>, <https://github.com/openvinotoolkit/training_extensions/pull/3816>, <https://github.com/openvinotoolkit/training_extensions/pull/3809>)
 - Support ImageFromBytes
   (<https://github.com/openvinotoolkit/training_extensions/pull/3948>)
+<<<<<<< HEAD
 - enable model export
+=======
+- Enable model export
+>>>>>>> releases/2.3.0
   (<https://github.com/openvinotoolkit/training_extensions/pull/3952>)
 - Move templates from OTX1.X to OTX2.X
   (<https://github.com/openvinotoolkit/training_extensions/pull/3951>)
@@ -57,6 +94,7 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3968>)
 - Change sematic segmentation to consider bbox only annotations
   (<https://github.com/openvinotoolkit/training_extensions/pull/3996>)
+<<<<<<< HEAD
 - Relieve memory usage criteria on batch size 2 during adaptive batch size
   (<https://github.com/openvinotoolkit/training_extensions/pull/4009>)
 - Remove background label from RT Info for segmentation task
@@ -67,6 +105,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4035>)
 - Bump onnx to 1.17.0 to omit CVE-2024-5187
   (<https://github.com/openvinotoolkit/training_extensions/pull/4063>)
+=======
+>>>>>>> releases/2.3.0
 
 ### Bug fixes
 
@@ -84,6 +124,7 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3946>)
 - Fix config converter for tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/3973>)
+<<<<<<< HEAD
 - Fix `BboxOverlaps2D` handling of empty ground-truth annotations in datasets.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4010>)
 - Fix num_trials calculation on dataset length less than num_class
@@ -108,6 +149,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4057>)
 - Fix incorrect all_groups order configuration in HLabelInfo
   (<https://github.com/openvinotoolkit/training_extensions/pull/4067>)
+=======
+>>>>>>> releases/2.3.0
 
 ## \[v2.1.0\]
 

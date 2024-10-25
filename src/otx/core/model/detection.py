@@ -35,13 +35,17 @@ if TYPE_CHECKING:
     from model_api.models.utils import DetectionResult
     from torch import nn
 
-    from otx.algo.detection.base_models import SingleStageDetector
+    from otx.algo.detection.detectors import SingleStageDetector
 
 
 class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
     """Base class for the detection models used in OTX."""
 
     input_size: tuple[int, int]
+
+    def __init__(self, model_name: str, *args, **kwargs) -> None:
+        self.model_name = model_name
+        super().__init__(*args, **kwargs)
 
     def test_step(self, batch: DetBatchDataEntity, batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
@@ -133,12 +137,15 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
 
         return inputs
 
-    def _customize_outputs(
+    def _customize_outputs(  # type: ignore[override]
         self,
-        outputs: list[InstanceData] | dict,
+        outputs: list[InstanceData] | dict | None,
         inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+    ) -> DetBatchPredEntity | OTXBatchLossEntity | None:
         if self.training:
+            if outputs is None:
+                return outputs
+
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
 
@@ -294,7 +301,7 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
             "preds": [
                 {
                     "boxes": bboxes.data,
-                    "scores": scores,
+                    "scores": scores.type(torch.float32),
                     "labels": labels,
                 }
                 for bboxes, scores, labels in zip(
@@ -387,6 +394,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
 
     def __init__(
         self,
+        model_name: str,
         label_info: LabelInfoTypes,
         input_size: tuple[int, int],
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -398,6 +406,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         from otx.algo.explain.explain_algo import feature_vector_fn
 
         super().__init__(
+            model_name=model_name,
             label_info=label_info,
             input_size=input_size,
             optimizer=optimizer,
@@ -462,11 +471,14 @@ class ExplainableOTXDetModel(OTXDetectionModel):
 
     def get_explain_fn(self) -> Callable:
         """Returns explain function."""
-        from otx.algo.detection.heads import SSDHead
+        from otx.algo.detection.heads.ssd_head import SSDHeadModule
         from otx.algo.explain.explain_algo import DetClassProbabilityMap
 
         # SSD-like heads also have background class
-        background_class = hasattr(self.model, "bbox_head") and isinstance(self.model.bbox_head, SSDHead)
+        background_class = hasattr(self.model, "bbox_head") and isinstance(
+            self.model.bbox_head,
+            SSDHeadModule,
+        )  # TODO (sungchul): revert module's name?
         tiling_mode = self.tile_config.enable_tiler if hasattr(self, "tile_config") else False
         explainer = DetClassProbabilityMap(
             num_classes=self.num_classes + background_class,

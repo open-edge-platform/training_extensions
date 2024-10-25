@@ -138,6 +138,7 @@ class OTXDataModule(LightningDataModule):
         if adaptive_input_size is not None:
             input_size = adapt_input_size_to_dataset(
                 dataset,
+                self.task,
                 input_size,
                 adaptive_input_size == "downscale",
                 input_size_multiplier,
@@ -149,7 +150,7 @@ class OTXDataModule(LightningDataModule):
         self.input_size = input_size
 
         if self.tile_config.enable_tiler and self.tile_config.enable_adaptive_tiling:
-            adapt_tile_config(self.tile_config, dataset=dataset)
+            adapt_tile_config(self.tile_config, dataset=dataset, task=self.task)
 
         config_mapping = {
             self.train_subset.subset_name: self.train_subset,
@@ -183,6 +184,7 @@ class OTXDataModule(LightningDataModule):
         )
 
         label_infos: list[LabelInfo] = []
+
         for name, dm_subset in dataset.subsets().items():
             if name not in config_mapping:
                 log.warning(f"{name} is not available. Skip it")
@@ -208,7 +210,6 @@ class OTXDataModule(LightningDataModule):
                     tile_config=self.tile_config,
                 )
             self.subsets[name] = dataset
-
             label_infos += [self.subsets[name].label_info]
             log.info(f"Add name: {name}, self.subsets: {self.subsets}")
 

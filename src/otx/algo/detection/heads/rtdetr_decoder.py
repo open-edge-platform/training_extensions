@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 import math
 from collections import OrderedDict
-from typing import Any, Callable
+from typing import Any, Callable, ClassVar
 
 import torch
 import torchvision
@@ -213,7 +213,7 @@ class MSDeformableAttention(nn.Module):
         query: torch.Tensor,
         reference_points: torch.Tensor,
         value: torch.Tensor,
-        value_spatial_shapes: list[tuple[int, int]],
+        value_spatial_shapes: torch.Tensor,
         value_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Forward function of MSDeformableAttention.
@@ -235,8 +235,8 @@ class MSDeformableAttention(nn.Module):
 
         value = self.value_proj(value)
         if value_mask is not None:
-            value_mask = value_mask.astype(value.dtype).unsqueeze(-1)
-            value *= value_mask
+            value = value.masked_fill(value_mask[..., None], float(0))
+
         value = value.reshape(bs, len_v, self.num_heads, self.head_dim)
 
         sampling_offsets = self.sampling_offsets(query).reshape(
@@ -262,7 +262,7 @@ class MSDeformableAttention(nn.Module):
         )
 
         if reference_points.shape[-1] == 2:
-            offset_normalizer = torch.tensor(value_spatial_shapes)
+            offset_normalizer = value_spatial_shapes.clone()
             offset_normalizer = offset_normalizer.flip([1]).reshape(1, 1, 1, self.num_levels, 1, 2)
             sampling_locations = (
                 reference_points.reshape(
@@ -279,6 +279,14 @@ class MSDeformableAttention(nn.Module):
             sampling_locations = (
                 reference_points[:, :, None, :, None, :2]
                 + sampling_offsets / self.num_points * reference_points[:, :, None, :, None, 2:] * 0.5
+            )
+        elif reference_points.shape[-1] == 6:
+            sampling_locations = (
+                reference_points[:, :, None, :, None, :2]
+                + sampling_offsets
+                / self.num_points
+                * (reference_points[:, :, None, :, None, 2::2] + reference_points[:, :, None, :, None, 3::2])
+                * 0.5
             )
         else:
             msg = f"Last dim of reference_points must be 2 or 4, but get {reference_points.shape[-1]} instead."
@@ -451,7 +459,7 @@ class TransformerDecoder(nn.Module):
         return torch.stack(dec_out_bboxes), torch.stack(dec_out_logits)
 
 
-class RTDETRTransformer(BaseModule):
+class RTDETRTransformerModule(BaseModule):
     """RTDETRTransformer.
 
     Args:
@@ -801,3 +809,38 @@ class RTDETRTransformer(BaseModule):
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
         return [{"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class, outputs_coord)]
+
+
+class RTDETRTransformer:
+    """RTDETRTransformer factory for detection."""
+
+    RTDETRTRANSFORMER_CFG: ClassVar[dict[str, Any]] = {
+        "rtdetr_18": {
+            "num_decoder_layers": 3,
+            "feat_channels": [256, 256, 256],
+        },
+        "rtdetr_50": {
+            "num_decoder_layers": 6,
+            "feat_channels": [256, 256, 256],
+        },
+        "rtdetr_101": {
+            "feat_channels": [384, 384, 384],
+        },
+    }
+
+    def __new__(
+        cls,
+        model_name: str,
+        num_classes: int,
+        eval_spatial_size: tuple[int, int] | None = None,
+    ) -> RTDETRTransformerModule:
+        """Constructor for RTDETRTransformer."""
+        if model_name not in cls.RTDETRTRANSFORMER_CFG:
+            msg = f"model type '{model_name}' is not supported"
+            raise KeyError(msg)
+
+        return RTDETRTransformerModule(
+            **cls.RTDETRTRANSFORMER_CFG[model_name],
+            num_classes=num_classes,
+            eval_spatial_size=eval_spatial_size,
+        )
