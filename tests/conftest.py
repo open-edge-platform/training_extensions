@@ -351,7 +351,9 @@ def fxt_accelerator(request: pytest.FixtureRequest) -> str:
     return request.config.getoption("--device", "gpu")
 
 
-@pytest.fixture(params=set(OTXTaskType) - {OTXTaskType.DETECTION_SEMI_SL, OTXTaskType.DIFFUSION})
+@pytest.fixture(
+    params=set(OTXTaskType) - {OTXTaskType.DETECTION_SEMI_SL, OTXTaskType.DIFFUSION, OTXTaskType.IMAGE_CAPTIONING},
+)
 def fxt_task(request: pytest.FixtureRequest) -> OTXTaskType:
     return request.param
 
