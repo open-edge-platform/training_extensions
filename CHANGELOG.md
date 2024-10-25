@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file.
   (https://github.com/openvinotoolkit/training_extensions/pull/4003)
 - Refactor MaskDINO
   (https://github.com/openvinotoolkit/training_extensions/pull/4006)
+- Fix MaskRCNN/RTMDet-Inst/MaskRCNNTV Explain Mode
+  (https://github.com/openvinotoolkit/training_extensions/pull/4053)
+
 
 ## \[2.3.0\]
 
