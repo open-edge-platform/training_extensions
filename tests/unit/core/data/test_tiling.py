@@ -31,9 +31,9 @@ from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntit
 from otx.core.data.entity.segmentation import SegBatchDataEntity
 from otx.core.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
 from otx.core.data.module import OTXDataModule
-from otx.core.types.transformer_libs import TransformLibType
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.task import OTXTaskType
+from otx.core.types.transformer_libs import TransformLibType
 from torchvision import tv_tensors
 
 from tests.test_helpers import generate_random_bboxes

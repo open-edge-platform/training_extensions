@@ -343,11 +343,7 @@ class TimmModelForHLabelCls(OTXHlabelClsModel):
         return model
 
     def _build_model(self, head_config: dict) -> nn.Module:
-<<<<<<< HEAD
-        backbone = TimmBackbone(backbone=self.backbone, pretrained=self.pretrained)
-=======
         backbone = TimmBackbone(model_name=self.model_name, pretrained=self.pretrained)
->>>>>>> releases/2.3.0
         copied_head_config = copy(head_config)
         copied_head_config["step_size"] = (ceil(self.input_size[0] / 32), ceil(self.input_size[1] / 32))
         return HLabelClassifier(
