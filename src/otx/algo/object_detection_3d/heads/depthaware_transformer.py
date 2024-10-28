@@ -4,7 +4,6 @@
 """depth aware transformer head for 3d object detection."""
 from __future__ import annotations
 
-import math
 from typing import Any, Callable, ClassVar
 
 import torch
@@ -100,30 +99,6 @@ class DepthAwareTransformer(nn.Module):
         xavier_uniform_(self.reference_points.weight.data, gain=1.0)
         constant_(self.reference_points.bias.data, 0.0)
         normal_(self.level_embed)
-
-    def get_proposal_pos_embed(self, proposals: Tensor) -> Tensor:
-        """Generate position embeddings for proposal tensor.
-
-        Args:
-            proposals (Tensor): Proposal tensor of shape (N, L, 6).
-
-        TODO (Kirill): Not used. Remove this function?
-
-        Returns:
-            Tensor: Position embeddings for proposal tensor of shape (N, L, embedding_dim).
-        """
-        num_pos_feats = 128
-        temperature = 10000
-        scale = 2 * math.pi
-
-        dim_t = torch.arange(num_pos_feats, dtype=torch.float32, device=proposals.device)
-        dim_t = temperature ** (2 * (dim_t // 2) / num_pos_feats)
-        # N, L, 6
-        proposals = proposals.sigmoid() * scale
-        # N, L, 6, 128
-        pos = proposals[:, :, :, None] / dim_t
-        # N, L, 6, 64, 2
-        return torch.stack((pos[:, :, :, 0::2].sin(), pos[:, :, :, 1::2].cos()), dim=4).flatten(2)
 
     def get_valid_ratio(self, mask: Tensor) -> Tensor:
         """Calculate the valid ratio of the mask.

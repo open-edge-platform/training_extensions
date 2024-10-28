@@ -7,7 +7,6 @@ import pytest
 import torch
 from otx.algo.object_detection_3d.heads.depthaware_transformer import (
     DepthAwareTransformerBuilder,
-    gen_sineembed_for_position,
 )
 
 
@@ -57,16 +56,6 @@ class TestDepthAwareTransformer:
         assert output[2].shape == (1, 550, 2)
         assert output[4] is None
 
-    def test_depth_aware_transformer_get_proposal_pos_embed(self, depth_aware_transformer):
-        # Create dummy input tensor
-        proposals = torch.randn(2, 10, 6)
-
-        # Get proposal position embeddings
-        pos_embed = depth_aware_transformer.get_proposal_pos_embed(proposals)
-
-        # Check output shape
-        assert pos_embed.shape == (2, 10, 768)
-
     def test_depth_aware_transformer_get_valid_ratio(self, depth_aware_transformer):
         # Create dummy input tensor
         mask = torch.randn(2, 32, 32) > 0
@@ -76,13 +65,3 @@ class TestDepthAwareTransformer:
 
         # Check output shape
         assert valid_ratio.shape == (2, 2)
-
-    def test_gen_sineembed_for_position(self):
-        # Create dummy input tensor
-        pos_tensor = torch.randn(2, 4, 6)
-
-        # Generate sine embeddings for position tensor
-        pos_embed = gen_sineembed_for_position(pos_tensor)
-
-        # Check output shape
-        assert pos_embed.shape == (2, 4, 768)
