@@ -11,9 +11,9 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
+from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
-from otx.algo.modules.base_module import BaseModule
 
 
 class TwoStageDetector(BaseModule):

@@ -15,7 +15,7 @@ from torch.nn import functional as f
 from torch.nn.init import normal_
 
 from otx.algo.common.layers.position_embed import PositionEmbeddingSine
-from otx.algo.common.layers.transformer_layers import MSDeformableAttention, VisualEncoder, VisualEncoderLayer
+from otx.algo.common.layers.transformer_layers import VisualEncoder, VisualEncoderLayer
 from otx.algo.instance_segmentation.utils.utils import (
     ShapeSpec,
 )
@@ -47,6 +47,7 @@ class MSDeformAttnTransformerEncoder(BaseModule):
         activation: Callable[..., nn.Module] = nn.ReLU,
         num_feature_levels: int = 4,
         enc_n_points: int = 4,
+        lora: bool = False,
     ) -> None:
         super().__init__()
 
@@ -61,6 +62,7 @@ class MSDeformAttnTransformerEncoder(BaseModule):
             num_feature_levels,
             nhead,
             enc_n_points,
+            lora,
         )
         self.encoder = VisualEncoder(encoder_layer, num_encoder_layers)
 
@@ -74,9 +76,6 @@ class MSDeformAttnTransformerEncoder(BaseModule):
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
-        for m in self.modules():
-            if isinstance(m, MSDeformableAttention):
-                m._reset_parameters()  # noqa: SLF001
         normal_(self.level_embed)
 
     def get_valid_ratio(self, mask: Tensor) -> Tensor:
@@ -192,6 +191,7 @@ class MaskDINOEncoderHeadModule(BaseModule):
         num_feature_levels: int = 3,
         total_num_feature_levels: int = 4,
         activation: Callable[..., nn.Module] = nn.ReLU,
+        lora: bool = False,
     ) -> None:
         super().__init__()
         # this is the input shape of pixel decoder
@@ -254,6 +254,7 @@ class MaskDINOEncoderHeadModule(BaseModule):
             dim_feedforward=transformer_dim_feedforward,
             num_encoder_layers=transformer_enc_layers,
             num_feature_levels=self.total_num_feature_levels,
+            lora=lora,
         )
         self.pe_layer = PositionEmbeddingSine(conv_dim // 2, normalize=True)
 
@@ -377,18 +378,21 @@ class MaskDINOEncoderHead:
         "resnet50": {},
         "swin_tiny": {
             "transformer_in_features": ("feat4", "feat3", "feat2"),
-        }
+        },
     }
 
     def __new__(
         cls,
         model_name: str,
         input_shape: dict[str, ShapeSpec],
+        lora: bool = False,
     ) -> MaskDINOEncoderHeadModule:
         """Create a new instance of MaskDINOEncoderHeadModule.
 
         Args:
             model_name (str): backbone model name
+            input_shape (dict[str, ShapeSpec]): dictionary of feature map shapes
+            lora (bool, optional): enable LoRA or not
 
         Raises:
             ValueError: If the model name is not supported
@@ -399,4 +403,8 @@ class MaskDINOEncoderHead:
         if model_name not in cls.encoder_head_cfg:
             msg = f"Model {model_name} not supported"
             raise ValueError(msg)
-        return MaskDINOEncoderHeadModule(**cls.encoder_head_cfg[model_name], input_shape=input_shape)
+        return MaskDINOEncoderHeadModule(
+            **cls.encoder_head_cfg[model_name],
+            input_shape=input_shape,
+            lora=lora,
+        )

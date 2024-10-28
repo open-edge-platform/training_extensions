@@ -165,7 +165,8 @@ class HungarianMatcher(nn.Module):
         target_bboxes = output["target_boxes"]
 
         # Compute the L1 cost between boxes
-        return torch.cdist(pred_bboxes, target_bboxes, p=1) * cost_bbox
+        dist = torch.cdist(pred_bboxes.float(), target_bboxes.float(), p=1).to(pred_bboxes)
+        return dist * cost_bbox
 
     @torch.no_grad()
     def giou_cost(self, output: dict[str, Tensor], cost_giou: float | int) -> Tensor:
@@ -328,7 +329,7 @@ class HungarianMatcher(nn.Module):
             cost_matrix = torch.maximum(cost_matrix, torch.tensor(-1e10))
 
             # Perform assignment using the hungarian algorithm in scipy
-            assigned_indices = linear_sum_assignment(cost_matrix.cpu())
+            assigned_indices = linear_sum_assignment(cost_matrix.float().cpu())
             indices.append(assigned_indices)
 
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]

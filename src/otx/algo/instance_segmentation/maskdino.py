@@ -10,15 +10,16 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from torch import Tensor, nn
+from torchtune.modules.peft import get_adapter_params, set_trainable_params
 from torchvision import tv_tensors
 from torchvision.models import resnet50
 from torchvision.models._utils import IntermediateLayerGetter
 from torchvision.models.detection.image_list import ImageList
 from torchvision.ops import box_convert
 
+from otx.algo.instance_segmentation.backbones.swin import SwinTransformer
 from otx.algo.instance_segmentation.heads import MaskDINODecoderHead, MaskDINOEncoderHead, MaskDINOHead
 from otx.algo.instance_segmentation.losses import MaskDINOCriterion
-from otx.algo.instance_segmentation.backbones.swin import SwinTransformer
 from otx.algo.instance_segmentation.segmentors import MaskDINOModule
 from otx.algo.instance_segmentation.utils.utils import ShapeSpec
 from otx.algo.modules.norm import AVAILABLE_NORMALIZATION_LIST, FrozenBatchNorm2d
@@ -32,9 +33,6 @@ from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel
 from otx.core.utils.mask_util import polygon_to_bitmap
-
-from torchtune.modules.peft import LoRALinear
-
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -176,8 +174,17 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
         backbone, fmap_shape_specs = self._build_backbone()
         model_name = self.model_name
 
-        pixel_decoder = MaskDINOEncoderHead(model_name=model_name, input_shape=fmap_shape_specs)
-        predictor = MaskDINODecoderHead(model_name=model_name, num_classes=num_classes)
+        pixel_decoder = MaskDINOEncoderHead(
+            model_name=model_name,
+            input_shape=fmap_shape_specs,
+            lora=self.lora,
+        )
+
+        predictor = MaskDINODecoderHead(
+            model_name=model_name,
+            num_classes=num_classes,
+            lora=self.lora,
+        )
 
         sem_seg_head = MaskDINOHead(
             num_classes=num_classes,
@@ -192,11 +199,19 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
             num_classes=num_classes,
         )
 
-        return MaskDINOModule(
+        model = MaskDINOModule(
             backbone=backbone,
             sem_seg_head=sem_seg_head,
             criterion=criterion,
         )
+
+        if self.lora:
+            # Fetch all params from the model that are associated with LoRA.
+            lora_params = get_adapter_params(model)
+
+            # Set requires_grad=True on lora_params, and requires_grad=False on all others.
+            set_trainable_params(model, lora_params)
+        return model
 
     @property
     def _exporter(self) -> OTXModelExporter:

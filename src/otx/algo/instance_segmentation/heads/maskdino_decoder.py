@@ -37,6 +37,7 @@ class DeformableTransformerDecoderLayer(BaseModule):
         n_levels: int = 4,
         n_heads: int = 8,
         n_points: int = 4,
+        lora: bool = False,
     ):
         super().__init__()
 
@@ -46,12 +47,14 @@ class DeformableTransformerDecoderLayer(BaseModule):
             num_levels=n_levels,
             num_heads=n_heads,
             num_points=n_points,
+            lora=lora,
         )
 
         self.dropout1 = nn.Dropout(dropout)
         self.norm1 = nn.LayerNorm(d_model)
 
         # self attention
+        # # TODO(Eugene): support LORA_Layer in MSDeformableAttention
         self.self_attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout)
         self.dropout2 = nn.Dropout(dropout)
         self.norm2 = nn.LayerNorm(d_model)
@@ -153,9 +156,6 @@ class DeformableTransformerDecoder(nn.Module):
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
-        for m in self.modules():
-            if isinstance(m, MSDeformableAttention):
-                m._reset_parameters()  # noqa: SLF001
 
     def forward(
         self,
@@ -249,6 +249,7 @@ class MaskDINODecoderHeadModule(BaseModule):
         dec_n_points: int = 4,
         query_dim: int = 4,
         activation: nn.Module = nn.ReLU,
+        lora: bool = False,
     ) -> None:
         super().__init__()
         self.num_feature_levels = total_num_feature_levels
@@ -282,6 +283,7 @@ class MaskDINODecoderHeadModule(BaseModule):
             self.num_feature_levels,
             nhead,
             dec_n_points,
+            lora=lora,
         )
         self.decoder = DeformableTransformerDecoder(
             decoder_layer,
@@ -634,12 +636,13 @@ class MaskDINODecoderHead:
         "swin_tiny": {},
     }
 
-    def __new__(cls, model_name: str, num_classes: int) -> MaskDINODecoderHeadModule:
+    def __new__(cls, model_name: str, num_classes: int, lora: bool = False) -> MaskDINODecoderHeadModule:
         """Create MaskDINODecoderHeadModule object.
 
         Args:
             model_name (str): backbone model name
             num_classes (int): number of classes
+            lora (bool, optional): enable LoRA or not
 
         Raises:
             ValueError: If model name is not supported
@@ -650,4 +653,8 @@ class MaskDINODecoderHead:
         if model_name not in cls.decoder_cfg:
             msg = f"Model {model_name} not supported"
             raise ValueError(msg)
-        return MaskDINODecoderHeadModule(**cls.decoder_cfg[model_name], num_classes=num_classes)
+        return MaskDINODecoderHeadModule(
+            **cls.decoder_cfg[model_name],
+            num_classes=num_classes,
+            lora=lora,
+        )

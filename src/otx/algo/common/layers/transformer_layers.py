@@ -14,6 +14,7 @@ from otx.algo.common.utils.utils import get_clones
 from otx.algo.modules.transformer import deformable_attention_core_func
 from torch import Tensor, nn
 from torch.nn import init
+from torchtune.modules.peft import LoRALinear
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -166,9 +167,25 @@ class MSDeformableAttention(nn.Module):
         num_heads (int): The number of heads in the multiheadattention models.
         num_levels (int): The number of levels in MSDeformableAttention.
         num_points (int): The number of points in MSDeformableAttention.
+
+        # TODO(Eugene): make as lora config
+        lora (bool): Whether to use LoRA or not. Defaults to False.
+        rank (int): The rank of the LoRA. Defaults to 32.
+        alpha (float): The alpha of the LoRA. Defaults to 32.0.
+        dropout (float): The dropout rate. Defaults to 0.2.
     """
 
-    def __init__(self, embed_dim: int = 256, num_heads: int = 8, num_levels: int = 4, num_points: int = 4) -> None:
+    def __init__(
+        self,
+        embed_dim: int = 256,
+        num_heads: int = 8,
+        num_levels: int = 4,
+        num_points: int = 4,
+        lora: bool = False,
+        rank: int = 32,
+        alpha: float = 32.0,
+        dropout: float = 0.2,
+    ) -> None:
         """Multi-Scale Deformable Attention Module."""
         super().__init__()
         self.embed_dim = embed_dim
@@ -176,16 +193,36 @@ class MSDeformableAttention(nn.Module):
         self.num_levels = num_levels
         self.num_points = num_points
         self.total_points = num_heads * num_levels * num_points
+        self.lora = lora
 
         self.head_dim = embed_dim // num_heads
         if self.head_dim * num_heads != self.embed_dim:
             msg = f"embed_dim must be divisible by num_heads, but got embed_dim={embed_dim} and num_heads={num_heads}"
             raise ValueError(msg)
 
-        self.sampling_offsets = nn.Linear(embed_dim, self.total_points * 2)
-        self.attention_weights = nn.Linear(embed_dim, self.total_points)
-        self.value_proj = nn.Linear(embed_dim, embed_dim)
-        self.output_proj = nn.Linear(embed_dim, embed_dim)
+        lora_config = {
+            "rank": rank,
+            "alpha": alpha,
+            "dropout": dropout,
+            "use_bias": True,
+        }
+
+        self.sampling_offsets = (
+            nn.Linear(embed_dim, self.total_points * 2)
+            if not lora
+            else LoRALinear(embed_dim, self.total_points * 2, **lora_config)
+        )
+        self.attention_weights = (
+            nn.Linear(embed_dim, self.total_points)
+            if not lora
+            else LoRALinear(embed_dim, self.total_points, **lora_config)
+        )
+        self.value_proj = (
+            nn.Linear(embed_dim, embed_dim) if not lora else LoRALinear(embed_dim, embed_dim, **lora_config)
+        )
+        self.output_proj = (
+            nn.Linear(embed_dim, embed_dim) if not lora else LoRALinear(embed_dim, embed_dim, **lora_config)
+        )
 
         self.ms_deformable_attn_core = deformable_attention_core_func
 
@@ -328,11 +365,12 @@ class VisualEncoderLayer(nn.Module):
         n_levels: int = 4,
         n_heads: int = 8,
         n_points: int = 4,
+        lora: bool = False,
     ) -> None:
         super().__init__()
 
         # self attention
-        self.self_attn = MSDeformableAttention(d_model, n_heads, n_levels, n_points)
+        self.self_attn = MSDeformableAttention(d_model, n_heads, n_levels, n_points, lora)
         self.dropout1 = nn.Dropout(dropout)
         self.norm1 = nn.LayerNorm(d_model)
 

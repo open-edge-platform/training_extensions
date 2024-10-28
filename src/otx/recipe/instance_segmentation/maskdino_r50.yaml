@@ -3,7 +3,7 @@ model:
   init_args:
     model_name: resnet50
     label_info: 80
-    lora: true
+    lora: false
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -31,7 +31,7 @@ callback_monitor: val/map_50
 
 data: ../_base_/data/instance_segmentation.yaml
 overrides:
-  precision: bf16
+  precision: bf16-true
   gradient_clip_val: 0.01
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
