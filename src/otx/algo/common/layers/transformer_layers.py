@@ -10,6 +10,7 @@ import math
 from typing import Callable
 
 import torch
+from otx.algo.common.layers.ops.functions.ms_deform_attn_func import CUDAMultiScaleDeformableAttentionFunction
 from otx.algo.common.utils.utils import get_clones
 from otx.algo.modules.transformer import deformable_attention_core_func
 from torch import Tensor, nn
@@ -338,7 +339,20 @@ class MSDeformableAttention(nn.Module):
                 msg,
             )
 
-        output = self.ms_deformable_attn_core(value, value_spatial_shapes, sampling_locations, attention_weights)
+        try:
+            level_start_index = torch.cat(
+                (value_spatial_shapes.new_zeros((1,)), value_spatial_shapes.prod(1).cumsum(0)[:-1]),
+            )
+            output = CUDAMultiScaleDeformableAttentionFunction.apply(
+                value,
+                value_spatial_shapes,
+                level_start_index,
+                sampling_locations,
+                attention_weights,
+                im2col_step=128,
+            )
+        except:
+            output = self.ms_deformable_attn_core(value, value_spatial_shapes, sampling_locations, attention_weights)
 
         return self.output_proj(output)
 
