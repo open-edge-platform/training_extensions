@@ -648,6 +648,7 @@ class SwinTransformer(BaseModule):
                 init_cfg=None,
             )
             self.stages.append(stage)
+            self.add_module(f"feat{i+1}", stage)
             if downsample:
                 in_channels = downsample.out_channels
 

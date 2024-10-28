@@ -39,6 +39,7 @@ callbacks:
     init_args:
       max_interval: 5
       decay: -0.025
+  - class_path: otx.algo.callbacks.gpu_monitor.GPUMonitor
 logger:
   - class_path: lightning.pytorch.loggers.csv_logs.CSVLogger
     init_args:
@@ -52,6 +53,7 @@ logger:
       log_graph: false
       default_hp_metric: true
       prefix: ""
+  # - class_path: lightning.pytorch.loggers.wandb.WandbLogger
 deterministic: false
 seed: null
 precision: 16

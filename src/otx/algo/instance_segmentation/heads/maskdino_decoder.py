@@ -631,6 +631,7 @@ class MaskDINODecoderHead:
 
     decoder_cfg: ClassVar[dict[str, Any]] = {
         "resnet50": {},
+        "swin_tiny": {},
     }
 
     def __new__(cls, model_name: str, num_classes: int) -> MaskDINODecoderHeadModule:

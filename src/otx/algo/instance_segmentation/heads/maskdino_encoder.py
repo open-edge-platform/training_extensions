@@ -375,6 +375,9 @@ class MaskDINOEncoderHead:
 
     encoder_head_cfg: ClassVar[dict[str, Any]] = {
         "resnet50": {},
+        "swin_tiny": {
+            "transformer_in_features": ("feat4", "feat3", "feat2"),
+        }
     }
 
     def __new__(

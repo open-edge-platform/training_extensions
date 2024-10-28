@@ -18,6 +18,7 @@ from torchvision.ops import box_convert
 
 from otx.algo.instance_segmentation.heads import MaskDINODecoderHead, MaskDINOEncoderHead, MaskDINOHead
 from otx.algo.instance_segmentation.losses import MaskDINOCriterion
+from otx.algo.instance_segmentation.backbones.swin import SwinTransformer
 from otx.algo.instance_segmentation.segmentors import MaskDINOModule
 from otx.algo.instance_segmentation.utils.utils import ShapeSpec
 from otx.algo.modules.norm import AVAILABLE_NORMALIZATION_LIST, FrozenBatchNorm2d
@@ -31,6 +32,9 @@ from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel
 from otx.core.utils.mask_util import polygon_to_bitmap
+
+from torchtune.modules.peft import LoRALinear
+
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -59,6 +63,26 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
                 "maskdino_r50_50ep_300q_hid2048_3sd1_instance_maskenhanced_mask46.3ap_box51.7ap.pth"
             ),
         },
+        "swin_tiny": {
+            "backbone": SwinTransformer(
+                drop_path_rate=0.2,
+                patch_norm=True,
+                convert_weights=True,
+            ),
+            "return_layers": {
+                "feat1": "feat1",
+                "feat2": "feat2",
+                "feat3": "feat3",
+                "feat4": "feat4",
+            },
+            "strides": [4, 8, 16, 32],
+            "channels": [96, 192, 384, 768],
+            "weights": (
+                "https://download.openmmlab.com/mmdetection/v2.0/swin/"
+                "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco/"
+                "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco_20210908_165006-90a4008c.pth"
+            ),
+        },
     }
 
     mean: tuple[float, float, float] = (123.675, 116.28, 103.53)
@@ -66,8 +90,9 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
 
     def __init__(
         self,
-        model_name: Literal["resnet50"],
+        model_name: Literal["resnet50", "swin_tiny"],
         label_info: LabelInfoTypes,
+        lora: bool = False,
         input_size: tuple[int, int] = (1024, 1024),
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -76,6 +101,7 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ):
         self.load_from: str = self.backbone_cfg[model_name]["weights"]
+        self.lora = lora
         super().__init__(
             model_name=model_name,
             label_info=label_info,

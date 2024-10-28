@@ -13,9 +13,10 @@ from torch import Tensor, nn
 
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.algo.modules.base_module import BaseModule
 
 
-class TwoStageDetector(nn.Module):
+class TwoStageDetector(BaseModule):
     """Base class for two-stage detectors.
 
     Two-stage detectors typically consisting of a region proposal network and a
