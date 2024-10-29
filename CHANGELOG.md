@@ -11,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Turn on/off detection and instance segmentation augmentations
   (<https://github.com/openvinotoolkit/training_extensions/pull/4066>)
 
-
 ### Enhancements
 
 - Update visual prompting pipeline for multi-label zero-shot learning support
