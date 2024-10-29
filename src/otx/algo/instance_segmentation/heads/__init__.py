@@ -7,7 +7,7 @@ from .custom_roi_head import CustomConvFCBBoxHead, CustomRoIHead
 from .fcn_mask_head import FCNMaskHead
 from .roi_head_tv import TVRoIHeads
 from .rpn_head import RPNHead
-from .rtmdet_ins_head import RTMDetInsSepBNHead
+from .rtmdet_inst_head import RTMDetInstSepBNHead
 
 __all__ = [
     "Shared2FCBBoxHead",
@@ -16,5 +16,5 @@ __all__ = [
     "FCNMaskHead",
     "TVRoIHeads",
     "RPNHead",
-    "RTMDetInsSepBNHead",
+    "RTMDetInstSepBNHead",
 ]

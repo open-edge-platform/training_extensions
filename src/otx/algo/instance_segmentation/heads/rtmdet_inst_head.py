@@ -46,7 +46,7 @@ from .utils import sigmoid_geometric_mean
 # mypy: disable-error-code="call-overload, index, override, attr-defined, misc"
 
 
-class RTMDetInsHead(RTMDetHead):
+class RTMDetInstHead(RTMDetHead):
     """Detection Head of RTMDet-Ins.
 
     Args:
@@ -764,7 +764,7 @@ class MaskFeatModule(BaseModule):
         return self.projection(mask_features)
 
 
-class RTMDetInsSepBNHead(RTMDetInsHead):
+class RTMDetInstSepBNHead(RTMDetInstHead):
     """Detection Head of RTMDet-Ins with sep-bn layers.
 
     Args:
