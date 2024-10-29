@@ -7,78 +7,82 @@ All notable changes to this project will be documented in this file.
 ### New features
 
 - Turn on/off classification augmentations
-  (https://github.com/openvinotoolkit/training_extensions/pull/4039)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4039>)
 
 ### Enhancements
 
 - Update visual prompting pipeline for multi-label zero-shot learning support
-  (https://github.com/openvinotoolkit/training_extensions/pull/3993)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3993>)
 - Update to work torch compile in detection
-  (https://github.com/openvinotoolkit/training_extensions/pull/4003)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4003>)
 - Refactor MaskDINO
-  (https://github.com/openvinotoolkit/training_extensions/pull/4006)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4006>)
 - Fix MaskRCNN/RTMDet-Inst/MaskRCNNTV Explain Mode
-  (https://github.com/openvinotoolkit/training_extensions/pull/4053)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4053>)
 
 ## \[2.3.0\]
 
 ### New features
 
 - Add YOLOv9 model for Object Detection
-  (https://github.com/openvinotoolkit/training_extensions/pull/3917)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3917>, <https://github.com/openvinotoolkit/training_extensions/pull/4026>)
 - Add OV inference for keypoint detection
-  (https://github.com/openvinotoolkit/training_extensions/pull/3970)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3970>)
 - Add tiling for semantic segmentation
-  (https://github.com/openvinotoolkit/training_extensions/pull/3954)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3954>)
 - Add 3D Object Detection task with MonoDETR model
-  (https://github.com/openvinotoolkit/training_extensions/pull/3979)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3979>)
+- Add OpenVINO inference for 3D Object Detection task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
 
 ### Enhancements
 
 - Upgrade OV, MAPI, and NNCF dependencies
-  (https://github.com/openvinotoolkit/training_extensions/pull/3967)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3967>)
 - Instance Segmentation Model refactoring
-  (https://github.com/openvinotoolkit/training_extensions/pull/3865)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3865>)
 - Bump torch and lightning to 2.4.0 versions
-  (https://github.com/openvinotoolkit/training_extensions/pull/3843)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3843>)
 - Add mAP metric to evaluate multilabel classification
-  (https://github.com/openvinotoolkit/training_extensions/pull/3985)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3985>)
 
 ### Bug fixes
 
 - Fix a wrong HPO log
-  (https://github.com/openvinotoolkit/training_extensions/pull/3972)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3972>)
+- Update model name in rotated detection recipes
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4028>)
 
 ## \[2.2.0\]
 
 ### New features
 
 - Add RT-DETR model for Object Detection
-  (https://github.com/openvinotoolkit/training_extensions/pull/3741)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3741>)
 - Add Multi-Label & H-label Classification with torchvision models
-  (https://github.com/openvinotoolkit/training_extensions/pull/3697)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3697>)
 - Add Hugging-Face Model Wrapper for Classification
-  (https://github.com/openvinotoolkit/training_extensions/pull/3710)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3710>)
 - Add LoRA finetuning capability for ViT Architectures
-  (https://github.com/openvinotoolkit/training_extensions/pull/3729)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3729>)
 - Add Hugging-Face Model Wrapper for Object Detection
-  (https://github.com/openvinotoolkit/training_extensions/pull/3747)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3747>)
 - Add Hugging-Face Model Wrapper for Semantic Segmentation
-  (https://github.com/openvinotoolkit/training_extensions/pull/3749)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3749>)
 - Enable torch.compile to work with classification
-  (https://github.com/openvinotoolkit/training_extensions/pull/3758)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3758>)
 - Add `otx benchmark` subcommand
-  (https://github.com/openvinotoolkit/training_extensions/pull/3762)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3762>)
 - Add RTMPose for Keypoint Detection Task
-  (https://github.com/openvinotoolkit/training_extensions/pull/3781)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3781>, <https://github.com/openvinotoolkit/training_extensions/pull/4034>)
 - Add Semi-SL MeanTeacher algorithm for Semantic Segmentation
-  (https://github.com/openvinotoolkit/training_extensions/pull/3801)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3801>)
 - Update head and h-label format for hierarchical label classification
-  (https://github.com/openvinotoolkit/training_extensions/pull/3810)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3810>)
 - Support configurable input size
-  (https://github.com/openvinotoolkit/training_extensions/pull/3788)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3788>)
 - Add diffusion task
-  (https://github.com/openvinotoolkit/training_extensions/pull/3875)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3875>)
 
 ### Enhancements
 
@@ -106,9 +110,21 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3968>)
 - Change sematic segmentation to consider bbox only annotations
   (<https://github.com/openvinotoolkit/training_extensions/pull/3996>)
+- Relieve memory usage criteria on batch size 2 during adaptive batch size
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4009>)
+- Remove background label from RT Info for segmentation task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4011>)
+- Prevent using too low confidence thresholds in detection
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4018>)
+- Update HPO interface
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4035>)
+- Bump onnx to 1.17.0 to omit CVE-2024-5187
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4063>)
 
 ### Bug fixes
 
+- Update anomaly base transforms to use square resizing
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4059>)
 - Fix Combined Dataloader & unlabeled warmup loss in Semi-SL
   (<https://github.com/openvinotoolkit/training_extensions/pull/3723>)
 - Revert #3579 to fix issues with replacing coco_instance with a different format in some dataset
@@ -121,6 +137,30 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3946>)
 - Fix config converter for tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/3973>)
+- Fix `BboxOverlaps2D` handling of empty ground-truth annotations in datasets.
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4010>)
+- Fix num_trials calculation on dataset length less than num_class
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4014>)
+- Fix out_features in HierarchicalCBAMClsHead
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4016>)
+- Fix multilabel_accuracy of MixedHLabelAccuracy
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4042>)
+- Fix wrong indices setting in HLabelInfo
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4044>)
+- Add legacy template LiteHRNet_18 template
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4049>)
+- Model templates: rename model_status value 'DISCONTINUED' to 'OBSOLETE'
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4051>)
+- Enable export of feature vectors for semantic segmentation task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4055>)
+- Update MRCNN model export to include feature vector and saliency map
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4056>)
+- Upgrade MAPI in 2.2
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4052>)
+- Fix applying model's hparams when loading model from checkpoint
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4057>)
+- Fix incorrect all_groups order configuration in HLabelInfo
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4067>)
 
 ## \[v2.1.0\]
 

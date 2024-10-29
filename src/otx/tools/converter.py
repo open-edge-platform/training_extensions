@@ -156,7 +156,6 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.SEMANTIC_SEGMENTATION,
         "model_name": "dino_v2",
     },
-    # ANOMALY_CLASSIFICATION
     # ANOMALY
     "ote_anomaly_padim": {
         "task": OTXTaskType.ANOMALY,
@@ -192,6 +191,15 @@ TEMPLATE_ID_DICT = {
     "ote_anomaly_segmentation_stfpm": {
         "task": OTXTaskType.ANOMALY_SEGMENTATION,
         "model_name": "stfpm",
+    },
+    # KEYPOINT_DETECTION
+    "Custom_Keypoint_Detection_Rtmpose_T": {
+        "task": OTXTaskType.KEYPOINT_DETECTION,
+        "model_name": "rtmpose_tiny",
+    },
+    "Custom_Keypoint_Detection_Rtmpose_T_Single_Obj": {
+        "task": OTXTaskType.KEYPOINT_DETECTION,
+        "model_name": "rtmpose_tiny_single_obj",
     },
 }
 

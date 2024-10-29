@@ -105,5 +105,4 @@ def remove_unused_labels(
         mapping = {original_categories[idx]: original_categories[idx] for idx in used_labels}
     msg = "There are unused labels in dataset, they will be filtered out before training."
     warnings.warn(msg, stacklevel=2)
-
     return dataset.transform("remap_labels", mapping=mapping, default="delete")

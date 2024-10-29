@@ -124,7 +124,6 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         self.input_size = input_size
         self.classification_layers: dict[str, dict[str, Any]] = {}
         self.model = self._create_model()
-        self._explain_mode = False
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)
         self.metric_callable = ensure_callable(metric)
@@ -1097,11 +1096,6 @@ class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
     def _set_label_info(self, label_info: LabelInfoTypes) -> None:
         """Set this model label information."""
         new_label_info = self._dispatch_label_info(label_info)
-
-        if self._label_info != new_label_info:
-            msg = "OVModel strictly does not allow overwrite label_info if they are different each other."
-            raise ValueError(msg)
-
         self._label_info = new_label_info
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:

@@ -9,36 +9,12 @@ from typing import Any, ClassVar
 import torch
 import torchvision
 from torch import nn
+from torchvision.models import get_model_weights
 from torchvision.models._utils import IntermediateLayerGetter
 
-from otx.algo.common.layers.position_embed import PositionEmbeddingLearned, PositionEmbeddingSine
+from otx.algo.common.layers.position_embed import PositionEmbeddingSine
 from otx.algo.modules.norm import FrozenBatchNorm2d
 from otx.algo.object_detection_3d.utils.utils import NestedTensor
-
-
-def build_position_encoding(
-    hidden_dim: int,
-    position_embedding: str | PositionEmbeddingSine | PositionEmbeddingLearned,
-) -> PositionEmbeddingSine | PositionEmbeddingLearned:
-    """Build the position encoding module.
-
-    Args:
-        hidden_dim (int): The hidden dimension.
-        position_embedding (Union[str, PositionEmbeddingSine, PositionEmbeddingLearned]): The position embedding type.
-
-    Returns:
-        Union[PositionEmbeddingSine, PositionEmbeddingLearned]: The position encoding module.
-    """
-    n_steps = hidden_dim // 2
-    if position_embedding in ("v2", "sine"):
-        position_embedding = PositionEmbeddingSine(n_steps, normalize=True)
-    elif position_embedding in ("v3", "learned"):
-        position_embedding = PositionEmbeddingLearned(n_steps)
-    else:
-        msg = f"not supported {position_embedding}"
-        raise ValueError(msg)
-
-    return position_embedding
 
 
 class BackboneBase(nn.Module):
@@ -85,7 +61,7 @@ class Backbone(BackboneBase):
         norm_layer = FrozenBatchNorm2d
         backbone = getattr(torchvision.models, name)(
             replace_stride_with_dilation=[False, False, dilation],
-            pretrained=True,
+            weights=get_model_weights(name).IMAGENET1K_V1,  # the same as pretrained=True
             norm_layer=norm_layer,
         )
         super().__init__(backbone, train_backbone, return_interm_layers)
@@ -99,13 +75,13 @@ class Joiner(nn.Sequential):
     def __init__(
         self,
         backbone: nn.Module,
-        position_embedding: PositionEmbeddingSine | PositionEmbeddingLearned,
+        position_embedding: PositionEmbeddingSine,
     ) -> None:
         """Initialize the Joiner module.
 
         Args:
             backbone (nn.Module): The backbone module.
-            position_embedding (Union[PositionEmbeddingSine, PositionEmbeddingLearned]): The position embedding module.
+            position_embedding (PositionEmbeddingSine): The position embedding module.
         """
         super().__init__(backbone, position_embedding)
         self.strides = backbone.strides
@@ -135,7 +111,6 @@ class BackboneBuilder:
             "return_interm_layers": True,
             "positional_encoding": {
                 "hidden_dim": 256,
-                "position_embedding": "sine",
             },
         },
     }
@@ -144,5 +119,6 @@ class BackboneBuilder:
         """Constructor for Backbone MonoDetr."""
         # TODO (Kirill): change backbone to already implemented in OTX
         backbone = Backbone(**cls.CFG[model_name])
-        position_embedding = build_position_encoding(**cls.CFG[model_name]["positional_encoding"])
+        n_steps = cls.CFG[model_name]["positional_encoding"]["hidden_dim"] // 2
+        position_embedding = PositionEmbeddingSine(n_steps, normalize=True)
         return Joiner(backbone, position_embedding)
