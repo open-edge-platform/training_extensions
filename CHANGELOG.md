@@ -108,6 +108,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4057>)
 - Fix incorrect all_groups order configuration in HLabelInfo
   (<https://github.com/openvinotoolkit/training_extensions/pull/4067>)
+- Fix wrong model name in converter & template
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4082>)
 
 ## \[v2.1.0\]
 
