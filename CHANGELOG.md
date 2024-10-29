@@ -108,6 +108,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4057>)
 - Fix incorrect all_groups order configuration in HLabelInfo
   (<https://github.com/openvinotoolkit/training_extensions/pull/4067>)
+- Fix RTDETR recipes
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4079>)
 
 ## \[v2.1.0\]
 
