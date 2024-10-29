@@ -258,6 +258,7 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
@@ -381,7 +382,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="s2">&quot;predict&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;explain&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;predict&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_type</span> <span class="o">==</span> <span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SEMI_SUPERVISED</span> <span class="ow">and</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;loss&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -417,6 +423,16 @@
                 <span class="n">losses</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
             <span class="k">return</span> <span class="n">losses</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SegBatchPredEntity</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">]),</span>
+                <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+                <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
+                <span class="n">scores</span><span class="o">=</span><span class="p">[],</span>
+                <span class="n">masks</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">],</span>
+                <span class="n">feature_vector</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+
         <span class="k">return</span> <span class="n">SegBatchPredEntity</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
@@ -428,12 +444,20 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines parameters required to export a particular model implementation.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;otx_background_lbl&quot;</span><span class="p">:</span>
+            <span class="c1"># remove otx background label for export</span>
+            <span class="n">modified_label_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
+            <span class="n">modified_label_info</span><span class="o">.</span><span class="n">label_names</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">modified_label_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span>
+
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
             <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;Segmentation&quot;</span><span class="p">,</span>
             <span class="n">task_type</span><span class="o">=</span><span class="s2">&quot;segmentation&quot;</span><span class="p">,</span>
             <span class="n">return_soft_prediction</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">soft_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
             <span class="n">blur_strength</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">label_info</span><span class="o">=</span><span class="n">modified_label_info</span><span class="p">,</span>
             <span class="n">tile_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_tiler</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -454,7 +478,7 @@
             <span class="n">swap_rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">via_onnx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">output_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
@@ -462,6 +486,16 @@
         <span class="n">preds</span><span class="p">:</span> <span class="n">SegBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert prediction and input entities to a format suitable for metric computation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            preds (SegBatchPredEntity): The predicted segmentation batch entity containing predicted masks.</span>
+<span class="sd">            inputs (SegBatchDataEntity): The input segmentation batch entity containing ground truth masks.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MetricInput: A list of dictionaries where each dictionary contains &#39;preds&#39; and &#39;target&#39; keys</span>
+<span class="sd">            corresponding to the predicted and target masks for metric evaluation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="p">{</span>
                 <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">pred_mask</span><span class="p">,</span>
@@ -540,8 +574,29 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OTXSegmentationModel.forward_for_tracing">[docs]</a>
     <span class="k">def</span> <span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function used for the model tracing during model exportation.&quot;&quot;&quot;</span>
-        <span class="n">raw_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">raw_outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;explain&quot;</span><span class="p">)</span>
+            <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">outputs</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OTXSegmentationModel.forward_explain">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OTXSegmentationModel.forward_explain">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SegBatchPredEntity</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward explain function.&quot;&quot;&quot;</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;explain&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SegBatchPredEntity</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">]),</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">masks</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preds&quot;</span><span class="p">],</span>
+            <span class="n">feature_vector</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">],</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXSegmentationModel.get_dummy_input">
@@ -641,25 +696,17 @@
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ImageResultWithSoftPrediction</span><span class="p">],</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SegBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">outputs</span> <span class="ow">and</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">saliency_map</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">predicted_s_maps</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">saliency_map</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">SegBatchPredEntity</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
-                <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">scores</span><span class="o">=</span><span class="p">[],</span>
-                <span class="n">masks</span><span class="o">=</span><span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">resultImage</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">],</span>
-                <span class="n">saliency_map</span><span class="o">=</span><span class="n">predicted_s_maps</span><span class="p">,</span>
-                <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
-            <span class="p">)</span>
-
+        <span class="n">masks</span> <span class="o">=</span> <span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">resultImage</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
+        <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span> <span class="k">if</span> <span class="n">outputs</span> <span class="ow">and</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">feature_vector</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">SegBatchPredEntity</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="n">scores</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">masks</span><span class="o">=</span><span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">resultImage</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">],</span>
+            <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
+            <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
@@ -667,6 +714,16 @@
         <span class="n">preds</span><span class="p">:</span> <span class="n">SegBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert prediction and input entities to a format suitable for metric computation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            preds (SegBatchPredEntity): The predicted segmentation batch entity containing predicted masks.</span>
+<span class="sd">            inputs (SegBatchDataEntity): The input segmentation batch entity containing ground truth masks.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MetricInput: A list of dictionaries where each dictionary contains &#39;preds&#39; and &#39;target&#39; keys</span>
+<span class="sd">            corresponding to the predicted and target masks for metric evaluation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="p">{</span>
                 <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">pred_mask</span><span class="p">,</span>

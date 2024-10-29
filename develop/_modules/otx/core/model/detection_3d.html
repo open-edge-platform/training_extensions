@@ -258,23 +258,25 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">NamedTuple</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">model_api.models</span> <span class="kn">import</span> <span class="n">ImageModel</span>
 <span class="kn">from</span> <span class="nn">torchvision.ops</span> <span class="kn">import</span> <span class="n">box_convert</span>
 
+<span class="kn">from</span> <span class="nn">otx.algo.object_detection_3d.utils.utils</span> <span class="kn">import</span> <span class="n">box_cxcylrtb_to_xyxy</span>
 <span class="kn">from</span> <span class="nn">otx.algo.utils.mmengine_utils</span> <span class="kn">import</span> <span class="n">load_checkpoint</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.dataset.utils.kitti_utils</span> <span class="kn">import</span> <span class="n">class2angle</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.base</span> <span class="kn">import</span> <span class="n">ImageInfo</span>
+<span class="kn">from</span> <span class="nn">otx.core.data.entity.base</span> <span class="kn">import</span> <span class="n">ImageInfo</span><span class="p">,</span> <span class="n">OTXBatchLossEntity</span>
 <span class="kn">from</span> <span class="nn">otx.core.data.entity.object_detection_3d</span> <span class="kn">import</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span> <span class="n">Det3DBatchPredEntity</span>
 <span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricInput</span>
 <span class="kn">from</span> <span class="nn">otx.core.metrics.average_precision_3d</span> <span class="kn">import</span> <span class="n">KittiMetric</span>
-<span class="kn">from</span> <span class="nn">otx.core.model.base</span> <span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span> <span class="n">OTXModel</span>
+<span class="kn">from</span> <span class="nn">otx.core.model.base</span> <span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span> <span class="n">OTXModel</span><span class="p">,</span> <span class="n">OVModel</span>
 <span class="kn">from</span> <span class="nn">otx.core.types.export</span> <span class="kn">import</span> <span class="n">TaskLevelExportParameters</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">lightning.pytorch.cli</span> <span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
+    <span class="kn">from</span> <span class="nn">model_api.adapters.inference_adapter</span> <span class="kn">import</span> <span class="n">InferenceAdapter</span>
     <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 
     <span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricCallable</span>
@@ -328,8 +330,75 @@
     <span class="k">def</span> <span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines parameters required to export a particular model implementation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
-            <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;ssd&quot;</span><span class="p">,</span>
-            <span class="n">task_type</span><span class="o">=</span><span class="s2">&quot;detection&quot;</span><span class="p">,</span>
+            <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;mono_3d_det&quot;</span><span class="p">,</span>
+            <span class="n">task_type</span><span class="o">=</span><span class="s2">&quot;3d_detection&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># prepare bboxes for the model</span>
+        <span class="n">targets_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">img_sizes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">]))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">key_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;boxes&quot;</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="s2">&quot;size_3d&quot;</span><span class="p">,</span> <span class="s2">&quot;heading_angle&quot;</span><span class="p">,</span> <span class="s2">&quot;boxes_3d&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">bz</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">)):</span>
+            <span class="n">target_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">:</span>
+                <span class="n">target_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">key</span><span class="p">)[</span><span class="n">bz</span><span class="p">]</span>
+            <span class="n">targets_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_dict</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="s2">&quot;calibs&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">p2</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">calib_matrix</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">targets_list</span><span class="p">,</span>
+            <span class="s2">&quot;img_sizes&quot;</span><span class="p">:</span> <span class="n">img_sizes</span><span class="p">,</span>
+            <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;loss&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="s2">&quot;predict&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Det3DBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+            <span class="n">losses</span> <span class="o">=</span> <span class="n">OTXBatchLossEntity</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">outputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">losses</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                    <span class="n">losses</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Loss output should be list or torch.tensor but got {type(v)}&quot;</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">losses</span>
+
+        <span class="n">labels</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">size_3d</span><span class="p">,</span> <span class="n">heading_angle</span><span class="p">,</span> <span class="n">boxes_3d</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_dets_from_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="c1"># bbox 2d decoding</span>
+        <span class="n">boxes_2d</span> <span class="o">=</span> <span class="n">box_cxcylrtb_to_xyxy</span><span class="p">(</span><span class="n">boxes_3d</span><span class="p">)</span>
+        <span class="n">xywh_2d</span> <span class="o">=</span> <span class="n">box_convert</span><span class="p">(</span><span class="n">boxes_2d</span><span class="p">,</span> <span class="s2">&quot;xyxy&quot;</span><span class="p">,</span> <span class="s2">&quot;cxcywh&quot;</span><span class="p">)</span>
+        <span class="c1"># size 2d decoding</span>
+        <span class="n">size_2d</span> <span class="o">=</span> <span class="n">xywh_2d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">Det3DBatchPredEntity</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
+            <span class="n">calib_matrix</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">calib_matrix</span><span class="p">,</span>
+            <span class="n">boxes</span><span class="o">=</span><span class="n">boxes_2d</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">boxes_3d</span><span class="o">=</span><span class="n">boxes_3d</span><span class="p">,</span>
+            <span class="n">size_2d</span><span class="o">=</span><span class="n">size_2d</span><span class="p">,</span>
+            <span class="n">size_3d</span><span class="o">=</span><span class="n">size_3d</span><span class="p">,</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span>
+            <span class="n">heading_angle</span><span class="o">=</span><span class="n">heading_angle</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
+            <span class="n">original_kitti_format</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
@@ -337,68 +406,12 @@
         <span class="n">preds</span><span class="p">:</span> <span class="n">Det3DBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts the prediction entity to the format required for computing metrics.</span>
+        <span class="k">return</span> <span class="n">_convert_pred_entity_to_compute_metric</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_threshold</span><span class="p">)</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            preds (Det3DBatchPredEntity): Prediction entity.</span>
-<span class="sd">            inputs (Det3DBatchDataEntity): Input data entity.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">boxes</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">boxes_3d</span>
-        <span class="c1"># bbox 2d decoding</span>
-        <span class="n">xywh_2d</span> <span class="o">=</span> <span class="n">box_convert</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">boxes</span><span class="p">,</span> <span class="s2">&quot;xyxy&quot;</span><span class="p">,</span> <span class="s2">&quot;cxcywh&quot;</span><span class="p">)</span>
-
-        <span class="n">xs3d</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">ys3d</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-        <span class="n">xs2d</span> <span class="o">=</span> <span class="n">xywh_2d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">ys2d</span> <span class="o">=</span> <span class="n">xywh_2d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-
-        <span class="n">batch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">scores</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">xs2d</span> <span class="o">=</span> <span class="n">xs2d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">ys2d</span> <span class="o">=</span> <span class="n">ys2d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">xs3d</span> <span class="o">=</span> <span class="n">xs3d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">ys3d</span> <span class="o">=</span> <span class="n">ys3d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-
-        <span class="n">detections</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="n">labels</span><span class="p">,</span>
-                    <span class="n">scores</span><span class="p">,</span>
-                    <span class="n">xs2d</span><span class="p">,</span>
-                    <span class="n">ys2d</span><span class="p">,</span>
-                    <span class="n">preds</span><span class="o">.</span><span class="n">size_2d</span><span class="p">,</span>
-                    <span class="n">preds</span><span class="o">.</span><span class="n">depth</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="n">preds</span><span class="o">.</span><span class="n">heading_angle</span><span class="p">,</span>
-                    <span class="n">preds</span><span class="o">.</span><span class="n">size_3d</span><span class="p">,</span>
-                    <span class="n">xs3d</span><span class="p">,</span>
-                    <span class="n">ys3d</span><span class="p">,</span>
-                    <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">preds</span><span class="o">.</span><span class="n">depth</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]),</span>
-                <span class="p">],</span>
-                <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="o">.</span><span class="n">detach</span><span class="p">()</span>
-            <span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
-            <span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-        <span class="p">)</span>
-
-        <span class="n">img_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">])</span>
-        <span class="n">calib_matrix</span> <span class="o">=</span> <span class="p">[</span><span class="n">p2</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">calib_matrix</span><span class="p">]</span>
-        <span class="n">result_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_detections_for_kitti_format</span><span class="p">(</span>
-            <span class="n">detections</span><span class="p">,</span>
-            <span class="n">img_sizes</span><span class="p">,</span>
-            <span class="n">calib_matrix</span><span class="p">,</span>
-            <span class="n">class_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">,</span>
-            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">score_threshold</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">result_list</span><span class="p">,</span>
-            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">original_kitti_format</span><span class="p">,</span>  <span class="c1"># type: ignore[dict-item]</span>
-        <span class="p">}</span>
-
+<div class="viewcode-block" id="OTX3DDetectionModel.decode_detections_for_kitti_format">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.OTX3DDetectionModel.decode_detections_for_kitti_format">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_decode_detections_for_kitti_format</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">decode_detections_for_kitti_format</span><span class="p">(</span>
         <span class="n">dets</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">img_size</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">calib_matrix</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
@@ -408,7 +421,34 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Decode the detection results for KITTI format.&quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="nf">_get_heading_angle</span><span class="p">(</span><span class="n">heading</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Get heading angle from the prediction.&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Get heading angle from the prediction.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                heading (np.ndarray): The heading prediction.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                np.ndarray: The heading angle in label format.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">class2angle</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">residual</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">to_label_format</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Inverse function to angle2class.</span>
+
+<span class="sd">                Args:</span>
+<span class="sd">                    cls (int): The class index.</span>
+<span class="sd">                    residual (float): The residual angle.</span>
+<span class="sd">                    to_label_format (bool): Whether to return the angle in label format.</span>
+
+<span class="sd">                Returns:</span>
+<span class="sd">                    float: The angle in label format.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">num_heading_bin</span> <span class="o">=</span> <span class="mi">12</span>
+                <span class="n">angle_per_class</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_heading_bin</span><span class="p">)</span>
+                <span class="n">angle_center</span> <span class="o">=</span> <span class="bp">cls</span> <span class="o">*</span> <span class="n">angle_per_class</span>
+                <span class="n">angle</span> <span class="o">=</span> <span class="n">angle_center</span> <span class="o">+</span> <span class="n">residual</span>
+                <span class="k">if</span> <span class="n">to_label_format</span> <span class="ow">and</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+                    <span class="n">angle</span> <span class="o">=</span> <span class="n">angle</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+                <span class="k">return</span> <span class="n">angle</span>
+
             <span class="n">heading_bin</span><span class="p">,</span> <span class="n">heading_res</span> <span class="o">=</span> <span class="n">heading</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">12</span><span class="p">],</span> <span class="n">heading</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">24</span><span class="p">]</span>
             <span class="bp">cls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">heading_bin</span><span class="p">)</span>
             <span class="n">res</span> <span class="o">=</span> <span class="n">heading_res</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span>
@@ -458,10 +498,10 @@
                     <span class="k">continue</span>
 
                 <span class="c1"># 2d bboxs decoding</span>
-                <span class="n">x</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">y</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">w</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">h</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">bbox</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span>
 
                 <span class="c1"># 3d bboxs decoding</span>
@@ -472,8 +512,8 @@
                 <span class="n">dimension</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">31</span><span class="p">:</span><span class="mi">34</span><span class="p">]</span>
 
                 <span class="c1"># positions decoding</span>
-                <span class="n">x3d</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">34</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">y3d</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">35</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">x3d</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">34</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">y3d</span> <span class="o">=</span> <span class="n">dets</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">35</span><span class="p">]</span> <span class="o">*</span> <span class="n">img_size</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">location</span> <span class="o">=</span> <span class="n">_img_to_rect</span><span class="p">(</span><span class="n">calib_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x3d</span><span class="p">,</span> <span class="n">y3d</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dimension</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
 
@@ -502,7 +542,8 @@
                 <span class="p">},</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">results</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
 
 <div class="viewcode-block" id="OTX3DDetectionModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.OTX3DDetectionModel.get_dummy_input">[docs]</a>
@@ -512,31 +553,7 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Input size attribute is not set for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
-        <span class="n">calib_matrix</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
-        <span class="n">infos</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
-            <span class="n">infos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">ImageInfo</span><span class="p">(</span>
-                    <span class="n">img_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                    <span class="n">img_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                    <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                <span class="p">),</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">Det3DBatchDataEntity</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">images</span><span class="p">,</span>
-            <span class="n">infos</span><span class="p">,</span>
-            <span class="n">boxes</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">labels</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">calib_matrix</span><span class="o">=</span><span class="n">calib_matrix</span><span class="p">,</span>
-            <span class="n">boxes_3d</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">size_2d</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">size_3d</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">depth</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">heading_angle</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">original_kitti_format</span><span class="o">=</span><span class="p">[],</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">_generate_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTX3DDetectionModel.get_classification_layers">
@@ -557,6 +574,371 @@
         <span class="k">return</span> <span class="n">classification_layers</span></div>
 </div>
 
+
+
+<div class="viewcode-block" id="MonoDETRModel">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.MonoDETRModel">[docs]</a>
+<span class="k">class</span> <span class="nc">MonoDETRModel</span><span class="p">(</span><span class="n">ImageModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper for MonoDETR 3d object detection model.&quot;&quot;&quot;</span>
+
+    <span class="n">__model__</span> <span class="o">=</span> <span class="s2">&quot;mono_3d_det&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inference_adapter</span><span class="p">:</span> <span class="n">InferenceAdapter</span><span class="p">,</span> <span class="n">configuration</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">preload</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes a 3d detection model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inference_adapter (InferenceAdapter): inference adapter containing the underlying model.</span>
+<span class="sd">            configuration (dict, optional): configuration overrides the model parameters (see parameters() method).</span>
+<span class="sd">            preload (bool, optional): forces inference adapter to load the model. Defaults to False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inference_adapter</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">preload</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_io_number</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MonoDETRModel.preprocess">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.MonoDETRModel.preprocess">[docs]</a>
+    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocesses the input data for the model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (dict[str, np.ndarray]): a dict with image, calibration matrix, and image size</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[dict[str, Any], ...]: a tuple with the preprocessed inputs and meta information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_blob_name</span><span class="p">:</span> <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">][</span><span class="kc">None</span><span class="p">],</span>
+            <span class="s2">&quot;calib_matrix&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;calib&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;img_sizes&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;img_size&quot;</span><span class="p">][</span><span class="kc">None</span><span class="p">],</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s2">&quot;original_shape&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="s2">&quot;resized_shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines the model inputs for images and additional info.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            WrapperError: if the wrapper failed to define appropriate inputs for images</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            - list of inputs names for images</span>
+<span class="sd">            - list of inputs names for additional info</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">image_blob_names</span><span class="p">,</span> <span class="n">image_info_blob_names</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">image_blob_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">image_info_blob_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">image_blob_names</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">raise_error</span><span class="p">(</span>
+                <span class="s2">&quot;Failed to identify the input for the image: no 4D input layer found&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">image_blob_names</span><span class="p">,</span> <span class="n">image_info_blob_names</span>
+
+<div class="viewcode-block" id="MonoDETRModel.postprocess">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.MonoDETRModel.postprocess">[docs]</a>
+    <span class="k">def</span> <span class="nf">postprocess</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">meta</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies SCC decoded to the model outputs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            outputs (dict[str, np.ndarray]): raw outputs of the model</span>
+<span class="sd">            meta (dict[str, Any]): meta information about the input data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict[str, Any]: postprocessed model outputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="OV3DDetectionModel">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.OV3DDetectionModel">[docs]</a>
+<span class="k">class</span> <span class="nc">OV3DDetectionModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">Det3DBatchDataEntity</span><span class="p">,</span> <span class="n">Det3DBatchPredEntity</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;3d detection model compatible for OpenVINO IR inference.</span>
+
+<span class="sd">    It can consume OpenVINO IR model path or model name from Intel OMZ repository</span>
+<span class="sd">    and create the OTX 3d detection model compatible for OTX testing pipeline.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mono_3d_det&quot;</span><span class="p">,</span>
+        <span class="n">async_inference</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">max_num_requests</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_throughput_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">model_api_configuration</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">KittiMetric</span><span class="p">,</span>
+        <span class="n">score_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">model_type</span><span class="o">=</span><span class="n">model_type</span><span class="p">,</span>
+            <span class="n">async_inference</span><span class="o">=</span><span class="n">async_inference</span><span class="p">,</span>
+            <span class="n">max_num_requests</span><span class="o">=</span><span class="n">max_num_requests</span><span class="p">,</span>
+            <span class="n">use_throughput_mode</span><span class="o">=</span><span class="n">use_throughput_mode</span><span class="p">,</span>
+            <span class="n">model_api_configuration</span><span class="o">=</span><span class="n">model_api_configuration</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_threshold</span> <span class="o">=</span> <span class="n">score_threshold</span>
+
+    <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">img_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">])</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">images</span><span class="p">,</span>
+            <span class="s2">&quot;calibs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">p2</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">calib_matrix</span><span class="p">],</span>
+            <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;img_sizes&quot;</span><span class="p">:</span> <span class="n">img_sizes</span><span class="p">,</span>
+            <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;predict&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NamedTuple</span><span class="p">],</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Det3DBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="n">stacked_outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">stacked_outputs</span><span class="p">:</span>
+                    <span class="n">stacked_outputs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">stacked_outputs</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="n">k</span><span class="p">])),</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">stacked_outputs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+        <span class="n">labels</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">size_3d</span><span class="p">,</span> <span class="n">heading_angle</span><span class="p">,</span> <span class="n">boxes_3d</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_dets_from_outputs</span><span class="p">(</span><span class="n">stacked_outputs</span><span class="p">)</span>
+        <span class="c1"># bbox 2d decoding</span>
+        <span class="n">boxes_2d</span> <span class="o">=</span> <span class="n">box_cxcylrtb_to_xyxy</span><span class="p">(</span><span class="n">boxes_3d</span><span class="p">)</span>
+        <span class="n">xywh_2d</span> <span class="o">=</span> <span class="n">box_convert</span><span class="p">(</span><span class="n">boxes_2d</span><span class="p">,</span> <span class="s2">&quot;xyxy&quot;</span><span class="p">,</span> <span class="s2">&quot;cxcywh&quot;</span><span class="p">)</span>
+        <span class="c1"># size 2d decoding</span>
+        <span class="n">size_2d</span> <span class="o">=</span> <span class="n">xywh_2d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">Det3DBatchPredEntity</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
+            <span class="n">calib_matrix</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">calib_matrix</span><span class="p">,</span>
+            <span class="n">boxes</span><span class="o">=</span><span class="n">boxes_2d</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">boxes_3d</span><span class="o">=</span><span class="n">boxes_3d</span><span class="p">,</span>
+            <span class="n">size_2d</span><span class="o">=</span><span class="n">size_2d</span><span class="p">,</span>
+            <span class="n">size_3d</span><span class="o">=</span><span class="n">size_3d</span><span class="p">,</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span>
+            <span class="n">heading_angle</span><span class="o">=</span><span class="n">heading_angle</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
+            <span class="n">original_kitti_format</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Det3DBatchPredEntity</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function.&quot;&quot;&quot;</span>
+        <span class="n">all_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="n">model_ready_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">image</span><span class="p">,</span> <span class="n">calib</span><span class="p">,</span> <span class="n">img_size</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_inputs</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">],</span> <span class="n">all_inputs</span><span class="p">[</span><span class="s2">&quot;calibs&quot;</span><span class="p">],</span> <span class="n">all_inputs</span><span class="p">[</span><span class="s2">&quot;img_sizes&quot;</span><span class="p">]):</span>
+            <span class="n">model_ready_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+                    <span class="s2">&quot;calib&quot;</span><span class="p">:</span> <span class="n">calib</span><span class="p">,</span>
+                    <span class="s2">&quot;img_size&quot;</span><span class="p">:</span> <span class="n">img_size</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">async_inference</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_batch</span><span class="p">(</span><span class="n">model_ready_inputs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">model_input</span> <span class="ow">in</span> <span class="n">model_ready_inputs</span><span class="p">:</span>
+                <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">model_input</span><span class="p">))</span>
+
+        <span class="n">customized_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">customized_outputs</span><span class="p">,</span> <span class="n">OTXBatchLossEntity</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">customized_outputs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">customized_outputs</span>
+
+<div class="viewcode-block" id="OV3DDetectionModel.transform_fn">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.OV3DDetectionModel.transform_fn">[docs]</a>
+    <span class="k">def</span> <span class="nf">transform_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Data transform function for PTQ.&quot;&quot;&quot;</span>
+        <span class="n">all_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">data_batch</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">all_inputs</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="n">resized_image</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">))</span>
+        <span class="n">resized_image</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_transform</span><span class="p">(</span><span class="n">resized_image</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">_change_layout</span><span class="p">(</span><span class="n">resized_image</span><span class="p">),</span>  <span class="c1"># noqa: SLF001,</span>
+            <span class="s2">&quot;calib_matrix&quot;</span><span class="p">:</span> <span class="n">all_inputs</span><span class="p">[</span><span class="s2">&quot;calibs&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;img_sizes&quot;</span><span class="p">:</span> <span class="n">all_inputs</span><span class="p">[</span><span class="s2">&quot;img_sizes&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="kc">None</span><span class="p">],</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="OV3DDetectionModel.extract_dets_from_outputs">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.OV3DDetectionModel.extract_dets_from_outputs">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">extract_dets_from_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">topk</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract detection results from model outputs.&quot;&quot;&quot;</span>
+        <span class="c1"># b, q, c</span>
+        <span class="n">out_logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">]</span>
+        <span class="n">out_bbox</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;boxes_3d&quot;</span><span class="p">]</span>
+
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">out_logits</span>
+        <span class="n">topk_values</span><span class="p">,</span> <span class="n">topk_indexes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">prob</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">out_logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">topk</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># final scores</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">topk_values</span>
+        <span class="c1"># final indexes</span>
+        <span class="n">topk_boxes</span> <span class="o">=</span> <span class="p">(</span><span class="n">topk_indexes</span> <span class="o">//</span> <span class="n">out_logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># final labels</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">topk_indexes</span> <span class="o">%</span> <span class="n">out_logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">heading</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;heading_angle&quot;</span><span class="p">]</span>
+        <span class="n">size_3d</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;size_3d&quot;</span><span class="p">]</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;depth&quot;</span><span class="p">]</span>
+        <span class="c1"># decode boxes</span>
+        <span class="n">boxes_3d</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">out_bbox</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">topk_boxes</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>  <span class="c1"># b, q&#39;, 4</span>
+        <span class="c1"># heading angle decoding</span>
+        <span class="n">heading</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">topk_boxes</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">24</span><span class="p">))</span>
+        <span class="c1"># depth decoding</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">topk_boxes</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="c1"># 3d dims decoding</span>
+        <span class="n">size_3d</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">size_3d</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">topk_boxes</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">labels</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">size_3d</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="n">boxes_3d</span><span class="p">,</span> <span class="n">depth</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">Det3DBatchPredEntity</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_convert_pred_entity_to_compute_metric</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_threshold</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OV3DDetectionModel.get_dummy_input">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection_3d.html#otx.core.model.detection_3d.OV3DDetectionModel.get_dummy_input">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Det3DBatchDataEntity</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for 3d object detection model.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_generate_dummy_input</span><span class="p">((</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="n">preds</span><span class="p">:</span> <span class="n">Det3DBatchPredEntity</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Det3DBatchDataEntity</span><span class="p">,</span>
+    <span class="n">label_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">score_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts the prediction entity to the format required for computing metrics.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        preds (Det3DBatchPredEntity): Prediction entity.</span>
+<span class="sd">        inputs (Det3DBatchDataEntity): Input data entity.</span>
+<span class="sd">        label_names (list[str]): List of label names.</span>
+<span class="sd">        score_threshold (float): Score threshold for filtering the predictions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">boxes_3d</span>
+    <span class="c1"># bbox 2d decoding</span>
+    <span class="n">xywh_2d</span> <span class="o">=</span> <span class="n">box_convert</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">boxes</span><span class="p">,</span> <span class="s2">&quot;xyxy&quot;</span><span class="p">,</span> <span class="s2">&quot;cxcywh&quot;</span><span class="p">)</span>
+
+    <span class="n">xs3d</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ys3d</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">xs2d</span> <span class="o">=</span> <span class="n">xywh_2d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ys2d</span> <span class="o">=</span> <span class="n">xywh_2d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">batch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">xs2d</span> <span class="o">=</span> <span class="n">xs2d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">ys2d</span> <span class="o">=</span> <span class="n">ys2d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">xs3d</span> <span class="o">=</span> <span class="n">xs3d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">ys3d</span> <span class="o">=</span> <span class="n">ys3d</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">detections</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">labels</span><span class="p">,</span>
+                <span class="n">scores</span><span class="p">,</span>
+                <span class="n">xs2d</span><span class="p">,</span>
+                <span class="n">ys2d</span><span class="p">,</span>
+                <span class="n">preds</span><span class="o">.</span><span class="n">size_2d</span><span class="p">,</span>
+                <span class="n">preds</span><span class="o">.</span><span class="n">depth</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">preds</span><span class="o">.</span><span class="n">heading_angle</span><span class="p">,</span>
+                <span class="n">preds</span><span class="o">.</span><span class="n">size_3d</span><span class="p">,</span>
+                <span class="n">xs3d</span><span class="p">,</span>
+                <span class="n">ys3d</span><span class="p">,</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">preds</span><span class="o">.</span><span class="n">depth</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]),</span>
+            <span class="p">],</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">img_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">])</span>
+    <span class="n">calib_matrix</span> <span class="o">=</span> <span class="p">[</span><span class="n">p2</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">calib_matrix</span><span class="p">]</span>
+    <span class="n">result_list</span> <span class="o">=</span> <span class="n">OTX3DDetectionModel</span><span class="o">.</span><span class="n">decode_detections_for_kitti_format</span><span class="p">(</span>
+        <span class="n">detections</span><span class="p">,</span>
+        <span class="n">img_sizes</span><span class="p">,</span>
+        <span class="n">calib_matrix</span><span class="p">,</span>
+        <span class="n">class_names</span><span class="o">=</span><span class="n">label_names</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=</span><span class="n">score_threshold</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">result_list</span><span class="p">,</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">original_kitti_format</span><span class="p">,</span>  <span class="c1"># type: ignore[dict-item]</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">_generate_dummy_input</span><span class="p">(</span><span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Det3DBatchDataEntity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for 3d object detection model.&quot;&quot;&quot;</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="n">input_size</span><span class="p">)</span>
+    <span class="n">calib_matrix</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+    <span class="n">infos</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+        <span class="n">infos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ImageInfo</span><span class="p">(</span>
+                <span class="n">img_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                <span class="n">img_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Det3DBatchDataEntity</span><span class="p">(</span>
+        <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">images</span><span class="p">,</span>
+        <span class="n">infos</span><span class="p">,</span>
+        <span class="n">boxes</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">calib_matrix</span><span class="o">=</span><span class="n">calib_matrix</span><span class="p">,</span>
+        <span class="n">boxes_3d</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">size_2d</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">size_3d</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">depth</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">heading_angle</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">original_kitti_format</span><span class="o">=</span><span class="p">[],</span>
+    <span class="p">)</span>
 </pre></div>
 
             </article>

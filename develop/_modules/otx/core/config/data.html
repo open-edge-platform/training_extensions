@@ -284,6 +284,8 @@
 <span class="sd">            (`TransformLibType.MMCV`, `TransformLibType.MMPRETRAIN`, ...).</span>
 <span class="sd">        transform_lib_type (TransformLibType): Transform library type used by this subset.</span>
 <span class="sd">        num_workers (int): Number of workers for the dataloader of this subset.</span>
+<span class="sd">        sampler (SamplerConfig | None): Sampler configuration for the dataloader of this subset.</span>
+<span class="sd">        to_tv_image (bool): Whether to convert image to torch tensor.</span>
 <span class="sd">        input_size (int | tuple[int, int] | None) :</span>
 <span class="sd">            input size model expects. If $(input_size) exists in transforms, it will be replaced with this value.</span>
 

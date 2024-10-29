@@ -396,8 +396,8 @@
 <h1>Releases<a class="headerlink" href="#releases" title="Link to this heading">#</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<section id="v2-2-0-2024-09">
-<h2>v2.2.0 (2024.09)<a class="headerlink" href="#v2-2-0-2024-09" title="Link to this heading">#</a></h2>
+<section id="v2-2-0-2024-10">
+<h2>v2.2.0 (2024.10)<a class="headerlink" href="#v2-2-0-2024-10" title="Link to this heading">#</a></h2>
 <section id="new-features">
 <h3>New features<a class="headerlink" href="#new-features" title="Link to this heading">#</a></h3>
 <ul class="simple">
@@ -430,6 +430,9 @@
 <li><p>Include full image with anno in case there’s no tile in tile dataset</p></li>
 <li><p>Add type checker in converter for callable functions (optimizer, scheduler)</p></li>
 <li><p>Change sematic segmentation to consider bbox only annotations</p></li>
+<li><p>Relieve memory usage criteria on batch size 2 during adaptive batch size</p></li>
+<li><p>Remove background label from RT Info for segmentation task</p></li>
+<li><p>Prevent using too low confidence thresholds in detection</p></li>
 </ul>
 </section>
 <section id="bug-fixes">
@@ -441,6 +444,10 @@
 <li><p>Add missing tile recipes and various tile recipe changes</p></li>
 <li><p>Change categories mapping logic</p></li>
 <li><p>Fix config converter for tiling</p></li>
+<li><p>Fix num_trials calculation on dataset length less than num_class</p></li>
+<li><p>Fix out_features in HierarchicalCBAMClsHead</p></li>
+<li><p>Fix multilabel_accuracy of MixedHLabelAccuracy</p></li>
+<li><p>Fix wrong indices setting in HLabelInfo</p></li>
 </ul>
 </section>
 </section>
@@ -925,8 +932,8 @@ architecture and functional updates. Users should [install the new environment](
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#v2-2-0-2024-09">
-   v2.2.0 (2024.09)
+  <a class="reference internal nav-link" href="#v2-2-0-2024-10">
+   v2.2.0 (2024.10)
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">

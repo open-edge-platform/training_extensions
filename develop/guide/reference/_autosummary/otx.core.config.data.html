@@ -495,6 +495,28 @@ Otherwise, it takes a Python dictionary that fits the configuration style used i
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="otx.core.config.data.SubsetConfig.sampler">
+<span class="sig-name descname"><span class="pre">sampler</span></span><a class="headerlink" href="#otx.core.config.data.SubsetConfig.sampler" title="Link to this definition">#</a></dt>
+<dd><p>Sampler configuration for the dataloader of this subset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#otx.core.config.data.SamplerConfig" title="otx.core.config.data.SamplerConfig">SamplerConfig</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.core.config.data.SubsetConfig.to_tv_image">
+<span class="sig-name descname"><span class="pre">to_tv_image</span></span><a class="headerlink" href="#otx.core.config.data.SubsetConfig.to_tv_image" title="Link to this definition">#</a></dt>
+<dd><p>Whether to convert image to torch tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="otx.core.config.data.SubsetConfig.input_size">
 <span class="sig-name descname"><span class="pre">input_size</span></span><a class="headerlink" href="#otx.core.config.data.SubsetConfig.input_size" title="Link to this definition">#</a></dt>
 <dd><p>input size model expects. If $(input_size) exists in transforms, it will be replaced with this value.</p>
@@ -657,6 +679,24 @@ num_workers=2,</p>
      <code class="docutils literal notranslate">
       <span class="pre">
        SubsetConfig.num_workers
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.core.config.data.SubsetConfig.sampler">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SubsetConfig.sampler
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.core.config.data.SubsetConfig.to_tv_image">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SubsetConfig.to_tv_image
       </span>
      </code>
     </a>

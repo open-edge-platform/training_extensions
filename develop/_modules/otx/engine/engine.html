@@ -258,6 +258,7 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -626,18 +627,32 @@
         <span class="c1"># NOTE, trainer.test takes only lightning based checkpoint.</span>
         <span class="c1"># So, it can&#39;t take the OTX1.x checkpoint.</span>
         <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
+            <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
+                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
+                <span class="c1"># TODO (sungchul): revisit for better solution</span>
+                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
+
             <span class="n">model_cls</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
-            <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">model</span><span class="o">.</span><span class="n">hparams</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">label_info</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;To launch a test pipeline, the label information should be same &quot;</span>
-                <span class="s2">&quot;between the training and testing datasets. &quot;</span>
-                <span class="s2">&quot;Please check whether you use the same dataset: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;model.label_info=</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;datamodule.label_info=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;SEMANTIC_SEGMENTATION&quot;</span>
+                <span class="ow">and</span> <span class="s2">&quot;otx_background_lbl&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span>
+                <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="c1"># workaround for background label</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;To launch a test pipeline, the label information should be same &quot;</span>
+                    <span class="s2">&quot;between the training and testing datasets. &quot;</span>
+                    <span class="s2">&quot;Please check whether you use the same dataset: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;model.label_info=</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;datamodule.label_info=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_trainer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -716,8 +731,14 @@
             <span class="n">datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">update_ov_subset_pipeline</span><span class="p">(</span><span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
+            <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
+                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
+                <span class="c1"># TODO (sungchul): revisit for better solution</span>
+                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
+
             <span class="n">model_cls</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
-            <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">model</span><span class="o">.</span><span class="n">hparams</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">label_info</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -831,11 +852,17 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
+            <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
+                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
+                <span class="c1"># TODO (sungchul): revisit for better solution</span>
+                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
+
             <span class="n">model_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span>
                 <span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span>
                 <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
-                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">hparams</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
@@ -1005,8 +1032,14 @@
             <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">get_ov_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">),</span> <span class="n">label_info</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
+            <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
+                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
+                <span class="c1"># TODO (sungchul): revisit for better solution</span>
+                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
+
             <span class="n">model_cls</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
-            <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">model</span><span class="o">.</span><span class="n">hparams</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">label_info</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -1111,11 +1144,17 @@
                 <span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
+                <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
+                    <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
+                    <span class="c1"># TODO (sungchul): revisit for better solution</span>
+                    <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
+
                 <span class="n">model_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span>
                     <span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span>
                     <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
-                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">hparams</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">OVModel</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;To run benchmark on OV model, checkpoint must be specified.&quot;</span>
@@ -1149,7 +1188,7 @@
                 <span class="n">input_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_dummy_input</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">model_fwd</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)</span>
                 <span class="n">depth</span> <span class="o">=</span> <span class="mi">3</span> <span class="k">if</span> <span class="n">extended_stats</span> <span class="k">else</span> <span class="mi">0</span>
-                <span class="n">fwd_flops</span> <span class="o">=</span> <span class="n">measure_flops</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">model_fwd</span><span class="p">,</span> <span class="n">print_stats_depth</span><span class="o">=</span><span class="n">depth</span><span class="p">)</span>
+                <span class="n">fwd_flops</span> <span class="o">=</span> <span class="n">measure_flops</span><span class="p">(</span><span class="n">model_fwd</span><span class="p">,</span> <span class="n">print_stats_depth</span><span class="o">=</span><span class="n">depth</span><span class="p">)</span>
                 <span class="n">flops_str</span> <span class="o">=</span> <span class="n">convert_num_with_suffix</span><span class="p">(</span><span class="n">fwd_flops</span><span class="p">,</span> <span class="n">get_suffix_str</span><span class="p">(</span><span class="n">fwd_flops</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span>
                 <span class="n">final_stats</span><span class="p">[</span><span class="s2">&quot;complexity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flops_str</span> <span class="o">+</span> <span class="s2">&quot; MACs&quot;</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>

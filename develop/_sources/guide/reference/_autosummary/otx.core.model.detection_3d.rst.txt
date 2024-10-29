@@ -17,7 +17,9 @@ otx.core.model.detection\_3d
 
    .. autosummary::
    
+      MonoDETRModel
       OTX3DDetectionModel
+      OV3DDetectionModel
    
    
 

@@ -358,6 +358,32 @@
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting to ONNX is done.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OTXObjectDetection3DExporter.to_exportable_code">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.exporter.detection_3d.html#otx.core.exporter.detection_3d.OTXObjectDetection3DExporter.to_exportable_code">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_exportable_code</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">OTXModel</span><span class="p">,</span>
+        <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">base_model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;exported_model&quot;</span><span class="p">,</span>
+        <span class="n">precision</span><span class="p">:</span> <span class="n">OTXPrecisionType</span> <span class="o">=</span> <span class="n">OTXPrecisionType</span><span class="o">.</span><span class="n">FP32</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export to zip folder final OV IR model with runable demo.</span>
+
+<span class="sd">        NOT SUPPORTED FOR OD 3D. It will raise an error.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (OTXModel): OTXModel to be exported</span>
+<span class="sd">            output_dir (Path): path to the directory to store export artifacts</span>
+<span class="sd">            base_model_name (str, optional): exported model name</span>
+<span class="sd">            precision (OTXExportPrecisionType, optional): precision of the exported model&#39;s weights</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Path: path to the exported model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Exportable code option is not supported for Object Detection 3D.&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
