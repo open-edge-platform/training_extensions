@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4006>)
 - Fix MaskRCNN/RTMDet-Inst/MaskRCNNTV Explain Mode
   (<https://github.com/openvinotoolkit/training_extensions/pull/4053>)
+- Reduce tiling unittests resource consumption
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
 
 ## \[2.3.0\]
 
