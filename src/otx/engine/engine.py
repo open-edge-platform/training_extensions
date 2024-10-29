@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import copy
 import csv
 import inspect
 import logging
@@ -366,18 +367,32 @@ class Engine:
         # NOTE, trainer.test takes only lightning based checkpoint.
         # So, it can't take the OTX1.x checkpoint.
         if checkpoint is not None and not is_ir_ckpt:
+            kwargs_user_input: dict[str, Any] = {}
+            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
+                # to update user's custom infer_reference_info_root through cli for zero-shot learning
+                # TODO (sungchul): revisit for better solution
+                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
+
             model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **model.hparams)
+            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
 
         if model.label_info != self.datamodule.label_info:
-            msg = (
-                "To launch a test pipeline, the label information should be same "
-                "between the training and testing datasets. "
-                "Please check whether you use the same dataset: "
-                f"model.label_info={model.label_info}, "
-                f"datamodule.label_info={self.datamodule.label_info}"
-            )
-            raise ValueError(msg)
+            if (
+                self.task == "SEMANTIC_SEGMENTATION"
+                and "otx_background_lbl" in self.datamodule.label_info.label_names
+                and (len(self.datamodule.label_info.label_names) - len(model.label_info.label_names) == 1)
+            ):
+                # workaround for background label
+                model.label_info = copy.deepcopy(self.datamodule.label_info)
+            else:
+                msg = (
+                    "To launch a test pipeline, the label information should be same "
+                    "between the training and testing datasets. "
+                    "Please check whether you use the same dataset: "
+                    f"model.label_info={model.label_info}, "
+                    f"datamodule.label_info={self.datamodule.label_info}"
+                )
+                raise ValueError(msg)
 
         self._build_trainer(**kwargs)
 
@@ -453,8 +468,14 @@ class Engine:
             datamodule = self._auto_configurator.update_ov_subset_pipeline(datamodule=datamodule, subset="test")
 
         if checkpoint is not None and not is_ir_ckpt:
+            kwargs_user_input: dict[str, Any] = {}
+            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
+                # to update user's custom infer_reference_info_root through cli for zero-shot learning
+                # TODO (sungchul): revisit for better solution
+                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
+
             model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **model.hparams)
+            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -565,11 +586,17 @@ class Engine:
             )
 
         if not is_ir_ckpt:
+            kwargs_user_input: dict[str, Any] = {}
+            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
+                # to update user's custom infer_reference_info_root through cli for zero-shot learning
+                # TODO (sungchul): revisit for better solution
+                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
+
             model_cls = self.model.__class__
             self.model = model_cls.load_from_checkpoint(
                 checkpoint_path=checkpoint,
                 map_location="cpu",
-                **self.model.hparams,
+                **kwargs_user_input,
             )
             self.model.eval()
 
@@ -733,8 +760,14 @@ class Engine:
             model = self._auto_configurator.get_ov_model(model_name=str(checkpoint), label_info=datamodule.label_info)
 
         if checkpoint is not None and not is_ir_ckpt:
+            kwargs_user_input: dict[str, Any] = {}
+            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
+                # to update user's custom infer_reference_info_root through cli for zero-shot learning
+                # TODO (sungchul): revisit for better solution
+                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
+
             model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **model.hparams)
+            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -836,11 +869,17 @@ class Engine:
                 )
 
             if not is_ir_ckpt:
+                kwargs_user_input: dict[str, Any] = {}
+                if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
+                    # to update user's custom infer_reference_info_root through cli for zero-shot learning
+                    # TODO (sungchul): revisit for better solution
+                    kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
+
                 model_cls = self.model.__class__
                 self.model = model_cls.load_from_checkpoint(
                     checkpoint_path=checkpoint,
                     map_location="cpu",
-                    **self.model.hparams,
+                    **kwargs_user_input,
                 )
         elif isinstance(self.model, OVModel):
             msg = "To run benchmark on OV model, checkpoint must be specified."
@@ -874,7 +913,7 @@ class Engine:
                 input_batch = self.model.get_dummy_input(1)
                 model_fwd = lambda: self.model.forward(input_batch)
                 depth = 3 if extended_stats else 0
-                fwd_flops = measure_flops(self.model.model, model_fwd, print_stats_depth=depth)
+                fwd_flops = measure_flops(model_fwd, print_stats_depth=depth)
                 flops_str = convert_num_with_suffix(fwd_flops, get_suffix_str(fwd_flops * 10**3))
                 final_stats["complexity"] = flops_str + " MACs"
             except Exception as e:

@@ -70,60 +70,6 @@ class PositionEmbeddingSine(nn.Module):
         return torch.cat((pos_y, pos_x), dim=3).permute(0, 3, 1, 2)
 
 
-class PositionEmbeddingLearned(nn.Module):
-    """Absolute pos embedding, learned."""
-
-    def __init__(self, num_pos_feats: int = 256):
-        """Positional embedding."""
-        super().__init__()
-        self.row_embed = nn.Embedding(50, num_pos_feats)
-        self.col_embed = nn.Embedding(50, num_pos_feats)
-
-    def forward(self, tensor_list: NestedTensor) -> torch.Tensor:
-        """Forward pass of the PositionEmbeddingLearned module.
-
-        Args:
-            tensor_list (NestedTensor): Input tensor.
-
-        Returns:
-            torch.Tensor: Position embeddings.
-        """
-        x = tensor_list.tensors
-        h, w = x.shape[-2:]
-        i = torch.arange(w, device=x.device) / w * 49
-        j = torch.arange(h, device=x.device) / h * 49
-        x_emb = self.get_embed(i, self.col_embed)
-        y_emb = self.get_embed(j, self.row_embed)
-        return (
-            torch.cat(
-                [
-                    x_emb.unsqueeze(0).repeat(h, 1, 1),
-                    y_emb.unsqueeze(1).repeat(1, w, 1),
-                ],
-                dim=-1,
-            )
-            .permute(2, 0, 1)
-            .unsqueeze(0)
-            .repeat(x.shape[0], 1, 1, 1)
-        )
-
-    def get_embed(self, coord: torch.Tensor, embed: nn.Embedding) -> torch.Tensor:
-        """Get the embedding for the given coordinates.
-
-        Args:
-            coord (torch.Tensor): The coordinates.
-            embed (nn.Embedding): The embedding layer.
-
-        Returns:
-            torch.Tensor: The embedding for the coordinates.
-        """
-        floor_coord = coord.floor()
-        delta = (coord - floor_coord).unsqueeze(-1)
-        floor_coord = floor_coord.long()
-        ceil_coord = (floor_coord + 1).clamp(max=49)
-        return embed(floor_coord) * (1 - delta) + embed(ceil_coord) * delta
-
-
 def gen_sineembed_for_position(pos_tensor: torch.Tensor) -> torch.Tensor:
     """Generate sine embeddings for position tensor.
 
