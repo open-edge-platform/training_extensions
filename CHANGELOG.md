@@ -110,6 +110,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4067>)
 - Fix RTDETR recipes
   (<https://github.com/openvinotoolkit/training_extensions/pull/4079>)
+- Fix wrong model name in converter & template
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4082>)
 
 ## \[v2.1.0\]
 
