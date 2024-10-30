@@ -124,7 +124,7 @@ ci_tox = [
 ]
 
 ci_publish = [
-    "build==1.2.2",
+    "build==1.2.2.post1",
 ]
 
 ci_benchmark = [
