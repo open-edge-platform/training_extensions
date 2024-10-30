@@ -113,7 +113,7 @@ class BalancedSampler(Sampler):
                 index = torch.cat(
                     [
                         self.img_indices[cls_indices][
-                            torch.randint(0, len(self.img_indices[cls_indices]), (1,), generator=self.generator)
+                            torch.randint(0, len(self.img_indices[cls_indices]), (1,), generator=generator)
                         ]
                         for cls_indices in self.img_indices
                     ],
