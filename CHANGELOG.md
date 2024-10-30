@@ -22,6 +22,11 @@ All notable changes to this project will be documented in this file.
 - Reduce tiling unittests resource consumption
   (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
 
+### Bug fixes
+
+- Fix MaskDINO, MonoDETR recipes
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4080>)
+
 ## \[2.3.0\]
 
 ### New features
