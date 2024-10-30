@@ -29,6 +29,8 @@ hyper_parameters:
         default_value: 0
       num_iters:
         default_value: 90
+      auto_adapt_batch_size:
+        default_value: Safe
 
 # Training resources.
 max_nodes: 1
