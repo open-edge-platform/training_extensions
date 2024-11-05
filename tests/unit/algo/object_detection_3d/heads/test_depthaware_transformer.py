@@ -7,7 +7,6 @@ import pytest
 import torch
 from otx.algo.object_detection_3d.heads.depthaware_transformer import (
     DepthAwareTransformerBuilder,
-    gen_sineembed_for_position,
 )
 
 
