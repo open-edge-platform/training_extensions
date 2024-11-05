@@ -324,7 +324,7 @@ class OverlapPatchEmbed(BaseModule):
         return x, h, w
 
 
-class NNMSCAN(nn.Module):
+class MSCANModule(nn.Module):
     """SegNeXt Multi-Scale Convolutional Attention Network (MCSAN) backbone.
 
     This backbone is the implementation of `SegNeXt: Rethinking
@@ -413,7 +413,6 @@ class NNMSCAN(nn.Module):
 
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """Forward function."""
-        b = x.shape[0]
         outs = []
 
         for i in range(self.num_stages):
@@ -424,7 +423,7 @@ class NNMSCAN(nn.Module):
             for blk in block:
                 x = blk(x, h, w)
             x = norm(x)
-            x = x.reshape(b, h, w, -1).permute(0, 3, 1, 2).contiguous()
+            x = x.reshape(x.shape[0], h, w, -1).permute(0, 3, 1, 2).contiguous()
             outs.append(x)
 
         return outs
@@ -462,10 +461,10 @@ class MSCAN:
         },
     }
 
-    def __new__(cls, version: str) -> NNMSCAN:
+    def __new__(cls, model_name: str) -> MSCANModule:
         """Constructor for MSCAN backbone."""
-        if version not in cls.MSCAN_CFG:
-            msg = f"model type '{version}' is not supported"
+        if model_name not in cls.MSCAN_CFG:
+            msg = f"model type '{model_name}' is not supported"
             raise KeyError(msg)
 
-        return NNMSCAN(**cls.MSCAN_CFG[version])
+        return MSCANModule(**cls.MSCAN_CFG[model_name])

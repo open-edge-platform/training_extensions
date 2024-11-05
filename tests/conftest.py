@@ -351,7 +351,7 @@ def fxt_accelerator(request: pytest.FixtureRequest) -> str:
     return request.config.getoption("--device", "gpu")
 
 
-@pytest.fixture(params=set(OTXTaskType) - {OTXTaskType.DETECTION_SEMI_SL})
+@pytest.fixture(params=set(OTXTaskType) - {OTXTaskType.DETECTION_SEMI_SL, OTXTaskType.DIFFUSION})
 def fxt_task(request: pytest.FixtureRequest) -> OTXTaskType:
     return request.param
 
@@ -467,6 +467,7 @@ def fxt_hlabel_multilabel_info() -> HLabelInfo:
 @pytest.fixture()
 def fxt_xpu_support_task() -> list[OTXTaskType]:
     return [
+        OTXTaskType.ANOMALY,
         OTXTaskType.ANOMALY_CLASSIFICATION,
         OTXTaskType.ANOMALY_DETECTION,
         OTXTaskType.ANOMALY_SEGMENTATION,

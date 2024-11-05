@@ -93,6 +93,7 @@ class OTXDatasetFactory:
         }
 
         if task in (
+            OTXTaskType.ANOMALY,
             OTXTaskType.ANOMALY_CLASSIFICATION,
             OTXTaskType.ANOMALY_DETECTION,
             OTXTaskType.ANOMALY_SEGMENTATION,
@@ -154,5 +155,15 @@ class OTXDatasetFactory:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset
 
             return OTXKeypointDetectionDataset(**common_kwargs)
+
+        if task == OTXTaskType.DIFFUSION:
+            from .dataset.diffusion import OTXDiffusionDataset
+
+            return OTXDiffusionDataset(**common_kwargs)
+
+        if task == OTXTaskType.OBJECT_DETECTION_3D:
+            from .dataset.object_detection_3d import OTX3DObjectDetectionDataset
+
+            return OTX3DObjectDetectionDataset(**common_kwargs)
 
         raise NotImplementedError(task)

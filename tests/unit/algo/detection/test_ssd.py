@@ -11,12 +11,13 @@ from otx.algo.detection.ssd import SSD
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.types.export import TaskLevelExportParameters
+from torch._dynamo.testing import CompileCounter
 
 
 class TestSSD:
     @pytest.fixture()
     def fxt_model(self) -> SSD:
-        return SSD(label_info=3)
+        return SSD(model_name="ssd_mobilenetv2", label_info=3)
 
     @pytest.fixture()
     def fxt_checkpoint(self, fxt_model, fxt_data_module, tmpdir, monkeypatch: pytest.MonkeyPatch):
@@ -46,7 +47,7 @@ class TestSSD:
         assert loaded_model.model.bbox_head.anchor_generator.heights[0][0] == 50
 
     def test_load_state_dict_pre_hook(self, fxt_model) -> None:
-        prev_model = SSD(2)
+        prev_model = SSD(model_name="ssd_mobilenetv2", label_info=2)
         state_dict = prev_model.state_dict()
         fxt_model.model_classes = [1, 2, 3]
         fxt_model.ckpt_classes = [1, 2]
@@ -83,3 +84,22 @@ class TestSSD:
         fxt_model.explain_mode = True
         output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 4
+
+    @pytest.mark.parametrize(
+        "model",
+        [
+            SSD(model_name="ssd_mobilenetv2", label_info=3),
+        ],
+    )
+    def test_compiled_model(self, model):
+        # Set Compile Counter
+        torch._dynamo.reset()
+        cnt = CompileCounter()
+
+        # Set model compile setting
+        model.model = torch.compile(model.model, backend=cnt)
+
+        # Prepare inputs
+        x = torch.randn(1, 3, *model.input_size)
+        model.model(x)
+        assert cnt.frame_count == 1

@@ -18,7 +18,7 @@ def test_tile_transform_consistency(mocker):
     # Test that OV tiler and PyTorch tile transform are consistent
     rng = np.random.default_rng()
     rnd_tile_size = rng.integers(low=100, high=500)
-    rnd_tile_overlap = rng.random()
+    rnd_tile_overlap = min(rng.random(), 0.9)
     image_size = rng.integers(low=1000, high=5000)
     np_image = np.zeros((image_size, image_size, 3), dtype=np.uint8)
     dm_image = Image.from_numpy(np_image)

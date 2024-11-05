@@ -40,12 +40,15 @@ class TestPerfObjectDetection(PerfTestBase):
         Benchmark.Model(task="detection", name="rtdetr_18", category="other"),
         Benchmark.Model(task="detection", name="rtdetr_50", category="other"),
         Benchmark.Model(task="detection", name="rtdetr_101", category="other"),
+        Benchmark.Model(task="detection", name="yolov9_s", category="other"),
+        Benchmark.Model(task="detection", name="yolov9_m", category="other"),
+        Benchmark.Model(task="detection", name="yolov9_c", category="other"),
     ]
 
     DATASET_TEST_CASES = [
         Benchmark.Dataset(
-            name=f"pothole_small_{idx}",
-            path=Path("detection/pothole_small") / f"{idx}",
+            name=f"bdd_small_{idx}",
+            path=Path("detection/bdd_small") / f"{idx}",
             group="small",
             num_repeat=5,
             extra_overrides={
@@ -57,8 +60,8 @@ class TestPerfObjectDetection(PerfTestBase):
         for idx in (1, 2, 3)
     ] + [
         Benchmark.Dataset(
-            name="pothole_medium",
-            path=Path("detection/pothole_medium"),
+            name="bdd_medium",
+            path=Path("detection/bdd_medium"),
             group="medium",
             num_repeat=5,
             extra_overrides={
@@ -68,8 +71,8 @@ class TestPerfObjectDetection(PerfTestBase):
             },
         ),
         Benchmark.Dataset(
-            name="vitens_large",
-            path=Path("detection/vitens_large"),
+            name="bdd_large",
+            path=Path("detection/bdd_large"),
             group="large",
             num_repeat=5,
             extra_overrides={

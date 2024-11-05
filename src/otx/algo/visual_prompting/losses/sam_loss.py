@@ -49,11 +49,11 @@ class SAMCriterion(nn.Module):
             loss_dice += self.calculate_dice_loss(post_processed_pred_mask, flatten_gt_mask, num_masks)
             loss_focal += self.calculate_sigmoid_ce_focal_loss(post_processed_pred_mask, flatten_gt_mask, num_masks)
             batch_iou = self.calculate_iou(post_processed_pred_mask, flatten_gt_mask)
-            loss_iou += nn.functional.mse_loss(iou, batch_iou.unsqueeze(1), reduction="sum") / num_masks
+            loss_iou += nn.functional.mse_loss(iou, batch_iou, reduction="sum") / num_masks
 
         loss = 20.0 * loss_focal + loss_dice + loss_iou
 
-        return {"loss": loss, "loss_focal": loss_focal, "loss_dice": loss_dice, "loss_iou": loss_iou}
+        return {"total_loss": loss, "loss_focal": loss_focal, "loss_dice": loss_dice, "loss_iou": loss_iou}
 
     def calculate_dice_loss(self, inputs: Tensor, targets: Tensor, num_masks: int) -> Tensor:
         """Compute the DICE loss, similar to generalized IOU for masks.

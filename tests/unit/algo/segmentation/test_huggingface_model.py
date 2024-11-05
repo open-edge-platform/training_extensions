@@ -7,6 +7,7 @@ import pytest
 import torch
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
+from torch._dynamo.testing import CompileCounter
 
 SKIP_TRANSFORMERS_TEST = False
 try:
@@ -24,7 +25,7 @@ class TestHuggingFaceModelForSegmentation:
     @pytest.fixture()
     def fxt_seg_model(self):
         return HuggingFaceModelForSegmentation(
-            model_name_or_path="nvidia/segformer-b0-finetuned-ade-512-512",
+            model_name="nvidia/segformer-b0-finetuned-ade-512-512",
             label_info=2,
         )
 
@@ -86,9 +87,22 @@ class TestHuggingFaceModelForSegmentation:
     def test_set_input_size(self, mock_pretrainedconfig, mock_automodel):
         input_size = (1, 3, 1024, 1024)
         HuggingFaceModelForSegmentation(
-            model_name_or_path="facebook/deit-tiny-patch16-224",
+            model_name="facebook/deit-tiny-patch16-224",
             label_info=10,
             input_size=input_size,
         )
 
         assert mock_automodel.from_pretrained.call_args.kwargs["image_size"] == input_size[-1]
+
+    def test_compiled_model(self, fxt_seg_model):
+        # Set Compile Counter
+        torch._dynamo.reset()
+        cnt = CompileCounter()
+
+        # Set model compile setting
+        fxt_seg_model.model = torch.compile(fxt_seg_model.model, backend=cnt)
+
+        # Prepare inputs
+        x = torch.randn(1, 3, *fxt_seg_model.input_size)
+        fxt_seg_model.model(x)
+        assert cnt.frame_count == 1

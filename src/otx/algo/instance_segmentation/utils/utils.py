@@ -1,15 +1,16 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-# Copyright (c) OpenMMLab. All rights reserved.
-"""Implementation modified from mmdet.models.utils.misc.py.
-
-Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/utils/misc.py
-"""
+"""Instance Segmentation Utilities."""
 
 from __future__ import annotations
 
-import torch
+from dataclasses import dataclass
+from typing import Callable
 
+import torch
+from torch import Tensor
+
+from otx.algo.common.utils.utils import sample_point
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 
@@ -127,3 +128,66 @@ def empty_instances(
             results.masks = im_mask
         results_list.append(results)
     return results_list
+
+
+@dataclass
+class ShapeSpec:
+    """A simple structure that contains basic shape specification about a tensor.
+
+    It is often used as the auxiliary inputs/outputs of models,
+    to complement the lack of shape inference ability among pytorch modules.
+    """
+
+    channels: int = -1
+    stride: int = 1
+
+
+def sample_points_using_uncertainty(
+    logits: Tensor,
+    uncertainty_function: Callable,
+    num_points: int,
+    oversample_ratio: float,
+    importance_sample_ratio: float,
+) -> Tensor:
+    """This function is meant for sampling points in [0, 1] * [0, 1] coordinate space based on their uncertainty.
+
+    The uncertainty is calculated for each point using the passed `uncertainty function` that takes points logit
+    prediction as input.
+
+    Source: https://github.com/facebookresearch/Mask2Former/blob/main/mask2former
+
+    Args:
+        logits (Tensor): Logit predictions for P points.
+        uncertainty_function (Callable): A function that takes logit predictions for P points and
+            returns their uncertainties.
+        num_points (int): The number of points P to sample.
+        oversample_ratio (float): Oversampling parameter.
+        importance_sample_ratio (float): Ratio of points that are sampled via importance sampling.
+
+    Returns:
+        point_coordinates (Tensor): Coordinates for P sampled points.
+    """
+    num_boxes = logits.shape[0]
+    num_points_sampled = int(num_points * oversample_ratio)
+
+    # Get random point coordinates
+    point_coordinates = torch.rand(num_boxes, num_points_sampled, 2, device=logits.device)
+    # Get sampled prediction value for the point coordinates
+    point_logits = sample_point(logits, point_coordinates, align_corners=False)
+    # Calculate the uncertainties based on the sampled prediction values of the points
+    point_uncertainties = uncertainty_function(point_logits)
+
+    num_uncertain_points = int(importance_sample_ratio * num_points)
+    num_random_points = num_points - num_uncertain_points
+
+    idx = torch.topk(point_uncertainties[:, 0, :], k=num_uncertain_points, dim=1)[1]
+    shift = num_points_sampled * torch.arange(num_boxes, dtype=torch.long, device=logits.device)
+    idx += shift[:, None]
+    point_coordinates = point_coordinates.view(-1, 2)[idx.view(-1), :].view(num_boxes, num_uncertain_points, 2)
+
+    if num_random_points > 0:
+        point_coordinates = torch.cat(
+            [point_coordinates, torch.rand(num_boxes, num_random_points, 2, device=logits.device)],
+            dim=1,
+        )
+    return point_coordinates

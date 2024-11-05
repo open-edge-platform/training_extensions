@@ -47,11 +47,12 @@ def test_forward_explain(
     is_semisl = model_name.endswith("_semisl")
     task = recipe_split[-2] if not is_semisl else recipe_split[-3]
 
+    if "maskdino" in model_name:
+        # TODO(Eugene): maskdino not support yet.
+        pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
+
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
-
-    if "maskrcnn_r50_tv" in model_name:
-        pytest.skip("MaskRCNN R50 Torchvision model doesn't support explain.")
 
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
@@ -59,6 +60,9 @@ def test_forward_explain(
 
     if "rtdetr" in recipe:
         pytest.skip("rtdetr on detection is not supported yet.")
+
+    if "yolov9" in recipe:
+        pytest.skip("yolov9 on detection is not supported yet.")
 
     engine = Engine.from_config(
         config_path=recipe,
@@ -110,9 +114,9 @@ def test_predict_with_explain(
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
-    if any(keyword in recipe for keyword in ["maskdino", "maskrcnn_r50_tv"]):
-        # TODO(Eugene): inst-seg models not fully support yet.
-        pytest.skip(f"There's issue with inst-seg: {recipe}. Skip for now.")
+    if "maskdino" in model_name:
+        # TODO(Eugene): maskdino not support yet.
+        pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
 
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
@@ -124,6 +128,9 @@ def test_predict_with_explain(
 
     if "rtdetr" in recipe:
         pytest.skip("rtdetr on detection is not supported yet.")
+
+    if "yolov9" in recipe:
+        pytest.skip("yolov9 on detection is not supported yet.")
 
     tmp_path = tmp_path / f"otx_xai_{model_name}"
     engine = Engine.from_config(

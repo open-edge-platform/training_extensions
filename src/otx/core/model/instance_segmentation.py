@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import copy
 import logging as log
 import types
 from contextlib import contextmanager
@@ -15,9 +16,11 @@ from model_api.tilers import InstanceSegmentationTiler
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
+from torchvision.models.detection.image_list import ImageList
 
 from otx.algo.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
-from otx.algo.instance_segmentation.two_stage import TwoStageDetector
+from otx.algo.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
+from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
@@ -30,7 +33,7 @@ from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfoTypes
+from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
 from otx.core.utils.tile_merge import InstanceSegTileMerge
 
@@ -44,18 +47,31 @@ if TYPE_CHECKING:
 
 
 class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchPredEntity]):
-    """Base class for the Instance Segmentation models used in OTX."""
+    """Base class for the Instance Segmentation models used in OTX.
+
+    Args:
+        label_info (LabelInfoTypes): label information
+        input_size (tuple[int, int]): model input size
+        model_name (str): model name/version
+        optimizer (OptimizerCallable, optional): optimizer
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): scheduler
+        metric (MetricCallable, optional): metric
+        torch_compile (bool, optional): torch compile
+        tile_config (TileConfig, optional): tile configuration
+    """
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int],
+        input_size: tuple[int, int] = (1024, 1024),
+        model_name: str = "inst_segm_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
+        self.model_name = model_name
         super().__init__(
             label_info=label_info,
             input_size=input_size,
@@ -72,11 +88,15 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
 
     def _create_model(self) -> nn.Module:
         detector = self._build_model(num_classes=self.label_info.num_classes)
-        detector.init_weights()
+        if hasattr(detector, "init_weights"):
+            detector.init_weights()
         self.classification_layers = self.get_classification_layers("model.")
 
-        if self.load_from is not None:
+        if isinstance(self.load_from, dict):
+            load_checkpoint(detector, self.load_from[self.model_name], map_location="cpu")
+        elif self.load_from is not None:
             load_checkpoint(detector, self.load_from, map_location="cpu")
+
         return detector
 
     def _customize_inputs(self, entity: InstanceSegBatchDataEntity) -> dict[str, Any]:
@@ -257,12 +277,17 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
+        modified_label_info = copy.deepcopy(self.label_info)
+        # Instance segmentation needs to add empty label to satisfy MAPI wrapper requirements
+        modified_label_info.label_names.insert(0, "otx_empty_lbl")
+
         return super()._export_parameters.wrap(
             model_type="MaskRCNN",
             task_type="instance_segmentation",
             confidence_threshold=self.hparams.get("best_confidence_threshold", 0.05),
             iou_threshold=0.5,
             tile_config=self.tile_config if self.tile_config.enable_tiler else None,
+            label_info=modified_label_info,
         )
 
     def on_load_checkpoint(self, ckpt: dict[str, Any]) -> None:
@@ -381,12 +406,25 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
 
 
 class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
-    """OTX Instance Segmentation model which can attach a XAI (Explainable AI) branch."""
+    """OTX Instance Segmentation model which can attach a XAI (Explainable AI) branch.
+
+    Args:
+        label_info (LabelInfoTypes): label information
+        input_size (tuple[int, int]): model input size
+        model_name (str): model name/version
+        optimizer (OptimizerCallable, optional): optimizer
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): scheduler
+        metric (MetricCallable, optional): metric
+        torch_compile (bool, optional): torch compile
+        tile_config (TileConfig, optional): tile configuration
+
+    """
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int],
+        model_name: str,
+        input_size: tuple[int, int] = (1024, 1024),
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
@@ -396,6 +434,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
         super().__init__(
             label_info=label_info,
             input_size=input_size,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -436,7 +475,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, Tensor]:
         """Forward func of the BaseDetector instance, which located in is in ExplainableOTXInstanceSegModel().model."""
-        x = self.extract_feat(entity.images)
+        x = self.backbone(entity.images) if isinstance(self, MaskRCNN) else self.extract_feat(entity.images)
 
         feature_vector = self.feature_vector_fn(x)
         predictions = self.get_results_from_head(x, entity)
@@ -445,8 +484,8 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
             # Export case, consists of tensors
             # For OV task saliency map are generated on MAPI side
             saliency_map = torch.empty(1, dtype=torch.uint8)
-        elif isinstance(predictions, list) and isinstance(predictions[0], InstanceData):
-            # Predict case, consists of InstanceData
+        elif isinstance(predictions, list) and isinstance(predictions[0], (InstanceData, dict)):
+            # Predict case, consists of InstanceData or dict
             saliency_map = self.explain_fn(predictions)
         else:
             msg = f"Unexpected predictions type: {type(predictions)}"
@@ -462,7 +501,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
         self,
         x: tuple[Tensor],
         entity: InstanceSegBatchDataEntity,
-    ) -> tuple[Tensor] | list[InstanceData]:
+    ) -> tuple[Tensor, Tensor, Tensor] | list[InstanceData] | list[dict[str, Tensor]]:
         """Get the results from the head of the instance segmentation model.
 
         Args:
@@ -470,12 +509,28 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
             data_samples (OptSampleList | None): A list of data samples.
 
         Returns:
-            tuple[Tensor] | list[InstanceData]: The predicted results from the head of the model.
+            tuple[Tensor, Tensor, Tensor] | list[InstanceData]: The predicted results from the head of the model.
             Tuple for the Export case, list for the Predict case.
         """
-        from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInstTiny
+        from otx.algo.instance_segmentation.maskrcnn_tv import MaskRCNNTV
+        from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInst
 
-        if isinstance(self, RTMDetInstTiny):
+        if isinstance(self, MaskRCNNTV):
+            ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]
+            img_shapes = [img_info.img_shape for img_info in entity.imgs_info]
+            image_list = ImageList(entity.images, img_shapes)
+            proposals, _ = self.model.rpn(image_list, x)
+            detections, _ = self.model.roi_heads(
+                x,
+                proposals,
+                image_list.image_sizes,
+            )
+            scale_factors = [
+                img_meta.scale_factor if img_meta.scale_factor else (1.0, 1.0) for img_meta in entity.imgs_info
+            ]
+            return self.model.postprocess(detections, ori_shapes, scale_factors)
+
+        if isinstance(self, RTMDetInst):
             return self.model.bbox_head.predict(x, entity, rescale=False)
         rpn_results_list = self.model.rpn_head.predict(x, entity, rescale=False)
         return self.model.roi_head.predict(x, rpn_results_list, entity, rescale=True)
@@ -708,3 +763,17 @@ class OVInstanceSegmentationModel(
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._log_metrics(meter, key, **compute_kwargs)
+
+    def _create_label_info_from_ov_ir(self) -> LabelInfo:
+        ov_model = self.model.get_model()
+
+        if ov_model.has_rt_info(["model_info", "label_info"]):
+            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
+            ir_label_info = LabelInfo.from_json(serialized)
+            # workaround to hide extra otx_empty_lbl
+            if ir_label_info.label_names[0] == "otx_empty_lbl":
+                ir_label_info.label_names.pop(0)
+                ir_label_info.label_groups[0].pop(0)
+            return ir_label_info
+
+        return super()._create_label_info_from_ov_ir()
