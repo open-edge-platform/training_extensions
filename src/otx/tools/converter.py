@@ -184,13 +184,9 @@ TEMPLATE_ID_DICT = {
         "model_name": "stfpm",
     },
     # KEYPOINT_DETECTION
-    "Custom_Keypoint_Detection_Rtmpose_T": {
+    "Keypoint_Detection_RTMPose_Tiny": {
         "task": OTXTaskType.KEYPOINT_DETECTION,
         "model_name": "rtmpose_tiny",
-    },
-    "Custom_Keypoint_Detection_Rtmpose_T_Single_Obj": {
-        "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny_single_obj",
     },
 }
 
