@@ -2,40 +2,67 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[Unreleased\]
+
+### New features
+
+- Turn on/off classification augmentations
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4039>)
+- Turn on/off detection and instance segmentation augmentations
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4066>)
+
+### Enhancements
+
+- Update visual prompting pipeline for multi-label zero-shot learning support
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3993>)
+- Update to work torch compile in detection
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4003>)
+- Refactor MaskDINO
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4006>)
+- Fix MaskRCNN/RTMDet-Inst/MaskRCNNTV Explain Mode
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4053>)
+- Reduce tiling unittests resource consumption
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
+
+### Bug fixes
+
+- Fix MaskDINO, MonoDETR recipes
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4080>)
+
 ## \[2.3.0\]
 
 ### New features
 
 - Add YOLOv9 model for Object Detection
-  (https://github.com/openvinotoolkit/training_extensions/pull/3917, https://github.com/openvinotoolkit/training_extensions/pull/4026)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3917>, <https://github.com/openvinotoolkit/training_extensions/pull/4026>)
 - Add OV inference for keypoint detection
-  (https://github.com/openvinotoolkit/training_extensions/pull/3970)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3970>)
 - Add tiling for semantic segmentation
-  (https://github.com/openvinotoolkit/training_extensions/pull/3954)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3954>)
 - Add 3D Object Detection task with MonoDETR model
-  (https://github.com/openvinotoolkit/training_extensions/pull/3979)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3979>)
 - Add OpenVINO inference for 3D Object Detection task
-  (https://github.com/openvinotoolkit/training_extensions/pull/4017)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
 
 ### Enhancements
 
 - Upgrade OV, MAPI, and NNCF dependencies
-  (https://github.com/openvinotoolkit/training_extensions/pull/3967)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3967>)
 - Instance Segmentation Model refactoring
-  (https://github.com/openvinotoolkit/training_extensions/pull/3865)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3865>)
 - Bump torch and lightning to 2.4.0 versions
-  (https://github.com/openvinotoolkit/training_extensions/pull/3843)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3843>)
 - Add mAP metric to evaluate multilabel classification
-  (https://github.com/openvinotoolkit/training_extensions/pull/3985)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3985>)
 
 ### Bug fixes
 
 - Fix a wrong HPO log
-  (https://github.com/openvinotoolkit/training_extensions/pull/3972)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3972>)
 - Update model name in rotated detection recipes
-  (https://github.com/openvinotoolkit/training_extensions/pull/4028)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4028>)
 - Fix SupCon flag
-  (https://github.com/openvinotoolkit/training_extensions/pull/4076)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4076>)
 
 ## \[2.2.0\]
 
@@ -65,6 +92,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3810>)
 - Support configurable input size
   (<https://github.com/openvinotoolkit/training_extensions/pull/3788>)
+- Add diffusion task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3875>)
 
 ### Enhancements
 

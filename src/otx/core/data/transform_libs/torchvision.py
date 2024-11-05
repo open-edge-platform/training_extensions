@@ -1377,7 +1377,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         inputs.image = img
         inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
-        bboxes = inputs.bboxes
+        bboxes = getattr(inputs, "bboxes", [])
         num_bboxes = len(bboxes)
         if num_bboxes:
             bboxes = project_bboxes(bboxes, warp_matrix)
@@ -2050,8 +2050,7 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
         img_hsv[..., 0] = (img_hsv[..., 0] + hsv_gains[0]) % 180
         img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_gains[1], 0, 255)
         img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_gains[2], 0, 255)
-        cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR, dst=img)
-
+        img = cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR)
         inputs.image = img
         return self.convert(inputs)
 
@@ -3800,6 +3799,8 @@ class TorchVisionTransformLib:
         transforms = []
         for cfg_transform in config.transforms:
             if isinstance(cfg_transform, (dict, DictConfig)):
+                if not cfg_transform.get("enable", True):  # Optional "enable: false" flag would remove the transform
+                    continue
                 cls._configure_input_size(cfg_transform, input_size)
             transform = cls._dispatch_transform(cfg_transform)
             transforms.append(transform)

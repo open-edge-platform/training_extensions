@@ -463,9 +463,11 @@ class TestOTXTiling:
 
     def test_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
-        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b")
+        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", input_size=(256, 256))
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
+        data_config["mem_cache_size"] = "0"
+        data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.INSTANCE_SEGMENTATION,
             **data_config,
@@ -480,9 +482,11 @@ class TestOTXTiling:
 
     def test_explain_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
-        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b")
+        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", input_size=(256, 256))
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True, enable_adaptive_tiling=False)
+        data_config["mem_cache_size"] = "0"
+        data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.INSTANCE_SEGMENTATION,
             **data_config,
