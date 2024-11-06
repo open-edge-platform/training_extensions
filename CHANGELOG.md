@@ -35,7 +35,6 @@ All notable changes to this project will be documented in this file.
 - Add Keypoint Detection legacy template
   (<https://github.com/openvinotoolkit/training_extensions/pull/4094>)
 
-
 ### Enhancements
 
 - Reimplement of ViT Architecture following TIMM
