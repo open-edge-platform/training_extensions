@@ -30,6 +30,11 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3810>)
 - Support configurable input size
   (<https://github.com/openvinotoolkit/training_extensions/pull/3788>)
+- Revert the old workaround for detection confidence threshold
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4096>)
+- Add Keypoint Detection legacy template
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4094>)
+
 
 ### Enhancements
 
