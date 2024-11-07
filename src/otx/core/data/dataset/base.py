@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Callable, Generic, Iterator, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterator, List, Union
 
 import cv2
 import numpy as np
@@ -92,6 +92,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         self.image_color_channel = image_color_channel
         self.stack_images = stack_images
         self.to_tv_image = to_tv_image
+
         if self.dm_subset.categories():
             self.label_info = LabelInfo.from_dm_label_groups(self.dm_subset.categories()[AnnotationType.label])
         else:
@@ -141,7 +142,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
-    def _get_img_data_and_shape(self, img: Image) -> tuple[np.ndarray, tuple[int, int]]:
+    def _get_img_data_and_shape(self, img: Image, roi: dict[str, Any] | None) -> tuple[np.ndarray, tuple[int, int]]:
         key = img.path if isinstance(img, ImageFromFile) else id(img)
 
         if (img_data := self.mem_cache_handler.get(key=key)[0]) is not None:
@@ -157,6 +158,18 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         if img_data is None:
             msg = "Cannot get image data"
             raise RuntimeError(msg)
+
+        if roi:
+            # extract ROI from image
+            shape = roi["shape"]
+            h, w = img_data.shape[:2]
+            x1, y1, x2, y2 = (
+                np.trunc(shape["x1"] * w),
+                np.trunc(shape["y1"] * h),
+                np.ceil(shape["x2"] * w),
+                np.ceil(shape["y2"] * h),
+            )
+            img_data = img_data[int(y1) : int(y2), int(x1) : int(x2)]
 
         img_data = self._cache_img(key=key, img_data=img_data.astype(np.uint8))
 
