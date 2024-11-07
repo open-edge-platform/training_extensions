@@ -33,7 +33,7 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
         item = self.dm_subset[index]
         img = item.media_as(Image)
         roi = item.attributes.get("roi", None)
-        img_data, img_shape = self._get_img_data_and_shape(img, roi)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img, roi)
         if roi:
             # extract labels from ROI
             labels_ids = [
@@ -78,7 +78,7 @@ class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         label_anns = []
         for ann in item.annotations:
@@ -195,7 +195,7 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         label_anns = []
         for ann in item.annotations:

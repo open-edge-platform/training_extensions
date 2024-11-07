@@ -40,7 +40,7 @@ class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 

@@ -142,11 +142,14 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
-    def _get_img_data_and_shape(self, img: Image, roi: dict[str, Any] | None) -> tuple[np.ndarray, tuple[int, int]]:
+    def _get_img_data_and_shape(self, img: Image, roi: dict[str, Any] | None = None) -> tuple[np.ndarray, tuple[int, int]]:
         key = img.path if isinstance(img, ImageFromFile) else id(img)
+        roi_meta = None
 
-        if (img_data := self.mem_cache_handler.get(key=key)[0]) is not None:
-            return img_data, img_data.shape[:2]
+        # check if the image is already in the cache
+        img_data, roi_meta = self.mem_cache_handler.get(key=key)
+        if img_data is not None:
+            return img_data, img_data.shape[:2], roi_meta
 
         with image_decode_context():
             img_data = (
@@ -164,18 +167,19 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
             shape = roi["shape"]
             h, w = img_data.shape[:2]
             x1, y1, x2, y2 = (
-                np.trunc(shape["x1"] * w),
-                np.trunc(shape["y1"] * h),
-                np.ceil(shape["x2"] * w),
-                np.ceil(shape["y2"] * h),
+                int(np.trunc(shape["x1"] * w)),
+                int(np.trunc(shape["y1"] * h)),
+                int(np.ceil(shape["x2"] * w)),
+                int(np.ceil(shape["y2"] * h)),
             )
-            img_data = img_data[int(y1) : int(y2), int(x1) : int(x2)]
+            img_data = img_data[y1 : y2, x1 : x2]
+            roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
 
-        img_data = self._cache_img(key=key, img_data=img_data.astype(np.uint8))
+        img_data = self._cache_img(key=key, img_data=img_data.astype(np.uint8), meta=roi_meta)
 
-        return img_data, img_data.shape[:2]
+        return img_data, img_data.shape[:2], roi_meta
 
-    def _cache_img(self, key: str | int, img_data: np.ndarray) -> np.ndarray:
+    def _cache_img(self, key: str | int, img_data: np.ndarray, meta: dict[str, Any] | None = None) -> np.ndarray:
         """Cache an image after resizing.
 
         If there is available space in the memory pool, the input image is cached.
@@ -195,14 +199,14 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
             return img_data
 
         if self.mem_cache_img_max_size is None:
-            self.mem_cache_handler.put(key=key, data=img_data, meta=None)
+            self.mem_cache_handler.put(key=key, data=img_data, meta=meta)
             return img_data
 
         height, width = img_data.shape[:2]
         max_height, max_width = self.mem_cache_img_max_size
 
         if height <= max_height and width <= max_width:
-            self.mem_cache_handler.put(key=key, data=img_data, meta=None)
+            self.mem_cache_handler.put(key=key, data=img_data, meta=meta)
             return img_data
 
         # Preserve the image size ratio and fit to max_height or max_width
@@ -219,7 +223,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         self.mem_cache_handler.put(
             key=key,
             data=resized_img,
-            meta=None,
+            meta=meta,
         )
         return resized_img
 
