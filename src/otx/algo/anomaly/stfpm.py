@@ -46,8 +46,8 @@ class Stfpm(AnomalyMixin, AnomalibStfpm, OTXAnomaly):
         input_size: tuple[int, int] = (256, 256),
         **kwargs,
     ) -> None:
-        self.task = task
         self.input_size = input_size
+        self.task = OTXTaskType(task)
         super().__init__(
             backbone=backbone,
             layers=layers,

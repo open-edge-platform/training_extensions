@@ -14,6 +14,7 @@ from anomalib.callbacks.post_processor import _PostProcessorCallback
 from anomalib.callbacks.thresholding import _ThresholdCallback
 from torch import nn
 
+from otx import __version__
 from otx.core.data.entity.anomaly import (
     AnomalyClassificationBatchPrediction,
     AnomalyClassificationDataBatch,
@@ -29,6 +30,7 @@ from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
+from otx.core.utils.utils import remove_state_dict_prefix
 
 if TYPE_CHECKING:
     import types
@@ -89,20 +91,6 @@ class OTXAnomaly(OTXModel):
         """
         ignore = ["task"] if ignore is None else [*ignore, "task"]
         return super().save_hyperparameters(*args, ignore=ignore, frame=frame, logger=logger)
-
-    def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
-        """Callback on saving checkpoint."""
-        super().on_save_checkpoint(checkpoint)  # type: ignore[misc]
-
-        attrs = ["_input_size", "image_threshold", "pixel_threshold"]
-        checkpoint["anomaly"] = {key: getattr(self, key, None) for key in attrs}
-
-    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
-        """Callback on loading checkpoint."""
-        super().on_load_checkpoint(checkpoint)  # type: ignore[misc]
-        if anomaly_attrs := checkpoint.get("anomaly"):
-            for key, value in anomaly_attrs.items():
-                setattr(self, key, value)
 
     @property
     def task(self) -> AnomalibTaskType:
@@ -434,8 +422,32 @@ class AnomalyMixin:
         Returns:
             tuple[int, int]: The input size of the model as a tuple of (height, width).
         """
-        return self._input_size
+        return self._input_shape  # since _input_size is re-defined in the base class.
 
     @input_size.setter
     def input_size(self, value: tuple[int, int]) -> None:
-        self._input_size = value
+        self._input_shape = value
+
+    def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Callback on saving checkpoint."""
+        if self.torch_compile:  # type: ignore[attr-defined]
+            # If torch_compile is True, a prefix key named _orig_mod. is added to the state_dict. Remove this.
+            compiled_state_dict = checkpoint["state_dict"]
+            checkpoint["state_dict"] = remove_state_dict_prefix(compiled_state_dict, "_orig_mod.")
+        # calls Anomalib's on_save_checkpoint
+        super().on_save_checkpoint(checkpoint)  # type: ignore[misc]
+
+        checkpoint["label_info"] = self.label_info  # type: ignore[attr-defined]
+        checkpoint["otx_version"] = __version__
+        checkpoint["tile_config"] = self.tile_config  # type: ignore[attr-defined]
+
+        attrs = ["_input_shape", "image_threshold", "pixel_threshold"]
+        checkpoint["anomaly"] = {key: getattr(self, key, None) for key in attrs}
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Callback on loading checkpoint."""
+        # calls Anomalib's on_load_checkpoint
+        super().on_load_checkpoint(checkpoint)  # type: ignore[misc]
+        if anomaly_attrs := checkpoint.get("anomaly"):
+            for key, value in anomaly_attrs.items():
+                setattr(self, key, value)
