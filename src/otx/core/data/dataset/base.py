@@ -142,7 +142,11 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
-    def _get_img_data_and_shape(self, img: Image, roi: dict[str, Any] | None) -> tuple[np.ndarray, tuple[int, int]]:
+    def _get_img_data_and_shape(
+        self,
+        img: Image,
+        roi: dict[str, Any] | None = None,
+    ) -> tuple[np.ndarray, tuple[int, int]]:
         key = img.path if isinstance(img, ImageFromFile) else id(img)
 
         if (img_data := self.mem_cache_handler.get(key=key)[0]) is not None:
