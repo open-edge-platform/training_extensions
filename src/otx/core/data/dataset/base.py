@@ -146,7 +146,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         self,
         img: Image,
         roi: dict[str, Any] | None = None,
-    ) -> tuple[np.ndarray, tuple[int, int]]:
+    ) -> tuple[np.ndarray, tuple[int, int], dict[str, Any] | None]:
         key = img.path if isinstance(img, ImageFromFile) else id(img)
         roi_meta = None
 
@@ -176,7 +176,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
                 int(np.ceil(shape["x2"] * w)),
                 int(np.ceil(shape["y2"] * h)),
             )
-            img_data = img_data[y1 : y2, x1 : x2]
+            img_data = img_data[y1:y2, x1:x2]
             roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
 
         img_data = self._cache_img(key=key, img_data=img_data.astype(np.uint8), meta=roi_meta)
