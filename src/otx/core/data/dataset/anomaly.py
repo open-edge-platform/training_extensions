@@ -79,7 +79,7 @@ class AnomalyDataset(OTXDataset):
         datumaro_item = self.dm_subset[index]
         img = datumaro_item.media_as(Image)
         # returns image in RGB format if self.image_color_channel is RGB
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         label = self._get_label(datumaro_item)
 
