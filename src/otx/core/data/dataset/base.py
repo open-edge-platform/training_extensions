@@ -189,9 +189,10 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
                 int(np.clip(np.ceil(shape["x2"] * w), 0, w)),
                 int(np.clip(np.ceil(shape["y2"] * h), 0, h)),
             )
-            if x1 >= x2 or y1 >= y2:
-                msg = f"Invalid ROI coordinates: {x1}, {y1}, {x2}, {y2}"
+            if (x2 - x1) * (y2 - y1) <= 0:
+                msg = f"ROI has zero or negative area. ROI coordinates: {x1}, {y1}, {x2}, {y2}"
                 raise ValueError(msg)
+
             img_data = img_data[y1:y2, x1:x2]
             roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
 
