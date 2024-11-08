@@ -180,6 +180,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4082>)
 - Fix RTMDet Inst Explain Mode
   (<https://github.com/openvinotoolkit/training_extensions/pull/4083>)
+- Fix RTDETR Explain Mode
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4106>)
 
 ## \[v2.1.0\]
 

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import numpy as np
@@ -95,15 +96,21 @@ class DETR(BaseModule):
         explain_mode: bool = False,
     ) -> dict[str, Any] | tuple[list[Any], list[Any], list[Any]]:
         """Exports the model."""
-        if explain_mode:
-            msg = "Explain mode is not supported for DETR models yet."
-            raise NotImplementedError(msg)
-
-        return self.postprocess(
+        results = self.postprocess(
             self._forward_features(batch_inputs),
             [meta["img_shape"] for meta in batch_img_metas],
             deploy_mode=True,
         )
+
+        if explain_mode:
+            # TODO(Eugene): Implement explain mode for DETR model.
+            warnings.warn("Explain mode is not supported for DETR model. Return dummy values.", stacklevel=2)
+            xai_output = {
+                "feature_vector": torch.zeros(1, 1),
+                "saliency_map": torch.zeros(1),
+            }
+            results.update(xai_output)  # type: ignore[union-attr]
+        return results
 
     def postprocess(
         self,
