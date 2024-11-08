@@ -147,6 +147,19 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         img: Image,
         roi: dict[str, Any] | None = None,
     ) -> tuple[np.ndarray, tuple[int, int], dict[str, Any] | None]:
+        """Get image data and shape.
+
+        This method is used to get image data and shape from Datumaro image object.
+        If ROI is provided, the image data is extracted from the ROI.
+
+        Args:
+            img (Image): Image object from Datumaro.
+            roi (dict[str, Any] | None, Optional): Region of interest.
+                Represented by dict with coordinates and some meta information.
+
+        Returns:
+                The image data, shape, and ROI meta information
+        """
         key = img.path if isinstance(img, ImageFromFile) else id(img)
         roi_meta = None
 
@@ -171,11 +184,14 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
             shape = roi["shape"]
             h, w = img_data.shape[:2]
             x1, y1, x2, y2 = (
-                int(np.trunc(shape["x1"] * w)),
-                int(np.trunc(shape["y1"] * h)),
-                int(np.ceil(shape["x2"] * w)),
-                int(np.ceil(shape["y2"] * h)),
+                int(np.clip(np.trunc(shape["x1"] * w), 0, w)),
+                int(np.clip(np.trunc(shape["y1"] * h), 0, h)),
+                int(np.clip(np.ceil(shape["x2"] * w), 0, w)),
+                int(np.clip(np.ceil(shape["y2"] * h), 0, h)),
             )
+            if x1 >= x2 or y1 >= y2:
+                msg = f"Invalid ROI coordinates: {x1}, {y1}, {x2}, {y2}"
+                raise ValueError(msg)
             img_data = img_data[y1:y2, x1:x2]
             roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
 
