@@ -205,9 +205,9 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
         roi = item.attributes.get("roi", None)
         img_data, img_shape, roi_meta = self._get_img_data_and_shape(img, roi)
         if item.annotations:
-            ori_shape = roi_meta["orig_image_shape"] if roi else img_shape
+            ori_shape = roi_meta["orig_image_shape"] if roi_meta else img_shape
             extracted_mask = _extract_class_mask(item=item, img_shape=ori_shape, ignore_index=self.ignore_index)
-            if roi:
+            if roi_meta:
                 extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
 
             masks = tv_tensors.Mask(extracted_mask[None])

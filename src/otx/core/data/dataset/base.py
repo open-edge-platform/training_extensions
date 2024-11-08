@@ -146,7 +146,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         self,
         img: Image,
         roi: dict[str, Any] | None = None,
-    ) -> tuple[np.ndarray, tuple[int, int]]:
+    ) -> tuple[np.ndarray, tuple[int, int], dict[str, Any] | None]:
         key = img.path if isinstance(img, ImageFromFile) else id(img)
         roi_meta = None
 
