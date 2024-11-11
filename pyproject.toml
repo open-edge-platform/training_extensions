@@ -32,7 +32,7 @@ dependencies = [
     "jsonargparse==4.30.0",
     "psutil==6.1.0", # Mem cache needs system checks
     "ftfy==6.3.1",
-    "regex==2024.9.11",
+    "regex==2024.11.6",
     "importlib_resources==6.4.5",
     "docstring_parser==0.16", # CLI help-formatter
     "rich_argparse==1.6.0", # CLI help-formatter
