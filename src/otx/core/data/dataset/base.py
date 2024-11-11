@@ -162,7 +162,6 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         """
         key = img.path if isinstance(img, ImageFromFile) else id(img)
         roi_meta = None
-
         # check if the image is already in the cache
         img_data, roi_meta = self.mem_cache_handler.get(key=key)
         if img_data is not None:
@@ -179,7 +178,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
             msg = "Cannot get image data"
             raise RuntimeError(msg)
 
-        if roi:
+        if roi and isinstance(roi, dict):
             # extract ROI from image
             shape = roi["shape"]
             h, w = img_data.shape[:2]
