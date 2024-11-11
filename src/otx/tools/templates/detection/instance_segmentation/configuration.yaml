@@ -589,7 +589,7 @@ tiling_parameters:
       rules: []
       type: UI_RULES
     value: true
-    visible_in_ui: true
+    visible_in_ui: false
     warning: The tile classifier prioritizes inference speed over training speed, it requires more training in order to achieve its optimized performance.
 
   enable_adaptive_params:
