@@ -102,13 +102,8 @@ class TestMaskRCNN:
 
         assert model_path.exists()
 
-        # TODO(Eugene): ONNX not fully support yet due to ExperimentalDetectronROIFeatureExtractor
-        # session = ort.InferenceSession(
-        #     model_path,
-        # )
-
-        # onnx_shapes = {}
-        # for onnx_input in session.get_inputs():
-        #     onnx_shapes[onnx_input.name] = onnx_input.shape
-
-        # assert tuple(onnx_shapes["image"][2:]) == model.input_size, "Input shape mismatch"
+        # TODO(Eugene): ONNX issue with ExperimentalDetectronROIFeatureExtractor
+        try:
+            ort.InferenceSession(model_path)
+        except Exception as e:
+            pytest.skip(f"ExperimentalDetectronROIFeatureExtractor is not supported: {e}")
