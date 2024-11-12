@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of OTX RTMDetInst architecture."""
 
+import onnxruntime as ort
 import torch
 from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInst
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
+from otx.core.types.export import OTXExportFormatType
 
 
 class TestRTMDetInst:
@@ -38,3 +40,23 @@ class TestRTMDetInst:
         # model.explain_mode = True  # noqa: ERA001
         # output = model.forward_for_tracing(torch.randn(1, 3, 32, 32))  # noqa: ERA001
         # assert len(output) == 5  # noqa: ERA001
+
+    def test_onnx_export(self, tmp_path):
+        model = RTMDetInst(3, "rtmdet_inst_tiny")
+        model_path = model.export(
+            output_dir=tmp_path,
+            base_name="model",
+            export_format=OTXExportFormatType.ONNX,
+        )
+
+        assert model_path.exists()
+
+        session = ort.InferenceSession(
+            model_path,
+        )
+
+        onnx_shapes = {}
+        for onnx_input in session.get_inputs():
+            onnx_shapes[onnx_input.name] = onnx_input.shape
+
+        assert tuple(onnx_shapes["image"][2:]) == model.input_size, "Input shape mismatch"

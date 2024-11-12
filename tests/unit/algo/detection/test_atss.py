@@ -2,13 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of OTX SSD architecture."""
 
+import onnxruntime as ort
 import pytest
 import torch
 from otx.algo.detection.atss import ATSS
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXModelExporter
-from otx.core.types.export import TaskLevelExportParameters
+from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
 from torch._dynamo.testing import CompileCounter
 
 
@@ -66,6 +67,32 @@ class TestATSS:
         model.explain_mode = True
         output = model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 4
+
+    @pytest.mark.parametrize(
+        "model",
+        [
+            ATSS(model_name="atss_mobilenetv2", label_info=3),
+            ATSS(model_name="atss_resnext101", label_info=3),
+        ],
+    )
+    def test_onnx_export(self, model, tmp_path):
+        model_path = model.export(
+            output_dir=tmp_path,
+            base_name="model",
+            export_format=OTXExportFormatType.ONNX,
+        )
+
+        assert model_path.exists()
+
+        session = ort.InferenceSession(
+            model_path,
+        )
+
+        onnx_shapes = {}
+        for onnx_input in session.get_inputs():
+            onnx_shapes[onnx_input.name] = onnx_input.shape
+
+        assert tuple(onnx_shapes["image"][2:]) == model.input_size, "Input shape mismatch"
 
     @pytest.mark.parametrize(
         "model",
