@@ -159,6 +159,10 @@ def test_otx_e2e(
             ExportCase2Test("OPENVINO", False, "exported_model_decoder.xml"),
         ]  # TODO (sungchul): EXPORTABLE_CODE will be supported
 
+    if task == "object_detection_3d":
+        # exportable code and demo package are not supported for OD 3D
+        fxt_export_list.pop(-1)
+
     overrides = fxt_cli_override_command_per_task[task]
 
     tmp_path_test = tmp_path / f"otx_test_{model_name}"
@@ -190,14 +194,6 @@ def test_otx_e2e(
         )
         assert latest_dir.exists()
         assert (latest_dir / export_case.expected_output).exists()
-
-    if "keypoint" in recipe:
-        print("Inference and explain are not supported for keypoint detection")
-        return
-
-    if "monodetr3d" in recipe:
-        print("Inference and explain are not supported for object detection 3d")
-        return
 
     # 4) infer of the exported models
     ov_output_dir = tmp_path_test / "outputs" / "OPENVINO"
@@ -250,8 +246,8 @@ def test_otx_e2e(
     # 5) otx export with XAI
     if "instance_segmentation/rtmdet_inst_tiny" in recipe:
         return
-    if ("_cls" not in task) and (task not in ["detection", "instance_segmentation"]):
-        return  # Supported only for classification, detection and instance segmentation task.
+    if ("_cls" not in task) and (task not in ["detection", "instance_segmentation", "semantic_segmentation"]):
+        return  # Supported only for classification, detection and segmentation tasks.
 
     if "dino" in model_name:
         return  # DINO is not supported.
@@ -261,8 +257,13 @@ def test_otx_e2e(
 
     if "yolov9" in model_name:
         return  # RT-DETR currently is not supported.
+
     if "keypoint" in recipe:
         print("Explain is not supported for keypoint detection")
+        return
+
+    if "monodetr3d" in recipe:
+        print("Explain is not supported for object detection 3d")
         return
 
     tmp_path_test = tmp_path / f"otx_export_xai_{model_name}"

@@ -65,7 +65,7 @@ class BalancedSampler(Sampler):
         self.img_indices = {k: torch.tensor(v, dtype=torch.int64) for k, v in ann_stats.items() if len(v) > 0}
         self.num_cls = len(self.img_indices.keys())
         self.data_length = len(self.dataset)
-        self.num_trials = int(self.data_length / self.num_cls)
+        self.num_trials = max(int(self.data_length / self.num_cls), 1)
 
         if efficient_mode:
             # Reduce the # of sampling (sampling data for a single epoch)
@@ -113,7 +113,7 @@ class BalancedSampler(Sampler):
                 index = torch.cat(
                     [
                         self.img_indices[cls_indices][
-                            torch.randint(0, len(self.img_indices[cls_indices]), (1,), generator=self.generator)
+                            torch.randint(0, len(self.img_indices[cls_indices]), (1,), generator=generator)
                         ]
                         for cls_indices in self.img_indices
                     ],
