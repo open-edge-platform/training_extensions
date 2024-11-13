@@ -55,6 +55,7 @@ dev = [
     "pytest-mock",
     "pytest-csv",
     "pytest-cov",
+    "onnxruntime==1.20.0",
 ]
 
 docs = [
@@ -84,7 +85,6 @@ xpu = [
     "openvino-model-api==0.2.5",
     "onnx==1.17.0",
     "onnxconverter-common==1.14.0",
-    "onnxruntime==1.20.0",
     "nncf==2.13.0",
     "anomalib[core]==1.1.0",
 ]
@@ -99,7 +99,6 @@ base = [
     "openvino-model-api==0.2.4",
     "onnx==1.17.0",
     "onnxconverter-common==1.14.0",
-    "onnxruntime==1.20.0",
     "nncf==2.13.0",
     "anomalib[core]==1.1.0",
 ]
