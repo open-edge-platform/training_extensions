@@ -77,7 +77,7 @@ DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/detection/" in recip
 INST_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/instance_segmentation/" in recipe]
 
 
-@pytest.mark.parametrize("recipe", CLS_RECIPES + DET_RECIPES)
+@pytest.mark.parametrize("recipe", CLS_RECIPES + DET_RECIPES + INST_SEG_RECIPES)
 def test_augmentation(
     recipe: str,
     fxt_target_dataset_per_task: dict,
