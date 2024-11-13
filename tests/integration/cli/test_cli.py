@@ -525,7 +525,6 @@ def test_otx_adaptive_bs_e2e(
     fxt_target_dataset_per_task: dict,
     fxt_cli_override_command_per_task: dict,
     fxt_open_subprocess: bool,
-    fxt_xpu_support_task: list[OTXTaskType],
     bs_adapt_type: str,
 ) -> None:
     """
@@ -540,8 +539,6 @@ def test_otx_adaptive_bs_e2e(
     """
     if fxt_accelerator not in ["gpu", "xpu"]:
         pytest.skip("Adaptive batch size only supports GPU and XPU.")
-    if fxt_accelerator == "xpu" and task not in fxt_xpu_support_task:
-        pytest.skip(f"{task} doesn't support XPU.")
     if task not in DEFAULT_CONFIG_PER_TASK:
         pytest.skip(f"Task {task} is not supported in the auto-configuration.")
     if task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:

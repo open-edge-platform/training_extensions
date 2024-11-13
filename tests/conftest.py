@@ -27,6 +27,7 @@ from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEn
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
+from otx.utils.device import is_xpu_available
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
@@ -348,6 +349,8 @@ def fxt_clean_up_mem_cache():
 
 @pytest.fixture(scope="session")
 def fxt_accelerator(request: pytest.FixtureRequest) -> str:
+    if is_xpu_available():
+        return "xpu"
     return request.config.getoption("--device", "gpu")
 
 
@@ -462,23 +465,6 @@ def fxt_hlabel_multilabel_info() -> HLabelInfo:
             ["Spade_King", "Spade"],
         ],
     )
-
-
-@pytest.fixture()
-def fxt_xpu_support_task() -> list[OTXTaskType]:
-    return [
-        OTXTaskType.ANOMALY,
-        OTXTaskType.ANOMALY_CLASSIFICATION,
-        OTXTaskType.ANOMALY_DETECTION,
-        OTXTaskType.ANOMALY_SEGMENTATION,
-        OTXTaskType.MULTI_CLASS_CLS,
-        OTXTaskType.MULTI_LABEL_CLS,
-        OTXTaskType.H_LABEL_CLS,
-        OTXTaskType.DETECTION,
-        OTXTaskType.ROTATED_DETECTION,
-        OTXTaskType.DETECTION_SEMI_SL,
-        OTXTaskType.SEMANTIC_SEGMENTATION,
-    ]
 
 
 @pytest.fixture()
