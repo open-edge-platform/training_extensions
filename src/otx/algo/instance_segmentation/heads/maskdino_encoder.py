@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, ClassVar
+from typing import Callable
 
 import numpy as np
 import torch
@@ -370,3 +370,31 @@ class MaskDINOEncoderHeadModule(BaseModule):
                     multi_scale_features.append(o)
                     num_cur_levels += 1
             return self.mask_features(out[-1]), out[0], multi_scale_features
+
+class MaskDINOEncoderHead:
+    """MaskDINO Encoder Head Factory Selector."""
+
+    encoder_head_cfg: ClassVar[dict[str, Any]] = {
+        "resnet50": {},
+    }
+
+    def __new__(
+        cls,
+        model_name: str,
+        input_shape: dict[str, ShapeSpec],
+    ) -> MaskDINOEncoderHeadModule:
+        """Create a new instance of MaskDINOEncoderHeadModule.
+
+        Args:
+            model_name (str): backbone model name
+
+        Raises:
+            ValueError: If the model name is not supported
+
+        Returns:
+            MaskDINOEncoderHeadModule: MaskDINOEncoderHeadModule instance
+        """
+        if model_name not in cls.encoder_head_cfg:
+            msg = f"Model {model_name} not supported"
+            raise ValueError(msg)
+        return MaskDINOEncoderHeadModule(**cls.encoder_head_cfg[model_name], input_shape=input_shape)

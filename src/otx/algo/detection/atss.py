@@ -27,7 +27,6 @@ from otx.core.model.detection import ExplainableOTXDetModel
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
-    from typing_extensions import Self
 
     from otx.core.metrics import MetricCallable
     from otx.core.schedulers import LRSchedulerListCallable

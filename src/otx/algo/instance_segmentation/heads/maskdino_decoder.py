@@ -8,8 +8,8 @@ from typing import Any, ClassVar
 
 import torch
 from torch import Tensor, nn
-from torchvision.ops import box_convert
 from torch.amp import autocast
+from torchvision.ops import box_convert
 
 from otx.algo.common.layers.position_embed import gen_sineembed_for_position
 from otx.algo.common.layers.transformer_layers import MLP, MSDeformableAttention

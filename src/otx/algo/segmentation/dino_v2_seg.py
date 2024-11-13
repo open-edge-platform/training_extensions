@@ -15,7 +15,6 @@ from otx.core.model.segmentation import OTXSegmentationModel
 
 if TYPE_CHECKING:
     from torch import nn
-    from typing_extensions import Self
 
 
 class DinoV2Seg(OTXSegmentationModel):
