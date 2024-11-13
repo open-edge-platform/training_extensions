@@ -265,7 +265,7 @@ class HLabelInfo(LabelInfo):
             single_label_group_info["class_to_idx"],
         )
 
-        label_to_idx = {lbl: i for i, lbl in enumerate(merged_class_to_idx.keys())}
+        label_to_idx = {lbl: i for i, lbl in enumerate(label_names)}
 
         return HLabelInfo(
             label_names=label_names,
