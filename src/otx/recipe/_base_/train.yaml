@@ -28,6 +28,7 @@ callbacks:
       prog_bar: true
       on_step: false
       on_epoch: true
+  - class_path: otx.algo.callbacks.gpu_mem_monitor.GPUMemMonitor
   - class_path: lightning.pytorch.callbacks.RichModelSummary
     init_args:
       max_depth: 1
