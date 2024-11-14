@@ -5,8 +5,6 @@
 
 
 import pytest
-import pytorch_lightning as pl
-import torch
 from lightning.pytorch.utilities.exceptions import MisconfigurationException
 from otx.algo.strategies import xpu_single as target_file
 from otx.algo.strategies.xpu_single import SingleXPUStrategy
