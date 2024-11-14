@@ -32,18 +32,18 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
     def _get_item_impl(self, index: int) -> MulticlassClsDataEntity | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        roi = item.attributes.get("roi", None)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img, roi)
+        if roi:
+            # extract labels from ROI
+            labels_ids = [
+                label["label"]["_id"] for label in roi["labels"] if label["label"]["domain"] == "CLASSIFICATION"
+            ]
+            label_anns = [self.label_info.label_names.index(label_id) for label_id in labels_ids]
+        else:
+            # extract labels from annotations
+            label_anns = [ann.label for ann in item.annotations if isinstance(ann, Label)]
 
-        label_anns = []
-        for ann in item.annotations:
-            if isinstance(ann, Label):
-                label_anns.append(ann)
-            else:
-                # If the annotation is not Label, it should be converted to Label.
-                # For Chained Task: Detection (Bbox) -> Classification (Label)
-                label = Label(label=ann.label)
-                if label not in label_anns:
-                    label_anns.append(label)
         if len(label_anns) > 1:
             msg = f"Multi-class Classification can't use the multi-label, currently len(labels) = {len(label_anns)}"
             raise ValueError(msg)
@@ -56,7 +56,7 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
             ),
-            labels=torch.as_tensor([ann.label for ann in label_anns]),
+            labels=torch.as_tensor(label_anns),
         )
 
         return self._apply_transforms(entity)
@@ -78,7 +78,7 @@ class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         label_anns = []
         for ann in item.annotations:
@@ -195,7 +195,7 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         label_anns = []
         for ann in item.annotations:

@@ -414,7 +414,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
         """
         item = self.dm_subset[index]
         img = item.media_as(Image)
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
 
@@ -505,7 +505,7 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
         """
         item = self.dm_subset[index]
         img = item.media_as(Image)
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 
@@ -607,7 +607,7 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
         """
         item = self.dm_subset[index]
         img = item.media_as(Image)
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         extracted_mask = _extract_class_mask(item=item, img_shape=img_shape, ignore_index=self.ignore_index)
         masks = tv_tensors.Mask(extracted_mask[None])

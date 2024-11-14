@@ -22,7 +22,7 @@ class OTXDiffusionDataset(OTXDataset[DiffusionDataEntity]):
         item = self.dm_subset[idx]
         caption = item.annotations[0].caption
         img = item.media_as(Image)
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
         entity = DiffusionDataEntity(
             image=img_data,
             img_info=ImageInfo(
