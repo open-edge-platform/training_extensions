@@ -40,11 +40,11 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.MULTI_CLASS_CLS,
         "model_name": "mobilenet_v3_large",
     },
-    "Custom_Image_Classification_EfficinetNet-B3": {
+    "Custom_Image_Classification_EfficientNet-B3": {
         "task": OTXTaskType.MULTI_CLASS_CLS,
         "model_name": "tv_efficientnet_b3",
     },
-    "Custom_Image_Classification_EfficinetNet-V2-L": {
+    "Custom_Image_Classification_EfficientNet-V2-L": {
         "task": OTXTaskType.MULTI_CLASS_CLS,
         "model_name": "tv_efficientnet_v2_l",
     },
@@ -193,13 +193,9 @@ TEMPLATE_ID_DICT = {
         "model_name": "stfpm",
     },
     # KEYPOINT_DETECTION
-    "Custom_Keypoint_Detection_Rtmpose_T": {
+    "Keypoint_Detection_RTMPose_Tiny": {
         "task": OTXTaskType.KEYPOINT_DETECTION,
         "model_name": "rtmpose_tiny",
-    },
-    "Custom_Keypoint_Detection_Rtmpose_T_Single_Obj": {
-        "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny_single_obj",
     },
 }
 

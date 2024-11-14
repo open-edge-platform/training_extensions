@@ -26,7 +26,7 @@ class OTXDetectionDataset(OTXDataset[DetDataEntity]):
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
 

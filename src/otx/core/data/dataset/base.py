@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Callable, Generic, Iterator, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterator, List, Union
 
 import cv2
 import numpy as np
@@ -92,6 +92,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         self.image_color_channel = image_color_channel
         self.stack_images = stack_images
         self.to_tv_image = to_tv_image
+
         if self.dm_subset.categories():
             self.label_info = LabelInfo.from_dm_label_groups(self.dm_subset.categories()[AnnotationType.label])
         else:
@@ -141,11 +142,30 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
-    def _get_img_data_and_shape(self, img: Image) -> tuple[np.ndarray, tuple[int, int]]:
-        key = img.path if isinstance(img, ImageFromFile) else id(img)
+    def _get_img_data_and_shape(
+        self,
+        img: Image,
+        roi: dict[str, Any] | None = None,
+    ) -> tuple[np.ndarray, tuple[int, int], dict[str, Any] | None]:
+        """Get image data and shape.
 
-        if (img_data := self.mem_cache_handler.get(key=key)[0]) is not None:
-            return img_data, img_data.shape[:2]
+        This method is used to get image data and shape from Datumaro image object.
+        If ROI is provided, the image data is extracted from the ROI.
+
+        Args:
+            img (Image): Image object from Datumaro.
+            roi (dict[str, Any] | None, Optional): Region of interest.
+                Represented by dict with coordinates and some meta information.
+
+        Returns:
+                The image data, shape, and ROI meta information
+        """
+        key = img.path if isinstance(img, ImageFromFile) else id(img)
+        roi_meta = None
+        # check if the image is already in the cache
+        img_data, roi_meta = self.mem_cache_handler.get(key=key)
+        if img_data is not None:
+            return img_data, img_data.shape[:2], roi_meta
 
         with image_decode_context():
             img_data = (
@@ -158,11 +178,28 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
             msg = "Cannot get image data"
             raise RuntimeError(msg)
 
-        img_data = self._cache_img(key=key, img_data=img_data.astype(np.uint8))
+        if roi and isinstance(roi, dict):
+            # extract ROI from image
+            shape = roi["shape"]
+            h, w = img_data.shape[:2]
+            x1, y1, x2, y2 = (
+                int(np.clip(np.trunc(shape["x1"] * w), 0, w)),
+                int(np.clip(np.trunc(shape["y1"] * h), 0, h)),
+                int(np.clip(np.ceil(shape["x2"] * w), 0, w)),
+                int(np.clip(np.ceil(shape["y2"] * h), 0, h)),
+            )
+            if (x2 - x1) * (y2 - y1) <= 0:
+                msg = f"ROI has zero or negative area. ROI coordinates: {x1}, {y1}, {x2}, {y2}"
+                raise ValueError(msg)
 
-        return img_data, img_data.shape[:2]
+            img_data = img_data[y1:y2, x1:x2]
+            roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
 
-    def _cache_img(self, key: str | int, img_data: np.ndarray) -> np.ndarray:
+        img_data = self._cache_img(key=key, img_data=img_data.astype(np.uint8), meta=roi_meta)
+
+        return img_data, img_data.shape[:2], roi_meta
+
+    def _cache_img(self, key: str | int, img_data: np.ndarray, meta: dict[str, Any] | None = None) -> np.ndarray:
         """Cache an image after resizing.
 
         If there is available space in the memory pool, the input image is cached.
@@ -182,14 +219,14 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
             return img_data
 
         if self.mem_cache_img_max_size is None:
-            self.mem_cache_handler.put(key=key, data=img_data, meta=None)
+            self.mem_cache_handler.put(key=key, data=img_data, meta=meta)
             return img_data
 
         height, width = img_data.shape[:2]
         max_height, max_width = self.mem_cache_img_max_size
 
         if height <= max_height and width <= max_width:
-            self.mem_cache_handler.put(key=key, data=img_data, meta=None)
+            self.mem_cache_handler.put(key=key, data=img_data, meta=meta)
             return img_data
 
         # Preserve the image size ratio and fit to max_height or max_width
@@ -206,7 +243,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         self.mem_cache_handler.put(
             key=key,
             data=resized_img,
-            meta=None,
+            meta=meta,
         )
         return resized_img
 

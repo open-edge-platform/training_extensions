@@ -94,6 +94,10 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3788>)
 - Add diffusion task
   (<https://github.com/openvinotoolkit/training_extensions/pull/3875>)
+- Revert the old workaround for detection confidence threshold
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4096>)
+- Add Keypoint Detection legacy template
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4094>)
 
 ### Enhancements
 
@@ -125,6 +129,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4009>)
 - Remove background label from RT Info for segmentation task
   (<https://github.com/openvinotoolkit/training_extensions/pull/4011>)
+- Enable export of the feature vectors for semantic segmentation task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4055>)
 - Prevent using too low confidence thresholds in detection
   (<https://github.com/openvinotoolkit/training_extensions/pull/4018>)
 - Update HPO interface
@@ -162,8 +168,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4049>)
 - Model templates: rename model_status value 'DISCONTINUED' to 'OBSOLETE'
   (<https://github.com/openvinotoolkit/training_extensions/pull/4051>)
-- Enable export of feature vectors for semantic segmentation task
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4055>)
 - Update MRCNN model export to include feature vector and saliency map
   (<https://github.com/openvinotoolkit/training_extensions/pull/4056>)
 - Upgrade MAPI in 2.2
@@ -172,6 +176,18 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4057>)
 - Fix incorrect all_groups order configuration in HLabelInfo
   (<https://github.com/openvinotoolkit/training_extensions/pull/4067>)
+- Fix RTDETR recipes
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4079>)
+- Fix wrong model name in converter & template
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4082>)
+- Fix RTMDet Inst Explain Mode
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4083>)
+- Fix RTDETR Explain Mode
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4106>)
+- Fix classification and semantic segmentation tasks, when ROI provided for images
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4105>)
+- Disable tiling classifier toggle in configurable parameters
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4107>)
 
 ## \[v2.1.0\]
 

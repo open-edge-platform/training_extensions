@@ -1,5 +1,5 @@
 # Description.
-model_template_id: Custom_Image_Classification_EfficinetNet-B3
+model_template_id: Custom_Image_Classification_EfficientNet-B3
 name: EfficientNet-B3
 task_type: CLASSIFICATION
 task_family: VISION

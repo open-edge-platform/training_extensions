@@ -1,0 +1,29 @@
+# Description.
+model_template_id: Keypoint_Detection_RTMPose_Tiny
+name: RTMPose-tiny
+task_type: KEYPOINT_DETECTION
+task_family: VISION
+instantiation: "CLASS"
+summary: RTMPose-tiny is a lightweight keypoint detection model based on the RTMPose architecture. It is designed for fast inference and is suitable for edge devices.
+application: ~
+
+# Algo backend.
+framework: OTXKeypointDetection v1.0.0
+
+# Hyper Parameters
+hyper_parameters:
+  base_path: ../configuration.yaml
+
+# Training resources.
+max_nodes: 1
+training_targets:
+  - GPU
+  - CPU
+
+# Computational Complexity
+gigaflops: 1.3
+size: 3.1
+
+# Model spec
+model_category: SPEED
+is_default_for_task: true
