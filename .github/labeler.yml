@@ -1,7 +1,5 @@
 # See help here: https://github.com/marketplace/actions/labeler
 
-OTX 2.0:
-  - "src/otx/**/*"
 TEST:
   - "tests/**/*"
 DOC:
