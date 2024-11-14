@@ -2650,6 +2650,7 @@ class FilterAnnotations(tvt_v2.Transform, NumpytoTVTensorMixin):
         if not keep.any() and self.keep_empty:
             return self.convert(inputs)
 
+        keep = list(keep)
         keys = ("bboxes", "labels", "masks", "polygons")
         for key in keys:
             if hasattr(inputs, key):

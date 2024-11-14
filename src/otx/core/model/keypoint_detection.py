@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from otx.algo.utils.mmengine_utils import load_checkpoint
-from otx.core.data.entity.base import OTXBatchLossEntity
+from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetBatchPredEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
@@ -149,6 +149,40 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
         """Model forward function used for the model tracing during model exportation."""
         return self.model.forward(inputs=image, mode="tensor")
 
+    def get_dummy_input(self, batch_size: int = 1) -> KeypointDetBatchDataEntity:
+        """Generates a dummy input, suitable for launching forward() on it.
+
+        Args:
+            batch_size (int, optional): number of elements in a dummy input sequence. Defaults to 1.
+
+        Returns:
+            KeypointDetBatchDataEntity: An entity containing randomly generated inference data.
+        """
+        if self.input_size is None:
+            msg = f"Input size attribute is not set for {self.__class__}"
+            raise ValueError(msg)
+
+        images = torch.rand(batch_size, 3, *self.input_size)
+        infos = []
+        for i, img in enumerate(images):
+            infos.append(
+                ImageInfo(
+                    img_idx=i,
+                    img_shape=img.shape,
+                    ori_shape=img.shape,
+                ),
+            )
+        return KeypointDetBatchDataEntity(
+            batch_size,
+            images,
+            infos,
+            bboxes=[],
+            labels=[],
+            bbox_info=[],
+            keypoints=[],
+            keypoints_visible=[],
+        )
+
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
@@ -156,20 +190,6 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
             model_type="keypoint_detection",
             task_type="keypoint_detection",
             confidence_threshold=self.hparams.get("best_confidence_threshold", None),
-        )
-
-    def get_dummy_input(self, batch_size: int = 1) -> KeypointDetBatchDataEntity:
-        """Returns a dummy input for key point detection model."""
-        images = torch.rand(batch_size, 3, *self.input_size)
-        return KeypointDetBatchDataEntity(
-            batch_size,
-            images,
-            [],
-            [torch.tensor([0, 0, self.input_size[1], self.input_size[0]])],
-            labels=[],
-            bbox_info=[],
-            keypoints=[],
-            keypoints_visible=[],
         )
 
 

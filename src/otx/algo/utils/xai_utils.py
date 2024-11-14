@@ -225,7 +225,7 @@ def _get_image_data_name(
     subset = datamodule.subsets[subset_name]
     item = subset.dm_subset[img_id]
     img = item.media_as(Image)
-    img_data, _ = subset._get_img_data_and_shape(img)  # noqa: SLF001
+    img_data, _, _ = subset._get_img_data_and_shape(img)  # noqa: SLF001
     image_save_name = "".join([char if char.isalnum() else "_" for char in item.id])
     return img_data, image_save_name
 

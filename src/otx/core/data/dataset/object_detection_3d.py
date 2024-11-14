@@ -58,7 +58,7 @@ class OTX3DObjectDetectionDataset(OTXDataset[Det3DDataEntity]):
     def _get_item_impl(self, index: int) -> Det3DDataEntity | None:
         entity = self.dm_subset[index]
         image = entity.media_as(Image)
-        image, ori_img_shape = self._get_img_data_and_shape(image)
+        image, ori_img_shape, _ = self._get_img_data_and_shape(image)
         calib = self.get_calib_from_file(entity.attributes["calib_path"])
         annotations_copy = deepcopy(entity.annotations)
         datumaro_kitti_format = [obj.attributes for obj in annotations_copy]

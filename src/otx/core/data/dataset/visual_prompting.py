@@ -79,7 +79,7 @@ class OTXVisualPromptingDataset(OTXDataset[VisualPromptingDataEntity]):
     def _get_item_impl(self, index: int) -> VisualPromptingDataEntity | None:
         item = self.dm_subset[index]
         img = item.media_as(dmImage)
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         gt_bboxes, gt_points = [], []
         gt_masks = defaultdict(list)
@@ -229,7 +229,7 @@ class OTXZeroShotVisualPromptingDataset(OTXDataset[ZeroShotVisualPromptingDataEn
     def _get_item_impl(self, index: int) -> ZeroShotVisualPromptingDataEntity | None:
         item = self.dm_subset[index]
         img = item.media_as(dmImage)
-        img_data, img_shape = self._get_img_data_and_shape(img)
+        img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
         prompts: list[ZeroShotPromptType] = []
         gt_masks: list[tvMask] = []
