@@ -188,8 +188,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4105>)
 - Disable tiling classifier toggle in configurable parameters
   (<https://github.com/openvinotoolkit/training_extensions/pull/4107>)
-- Fix classification and semantic segmentation tasks, when ROI provided for images
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4105>)
 
 ## \[v2.1.0\]
 
