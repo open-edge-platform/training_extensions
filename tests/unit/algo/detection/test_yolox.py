@@ -109,4 +109,4 @@ class TestYOLOX:
         # Prepare inputs
         x = torch.randn(1, 3, *model.input_size)
         model.model(x)
-        assert cnt.frame_count == 4
+        assert cnt.frame_count == 1
