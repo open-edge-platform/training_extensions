@@ -8,7 +8,6 @@ from typing import Any, ClassVar
 
 import torch
 from torch import Tensor, nn
-from torch.amp import autocast
 from torchvision.ops import box_convert
 
 from otx.algo.common.layers.position_embed import gen_sineembed_for_position
@@ -95,28 +94,27 @@ class DeformableTransformerDecoderLayer(BaseModule):
         self_attn_mask: Tensor,
     ) -> Tensor:
         """Forward pass."""
-        with autocast(device_type=tgt.device.type, enabled=False):
-            # self attention
-            if self.self_attn is not None:
-                q = k = self.with_pos_embed(tgt, tgt_query_pos)
-                tgt2 = self.self_attn(q, k, tgt, attn_mask=self_attn_mask)[0]
-                tgt = tgt + self.dropout2(tgt2)
-                tgt = self.norm2(tgt)
+        # self attention
+        if self.self_attn is not None:
+            q = k = self.with_pos_embed(tgt, tgt_query_pos)
+            tgt2 = self.self_attn(q, k, tgt, attn_mask=self_attn_mask)[0]
+            tgt = tgt + self.dropout2(tgt2)
+            tgt = self.norm2(tgt)
 
-            # cross attention
-            tgt2 = self.cross_attn(
-                self.with_pos_embed(tgt, tgt_query_pos).transpose(0, 1),
-                tgt_reference_points.transpose(0, 1).contiguous(),
-                memory.transpose(0, 1),
-                memory_spatial_shapes,
-                memory_key_padding_mask,
-            ).transpose(0, 1)
+        # cross attention
+        tgt2 = self.cross_attn(
+            self.with_pos_embed(tgt, tgt_query_pos).transpose(0, 1),
+            tgt_reference_points.transpose(0, 1).contiguous(),
+            memory.transpose(0, 1),
+            memory_spatial_shapes,
+            memory_key_padding_mask,
+        ).transpose(0, 1)
 
-            tgt = tgt + self.dropout1(tgt2)
-            tgt = self.norm1(tgt)
+        tgt = tgt + self.dropout1(tgt2)
+        tgt = self.norm1(tgt)
 
-            # ffn
-            return self.forward_ffn(tgt)
+        # ffn
+        return self.forward_ffn(tgt)
 
 
 class DeformableTransformerDecoder(nn.Module):
@@ -337,7 +335,7 @@ class MaskDINODecoderHeadModule(BaseModule):
             known_bbox_expand = known_bboxs.clone()
 
             # noise on the label
-            p = torch.rand_like(torch.tensor(known_labels_expaned, dtype=known_bbox_expand.dtype))
+            p = torch.rand_like(known_labels_expaned.clone().detach().requires_grad_(True), dtype=known_bbox_expand.dtype)
             chosen_indice = torch.nonzero(p < (noise_scale * 0.5)).view(-1)  # half of bbox prob
             new_label = torch.randint_like(chosen_indice, 0, self.num_classes)  # randomly put a new one here
             known_labels_expaned.scatter_(0, chosen_indice, new_label)

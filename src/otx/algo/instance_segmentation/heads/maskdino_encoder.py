@@ -307,7 +307,7 @@ class MaskDINOEncoderHeadModule(BaseModule):
         self.lateral_convs = lateral_convs[::-1]
         self.output_convs = output_convs[::-1]
 
-    def forward_features(self, features: dict[str, Tensor]) -> tuple[Tensor, Tensor, list[Tensor]]:
+    def forward(self, features: dict[str, Tensor]) -> tuple[Tensor, Tensor, list[Tensor]]:
         """Forward pass of the encoder."""
         # backbone features
         srcs = []
@@ -316,7 +316,7 @@ class MaskDINOEncoderHeadModule(BaseModule):
         srcsl: list[Tensor] = []
         posl = []
         if self.total_num_feature_levels > self.transformer_num_feature_levels:
-            smallest_feat = features[self.transformer_in_features[self.low_resolution_index]].float()
+            smallest_feat = features[self.transformer_in_features[self.low_resolution_index]]
             _len_srcs = self.transformer_num_feature_levels
             for lvl in range(_len_srcs, self.total_num_feature_levels):
                 src = self.input_proj[lvl](smallest_feat) if lvl == _len_srcs else self.input_proj[lvl](srcsl[-1])
@@ -325,7 +325,7 @@ class MaskDINOEncoderHeadModule(BaseModule):
         srcsl = srcsl[::-1]
         # Reverse feature maps
         for idx, feat in enumerate(self.transformer_in_features[::-1]):
-            x = features[feat].float()  # deformable detr does not support half precision
+            x = features[feat]
             srcs.append(self.input_proj[idx](x))
             pos.append(self.pe_layer(x))
         srcs.extend(srcsl)
@@ -350,7 +350,7 @@ class MaskDINOEncoderHeadModule(BaseModule):
         # append `out` with extra FPN levels
         # Reverse feature maps into top-down order (from low to high resolution)
         for idx, feat in enumerate(self.in_features[: self.num_fpn_levels][::-1]):
-            x = features[feat].float()
+            x = features[feat]
             lateral_conv = self.lateral_convs[idx]
             output_conv = self.output_convs[idx]
             cur_fpn = lateral_conv(x)
