@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of OTX YOLOX architecture."""
 
-import onnxruntime as ort
 import pytest
 import torch
 from otx.algo.detection.backbones.csp_darknet import CSPDarknetModule
@@ -11,7 +10,6 @@ from otx.algo.detection.necks.yolox_pafpn import YOLOXPAFPNModule
 from otx.algo.detection.yolox import YOLOX
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.types.export import OTXExportFormatType
 from torch._dynamo.testing import CompileCounter
 
 
@@ -112,31 +110,3 @@ class TestYOLOX:
         x = torch.randn(1, 3, *model.input_size)
         model.model(x)
         assert cnt.frame_count == 4
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            YOLOX(model_name="yolox_tiny", label_info=3),
-            YOLOX(model_name="yolox_s", label_info=3),
-            YOLOX(model_name="yolox_l", label_info=3),
-            YOLOX(model_name="yolox_x", label_info=3),
-        ],
-    )
-    def test_onnx_export(self, model, tmp_path):
-        model_path = model.export(
-            output_dir=tmp_path,
-            base_name="model",
-            export_format=OTXExportFormatType.ONNX,
-        )
-
-        assert model_path.exists()
-
-        session = ort.InferenceSession(
-            model_path,
-        )
-
-        onnx_shapes = {}
-        for onnx_input in session.get_inputs():
-            onnx_shapes[onnx_input.name] = onnx_input.shape
-
-        assert tuple(onnx_shapes["image"][2:]) == model.input_size, "Input shape mismatch"

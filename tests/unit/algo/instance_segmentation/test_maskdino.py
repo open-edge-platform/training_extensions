@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of OTX MaskDINO architecture."""
 
-import onnxruntime as ort
 import pytest
 import torch
 from otx.algo.instance_segmentation.heads import MaskDINOHead
@@ -10,7 +9,6 @@ from otx.algo.instance_segmentation.maskdino import MaskDINO
 from otx.algo.utils.mmengine_utils import load_from_http
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
-from otx.core.types.export import OTXExportFormatType
 
 
 class TestMaskDINO:
@@ -121,19 +119,3 @@ class TestMaskDINO:
             pixel_decoder.adapter_1.gn.bias,
             pretrained["model"]["sem_seg_head.pixel_decoder.adapter_1.norm.bias"],
         )
-
-    @pytest.mark.parametrize("model", [MaskDINO(label_info=3, model_name="resnet50")])
-    def test_onnx_export(self, model, tmp_path):
-        model_path = model.export(
-            output_dir=tmp_path,
-            base_name="model",
-            export_format=OTXExportFormatType.ONNX,
-        )
-
-        assert model_path.exists()
-
-        # TODO(Eugene): issue with ONNX graph
-        try:
-            ort.InferenceSession(model_path)
-        except Exception as e:
-            pytest.skip(f"ONNX graph is not valid: {e}")

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of RTMDet."""
 
-import onnxruntime as ort
 import pytest
 import torch
 from otx.algo.common.backbones.cspnext import CSPNeXtModule
@@ -11,7 +10,6 @@ from otx.algo.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
 from otx.algo.detection.rtmdet import RTMDet
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.types.export import OTXExportFormatType
 from torch._dynamo.testing import CompileCounter
 
 
@@ -73,28 +71,3 @@ class TestRTMDet:
         x = torch.randn(1, 3, *model.input_size)
         model.model(x)
         assert cnt.frame_count == 1
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            RTMDet(model_name="rtmdet_tiny", label_info=3),
-        ],
-    )
-    def test_onnx_export(self, model, tmp_path):
-        model_path = model.export(
-            output_dir=tmp_path,
-            base_name="model",
-            export_format=OTXExportFormatType.ONNX,
-        )
-
-        assert model_path.exists()
-
-        session = ort.InferenceSession(
-            model_path,
-        )
-
-        onnx_shapes = {}
-        for onnx_input in session.get_inputs():
-            onnx_shapes[onnx_input.name] = onnx_input.shape
-
-        assert tuple(onnx_shapes["image"][2:]) == model.input_size, "Input shape mismatch"

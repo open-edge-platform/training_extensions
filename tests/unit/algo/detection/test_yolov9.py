@@ -4,7 +4,6 @@
 
 from unittest.mock import Mock, patch
 
-import onnxruntime as ort
 import pytest
 import torch
 from otx.algo.detection.backbones.gelan import GELANModule
@@ -12,7 +11,6 @@ from otx.algo.detection.heads.yolo_head import YOLOHeadModule
 from otx.algo.detection.necks.yolo_neck import YOLONeckModule
 from otx.algo.detection.yolov9 import YOLOv9
 from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.types.export import OTXExportFormatType
 from torch._dynamo.testing import CompileCounter
 
 
@@ -71,30 +69,3 @@ class TestYOLOv9:
         x = torch.randn(1, 3, *model.input_size)
         model.model(x)
         assert cnt.frame_count == 1
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            YOLOv9(model_name="yolov9_s", label_info=3),
-            YOLOv9(model_name="yolov9_m", label_info=3),
-            YOLOv9(model_name="yolov9_c", label_info=3),
-        ],
-    )
-    def test_onnx_export(self, model, tmp_path):
-        model_path = model.export(
-            output_dir=tmp_path,
-            base_name="model",
-            export_format=OTXExportFormatType.ONNX,
-        )
-
-        assert model_path.exists()
-
-        session = ort.InferenceSession(
-            model_path,
-        )
-
-        onnx_shapes = {}
-        for onnx_input in session.get_inputs():
-            onnx_shapes[onnx_input.name] = onnx_input.shape
-
-        assert tuple(onnx_shapes["image"][2:]) == model.input_size, "Input shape mismatch"

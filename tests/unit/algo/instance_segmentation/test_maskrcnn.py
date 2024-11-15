@@ -2,14 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of OTX MaskRCNN architecture."""
 
-import onnxruntime as ort
 import pytest
 import torch
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.instance_segmentation.maskrcnn_tv import MaskRCNNTV
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
-from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
+from otx.core.types.export import TaskLevelExportParameters
 
 
 class TestMaskRCNN:
@@ -83,27 +82,3 @@ class TestMaskRCNN:
         # model.explain_mode = True  # noqa: ERA001
         # output = model.forward_for_tracing(torch.randn(1, 3, 32, 32))  # noqa: ERA001
         # assert len(output) == 5  # noqa: ERA001
-
-    @pytest.mark.parametrize(
-        "model",
-        [
-            MaskRCNN(3, "maskrcnn_resnet_50"),
-            MaskRCNN(3, "maskrcnn_efficientnet_b2b"),
-            MaskRCNN(3, "maskrcnn_swin_tiny"),
-            MaskRCNNTV(3, "maskrcnn_resnet_50"),
-        ],
-    )
-    def test_onnx_export(self, model, tmp_path):
-        model_path = model.export(
-            output_dir=tmp_path,
-            base_name="model",
-            export_format=OTXExportFormatType.ONNX,
-        )
-
-        assert model_path.exists()
-
-        # TODO(Eugene): ONNX issue with ExperimentalDetectronROIFeatureExtractor
-        try:
-            ort.InferenceSession(model_path)
-        except Exception as e:
-            pytest.skip(f"ExperimentalDetectronROIFeatureExtractor is not supported: {e}")

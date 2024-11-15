@@ -125,6 +125,7 @@ class YOLOv9(OTXDetectionModel):
                 "export_params": True,
                 "opset_version": 11,
                 "dynamic_axes": {
+                    "image": {0: "batch"},
                     "boxes": {0: "batch", 1: "num_dets"},
                     "labels": {0: "batch", 1: "num_dets"},
                 },
