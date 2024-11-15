@@ -335,10 +335,7 @@ class MaskDINODecoderHeadModule(BaseModule):
             known_bbox_expand = known_bboxs.clone()
 
             # noise on the label
-            p = torch.rand_like(
-                known_labels_expaned.clone().detach().requires_grad_(True),
-                dtype=known_bbox_expand.dtype,
-            )
+            p = torch.rand_like(torch.tensor(known_labels_expaned, dtype=known_bbox_expand.dtype))
             chosen_indice = torch.nonzero(p < (noise_scale * 0.5)).view(-1)  # half of bbox prob
             new_label = torch.randint_like(chosen_indice, 0, self.num_classes)  # randomly put a new one here
             known_labels_expaned.scatter_(0, chosen_indice, new_label)
