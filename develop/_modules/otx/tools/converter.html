@@ -734,7 +734,7 @@
         <span class="p">)</span>
         <span class="c1"># Update callbacks &amp; logger dir as engine.work_dir</span>
         <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="s2">&quot;dirpath&quot;</span> <span class="ow">in</span> <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="s2">&quot;init_args&quot;</span> <span class="ow">in</span> <span class="n">callback</span> <span class="ow">and</span> <span class="s2">&quot;dirpath&quot;</span> <span class="ow">in</span> <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]:</span>
                 <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;dirpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">work_dir</span>
         <span class="k">for</span> <span class="n">logger</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;logger&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="s2">&quot;save_dir&quot;</span> <span class="ow">in</span> <span class="n">logger</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]:</span>
