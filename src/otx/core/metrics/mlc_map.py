@@ -49,8 +49,10 @@ class MultilabelmAP(Metric):
 
     def compute(self) -> Tensor | dict[str, Any]:
         """Compute the metric."""
-        metric_value = _map(torch.stack(self.targets).cpu().numpy(), torch.stack(self.preds).cpu().numpy())
-
+        metric_value = _map(
+            torch.stack(self.targets).cpu().numpy(),
+            torch.stack(self.preds).detach().cpu().float().numpy(),
+        )
         return {"mAP": Tensor([metric_value])}
 
 

@@ -85,4 +85,4 @@ class TestATSS:
         # Prepare inputs
         x = torch.randn(1, 3, *model.input_size)
         model.model(x)
-        assert cnt.frame_count == 6
+        assert cnt.frame_count == 1
