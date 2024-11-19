@@ -190,7 +190,7 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
             onnx_export_configuration={
                 "input_names": ["image"],
                 "dynamic_axes": {
-                    "image": {0: "batch", 2: "height", 3: "width"},
+                    "image": {0: "batch"},
                     "boxes": {0: "batch", 1: "num_dets"},
                     "labels": {0: "batch", 1: "num_dets"},
                     "masks": {0: "batch", 1: "num_dets", 2: "height", 3: "width"},

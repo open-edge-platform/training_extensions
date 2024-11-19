@@ -55,6 +55,7 @@ dev = [
     "pytest-mock",
     "pytest-csv",
     "pytest-cov",
+    "onnxruntime==1.20.0",
 ]
 
 docs = [

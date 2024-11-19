@@ -183,7 +183,7 @@ class ATSS(ExplainableOTXDetModel):
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],
                 "dynamic_axes": {
-                    "image": {0: "batch", 2: "height", 3: "width"},
+                    "image": {0: "batch"},
                     "boxes": {0: "batch", 1: "num_dets"},
                     "labels": {0: "batch", 1: "num_dets"},
                 },
