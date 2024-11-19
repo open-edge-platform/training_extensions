@@ -17,6 +17,7 @@ otx.core.model.anomaly
 
    .. autosummary::
    
+      AnomalyMixin
       OTXAnomaly
    
    
