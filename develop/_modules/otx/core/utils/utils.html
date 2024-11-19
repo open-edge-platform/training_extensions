@@ -266,6 +266,8 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">datumaro.components.annotation</span> <span class="kn">import</span> <span class="n">AnnotationType</span><span class="p">,</span> <span class="n">LabelCategories</span>
 
+<span class="kn">from</span> <span class="nn">otx.utils.device</span> <span class="kn">import</span> <span class="n">is_xpu_available</span>
+
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">datumaro</span> <span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
 
@@ -304,10 +306,10 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.get_adaptive_num_workers">[docs]</a>
 <span class="k">def</span> <span class="nf">get_adaptive_num_workers</span><span class="p">(</span><span class="n">num_dataloader</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Measure appropriate num_workers value and return it.&quot;&quot;&quot;</span>
-    <span class="n">num_gpus</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">num_gpus</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">num_devices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">xpu</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_xpu_available</span><span class="p">()</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">num_devices</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">//</span> <span class="p">(</span><span class="n">num_dataloader</span> <span class="o">*</span> <span class="n">num_gpus</span><span class="p">),</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># max available num_workers is 8</span></div>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">//</span> <span class="p">(</span><span class="n">num_dataloader</span> <span class="o">*</span> <span class="n">num_devices</span><span class="p">),</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># max available num_workers is 8</span></div>
 
 
 
