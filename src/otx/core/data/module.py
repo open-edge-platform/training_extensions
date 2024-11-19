@@ -107,13 +107,6 @@ class OTXDataModule(LightningDataModule):
         self.subsets: dict[str, OTXDataset] = {}
         self.save_hyperparameters(ignore=["input_size"])
 
-        # TODO (Jaeguk): This is workaround for a bug in Datumaro.
-        # These lines should be removed after next datumaro release.
-        # https://github.com/openvinotoolkit/datumaro/pull/1223/files
-        from datumaro.plugins.data_formats.video import VIDEO_EXTENSIONS
-
-        VIDEO_EXTENSIONS.append(".mp4")
-
         dataset = DmDataset.import_from(self.data_root, format=self.data_format)
         if self.task != "H_LABEL_CLS":
             dataset = pre_filtering(
