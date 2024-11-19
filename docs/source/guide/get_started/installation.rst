@@ -91,9 +91,12 @@ from source to use XPU functionality.
             git clone https://github.com/openvinotoolkit/training_extensions.git
             cd training_extensions
 
-            pip install -e '.[xpu]' --extra-index-url https://download.pytorch.org/whl/test/xpu
+            pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
 
-[Optional] Refer to the `PyTorch documentation guide <https://pytorch.org/docs/stable/notes/get_start_xpu.html>`_
+.. note::
+
+    Please, refer to the `PyTorch official documentation guide <https://pytorch.org/docs/stable/notes/get_start_xpu.html>`_
+    to install prerequisites and resolve possible issues.
 
 2. Once the package is installed in the virtual environment, you can use full
 OpenVINO™ Training Extensions command line functionality.
