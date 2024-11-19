@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4039>)
 - Turn on/off detection and instance segmentation augmentations
   (<https://github.com/openvinotoolkit/training_extensions/pull/4066>)
+- Add GPU memory monitor hook
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4118>)
 
 ### Enhancements
 

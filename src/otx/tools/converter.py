@@ -474,7 +474,7 @@ class ConfigConverter:
         )
         # Update callbacks & logger dir as engine.work_dir
         for callback in config["callbacks"]:
-            if "dirpath" in callback["init_args"]:
+            if "init_args" in callback and "dirpath" in callback["init_args"]:
                 callback["init_args"]["dirpath"] = engine.work_dir
         for logger in config["logger"]:
             if "save_dir" in logger["init_args"]:
