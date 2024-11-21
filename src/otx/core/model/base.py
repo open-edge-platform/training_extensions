@@ -809,7 +809,11 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         if isinstance(label_info, int):
             return LabelInfo.from_num_classes(num_classes=label_info)
         if isinstance(label_info, Sequence) and all(isinstance(name, str) for name in label_info):
-            return LabelInfo(label_names=label_info, label_groups=[label_info])
+            return LabelInfo(
+                label_names=label_info,
+                label_groups=[label_info],
+                label_ids=[str(i) for i in range(len(label_info))],
+            )
         if isinstance(label_info, LabelInfo):
             return label_info
 
@@ -1113,7 +1117,7 @@ class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
             )
 
             logger.warning(msg)
-            return LabelInfo(label_names=label_names, label_groups=[label_names])
+            return LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=[])
 
         msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
         raise ValueError(msg)

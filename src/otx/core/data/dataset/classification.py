@@ -129,9 +129,13 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
 
         # Hlabel classification used HLabelInfo to insert the HLabelData.
         if self.data_format == "arrow":
+            # arrow format stores label IDs as names, have to deal with that here
             self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
         else:
             self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
+
+        self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))
+        self.id_to_name_mapping[""] = ""
 
         if self.label_info.num_multiclass_heads == 0:
             msg = "The number of multiclass heads should be larger than 0."
@@ -153,7 +157,7 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         """
 
         def _label_idx_to_name(idx: int) -> str:
-            return self.label_info.label_names[idx]
+            return self.dm_categories[idx].name
 
         def _label_name_to_idx(name: str) -> int:
             indices = [idx for idx, val in enumerate(self.label_info.label_names) if val == name]
@@ -161,6 +165,8 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
 
         def _get_label_group_idx(label_name: str) -> int:
             if isinstance(self.label_info, HLabelInfo):
+                if self.data_format == "arrow":
+                    return self.label_info.class_to_group_idx[self.id_to_name_mapping[label_name]][0]
                 return self.label_info.class_to_group_idx[label_name][0]
             msg = f"self.label_info should have HLabelInfo type, got {type(self.label_info)}"
             raise ValueError(msg)
@@ -260,18 +266,18 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
             class_indices[i] = -1
 
         for ann in label_anns:
-            ann_name = self.dm_categories.items[ann.label].name
-            ann_parent = self.dm_categories.items[ann.label].parent
+            if self.data_format == "arrow":
+                # skips unknown labels for instance, the empty one
+                if self.dm_categories.items[ann.label].name not in self.id_to_name_mapping:
+                    continue
+                ann_name = self.id_to_name_mapping[self.dm_categories.items[ann.label].name]
+            else:
+                ann_name = self.dm_categories.items[ann.label].name
             group_idx, in_group_idx = self.label_info.class_to_group_idx[ann_name]
-            (parent_group_idx, parent_in_group_idx) = (
-                self.label_info.class_to_group_idx[ann_parent] if ann_parent else (None, None)
-            )
 
             if group_idx < num_multiclass_heads:
                 class_indices[group_idx] = in_group_idx
-                if parent_group_idx is not None and parent_in_group_idx is not None:
-                    class_indices[parent_group_idx] = parent_in_group_idx
-            elif not ignored_labels or ann.label not in ignored_labels:
+            elif ann.label not in ignored_labels:
                 class_indices[num_multiclass_heads + in_group_idx] = 1
             else:
                 class_indices[num_multiclass_heads + in_group_idx] = -1

@@ -231,6 +231,7 @@ class OTXDataModule(LightningDataModule):
                         include_polygons=include_polygons,
                         ignore_index=ignore_index,
                         vpm_config=vpm_config,
+                        data_format=self.data_format,
                     )
                     self.subsets[transform_key] = unlabeled_dataset
             else:
@@ -245,6 +246,7 @@ class OTXDataModule(LightningDataModule):
                     include_polygons=include_polygons,
                     ignore_index=ignore_index,
                     vpm_config=vpm_config,
+                    data_format=self.data_format,
                 )
                 self.subsets[name] = unlabeled_dataset
 

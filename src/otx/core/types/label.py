@@ -8,8 +8,9 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import asdict, dataclass
-from datumaro.components.annotation import GroupType
 from typing import TYPE_CHECKING, Any
+
+from datumaro.components.annotation import GroupType
 
 if TYPE_CHECKING:
     from datumaro import Label, LabelCategories
@@ -89,8 +90,7 @@ class LabelInfo:
 
     @classmethod
     def from_dm_label_groups_arrow(cls, dm_label_categories: LabelCategories) -> LabelInfo:
-        """Overload to support datumaro's arrow format.
-        """
+        """Overload to support datumaro's arrow format."""
         label_names = []
         for item in dm_label_categories.items:
             for attr in item.attributes:
@@ -321,7 +321,12 @@ class HLabelInfo(LabelInfo):
         )
 
     @classmethod
-    def from_dm_label_groups_arrow(cls, dm_label_categories: LabelCategories) -> LabelInfo:
+    def from_dm_label_groups_arrow(cls, dm_label_categories: LabelCategories) -> HLabelInfo:
+        """Generate HLabelData from the Datumaro LabelCategories. Arrow-specific implementation.
+
+        Args:
+            dm_label_categories (LabelCategories): the label categories of datumaro.
+        """
         dm_label_categories = copy.deepcopy(dm_label_categories)
 
         empty_label_name = None
@@ -329,7 +334,9 @@ class HLabelInfo(LabelInfo):
             if label_group.group_type == GroupType.RESTRICTED:
                 empty_label_name = label_group.labels[0]
 
-        dm_label_categories.label_groups = [group for group in dm_label_categories.label_groups if group.group_type != GroupType.RESTRICTED]
+        dm_label_categories.label_groups = [
+            group for group in dm_label_categories.label_groups if group.group_type != GroupType.RESTRICTED
+        ]
 
         empty_label_id = None
         label_names = []
@@ -409,7 +416,7 @@ class SegLabelInfo(LabelInfo):
         if num_classes == 1:
             # binary segmentation
             label_names = ["background", "label_0"]
-            return SegLabelInfo(label_names=label_names, label_groups=[label_names])
+            return SegLabelInfo(label_names=label_names, label_groups=[label_names], label_ids=["0", "1"])
 
         return super().from_num_classes(num_classes)
 
@@ -419,7 +426,7 @@ class NullLabelInfo(LabelInfo):
     """Represent no label information. It is used for Visual Prompting tasks."""
 
     def __init__(self) -> None:
-        super().__init__(label_names=[], label_groups=[[]])
+        super().__init__(label_names=[], label_groups=[[]], label_ids=[])
 
     @classmethod
     def from_json(cls, _: str) -> LabelInfo:
@@ -432,7 +439,7 @@ class AnomalyLabelInfo(LabelInfo):
     """Represent no label information. It is used for Anomaly tasks."""
 
     def __init__(self) -> None:
-        super().__init__(label_names=["Normal", "Anomaly"], label_groups=[["Normal", "Anomaly"]])
+        super().__init__(label_names=["Normal", "Anomaly"], label_groups=[["Normal", "Anomaly"]], label_ids=["0", "1"])
 
 
 # Dispatching rules:

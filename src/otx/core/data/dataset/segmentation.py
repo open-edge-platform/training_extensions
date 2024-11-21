@@ -187,6 +187,7 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
             label_names=self.label_info.label_names,
             label_groups=self.label_info.label_groups,
             ignore_index=ignore_index,
+            label_ids=self.label_info.label_ids,
         )
         self.ignore_index = ignore_index
 
