@@ -73,6 +73,7 @@ class OTXDatasetFactory:
         dm_subset: DmDataset,
         cfg_subset: SubsetConfig,
         mem_cache_handler: MemCacheHandlerBase,
+        data_format: str,
         mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -85,6 +86,7 @@ class OTXDatasetFactory:
         common_kwargs = {
             "dm_subset": dm_subset,
             "transforms": transforms,
+            "data_format": data_format,
             "mem_cache_handler": mem_cache_handler,
             "mem_cache_img_max_size": mem_cache_img_max_size,
             "image_color_channel": image_color_channel,

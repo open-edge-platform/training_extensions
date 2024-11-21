@@ -186,6 +186,7 @@ class OTXDataModule(LightningDataModule):
                 dm_subset=dm_subset.as_dataset(),
                 cfg_subset=config_mapping[name],
                 mem_cache_handler=mem_cache_handler,
+                data_format=self.data_format,
                 mem_cache_img_max_size=mem_cache_img_max_size,
                 image_color_channel=image_color_channel,
                 stack_images=stack_images,

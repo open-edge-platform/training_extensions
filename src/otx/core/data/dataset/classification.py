@@ -128,7 +128,11 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         self.dm_categories = self.dm_subset.categories()[AnnotationType.label]
 
         # Hlabel classification used HLabelInfo to insert the HLabelData.
-        self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
+        if self.data_format == "arrow":
+            self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
+        else:
+            self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
+
         if self.label_info.num_multiclass_heads == 0:
             msg = "The number of multiclass heads should be larger than 0."
             raise ValueError(msg)
