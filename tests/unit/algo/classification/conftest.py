@@ -31,6 +31,7 @@ def fxt_hlabel_data() -> HLabelInfo:
             ["Heart_Queen", "Heart_King"],
             ["Spade_A", "Spade_King"],
         ],
+        label_ids=[str(i) for i in range(6)],
         num_multiclass_heads=3,
         num_multilabel_classes=0,
         head_idx_to_logits_range={"0": (0, 2), "1": (2, 4), "2": (4, 6)},
@@ -149,6 +150,7 @@ def fxt_hlabel_cifar() -> HLabelInfo:
             "aquatic_mammals",
             "fish",
         ],
+        label_ids=[str(i) for i in range(12)],
         label_groups=[
             ["beaver", "dolphin", "otter", "seal", "whale"],
             ["aquarium_fish", "flatfish", "ray", "shark", "trout"],

@@ -167,6 +167,7 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
         stack_images: bool = True,
         to_tv_image: bool = True,
         ignore_index: int = 255,
+        data_format="",
     ) -> None:
         super().__init__(
             dm_subset,
