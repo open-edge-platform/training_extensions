@@ -17,9 +17,10 @@ def test_seg_label_info():
     # Automatically insert background label at zero index
     assert SegLabelInfo.from_num_classes(3) == SegLabelInfo(
         ["label_0", "label_1", "label_2"],
+        ["0", "1", "2"],
         [["label_0", "label_1", "label_2"]],
     )
-    assert SegLabelInfo.from_num_classes(1) == SegLabelInfo(["background", "label_0"], [["background", "label_0"]])
+    assert SegLabelInfo.from_num_classes(1) == SegLabelInfo(["background", "label_0"], ["0", "1"], [["background", "label_0"]])
     assert SegLabelInfo.from_num_classes(0) == NullLabelInfo()
 
 

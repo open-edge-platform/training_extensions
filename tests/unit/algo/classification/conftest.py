@@ -81,6 +81,7 @@ def fxt_hlabel_multilabel_info() -> HLabelInfo:
             "Red_Joker",
             "Extra_Joker",
         ],
+        label_ids=[str(i) for i in range(9)],
         label_groups=[
             ["Heart", "Spade"],
             ["Heart_Queen", "Heart_King"],
