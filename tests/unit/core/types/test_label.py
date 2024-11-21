@@ -20,7 +20,11 @@ def test_seg_label_info():
         ["0", "1", "2"],
         [["label_0", "label_1", "label_2"]],
     )
-    assert SegLabelInfo.from_num_classes(1) == SegLabelInfo(["background", "label_0"], ["0", "1"], [["background", "label_0"]])
+    assert SegLabelInfo.from_num_classes(1) == SegLabelInfo(
+        ["background", "label_0"],
+        ["0", "1"],
+        [["background", "label_0"]],
+    )
     assert SegLabelInfo.from_num_classes(0) == NullLabelInfo()
 
 
