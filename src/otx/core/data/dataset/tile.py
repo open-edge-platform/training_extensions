@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging as log
 import operator
+import warnings
 from copy import deepcopy
 from itertools import product
 from typing import TYPE_CHECKING, Callable
@@ -372,14 +373,17 @@ class OTXTileDetTestDataset(OTXTileDataset):
         img = item.media_as(Image)
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
-        bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
+        gt_bboxes = [ann for ann in item.annotations if isinstance(ann, Bbox)]
+
+        if empty_anno := len(gt_bboxes) == 0:
+            warnings.warn(f"Empty annotation for image {item.id}!", stacklevel=2)
 
         bboxes = (
-            np.stack([ann.points for ann in bbox_anns], axis=0).astype(np.float32)
-            if len(bbox_anns) > 0
-            else np.zeros((0, 4), dtype=np.float32)
+            np.empty((0, 4), dtype=np.float32)
+            if empty_anno
+            else np.stack([ann.points for ann in gt_bboxes], axis=0).astype(np.float32)
         )
-        labels = torch.as_tensor([ann.label for ann in bbox_anns])
+        labels = torch.as_tensor([ann.label for ann in gt_bboxes])
 
         tile_entities, tile_attrs = self.get_tiles(img_data, item, index)
 
@@ -476,11 +480,14 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
                 else:
                     gt_masks.append(polygon_to_bitmap([annotation], *img_shape)[0])
 
+        if empty_anno := len(gt_bboxes) == 0:
+            warnings.warn(f"Empty annotation for image {item.id}", stacklevel=2)
+
         # convert xywh to xyxy format
-        bboxes = np.array(gt_bboxes, dtype=np.float32)
+        bboxes = np.empty((0, 4), dtype=np.float32) if empty_anno else np.stack(gt_bboxes, dtype=np.float32)
         bboxes[:, 2:] += bboxes[:, :2]
 
-        masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((0, *img_shape), dtype=bool)
+        masks = np.stack(gt_masks, axis=0) if gt_masks else np.empty((0, *img_shape), dtype=bool)
         labels = np.array(gt_labels, dtype=np.int64)
 
         tile_entities, tile_attrs = self.get_tiles(img_data, item, index)
