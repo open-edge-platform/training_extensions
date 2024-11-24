@@ -534,7 +534,7 @@ class _FMeasureCalculator:
         for entity in entities:
             keep = entity.labels == label_idx
             if confidence_threshold > 0.0 and hasattr(entity, "score"):
-                keep = keep & (entity.score > 0.0)
+                keep = keep & (entity.score > confidence_threshold)
             batch_bboxes.append(entity.bboxes[keep])
         return batch_bboxes
 
