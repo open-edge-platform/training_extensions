@@ -633,7 +633,7 @@ class FMeasure(Metric):
                     image=None,
                     img_info=None,
                     bboxes=pred["boxes"],
-                    scores=pred["scores"],
+                    score=pred["scores"],
                     labels=pred["labels"],
                 ),
             )
