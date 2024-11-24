@@ -7,101 +7,37 @@ from __future__ import annotations
 
 import inspect
 import logging
+from functools import wraps
+from time import time
 from typing import Any
 
 import numpy as np
+import torch
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchvision.ops import box_iou
 
+from otx.core.data.entity.detection import DetDataEntity, DetPredEntity
 from otx.core.types.label import LabelInfo
 
 logger = logging.getLogger()
 ALL_CLASSES_NAME = "All Classes"
 
 
-def intersection_box(
-    box1: tuple,
-    box2: tuple,
-) -> tuple[float, float, float, float]:
-    """Calculate the intersection box of two bounding boxes.
+def timing(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        print("func:%r args:[%r, %r] took: %2.4f sec" % (f.__name__, args, kw, te - ts))
+        return result
 
-    Args:
-        box1 (tuple): (x1, y1, x2, y2, class, score)
-        box2 (tuple): (x1, y1, x2, y2, class, score)
-
-    Returns:
-        tuple[float, float, float, float]: (x_left, x_right, y_bottom, y_top)
-    """
-    x_left = max(box1[0], box2[0])
-    y_top = max(box1[1], box2[1])
-    x_right = min(box1[2], box2[2])
-    y_bottom = min(box1[3], box2[3])
-    return (x_left, x_right, y_bottom, y_top)
+    return wrap
 
 
-def bounding_box_intersection_over_union(
-    box1: tuple,
-    box2: tuple,
-) -> float:
-    """Calculate the Intersection over Union (IoU) of two bounding boxes.
-
-    Args:
-        box1 (tuple): (x1, y1, x2, y2, class, score)
-        box2 (tuple): (x1, y1, x2, y2, class, score)
-
-    Raises:
-        ValueError: In case the IoU is outside of [0.0, 1.0]
-
-    Returns:
-        float: Intersection-over-union of box1 and box2.
-    """
-    x_left, x_right, y_bottom, y_top = intersection_box(box1, box2)
-
-    if x_right <= x_left or y_bottom <= y_top:
-        iou = 0.0
-    else:
-        intersection_area = (x_right - x_left) * (y_bottom - y_top)
-        bb1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
-        bb2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
-        union_area = float(bb1_area + bb2_area - intersection_area)
-        iou = 0.0 if union_area == 0 else intersection_area / union_area
-    if iou < 0.0 or iou > 1.0:
-        msg = f"intersection over union should be in range [0,1], actual={iou}"
-        raise ValueError(msg)
-    return iou
-
-
-def get_iou_matrix(
-    ground_truth: list[tuple],
-    predicted: list[tuple],
-) -> np.ndarray:
-    """Constructs an iou matrix of shape [num_ground_truth_boxes, num_predicted_boxes].
-
-    Each cell(x,y) in the iou matrix contains the intersection over union of ground truth box(x) and predicted box(y)
-    An iou matrix corresponds to a single image
-
-    Args:
-        ground_truth (list[tuple]): list of ground truth boxes.
-            Each box is a list of (x,y) coordinates and a label.
-            a box: [x1: float, y1, x2, y2, class: str, score: float]
-            boxes_per_image: [box1, box2, …]
-            boxes1: [boxes_per_image_1, boxes_per_image_2, boxes_per_image_3, …]
-        predicted (list[tuple]): list of predicted boxes.
-            Each box is a list of (x,y) coordinates and a label.
-            a box: [x1: float, y1, x2, y2, class: str, score: float]
-            boxes_per_image: [box1, box2, …]
-            boxes2: [boxes_per_image_1, boxes_per_image_2, boxes_per_image_3, …]
-
-    Returns:
-        np.ndarray: IoU matrix of shape [ground_truth_boxes, predicted_boxes]
-    """
-    return np.array(
-        [[bounding_box_intersection_over_union(gts, preds) for preds in predicted] for gts in ground_truth],
-    )
-
-
-def get_n_false_negatives(iou_matrix: np.ndarray, iou_threshold: float) -> int:
+def _get_n_false_negatives(iou_matrix: np.ndarray, iou_threshold: float) -> int:
     """Get the number of false negatives inside the IoU matrix for a given threshold.
 
     The first loop accounts for all the ground truth boxes which do not have a high enough iou with any predicted
@@ -123,6 +59,32 @@ def get_n_false_negatives(iou_matrix: np.ndarray, iou_threshold: float) -> int:
     for column in np.rot90(iou_matrix):
         indices = np.where(column > iou_threshold)
         n_false_negatives += max(len(indices[0]) - 1, 0)
+    return n_false_negatives
+
+
+def get_n_false_negatives(iou_matrix: np.ndarray, iou_threshold: float) -> int:
+    """Get the number of false negatives inside the IoU matrix for a given threshold.
+
+    The first loop accounts for all the ground truth boxes which do not have a high enough iou with any predicted
+    box (they go undetected)
+    The second loop accounts for the much rarer case where two ground truth boxes are detected by the same predicted
+    box. The principle is that each ground truth box requires a unique prediction box
+
+    Args:
+        iou_matrix (np.ndarray): IoU matrix of shape [ground_truth_boxes, predicted_boxes]
+        iou_threshold (float): IoU threshold to use for the false negatives.
+
+    Returns:
+        int: Number of false negatives
+    """
+    # First loop
+    n_false_negatives = 0
+    values = torch.max(iou_matrix, 1)[0] < iou_threshold
+    n_false_negatives += sum(values)
+
+    # Second loop
+    matrix = torch.sum(iou_threshold < iou_matrix.T, 1)
+    n_false_negatives += sum(torch.clamp(matrix - 1, min=0))
     return n_false_negatives
 
 
@@ -240,11 +202,11 @@ class _FMeasureCalculator:
 
     def __init__(
         self,
-        ground_truth_boxes_per_image: list[list[tuple]],
-        prediction_boxes_per_image: list[list[tuple]],
+        gt_entities: list[DetDataEntity],
+        pred_entities: list[DetPredEntity],
     ):
-        self.ground_truth_boxes_per_image = ground_truth_boxes_per_image
-        self.prediction_boxes_per_image = prediction_boxes_per_image
+        self.gt_entities = gt_entities
+        self.pred_entities = pred_entities
         self.confidence_range = [0.025, 1.0, 0.025]
         self.nms_range = [0.1, 1, 0.05]
         self.default_confidence_threshold = 0.35
@@ -375,16 +337,16 @@ class _FMeasureCalculator:
         result.best_f_measure = min_f_measure
         result.best_threshold = 0.5
 
-        critical_nms_per_image = self.__get_critical_nms(self.prediction_boxes_per_image, cross_class_nms)
+        critical_nms_per_image = self.__get_critical_nms(self.pred_entities, cross_class_nms)
 
         for nms_threshold in np.arange(*self.nms_range):
             predicted_boxes_per_image_per_nms = self.__filter_nms(
-                self.prediction_boxes_per_image,
+                self.pred_entities,
                 critical_nms_per_image,
                 nms_threshold,
             )
             boxes_pair_for_nms = _FMeasureCalculator(
-                self.ground_truth_boxes_per_image,
+                self.gt_entities,
                 predicted_boxes_per_image_per_nms,
             )
             result_point = boxes_pair_for_nms.evaluate_classes(
@@ -427,9 +389,9 @@ class _FMeasureCalculator:
 
         if ALL_CLASSES_NAME in classes:
             classes.remove(ALL_CLASSES_NAME)
-        for class_name in classes:
+        for label_idx, class_name in enumerate(classes):
             metrics, counters = self.get_f_measure_for_class(
-                class_name=class_name,
+                label_idx=label_idx,
                 iou_threshold=iou_threshold,
                 confidence_threshold=confidence_threshold,
             )
@@ -444,7 +406,7 @@ class _FMeasureCalculator:
 
     def get_f_measure_for_class(
         self,
-        class_name: str,
+        label_idx: int,
         iou_threshold: float,
         confidence_threshold: float,
     ) -> tuple[_Metrics, _ResultCounters]:
@@ -462,18 +424,22 @@ class _FMeasureCalculator:
             tuple[_Metrics, _ResultCounters]: a structure containing the statistics (e.g. f_measure) and a structure
             containing the intermediated counters used to derive the stats (e.g. num. false positives)
         """
-        class_ground_truth_boxes_per_image = self.__filter_class(self.ground_truth_boxes_per_image, class_name)
-        confidence_predicted_boxes_per_image = self.__filter_confidence(
-            self.prediction_boxes_per_image,
-            confidence_threshold,
+        batch_gt_bboxes = self.__filter(
+            self.gt_entities,
+            label_idx=label_idx,
         )
-        class_predicted_boxes_per_image = self.__filter_class(confidence_predicted_boxes_per_image, class_name)
-        if len(class_ground_truth_boxes_per_image) > 0:
-            boxes_pair_per_class = _FMeasureCalculator(
-                ground_truth_boxes_per_image=class_ground_truth_boxes_per_image,
-                prediction_boxes_per_image=class_predicted_boxes_per_image,
+        batch_pred_bboxes = self.__filter(
+            self.pred_entities,
+            label_idx=label_idx,
+            confidence_threshold=confidence_threshold,
+        )
+
+        if len(batch_gt_bboxes) > 0:
+            result_counters = self.get_counters(
+                batch_gt=batch_gt_bboxes,
+                batch_pred=batch_pred_bboxes,
+                iou_threshold=iou_threshold,
             )
-            result_counters = boxes_pair_per_class.get_counters(iou_threshold=iou_threshold)
             result_metrics = result_counters.calculate_f_measure()
             results = (result_metrics, result_counters)
         else:
@@ -550,10 +516,11 @@ class _FMeasureCalculator:
         return new_boxes_per_image
 
     @staticmethod
-    def __filter_class(
-        boxes_per_image: list[list[tuple]],
-        class_name: str,
-    ) -> list[list[tuple]]:
+    def __filter(
+        entities: list[DetDataEntity | DetPredEntity],
+        label_idx: int,
+        confidence_threshold: float = 0.0,
+    ) -> list[torch.Tensor]:
         """Filters boxes to only keep members of one class.
 
         Args:
@@ -563,42 +530,28 @@ class _FMeasureCalculator:
         Returns:
             list[list[tuple]]: a list of lists of boxes
         """
-        filtered_boxes_per_image = []
-        for boxes in boxes_per_image:
-            filtered_boxes = [box for box in boxes if box[4].lower() == class_name.lower()]
-            filtered_boxes_per_image.append(filtered_boxes)
-        return filtered_boxes_per_image
+        batch_bboxes = []
+        for entity in entities:
+            keep = entity.labels == label_idx
+            if confidence_threshold > 0.0 and hasattr(entity, "score"):
+                keep = keep & (entity.score > 0.0)
+            batch_bboxes.append(entity.bboxes[keep])
+        return batch_bboxes
 
     @staticmethod
-    def __filter_confidence(
-        boxes_per_image: list[list[tuple]],
-        confidence_threshold: float,
-    ) -> list[list[tuple]]:
-        """Filters boxes to only keep ones with higher confidence than a given confidence threshold.
-
-        Args:
-            boxes_per_image (list[list[tuple]]):
-                a box: [x1: float, y1, x2, y2, class: str, score: float]
-                boxes_per_image: [box1, box2, …]
-            confidence_threshold (float): Confidence threshold
-
-        Returns:
-            list[list[tuple]]: Boxes with higher confidence than the given
-                threshold.
-        """
-        filtered_boxes_per_image = []
-        for boxes in boxes_per_image:
-            filtered_boxes = [box for box in boxes if float(box[5]) > confidence_threshold]
-            filtered_boxes_per_image.append(filtered_boxes)
-        return filtered_boxes_per_image
-
-    def get_counters(self, iou_threshold: float) -> _ResultCounters:
+    def get_counters(
+        batch_gt: list[torch.Tensor],
+        batch_pred: list[torch.Tensor],
+        iou_threshold: float,
+    ) -> _ResultCounters:
         """Return counts of true positives, false positives and false negatives for a given iou threshold.
 
         For each image (the loop), compute the number of false negatives, the number of predicted boxes, and the number
         of ground truth boxes, then add each value to its corresponding counter
 
         Args:
+            batch_gt (list[torch.Tensor]): List of ground truth boxes
+            batch_pred (list[torch.Tensor]): List of predicted boxes
             iou_threshold (float): IoU threshold
 
         Returns:
@@ -607,18 +560,15 @@ class _FMeasureCalculator:
         n_false_negatives = 0
         n_true = 0
         n_predicted = 0
-        for ground_truth_boxes, predicted_boxes in zip(
-            self.ground_truth_boxes_per_image,
-            self.prediction_boxes_per_image,
-        ):
-            n_true += len(ground_truth_boxes)
-            n_predicted += len(predicted_boxes)
-            if len(predicted_boxes) > 0:
-                if len(ground_truth_boxes) > 0:
-                    iou_matrix = get_iou_matrix(ground_truth_boxes, predicted_boxes)
+        for gt_bboxes, pred_bboxes in zip(batch_pred, batch_gt, strict=True):
+            n_true += len(gt_bboxes)
+            n_predicted += len(pred_bboxes)
+            if len(pred_bboxes) > 0:
+                if len(gt_bboxes) > 0:
+                    iou_matrix = box_iou(gt_bboxes, pred_bboxes)
                     n_false_negatives += get_n_false_negatives(iou_matrix, iou_threshold)
             else:
-                n_false_negatives += len(ground_truth_boxes)
+                n_false_negatives += len(gt_bboxes)
         return _ResultCounters(n_false_negatives, n_true, n_predicted)
 
 
@@ -679,22 +629,24 @@ class FMeasure(Metric):
         """Update total predictions and targets from given batch predicitons and targets."""
         for pred, tget in zip(preds, target):
             self.preds.append(
-                [
-                    (*box, self.classes[label], score)
-                    for box, label, score in zip(
-                        pred["boxes"].tolist(),
-                        pred["labels"].tolist(),
-                        pred["scores"].tolist(),
-                    )
-                ],
+                DetPredEntity(
+                    image=None,
+                    img_info=None,
+                    bboxes=pred["boxes"],
+                    scores=pred["scores"],
+                    labels=pred["labels"],
+                ),
             )
             self.targets.append(
-                [
-                    (*box, self.classes[label], 0.0)
-                    for box, label in zip(tget["boxes"].tolist(), tget["labels"].tolist())
-                ],
+                DetDataEntity(
+                    image=None,
+                    img_info=None,
+                    bboxes=tget["boxes"],
+                    labels=tget["labels"],
+                ),
             )
 
+    @timing
     def compute(self, best_confidence_threshold: float | None = None) -> dict:
         """Compute f1 score metric.
 
@@ -785,6 +737,12 @@ class FMeasure(Metric):
         return self.label_info.label_names
 
 
+class OTXMeanAveragePrecision(MeanAveragePrecision):
+    @timing
+    def compute(self) -> Tensor:
+        return super().compute()
+
+
 class MeanAveragePrecisionFMeasure(MetricCollection):
     """Computes the mean AP with f-measure for a resultset.
 
@@ -799,12 +757,12 @@ class MeanAveragePrecisionFMeasure(MetricCollection):
     """
 
     def __init__(self, box_format: str, iou_type: str, label_info: LabelInfo, **kwargs):
-        map_kwargs = self._filter_kwargs(MeanAveragePrecision, kwargs)
+        map_kwargs = self._filter_kwargs(OTXMeanAveragePrecision, kwargs)
         fmeasure_kwargs = self._filter_kwargs(FMeasure, kwargs)
 
         super().__init__(
             [
-                MeanAveragePrecision(box_format, iou_type, **map_kwargs),
+                OTXMeanAveragePrecision(box_format, iou_type, **map_kwargs),
                 FMeasure(label_info, **fmeasure_kwargs),
             ],
         )
