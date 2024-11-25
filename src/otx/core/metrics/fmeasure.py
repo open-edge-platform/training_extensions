@@ -67,7 +67,7 @@ def get_n_false_negatives(iou_matrix: Tensor, iou_threshold: float) -> Tensor:
     """
     # First loop
     n_false_negatives = 0
-    values = torch.max(iou_matrix, 1)[0] < iou_threshold
+    values = torch.max(iou_matrix, 1)[0] < iou_threshold - 1e-6  # 1e-6 is to avoid numerical instability
     n_false_negatives += sum(values)
 
     # Second loop
