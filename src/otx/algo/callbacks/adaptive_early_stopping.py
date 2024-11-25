@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 class EarlyStoppingWithWarmup(EarlyStopping):
     """EarlyStoppingWithWarmup callback."""
+
     def __init__(
         self,
         monitor: str,
