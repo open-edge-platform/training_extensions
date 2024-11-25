@@ -308,7 +308,9 @@ class ConfigConverter:
             config["data"]["test_subset"]["num_workers"] = param_value
 
         def update_enable_early_stopping(param_value: bool) -> None:
-            idx = ConfigConverter._get_callback_idx(config["callbacks"], "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup")
+            idx = ConfigConverter._get_callback_idx(
+                config["callbacks"], "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+            )
             if not param_value and idx > -1:
                 config["callbacks"].pop(idx)
 
