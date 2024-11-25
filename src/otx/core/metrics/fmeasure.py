@@ -25,31 +25,6 @@ logger = logging.getLogger()
 ALL_CLASSES_NAME = "All Classes"
 
 
-def _get_n_false_negatives(iou_matrix: np.ndarray, iou_threshold: float) -> int:
-    """Get the number of false negatives inside the IoU matrix for a given threshold.
-
-    The first loop accounts for all the ground truth boxes which do not have a high enough iou with any predicted
-    box (they go undetected)
-    The second loop accounts for the much rarer case where two ground truth boxes are detected by the same predicted
-    box. The principle is that each ground truth box requires a unique prediction box
-
-    Args:
-        iou_matrix (np.ndarray): IoU matrix of shape [ground_truth_boxes, predicted_boxes]
-        iou_threshold (float): IoU threshold to use for the false negatives.
-
-    Returns:
-        int: Number of false negatives
-    """
-    n_false_negatives = 0
-    for row in iou_matrix:
-        if max(row) < iou_threshold:
-            n_false_negatives += 1
-    for column in np.rot90(iou_matrix):
-        indices = np.where(column > iou_threshold)
-        n_false_negatives += max(len(indices[0]) - 1, 0)
-    return n_false_negatives
-
-
 def get_n_false_negatives(iou_matrix: Tensor, iou_threshold: float) -> Tensor:
     """Get the number of false negatives inside the IoU matrix for a given threshold.
 
@@ -59,11 +34,11 @@ def get_n_false_negatives(iou_matrix: Tensor, iou_threshold: float) -> Tensor:
     box. The principle is that each ground truth box requires a unique prediction box
 
     Args:
-        iou_matrix (np.ndarray): IoU matrix of shape [ground_truth_boxes, predicted_boxes]
+        iou_matrix (torch.Tensor): IoU matrix of shape [ground_truth_boxes, predicted_boxes]
         iou_threshold (float): IoU threshold to use for the false negatives.
 
     Returns:
-        int: Number of false negatives
+        Tensor: Number of false negatives
     """
     # First loop
     n_false_negatives = 0
@@ -175,8 +150,7 @@ class _FMeasureCalculator:
     """This class contains the functions to calculate FMeasure.
 
     Args:
-        gt_entities (list[DetDataEntity]): list of ground truth detection entities.
-        pred_entities (list[DetPredEntity]): list of predicted detection entities.
+       classes (list[str]): List of classes.
     """
 
     def __init__(self, classes: list[str]):
@@ -201,7 +175,8 @@ class _FMeasureCalculator:
         used to achieve them.
 
         Args:
-            classes (list[str]): Names of classes to be evaluated.
+            gt_entities (list[DetDataEntity]): List of ground truth entities.
+            pred_entities (list[DetPredEntity]): List of predicted entities.
             iou_threshold (float): IOU threshold. Defaults to 0.5.
 
         Returns:
@@ -243,6 +218,8 @@ class _FMeasureCalculator:
 
         Args:
             classes (list[str]): Names of classes to be evaluated.
+            gt_entities (list[DetDataEntity]): List of ground truth entities.
+            pred_entities (list[DetPredEntity]): List of predicted entities.
             confidence_range (list[float]): list of confidence thresholds to be evaluated.
             iou_threshold (float): IoU threshold to use for false negatives.
 
@@ -329,7 +306,7 @@ class _FMeasureCalculator:
         all boxes are filtered at this stage by class and predicted boxes are filtered by confidence threshold
 
         Args:
-            gt_entites (list[DetDataEntity]): List of ground truth entities.
+            gt_entities (list[DetDataEntity]): List of ground truth entities.
             pred_entities (list[DetPredEntity]): List of predicted entities.
             label_idx (int): Index of the class for which the boxes are filtered.
             iou_threshold (float): IoU threshold
