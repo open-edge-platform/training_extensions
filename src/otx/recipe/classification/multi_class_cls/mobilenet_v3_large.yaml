@@ -20,7 +20,7 @@ model:
           init_args:
             mode: max
             factor: 0.5
-            patience: 1
+            patience: 5
             monitor: val/accuracy
 
 engine:

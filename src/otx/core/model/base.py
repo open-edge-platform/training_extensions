@@ -744,7 +744,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             return super().lr_scheduler_step(scheduler=scheduler, metric=metric)
 
         if len(warmup_schedulers) != 1:
-            msg = "No more than two warmup schedulers coexist."
+            msg = "No more than one warmup schedulers coexist."
             raise RuntimeError(msg)
 
         warmup_scheduler = next(iter(warmup_schedulers))
