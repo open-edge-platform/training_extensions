@@ -25,6 +25,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4053>)
 - Reduce tiling unittests resource consumption
   (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
+- Upgrade OpenVINO to 2024.5 and NNCF to 2.14.0
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4123>)
 
 ### Bug fixes
 
