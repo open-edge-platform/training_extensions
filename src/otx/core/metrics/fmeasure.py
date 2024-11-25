@@ -249,7 +249,7 @@ class _FMeasureCalculator:
         Returns:
             _AggregatedResults: _AggregatedResults object with the result statistics (e.g F-measure).
         """
-        result = _AggregatedResults(self.classes)
+        result = _AggregatedResults(classes)
         result.best_threshold = 0.1
 
         for confidence_threshold in np.arange(*confidence_range):
@@ -263,7 +263,7 @@ class _FMeasureCalculator:
             all_classes_f_measure = result_point[ALL_CLASSES_NAME].f_measure
             result.all_classes_f_measure_curve.append(all_classes_f_measure)
 
-            for class_name in self.classes:
+            for class_name in classes:
                 result.f_measure_curve[class_name].append(result_point[class_name].f_measure)
                 result.precision_curve[class_name].append(result_point[class_name].precision)
                 result.recall_curve[class_name].append(result_point[class_name].recall)
