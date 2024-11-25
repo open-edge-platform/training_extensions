@@ -427,7 +427,7 @@ class _FMeasureCalculator:
         n_false_negatives = 0
         n_true = 0
         n_predicted = 0
-        for gt_bboxes, pred_bboxes in zip(batch_pred, batch_gt, strict=True):
+        for gt_bboxes, pred_bboxes in zip(batch_gt, batch_pred, strict=True):
             n_true += len(gt_bboxes)
             n_predicted += len(pred_bboxes)
             if len(pred_bboxes) > 0:
