@@ -31,7 +31,3 @@ callback_monitor: val/accuracy
 data: ../../_base_/data/classification.yaml
 overrides:
   max_epochs: 90
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
-        patience: 3

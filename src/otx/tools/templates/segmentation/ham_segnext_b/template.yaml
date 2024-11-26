@@ -31,8 +31,6 @@ hyper_parameters:
         default_value: 200
       early_stop_start:
         default_value: 100
-      early_stop_patience:
-        default_value: 10
 
 # Training resources.
 max_nodes: 1

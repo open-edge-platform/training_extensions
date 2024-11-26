@@ -35,10 +35,6 @@ overrides:
     - data.train_subset.transforms
 
   max_epochs: 200
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
-        patience: 3
 
   data:
     task: MULTI_LABEL_CLS

@@ -15,12 +15,11 @@ if TYPE_CHECKING:
 
 class EarlyStoppingWithWarmup(EarlyStopping):
     """EarlyStoppingWithWarmup callback."""
-
     def __init__(
         self,
         monitor: str,
         min_delta: float = 0.0,
-        patience: int = 3,
+        patience: int = 10,
         verbose: bool = False,
         mode: str = "min",
         strict: bool = True,

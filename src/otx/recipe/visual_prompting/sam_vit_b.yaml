@@ -39,4 +39,4 @@ overrides:
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
-        patience: 3
+        patience: 5
