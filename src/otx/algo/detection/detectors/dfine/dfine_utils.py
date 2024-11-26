@@ -1,14 +1,13 @@
-"""
-Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
+"""Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 """
 
 import torch
+
 from .box_ops import box_xyxy_to_cxcywh
 
 
 def weighting_function(reg_max, up, reg_scale, deploy=False):
-    """
-    Generates the non-uniform Weighting Function W(n) for bounding box regression.
+    """Generates the non-uniform Weighting Function W(n) for bounding box regression.
 
     Args:
         reg_max (int): Max number of the discrete bins.
@@ -26,7 +25,7 @@ def weighting_function(reg_max, up, reg_scale, deploy=False):
         upper_bound1 = (abs(up[0]) * abs(reg_scale)).item()
         upper_bound2 = (abs(up[0]) * abs(reg_scale) * 2).item()
         step = (upper_bound1 + 1) ** (2 / (reg_max - 2))
-        left_values = [-(step) ** i + 1 for i in range(reg_max // 2 - 1, 0, -1)]
+        left_values = [-((step) ** i) + 1 for i in range(reg_max // 2 - 1, 0, -1)]
         right_values = [(step) ** i - 1 for i in range(1, reg_max // 2)]
         values = [-upper_bound2] + left_values + [torch.zeros_like(up[0][None])] + right_values + [upper_bound2]
         return torch.tensor(values, dtype=up.dtype, device=up.device)
@@ -34,15 +33,14 @@ def weighting_function(reg_max, up, reg_scale, deploy=False):
         upper_bound1 = abs(up[0]) * abs(reg_scale)
         upper_bound2 = abs(up[0]) * abs(reg_scale) * 2
         step = (upper_bound1 + 1) ** (2 / (reg_max - 2))
-        left_values = [-(step) ** i + 1 for i in range(reg_max // 2 - 1, 0, -1)]
+        left_values = [-((step) ** i) + 1 for i in range(reg_max // 2 - 1, 0, -1)]
         right_values = [(step) ** i - 1 for i in range(1, reg_max // 2)]
         values = [-upper_bound2] + left_values + [torch.zeros_like(up[0][None])] + right_values + [upper_bound2]
         return torch.cat(values, 0)
 
 
 def translate_gt(gt, reg_max, reg_scale, up):
-    """
-    Decodes bounding box ground truth (GT) values into distribution-based GT representations.
+    """Decodes bounding box ground truth (GT) values into distribution-based GT representations.
 
     This function maps continuous GT values into discrete distribution bins, which can be used
     for regression tasks in object detection models. It calculates the indices of the closest
@@ -90,12 +88,12 @@ def translate_gt(gt, reg_max, reg_scale, up):
     weight_left[valid_idx_mask] = 1.0 - weight_right[valid_idx_mask]
 
     # Invalid weights (out of range)
-    invalid_idx_mask_neg = (indices < 0)
+    invalid_idx_mask_neg = indices < 0
     weight_right[invalid_idx_mask_neg] = 0.0
     weight_left[invalid_idx_mask_neg] = 1.0
     indices[invalid_idx_mask_neg] = 0.0
 
-    invalid_idx_mask_pos = (indices >= reg_max)
+    invalid_idx_mask_pos = indices >= reg_max
     weight_right[invalid_idx_mask_pos] = 1.0
     weight_left[invalid_idx_mask_pos] = 0.0
     indices[invalid_idx_mask_pos] = reg_max - 0.1
@@ -104,8 +102,7 @@ def translate_gt(gt, reg_max, reg_scale, up):
 
 
 def distance2bbox(points, distance, reg_scale):
-    """
-    Decodes edge-distances into bounding box coordinates.
+    """Decodes edge-distances into bounding box coordinates.
 
     Args:
         points (Tensor): (B, N, 4) or (N, 4) format, representing [x, y, w, h],
@@ -130,8 +127,7 @@ def distance2bbox(points, distance, reg_scale):
 
 
 def bbox2distance(points, bbox, reg_max, reg_scale, up, eps=0.1):
-    """
-    Converts bounding box coordinates to distances from a reference point.
+    """Converts bounding box coordinates to distances from a reference point.
 
     Args:
         points (Tensor): (n, 4) [x, y, w, h], where (x, y) is the center.
@@ -145,12 +141,12 @@ def bbox2distance(points, bbox, reg_max, reg_scale, up, eps=0.1):
         Tensor: Decoded distances.
     """
     reg_scale = abs(reg_scale)
-    left   = (points[:, 0] - bbox[:, 0]) / (points[..., 2] / reg_scale + 1e-16) - 0.5 * reg_scale
-    top    = (points[:, 1] - bbox[:, 1]) / (points[..., 3] / reg_scale + 1e-16) - 0.5 * reg_scale
-    right  = (bbox[:, 2] - points[:, 0]) / (points[..., 2] / reg_scale + 1e-16) - 0.5 * reg_scale
+    left = (points[:, 0] - bbox[:, 0]) / (points[..., 2] / reg_scale + 1e-16) - 0.5 * reg_scale
+    top = (points[:, 1] - bbox[:, 1]) / (points[..., 3] / reg_scale + 1e-16) - 0.5 * reg_scale
+    right = (bbox[:, 2] - points[:, 0]) / (points[..., 2] / reg_scale + 1e-16) - 0.5 * reg_scale
     bottom = (bbox[:, 3] - points[:, 1]) / (points[..., 3] / reg_scale + 1e-16) - 0.5 * reg_scale
     four_lens = torch.stack([left, top, right, bottom], -1)
     four_lens, weight_right, weight_left = translate_gt(four_lens, reg_max, reg_scale, up)
     if reg_max is not None:
-        four_lens = four_lens.clamp(min=0, max=reg_max-eps)
+        four_lens = four_lens.clamp(min=0, max=reg_max - eps)
     return four_lens.reshape(-1).detach(), weight_right.detach(), weight_left.detach()

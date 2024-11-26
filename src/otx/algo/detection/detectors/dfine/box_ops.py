@@ -1,5 +1,4 @@
-"""
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+"""# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 https://github.com/facebookresearch/detr/blob/main/util/box_ops.py
 """
 
@@ -10,16 +9,18 @@ from torchvision.ops.boxes import box_area
 
 def box_cxcywh_to_xyxy(x):
     x_c, y_c, w, h = x.unbind(-1)
-    b = [(x_c - 0.5 * w.clamp(min=0.0)), (y_c - 0.5 * h.clamp(min=0.0)),
-         (x_c + 0.5 * w.clamp(min=0.0)), (y_c + 0.5 * h.clamp(min=0.0))]
+    b = [
+        (x_c - 0.5 * w.clamp(min=0.0)),
+        (y_c - 0.5 * h.clamp(min=0.0)),
+        (x_c + 0.5 * w.clamp(min=0.0)),
+        (y_c + 0.5 * h.clamp(min=0.0)),
+    ]
     return torch.stack(b, dim=-1)
-
 
 
 def box_xyxy_to_cxcywh(x: Tensor) -> Tensor:
     x0, y0, x1, y1 = x.unbind(-1)
-    b = [(x0 + x1) / 2, (y0 + y1) / 2,
-         (x1 - x0), (y1 - y0)]
+    b = [(x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0), (y1 - y0)]
     return torch.stack(b, dim=-1)
 
 
@@ -41,8 +42,7 @@ def box_iou(boxes1: Tensor, boxes2: Tensor):
 
 
 def generalized_box_iou(boxes1, boxes2):
-    """
-    Generalized IoU from https://giou.stanford.edu/
+    """Generalized IoU from https://giou.stanford.edu/
 
     The boxes should be in [x0, y0, x1, y1] format
 
@@ -80,11 +80,11 @@ def masks_to_boxes(masks):
     x = torch.arange(0, w, dtype=torch.float)
     y, x = torch.meshgrid(y, x)
 
-    x_mask = (masks * x.unsqueeze(0))
+    x_mask = masks * x.unsqueeze(0)
     x_max = x_mask.flatten(1).max(-1)[0]
     x_min = x_mask.masked_fill(~(masks.bool()), 1e8).flatten(1).min(-1)[0]
 
-    y_mask = (masks * y.unsqueeze(0))
+    y_mask = masks * y.unsqueeze(0)
     y_max = y_mask.flatten(1).max(-1)[0]
     y_min = y_mask.masked_fill(~(masks.bool()), 1e8).flatten(1).min(-1)[0]
 

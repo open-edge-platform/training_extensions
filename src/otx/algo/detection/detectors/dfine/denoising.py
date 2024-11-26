@@ -4,24 +4,25 @@ Modifications Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 
 import torch
 
-from .utils import inverse_sigmoid
 from .box_ops import box_cxcywh_to_xyxy, box_xyxy_to_cxcywh
+from .utils import inverse_sigmoid
 
 
-
-def get_contrastive_denoising_training_group(targets,
-                                             num_classes,
-                                             num_queries,
-                                             class_embed,
-                                             num_denoising=100,
-                                             label_noise_ratio=0.5,
-                                             box_noise_scale=1.0,):
-    """cnd"""
+def get_contrastive_denoising_training_group(
+    targets,
+    num_classes,
+    num_queries,
+    class_embed,
+    num_denoising=100,
+    label_noise_ratio=0.5,
+    box_noise_scale=1.0,
+):
+    """Cnd"""
     if num_denoising <= 0:
         return None, None, None, None
 
-    num_gts = [len(t['labels']) for t in targets]
-    device = targets[0]['labels'].device
+    num_gts = [len(t["labels"]) for t in targets]
+    device = targets[0]["labels"].device
 
     max_gt_num = max(num_gts)
     if max_gt_num == 0:
@@ -39,8 +40,8 @@ def get_contrastive_denoising_training_group(targets,
     for i in range(bs):
         num_gt = num_gts[i]
         if num_gt > 0:
-            input_query_class[i, :num_gt] = targets[i]['labels']
-            input_query_bbox[i, :num_gt] = targets[i]['boxes']
+            input_query_class[i, :num_gt] = targets[i]["labels"]
+            input_query_bbox[i, :num_gt] = targets[i]["boxes"]
             pad_gt_mask[i, :num_gt] = 1
     # each group has positive and negative queries.
     input_query_class = input_query_class.tile([1, 2 * num_group])
@@ -77,7 +78,7 @@ def get_contrastive_denoising_training_group(targets,
         # # this is to make sure the dn bbox can be reversed to the original bbox by dfine head.
         # rand_sign = torch.where((shrink_mask * (1 - negative_gt_mask) * mask).bool(), \
         #                         rand_sign * upper_bound / (upper_bound+1) / rand_part, rand_sign)
-        known_bbox += (rand_sign * rand_part * diff)
+        known_bbox += rand_sign * rand_part * diff
         known_bbox = torch.clip(known_bbox, min=0.0, max=1.0)
         input_query_bbox = box_xyxy_to_cxcywh(known_bbox)
         input_query_bbox[input_query_bbox < 0] *= -1
@@ -93,17 +94,17 @@ def get_contrastive_denoising_training_group(targets,
     # reconstruct cannot see each other
     for i in range(num_group):
         if i == 0:
-            attn_mask[max_gt_num * 2 * i: max_gt_num * 2 * (i + 1), max_gt_num * 2 * (i + 1): num_denoising] = True
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), max_gt_num * 2 * (i + 1) : num_denoising] = True
         if i == num_group - 1:
-            attn_mask[max_gt_num * 2 * i: max_gt_num * 2 * (i + 1), :max_gt_num * i * 2] = True
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), : max_gt_num * i * 2] = True
         else:
-            attn_mask[max_gt_num * 2 * i: max_gt_num * 2 * (i + 1), max_gt_num * 2 * (i + 1): num_denoising] = True
-            attn_mask[max_gt_num * 2 * i: max_gt_num * 2 * (i + 1), :max_gt_num * 2 * i] = True
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), max_gt_num * 2 * (i + 1) : num_denoising] = True
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), : max_gt_num * 2 * i] = True
 
     dn_meta = {
         "dn_positive_idx": dn_positive_idx,
         "dn_num_group": num_group,
-        "dn_num_split": [num_denoising, num_queries]
+        "dn_num_split": [num_denoising, num_queries],
     }
 
     # print(input_query_class.shape) # torch.Size([4, 196, 256])

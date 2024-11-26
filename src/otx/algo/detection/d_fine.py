@@ -7,14 +7,19 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxFormat
 
-
+from otx.algo.common.utils.assigners.hungarian_matcher import HungarianMatcher
+from otx.algo.detection.detectors import DETR
+from otx.algo.detection.detectors.dfine.dfine_criterion import DFINECriterion
+from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
+from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
+from otx.algo.detection.detectors.dfine.hybrid_encoder import HybridEncoder
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -23,13 +28,6 @@ from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import ExplainableOTXDetModel
-
-
-from otx.algo.detection.detectors.dfine.dfine import DFINE
-from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
-from otx.algo.detection.detectors.dfine.hybrid_encoder import HybridEncoder
-from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
-
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -50,7 +48,7 @@ PRETRAINED_WEIGHTS: dict[str, str] = {
 }
 
 
-class DFINE(ExplainableOTXDetModel):
+class DFine(ExplainableOTXDetModel):
     """OTX Detection model class for D-Fine."""
 
     input_size_multiplier = 32
@@ -86,11 +84,22 @@ class DFINE(ExplainableOTXDetModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> DFINE:
+    def _build_model(self, num_classes: int) -> DFINEModule:
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
         decoder = DFINETransformer(
             model_name=self.model_name,
+            num_classes=num_classes,
+        )
+        criterion = DFINECriterion(
+            matcher=HungarianMatcher(
+                cost_dict={"cost_class": 2, "cost_bbox": 5, "cost_giou": 2},
+            ),
+            weight_dict={"loss_vfl": 1, "loss_bbox": 5, "loss_giou": 2, "loss_fgl": 0.15, "loss_ddf": 1.5},
+            losses=["vfl", "boxes", "local"],
+            alpha=0.75,
+            gamma=2.0,
+            reg_max=32,
             num_classes=num_classes,
         )
 
@@ -104,13 +113,13 @@ class DFINE(ExplainableOTXDetModel):
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
         ]
 
-        return DFINE(
+        return DETR(
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,
+            criterion=criterion,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
-            input_size=self.input_size[0],
         )
 
     def _customize_inputs(

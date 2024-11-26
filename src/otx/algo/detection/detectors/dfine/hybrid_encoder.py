@@ -1,5 +1,4 @@
-"""
-D-FINE: Redefine Regression Task of DETRs as Fine-grained Distribution Refinement
+"""D-FINE: Redefine Regression Task of DETRs as Fine-grained Distribution Refinement
 Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
@@ -7,46 +6,45 @@ Copyright (c) 2023 lyuwenyu. All Rights Reserved.
 """
 from __future__ import annotations
 
-from typing import Any, ClassVar
-
 import copy
 from collections import OrderedDict
+from typing import Any, ClassVar
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 from .utils import get_activation
 
-__all__ = ['HybridEncoderModule']
+__all__ = ["HybridEncoderModule"]
 
 
 class ConvNormLayer_fuse(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size, stride, g=1, padding=None, bias=False, act=None):
         super().__init__()
-        padding = (kernel_size-1)//2 if padding is None else padding
-        self.conv = nn.Conv2d(
+        padding = (kernel_size - 1) // 2 if padding is None else padding
+        self.conv = nn.Conv2d(ch_in, ch_out, kernel_size, stride, groups=g, padding=padding, bias=bias)
+        self.norm = nn.BatchNorm2d(ch_out)
+        self.act = nn.Identity() if act is None else get_activation(act)
+        self.ch_in, self.ch_out, self.kernel_size, self.stride, self.g, self.padding, self.bias = (
             ch_in,
             ch_out,
             kernel_size,
             stride,
-            groups=g,
-            padding=padding,
-            bias=bias)
-        self.norm = nn.BatchNorm2d(ch_out)
-        self.act = nn.Identity() if act is None else get_activation(act)
-        self.ch_in, self.ch_out, self.kernel_size, self.stride, self.g, self.padding, self.bias = \
-            ch_in, ch_out, kernel_size, stride, g, padding, bias
+            g,
+            padding,
+            bias,
+        )
 
     def forward(self, x):
-        if hasattr(self, 'conv_bn_fused'):
+        if hasattr(self, "conv_bn_fused"):
             y = self.conv_bn_fused(x)
         else:
             y = self.norm(self.conv(x))
         return self.act(y)
 
     def convert_to_deploy(self):
-        if not hasattr(self, 'conv_bn_fused'):
+        if not hasattr(self, "conv_bn_fused"):
             self.conv_bn_fused = nn.Conv2d(
                 self.ch_in,
                 self.ch_out,
@@ -54,13 +52,14 @@ class ConvNormLayer_fuse(nn.Module):
                 self.stride,
                 groups=self.g,
                 padding=self.padding,
-                bias=True)
+                bias=True,
+            )
 
         kernel, bias = self.get_equivalent_kernel_bias()
         self.conv_bn_fused.weight.data = kernel
         self.conv_bn_fused.bias.data = bias
-        self.__delattr__('conv')
-        self.__delattr__('norm')
+        self.__delattr__("conv")
+        self.__delattr__("norm")
 
     def get_equivalent_kernel_bias(self):
         kernel3x3, bias3x3 = self._fuse_bn_tensor()
@@ -82,15 +81,8 @@ class ConvNormLayer_fuse(nn.Module):
 class ConvNormLayer(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size, stride, g=1, padding=None, bias=False, act=None):
         super().__init__()
-        padding = (kernel_size-1)//2 if padding is None else padding
-        self.conv = nn.Conv2d(
-            ch_in,
-            ch_out,
-            kernel_size,
-            stride,
-            groups=g,
-            padding=padding,
-            bias=bias)
+        padding = (kernel_size - 1) // 2 if padding is None else padding
+        self.conv = nn.Conv2d(ch_in, ch_out, kernel_size, stride, groups=g, padding=padding, bias=bias)
         self.norm = nn.BatchNorm2d(ch_out)
         self.act = nn.Identity() if act is None else get_activation(act)
 
@@ -109,7 +101,7 @@ class SCDown(nn.Module):
 
 
 class VGGBlock(nn.Module):
-    def __init__(self, ch_in, ch_out, act='relu'):
+    def __init__(self, ch_in, ch_out, act="relu"):
         super().__init__()
         self.ch_in = ch_in
         self.ch_out = ch_out
@@ -118,7 +110,7 @@ class VGGBlock(nn.Module):
         self.act = nn.Identity() if act is None else act
 
     def forward(self, x):
-        if hasattr(self, 'conv'):
+        if hasattr(self, "conv"):
             y = self.conv(x)
         else:
             y = self.conv1(x) + self.conv2(x)
@@ -126,14 +118,14 @@ class VGGBlock(nn.Module):
         return self.act(y)
 
     def convert_to_deploy(self):
-        if not hasattr(self, 'conv'):
+        if not hasattr(self, "conv"):
             self.conv = nn.Conv2d(self.ch_in, self.ch_out, 3, 1, padding=1)
 
         kernel, bias = self.get_equivalent_kernel_bias()
         self.conv.weight.data = kernel
         self.conv.bias.data = bias
-        self.__delattr__('conv1')
-        self.__delattr__('conv2')
+        self.__delattr__("conv1")
+        self.__delattr__("conv2")
 
     def get_equivalent_kernel_bias(self):
         kernel3x3, bias3x3 = self._fuse_bn_tensor(self.conv1)
@@ -163,16 +155,19 @@ class VGGBlock(nn.Module):
 
 class ELAN(nn.Module):
     # csp-elan
-    def __init__(self, c1, c2, c3, c4, n=2,
-                 bias=False,
-                 act="silu",
-                 bottletype=VGGBlock):
+    def __init__(self, c1, c2, c3, c4, n=2, bias=False, act="silu", bottletype=VGGBlock):
         super().__init__()
         self.c = c3
         self.cv1 = ConvNormLayer_fuse(c1, c3, 1, 1, bias=bias, act=act)
-        self.cv2 = nn.Sequential(bottletype(c3//2, c4, act=get_activation(act)), ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act))
-        self.cv3 = nn.Sequential(bottletype(c4, c4, act=get_activation(act)), ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act))
-        self.cv4 = ConvNormLayer_fuse(c3+(2*c4), c2, 1, 1, bias=bias, act=act)
+        self.cv2 = nn.Sequential(
+            bottletype(c3 // 2, c4, act=get_activation(act)),
+            ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act),
+        )
+        self.cv3 = nn.Sequential(
+            bottletype(c4, c4, act=get_activation(act)),
+            ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act),
+        )
+        self.cv4 = ConvNormLayer_fuse(c3 + (2 * c4), c2, 1, 1, bias=bias, act=act)
 
     def forward(self, x):
         # y = [self.cv1(x)]
@@ -183,15 +178,19 @@ class ELAN(nn.Module):
 
 class RepNCSPELAN4(nn.Module):
     # csp-elan
-    def __init__(self, c1, c2, c3, c4, n=3,
-                 bias=False,
-                 act="silu"):
+    def __init__(self, c1, c2, c3, c4, n=3, bias=False, act="silu"):
         super().__init__()
-        self.c = c3//2
+        self.c = c3 // 2
         self.cv1 = ConvNormLayer_fuse(c1, c3, 1, 1, bias=bias, act=act)
-        self.cv2 = nn.Sequential(CSPLayer(c3//2, c4, n, 1, bias=bias, act=act, bottletype=VGGBlock), ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act))
-        self.cv3 = nn.Sequential(CSPLayer(c4, c4, n, 1, bias=bias, act=act, bottletype=VGGBlock), ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act))
-        self.cv4 = ConvNormLayer_fuse(c3+(2*c4), c2, 1, 1, bias=bias, act=act)
+        self.cv2 = nn.Sequential(
+            CSPLayer(c3 // 2, c4, n, 1, bias=bias, act=act, bottletype=VGGBlock),
+            ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act),
+        )
+        self.cv3 = nn.Sequential(
+            CSPLayer(c4, c4, n, 1, bias=bias, act=act, bottletype=VGGBlock),
+            ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act),
+        )
+        self.cv4 = ConvNormLayer_fuse(c3 + (2 * c4), c2, 1, 1, bias=bias, act=act)
 
     def forward_chunk(self, x):
         y = list(self.cv1(x).chunk(2, 1))
@@ -205,21 +204,23 @@ class RepNCSPELAN4(nn.Module):
 
 
 class CSPLayer(nn.Module):
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 num_blocks=3,
-                 expansion=1.0,
-                 bias=False,
-                 act="silu",
-                 bottletype=VGGBlock):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        num_blocks=3,
+        expansion=1.0,
+        bias=False,
+        act="silu",
+        bottletype=VGGBlock,
+    ):
         super(CSPLayer, self).__init__()
         hidden_channels = int(out_channels * expansion)
         self.conv1 = ConvNormLayer_fuse(in_channels, hidden_channels, 1, 1, bias=bias, act=act)
         self.conv2 = ConvNormLayer_fuse(in_channels, hidden_channels, 1, 1, bias=bias, act=act)
-        self.bottlenecks = nn.Sequential(*[
-            bottletype(hidden_channels, hidden_channels, act=get_activation(act)) for _ in range(num_blocks)
-        ])
+        self.bottlenecks = nn.Sequential(
+            *[bottletype(hidden_channels, hidden_channels, act=get_activation(act)) for _ in range(num_blocks)],
+        )
         if hidden_channels != out_channels:
             self.conv3 = ConvNormLayer_fuse(hidden_channels, out_channels, 1, 1, bias=bias, act=act)
         else:
@@ -234,13 +235,7 @@ class CSPLayer(nn.Module):
 
 # transformer
 class TransformerEncoderLayer(nn.Module):
-    def __init__(self,
-                 d_model,
-                 nhead,
-                 dim_feedforward=2048,
-                 dropout=0.1,
-                 activation="relu",
-                 normalize_before=False):
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", normalize_before=False):
         super().__init__()
         self.normalize_before = normalize_before
 
@@ -300,7 +295,7 @@ class TransformerEncoder(nn.Module):
 
 
 class HybridEncoderModule(nn.Module):
-    __share__ = ['eval_spatial_size', ]
+    __share__ = ["eval_spatial_size"]
 
     def __init__(
         self,
@@ -308,15 +303,15 @@ class HybridEncoderModule(nn.Module):
         feat_strides=[8, 16, 32],
         hidden_dim=256,
         nhead=8,
-        dim_feedforward = 1024,
+        dim_feedforward=1024,
         dropout=0.0,
-        enc_act='gelu',
+        enc_act="gelu",
         use_encoder_idx=[2],
         num_encoder_layers=1,
         pe_temperature=10000,
         expansion=1.0,
         depth_mult=1.0,
-        act='silu',
+        act="silu",
         eval_spatial_size=None,
     ):
         super().__init__()
@@ -333,11 +328,14 @@ class HybridEncoderModule(nn.Module):
         # channel projection
         self.input_proj = nn.ModuleList()
         for in_channel in in_channels:
-
-            proj = nn.Sequential(OrderedDict([
-                    ('conv', nn.Conv2d(in_channel, hidden_dim, kernel_size=1, bias=False)),
-                    ('norm', nn.BatchNorm2d(hidden_dim))
-                ]))
+            proj = nn.Sequential(
+                OrderedDict(
+                    [
+                        ("conv", nn.Conv2d(in_channel, hidden_dim, kernel_size=1, bias=False)),
+                        ("norm", nn.BatchNorm2d(hidden_dim)),
+                    ],
+                ),
+            )
 
             self.input_proj.append(proj)
 
@@ -347,11 +345,12 @@ class HybridEncoderModule(nn.Module):
             nhead=nhead,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
-            activation=enc_act)
+            activation=enc_act,
+        )
 
-        self.encoder = nn.ModuleList([
-            TransformerEncoder(copy.deepcopy(encoder_layer), num_encoder_layers) for _ in range(len(use_encoder_idx))
-        ])
+        self.encoder = nn.ModuleList(
+            [TransformerEncoder(copy.deepcopy(encoder_layer), num_encoder_layers) for _ in range(len(use_encoder_idx))],
+        )
 
         # top-down fpn
         self.lateral_convs = nn.ModuleList()
@@ -359,7 +358,13 @@ class HybridEncoderModule(nn.Module):
         for _ in range(len(in_channels) - 1, 0, -1):
             self.lateral_convs.append(ConvNormLayer_fuse(hidden_dim, hidden_dim, 1, 1))
             self.fpn_blocks.append(
-                RepNCSPELAN4(hidden_dim * 2, hidden_dim, hidden_dim * 2, round(expansion * hidden_dim // 2), round(3 * depth_mult))
+                RepNCSPELAN4(
+                    hidden_dim * 2,
+                    hidden_dim,
+                    hidden_dim * 2,
+                    round(expansion * hidden_dim // 2),
+                    round(3 * depth_mult),
+                ),
                 # CSPLayer(hidden_dim * 2, hidden_dim, round(3 * depth_mult), act=act, expansion=expansion, bottletype=VGGBlock)
             )
 
@@ -367,12 +372,19 @@ class HybridEncoderModule(nn.Module):
         self.downsample_convs = nn.ModuleList()
         self.pan_blocks = nn.ModuleList()
         for _ in range(len(in_channels) - 1):
-            self.downsample_convs.append(nn.Sequential(
-                SCDown(hidden_dim, hidden_dim, 3, 2),
-                )
+            self.downsample_convs.append(
+                nn.Sequential(
+                    SCDown(hidden_dim, hidden_dim, 3, 2),
+                ),
             )
             self.pan_blocks.append(
-                RepNCSPELAN4(hidden_dim * 2, hidden_dim, hidden_dim * 2, round(expansion * hidden_dim // 2), round(3 * depth_mult))
+                RepNCSPELAN4(
+                    hidden_dim * 2,
+                    hidden_dim,
+                    hidden_dim * 2,
+                    round(expansion * hidden_dim // 2),
+                    round(3 * depth_mult),
+                ),
                 # CSPLayer(hidden_dim * 2, hidden_dim, round(3 * depth_mult), act=act, expansion=expansion, bottletype=VGGBlock)
             )
 
@@ -383,23 +395,24 @@ class HybridEncoderModule(nn.Module):
             for idx in self.use_encoder_idx:
                 stride = self.feat_strides[idx]
                 pos_embed = self.build_2d_sincos_position_embedding(
-                    self.eval_spatial_size[1] // stride, self.eval_spatial_size[0] // stride,
-                    self.hidden_dim, self.pe_temperature)
-                setattr(self, f'pos_embed{idx}', pos_embed)
+                    self.eval_spatial_size[1] // stride,
+                    self.eval_spatial_size[0] // stride,
+                    self.hidden_dim,
+                    self.pe_temperature,
+                )
+                setattr(self, f"pos_embed{idx}", pos_embed)
                 # self.register_buffer(f'pos_embed{idx}', pos_embed)
 
     @staticmethod
-    def build_2d_sincos_position_embedding(w, h, embed_dim=256, temperature=10000.):
-        """
-        """
+    def build_2d_sincos_position_embedding(w, h, embed_dim=256, temperature=10000.0):
+        """ """
         grid_w = torch.arange(int(w), dtype=torch.float32)
         grid_h = torch.arange(int(h), dtype=torch.float32)
-        grid_w, grid_h = torch.meshgrid(grid_w, grid_h, indexing='ij')
-        assert embed_dim % 4 == 0, \
-            'Embed dimension must be divisible by 4 for 2D sin-cos position embedding'
+        grid_w, grid_h = torch.meshgrid(grid_w, grid_h, indexing="ij")
+        assert embed_dim % 4 == 0, "Embed dimension must be divisible by 4 for 2D sin-cos position embedding"
         pos_dim = embed_dim // 4
         omega = torch.arange(pos_dim, dtype=torch.float32) / pos_dim
-        omega = 1. / (temperature ** omega)
+        omega = 1.0 / (temperature**omega)
 
         out_w = grid_w.flatten()[..., None] @ omega[None]
         out_h = grid_h.flatten()[..., None] @ omega[None]
@@ -417,12 +430,13 @@ class HybridEncoderModule(nn.Module):
                 # flatten [B, C, H, W] to [B, HxW, C]
                 src_flatten = proj_feats[enc_ind].flatten(2).permute(0, 2, 1)
                 if self.training or self.eval_spatial_size is None:
-                    pos_embed = self.build_2d_sincos_position_embedding(
-                        w, h, self.hidden_dim, self.pe_temperature).to(src_flatten.device)
+                    pos_embed = self.build_2d_sincos_position_embedding(w, h, self.hidden_dim, self.pe_temperature).to(
+                        src_flatten.device,
+                    )
                 else:
-                    pos_embed = getattr(self, f'pos_embed{enc_ind}', None).to(src_flatten.device)
+                    pos_embed = getattr(self, f"pos_embed{enc_ind}", None).to(src_flatten.device)
 
-                memory :torch.Tensor = self.encoder[i](src_flatten, pos_embed=pos_embed)
+                memory: torch.Tensor = self.encoder[i](src_flatten, pos_embed=pos_embed)
                 proj_feats[enc_ind] = memory.permute(0, 2, 1).reshape(-1, self.hidden_dim, h, w).contiguous()
 
         # broadcasting and fusion
@@ -432,8 +446,8 @@ class HybridEncoderModule(nn.Module):
             feat_low = proj_feats[idx - 1]
             feat_heigh = self.lateral_convs[len(self.in_channels) - 1 - idx](feat_heigh)
             inner_outs[0] = feat_heigh
-            upsample_feat = F.interpolate(feat_heigh, scale_factor=2., mode='nearest')
-            inner_out = self.fpn_blocks[len(self.in_channels)-1-idx](torch.concat([upsample_feat, feat_low], dim=1))
+            upsample_feat = F.interpolate(feat_heigh, scale_factor=2.0, mode="nearest")
+            inner_out = self.fpn_blocks[len(self.in_channels) - 1 - idx](torch.concat([upsample_feat, feat_low], dim=1))
             inner_outs.insert(0, inner_out)
 
         outs = [inner_outs[0]]
@@ -458,7 +472,7 @@ class HybridEncoder:
             "expansion": 0.34,
             "depth_mult": 0.5,
             "eval_spatial_size": [640, 640],
-        }
+        },
     }
 
     def __new__(cls, model_name) -> HybridEncoderModule:

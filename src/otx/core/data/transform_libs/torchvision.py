@@ -80,8 +80,42 @@ if TYPE_CHECKING:
 
 # mypy: disable-error-code="attr-defined"
 
+__all__ = [
+    "NumpytoTVTensorMixin",
+    "PerturbBoundingBoxes",
+    "PadtoSquare",
+    "ResizetoLongestEdge",
+    "DecodeVideo",
+    "PackVideo",
+    "MinIoURandomCrop",
+    "Resize",
+    "RandomResizedCrop",
+    "EfficientNetRandomCrop",
+    "RandomFlip",
+    "PhotoMetricDistortion",
+    "RandomAffine",
+    "CachedMosaic",
+    "CachedMixUp",
+    "YOLOXHSVRandomAug",
+    "Pad",
+    "RandomResize",
+    "RandomCrop",
+    "FilterAnnotations",
+    "Compose",
+    "FormatShape",
+    "DecordInit",
+    "SampleFrames",
+    "DecordDecode",
+    "Normalize3D",
+    "GetBBoxCenterScale",
+    "RandomBBoxTransform",
+    "TopdownAffine",
+    "Decode3DInputsAffineTransforms",
+    "TorchVisionTransformLib",
+]
 
-def custom_query_size(flat_inputs: list[Any]) -> tuple[int, int]:  # noqa: D103
+
+def custom_query_size(flat_inputs: list[Any]) -> tuple[int, int]:
     sizes = {
         tuple(F.get_size(inpt))
         for inpt in flat_inputs
@@ -3921,3 +3955,31 @@ class TorchVisionTransformLib:
             raise TypeError(msg)
 
         return transform
+
+
+class RandomIoUCrop(tvt_v2.RandomIoUCrop):
+    def __init__(
+        self,
+        min_scale: float = 0.3,
+        max_scale: float = 1,
+        min_aspect_ratio: float = 0.5,
+        max_aspect_ratio: float = 2,
+        sampler_options: list[float] | None = None,
+        trials: int = 40,
+        p: float = 1.0,
+    ):
+        super().__init__(
+            min_scale,
+            max_scale,
+            min_aspect_ratio,
+            max_aspect_ratio,
+            sampler_options,
+            trials,
+        )
+        self.p = p
+
+    def __call__(self, *inputs: Any) -> Any:
+        if torch.rand(1) >= self.p:
+            return inputs if len(inputs) > 1 else inputs[0]
+
+        return super().forward(*inputs)

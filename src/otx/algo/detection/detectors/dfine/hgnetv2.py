@@ -1,5 +1,4 @@
-"""
-reference
+"""reference
 - https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/backbones/hgnet_v2.py
 
 Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
@@ -9,25 +8,24 @@ from __future__ import annotations
 from typing import Any, ClassVar
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 from otx.algo.modules.norm import FrozenBatchNorm2d
-
 
 # Constants for initialization
 kaiming_normal_ = nn.init.kaiming_normal_
 zeros_ = nn.init.zeros_
 ones_ = nn.init.ones_
 
-__all__ = ['HGNetv2Module']
+__all__ = ["HGNetv2Module"]
 
 
 class LearnableAffineBlock(nn.Module):
     def __init__(
-            self,
-            scale_value=1.0,
-            bias_value=0.0
+        self,
+        scale_value=1.0,
+        bias_value=0.0,
     ):
         super().__init__()
         self.scale = nn.Parameter(torch.tensor([scale_value]), requires_grad=True)
@@ -39,20 +37,20 @@ class LearnableAffineBlock(nn.Module):
 
 class ConvBNAct(nn.Module):
     def __init__(
-            self,
-            in_chs,
-            out_chs,
-            kernel_size,
-            stride=1,
-            groups=1,
-            padding='',
-            use_act=True,
-            use_lab=False
+        self,
+        in_chs,
+        out_chs,
+        kernel_size,
+        stride=1,
+        groups=1,
+        padding="",
+        use_act=True,
+        use_lab=False,
     ):
         super().__init__()
         self.use_act = use_act
         self.use_lab = use_lab
-        if padding == 'same':
+        if padding == "same":
             self.conv = nn.Sequential(
                 nn.ZeroPad2d([0, 1, 0, 1]),
                 nn.Conv2d(
@@ -61,8 +59,8 @@ class ConvBNAct(nn.Module):
                     kernel_size,
                     stride,
                     groups=groups,
-                    bias=False
-                )
+                    bias=False,
+                ),
             )
         else:
             self.conv = nn.Conv2d(
@@ -72,7 +70,7 @@ class ConvBNAct(nn.Module):
                 stride,
                 padding=(kernel_size - 1) // 2,
                 groups=groups,
-                bias=False
+                bias=False,
             )
         self.bn = nn.BatchNorm2d(out_chs)
         if self.use_act:
@@ -94,12 +92,12 @@ class ConvBNAct(nn.Module):
 
 class LightConvBNAct(nn.Module):
     def __init__(
-            self,
-            in_chs,
-            out_chs,
-            kernel_size,
-            groups=1,
-            use_lab=False,
+        self,
+        in_chs,
+        out_chs,
+        kernel_size,
+        groups=1,
+        use_lab=False,
     ):
         super().__init__()
         self.conv1 = ConvBNAct(
@@ -200,17 +198,17 @@ class EseModule(nn.Module):
 
 class HG_Block(nn.Module):
     def __init__(
-            self,
-            in_chs,
-            mid_chs,
-            out_chs,
-            layer_num,
-            kernel_size=3,
-            residual=False,
-            light_block=False,
-            use_lab=False,
-            agg='ese',
-            drop_path=0.,
+        self,
+        in_chs,
+        mid_chs,
+        out_chs,
+        layer_num,
+        kernel_size=3,
+        residual=False,
+        light_block=False,
+        use_lab=False,
+        agg="ese",
+        drop_path=0.0,
     ):
         super().__init__()
         self.residual = residual
@@ -224,7 +222,7 @@ class HG_Block(nn.Module):
                         mid_chs,
                         kernel_size=kernel_size,
                         use_lab=use_lab,
-                    )
+                    ),
                 )
             else:
                 self.layers.append(
@@ -234,12 +232,12 @@ class HG_Block(nn.Module):
                         kernel_size=kernel_size,
                         stride=1,
                         use_lab=use_lab,
-                    )
+                    ),
                 )
 
         # feature aggregation
         total_chs = in_chs + layer_num * mid_chs
-        if agg == 'se':
+        if agg == "se":
             aggregation_squeeze_conv = ConvBNAct(
                 total_chs,
                 out_chs // 2,
@@ -289,18 +287,18 @@ class HG_Block(nn.Module):
 
 class HG_Stage(nn.Module):
     def __init__(
-            self,
-            in_chs,
-            mid_chs,
-            out_chs,
-            block_num,
-            layer_num,
-            downsample=True,
-            light_block=False,
-            kernel_size=3,
-            use_lab=False,
-            agg='se',
-            drop_path=0.,
+        self,
+        in_chs,
+        mid_chs,
+        out_chs,
+        block_num,
+        layer_num,
+        downsample=True,
+        light_block=False,
+        kernel_size=3,
+        use_lab=False,
+        agg="se",
+        drop_path=0.0,
     ):
         super().__init__()
         self.downsample = downsample
@@ -331,7 +329,7 @@ class HG_Stage(nn.Module):
                     use_lab=use_lab,
                     agg=agg,
                     drop_path=drop_path[i] if isinstance(drop_path, (list, tuple)) else drop_path,
-                )
+                ),
             )
         self.blocks = nn.Sequential(*blocks_list)
 
@@ -342,94 +340,94 @@ class HG_Stage(nn.Module):
 
 
 class HGNetv2Module(nn.Module):
-    """
-    HGNetV2
+    """HGNetV2
     Args:
         stem_channels: list. Number of channels for the stem block.
         stage_type: str. The stage configuration of HGNet. such as the number of channels, stride, etc.
         use_lab: boolean. Whether to use LearnableAffineBlock in network.
         lr_mult_list: list. Control the learning rate of different stages.
+
     Returns:
         model: nn.Layer. Specific HGNetV2 model depends on args.
     """
 
     arch_configs = {
-        'B0': {
-            'stem_channels': [3, 16, 16],
-            'stage_config': {
+        "B0": {
+            "stem_channels": [3, 16, 16],
+            "stage_config": {
                 # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
                 "stage1": [16, 16, 64, 1, False, False, 3, 3],
                 "stage2": [64, 32, 256, 1, True, False, 3, 3],
                 "stage3": [256, 64, 512, 2, True, True, 5, 3],
                 "stage4": [512, 128, 1024, 1, True, True, 5, 3],
             },
-            'url': 'https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B0_stage1.pth'
+            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B0_stage1.pth",
         },
-        'B1': {
-            'stem_channels': [3, 24, 32],
-            'stage_config': {
+        "B1": {
+            "stem_channels": [3, 24, 32],
+            "stage_config": {
                 # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
                 "stage1": [32, 32, 64, 1, False, False, 3, 3],
                 "stage2": [64, 48, 256, 1, True, False, 3, 3],
                 "stage3": [256, 96, 512, 2, True, True, 5, 3],
                 "stage4": [512, 192, 1024, 1, True, True, 5, 3],
             },
-            'url': 'https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B1_stage1.pth'
+            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B1_stage1.pth",
         },
-        'B2': {
-            'stem_channels': [3, 24, 32],
-            'stage_config': {
+        "B2": {
+            "stem_channels": [3, 24, 32],
+            "stage_config": {
                 # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
                 "stage1": [32, 32, 96, 1, False, False, 3, 4],
                 "stage2": [96, 64, 384, 1, True, False, 3, 4],
                 "stage3": [384, 128, 768, 3, True, True, 5, 4],
                 "stage4": [768, 256, 1536, 1, True, True, 5, 4],
             },
-            'url': 'https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B2_stage1.pth'
+            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B2_stage1.pth",
         },
-        'B3': {
-            'stem_channels': [3, 24, 32],
-            'stage_config': {
+        "B3": {
+            "stem_channels": [3, 24, 32],
+            "stage_config": {
                 # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
                 "stage1": [32, 32, 128, 1, False, False, 3, 5],
                 "stage2": [128, 64, 512, 1, True, False, 3, 5],
                 "stage3": [512, 128, 1024, 3, True, True, 5, 5],
                 "stage4": [1024, 256, 2048, 1, True, True, 5, 5],
             },
-            'url': 'https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B3_stage1.pth'
+            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B3_stage1.pth",
         },
-        'B4': {
-            'stem_channels': [3, 32, 48],
-            'stage_config': {
+        "B4": {
+            "stem_channels": [3, 32, 48],
+            "stage_config": {
                 # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
                 "stage1": [48, 48, 128, 1, False, False, 3, 6],
                 "stage2": [128, 96, 512, 1, True, False, 3, 6],
                 "stage3": [512, 192, 1024, 3, True, True, 5, 6],
                 "stage4": [1024, 384, 2048, 1, True, True, 5, 6],
             },
-            'url': 'https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B4_stage1.pth'
+            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B4_stage1.pth",
         },
-        'B5': {
-            'stem_channels': [3, 32, 64],
-            'stage_config': {
+        "B5": {
+            "stem_channels": [3, 32, 64],
+            "stage_config": {
                 # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
                 "stage1": [64, 64, 128, 1, False, False, 3, 6],
                 "stage2": [128, 128, 512, 2, True, False, 3, 6],
                 "stage3": [512, 256, 1024, 5, True, True, 5, 6],
                 "stage4": [1024, 512, 2048, 2, True, True, 5, 6],
             },
-            'url': 'https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B5_stage1.pth'
+            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B5_stage1.pth",
         },
-        'B6': {
-            'stem_channels': [3, 48, 96],
-            'stage_config': {
+        "B6": {
+            "stem_channels": [3, 48, 96],
+            "stage_config": {
                 # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
                 "stage1": [96, 96, 192, 2, False, False, 3, 6],
                 "stage2": [192, 192, 512, 3, True, False, 3, 6],
                 "stage3": [512, 384, 1024, 6, True, True, 5, 6],
                 "stage4": [1024, 768, 2048, 3, True, True, 5, 6],
             },
-            'url': 'https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B6_stage1.pth'
+            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B6_stage1.pth",
         },
     }
 
@@ -446,8 +444,8 @@ class HGNetv2Module(nn.Module):
         self.use_lab = use_lab
         self.return_idx = return_idx
 
-        stem_channels = self.arch_configs[name]['stem_channels']
-        stage_config = self.arch_configs[name]['stage_config']
+        stem_channels = self.arch_configs[name]["stem_channels"]
+        stage_config = self.arch_configs[name]["stage_config"]
 
         self._out_strides = [4, 8, 16, 32]
         self._out_channels = [stage_config[k][2] for k in stage_config]
@@ -457,14 +455,22 @@ class HGNetv2Module(nn.Module):
             in_chs=stem_channels[0],
             mid_chs=stem_channels[1],
             out_chs=stem_channels[2],
-            use_lab=use_lab
+            use_lab=use_lab,
         )
 
         # stages
         self.stages = nn.ModuleList()
         for i, k in enumerate(stage_config):
-            in_channels, mid_channels, out_channels, block_num, downsample, light_block, kernel_size, layer_num = stage_config[
-                k]
+            (
+                in_channels,
+                mid_channels,
+                out_channels,
+                block_num,
+                downsample,
+                light_block,
+                kernel_size,
+                layer_num,
+            ) = stage_config[k]
             self.stages.append(
                 HG_Stage(
                     in_channels,
@@ -475,7 +481,9 @@ class HGNetv2Module(nn.Module):
                     downsample,
                     light_block,
                     kernel_size,
-                    use_lab))
+                    use_lab,
+                ),
+            )
 
         if freeze_at >= 0:
             self._freeze_parameters(self.stem)
@@ -519,7 +527,7 @@ class HGNetv2:
             "freeze_norm": False,
             "use_lab": True,
             "freeze_stem_only": True,
-        }
+        },
     }
 
     def __new__(cls, model_name) -> HGNetv2Module:
