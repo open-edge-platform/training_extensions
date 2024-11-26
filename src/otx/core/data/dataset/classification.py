@@ -207,17 +207,22 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
-        label_anns = []
+        label_ids = set()
         for ann in item.annotations:
+            # in h-cls scenario multilabel information stored in 'multi_label_ids' attribute
+            if "multi_label_ids" in ann.attributes:
+                for lbl_idx in ann.attributes["multi_label_ids"]:
+                    label_ids.add(lbl_idx)
+
             if isinstance(ann, Label):
-                label_anns.append(ann)
+                label_ids.add(ann.label)
             else:
                 # If the annotation is not Label, it should be converted to Label.
                 # For Chained Task: Detection (Bbox) -> Classification (Label)
                 label = Label(label=ann.label)
-                if label not in label_anns:
-                    label_anns.append(label)
-        hlabel_labels = self._convert_label_to_hlabel_format(label_anns, ignored_labels)
+                label_ids.add(label.label)
+
+        hlabel_labels = self._convert_label_to_hlabel_format([Label(label=idx) for idx in label_ids], ignored_labels)
 
         entity = HlabelClsDataEntity(
             image=img_data,
