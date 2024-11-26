@@ -5,4 +5,13 @@
 
 from . import backbones, heads, losses
 
-__all__ = ["backbones", "heads", "losses"]
+__all__ = [
+    "backbones",
+    "efficientnet",
+    "heads",
+    "losses",
+    "mobilenet_v3",
+    "timm_model",
+    "torchvision_model",
+    "vit",
+]

@@ -42,6 +42,20 @@ extensions = [
     "sphinx.ext.intersphinx",  # Generate links to the documentation
     "sphinx_tabs.tabs",
     "sphinx_design",
+    "myst_parser",  # Enhanced markdown support
+    "sphinx.ext.todo",  # Support for TODO items
+    "sphinx.ext.githubpages",  # GitHub Pages support
+    "sphinx.ext.coverage",  # Documentation coverage check
+]
+
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_image",
+    "linkify",
+    "tasklist",
 ]
 
 source_suffix = {
@@ -69,6 +83,13 @@ exclude_patterns = []
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 
+# Show source link & copyright
+html_show_sourcelink = True
+html_show_sphinx = False
+html_show_copyright = True
+html_copy_source = True
+
+
 html_theme_options = {
     "navbar_center": [],
     "navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html"],
@@ -81,11 +102,23 @@ html_theme_options = {
         {
             "name": "GitHub",
             "url": "https://github.com/openvinotoolkit/training_extensions",
-            "icon": "_static/logos/github_icon.png",
-            "type": "local",
+            "icon": "fab fa-github",
+            "type": "fontawesome",
         },
     ],
+    "use_edit_page_button": True,
+    "show_nav_level": 3,
+    "navigation_depth": 6,
+    "show_toc_level": 3,
 }
+
+html_context = {
+    "github_user": "openvinotoolkit",
+    "github_repo": "training_extensions",
+    "github_version": "master",
+    "doc_path": "docs/source/",
+}
+
 html_css_files = [
     "css/custom.css",
 ]

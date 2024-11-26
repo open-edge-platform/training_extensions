@@ -70,6 +70,8 @@ docs = [
     "sphinx-autoapi",
     "sphinxemoji",
     "nbsphinx",
+    "myst-parser>=2.0.0",
+    "linkify-it-py",
 ]
 
 base = [
