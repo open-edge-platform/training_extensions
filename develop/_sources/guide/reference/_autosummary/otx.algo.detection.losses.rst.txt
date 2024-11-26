@@ -1,0 +1,34 @@
+otx.algo.detection.losses
+=========================
+
+.. automodule:: otx.algo.detection.losses
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ATSSCriterion
+      DetrCriterion
+      RTMDetCriterion
+      SSDCriterion
+      YOLOv9Criterion
+      YOLOXCriterion
+   
+   
+
+   
+   
+   
+
+
+

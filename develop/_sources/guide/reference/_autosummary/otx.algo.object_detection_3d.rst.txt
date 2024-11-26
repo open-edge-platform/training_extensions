@@ -1,0 +1,36 @@
+otx.algo.object\_detection\_3d
+==============================
+
+.. automodule:: otx.algo.object_detection_3d
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   otx.algo.object_detection_3d.backbones
+   otx.algo.object_detection_3d.heads
+   otx.algo.object_detection_3d.losses
+   otx.algo.object_detection_3d.detectors
+   otx.algo.object_detection_3d.matchers
+   otx.algo.object_detection_3d.utils
+

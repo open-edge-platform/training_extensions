@@ -1,0 +1,30 @@
+otx.algo.segmentation.segmentors
+================================
+
+.. automodule:: otx.algo.segmentation.segmentors
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseSegmentationModel
+      MeanTeacher
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,29 @@
+otx.algo.object\_detection\_3d.detectors.monodetr
+=================================================
+
+.. automodule:: otx.algo.object_detection_3d.detectors.monodetr
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MonoDETR
+   
+   
+
+   
+   
+   
+
+
+

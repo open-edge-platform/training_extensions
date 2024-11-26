@@ -1,0 +1,30 @@
+otx.algo.anomaly
+================
+
+.. automodule:: otx.algo.anomaly
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Padim
+      Stfpm
+   
+   
+
+   
+   
+   
+
+
+

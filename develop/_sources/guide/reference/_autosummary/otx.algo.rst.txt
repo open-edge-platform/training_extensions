@@ -27,6 +27,17 @@ otx.algo
    :toctree:
    :recursive:
 
-   otx.algo.strategies
    otx.algo.accelerators
+   otx.algo.callbacks
+   otx.algo.strategies
+   otx.algo.action_classification
+   otx.algo.anomaly
+   otx.algo.classification
+   otx.algo.detection
+   otx.algo.modules
+   otx.algo.object_detection_3d
+   otx.algo.samplers
+   otx.algo.segmentation
+   otx.algo.utils
+   otx.algo.visual_prompting
 

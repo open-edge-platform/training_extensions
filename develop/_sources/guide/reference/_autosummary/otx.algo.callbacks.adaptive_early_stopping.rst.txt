@@ -1,0 +1,29 @@
+otx.algo.callbacks.adaptive\_early\_stopping
+============================================
+
+.. automodule:: otx.algo.callbacks.adaptive_early_stopping
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      EarlyStoppingWithWarmup
+   
+   
+
+   
+   
+   
+
+
+

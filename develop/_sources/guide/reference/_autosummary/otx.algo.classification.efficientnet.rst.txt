@@ -1,0 +1,31 @@
+otx.algo.classification.efficientnet
+====================================
+
+.. automodule:: otx.algo.classification.efficientnet
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      EfficientNetForHLabelCls
+      EfficientNetForMulticlassCls
+      EfficientNetForMultilabelCls
+   
+   
+
+   
+   
+   
+
+
+

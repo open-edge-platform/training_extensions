@@ -1,0 +1,34 @@
+otx.algo.action\_classification
+===============================
+
+.. automodule:: otx.algo.action_classification
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseRecognizer
+      MoViNetBackbone
+      MoViNetHead
+      MoViNetRecognizer
+      X3DBackbone
+      X3DHead
+   
+   
+
+   
+   
+   
+
+
+

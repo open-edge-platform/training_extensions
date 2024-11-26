@@ -1,0 +1,30 @@
+otx.algo.object\_detection\_3d.heads
+====================================
+
+.. automodule:: otx.algo.object_detection_3d.heads
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DepthPredictor
+      DepthAwareTransformerBuilder
+   
+   
+
+   
+   
+   
+
+
+

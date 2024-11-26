@@ -1,0 +1,35 @@
+otx.algo.object\_detection\_3d.utils.utils
+==========================================
+
+.. automodule:: otx.algo.object_detection_3d.utils.utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      box_cxcylrtb_to_xyxy
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      NestedTensor
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,34 @@
+otx.algo.detection.heads
+========================
+
+.. automodule:: otx.algo.detection.heads
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ATSSHead
+      RTDETRTransformer
+      RTMDetSepBNHead
+      SSDHead
+      YOLOHead
+      YOLOXHead
+   
+   
+
+   
+   
+   
+
+
+
