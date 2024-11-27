@@ -12,6 +12,8 @@ from decimal import Decimal
 from functools import partial
 from types import LambdaType
 from typing import TYPE_CHECKING, Any, Callable
+from functools import wraps
+from time import time
 
 from otx.core.model.base import OTXModel
 
@@ -261,3 +263,15 @@ def measure_flops(
         else:
             loss_fn(forward_fn()).backward()
     return flop_counter.get_total_flops()
+
+
+def timing(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        total_time = te - ts
+        print('func:%r args:[%r, %r] took: %2.4f sec' % (f.__name__, args, kw, total_time))
+        return result
+    return wrap
