@@ -70,6 +70,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         max_refetch: Maximum number of images to fetch in cache
         image_color_channel: Color channel of images
         stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
+        data_format: Source data format, which was originally passed to datumaro (could be arrow for instance).
 
     """
 
