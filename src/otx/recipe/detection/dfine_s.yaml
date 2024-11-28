@@ -65,7 +65,8 @@ overrides:
           init_args:
             min_size: 1
         - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
-          prob: 0.5
+          init_args:
+            prob: 0.5
         - class_path: otx.core.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
