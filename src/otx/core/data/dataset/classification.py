@@ -141,8 +141,9 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
             msg = "The number of multiclass heads should be larger than 0."
             raise ValueError(msg)
 
-        for dm_item in self.dm_subset:
-            self._add_ancestors(dm_item.annotations)
+        if self.data_format != "arrow":
+            for dm_item in self.dm_subset:
+                self._add_ancestors(dm_item.annotations)
 
     def _add_ancestors(self, label_anns: list[Label]) -> None:
         """Add ancestors recursively if some label miss the ancestor information.
