@@ -411,10 +411,10 @@ class DFINETransformerModule(nn.Module):
         num_classes=80,
         hidden_dim=256,
         num_queries=300,
-        feat_channels=[512, 1024, 2048],
+        feat_channels=[256, 256, 256],
         feat_strides=[8, 16, 32],
         num_levels=3,
-        num_points=4,
+        num_points=[3, 6, 3],
         nhead=8,
         num_layers=6,
         dim_feedforward=1024,
@@ -898,6 +898,13 @@ class DFINETransformer:
             "eval_idx": -1,
             "num_points": [6, 6],
             "eval_spatial_size": [640, 640],
+        },
+        "dfine_hgnetv2_s": {
+            "feat_channels": [256, 256, 256],
+            "num_layers": 3,
+            "eval_idx": -1,
+            "eval_spatial_size": [640, 640],
+            "num_points": [3, 6, 3]
         },
     }
 

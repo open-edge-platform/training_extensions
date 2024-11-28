@@ -581,7 +581,6 @@ def _mean_ap_f_measure_callable(label_info: LabelInfo) -> MeanAveragePrecisionFM
         box_format="xyxy",
         iou_type="bbox",
         label_info=label_info,
-        backend="faster_coco_eval",
     )
 
 

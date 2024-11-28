@@ -41,7 +41,7 @@ PRETRAINED_ROOT: str = "https://github.com/Peterande/storage/releases/download/d
 
 PRETRAINED_WEIGHTS: dict[str, str] = {
     "dfine_hgnetv2_n": PRETRAINED_ROOT + "dfine_n_coco.pth",
-    "dfine_hgnetv2_s": PRETRAINED_ROOT + "dfine_s_coco.pth",
+    "dfine_hgnetv2_s": PRETRAINED_ROOT + "dfine_s_obj2coco.pth",
     "dfine_hgnetv2_m": PRETRAINED_ROOT + "dfine_m_coco.pth",
     "dfine_hgnetv2_l": PRETRAINED_ROOT + "dfine_l_coco.pth",
     "dfine_hgnetv2_x": PRETRAINED_ROOT + "dfine_x_coco.pth",
@@ -84,7 +84,7 @@ class DFine(ExplainableOTXDetModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> DFINEModule:
+    def _build_model(self, num_classes: int) -> DETR:
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
         decoder = DFINETransformer(
@@ -103,12 +103,20 @@ class DFine(ExplainableOTXDetModel):
             num_classes=num_classes,
         )
 
+        if self.model_name == "dfine_hgnetv2_n":
+            backbone_lr = 0.0004
+        elif self.model_name == "dfine_hgnetv2_s":
+            backbone_lr = 0.0001
+        else:
+            backbone_lr = 0.00001
+
+
         # TODO(Eugene): difference variant has different backbone, encoder, and decoder lr rate.
         optimizer_configuration = [
             # no weight decay for norm layers in backbone
-            {"params": "^(?=.*backbone)(?=.*norm).*$", "weight_decay": 0.0, "lr": 0.0004},
+            {"params": "^(?=.*backbone)(?=.*norm).*$", "weight_decay": 0.0, "lr": backbone_lr},
             # lr for the backbone, but not norm layers is 0.00001
-            {"params": "^(?=.*backbone)(?!.*norm).*$", "lr": 0.0004},
+            {"params": "^(?=.*backbone)(?!.*norm).*$", "lr": backbone_lr},
             # no weight decay for norm layers and biases in encoder and decoder layers
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
         ]

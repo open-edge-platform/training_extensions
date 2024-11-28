@@ -17,11 +17,13 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 
 from .base import OTXDataset
+from otx.utils.utils import timing
 
 
 class OTXDetectionDataset(OTXDataset[DetDataEntity]):
     """OTXDataset class for detection task."""
 
+    # @timing
     def _get_item_impl(self, index: int) -> DetDataEntity | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
