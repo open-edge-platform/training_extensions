@@ -206,7 +206,7 @@ GETI_DEFAULT_MODEL = {
     "detection": {"atss_mobilenetv2", "ssd_mobilenetv2", "yolox_tiny"},
     "instance_segmentation": {
         "non-tile": ["maskrcnn_efficientnetb2b", "maskrcnn_r50"],
-        "tile": ["maskrcnn_efficientnetb2b_tile", "maskrcnn_r50_tile"]
+        "tile": ["maskrcnn_efficientnetb2b_tile", "maskrcnn_r50_tile"],
     },
     "semantic_segmentation": {'litehrnet_18', 'litehrnet_s', 'litehrnet_x'}
 }
@@ -328,7 +328,7 @@ def summarize(raw_data: pd.DataFrame, metrics: list[str] | None = None) -> pd.Da
         metrics = raw_data.select_dtypes(include=["number"]).columns.to_list()
 
     grouped_data = raw_data.groupby(["otx_version", "task", "model", "data_group"])
-    aggregated = grouped_data.agg({metric: ['mean', 'std'] for metric in metrics}).reset_index()
+    aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 
     # Flatten the MultiIndex columns, excluding 'otx_version', 'task', 'model', 'data_group'
     cols_to_exclude = {'otx_version', 'task', 'model', 'data_group'}
