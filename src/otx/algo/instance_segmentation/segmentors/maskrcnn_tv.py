@@ -91,6 +91,7 @@ class MaskRCNN(_MaskRCNN):
         for i, (pred, scale_factor, ori_shape) in enumerate(zip(result, scale_factors, ori_shapes)):
             boxes = pred["boxes"]
             labels = pred["labels"]
+            scores = pred["scores"]
             _scale_factor = [1 / s for s in scale_factor]  # (H, W)
             boxes = boxes * boxes.new_tensor(_scale_factor[::-1]).repeat((1, int(boxes.size(-1) / 2)))
             h, w = ori_shape
@@ -99,8 +100,10 @@ class MaskRCNN(_MaskRCNN):
             keep_indices = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1]) > 0
             boxes = boxes[keep_indices > 0]
             labels = labels[keep_indices > 0]
+            scores = scores[keep_indices > 0]
             result[i]["boxes"] = boxes
             result[i]["labels"] = labels - 1  # Convert back to 0-indexed labels
+            result[i]["scores"] = scores
             if "masks" in pred:
                 masks = pred["masks"][keep_indices]
                 masks = paste_masks_in_image(masks, boxes, ori_shape)
