@@ -55,7 +55,7 @@ dev = [
     "pytest-mock",
     "pytest-csv",
     "pytest-cov",
-    "onnxruntime==1.20.0",
+    "onnxruntime==1.20.1",
 ]
 
 docs = [
@@ -89,7 +89,7 @@ base = [
 ]
 
 transformers = [
-    "transformers==4.46.2",
+    "transformers==4.46.3",
     "diffusers==0.31.0",
     "torchmetrics[image]>=0.7.0"
 ]
@@ -120,7 +120,7 @@ ci_benchmark = [
     "ipython==8.29.0",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
-    "mlflow==2.17.2",
+    "mlflow==2.18.0",
     "py-cpuinfo==9.0.0",
 ]
 
