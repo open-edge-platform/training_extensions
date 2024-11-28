@@ -332,7 +332,7 @@ def summarize(raw_data: pd.DataFrame, metrics: list[str] | None = None) -> pd.Da
     # Flatten the MultiIndex columns, excluding 'otx_version', 'task', 'model', 'data_group'
     cols_to_exclude = {"otx_version", "task", "model", "data_group"}
     aggregated.columns = [
-        ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.values
+        ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.to_numpy()
     ]
 
     # Calculate the 'all' data group by taking the mean of the means across all data groups for each model
@@ -364,8 +364,7 @@ def summarize(raw_data: pd.DataFrame, metrics: list[str] | None = None) -> pd.Da
 
     # Sort the index and columns
     summary_data = summary_data.reorder_levels(["data_group", "metric", "stat"], axis=1)
-    summary_data.sort_index(axis=1, inplace=True)
-    return summary_data
+    return summary_data.sort_index(axis=1)
 
 
 def summarize_table(history: pd.DataFrame, task: str) -> pd.DataFrame:
