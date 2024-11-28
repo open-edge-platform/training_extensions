@@ -10,16 +10,15 @@ import fnmatch
 import io
 import os
 import sys
-import numpy as np
 from pathlib import Path
-from typing import Any
 from zipfile import ZipFile
 
-import pandas as pd
 import matplotlib.pyplot as plt
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
+import pandas as pd
+
+pd.set_option("display.max_rows", None)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", None)
 
 V1_V2_NAME_MAP = {
     # Columns
@@ -208,7 +207,7 @@ GETI_DEFAULT_MODEL = {
         "non-tile": ["maskrcnn_efficientnetb2b", "maskrcnn_r50"],
         "tile": ["maskrcnn_efficientnetb2b_tile", "maskrcnn_r50_tile"],
     },
-    "semantic_segmentation": {'litehrnet_18', 'litehrnet_s', 'litehrnet_x'}
+    "semantic_segmentation": {"litehrnet_18", "litehrnet_s", "litehrnet_x"},
 }
 
 
@@ -331,14 +330,16 @@ def summarize(raw_data: pd.DataFrame, metrics: list[str] | None = None) -> pd.Da
     aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 
     # Flatten the MultiIndex columns, excluding 'otx_version', 'task', 'model', 'data_group'
-    cols_to_exclude = {'otx_version', 'task', 'model', 'data_group'}
-    aggregated.columns = [('_'.join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.values]
+    cols_to_exclude = {"otx_version", "task", "model", "data_group"}
+    aggregated.columns = [
+        ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.values
+    ]
 
     # Calculate the 'all' data group by taking the mean of the means across all data groups for each model
     # Only numeric columns should be included in the mean calculation
     numeric_cols = aggregated.select_dtypes(include=["number"]).columns
     all_data = aggregated.groupby(["otx_version", "task", "model"])[numeric_cols].mean().reset_index()
-    all_data['data_group'] = 'all'
+    all_data["data_group"] = "all"
 
     # Combine the 'all' data group with the rest of the data
     combined_data = pd.concat([all_data, aggregated], ignore_index=True)
@@ -348,21 +349,21 @@ def summarize(raw_data: pd.DataFrame, metrics: list[str] | None = None) -> pd.Da
         index=["task", "model", "otx_version"],
         columns=["data_group"],
         values=[col for col in aggregated.columns if col not in cols_to_exclude],
-        aggfunc='first'
+        aggfunc="first",
     )
 
     # Split the flattened column names and create a MultiIndex
     new_columns = []
     for col in summary_data.columns:
         metric_stat, data_group = col
-        metric, stat = metric_stat.rsplit('_', 1)  # Split on the last underscore
+        metric, stat = metric_stat.rsplit("_", 1)  # Split on the last underscore
         new_columns.append((metric, stat, data_group))
 
     # Assign the new MultiIndex to the columns of the DataFrame
-    summary_data.columns = pd.MultiIndex.from_tuples(new_columns, names=['metric', 'stat', 'data_group'])
+    summary_data.columns = pd.MultiIndex.from_tuples(new_columns, names=["metric", "stat", "data_group"])
 
     # Sort the index and columns
-    summary_data = summary_data.reorder_levels(['data_group', 'metric', 'stat'], axis=1)
+    summary_data = summary_data.reorder_levels(["data_group", "metric", "stat"], axis=1)
     summary_data.sort_index(axis=1, inplace=True)
     return summary_data
 
@@ -380,38 +381,46 @@ def summarize_table(history: pd.DataFrame, task: str) -> pd.DataFrame:
     ]
     raw_data = history.query(f"task == '{task}'")
     summary_data = summarize(raw_data, metrics)
-    avg_row = summary_data.groupby(['task', 'otx_version']).mean().reset_index()
-    avg_row['model'] = 'avg'
-    summary_data = pd.concat([summary_data, avg_row.set_index(['task', 'model', 'otx_version'])])
+    avg_row = summary_data.groupby(["task", "otx_version"]).mean().reset_index()
+    avg_row["model"] = "avg"
+    summary_data = pd.concat([summary_data, avg_row.set_index(["task", "model", "otx_version"])])
 
     geti_models = GETI_DEFAULT_MODEL.get(task, set())
     if task == "instance_segmentation":
         for tile_type, models in geti_models.items():
-            model_name = f'geti_default_avg ({tile_type})'
-            geti_data = summary_data.loc[summary_data.index.get_level_values('model').isin(models)]
-            geti_default_avg_row = geti_data.groupby(['task', 'otx_version']).mean().reset_index()
-            geti_default_avg_row['model'] = model_name
-            geti_default_avg_row['task'] = task
-            summary_data = pd.concat([summary_data, geti_default_avg_row.set_index(['task', 'model', 'otx_version'])])
+            model_name = f"geti_default_avg ({tile_type})"
+            geti_data = summary_data.loc[summary_data.index.get_level_values("model").isin(models)]
+            geti_default_avg_row = geti_data.groupby(["task", "otx_version"]).mean().reset_index()
+            geti_default_avg_row["model"] = model_name
+            geti_default_avg_row["task"] = task
+            summary_data = pd.concat([summary_data, geti_default_avg_row.set_index(["task", "model", "otx_version"])])
     else:
-        geti_data = summary_data.loc[summary_data.index.get_level_values('model').isin(geti_models)]
-        geti_default_avg_row = geti_data.groupby(['task', 'otx_version']).mean().reset_index()
-        geti_default_avg_row['model'] = 'geti_default_avg'
-        geti_default_avg_row['task'] = task
-        summary_data = pd.concat([summary_data, geti_default_avg_row.set_index(['task', 'model', 'otx_version'])])
+        geti_data = summary_data.loc[summary_data.index.get_level_values("model").isin(geti_models)]
+        geti_default_avg_row = geti_data.groupby(["task", "otx_version"]).mean().reset_index()
+        geti_default_avg_row["model"] = "geti_default_avg"
+        geti_default_avg_row["task"] = task
+        summary_data = pd.concat([summary_data, geti_default_avg_row.set_index(["task", "model", "otx_version"])])
 
     if task == "instance_segmentation":
-        order = ['avg', 'geti_default_avg (non-tile)', 'geti_default_avg (tile)'] + [model for model in summary_data.index.get_level_values('model').unique() if model not in ['avg', 'geti_default_avg (non-tile)', 'geti_default_avg (tile)']]
+        order = ["avg", "geti_default_avg (non-tile)", "geti_default_avg (tile)"] + [
+            model
+            for model in summary_data.index.get_level_values("model").unique()
+            if model not in ["avg", "geti_default_avg (non-tile)", "geti_default_avg (tile)"]
+        ]
     else:
-        order = ['avg', 'geti_default_avg'] + [model for model in summary_data.index.get_level_values('model').unique() if model not in ['avg', 'geti_default_avg']]
-    summary_data = summary_data.reindex(order, level='model')
+        order = ["avg", "geti_default_avg"] + [
+            model
+            for model in summary_data.index.get_level_values("model").unique()
+            if model not in ["avg", "geti_default_avg"]
+        ]
+    summary_data = summary_data.reindex(order, level="model")
 
     # Round all numeric columns to four decimal places
     for col in summary_data.columns:
         if isinstance(col, tuple):  # Check if the column name is a tuple (MultiIndex)
             metric = col[1]  # Get the metric part of the column name
-            stat = col[2]    # Get the stat part of the column name
-            if metric in ['train/e2e_time', 'train/epoch'] and stat in ['mean', 'std']:
+            stat = col[2]  # Get the stat part of the column name
+            if metric in ["train/e2e_time", "train/epoch"] and stat in ["mean", "std"]:
                 # Convert to integers
                 summary_data[col] = summary_data[col].fillna(0).astype(int)
             else:
@@ -428,7 +437,7 @@ def create_graphs(data: pd.DataFrame, metrics: list[str], title_prefix: str) -> 
         pivot_data = data.pivot_table(index=["otx_version"], columns=["model"], values=metric, aggfunc="mean")
         if not pivot_data.empty and pivot_data.count().sum() > 0:
             pivot_data.plot(ax=ax, title=f"{title_prefix} - {metric}", marker="o", legend=True)
-            ax.set_xlabel('OTX Version')
+            ax.set_xlabel("OTX Version")
             ax.set_ylabel(metric)
             figures.append(fig)
         else:
@@ -442,7 +451,7 @@ def display_graphs_in_row(figures, num_columns):
     num_graphs = len(figures)
     num_rows = 1  # We want a single row
     fig, axs = plt.subplots(num_rows, num_columns, figsize=(5 * num_columns, 5))
-    
+
     # Flatten the axs array and remove excess axes if there are any
     axs = axs.flatten() if num_columns > 1 else [axs]
     for idx, ax in enumerate(axs):
@@ -450,7 +459,13 @@ def display_graphs_in_row(figures, num_columns):
             figure = figures[idx]
             orig_ax = figure.axes[0]
             for line in orig_ax.lines:
-                ax.plot(line.get_xdata(), line.get_ydata(), label=line.get_label(), color=line.get_color(), marker=line.get_marker())
+                ax.plot(
+                    line.get_xdata(),
+                    line.get_ydata(),
+                    label=line.get_label(),
+                    color=line.get_color(),
+                    marker=line.get_marker(),
+                )
             for patch in orig_ax.patches:
                 ax.add_patch(patch)
             ax.set_xlim(orig_ax.get_xlim())
@@ -467,7 +482,7 @@ def display_graphs_in_row(figures, num_columns):
     # Hide any unused Axes
     for ax in axs[num_graphs:]:
         ax.set_visible(False)
-    
+
     plt.tight_layout()
     plt.show()
 
@@ -515,7 +530,7 @@ def summarize_graph_geti(history: pd.DataFrame, task: str):
             figures = create_graphs(tile_filtered_data, metrics, title_prefix)
             display_graphs_in_row(figures, len(metrics))
             # Create and display graphs for each tile type and data_group
-            for data_group in tile_filtered_data['data_group'].unique():
+            for data_group in tile_filtered_data["data_group"].unique():
                 group_filtered_data = tile_filtered_data.query(f"data_group == '{data_group}'")
                 title_prefix = f"(geti_default_{data_group}) {task_abbr}_{tile_type}"
                 figures = create_graphs(group_filtered_data, metrics, title_prefix)
@@ -529,7 +544,7 @@ def summarize_graph_geti(history: pd.DataFrame, task: str):
         figures = create_graphs(geti_filtered_data, metrics, title_prefix)
         display_graphs_in_row(figures, len(metrics))
         # Create and display graphs for each data_group
-        for data_group in geti_filtered_data['data_group'].unique():
+        for data_group in geti_filtered_data["data_group"].unique():
             group_filtered_data = geti_filtered_data.query(f"data_group == '{data_group}'")
             title_prefix = f"(geti_default_{data_group}) {task_abbr}"
             figures = create_graphs(group_filtered_data, metrics, title_prefix)
@@ -566,7 +581,7 @@ if __name__ == "__main__":
     tasks = sorted(raw_data["task"].unique())
     for task in tasks:
         # Skip action tasks
-        if task in ['action_classification', 'action_detection']:
+        if task in ["action_classification", "action_detection"]:
             print(f"Skipping task: {task}")
             continue
 
