@@ -80,17 +80,21 @@ class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
-        label_anns = []
+        label_ids = set()
         for ann in item.annotations:
+            # multilabel information stored in 'multi_label_ids' attribute when the source format is arrow
+            if "multi_label_ids" in ann.attributes:
+                for lbl_idx in ann.attributes["multi_label_ids"]:
+                    label_ids.add(lbl_idx)
+
             if isinstance(ann, Label):
-                label_anns.append(ann)
+                label_ids.add(ann.label)
             else:
                 # If the annotation is not Label, it should be converted to Label.
                 # For Chained Task: Detection (Bbox) -> Classification (Label)
                 label = Label(label=ann.label)
-                if label not in label_anns:
-                    label_anns.append(label)
-        labels = torch.as_tensor([ann.label for ann in label_anns])
+                label_ids.add(label.label)
+        labels = torch.as_tensor(list(label_ids))
 
         entity = MultilabelClsDataEntity(
             image=img_data,
