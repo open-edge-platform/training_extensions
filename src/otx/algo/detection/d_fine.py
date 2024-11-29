@@ -42,7 +42,7 @@ PRETRAINED_ROOT: str = "https://github.com/Peterande/storage/releases/download/d
 PRETRAINED_WEIGHTS: dict[str, str] = {
     "dfine_hgnetv2_n": PRETRAINED_ROOT + "dfine_n_coco.pth",
     "dfine_hgnetv2_s": PRETRAINED_ROOT + "dfine_s_obj2coco.pth",
-    "dfine_hgnetv2_m": PRETRAINED_ROOT + "dfine_m_coco.pth",
+    "dfine_hgnetv2_m": PRETRAINED_ROOT + "dfine_m_obj2coco.pth",
     "dfine_hgnetv2_l": PRETRAINED_ROOT + "dfine_l_coco.pth",
     "dfine_hgnetv2_x": PRETRAINED_ROOT + "dfine_x_coco.pth",
 }
@@ -107,9 +107,10 @@ class DFine(ExplainableOTXDetModel):
             backbone_lr = 0.0004
         elif self.model_name == "dfine_hgnetv2_s":
             backbone_lr = 0.0001
+        elif self.model_name == "dfine_hgnetv2_m":
+            backbone_lr = 0.00002
         else:
-            backbone_lr = 0.00001
-
+            raise ValueError(f"Unsupported model name: {self.model_name}")
 
         # TODO(Eugene): difference variant has different backbone, encoder, and decoder lr rate.
         optimizer_configuration = [

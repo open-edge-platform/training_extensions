@@ -534,7 +534,14 @@ class HGNetv2:
             "freeze_at": -1,
             "freeze_norm": False,
             "use_lab": True,
-        }
+        },
+        "dfine_hgnetv2_m": {
+            "name": "B2",
+            "return_idx": [1, 2, 3],
+            "freeze_at": -1,
+            "freeze_norm": False,
+            "use_lab": True,
+        },
     }
 
     def __new__(cls, model_name) -> HGNetv2Module:

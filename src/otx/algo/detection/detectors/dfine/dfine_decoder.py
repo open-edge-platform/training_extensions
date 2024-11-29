@@ -904,7 +904,12 @@ class DFINETransformer:
             "num_layers": 3,
             "eval_idx": -1,
             "eval_spatial_size": [640, 640],
-            "num_points": [3, 6, 3]
+            "num_points": [3, 6, 3],
+        },
+        "dfine_hgnetv2_m": {
+            "num_layers": 4,
+            "eval_idx": -1,
+            "eval_spatial_size": [640, 640],
         },
     }
 

@@ -17,7 +17,6 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 
 from .base import OTXDataset
-from otx.utils.utils import timing
 
 
 class OTXDetectionDataset(OTXDataset[DetDataEntity]):

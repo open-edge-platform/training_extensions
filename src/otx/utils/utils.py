@@ -9,11 +9,10 @@ import importlib
 import inspect
 import pickle  # nosec B403 used pickle for internal state dump/load
 from decimal import Decimal
-from functools import partial
+from functools import partial, wraps
+from time import time
 from types import LambdaType
 from typing import TYPE_CHECKING, Any, Callable
-from functools import wraps
-from time import time
 
 from otx.core.model.base import OTXModel
 
@@ -272,6 +271,7 @@ def timing(f):
         result = f(*args, **kw)
         te = time()
         total_time = te - ts
-        print('func:%r args:[%r, %r] took: %2.4f sec' % (f.__name__, args, kw, total_time))
+        print("func:%r args:[%r, %r] took: %2.4f sec" % (f.__name__, args, kw, total_time))
         return result
+
     return wrap
