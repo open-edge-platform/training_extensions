@@ -29,7 +29,7 @@ class LinearWarmupScheduler(LambdaLR):
         self,
         optimizer: Optimizer,
         num_warmup_steps: int = 1000,
-        interval: Literal["step", "epoch"] = "epoch",
+        interval: Literal["step", "epoch"] = "step",
     ):
         if not num_warmup_steps > 0:
             msg = f"num_warmup_steps should be > 0, got {num_warmup_steps}"
@@ -65,7 +65,7 @@ class LinearWarmupSchedulerCallable:
         self,
         main_scheduler_callable: LRSchedulerCallable,
         num_warmup_steps: int = 0,
-        warmup_interval: Literal["step", "epoch"] = "epoch",
+        warmup_interval: Literal["step", "epoch"] = "step",
         monitor: str | None = None,
     ):
         self.main_scheduler_callable = SchedulerCallableSupportHPO.from_callable(main_scheduler_callable)
