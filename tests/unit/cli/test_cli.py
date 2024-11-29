@@ -190,7 +190,7 @@ class TestOTXCLI:
           init_args:
             num_warmup_steps: 3
             monitor: val/test_f1
-            warmup_interval: epoch
+            warmup_interval: step
             main_scheduler_callable:
               class_path: lightning.pytorch.cli.ReduceLROnPlateau
               init_args:

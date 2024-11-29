@@ -109,9 +109,9 @@ learning_parameters:
     description:
       Increasing this value might improve training speed however it might
       cause out of memory errors. If the number of workers is set to zero, data loading
-      will happen only in the main training thread leading to decreasing training speed.
+      will happen in the main training thread.
     editable: true
-    header: Number of cpu threads for batch generation (num workers)
+    header: Number of cpu threads to use during batch generation
     max_value: 8
     min_value: 0
     type: INTEGER
@@ -187,23 +187,6 @@ learning_parameters:
       rules: []
       type: UI_RULES
     value: 8
-    visible_in_ui: true
-    warning: This is applied exclusively when early stopping is enabled.
-  early_stop_iteration_patience:
-    affects_outcome_of: TRAINING
-    default_value: 30
-    description: This parameter ensures that the model is trained enough within the number of iterations of warmup and stable before early stopping is on.
-    editable: true
-    header: Number of warmup iterations for early stopping
-    max_value: 10000
-    min_value: 0
-    type: INTEGER
-    ui_rules:
-      action: DISABLE_EDITING
-      operator: AND
-      rules: []
-      type: UI_RULES
-    value: 30
     visible_in_ui: true
     warning: This is applied exclusively when early stopping is enabled.
   use_adaptive_interval:
