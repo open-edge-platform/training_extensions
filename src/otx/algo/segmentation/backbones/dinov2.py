@@ -38,7 +38,6 @@ class DinoVisionTransformer(nn.Module):
             pretrained = False
 
         self.backbone = torch.hub.load(repo_or_dir="facebookresearch/dinov2", model=name, pretrained=pretrained)
-
         if ci_data_root is not None and Path(ci_data_root).exists():
             ckpt_filename = f"{name}4_pretrain.pth"
             ckpt_path = Path(ci_data_root) / "torch" / "hub" / "checkpoints" / ckpt_filename

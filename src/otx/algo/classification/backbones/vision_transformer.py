@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from functools import partial
 from typing import TYPE_CHECKING, Any, Callable, Literal
+import math
 
 import torch
 from timm.layers import (
@@ -87,6 +88,7 @@ class VisionTransformer(BaseModule):
         norm_layer: Normalization layer.
         act_layer: MLP activation layer.
         block_fn: Transformer block layer.
+        interpolate_offset: work-around offset to apply when interpolating positional embeddings
         lora: Enable LoRA training.
     """
 
@@ -145,8 +147,8 @@ class VisionTransformer(BaseModule):
                 "embed_dim": 384,
                 "depth": 12,
                 "num_heads": 6,
-                "reg_tokens": 4,
-                "no_embed_class": True,
+                "reg_tokens": 0,
+                "no_embed_class": False,
                 "init_values": 1e-5,
             },
         ),
@@ -221,6 +223,7 @@ class VisionTransformer(BaseModule):
         mlp_layer: nn.Module | None = None,
         act_layer: LayerType | None = None,
         norm_layer: LayerType | None = None,
+        interpolate_offset: float = 0.1,
         lora: bool = False,
     ) -> None:
         super().__init__()
@@ -251,6 +254,7 @@ class VisionTransformer(BaseModule):
         self.no_embed_class = no_embed_class  # don't embed prefix positions (includes reg)
         self.dynamic_img_size = dynamic_img_size
         self.grad_checkpointing = False
+        self.interpolate_offset = interpolate_offset
 
         embed_args = {}
         if dynamic_img_size:
@@ -353,15 +357,17 @@ class VisionTransformer(BaseModule):
             # convert dinov2 pretrained weights
             state_dict = torch.load(checkpoint_path)
             state_dict.pop("mask_token", None)
-            state_dict["reg_token"] = state_dict.pop("register_tokens")
+            if "reg_token" in state_dict:
+                state_dict["reg_token"] = state_dict.pop("register_tokens")
             state_dict["cls_token"] = state_dict.pop("cls_token") + state_dict["pos_embed"][:, 0]
 
             img_size = (self.img_size, self.img_size) if isinstance(self.img_size, int) else self.img_size
             patch_size = (self.patch_size, self.patch_size) if isinstance(self.patch_size, int) else self.patch_size
-            state_dict["pos_embed"] = resize_positional_embeddings(
-                state_dict.pop("pos_embed")[:, 1:],
-                (img_size[0] // patch_size[0], img_size[1] // patch_size[1]),
-            )
+            if state_dict["pos_embed"].shape != self.pos_embed.shape:
+                state_dict["pos_embed"] = resize_positional_embeddings(
+                    state_dict.pop("pos_embed")[:, 1:],
+                    (img_size[0] // patch_size[0], img_size[1] // patch_size[1]),
+                )
             self.load_state_dict(state_dict, strict=False)
         else:
             msg = f"Unsupported `checkpoint_extension` {checkpoint_ext}, please choose from 'npz' or 'pth'."
@@ -401,10 +407,99 @@ class VisionTransformer(BaseModule):
 
         return self.pos_drop(x)
 
+    def interpolate_pos_encoding(self, x, w, h):
+        previous_dtype = x.dtype
+        npatch = x.shape[1]
+        N = self.pos_embed.shape[1]
+        if npatch == N and w == h:
+            return self.pos_embed
+        pos_embed = self.pos_embed.float()
+        class_pos_embed = pos_embed[:, 0]
+        patch_pos_embed = pos_embed[:, 1:]
+        dim = x.shape[-1]
+        w0 = w // self.patch_size
+        h0 = h // self.patch_size
+        M = int(math.sqrt(N))  # Recover the number of patches in each dimension
+        assert N == M * M
+        kwargs = {}
+        if self.interpolate_offset:
+            # Historical kludge: add a small number to avoid floating point error in the interpolation, see https://github.com/facebookresearch/dino/issues/8
+            # Note: still needed for backward-compatibility, the underlying operators are using both output size and scale factors
+            sx = float(w0 + self.interpolate_offset) / M
+            sy = float(h0 + self.interpolate_offset) / M
+            kwargs["scale_factor"] = (sx, sy)
+        else:
+            # Simply specify an output size instead of a scale factor
+            kwargs["size"] = (w0, h0)
+        patch_pos_embed = nn.functional.interpolate(
+            patch_pos_embed.reshape(1, M, M, dim).permute(0, 3, 1, 2),
+            mode="bicubic",
+            **kwargs,
+        )
+        assert (w0, h0) == patch_pos_embed.shape[-2:]
+        patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
+        return torch.cat((class_pos_embed.unsqueeze(0), patch_pos_embed), dim=1).to(previous_dtype)
+
+    def prepare_tokens_with_masks(self, x, masks=None):
+        _, _, w, h = x.shape
+        x = self.patch_embed(x)
+        if masks is not None:
+            x = torch.where(masks.unsqueeze(-1), self.mask_token.to(x.dtype).unsqueeze(0), x)
+
+        x = torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
+        x = x + self.interpolate_pos_encoding(x, w, h)
+
+        if self.reg_token is not None:
+            x = torch.cat(
+                (
+                    x[:, :1],
+                    self.reg_token.expand(x.shape[0], -1, -1),
+                    x[:, 1:],
+                ),
+                dim=1,
+            )
+
+        return x
+
+    def _get_intermediate_layers_not_chunked(self, x, n=1):
+        x = self.prepare_tokens_with_masks(x)
+        # If n is an int, take the n last blocks. If it's a list, take them
+        output, total_block_len = [], len(self.blocks)
+        blocks_to_take = range(total_block_len - n, total_block_len) if isinstance(n, int) else n
+        for i, blk in enumerate(self.blocks):
+            x = blk(x)
+            if i in blocks_to_take:
+                output.append(x)
+        assert len(output) == len(blocks_to_take), f"only {len(output)} / {len(blocks_to_take)} blocks found"
+        return output
+
+    def get_intermediate_layers(
+        self,
+        x: torch.Tensor,
+        n: int = 1,  # Layers or n last layers to take
+        reshape: bool = False,
+        return_class_token: bool = False,
+        norm=True,
+    ) -> tuple:
+        outputs = self._get_intermediate_layers_not_chunked(x, n)
+        if norm:
+            outputs = [self.norm(out) for out in outputs]
+        class_tokens = [out[:, 0] for out in outputs]
+        outputs = [out[:, 1 + self.num_reg_tokens :] for out in outputs]
+        if reshape:
+            B, _, w, h = x.shape
+            outputs = [
+                out.reshape(B, w // self.patch_size, h // self.patch_size, -1).permute(0, 3, 1, 2).contiguous()
+                for out in outputs
+            ]
+        if return_class_token:
+            return tuple(zip(outputs, class_tokens))
+        return tuple(outputs)
+
     def forward(
         self,
         x: torch.Tensor,
-        out_type: Literal["raw", "cls_token", "featmap", "avg_featmap"] = "cls_token",
+        out_type: Literal["raw", "cls_token", "featmap", "avg_featmap"] = "raw",
     ) -> tuple:
         """Forward pass of the VisionTransformer model."""
         x = self.patch_embed(x)

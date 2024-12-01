@@ -4,8 +4,8 @@ model:
     label_info: 2
     model_version: dinov2_vits14
     input_size:
-      - 560
-      - 560
+      - 518
+      - 518
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -33,8 +33,8 @@ data: ../_base_/data/semantic_segmentation.yaml
 overrides:
   data:
     input_size:
-      - 560
-      - 560
+      - 518
+      - 518
     train_subset:
       transforms:
         - class_path: otx.core.data.transform_libs.torchvision.RandomResizedCrop
