@@ -9,7 +9,7 @@ Introduction
 
 **OpenVINO™ Training Extensions** is a low-code transfer learning framework for Computer Vision.
 
-The CLI commands of the framework or API allows users to train, infer, optimize and deploy models easily and quickly even with low expertise in the deep learning field. OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on `PyTorch <https://pytorch.org/>`_ , `Lightning <https://lightning.ai/>`_ and `OpenVINO™ toolkit <https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html>`_.
+The framework's CLI commands and API allow users to easily train, infer, optimize and deploy models, even with limited deep learning expertise. OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on `PyTorch <https://pytorch.org/>`_ , `Lightning <https://lightning.ai/>`_ and `OpenVINO™ toolkit <https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html>`_.
 
 OpenVINO™ Training Extensions provide `recipe <https://github.com/openvinotoolkit/training_extensions/tree/develop/src/otx/recipe>`_ for every supported task type, which consolidates necessary information to build a model. Model templates are validated on various datasets and serve one-stop shop for obtaining the best models in general. If you are an experienced user, you can configure your own model based on `torchvision <https://pytorch.org/vision/stable/index.html>`_, `mmcv <https://github.com/open-mmlab/mmcv>`_ and `OpenVINO Model Zoo (OMZ) <https://github.com/openvinotoolkit/open_model_zoo>`_ frameworks.
 
@@ -127,13 +127,6 @@ Documentation content
 
         Learn how to train an action classification model
 
-    .. grid-item-card:: Action Detection
-        :link: ../tutorials/base/how_to_train/action_detection
-        :link-type: doc
-        :text-align: center
-
-        Learn how to train an action detection model
-
     .. grid-item-card:: Visual Prompting
         :link: ../tutorials/base/how_to_train/visual_prompting
         :link-type: doc
@@ -166,8 +159,8 @@ This section consists of an algorithms explanation and describes additional feat
 
 4. **Reference**:
 
-This section gives an overview of the OpenVINO™ Training Extensions code base. There source code for Entities, classes and functions can be found.
+This section gives an overview of the OpenVINO™ Training Extensions code base, where source code for Entities, classes and functions can be found.
 
 5. **Release Notes**:
 
-There can be found a description of new and previous releases.
+This section contains descriptions of current and previous releases.

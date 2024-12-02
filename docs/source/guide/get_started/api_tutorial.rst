@@ -295,7 +295,7 @@ The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModul
     from otx.core.data.module import OTXDataModule
     from otx.engine import Engine
 
-    datamodule = OTXDataModule(data_root="data/wgisd")
+    datamodule = OTXDataModule(data_root="data/wgisd", ...)
 
     engine = Engine(datamodule=datamodule)
     engine.train()
@@ -304,6 +304,15 @@ The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModul
 
     If both ``data_root`` and ``datamodule`` enter ``Engine`` as input, ``Engine`` uses datamodule as the base.
 
+.. tip::
+
+    You can get DataModule more easily using AutoConfigurator.
+
+    .. code-block:: python
+
+        from otx.engine.utils.auto_configuration import AutoConfigurator
+
+        datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
 
 5. You can use train-specific arguments with ``train()`` function.
 

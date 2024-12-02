@@ -5,9 +5,10 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 import torch
-from otx.core.metrics.fmeasure import FMeasure
+from otx.core.metrics.fmeasure import FMeasure, get_n_false_negatives
 from otx.core.types.label import LabelInfo
 
 
@@ -65,3 +66,22 @@ class TestFMeasure:
         metric.update(fxt_preds, fxt_targets)
         result = metric.compute(best_confidence_threshold=0.85)
         assert result["f1-score"] == 0.3333333432674408
+
+    def test_get_fn(self):
+        def _get_n_false_negatives_numpy(iou_matrix: np.ndarray, iou_threshold: float) -> int:
+            n_false_negatives = 0
+            for row in iou_matrix:
+                if max(row) < iou_threshold:
+                    n_false_negatives += 1
+            for column in np.rot90(iou_matrix):
+                indices = np.where(column > iou_threshold)
+                n_false_negatives += max(len(indices[0]) - 1, 0)
+            return n_false_negatives
+
+        iou_matrix = torch.rand((10, 20))
+        iou_threshold = np.random.rand()
+
+        assert get_n_false_negatives(iou_matrix, iou_threshold) == _get_n_false_negatives_numpy(
+            iou_matrix.numpy(),
+            iou_threshold,
+        )
