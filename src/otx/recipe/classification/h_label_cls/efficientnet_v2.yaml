@@ -19,7 +19,7 @@ model:
           init_args:
             mode: max
             factor: 0.5
-            patience: 5
+            patience: 3
             monitor: val/accuracy
 
 engine:
@@ -33,11 +33,16 @@ overrides:
   reset:
     - data.train_subset.transforms
 
+
   max_epochs: 90
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
         warmup_iters: 750
+    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      init_args:
+        patience: 5
+
   data:
     task: H_LABEL_CLS
     data_format: datumaro

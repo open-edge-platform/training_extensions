@@ -19,7 +19,7 @@ model:
           init_args:
             mode: max
             factor: 0.5
-            patience: 5
+            patience: 3
             monitor: val/accuracy
 
 engine:
@@ -32,6 +32,11 @@ data: ../../_base_/data/classification.yaml
 overrides:
   reset:
     - data.train_subset.transforms
+
+  callbacks:
+    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      init_args:
+        patience: 5
 
   max_epochs: 90
 

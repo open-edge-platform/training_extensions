@@ -32,6 +32,11 @@ overrides:
   reset:
     - data.train_subset.transforms
 
+  callbacks:
+    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      init_args:
+        patience: 5
+
   data:
     task: MULTI_LABEL_CLS
     data_format: datumaro
