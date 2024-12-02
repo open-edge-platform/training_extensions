@@ -147,9 +147,8 @@ class VisionTransformer(BaseModule):
                 "embed_dim": 384,
                 "depth": 12,
                 "num_heads": 6,
-                "reg_tokens": 0,
-                "no_embed_class": False,
-                "init_values": 1e-5,
+                "reg_tokens": 4,
+                "no_embed_class": True,
             },
         ),
         **dict.fromkeys(
@@ -511,7 +510,7 @@ class VisionTransformer(BaseModule):
     def forward(
         self,
         x: torch.Tensor,
-        out_type: Literal["raw", "cls_token", "featmap", "avg_featmap"] = "raw",
+        out_type: Literal["raw", "cls_token", "featmap", "avg_featmap"] = "cls_token",
     ) -> tuple:
         """Forward pass of the VisionTransformer model."""
         x = self.patch_embed(x)

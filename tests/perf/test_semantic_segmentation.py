@@ -17,56 +17,37 @@ class TestPerfSemanticSegmentation(PerfTestBase):
     """Benchmark semantic segmentation."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        # Benchmark.Model(task="semantic_segmentation", name="litehrnet_18", category="balance"),
-        # Benchmark.Model(task="semantic_segmentation", name="litehrnet_s", category="speed"),
-        # Benchmark.Model(task="semantic_segmentation", name="litehrnet_x", category="accuracy"),
-        # Benchmark.Model(task="semantic_segmentation", name="segnext_b", category="other"),
-        # Benchmark.Model(task="semantic_segmentation", name="segnext_s", category="other"),
-        # Benchmark.Model(task="semantic_segmentation", name="segnext_t", category="other"),
+        Benchmark.Model(task="semantic_segmentation", name="litehrnet_18", category="balance"),
+        Benchmark.Model(task="semantic_segmentation", name="litehrnet_s", category="speed"),
+        Benchmark.Model(task="semantic_segmentation", name="litehrnet_x", category="accuracy"),
+        Benchmark.Model(task="semantic_segmentation", name="segnext_b", category="other"),
+        Benchmark.Model(task="semantic_segmentation", name="segnext_s", category="other"),
+        Benchmark.Model(task="semantic_segmentation", name="segnext_t", category="other"),
         Benchmark.Model(task="semantic_segmentation", name="dino_v2", category="other"),
     ]
 
     DATASET_TEST_CASES = [
         Benchmark.Dataset(
-            name="cell_labels_6_6",
-            path=Path("semantic_segmentation/cell_labels_6_6"),
+            name=f"kvasir_small_{idx}",
+            path=Path("semantic_seg/kvasir_small") / f"{idx}",
             group="small",
-            num_repeat=3,
+            num_repeat=5,
             extra_overrides={},
-        ),
+        )
+        for idx in (1, 2, 3)
+    ] + [
         Benchmark.Dataset(
-            name="green_orange_6_6",
-            path=Path("semantic_segmentation/green_orange_6_6"),
-            group="small_1",
-            num_repeat=3,
-            extra_overrides={},
-        ),
-        Benchmark.Dataset(
-            name="human_railway_animal_6_6",
-            path=Path("semantic_segmentation/human_railway_animal_6_6"),
-            group="small_2",
-            num_repeat=3,
-            extra_overrides={},
-        ),
-        Benchmark.Dataset(
-            name="kitti_150_50",
-            path=Path("semantic_segmentation/kitti_150_50"),
+            name="kvasir_medium",
+            path=Path("semantic_seg/kvasir_medium"),
             group="medium",
-            num_repeat=3,
+            num_repeat=5,
             extra_overrides={},
         ),
         Benchmark.Dataset(
-            name="aerial_200_60",
-            path=Path("semantic_segmentation/aerial_200_60"),
-            group="medium_1",
-            num_repeat=3,
-            extra_overrides={},
-        ),
-        Benchmark.Dataset(
-            name="voc_otx_cut",
-            path=Path("semantic_segmentation/voc_otx_cut"),
+            name="kvasir_large",
+            path=Path("semantic_seg/kvasir_large"),
             group="large",
-            num_repeat=3,
+            num_repeat=5,
             extra_overrides={},
         ),
     ]
@@ -117,79 +98,79 @@ class TestPerfSemanticSegmentation(PerfTestBase):
         )
 
 
-# class TestPerfSemanticSegmentationSemiSL(TestPerfSemanticSegmentation):
-#     """Benchmark semantic segmentation."""
+class TestPerfSemanticSegmentationSemiSL(TestPerfSemanticSegmentation):
+    """Benchmark semantic segmentation."""
 
-#     MODEL_TEST_CASES = [  # noqa: RUF012
-#         Benchmark.Model(task="semantic_segmentation", name="litehrnet_18_semisl", category="balance"),
-#         Benchmark.Model(task="semantic_segmentation", name="litehrnet_s_semisl", category="speed"),
-#         Benchmark.Model(task="semantic_segmentation", name="litehrnet_x_semisl", category="accuracy"),
-#         Benchmark.Model(task="semantic_segmentation", name="segnext_b_semisl", category="other"),
-#         Benchmark.Model(task="semantic_segmentation", name="segnext_s_semisl", category="other"),
-#         Benchmark.Model(task="semantic_segmentation", name="segnext_t_semisl", category="other"),
-#         Benchmark.Model(task="semantic_segmentation", name="dino_v2_semisl", category="other"),
-#     ]
+    MODEL_TEST_CASES = [  # noqa: RUF012
+        Benchmark.Model(task="semantic_segmentation", name="litehrnet_18_semisl", category="balance"),
+        Benchmark.Model(task="semantic_segmentation", name="litehrnet_s_semisl", category="speed"),
+        Benchmark.Model(task="semantic_segmentation", name="litehrnet_x_semisl", category="accuracy"),
+        Benchmark.Model(task="semantic_segmentation", name="segnext_b_semisl", category="other"),
+        Benchmark.Model(task="semantic_segmentation", name="segnext_s_semisl", category="other"),
+        Benchmark.Model(task="semantic_segmentation", name="segnext_t_semisl", category="other"),
+        Benchmark.Model(task="semantic_segmentation", name="dino_v2_semisl", category="other"),
+    ]
 
-#     DATASET_TEST_CASES = [  # noqa: RUF012
-#         Benchmark.Dataset(
-#             name="kvasir",
-#             path=Path("semantic_seg/semisl/kvasir_24"),
-#             group="small",
-#             num_repeat=5,
-#             unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/kvasir"),
-#             extra_overrides={},
-#         ),
-#         Benchmark.Dataset(
-#             name="kitti",
-#             path=Path("semantic_seg/semisl/kitti_18"),
-#             group="small",
-#             num_repeat=5,
-#             unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/kitti"),
-#             extra_overrides={},
-#         ),
-#         Benchmark.Dataset(
-#             name="cityscapes",
-#             path=Path("semantic_seg/semisl/cityscapes"),
-#             group="medium",
-#             num_repeat=5,
-#             unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/cityscapes"),
-#             extra_overrides={},
-#         ),
-#         Benchmark.Dataset(
-#             name="pascal_voc",
-#             path=Path("semantic_seg/semisl/pascal_voc"),
-#             group="large",
-#             num_repeat=5,
-#             unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/pascal_voc"),
-#             extra_overrides={},
-#         ),
-#     ]
+    DATASET_TEST_CASES = [  # noqa: RUF012
+        Benchmark.Dataset(
+            name="kvasir",
+            path=Path("semantic_seg/semisl/kvasir_24"),
+            group="small",
+            num_repeat=5,
+            unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/kvasir"),
+            extra_overrides={},
+        ),
+        Benchmark.Dataset(
+            name="kitti",
+            path=Path("semantic_seg/semisl/kitti_18"),
+            group="small",
+            num_repeat=5,
+            unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/kitti"),
+            extra_overrides={},
+        ),
+        Benchmark.Dataset(
+            name="cityscapes",
+            path=Path("semantic_seg/semisl/cityscapes"),
+            group="medium",
+            num_repeat=5,
+            unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/cityscapes"),
+            extra_overrides={},
+        ),
+        Benchmark.Dataset(
+            name="pascal_voc",
+            path=Path("semantic_seg/semisl/pascal_voc"),
+            group="large",
+            num_repeat=5,
+            unlabeled_data_path=Path("semantic_seg/semisl/unlabeled_images/pascal_voc"),
+            extra_overrides={},
+        ),
+    ]
 
-#     @pytest.mark.parametrize(
-#         "fxt_model",
-#         MODEL_TEST_CASES,
-#         ids=lambda model: model.name,
-#         indirect=True,
-#     )
-#     @pytest.mark.parametrize(
-#         "fxt_dataset",
-#         DATASET_TEST_CASES,
-#         ids=lambda dataset: dataset.name,
-#         indirect=True,
-#     )
-#     def test_perf(
-#         self,
-#         fxt_model: Benchmark.Model,
-#         fxt_dataset: Benchmark.Dataset,
-#         fxt_benchmark: Benchmark,
-#         fxt_accelerator: str,
-#     ):
-#         if fxt_model.name == "dino_v2" and fxt_accelerator == "xpu":
-#             pytest.skip(f"{fxt_model.name} doesn't support {fxt_accelerator}.")
+    @pytest.mark.parametrize(
+        "fxt_model",
+        MODEL_TEST_CASES,
+        ids=lambda model: model.name,
+        indirect=True,
+    )
+    @pytest.mark.parametrize(
+        "fxt_dataset",
+        DATASET_TEST_CASES,
+        ids=lambda dataset: dataset.name,
+        indirect=True,
+    )
+    def test_perf(
+        self,
+        fxt_model: Benchmark.Model,
+        fxt_dataset: Benchmark.Dataset,
+        fxt_benchmark: Benchmark,
+        fxt_accelerator: str,
+    ):
+        if fxt_model.name == "dino_v2" and fxt_accelerator == "xpu":
+            pytest.skip(f"{fxt_model.name} doesn't support {fxt_accelerator}.")
 
-#         self._test_perf(
-#             model=fxt_model,
-#             dataset=fxt_dataset,
-#             benchmark=fxt_benchmark,
-#             criteria=self.BENCHMARK_CRITERIA,
-#         )
+        self._test_perf(
+            model=fxt_model,
+            dataset=fxt_dataset,
+            benchmark=fxt_benchmark,
+            criteria=self.BENCHMARK_CRITERIA,
+        )
