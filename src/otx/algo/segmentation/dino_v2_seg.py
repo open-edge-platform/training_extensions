@@ -4,11 +4,13 @@
 """DinoV2Seg model implementations."""
 
 from __future__ import annotations
-from torch.hub import download_url_to_file
+
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urlparse
-from functools import partial
+
+from torch.hub import download_url_to_file
 
 from otx.algo.classification.backbones.vision_transformer import VisionTransformer
 from otx.algo.segmentation.heads import FCNHead
@@ -25,10 +27,10 @@ class DinoV2Seg(OTXSegmentationModel):
     """DinoV2Seg Model."""
 
     AVAILABLE_MODEL_VERSIONS: ClassVar[list[str]] = [
-        "dinov2_vits14",
+        "dinov2-small-seg",
     ]
-    PRETRAINED_WEIGHTS = {
-        "dinov2_vits14": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
+    PRETRAINED_WEIGHTS: ClassVar[dict[str, str]] = {
+        "dinov2-small-seg": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
     }
 
     def _build_model(self) -> nn.Module:
@@ -36,7 +38,7 @@ class DinoV2Seg(OTXSegmentationModel):
             msg = f"Model version {self.model_version} is not supported."
             raise ValueError(msg)
         backbone = VisionTransformer(arch=self.model_version, img_size=self.input_size)
-        backbone.forward = partial(
+        backbone.forward = partial(  # type: ignore[method-assign]
             backbone.get_intermediate_layers,
             n=[8, 9, 10, 11],
             reshape=True,

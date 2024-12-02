@@ -217,7 +217,7 @@ class FCNHead:
             "aggregator_merge_norm": "None",
             "aggregator_use_concat": False,
         },
-        "dinov2_vits14": {
+        "dinov2-small-seg": {
             "normalization": partial(build_norm_layer, nn.SyncBatchNorm, requires_grad=True),
             "in_channels": [384, 384, 384, 384],
             "in_index": [0, 1, 2, 3],
