@@ -153,6 +153,18 @@ class VisionTransformer(BaseModule):
             },
         ),
         **dict.fromkeys(
+            ["dinov2_vits14"], # segmentation
+            {
+                "patch_size": 14,
+                "embed_dim": 384,
+                "depth": 12,
+                "num_heads": 6,
+                "reg_tokens": 0,
+                "no_embed_class": False,
+                "init_values": 1e-5,
+            },
+        ),
+        **dict.fromkeys(
             ["dinov2-b", "dinov2-base"],
             {
                 "patch_size": 14,

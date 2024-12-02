@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 from functools import partial
 
 from otx.algo.classification.backbones.vision_transformer import VisionTransformer
-from otx.algo.segmentation.backbones import DinoVisionTransformer
 from otx.algo.segmentation.heads import FCNHead
 from otx.algo.segmentation.losses import CrossEntropyLossWithIgnore
 from otx.algo.segmentation.segmentors import BaseSegmModel
@@ -36,8 +35,7 @@ class DinoV2Seg(OTXSegmentationModel):
         if self.model_version not in self.AVAILABLE_MODEL_VERSIONS:
             msg = f"Model version {self.model_version} is not supported."
             raise ValueError(msg)
-        backbone = VisionTransformer(arch="dinov2-small", img_size=self.input_size)
-        # backbone2 = DinoVisionTransformer(name=self.model_version, freeze_backbone=True, out_index=[8, 9, 10, 11])
+        backbone = VisionTransformer(arch=self.model_version, img_size=self.input_size)
         backbone.forward = partial(
             backbone.get_intermediate_layers,
             n=[8, 9, 10, 11],
@@ -47,15 +45,16 @@ class DinoV2Seg(OTXSegmentationModel):
         criterion = CrossEntropyLossWithIgnore(ignore_index=self.label_info.ignore_index)  # type: ignore[attr-defined]
 
         backbone.init_weights()
-        print(f"init weight - {self.PRETRAINED_WEIGHTS[self.model_version]}")
-        parts = urlparse(self.PRETRAINED_WEIGHTS[self.model_version])
-        filename = Path(parts.path).name
+        if self.model_version in self.PRETRAINED_WEIGHTS:
+            print(f"init weight - {self.PRETRAINED_WEIGHTS[self.model_version]}")
+            parts = urlparse(self.PRETRAINED_WEIGHTS[self.model_version])
+            filename = Path(parts.path).name
 
-        cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
-        cache_file = cache_dir / filename
-        if not Path.exists(cache_file):
-            download_url_to_file(self.PRETRAINED_WEIGHTS[self.model_version], cache_file, "", progress=True)
-        backbone.load_pretrained(checkpoint_path=cache_file)
+            cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
+            cache_file = cache_dir / filename
+            if not Path.exists(cache_file):
+                download_url_to_file(self.PRETRAINED_WEIGHTS[self.model_version], cache_file, "", progress=True)
+            backbone.load_pretrained(checkpoint_path=cache_file)
 
         # freeze backbone
         for _, v in backbone.named_parameters():
