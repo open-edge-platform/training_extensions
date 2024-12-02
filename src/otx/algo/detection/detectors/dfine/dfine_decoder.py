@@ -911,6 +911,7 @@ class DFINETransformer:
             "eval_idx": -1,
             "eval_spatial_size": [640, 640],
         },
+        "dfine_hgnetv2_l": {},
     }
 
     def __new__(cls, model_name, num_classes) -> DFINETransformerModule:

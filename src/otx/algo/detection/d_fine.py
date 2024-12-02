@@ -95,7 +95,13 @@ class DFine(ExplainableOTXDetModel):
             matcher=HungarianMatcher(
                 cost_dict={"cost_class": 2, "cost_bbox": 5, "cost_giou": 2},
             ),
-            weight_dict={"loss_vfl": 1, "loss_bbox": 5, "loss_giou": 2, "loss_fgl": 0.15, "loss_ddf": 1.5},
+            weight_dict={
+                "loss_vfl": 1,
+                "loss_bbox": 5,
+                "loss_giou": 2,
+                "loss_fgl": 0.15,
+                "loss_ddf": 1.5
+            },
             losses=["vfl", "boxes", "local"],
             alpha=0.75,
             gamma=2.0,
@@ -109,6 +115,8 @@ class DFine(ExplainableOTXDetModel):
             backbone_lr = 0.0001
         elif self.model_name == "dfine_hgnetv2_m":
             backbone_lr = 0.00002
+        elif self.model_name == "dfine_hgnetv2_l":
+            backbone_lr = 0.0000125
         else:
             raise ValueError(f"Unsupported model name: {self.model_name}")
 

@@ -116,8 +116,7 @@ class DFINECriterion(nn.Module):
         return losses
 
     def loss_local(self, outputs, targets, indices, num_boxes, T=5):
-        """Compute Fine-Grained Localization (FGL) Loss
-        and Decoupled Distillation Focal (DDF) Loss.
+        """Compute Fine-Grained Localization (FGL) Loss and Decoupled Distillation Focal (DDF) Loss.
         """
         losses = {}
         if "pred_corners" in outputs:
@@ -163,7 +162,9 @@ class DFINECriterion(nn.Module):
             if "teacher_corners" in outputs:
                 pred_corners = outputs["pred_corners"].reshape(-1, (self.reg_max + 1))
                 target_corners = outputs["teacher_corners"].reshape(-1, (self.reg_max + 1))
-                if not torch.equal(pred_corners, target_corners):
+                if torch.equal(pred_corners, target_corners):
+                    losses["loss_ddf"] = pred_corners.sum() * 0
+                else:
                     weight_targets_local = outputs["teacher_logits"].sigmoid().max(dim=-1)[0]
 
                     mask = torch.zeros_like(weight_targets_local, dtype=torch.bool)
@@ -358,6 +359,7 @@ class DFINECriterion(nn.Module):
             assert "dn_meta" in outputs, ""
             indices_dn = self.get_cdn_matched_indices(outputs["dn_meta"], targets)
             dn_num_boxes = num_boxes * outputs["dn_meta"]["dn_num_group"]
+            dn_num_boxes = dn_num_boxes if dn_num_boxes > 0 else 1
 
             for i, aux_outputs in enumerate(outputs["dn_outputs"]):
                 aux_outputs["is_dn"] = True

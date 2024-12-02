@@ -486,6 +486,7 @@ class HybridEncoder:
             "depth_mult": 0.67,
             "eval_spatial_size": [640, 640],
         },
+        "dfine_hgnetv2_l": {},
     }
 
     def __new__(cls, model_name) -> HybridEncoderModule:

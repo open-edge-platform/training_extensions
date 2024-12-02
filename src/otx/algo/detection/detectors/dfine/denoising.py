@@ -26,7 +26,12 @@ def get_contrastive_denoising_training_group(
 
     max_gt_num = max(num_gts)
     if max_gt_num == 0:
-        return None, None, None, None
+        dn_meta = {
+            "dn_positive_idx": None,
+            "dn_num_group": 0,
+            "dn_num_split": [0, num_queries],
+        }
+        return None, None, None, dn_meta
 
     num_group = num_denoising // max_gt_num
     num_group = 1 if num_group == 0 else num_group

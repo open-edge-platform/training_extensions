@@ -24,7 +24,12 @@ def bias_init_with_prob(prior_prob=0.01):
     return bias_init
 
 
-def deformable_attention_core_func(value, value_spatial_shapes, sampling_locations, attention_weights):
+def deformable_attention_core_func(
+    value,
+    value_spatial_shapes,
+    sampling_locations,
+    attention_weights,
+):
     """Args:
         value (Tensor): [bs, value_length, n_head, c]
         value_spatial_shapes (Tensor|List): [n_levels, 2]
