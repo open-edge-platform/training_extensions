@@ -14,8 +14,8 @@ def weighting_function(reg_max, up, reg_scale, deploy=False):
         up (Tensor): Controls upper bounds of the sequence,
                      where maximum offset is ±up * H / W.
         reg_scale (float): Controls the curvature of the Weighting Function.
-                           Larger values result in flatter weights near the central axis W(reg_max/2)=0
-                           and steeper weights at both ends.
+                        Larger values result in flatter weights near the central axis W(reg_max/2)=0
+                        and steeper weights at both ends.
         deploy (bool): If True, uses deployment mode settings.
 
     Returns:

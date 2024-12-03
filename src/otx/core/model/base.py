@@ -54,6 +54,9 @@ from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
 
+# import wandb
+# import cv2
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -140,6 +143,22 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         # so that it can retrieve it from the checkpoint
         self.save_hyperparameters(logger=False, ignore=["optimizer", "scheduler", "metric"])
 
+    def vis(self, image, bboxes):
+        image = (image.clone().cpu() * 255).to(torch.int8).numpy().transpose(1, 2, 0)
+        image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2RGB)
+        bboxes  = bboxes.clone().cpu().to(torch.int).numpy()
+        for bbox in bboxes:
+            x1, y1, x2, y2 = bbox
+            image = cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 1)
+        wandb.log(
+            {
+                "train/image0": wandb.Image(
+                    image,
+                    caption=f"Epoch: {self.current_epoch}, Batch: {0}",
+                ),
+            },
+        )
+
     def training_step(self, batch: T_OTXBatchDataEntity, batch_idx: int) -> Tensor | None:
         """Step for model training."""
         train_loss = self.forward(inputs=batch)
@@ -147,6 +166,9 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             # to skip current iteration
             # TODO (sungchul): check this in distributed training
             return None if self.trainer.world_size == 1 else torch.tensor(0.0, device=self.device)
+
+        # if batch_idx == 0:
+        #     self.vis(batch.images[0], batch.bboxes[0])
 
         if isinstance(train_loss, Tensor):
             self.log(

@@ -50,8 +50,6 @@ class DFINECriterion(nn.Module):
         self.share_matched_indices = share_matched_indices
         self.alpha = alpha
         self.gamma = gamma
-        self.fgl_targets, self.fgl_targets_dn = None, None
-        self.own_targets, self.own_targets_dn = None, None
         self.reg_max = reg_max
         self.num_pos, self.num_neg = None, None
 
@@ -116,8 +114,7 @@ class DFINECriterion(nn.Module):
         return losses
 
     def loss_local(self, outputs, targets, indices, num_boxes, T=5):
-        """Compute Fine-Grained Localization (FGL) Loss and Decoupled Distillation Focal (DDF) Loss.
-        """
+        """Compute Fine-Grained Localization (FGL) Loss and Decoupled Distillation Focal (DDF) Loss."""
         losses = {}
         if "pred_corners" in outputs:
             idx = self._get_src_permutation_idx(indices)
@@ -126,16 +123,16 @@ class DFINECriterion(nn.Module):
             pred_corners = outputs["pred_corners"][idx].reshape(-1, (self.reg_max + 1))
             ref_points = outputs["ref_points"][idx].detach()
             with torch.no_grad():
-                if self.fgl_targets_dn is None and "is_dn" in outputs:
-                    self.fgl_targets_dn = bbox2distance(
+                if "is_dn" in outputs:
+                    fgl_targets_dn = bbox2distance(
                         ref_points,
                         box_cxcywh_to_xyxy(target_boxes),
                         self.reg_max,
                         outputs["reg_scale"],
                         outputs["up"],
                     )
-                if self.fgl_targets is None and "is_dn" not in outputs:
-                    self.fgl_targets = bbox2distance(
+                if "is_dn" not in outputs:
+                    fgl_targets = bbox2distance(
                         ref_points,
                         box_cxcywh_to_xyxy(target_boxes),
                         self.reg_max,
@@ -143,7 +140,7 @@ class DFINECriterion(nn.Module):
                         outputs["up"],
                     )
 
-            target_corners, weight_right, weight_left = self.fgl_targets_dn if "is_dn" in outputs else self.fgl_targets
+            target_corners, weight_right, weight_left = fgl_targets_dn if "is_dn" in outputs else fgl_targets
 
             ious = torch.diag(
                 box_iou(box_cxcywh_to_xyxy(outputs["pred_boxes"][idx]), box_cxcywh_to_xyxy(target_boxes))[0],
@@ -235,11 +232,6 @@ class DFINECriterion(nn.Module):
             results.append((final_rows.long(), final_cols.long()))
         return results
 
-    def _clear_cache(self):
-        self.fgl_targets, self.fgl_targets_dn = None, None
-        self.own_targets, self.own_targets_dn = None, None
-        self.num_pos, self.num_neg = None, None
-
     def get_loss(self, loss, outputs, targets, indices, num_boxes, **kwargs):
         loss_map = {
             "boxes": self.loss_boxes,
@@ -261,7 +253,6 @@ class DFINECriterion(nn.Module):
 
         # Retrieve the matching between the outputs of the last layer and the targets
         indices = self.matcher(outputs_without_aux, targets)
-        self._clear_cache()
 
         # Get the matching union set across all decoder layers.
         if "aux_outputs" in outputs:
