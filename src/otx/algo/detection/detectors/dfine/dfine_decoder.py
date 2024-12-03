@@ -26,8 +26,8 @@ from .utils import bias_init_with_prob, deformable_attention_core_func_v2, get_a
 __all__ = ["DFINETransformerModule"]
 
 
-LEARNABLE_PARAMS = True
-TEACHER_DISTILLATION = False
+LEARNABLE_PARAMS = False
+TEACHER_DISTILLATION = True
 
 
 class MLP(nn.Module):
@@ -834,21 +834,14 @@ class DFINETransformerModule(nn.Module):
                 "pred_boxes": out_bboxes[-1],
             }
 
-        if TEACHER_DISTILLATION:
-            teacher_corners = out_corners[-1]
-            teacher_logits = out_logits[-1]
-        else:
-            teacher_corners = None
-            teacher_logits = None
-
         if self.training and self.aux_loss:
             out["aux_outputs"] = self._set_aux_loss2(
                 outputs_class=out_logits[:-1],
                 outputs_coord=out_bboxes[:-1],
                 outputs_corners=out_corners[:-1],
                 outputs_ref=out_refs[:-1],
-                teacher_corners=teacher_corners,
-                teacher_logits=teacher_logits,
+                teacher_corners=out_corners[-1] if TEACHER_DISTILLATION else None,
+                teacher_logits=out_logits[-1] if TEACHER_DISTILLATION else None,
             )
             out["enc_aux_outputs"] = self._set_aux_loss(
                 enc_topk_logits_list,
@@ -866,8 +859,8 @@ class DFINETransformerModule(nn.Module):
                     outputs_coord=dn_out_bboxes,
                     outputs_corners=dn_out_corners,
                     outputs_ref=dn_out_refs,
-                    teacher_corners=teacher_corners,
-                    teacher_logits=teacher_logits,
+                    teacher_corners=dn_out_corners[-1] if TEACHER_DISTILLATION else None,
+                    teacher_logits=dn_out_logits[-1] if TEACHER_DISTILLATION else None,
                 )
                 out["dn_pre_outputs"] = {
                     "pred_logits": dn_pre_logits,
@@ -891,8 +884,8 @@ class DFINETransformerModule(nn.Module):
         outputs_coord,
         outputs_corners,
         outputs_ref,
-        teacher_corners=None,
-        teacher_logits=None,
+        teacher_corners,
+        teacher_logits,
     ):
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
