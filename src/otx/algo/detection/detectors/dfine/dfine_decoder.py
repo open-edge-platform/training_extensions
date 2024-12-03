@@ -26,6 +26,10 @@ from .utils import bias_init_with_prob, deformable_attention_core_func_v2, get_a
 __all__ = ["DFINETransformerModule"]
 
 
+LEARNABLE_PARAMS = True
+TEACHER_DISTILLATION = False
+
+
 class MLP(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers, act="relu"):
         super().__init__()
@@ -464,8 +468,8 @@ class DFINETransformerModule(nn.Module):
         self._build_input_proj_layer(feat_channels)
 
         # Transformer module
-        self.up = nn.Parameter(torch.tensor([0.5]), requires_grad=False)
-        self.reg_scale = nn.Parameter(torch.tensor([reg_scale]), requires_grad=False)
+        self.up = nn.Parameter(torch.tensor([0.5]), requires_grad=LEARNABLE_PARAMS)
+        self.reg_scale = nn.Parameter(torch.tensor([reg_scale]), requires_grad=LEARNABLE_PARAMS)
         decoder_layer = TransformerDecoderLayer(
             hidden_dim,
             nhead,
@@ -825,31 +829,50 @@ class DFINETransformerModule(nn.Module):
                 "reg_scale": self.reg_scale,
             }
         else:
-            out = {"pred_logits": out_logits[-1], "pred_boxes": out_bboxes[-1]}
+            out = {
+                "pred_logits": out_logits[-1],
+                "pred_boxes": out_bboxes[-1],
+            }
+
+        if TEACHER_DISTILLATION:
+            teacher_corners = out_corners[-1]
+            teacher_logits = out_logits[-1]
+        else:
+            teacher_corners = None
+            teacher_logits = None
 
         if self.training and self.aux_loss:
             out["aux_outputs"] = self._set_aux_loss2(
-                out_logits[:-1],
-                out_bboxes[:-1],
-                out_corners[:-1],
-                out_refs[:-1],
-                out_corners[-1],
-                out_logits[-1],
+                outputs_class=out_logits[:-1],
+                outputs_coord=out_bboxes[:-1],
+                outputs_corners=out_corners[:-1],
+                outputs_ref=out_refs[:-1],
+                teacher_corners=teacher_corners,
+                teacher_logits=teacher_logits,
             )
-            out["enc_aux_outputs"] = self._set_aux_loss(enc_topk_logits_list, enc_topk_bboxes_list)
-            out["pre_outputs"] = {"pred_logits": pre_logits, "pred_boxes": pre_bboxes}
+            out["enc_aux_outputs"] = self._set_aux_loss(
+                enc_topk_logits_list,
+                enc_topk_bboxes_list,
+            )
+            out["pre_outputs"] = {
+                "pred_logits": pre_logits,
+                "pred_boxes": pre_bboxes,
+            }
             out["enc_meta"] = {"class_agnostic": self.query_select_method == "agnostic"}
 
             if dn_meta is not None:
                 out["dn_outputs"] = self._set_aux_loss2(
-                    dn_out_logits,
-                    dn_out_bboxes,
-                    dn_out_corners,
-                    dn_out_refs,
-                    dn_out_corners[-1],
-                    dn_out_logits[-1],
+                    outputs_class=dn_out_logits,
+                    outputs_coord=dn_out_bboxes,
+                    outputs_corners=dn_out_corners,
+                    outputs_ref=dn_out_refs,
+                    teacher_corners=teacher_corners,
+                    teacher_logits=teacher_logits,
                 )
-                out["dn_pre_outputs"] = {"pred_logits": dn_pre_logits, "pred_boxes": dn_pre_bboxes}
+                out["dn_pre_outputs"] = {
+                    "pred_logits": dn_pre_logits,
+                    "pred_boxes": dn_pre_bboxes,
+                }
                 out["dn_meta"] = dn_meta
 
         return out

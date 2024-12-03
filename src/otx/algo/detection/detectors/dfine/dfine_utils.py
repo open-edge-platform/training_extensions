@@ -11,8 +11,7 @@ def weighting_function(reg_max, up, reg_scale, deploy=False):
 
     Args:
         reg_max (int): Max number of the discrete bins.
-        up (Tensor): Controls upper bounds of the sequence,
-                     where maximum offset is ±up * H / W.
+        up (Tensor): Controls upper bounds of the sequence, where maximum offset is ±up * H / W.
         reg_scale (float): Controls the curvature of the Weighting Function.
                         Larger values result in flatter weights near the central axis W(reg_max/2)=0
                         and steeper weights at both ends.
@@ -43,9 +42,14 @@ def translate_gt(gt, reg_max, reg_scale, up):
     """Decodes bounding box ground truth (GT) values into distribution-based GT representations.
 
     This function maps continuous GT values into discrete distribution bins, which can be used
-    for regression tasks in object detection models. It calculates the indices of the closest
-    bins to each GT value and assigns interpolation weights to these bins based on their proximity
-    to the GT value.
+    for regression tasks in object detection models.
+
+    It calculates the indices of the closest bins to each GT value and assigns interpolation weights
+    to these bins based on their proximity to the GT value.
+
+    In the paper:
+        'a' (up) controlling the upper bounds.
+        'c' (reg_scale) controlling the curvature.
 
     Args:
         gt (Tensor): Ground truth bounding box values, shape (N, ).

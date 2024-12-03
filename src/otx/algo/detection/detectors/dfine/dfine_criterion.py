@@ -123,27 +123,19 @@ class DFINECriterion(nn.Module):
             pred_corners = outputs["pred_corners"][idx].reshape(-1, (self.reg_max + 1))
             ref_points = outputs["ref_points"][idx].detach()
             with torch.no_grad():
-                if "is_dn" in outputs:
-                    fgl_targets_dn = bbox2distance(
-                        ref_points,
-                        box_cxcywh_to_xyxy(target_boxes),
-                        self.reg_max,
-                        outputs["reg_scale"],
-                        outputs["up"],
-                    )
-                if "is_dn" not in outputs:
-                    fgl_targets = bbox2distance(
-                        ref_points,
-                        box_cxcywh_to_xyxy(target_boxes),
-                        self.reg_max,
-                        outputs["reg_scale"],
-                        outputs["up"],
-                    )
-
-            target_corners, weight_right, weight_left = fgl_targets_dn if "is_dn" in outputs else fgl_targets
+                target_corners, weight_right, weight_left = bbox2distance(
+                    ref_points,
+                    box_cxcywh_to_xyxy(target_boxes),
+                    self.reg_max,
+                    outputs["reg_scale"],
+                    outputs["up"],
+                )
 
             ious = torch.diag(
-                box_iou(box_cxcywh_to_xyxy(outputs["pred_boxes"][idx]), box_cxcywh_to_xyxy(target_boxes))[0],
+                box_iou(
+                    box_cxcywh_to_xyxy(outputs["pred_boxes"][idx]),
+                    box_cxcywh_to_xyxy(target_boxes),
+                )[0],
             )
             weight_targets = ious.unsqueeze(-1).repeat(1, 1, 4).reshape(-1).detach()
 
@@ -156,7 +148,7 @@ class DFINECriterion(nn.Module):
                 avg_factor=num_boxes,
             )
 
-            if "teacher_corners" in outputs:
+            if outputs.get("teacher_corners"):
                 pred_corners = outputs["pred_corners"].reshape(-1, (self.reg_max + 1))
                 target_corners = outputs["teacher_corners"].reshape(-1, (self.reg_max + 1))
                 if torch.equal(pred_corners, target_corners):
@@ -426,32 +418,28 @@ class DFINECriterion(nn.Module):
 
         return dn_match_indices
 
-    def feature_loss_function(self, fea, target_fea):
-        loss = (fea - target_fea) ** 2 * ((fea > 0) | (target_fea > 0)).float()
-        return torch.abs(loss)
-
     def unimodal_distribution_focal_loss(
         self,
-        pred,
-        label,
+        preds,
+        targets,
         weight_right,
         weight_left,
-        weight=None,
+        iou_weight=None,
         reduction="sum",
         avg_factor=None,
     ):
-        dis_left = label.long()
+        dis_left = targets.long()
         dis_right = dis_left + 1
 
-        loss = F.cross_entropy(pred, dis_left, reduction="none") * weight_left.reshape(-1) + F.cross_entropy(
-            pred,
+        loss = F.cross_entropy(preds, dis_left, reduction="none") * weight_left.reshape(-1) + F.cross_entropy(
+            preds,
             dis_right,
             reduction="none",
         ) * weight_right.reshape(-1)
 
-        if weight is not None:
-            weight = weight.float()
-            loss = loss * weight
+        if iou_weight is not None:
+            iou_weight = iou_weight.float()
+            loss = loss * iou_weight
 
         if avg_factor is not None:
             loss = loss.sum() / avg_factor
