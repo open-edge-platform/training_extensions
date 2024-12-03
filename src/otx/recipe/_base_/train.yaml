@@ -53,6 +53,9 @@ logger:
       log_graph: false
       default_hp_metric: true
       prefix: ""
+  # - class_path: lightning.pytorch.loggers.wandb.WandbLogger
+  #   init_args:
+  #     project: "dfine"
 deterministic: false
 seed: null
 precision: 16
