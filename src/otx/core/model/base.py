@@ -146,7 +146,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
     def vis(self, image, bboxes):
         image = (image.clone().cpu() * 255).to(torch.int8).numpy().transpose(1, 2, 0)
         image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2RGB)
-        bboxes  = bboxes.clone().cpu().to(torch.int).numpy()
+        bboxes = bboxes.clone().cpu().to(torch.int).numpy()
         for bbox in bboxes:
             x1, y1, x2, y2 = bbox
             image = cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 1)

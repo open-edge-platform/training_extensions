@@ -18,7 +18,8 @@ import torch.nn.functional as F
 from torch import nn
 from torch.nn import init
 
-from .denoising import get_contrastive_denoising_training_group
+from otx.algo.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
+
 from .dfine_utils import distance2bbox, weighting_function
 from .utils import bias_init_with_prob, deformable_attention_core_func_v2, get_activation, inverse_sigmoid
 

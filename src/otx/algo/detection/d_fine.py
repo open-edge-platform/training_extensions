@@ -100,7 +100,7 @@ class DFine(ExplainableOTXDetModel):
                 "loss_bbox": 5,
                 "loss_giou": 2,
                 "loss_fgl": 0.15,
-                "loss_ddf": 1.5
+                "loss_ddf": 1.5,
             },
             losses=["vfl", "boxes", "local"],
             alpha=0.75,
