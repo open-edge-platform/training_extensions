@@ -148,7 +148,7 @@ class DFINECriterion(nn.Module):
                 avg_factor=num_boxes,
             )
 
-            if outputs.get("teacher_corners"):
+            if "teacher_corners" in outputs and outputs["teacher_corners"] is not None:
                 pred_corners = outputs["pred_corners"].reshape(-1, (self.reg_max + 1))
                 target_corners = outputs["teacher_corners"].reshape(-1, (self.reg_max + 1))
                 if torch.equal(pred_corners, target_corners):
