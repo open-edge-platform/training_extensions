@@ -84,7 +84,7 @@ def remove_unused_labels(dataset: DmDataset, data_format: str, ignore_index: int
         used_labels = [0, *used_labels]
     if data_format == "common_semantic_segmentation_with_subset_dirs" and len(original_categories) < len(used_labels):
         msg = (
-            "There are labeles mismatch in dataset categories and actuall categories comes from semantic masks."
+            "There are labels mismatch in dataset categories and actual categories comes from semantic masks."
             "Please, check `dataset_meta.json` file."
         )
         raise ValueError(msg)

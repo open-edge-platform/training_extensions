@@ -91,11 +91,11 @@ learning_parameters:
   num_iters:
     affects_outcome_of: TRAINING
     default_value: 200
-    description:
-      Increasing this value causes the results to be more robust but training
-      time will be longer.
+    description: Maximum number of epochs to train a model.
+      Increasing this value may result in longer training, but potentially in a more robust model.
+      Note, if the early stopping is enabled, the actual number of epochs may be less than this value.
     editable: true
-    header: Number of training iterations
+    header: Number of training epochs
     max_value: 1000
     min_value: 1
     type: INTEGER
@@ -173,25 +173,6 @@ learning_parameters:
     value: 10
     visible_in_ui: true
     warning: This is applied exclusively when early stopping is enabled.
-  early_stop_iteration_patience:
-    affects_outcome_of: TRAINING
-    default_value: 0
-    description:
-      Training will stop if the model does not improve within the number of iterations of patience.
-      This ensures the model is trained enough with the number of iterations of patience before early stopping.
-    editable: true
-    header: Iteration patience for early stopping
-    max_value: 1000
-    min_value: 0
-    type: INTEGER
-    ui_rules:
-      action: DISABLE_EDITING
-      operator: AND
-      rules: []
-      type: UI_RULES
-    value: 0
-    visible_in_ui: true
-    warning: This is applied exclusively when early stopping is enabled.
   use_adaptive_interval:
     affects_outcome_of: TRAINING
     default_value: true
@@ -232,7 +213,7 @@ learning_parameters:
   auto_num_workers:
     affects_outcome_of: TRAINING
     default_value: false
-    description: Adapt num_workers according to current hardware status automatically.
+    description: Adapt number of workers according to current hardware status automatically.
     editable: true
     header: Enable auto adaptive num_workers
     type: BOOLEAN

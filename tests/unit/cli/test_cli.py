@@ -188,7 +188,7 @@ class TestOTXCLI:
         scheduler:
           class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
           init_args:
-            num_warmup_steps: 3
+            num_warmup_steps: 0
             monitor: val/test_f1
             warmup_interval: step
             main_scheduler_callable:

@@ -37,6 +37,7 @@ class OTXActionClsDataset(OTXDataset[ActionClsDataEntity]):
         image_color_channel: ImageColorChannel = ImageColorChannel.BGR,
         stack_images: bool = True,
         to_tv_image: bool = True,
+        data_format: str = "",
     ) -> None:
         super().__init__(
             dm_subset,

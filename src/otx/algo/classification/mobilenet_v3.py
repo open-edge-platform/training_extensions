@@ -15,7 +15,7 @@ from torch import Tensor, nn
 from otx.algo.classification.backbones import OTXMobileNetV3
 from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier, SemiSLClassifier
 from otx.algo.classification.heads import (
-    HierarchicalCBAMClsHead,
+    HierarchicalLinearClsHead,
     LinearClsHead,
     MultiLabelNonLinearClsHead,
     SemiSLLinearClsHead,
@@ -313,14 +313,12 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
 
         copied_head_config = copy(head_config)
         copied_head_config["step_size"] = (ceil(self.input_size[0] / 32), ceil(self.input_size[1] / 32))
+        in_channels = 960 if self.mode == "large" else 576
 
         return HLabelClassifier(
             backbone=OTXMobileNetV3(mode=self.mode, input_size=self.input_size),
-            neck=nn.Identity(),
-            head=HierarchicalCBAMClsHead(
-                in_channels=960,
-                **copied_head_config,
-            ),
+            neck=GlobalAveragePooling(dim=2),
+            head=HierarchicalLinearClsHead(**copied_head_config, in_channels=in_channels),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )

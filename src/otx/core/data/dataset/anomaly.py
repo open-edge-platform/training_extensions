@@ -57,6 +57,7 @@ class AnomalyDataset(OTXDataset):
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
+        data_format: str = "",
     ) -> None:
         self.task_type = task_type
         super().__init__(

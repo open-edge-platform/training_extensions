@@ -18,10 +18,14 @@ model:
         lr: 0.00001
 
     scheduler:
-      class_path: torch.optim.lr_scheduler.ConstantLR
+      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
       init_args:
-        factor: 1
-        total_iters: -1
+        num_warmup_steps: 0
+        main_scheduler_callable:
+          class_path: torch.optim.lr_scheduler.ConstantLR
+          init_args:
+            factor: 1
+            total_iters: -1
 
 engine:
   task: VISUAL_PROMPTING
@@ -35,4 +39,4 @@ overrides:
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
-        patience: 3
+        patience: 5
