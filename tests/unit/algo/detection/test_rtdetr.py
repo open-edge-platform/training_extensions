@@ -13,7 +13,7 @@ from torch import nn
 
 class TestRTDETR:
     def test_customize_outputs(self, mocker):
-        label_info = LabelInfo(["a", "b", "c"], [["a", "b", "c"]])
+        label_info = LabelInfo(["a", "b", "c"], ["0", "1", "2"], [["a", "b", "c"]])
         mocker.patch("otx.algo.detection.rtdetr.RTDETR._build_model", return_value=mocker.MagicMock())
         model = RTDETR(label_info)
         model.model.load_from = None
