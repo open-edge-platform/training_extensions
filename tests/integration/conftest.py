@@ -131,6 +131,7 @@ def fxt_target_dataset_per_task() -> dict:
         "anomaly_classification": "tests/assets/anomaly_hazelnut",
         "anomaly_detection": "tests/assets/anomaly_hazelnut",
         "anomaly_segmentation": "tests/assets/anomaly_hazelnut",
+        "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
     }
 
 
