@@ -34,6 +34,7 @@ class TestOTXSegmentationModel:
         return SegLabelInfo(
             label_names=["Background", "label_0", "label_1"],
             label_groups=[["Background", "label_0", "label_1"]],
+            label_ids=["0", "1", "2"],
         )
 
     @pytest.fixture()
@@ -64,8 +65,16 @@ class TestOTXSegmentationModel:
         ("label_info", "expected_label_info"),
         [
             (
-                SegLabelInfo(label_names=["label1", "label2", "label3"], label_groups=[["label1", "label2", "label3"]]),
-                SegLabelInfo(label_names=["label1", "label2", "label3"], label_groups=[["label1", "label2", "label3"]]),
+                SegLabelInfo(
+                    label_names=["label1", "label2", "label3"],
+                    label_groups=[["label1", "label2", "label3"]],
+                    label_ids=["0", "1", "2"],
+                ),
+                SegLabelInfo(
+                    label_names=["label1", "label2", "label3"],
+                    label_groups=[["label1", "label2", "label3"]],
+                    label_ids=["0", "1", "2"],
+                ),
             ),
             (SegLabelInfo.from_num_classes(num_classes=5), SegLabelInfo.from_num_classes(num_classes=5)),
         ],

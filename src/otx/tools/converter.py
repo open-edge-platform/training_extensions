@@ -239,6 +239,9 @@ class ConfigConverter:
         task_info = TEMPLATE_ID_DICT[template_config["model_template_id"]]
         if param_dict.get("enable_tiling", None) and not task_info["model_name"].endswith("_tile"):
             task_info["model_name"] += "_tile"
+        # classification task type can't be deducted from template name, try to extract from config
+        if "sub_task_type" in template_config and "CLS" in template_config["sub_task_type"]:
+            task_info["task"] = template_config["sub_task_type"]
         if task is not None:
             task_info["task"] = task
         default_config = ConfigConverter._get_default_config(task_info)

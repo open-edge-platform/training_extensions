@@ -370,6 +370,7 @@ def fxt_seg_label_info() -> SegLabelInfo:
             label_names,
             ["class2", "class3"],
         ],
+        label_ids=["0", "1", "2"],
     )
 
 
@@ -382,6 +383,7 @@ def fxt_multiclass_labelinfo() -> LabelInfo:
             label_names,
             ["class2", "class3"],
         ],
+        label_ids=["0", "1", "2"],
     )
 
 
@@ -395,6 +397,7 @@ def fxt_multilabel_labelinfo() -> LabelInfo:
             [label_names[1]],
             [label_names[2]],
         ],
+        label_ids=["0", "1", "2"],
     )
 
 
@@ -461,6 +464,7 @@ def fxt_hlabel_multilabel_info() -> HLabelInfo:
             ["Spade_A", "Spade"],
             ["Spade_King", "Spade"],
         ],
+        label_ids=[str(i) for i in range(9)],
     )
 
 

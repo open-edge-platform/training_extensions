@@ -52,7 +52,7 @@ class TestAccuracy:
         metric = MultiClassClsMetricCallable(fxt_multiclass_labelinfo)
         assert isinstance(metric.accuracy, MulticlassAccuracy)
 
-        one_class_label_info = LabelInfo(label_names=["class1"], label_groups=[["class1"]])
+        one_class_label_info = LabelInfo(label_names=["class1"], label_groups=[["class1"]], label_ids=["0"])
         assert one_class_label_info.num_classes == 1
         binary_metric = MultiClassClsMetricCallable(one_class_label_info)
         assert isinstance(binary_metric.accuracy, BinaryAccuracy)
