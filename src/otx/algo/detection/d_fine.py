@@ -20,6 +20,7 @@ from otx.algo.detection.detectors.dfine.dfine_criterion import DFINECriterion
 from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
 from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors.dfine.hybrid_encoder import HybridEncoder
+from otx.algo.utils.mmengine_utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -84,6 +85,15 @@ class DFine(ExplainableOTXDetModel):
             tile_config=tile_config,
         )
 
+    def _create_model(self) -> nn.Module:
+        detector = self._build_model(num_classes=self.label_info.num_classes)
+        if self.model_name != "dfine_hgnetv2_x" and hasattr(detector, "init_weights"):
+            detector.init_weights()
+        self.classification_layers = self.get_classification_layers(prefix="model.")
+        if self.load_from is not None:
+            load_checkpoint(detector, self.load_from, map_location="cpu")
+        return detector
+
     def _build_model(self, num_classes: int) -> DETR:
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
@@ -115,7 +125,7 @@ class DFine(ExplainableOTXDetModel):
             backbone_lr = 0.0001
         elif self.model_name == "dfine_hgnetv2_m":
             backbone_lr = 0.00002
-        elif self.model_name == "dfine_hgnetv2_l":
+        elif self.model_name == "dfine_hgnetv2_l" or self.model_name == "dfine_hgnetv2_x":
             backbone_lr = 0.0000125
         else:
             raise ValueError(f"Unsupported model name: {self.model_name}")

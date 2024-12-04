@@ -487,6 +487,10 @@ class HybridEncoder:
             "eval_spatial_size": [640, 640],
         },
         "dfine_hgnetv2_l": {},
+        "dfine_hgnetv2_x": {
+            "hidden_dim": 384,
+            "dim_feedforward": 2048,
+        },
     }
 
     def __new__(cls, model_name) -> HybridEncoderModule:
