@@ -132,6 +132,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4131>)
 - Fix tensor type compatibility in dynamic soft label assigner and RTMDet head
   (<https://github.com/openvinotoolkit/training_extensions/pull/4140>)
+- Fix DETR target class indices are of type long in loss calculations
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4143>)
 
 ## \[v2.1.0\]
 
