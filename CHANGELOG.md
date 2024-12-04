@@ -73,6 +73,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4035>)
 - Bump onnx to 1.17.0 to omit CVE-2024-5187
   (<https://github.com/openvinotoolkit/training_extensions/pull/4063>)
+- Decouple DinoV2 for semantic segmentation task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4136>)
 
 ### Bug fixes
 
@@ -126,6 +128,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4107>)
 - Fix empty annotation in tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4124>)
+- Fix patching early stopping in tools/converter.py, update headers in templates, change training schedule for classification
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4131>)
 - Fix tensor type compatibility in dynamic soft label assigner and RTMDet head
   (<https://github.com/openvinotoolkit/training_extensions/pull/4140>)
 
