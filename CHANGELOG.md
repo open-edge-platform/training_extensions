@@ -126,6 +126,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4107>)
 - Fix empty annotation in tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4124>)
+- Fix tensor type compatibility in dynamic soft label assigner and RTMDet head
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4140>)
 
 ## \[v2.1.0\]
 
