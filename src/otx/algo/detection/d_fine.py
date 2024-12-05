@@ -42,10 +42,10 @@ PRETRAINED_ROOT: str = "https://github.com/Peterande/storage/releases/download/d
 
 PRETRAINED_WEIGHTS: dict[str, str] = {
     "dfine_hgnetv2_n": PRETRAINED_ROOT + "dfine_n_coco.pth",
-    "dfine_hgnetv2_s": PRETRAINED_ROOT + "dfine_s_coco.pth",
-    "dfine_hgnetv2_m": PRETRAINED_ROOT + "dfine_m_coco.pth",
-    "dfine_hgnetv2_l": PRETRAINED_ROOT + "dfine_l_coco.pth",
-    "dfine_hgnetv2_x": PRETRAINED_ROOT + "dfine_x_coco.pth",
+    "dfine_hgnetv2_s": PRETRAINED_ROOT + "dfine_s_coco.pth",  # dfine_s_obj365.pth
+    "dfine_hgnetv2_m": PRETRAINED_ROOT + "dfine_m_coco.pth",  # dfine_m_obj365.pth
+    "dfine_hgnetv2_l": PRETRAINED_ROOT + "dfine_l_coco.pth",  # dfine_l_obj365_e25.pth
+    "dfine_hgnetv2_x": PRETRAINED_ROOT + "dfine_x_coco.pth",  # dfine_x_obj365.pth
 }
 
 
