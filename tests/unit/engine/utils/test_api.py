@@ -28,15 +28,11 @@ def test_list_models_pattern() -> None:
 
     target = [
         "efficientnet_b0",
-        "efficientnet_b0_semisl",
         "efficientnet_v2",
-        "efficientnet_v2_semisl",
         "maskrcnn_efficientnetb2b",
         "maskrcnn_efficientnetb2b_tile",
         "tv_efficientnet_b3",
-        "tv_efficientnet_b3_semisl",
         "tv_efficientnet_v2_l",
-        "tv_efficientnet_v2_l_semisl",
     ]
     assert sorted(models) == sorted(target)
 
