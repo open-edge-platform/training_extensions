@@ -39,7 +39,10 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
             labels_ids = [
                 label["label"]["_id"] for label in roi["labels"] if label["label"]["domain"] == "CLASSIFICATION"
             ]
-            label_anns = [self.label_info.label_names.index(label_id) for label_id in labels_ids]
+            if self.data_format == "arrow":
+                label_anns = [self.label_info.label_ids.index(label_id) for label_id in labels_ids]
+            else:
+                label_anns = [self.label_info.label_names.index(label_id) for label_id in labels_ids]
         else:
             # extract labels from annotations
             label_anns = [ann.label for ann in item.annotations if isinstance(ann, Label)]
