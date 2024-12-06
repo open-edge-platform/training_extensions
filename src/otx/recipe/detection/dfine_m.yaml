@@ -3,6 +3,7 @@ model:
   init_args:
     model_name: dfine_hgnetv2_m
     label_info: 80
+    multi_scale: true
 
     optimizer:
       class_path: torch.optim.AdamW

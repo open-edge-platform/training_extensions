@@ -70,10 +70,12 @@ class DFine(ExplainableOTXDetModel):
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
+        multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
+        self.multi_scale = multi_scale
         super().__init__(
             model_name=model_name,
             label_info=label_info,
@@ -141,6 +143,7 @@ class DFine(ExplainableOTXDetModel):
         ]
 
         return DETR(
+            multi_scale=None if self.multi_scale else [],
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,
