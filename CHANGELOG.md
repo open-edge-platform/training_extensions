@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.2.1\]
+
+### Bug fixes
+
+- Fix empty annotation in tiling
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4124>)
+- Fix patching early stopping in tools/converter.py, update headers in templates, change training schedule for classification
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4131>)
+- Fix tensor type compatibility in dynamic soft label assigner and RTMDet head
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4140>)
+- Fix DETR target class indices are of type long in loss calculations
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4143>)
+- Fix arrow format reader for multiclass ROI case
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4145>)
+
+### Enhancements
+
+- Decouple DinoV2 for semantic segmentation task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4136>)
+- Update Label Info handling
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4127>)
+
 ## \[2.2.0\]
 
 ### New features
@@ -73,8 +95,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4035>)
 - Bump onnx to 1.17.0 to omit CVE-2024-5187
   (<https://github.com/openvinotoolkit/training_extensions/pull/4063>)
-- Decouple DinoV2 for semantic segmentation task
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4136>)
 
 ### Bug fixes
 
@@ -126,14 +146,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4105>)
 - Disable tiling classifier toggle in configurable parameters
   (<https://github.com/openvinotoolkit/training_extensions/pull/4107>)
-- Fix empty annotation in tiling
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4124>)
-- Fix patching early stopping in tools/converter.py, update headers in templates, change training schedule for classification
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4131>)
-- Fix tensor type compatibility in dynamic soft label assigner and RTMDet head
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4140>)
-- Fix DETR target class indices are of type long in loss calculations
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4143>)
 
 ## \[v2.1.0\]
 
