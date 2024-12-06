@@ -3,7 +3,7 @@ model:
   init_args:
     model_name: dfine_hgnetv2_s
     label_info: 80
-    multi_scale: false
+    multi_scale: true
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -47,6 +47,11 @@ overrides:
         warmup_iters: 100
         warmup_epochs: 7
 
+  reset:
+    - data.train_subset.transforms
+    - data.val_subset.transforms
+    - data.test_subset.transforms
+
   data:
     input_size:
       - 640
@@ -59,14 +64,34 @@ overrides:
       num_workers: 4
       to_tv_image: true
       transforms:
+        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+          init_args:
+            p: 0.5
+        - class_path: torchvision.transforms.v2.RandomZoomOut
+          init_args:
+            fill: 0
+        - class_path: otx.core.data.transform_libs.torchvision.RandomIoUCrop
+          init_args:
+            p: 0.8
+        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+          init_args:
+            min_size: 1
+        - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+          init_args:
+            prob: 0.5
         - class_path: otx.core.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             transform_bbox: true
             keep_ratio: false
+            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
+            scale: true
+        - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+          init_args:
+            min_size: 1
       sampler:
         class_path: otx.algo.samplers.balanced_sampler.BalancedSampler
 
@@ -79,6 +104,10 @@ overrides:
             scale: $(input_size)
             keep_ratio: false
             is_numpy_to_tvtensor: true
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+            scale: true
 
     test_subset:
       batch_size: 8
@@ -89,3 +118,7 @@ overrides:
             scale: $(input_size)
             keep_ratio: false
             is_numpy_to_tvtensor: true
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+            scale: true
