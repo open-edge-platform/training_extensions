@@ -119,18 +119,16 @@ class DFine(ExplainableOTXDetModel):
             num_classes=num_classes,
         )
 
-        # if self.model_name == "dfine_hgnetv2_n":
-        #     backbone_lr = 0.0004
-        # elif self.model_name == "dfine_hgnetv2_s":
-        #     backbone_lr = 0.0001
-        # elif self.model_name == "dfine_hgnetv2_m":
-        #     backbone_lr = 0.00002
-        # elif self.model_name == "dfine_hgnetv2_l" or self.model_name == "dfine_hgnetv2_x":
-        #     backbone_lr = 0.0000125
-        # else:
-        #     raise ValueError(f"Unsupported model name: {self.model_name}")
-
-        backbone_lr = 0.00001
+        if self.model_name == "dfine_hgnetv2_n":
+            backbone_lr = 0.0004
+        elif self.model_name == "dfine_hgnetv2_s":
+            backbone_lr = 0.0001
+        elif self.model_name == "dfine_hgnetv2_m":
+            backbone_lr = 0.00002
+        elif self.model_name == "dfine_hgnetv2_l" or self.model_name == "dfine_hgnetv2_x":
+            backbone_lr = 0.0000125
+        else:
+            raise ValueError(f"Unsupported model name: {self.model_name}")
 
         # TODO(Eugene): difference variant has different backbone, encoder, and decoder lr rate.
         optimizer_configuration = [

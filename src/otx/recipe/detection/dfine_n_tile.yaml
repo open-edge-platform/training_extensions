@@ -65,7 +65,7 @@ overrides:
             keep_ratio: false
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
-            dtype: ${as_torch_dtype:torch.float32}            
+            dtype: ${as_torch_dtype:torch.float32}
       sampler:
         class_path: otx.algo.samplers.balanced_sampler.BalancedSampler
 
