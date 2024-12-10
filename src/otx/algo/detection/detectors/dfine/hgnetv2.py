@@ -363,17 +363,6 @@ class HGNetv2Module(nn.Module):
             },
             "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B0_stage1.pth",
         },
-        "B1": {
-            "stem_channels": [3, 24, 32],
-            "stage_config": {
-                # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
-                "stage1": [32, 32, 64, 1, False, False, 3, 3],
-                "stage2": [64, 48, 256, 1, True, False, 3, 3],
-                "stage3": [256, 96, 512, 2, True, True, 5, 3],
-                "stage4": [512, 192, 1024, 1, True, True, 5, 3],
-            },
-            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B1_stage1.pth",
-        },
         "B2": {
             "stem_channels": [3, 24, 32],
             "stage_config": {
@@ -384,17 +373,6 @@ class HGNetv2Module(nn.Module):
                 "stage4": [768, 256, 1536, 1, True, True, 5, 4],
             },
             "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B2_stage1.pth",
-        },
-        "B3": {
-            "stem_channels": [3, 24, 32],
-            "stage_config": {
-                # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
-                "stage1": [32, 32, 128, 1, False, False, 3, 5],
-                "stage2": [128, 64, 512, 1, True, False, 3, 5],
-                "stage3": [512, 128, 1024, 3, True, True, 5, 5],
-                "stage4": [1024, 256, 2048, 1, True, True, 5, 5],
-            },
-            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B3_stage1.pth",
         },
         "B4": {
             "stem_channels": [3, 32, 48],
@@ -418,17 +396,6 @@ class HGNetv2Module(nn.Module):
             },
             "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B5_stage1.pth",
         },
-        "B6": {
-            "stem_channels": [3, 48, 96],
-            "stage_config": {
-                # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
-                "stage1": [96, 96, 192, 2, False, False, 3, 6],
-                "stage2": [192, 192, 512, 3, True, False, 3, 6],
-                "stage3": [512, 384, 1024, 6, True, True, 5, 6],
-                "stage4": [1024, 768, 2048, 3, True, True, 5, 6],
-            },
-            "url": "https://github.com/Peterande/storage/releases/download/dfinev1.0/PPHGNetV2_B6_stage1.pth",
-        },
     }
 
     def __init__(
@@ -439,6 +406,7 @@ class HGNetv2Module(nn.Module):
         freeze_stem_only=True,
         freeze_at=0,
         freeze_norm=True,
+        pretrained=False,
     ):
         super().__init__()
         self.use_lab = use_lab
@@ -446,6 +414,7 @@ class HGNetv2Module(nn.Module):
 
         stem_channels = self.arch_configs[name]["stem_channels"]
         stage_config = self.arch_configs[name]["stage_config"]
+        download_url = self.arch_configs[name]['url']
 
         self._out_strides = [4, 8, 16, 32]
         self._out_channels = [stage_config[k][2] for k in stage_config]
@@ -494,6 +463,14 @@ class HGNetv2Module(nn.Module):
         if freeze_norm:
             self._freeze_norm(self)
 
+        if pretrained:
+            state = torch.hub.load_state_dict_from_url(
+                download_url,
+                map_location='cpu'
+            )
+            print(f"Loaded stage1 {name} HGNetV2 from URL.")
+            self.load_state_dict(state)
+
     def _freeze_norm(self, m: nn.Module):
         if isinstance(m, nn.BatchNorm2d):
             m = FrozenBatchNorm2d(m.num_features)
@@ -527,6 +504,7 @@ class HGNetv2:
             "freeze_norm": False,
             "use_lab": True,
             "freeze_stem_only": True,
+            "pretrained": True,
         },
         "dfine_hgnetv2_s": {
             "name": "B0",
