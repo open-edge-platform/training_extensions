@@ -414,7 +414,7 @@ class HGNetv2Module(nn.Module):
 
         stem_channels = self.arch_configs[name]["stem_channels"]
         stage_config = self.arch_configs[name]["stage_config"]
-        download_url = self.arch_configs[name]['url']
+        download_url = self.arch_configs[name]["url"]
 
         self._out_strides = [4, 8, 16, 32]
         self._out_channels = [stage_config[k][2] for k in stage_config]
@@ -466,7 +466,7 @@ class HGNetv2Module(nn.Module):
         if pretrained:
             state = torch.hub.load_state_dict_from_url(
                 download_url,
-                map_location='cpu'
+                map_location="cpu",
             )
             print(f"Loaded stage1 {name} HGNetV2 from URL.")
             self.load_state_dict(state)
