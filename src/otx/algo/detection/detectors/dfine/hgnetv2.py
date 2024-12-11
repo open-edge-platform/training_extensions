@@ -1,7 +1,9 @@
-"""reference
-- https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/backbones/hgnet_v2.py
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 
-Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
+"""Backbone from: https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/backbones/hgnet_v2.py
+Modified from: https://github.com/Peterande/D-FINE
 """
 from __future__ import annotations
 
@@ -17,8 +19,6 @@ from otx.algo.modules.norm import FrozenBatchNorm2d
 kaiming_normal_ = nn.init.kaiming_normal_
 zeros_ = nn.init.zeros_
 ones_ = nn.init.ones_
-
-__all__ = ["HGNetv2Module"]
 
 
 class LearnableAffineBlock(nn.Module):
@@ -43,35 +43,21 @@ class ConvBNAct(nn.Module):
         kernel_size,
         stride=1,
         groups=1,
-        padding="",
         use_act=True,
         use_lab=False,
     ):
         super().__init__()
         self.use_act = use_act
         self.use_lab = use_lab
-        if padding == "same":
-            self.conv = nn.Sequential(
-                nn.ZeroPad2d([0, 1, 0, 1]),
-                nn.Conv2d(
-                    in_chs,
-                    out_chs,
-                    kernel_size,
-                    stride,
-                    groups=groups,
-                    bias=False,
-                ),
-            )
-        else:
-            self.conv = nn.Conv2d(
-                in_chs,
-                out_chs,
-                kernel_size,
-                stride,
-                padding=(kernel_size - 1) // 2,
-                groups=groups,
-                bias=False,
-            )
+        self.conv = nn.Conv2d(
+            in_chs,
+            out_chs,
+            kernel_size,
+            stride,
+            padding=(kernel_size - 1) // 2,
+            groups=groups,
+            bias=False,
+        )
         self.bn = nn.BatchNorm2d(out_chs)
         if self.use_act:
             self.act = nn.ReLU()
@@ -96,7 +82,6 @@ class LightConvBNAct(nn.Module):
         in_chs,
         out_chs,
         kernel_size,
-        groups=1,
         use_lab=False,
     ):
         super().__init__()
@@ -176,26 +161,6 @@ class StemBlock(nn.Module):
         return x
 
 
-class EseModule(nn.Module):
-    def __init__(self, chs):
-        super().__init__()
-        self.conv = nn.Conv2d(
-            chs,
-            chs,
-            kernel_size=1,
-            stride=1,
-            padding=0,
-        )
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        identity = x
-        x = x.mean((2, 3), keepdim=True)
-        x = self.conv(x)
-        x = self.sigmoid(x)
-        return torch.mul(identity, x)
-
-
 class HG_Block(nn.Module):
     def __init__(
         self,
@@ -207,7 +172,6 @@ class HG_Block(nn.Module):
         residual=False,
         light_block=False,
         use_lab=False,
-        agg="ese",
         drop_path=0.0,
     ):
         super().__init__()
@@ -237,38 +201,24 @@ class HG_Block(nn.Module):
 
         # feature aggregation
         total_chs = in_chs + layer_num * mid_chs
-        if agg == "se":
-            aggregation_squeeze_conv = ConvBNAct(
-                total_chs,
-                out_chs // 2,
-                kernel_size=1,
-                stride=1,
-                use_lab=use_lab,
-            )
-            aggregation_excitation_conv = ConvBNAct(
-                out_chs // 2,
-                out_chs,
-                kernel_size=1,
-                stride=1,
-                use_lab=use_lab,
-            )
-            self.aggregation = nn.Sequential(
-                aggregation_squeeze_conv,
-                aggregation_excitation_conv,
-            )
-        else:
-            aggregation_conv = ConvBNAct(
-                total_chs,
-                out_chs,
-                kernel_size=1,
-                stride=1,
-                use_lab=use_lab,
-            )
-            att = EseModule(out_chs)
-            self.aggregation = nn.Sequential(
-                aggregation_conv,
-                att,
-            )
+        aggregation_squeeze_conv = ConvBNAct(
+            total_chs,
+            out_chs // 2,
+            kernel_size=1,
+            stride=1,
+            use_lab=use_lab,
+        )
+        aggregation_excitation_conv = ConvBNAct(
+            out_chs // 2,
+            out_chs,
+            kernel_size=1,
+            stride=1,
+            use_lab=use_lab,
+        )
+        self.aggregation = nn.Sequential(
+            aggregation_squeeze_conv,
+            aggregation_excitation_conv,
+        )
 
         self.drop_path = nn.Dropout(drop_path) if drop_path else nn.Identity()
 
@@ -297,7 +247,6 @@ class HG_Stage(nn.Module):
         light_block=False,
         kernel_size=3,
         use_lab=False,
-        agg="se",
         drop_path=0.0,
     ):
         super().__init__()
@@ -327,7 +276,6 @@ class HG_Stage(nn.Module):
                     kernel_size=kernel_size,
                     light_block=light_block,
                     use_lab=use_lab,
-                    agg=agg,
                     drop_path=drop_path[i] if isinstance(drop_path, (list, tuple)) else drop_path,
                 ),
             )

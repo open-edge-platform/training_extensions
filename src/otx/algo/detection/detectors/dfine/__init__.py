@@ -1,3 +1,4 @@
-"""Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
-Copyright(c) 2023 lyuwenyu. All Rights Reserved.
-"""
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Modified from D-FINE (https://github.com/Peterande/D-FINE)"""

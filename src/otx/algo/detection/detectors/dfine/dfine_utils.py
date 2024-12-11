@@ -2,8 +2,7 @@
 """
 
 import torch
-
-from .box_ops import box_xyxy_to_cxcywh
+from torchvision.ops import box_convert
 
 
 def weighting_function(reg_max, up, reg_scale, deploy=False):
@@ -126,8 +125,7 @@ def distance2bbox(points, distance, reg_scale):
     y2 = points[..., 1] + (0.5 * reg_scale + distance[..., 3]) * (points[..., 3] / reg_scale)
 
     bboxes = torch.stack([x1, y1, x2, y2], -1)
-
-    return box_xyxy_to_cxcywh(bboxes)
+    return box_convert(bboxes, in_fmt="xyxy", out_fmt="cxcywh")
 
 
 def bbox2distance(points, bbox, reg_max, reg_scale, up, eps=0.1):

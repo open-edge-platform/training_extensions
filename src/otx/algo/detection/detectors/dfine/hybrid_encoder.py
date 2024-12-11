@@ -1,9 +1,8 @@
-"""D-FINE: Redefine Regression Task of DETRs as Fine-grained Distribution Refinement
-Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
----------------------------------------------------------------------------------
-Modified from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
-Copyright (c) 2023 lyuwenyu. All Rights Reserved.
-"""
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""D-FINE Hybrid Encoder. Modified from D-FINE (https://github.com/Peterande/D-FINE)"""
+
 from __future__ import annotations
 
 import copy
@@ -15,8 +14,6 @@ import torch.nn.functional as F
 from torch import nn
 
 from .utils import get_activation
-
-__all__ = ["HybridEncoderModule"]
 
 
 class ConvNormLayer_fuse(nn.Module):
@@ -153,29 +150,6 @@ class VGGBlock(nn.Module):
         return kernel * t, beta - running_mean * gamma / std
 
 
-class ELAN(nn.Module):
-    # csp-elan
-    def __init__(self, c1, c2, c3, c4, n=2, bias=False, act="silu", bottletype=VGGBlock):
-        super().__init__()
-        self.c = c3
-        self.cv1 = ConvNormLayer_fuse(c1, c3, 1, 1, bias=bias, act=act)
-        self.cv2 = nn.Sequential(
-            bottletype(c3 // 2, c4, act=get_activation(act)),
-            ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act),
-        )
-        self.cv3 = nn.Sequential(
-            bottletype(c4, c4, act=get_activation(act)),
-            ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act),
-        )
-        self.cv4 = ConvNormLayer_fuse(c3 + (2 * c4), c2, 1, 1, bias=bias, act=act)
-
-    def forward(self, x):
-        # y = [self.cv1(x)]
-        y = list(self.cv1(x).chunk(2, 1))
-        y.extend((m(y[-1])) for m in [self.cv2, self.cv3])
-        return self.cv4(torch.cat(y, 1))
-
-
 class RepNCSPELAN4(nn.Module):
     # csp-elan
     def __init__(self, c1, c2, c3, c4, n=3, bias=False, act="silu"):
@@ -191,11 +165,6 @@ class RepNCSPELAN4(nn.Module):
             ConvNormLayer_fuse(c4, c4, 3, 1, bias=bias, act=act),
         )
         self.cv4 = ConvNormLayer_fuse(c3 + (2 * c4), c2, 1, 1, bias=bias, act=act)
-
-    def forward_chunk(self, x):
-        y = list(self.cv1(x).chunk(2, 1))
-        y.extend((m(y[-1])) for m in [self.cv2, self.cv3])
-        return self.cv4(torch.cat(y, 1))
 
     def forward(self, x):
         y = list(self.cv1(x).split((self.c, self.c), 1))
@@ -233,9 +202,16 @@ class CSPLayer(nn.Module):
         return self.conv3(x_1 + x_2)
 
 
-# transformer
 class TransformerEncoderLayer(nn.Module):
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu", normalize_before=False):
+    def __init__(
+        self,
+        d_model,
+        nhead,
+        dim_feedforward=2048,
+        dropout=0.1,
+        activation="relu",
+        normalize_before=False,
+    ):
         super().__init__()
         self.normalize_before = normalize_before
 
@@ -295,8 +271,6 @@ class TransformerEncoder(nn.Module):
 
 
 class HybridEncoderModule(nn.Module):
-    __share__ = ["eval_spatial_size"]
-
     def __init__(
         self,
         in_channels=[512, 1024, 2048],
@@ -311,7 +285,6 @@ class HybridEncoderModule(nn.Module):
         pe_temperature=10000,
         expansion=1.0,
         depth_mult=1.0,
-        act="silu",
         eval_spatial_size=None,
     ):
         super().__init__()
@@ -365,7 +338,6 @@ class HybridEncoderModule(nn.Module):
                     round(expansion * hidden_dim // 2),
                     round(3 * depth_mult),
                 ),
-                # CSPLayer(hidden_dim * 2, hidden_dim, round(3 * depth_mult), act=act, expansion=expansion, bottletype=VGGBlock)
             )
 
         # bottom-up pan
@@ -385,7 +357,6 @@ class HybridEncoderModule(nn.Module):
                     round(expansion * hidden_dim // 2),
                     round(3 * depth_mult),
                 ),
-                # CSPLayer(hidden_dim * 2, hidden_dim, round(3 * depth_mult), act=act, expansion=expansion, bottletype=VGGBlock)
             )
 
         self._reset_parameters()
@@ -401,7 +372,6 @@ class HybridEncoderModule(nn.Module):
                     self.pe_temperature,
                 )
                 setattr(self, f"pos_embed{idx}", pos_embed)
-                # self.register_buffer(f'pos_embed{idx}', pos_embed)
 
     @staticmethod
     def build_2d_sincos_position_embedding(w, h, embed_dim=256, temperature=10000.0):

@@ -8,7 +8,6 @@ Copyright (c) 2023 lyuwenyu. All Rights Reserved.
 from __future__ import annotations
 
 import copy
-import functools
 import math
 from collections import OrderedDict
 from typing import Any, ClassVar
@@ -22,12 +21,6 @@ from otx.algo.detection.heads.rtdetr_decoder import get_contrastive_denoising_tr
 
 from .dfine_utils import distance2bbox, weighting_function
 from .utils import bias_init_with_prob, deformable_attention_core_func_v2, get_activation, inverse_sigmoid
-
-__all__ = ["DFINETransformerModule"]
-
-
-LEARNABLE_PARAMS = False
-TEACHER_DISTILLATION = True
 
 
 class MLP(nn.Module):
@@ -51,7 +44,6 @@ class MSDeformableAttention(nn.Module):
         num_heads=8,
         num_levels=4,
         num_points=4,
-        method="default",
         offset_scale=0.5,
     ):
         """Multi-Scale Deformable Attention"""
@@ -73,7 +65,6 @@ class MSDeformableAttention(nn.Module):
         self.register_buffer("num_points_scale", torch.tensor(num_points_scale, dtype=torch.float32))
 
         self.total_points = num_heads * sum(num_points_list)
-        self.method = method
 
         self.head_dim = embed_dim // num_heads
         assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
@@ -81,13 +72,7 @@ class MSDeformableAttention(nn.Module):
         self.sampling_offsets = nn.Linear(embed_dim, self.total_points * 2)
         self.attention_weights = nn.Linear(embed_dim, self.total_points)
 
-        self.ms_deformable_attn_core = functools.partial(deformable_attention_core_func_v2, method=self.method)
-
         self._reset_parameters()
-
-        if method == "discrete":
-            for p in self.sampling_offsets.parameters():
-                p.requires_grad = False
 
     def _reset_parameters(self):
         # sampling_offsets
@@ -146,7 +131,7 @@ class MSDeformableAttention(nn.Module):
                 f"Last dim of reference_points must be 2 or 4, but get {reference_points.shape[-1]} instead.",
             )
 
-        output = self.ms_deformable_attn_core(
+        output = deformable_attention_core_func_v2(
             value,
             value_spatial_shapes,
             sampling_locations,
@@ -167,10 +152,9 @@ class TransformerDecoderLayer(nn.Module):
         activation="relu",
         n_levels=4,
         n_points=4,
-        cross_attn_method="default",
         layer_scale=None,
     ):
-        super(TransformerDecoderLayer, self).__init__()
+        super().__init__()
         if layer_scale is not None:
             dim_feedforward = round(layer_scale * dim_feedforward)
             d_model = round(layer_scale * d_model)
@@ -181,7 +165,7 @@ class TransformerDecoderLayer(nn.Module):
         self.norm1 = nn.LayerNorm(d_model)
 
         # cross attention
-        self.cross_attn = MSDeformableAttention(d_model, n_head, n_levels, n_points, method=cross_attn_method)
+        self.cross_attn = MSDeformableAttention(d_model, n_head, n_levels, n_points)
         self.dropout2 = nn.Dropout(dropout)
 
         # gate
@@ -253,7 +237,7 @@ class Integral(nn.Module):
 
     Args:
         reg_max (int): Max number of the discrete bins. Default is 32.
-                       It can be adjusted based on the dataset or task requirements.
+                        It can be adjusted based on the dataset or task requirements.
     """
 
     def __init__(self, reg_max=32):
@@ -433,8 +417,6 @@ class DFINETransformerModule(nn.Module):
         eval_idx=-1,
         eps=1e-2,
         aux_loss=True,
-        cross_attn_method="default",
-        query_select_method="default",
         reg_max=32,
         reg_scale=4.0,
         layer_scale=1,
@@ -459,17 +441,12 @@ class DFINETransformerModule(nn.Module):
         self.aux_loss = aux_loss
         self.reg_max = reg_max
 
-        assert query_select_method in ("default", "one2many", "agnostic"), ""
-        assert cross_attn_method in ("default", "discrete"), ""
-        self.cross_attn_method = cross_attn_method
-        self.query_select_method = query_select_method
-
         # backbone feature projection
         self._build_input_proj_layer(feat_channels)
 
         # Transformer module
-        self.up = nn.Parameter(torch.tensor([0.5]), requires_grad=LEARNABLE_PARAMS)
-        self.reg_scale = nn.Parameter(torch.tensor([reg_scale]), requires_grad=LEARNABLE_PARAMS)
+        self.up = nn.Parameter(torch.tensor([0.5]), requires_grad=False)
+        self.reg_scale = nn.Parameter(torch.tensor([reg_scale]), requires_grad=False)
         decoder_layer = TransformerDecoderLayer(
             hidden_dim,
             nhead,
@@ -478,7 +455,6 @@ class DFINETransformerModule(nn.Module):
             activation,
             num_levels,
             num_points,
-            cross_attn_method=cross_attn_method,
         )
         decoder_layer_wide = TransformerDecoderLayer(
             hidden_dim,
@@ -488,7 +464,6 @@ class DFINETransformerModule(nn.Module):
             activation,
             num_levels,
             num_points,
-            cross_attn_method=cross_attn_method,
             layer_scale=layer_scale,
         )
         self.decoder = TransformerDecoder(
@@ -517,10 +492,6 @@ class DFINETransformerModule(nn.Module):
             self.tgt_embed = nn.Embedding(num_queries, hidden_dim)
         self.query_pos_head = MLP(4, 2 * hidden_dim, hidden_dim, 2)
 
-        # if num_select_queries != self.num_queries:
-        #     layer = TransformerEncoderLayer(hidden_dim, nhead, dim_feedforward, activation='gelu')
-        #     self.encoder = TransformerEncoder(layer, 1)
-
         self.enc_output = nn.Sequential(
             OrderedDict(
                 [
@@ -530,11 +501,7 @@ class DFINETransformerModule(nn.Module):
             ),
         )
 
-        if query_select_method == "agnostic":
-            self.enc_score_head = nn.Linear(hidden_dim, 1)
-        else:
-            self.enc_score_head = nn.Linear(hidden_dim, num_classes)
-
+        self.enc_score_head = nn.Linear(hidden_dim, num_classes)
         self.enc_bbox_head = MLP(hidden_dim, hidden_dim, 4, 3)
 
         # decoder head
@@ -741,18 +708,7 @@ class DFINETransformerModule(nn.Module):
         outputs_anchors_unact: torch.Tensor,
         topk: int,
     ):
-        if self.query_select_method == "default":
-            _, topk_ind = torch.topk(outputs_logits.max(-1).values, topk, dim=-1)
-
-        elif self.query_select_method == "one2many":
-            _, topk_ind = torch.topk(outputs_logits.flatten(1), topk, dim=-1)
-            topk_ind = topk_ind // self.num_classes
-
-        elif self.query_select_method == "agnostic":
-            _, topk_ind = torch.topk(outputs_logits.squeeze(-1), topk, dim=-1)
-
-        topk_ind: torch.Tensor
-
+        _, topk_ind = torch.topk(outputs_logits.max(-1).values, topk, dim=-1)
         topk_anchors = outputs_anchors_unact.gather(
             dim=1,
             index=topk_ind.unsqueeze(-1).repeat(1, 1, outputs_anchors_unact.shape[-1]),
@@ -840,8 +796,8 @@ class DFINETransformerModule(nn.Module):
                 outputs_coord=out_bboxes[:-1],
                 outputs_corners=out_corners[:-1],
                 outputs_ref=out_refs[:-1],
-                teacher_corners=out_corners[-1] if TEACHER_DISTILLATION else None,
-                teacher_logits=out_logits[-1] if TEACHER_DISTILLATION else None,
+                teacher_corners=out_corners[-1],
+                teacher_logits=out_logits[-1],
             )
             out["enc_aux_outputs"] = self._set_aux_loss(
                 enc_topk_logits_list,
@@ -851,7 +807,6 @@ class DFINETransformerModule(nn.Module):
                 "pred_logits": pre_logits,
                 "pred_boxes": pre_bboxes,
             }
-            out["enc_meta"] = {"class_agnostic": self.query_select_method == "agnostic"}
 
             if dn_meta is not None:
                 out["dn_outputs"] = self._set_aux_loss2(
@@ -859,8 +814,8 @@ class DFINETransformerModule(nn.Module):
                     outputs_coord=dn_out_bboxes,
                     outputs_corners=dn_out_corners,
                     outputs_ref=dn_out_refs,
-                    teacher_corners=dn_out_corners[-1] if TEACHER_DISTILLATION else None,
-                    teacher_logits=dn_out_logits[-1] if TEACHER_DISTILLATION else None,
+                    teacher_corners=dn_out_corners[-1],
+                    teacher_logits=dn_out_logits[-1],
                 )
                 out["dn_pre_outputs"] = {
                     "pred_logits": dn_pre_logits,
