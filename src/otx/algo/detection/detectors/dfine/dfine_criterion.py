@@ -5,50 +5,16 @@ Modified from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright (c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import copy
-
 import torch
 import torch.distributed
 import torch.nn.functional as F
 import torchvision
-from torch import Tensor, nn
-from torchvision.ops.boxes import box_area
+from torch import nn
+from torchvision.ops import box_convert
+from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
+from otx.algo.common.losses.iou_loss import giou_loss
 
 from .dfine_utils import bbox2distance
-
-
-def box_cxcywh_to_xyxy(x):
-    x_c, y_c, w, h = x.unbind(-1)
-    b = [
-        (x_c - 0.5 * w.clamp(min=0.0)),
-        (y_c - 0.5 * h.clamp(min=0.0)),
-        (x_c + 0.5 * w.clamp(min=0.0)),
-        (y_c + 0.5 * h.clamp(min=0.0)),
-    ]
-    return torch.stack(b, dim=-1)
-
-
-def box_xyxy_to_cxcywh(x: Tensor) -> Tensor:
-    x0, y0, x1, y1 = x.unbind(-1)
-    b = [(x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0), (y1 - y0)]
-    return torch.stack(b, dim=-1)
-
-
-# modified from torchvision to also return the union
-def box_iou(boxes1: Tensor, boxes2: Tensor):
-    area1 = box_area(boxes1)
-    area2 = box_area(boxes2)
-
-    lt = torch.max(boxes1[:, None, :2], boxes2[:, :2])  # [N,M,2]
-    rb = torch.min(boxes1[:, None, 2:], boxes2[:, 2:])  # [N,M,2]
-
-    wh = (rb - lt).clamp(min=0)  # [N,M,2]
-    inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
-
-    union = area1[:, None] + area2 - inter
-
-    iou = inter / union
-    return iou, union
 
 
 def generalized_box_iou(boxes1, boxes2):
@@ -129,7 +95,10 @@ class DFINECriterion(nn.Module):
         if values is None:
             src_boxes = outputs["pred_boxes"][idx]
             target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
-            ious, _ = box_iou(box_cxcywh_to_xyxy(src_boxes), box_cxcywh_to_xyxy(target_boxes))
+            ious = bbox_overlaps(
+                box_convert(src_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
+                box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
+            )
             ious = torch.diag(ious).detach()
         else:
             ious = values
@@ -164,7 +133,14 @@ class DFINECriterion(nn.Module):
         loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction="none")
         losses["loss_bbox"] = loss_bbox.sum() / num_boxes
 
-        loss_giou = 1 - torch.diag(generalized_box_iou(box_cxcywh_to_xyxy(src_boxes), box_cxcywh_to_xyxy(target_boxes)))
+        loss_giou = 1 - torch.diag(
+            bbox_overlaps(
+                box_convert(src_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
+                box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
+                mode="giou",
+                is_aligned=True
+            )
+        )
         loss_giou = loss_giou if boxes_weight is None else loss_giou * boxes_weight
         losses["loss_giou"] = loss_giou.sum() / num_boxes
 
@@ -182,17 +158,17 @@ class DFINECriterion(nn.Module):
             with torch.no_grad():
                 target_corners, weight_right, weight_left = bbox2distance(
                     ref_points,
-                    box_cxcywh_to_xyxy(target_boxes),
+                    box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
                     self.reg_max,
                     outputs["reg_scale"],
                     outputs["up"],
                 )
 
             ious = torch.diag(
-                box_iou(
-                    box_cxcywh_to_xyxy(outputs["pred_boxes"][idx]),
-                    box_cxcywh_to_xyxy(target_boxes),
-                )[0],
+                bbox_overlaps(
+                    box_convert(outputs["pred_boxes"][idx], in_fmt="cxcywh", out_fmt="xyxy"),
+                    box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
+                )
             )
             weight_targets = ious.unsqueeze(-1).repeat(1, 1, 4).reshape(-1).detach()
 
@@ -414,30 +390,7 @@ class DFINECriterion(nn.Module):
         return losses
 
     def get_loss_meta_info(self, loss, outputs, targets, indices):
-        if self.boxes_weight_format is None:
-            return {}
-
-        src_boxes = outputs["pred_boxes"][self._get_src_permutation_idx(indices)]
-        target_boxes = torch.cat([t["boxes"][j] for t, (_, j) in zip(targets, indices)], dim=0)
-
-        if self.boxes_weight_format == "iou":
-            iou, _ = box_iou(box_cxcywh_to_xyxy(src_boxes.detach()), box_cxcywh_to_xyxy(target_boxes))
-            iou = torch.diag(iou)
-        elif self.boxes_weight_format == "giou":
-            iou = torch.diag(
-                generalized_box_iou(box_cxcywh_to_xyxy(src_boxes.detach()), box_cxcywh_to_xyxy(target_boxes)),
-            )
-        else:
-            raise AttributeError
-
-        if loss in ("boxes",):
-            meta = {"boxes_weight": iou}
-        elif loss in ("vfl",):
-            meta = {"values": iou}
-        else:
-            meta = {}
-
-        return meta
+        return {}
 
     @staticmethod
     def get_cdn_matched_indices(dn_meta, targets):

@@ -29,6 +29,8 @@ from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import ExplainableOTXDetModel
+from otx.algo.detection.detectors.dfine.dfine_criterion_otx import _DFINECriterion
+
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -121,6 +123,19 @@ class DFine(ExplainableOTXDetModel):
             num_classes=num_classes,
         )
 
+        criterion2 = _DFINECriterion(
+            weight_dict={
+                "loss_vfl": 1.0,
+                "loss_bbox": 5.0,
+                "loss_giou": 2.0,
+                "loss_fgl": 0.15,
+                "loss_ddf": 1.5,
+            },
+            alpha=0.75,
+            gamma=2.0,
+            num_classes=num_classes,
+        )
+
         if self.model_name == "dfine_hgnetv2_n":
             backbone_lr = 0.0004
         elif self.model_name == "dfine_hgnetv2_s":
@@ -148,6 +163,7 @@ class DFine(ExplainableOTXDetModel):
             encoder=encoder,
             decoder=decoder,
             criterion=criterion,
+            criterion2=criterion2,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
         )
