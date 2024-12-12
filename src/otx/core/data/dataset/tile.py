@@ -92,6 +92,7 @@ class OTXTileTransform(Tile):
         )
         self._tile_size = tile_size
         self._tile_ann_func_map[AnnotationType.polygon] = OTXTileTransform._tile_polygon
+        self._tile_ann_func_map[AnnotationType.ellipse] = OTXTileTransform._tile_polygon
         self.with_full_img = with_full_img
 
     @staticmethod
