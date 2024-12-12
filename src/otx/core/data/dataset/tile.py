@@ -9,6 +9,7 @@ import logging as log
 import operator
 import warnings
 from copy import deepcopy
+from functools import partial
 from itertools import product
 from typing import TYPE_CHECKING, Callable
 
@@ -92,7 +93,7 @@ class OTXTileTransform(Tile):
         )
         self._tile_size = tile_size
         self._tile_ann_func_map[AnnotationType.polygon] = OTXTileTransform._tile_polygon
-        self._tile_ann_func_map[AnnotationType.ellipse] = OTXTileTransform._tile_polygon
+        self._tile_ann_func_map[AnnotationType.ellipse] = partial(OTXTileTransform._tile_polygon, num_points=10)
         self.with_full_img = with_full_img
 
     @staticmethod
@@ -101,9 +102,10 @@ class OTXTileTransform(Tile):
         roi_box: sg.Polygon,
         threshold_drop_ann: float = 0.8,
         *args,  # noqa: ARG004
-        **kwargs,  # noqa: ARG004
+        **kwargs,
     ) -> Polygon | None:
-        polygon = sg.Polygon(ann.get_points())
+        num_points = kwargs["num_points"] if kwargs.get("num_points") else 720
+        polygon = sg.Polygon(ann.get_points(num_points=num_points))
 
         # NOTE: polygon may be invalid, e.g. self-intersecting
         if not roi_box.intersects(polygon) or not polygon.is_valid:
@@ -128,9 +130,10 @@ class OTXTileTransform(Tile):
 
         inter = _apply_offset(inter, roi_box)
 
-        return ann.wrap(
+        return Polygon(
             points=[p for xy in inter.exterior.coords for p in xy],
             attributes=deepcopy(ann.attributes),
+            label=ann.label,
         )
 
     def _extract_rois(self, image: Image) -> list[BboxIntCoords]:
