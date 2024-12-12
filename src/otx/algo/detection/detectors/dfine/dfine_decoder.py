@@ -371,7 +371,11 @@ class TransformerDecoder(nn.Module):
 
             # Refine bounding box corners using FDR, integrating previous layer's corrections
             pred_corners = bbox_head[i](output + output_detach) + pred_corners_undetach
-            inter_ref_bbox = distance2bbox(ref_points_initial, integral(pred_corners, project), reg_scale)
+            inter_ref_bbox = distance2bbox(
+                ref_points_initial,
+                integral(pred_corners, project),
+                reg_scale
+            )
 
             if self.training or i == self.eval_idx:
                 scores = score_head[i](output)
@@ -389,9 +393,14 @@ class TransformerDecoder(nn.Module):
             ref_points_detach = inter_ref_bbox.detach()
             output_detach = output.detach()
 
-        return torch.stack(dec_out_bboxes), torch.stack(dec_out_logits), torch.stack(dec_out_pred_corners), torch.stack(
-            dec_out_refs,
-        ), pre_bboxes, pre_scores
+        return (
+            torch.stack(dec_out_bboxes),
+            torch.stack(dec_out_logits),
+            torch.stack(dec_out_pred_corners),
+            torch.stack(dec_out_refs),
+            pre_bboxes,
+            pre_scores,
+        )
 
 
 class DFINETransformerModule(nn.Module):
