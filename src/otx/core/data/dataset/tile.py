@@ -8,15 +8,15 @@ from __future__ import annotations
 import logging as log
 import operator
 import warnings
+from collections import defaultdict
 from copy import deepcopy
-from functools import partial
 from itertools import product
 from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import shapely.geometry as sg
 import torch
-from datumaro import Bbox, DatasetItem, Image, Polygon
+from datumaro import Bbox, DatasetItem, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
 from datumaro.components.annotation import AnnotationType
 from datumaro.plugins.tiling import Tile
@@ -93,7 +93,7 @@ class OTXTileTransform(Tile):
         )
         self._tile_size = tile_size
         self._tile_ann_func_map[AnnotationType.polygon] = OTXTileTransform._tile_polygon
-        self._tile_ann_func_map[AnnotationType.ellipse] = partial(OTXTileTransform._tile_polygon, num_points=10)
+        self._tile_ann_func_map[AnnotationType.ellipse] = OTXTileTransform._tile_ellipse
         self.with_full_img = with_full_img
 
     @staticmethod
@@ -102,10 +102,47 @@ class OTXTileTransform(Tile):
         roi_box: sg.Polygon,
         threshold_drop_ann: float = 0.8,
         *args,  # noqa: ARG004
-        **kwargs,
+        **kwargs,  # noqa: ARG004
     ) -> Polygon | None:
-        num_points = kwargs["num_points"] if kwargs.get("num_points") else 720
-        polygon = sg.Polygon(ann.get_points(num_points=num_points))
+        polygon = sg.Polygon(ann.get_points())
+
+        # NOTE: polygon may be invalid, e.g. self-intersecting
+        if not roi_box.intersects(polygon) or not polygon.is_valid:
+            return None
+
+        # NOTE: intersection may return a GeometryCollection or MultiPolygon
+        inter = polygon.intersection(roi_box)
+        if isinstance(inter, (sg.GeometryCollection, sg.MultiPolygon)):
+            shapes = [(geom, geom.area) for geom in list(inter.geoms) if geom.is_valid]
+            if not shapes:
+                return None
+
+            inter, _ = max(shapes, key=operator.itemgetter(1))
+
+            if not isinstance(inter, sg.Polygon) and not inter.is_valid:
+                return None
+
+        prop_area = inter.area / polygon.area
+
+        if prop_area < threshold_drop_ann:
+            return None
+
+        inter = _apply_offset(inter, roi_box)
+
+        return ann.wrap(
+            points=[p for xy in inter.exterior.coords for p in xy],
+            attributes=deepcopy(ann.attributes),
+        )
+
+    @staticmethod
+    def _tile_ellipse(
+        ann: Ellipse,
+        roi_box: sg.Polygon,
+        threshold_drop_ann: float = 0.8,
+        *args,  # noqa: ARG004
+        **kwargs,  # noqa: ARG004
+    ) -> Polygon | None:
+        polygon = sg.Polygon(ann.get_points(num_points=10))
 
         # NOTE: polygon may be invalid, e.g. self-intersecting
         if not roi_box.intersects(polygon) or not polygon.is_valid:
@@ -471,25 +508,51 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
         img = item.media_as(Image)
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
+        anno_collection: dict[str, list] = defaultdict(list)
+        for anno in item.annotations:
+            anno_collection[anno.__class__.__name__].append(anno)
+
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 
-        for annotation in item.annotations:
-            if isinstance(annotation, Polygon):
-                bbox = np.array(annotation.get_bbox(), dtype=np.float32)
+        if Polygon.__name__ in anno_collection:  # Polygon for InstSeg has higher priority
+            for poly in anno_collection[Polygon.__name__]:
+                bbox = Bbox(*poly.get_bbox()).points
                 gt_bboxes.append(bbox)
-                gt_labels.append(annotation.label)
+                gt_labels.append(poly.label)
 
                 if self._dataset.include_polygons:
-                    gt_polygons.append(annotation)
+                    gt_polygons.append(poly)
                 else:
-                    gt_masks.append(polygon_to_bitmap([annotation], *img_shape)[0])
+                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
+        elif Bbox.__name__ in anno_collection:
+            bboxes = anno_collection[Bbox.__name__]
+            gt_bboxes = [ann.points for ann in bboxes]
+            gt_labels = [ann.label for ann in bboxes]
+            for box in bboxes:
+                poly = Polygon(box.as_polygon())
+                if self._dataset.include_polygons:
+                    gt_polygons.append(poly)
+                else:
+                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
+        elif Ellipse.__name__ in anno_collection:
+            for ellipse in anno_collection[Ellipse.__name__]:
+                bbox = Bbox(*ellipse.get_bbox()).points
+                gt_bboxes.append(bbox)
+                gt_labels.append(ellipse.label)
+                poly = Polygon(ellipse.as_polygon(num_points=10))
+                if self._dataset.include_polygons:
+                    gt_polygons.append(poly)
+                else:
+                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
+        else:
+            msg = "No valid annotations found in the dataset."
+            raise ValueError(msg)
 
         if empty_anno := len(gt_bboxes) == 0:
             warnings.warn(f"Empty annotation for image {item.id}", stacklevel=2)
 
         # convert xywh to xyxy format
         bboxes = np.empty((0, 4), dtype=np.float32) if empty_anno else np.stack(gt_bboxes, dtype=np.float32)
-        bboxes[:, 2:] += bboxes[:, :2]
 
         masks = np.stack(gt_masks, axis=0) if gt_masks else np.empty((0, *img_shape), dtype=bool)
         labels = np.array(gt_labels, dtype=np.int64)
