@@ -514,9 +514,10 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
 
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 
-        # NOTE (Eugene):
+        # TODO(Eugene): https://jira.devtools.intel.com/browse/CVS-159363
         # Temporary solution to handle multiple annotation types.
         # Ideally, we should pre-filter annotations during initialization of the dataset.
+
         if Polygon.__name__ in anno_collection:  # Polygon for InstSeg has higher priority
             for poly in anno_collection[Polygon.__name__]:
                 bbox = Bbox(*poly.get_bbox()).points
