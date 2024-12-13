@@ -5,13 +5,15 @@
 
 from __future__ import annotations
 
+import warnings
+from collections import defaultdict
 from functools import partial
 from typing import Callable
 
 import numpy as np
 import torch
+from datumaro import Bbox, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
-from datumaro import Image, Polygon
 from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
@@ -42,23 +44,49 @@ class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
         ignored_labels: list[int] = []
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
+        anno_collection: dict[str, list] = defaultdict(list)
+        for anno in item.annotations:
+            anno_collection[anno.__class__.__name__].append(anno)
+
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 
-        for annotation in item.annotations:
-            if isinstance(annotation, Polygon):
-                bbox = np.array(annotation.get_bbox(), dtype=np.float32)
+        # TODO(Eugene): https://jira.devtools.intel.com/browse/CVS-159363
+        # Temporary solution to handle multiple annotation types.
+        # Ideally, we should pre-filter annotations during initialization of the dataset.
+        if Polygon.__name__ in anno_collection:  # Polygon for InstSeg has higher priority
+            for poly in anno_collection[Polygon.__name__]:
+                bbox = Bbox(*poly.get_bbox()).points
                 gt_bboxes.append(bbox)
-                gt_labels.append(annotation.label)
+                gt_labels.append(poly.label)
 
                 if self.include_polygons:
-                    gt_polygons.append(annotation)
+                    gt_polygons.append(poly)
                 else:
-                    gt_masks.append(polygon_to_bitmap([annotation], *img_shape)[0])
+                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
+        elif Bbox.__name__ in anno_collection:
+            bboxes = anno_collection[Bbox.__name__]
+            gt_bboxes = [ann.points for ann in bboxes]
+            gt_labels = [ann.label for ann in bboxes]
+            for box in bboxes:
+                poly = Polygon(box.as_polygon())
+                if self.include_polygons:
+                    gt_polygons.append(poly)
+                else:
+                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
+        elif Ellipse.__name__ in anno_collection:
+            for ellipse in anno_collection[Ellipse.__name__]:
+                bbox = Bbox(*ellipse.get_bbox()).points
+                gt_bboxes.append(bbox)
+                gt_labels.append(ellipse.label)
+                poly = Polygon(ellipse.as_polygon(num_points=10))
+                if self.include_polygons:
+                    gt_polygons.append(poly)
+                else:
+                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
+        else:
+            warnings.warn(f"No valid annotations found for image {item.id}!", stacklevel=2)
 
-        # convert xywh to xyxy format
-        bboxes = np.array(gt_bboxes, dtype=np.float32) if gt_bboxes else np.empty((0, 4))
-        bboxes[:, 2:] += bboxes[:, :2]
-
+        bboxes = np.stack(gt_bboxes, dtype=np.float32, axis=0) if gt_bboxes else np.empty((0, 4))
         masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((0, *img_shape), dtype=bool)
         labels = np.array(gt_labels, dtype=np.int64)
 
