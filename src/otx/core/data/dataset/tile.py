@@ -222,6 +222,7 @@ class OTXTileDataset(OTXDataset):
             dataset.image_color_channel,
             dataset.stack_images,
             dataset.to_tv_image,
+            data_format=dataset.data_format,
         )
         self.tile_config = tile_config
         self._dataset = dataset
