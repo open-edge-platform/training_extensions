@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import defaultdict
 from functools import partial
 from typing import Callable
@@ -49,6 +50,9 @@ class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
 
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 
+        # NOTE (Eugene):
+        # Temporary solution to handle multiple annotation types.
+        # Ideally, we should pre-filter annotations during initialization of the dataset.
         if Polygon.__name__ in anno_collection:  # Polygon for InstSeg has higher priority
             for poly in anno_collection[Polygon.__name__]:
                 bbox = Bbox(*poly.get_bbox()).points
@@ -80,8 +84,7 @@ class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
                 else:
                     gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
         else:
-            msg = "No valid annotations found in the dataset."
-            raise ValueError(msg)
+            warnings.warn(f"No valid annotations found for image {item.id}!", stacklevel=2)
 
         bboxes = np.stack(gt_bboxes, dtype=np.float32, axis=0) if gt_bboxes else np.empty((0, 4))
         masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((0, *img_shape), dtype=bool)

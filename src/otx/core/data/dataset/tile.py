@@ -514,6 +514,9 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
 
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 
+        # NOTE (Eugene):
+        # Temporary solution to handle multiple annotation types.
+        # Ideally, we should pre-filter annotations during initialization of the dataset.
         if Polygon.__name__ in anno_collection:  # Polygon for InstSeg has higher priority
             for poly in anno_collection[Polygon.__name__]:
                 bbox = Bbox(*poly.get_bbox()).points
@@ -525,10 +528,10 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
                 else:
                     gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
         elif Bbox.__name__ in anno_collection:
-            bboxes = anno_collection[Bbox.__name__]
-            gt_bboxes = [ann.points for ann in bboxes]
-            gt_labels = [ann.label for ann in bboxes]
-            for box in bboxes:
+            boxes = anno_collection[Bbox.__name__]
+            gt_bboxes = [ann.points for ann in boxes]
+            gt_labels = [ann.label for ann in boxes]
+            for box in boxes:
                 poly = Polygon(box.as_polygon())
                 if self._dataset.include_polygons:
                     gt_polygons.append(poly)
@@ -545,15 +548,9 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
                 else:
                     gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
         else:
-            msg = "No valid annotations found in the dataset."
-            raise ValueError(msg)
+            warnings.warn(f"No valid annotations found for image {item.id}!", stacklevel=2)
 
-        if empty_anno := len(gt_bboxes) == 0:
-            warnings.warn(f"Empty annotation for image {item.id}", stacklevel=2)
-
-        # convert xywh to xyxy format
-        bboxes = np.empty((0, 4), dtype=np.float32) if empty_anno else np.stack(gt_bboxes, dtype=np.float32)
-
+        bboxes = np.stack(gt_bboxes, dtype=np.float32) if gt_bboxes else np.empty((0, 4), dtype=np.float32)
         masks = np.stack(gt_masks, axis=0) if gt_masks else np.empty((0, *img_shape), dtype=bool)
         labels = np.array(gt_labels, dtype=np.int64)
 
