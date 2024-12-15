@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import warnings
 from typing import Any
+
 import numpy as np
 import torch
 from torch import Tensor, nn
@@ -43,7 +44,7 @@ class DETR(BaseModule):
         decoder: nn.Module,
         num_classes: int,
         criterion: nn.Module | None = None,
-        criterion2 = None,
+        criterion2=None,
         optimizer_configuration: list[dict] | None = None,
         multi_scale: list[int] | None = None,
         num_top_queries: int = 300,

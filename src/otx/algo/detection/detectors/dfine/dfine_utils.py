@@ -109,9 +109,9 @@ def distance2bbox(points, distance, reg_scale):
 
     Args:
         points (Tensor): (B, N, 4) or (N, 4) format, representing [x, y, w, h],
-                         where (x, y) is the center and (w, h) are width and height.
+                        where (x, y) is the center and (w, h) are width and height.
         distance (Tensor): (B, N, 4) or (N, 4), representing distances from the
-                           point to the left, top, right, and bottom boundaries.
+                        point to the left, top, right, and bottom boundaries.
 
         reg_scale (float): Controls the curvature of the Weighting Function.
 
@@ -143,6 +143,7 @@ def bbox2distance(points, bbox, reg_max, reg_scale, up, eps=0.1):
         Tensor: Decoded distances.
     """
     reg_scale = abs(reg_scale)
+    # ϕ = (dᴳᵀ- d⁰) / {H, H, W, W}
     left = (points[:, 0] - bbox[:, 0]) / (points[..., 2] / reg_scale + 1e-16) - 0.5 * reg_scale
     top = (points[:, 1] - bbox[:, 1]) / (points[..., 3] / reg_scale + 1e-16) - 0.5 * reg_scale
     right = (bbox[:, 2] - points[:, 0]) / (points[..., 2] / reg_scale + 1e-16) - 0.5 * reg_scale

@@ -14,7 +14,7 @@ from typing import Any, ClassVar
 
 import torch
 import torch.nn.functional as F
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import init
 
 from otx.algo.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
@@ -24,7 +24,14 @@ from .utils import bias_init_with_prob, deformable_attention_core_func_v2, get_a
 
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, num_layers, act="relu"):
+    def __init__(
+        self,
+        input_dim,
+        hidden_dim,
+        output_dim,
+        num_layers,
+        act="relu",
+    ):
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
@@ -256,7 +263,12 @@ class LQE(nn.Module):
         super(LQE, self).__init__()
         self.k = k
         self.reg_max = reg_max
-        self.reg_conf = MLP(4 * (k + 1), hidden_dim, 1, num_layers)
+        self.reg_conf = MLP(
+            input_dim=4 * (k + 1),
+            hidden_dim=hidden_dim,
+            output_dim=1,
+            num_layers=num_layers,
+        )
         init.constant_(self.reg_conf.layers[-1].bias, 0)
         init.constant_(self.reg_conf.layers[-1].weight, 0)
 
@@ -320,20 +332,19 @@ class TransformerDecoder(nn.Module):
 
     def forward(
         self,
-        target,
-        ref_points_unact,
-        memory,
-        spatial_shapes,
-        bbox_head,
-        score_head,
-        query_pos_head,
-        pre_bbox_head,
-        integral,
-        up,
-        reg_scale,
-        attn_mask=None,
-        memory_mask=None,
-        dn_meta=None,
+        target: Tensor,
+        ref_points_unact: Tensor,
+        memory: Tensor,
+        spatial_shapes: list[list[int]],
+        bbox_head: nn.Module,
+        score_head: nn.Module,
+        query_pos_head: nn.Module,
+        pre_bbox_head: nn.Module,
+        integral: nn.Module,
+        up: Tensor,
+        reg_scale: Tensor,
+        attn_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
     ):
         output = target
         output_detach = pred_corners_undetach = 0
@@ -367,14 +378,14 @@ class TransformerDecoder(nn.Module):
                 # Initial bounding box predictions with inverse sigmoid refinement
                 pre_bboxes = F.sigmoid(pre_bbox_head(output) + inverse_sigmoid(ref_points_detach))
                 pre_scores = score_head[0](output)
-                ref_points_initial = pre_bboxes.detach()
+                initial_ref_boxes = pre_bboxes.detach()
 
             # Refine bounding box corners using FDR, integrating previous layer's corrections
             pred_corners = bbox_head[i](output + output_detach) + pred_corners_undetach
             inter_ref_bbox = distance2bbox(
-                ref_points_initial,
+                initial_ref_boxes,
                 integral(pred_corners, project),
-                reg_scale
+                reg_scale,
             )
 
             if self.training or i == self.eval_idx:
@@ -384,7 +395,7 @@ class TransformerDecoder(nn.Module):
                 dec_out_logits.append(scores)
                 dec_out_bboxes.append(inter_ref_bbox)
                 dec_out_pred_corners.append(pred_corners)
-                dec_out_refs.append(ref_points_initial)
+                dec_out_refs.append(initial_ref_boxes)
 
                 if not self.training:
                     break
@@ -499,7 +510,12 @@ class DFINETransformerModule(nn.Module):
         self.learn_query_content = learn_query_content
         if learn_query_content:
             self.tgt_embed = nn.Embedding(num_queries, hidden_dim)
-        self.query_pos_head = MLP(4, 2 * hidden_dim, hidden_dim, 2)
+        self.query_pos_head = MLP(
+            input_dim=4,
+            hidden_dim=2 * hidden_dim,
+            output_dim=hidden_dim,
+            num_layers=2,
+        )
 
         self.enc_output = nn.Sequential(
             OrderedDict(
@@ -511,7 +527,12 @@ class DFINETransformerModule(nn.Module):
         )
 
         self.enc_score_head = nn.Linear(hidden_dim, num_classes)
-        self.enc_bbox_head = MLP(hidden_dim, hidden_dim, 4, 3)
+        self.enc_bbox_head = MLP(
+            input_dim=hidden_dim,
+            hidden_dim=hidden_dim,
+            output_dim=4,
+            num_layers=3,
+        )
 
         # decoder head
         self.eval_idx = eval_idx if eval_idx >= 0 else num_layers + eval_idx
@@ -519,10 +540,33 @@ class DFINETransformerModule(nn.Module):
             [nn.Linear(hidden_dim, num_classes) for _ in range(self.eval_idx + 1)]
             + [nn.Linear(scaled_dim, num_classes) for _ in range(num_layers - self.eval_idx - 1)],
         )
-        self.pre_bbox_head = MLP(hidden_dim, hidden_dim, 4, 3)
+        self.pre_bbox_head = MLP(
+            input_dim=hidden_dim,
+            hidden_dim=hidden_dim,
+            output_dim=4,
+            num_layers=3,
+        )
+
+        # distribution refinement over num of self.reg_max bins
         self.dec_bbox_head = nn.ModuleList(
-            [MLP(hidden_dim, hidden_dim, 4 * (self.reg_max + 1), 3) for _ in range(self.eval_idx + 1)]
-            + [MLP(scaled_dim, scaled_dim, 4 * (self.reg_max + 1), 3) for _ in range(num_layers - self.eval_idx - 1)],
+            [
+                MLP(
+                    input_dim=hidden_dim,
+                    hidden_dim=hidden_dim,
+                    output_dim=4 * (self.reg_max + 1),
+                    num_layers=3,
+                )
+                for _ in range(self.eval_idx + 1)
+            ]
+            + [
+                MLP(
+                    input_dim=scaled_dim,
+                    hidden_dim=scaled_dim,
+                    output_dim=4 * (self.reg_max + 1),
+                    num_layers=3,
+                )
+                for _ in range(num_layers - self.eval_idx - 1)
+            ],
         )
         self.integral = Integral(self.reg_max)
 
@@ -658,10 +702,10 @@ class DFINETransformerModule(nn.Module):
 
     def _get_decoder_input(
         self,
-        memory: torch.Tensor,
-        spatial_shapes,
-        denoising_logits=None,
-        denoising_bbox_unact=None,
+        memory: Tensor,
+        spatial_shapes: list[list[int]],
+        denoising_logits: Tensor | None = None,
+        denoising_bbox_unact: Tensor | None = None,
     ):
         # prepare input for decoder
         if self.training or self.eval_spatial_size is None:
@@ -672,12 +716,10 @@ class DFINETransformerModule(nn.Module):
         if memory.shape[0] > 1:
             anchors = anchors.repeat(memory.shape[0], 1, 1)
 
-        # memory = torch.where(valid_mask, memory, 0)
-        # TODO fix type error for onnx export
         memory = valid_mask.to(memory.dtype) * memory
 
-        output_memory: torch.Tensor = self.enc_output(memory)
-        enc_outputs_logits: torch.Tensor = self.enc_score_head(output_memory)
+        output_memory = self.enc_output(memory)
+        enc_outputs_logits = self.enc_score_head(output_memory)
 
         enc_topk_bboxes_list, enc_topk_logits_list = [], []
         enc_topk_memory, enc_topk_logits, enc_topk_anchors = self._select_topk(
@@ -687,15 +729,12 @@ class DFINETransformerModule(nn.Module):
             self.num_queries,
         )
 
-        enc_topk_bbox_unact: torch.Tensor = self.enc_bbox_head(enc_topk_memory) + enc_topk_anchors
+        enc_topk_bbox_unact = self.enc_bbox_head(enc_topk_memory) + enc_topk_anchors
 
         if self.training:
             enc_topk_bboxes = F.sigmoid(enc_topk_bbox_unact)
             enc_topk_bboxes_list.append(enc_topk_bboxes)
             enc_topk_logits_list.append(enc_topk_logits)
-
-        # if self.num_select_queries != self.num_queries:
-        #     raise NotImplementedError('')
 
         if self.learn_query_content:
             content = self.tgt_embed.weight.unsqueeze(0).tile([memory.shape[0], 1, 1])
@@ -772,7 +811,6 @@ class DFINETransformerModule(nn.Module):
             self.up,
             self.reg_scale,
             attn_mask=attn_mask,
-            dn_meta=dn_meta,
         )
 
         if self.training and dn_meta is not None:

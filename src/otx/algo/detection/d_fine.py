@@ -17,6 +17,7 @@ from torchvision.tv_tensors import BoundingBoxFormat
 from otx.algo.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from otx.algo.detection.detectors import DETR
 from otx.algo.detection.detectors.dfine.dfine_criterion import DFINECriterion
+from otx.algo.detection.detectors.dfine.dfine_criterion_otx import _DFINECriterion
 from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
 from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors.dfine.hybrid_encoder import HybridEncoder
@@ -29,8 +30,6 @@ from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import ExplainableOTXDetModel
-from otx.algo.detection.detectors.dfine.dfine_criterion_otx import _DFINECriterion
-
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

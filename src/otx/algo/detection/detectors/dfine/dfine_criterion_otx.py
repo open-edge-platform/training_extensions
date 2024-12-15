@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from typing import Callable
 
-from torch import nn
 import torch
 import torch.distributed
 import torch.nn.functional as F
+from torch import nn
+from torchvision.ops import box_convert
+
+from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
 from otx.algo.detection.losses.rtdetr_loss import DetrCriterion
 
 from .dfine_utils import bbox2distance
-from torchvision.ops import box_convert
-from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
 
 
 class _DFINECriterion(DetrCriterion):
@@ -54,7 +55,7 @@ class _DFINECriterion(DetrCriterion):
                 bbox_overlaps(
                     box_convert(outputs["pred_boxes"][idx], in_fmt="cxcywh", out_fmt="xyxy"),
                     box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
-                )
+                ),
             )
             weight_targets = ious.unsqueeze(-1).repeat(1, 1, 4).reshape(-1).detach()
 
@@ -136,7 +137,7 @@ class _DFINECriterion(DetrCriterion):
     @property
     def _available_losses(self) -> tuple[Callable]:
         return (
-            self.loss_boxes, 
+            self.loss_boxes,
             self.loss_labels_vfl,
             self.loss_local,
         )

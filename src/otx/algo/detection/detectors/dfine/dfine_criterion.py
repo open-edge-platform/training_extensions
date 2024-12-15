@@ -11,8 +11,8 @@ import torch.nn.functional as F
 import torchvision
 from torch import nn
 from torchvision.ops import box_convert
+
 from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
-from otx.algo.common.losses.iou_loss import giou_loss
 
 from .dfine_utils import bbox2distance
 
@@ -138,8 +138,8 @@ class DFINECriterion(nn.Module):
                 box_convert(src_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
                 box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
                 mode="giou",
-                is_aligned=True
-            )
+                is_aligned=True,
+            ),
         )
         loss_giou = loss_giou if boxes_weight is None else loss_giou * boxes_weight
         losses["loss_giou"] = loss_giou.sum() / num_boxes
@@ -168,7 +168,7 @@ class DFINECriterion(nn.Module):
                 bbox_overlaps(
                     box_convert(outputs["pred_boxes"][idx], in_fmt="cxcywh", out_fmt="xyxy"),
                     box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
-                )
+                ),
             )
             weight_targets = ious.unsqueeze(-1).repeat(1, 1, 4).reshape(-1).detach()
 
@@ -302,7 +302,7 @@ class DFINECriterion(nn.Module):
         else:
             assert "aux_outputs" in outputs, ""
 
-        # Compute the average number of target boxes accross all nodes, for normalization purposes
+        # Compute the average number of target boxes across all nodes, for normalization purposes
         num_boxes = sum(len(t["labels"]) for t in targets)
         num_boxes = torch.as_tensor([num_boxes], dtype=torch.float, device=next(iter(outputs.values())).device)
         num_boxes = torch.clamp(num_boxes, min=1).item()
