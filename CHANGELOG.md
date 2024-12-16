@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.2.2\]
+
+### Bug fixes
+
+- BC improvement
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4154>)
+
 ## \[2.2.1\]
 
 ### Bug fixes
