@@ -350,10 +350,10 @@ class TransformerDecoder(nn.Module):
         output_detach = pred_corners_undetach = 0
         value = self.value_op(memory, None, None, memory_mask, spatial_shapes)
 
-        dec_out_bboxes = []
-        dec_out_logits = []
-        dec_out_pred_corners = []
-        dec_out_refs = []
+        out_bboxes = []
+        out_logits = []
+        out_corners = []
+        out_refs = []
         if not hasattr(self, "project"):
             project = weighting_function(self.reg_max, up, reg_scale)
         else:
@@ -392,10 +392,10 @@ class TransformerDecoder(nn.Module):
                 scores = score_head[i](output)
                 # Lqe does not affect the performance here.
                 scores = self.lqe_layers[i](scores, pred_corners)
-                dec_out_logits.append(scores)
-                dec_out_bboxes.append(inter_ref_bbox)
-                dec_out_pred_corners.append(pred_corners)
-                dec_out_refs.append(initial_ref_boxes)
+                out_logits.append(scores)
+                out_bboxes.append(inter_ref_bbox)
+                out_corners.append(pred_corners)
+                out_refs.append(initial_ref_boxes)
 
                 if not self.training:
                     break
@@ -405,10 +405,10 @@ class TransformerDecoder(nn.Module):
             output_detach = output.detach()
 
         return (
-            torch.stack(dec_out_bboxes),
-            torch.stack(dec_out_logits),
-            torch.stack(dec_out_pred_corners),
-            torch.stack(dec_out_refs),
+            torch.stack(out_bboxes),  # out_bboxes
+            torch.stack(out_logits),  # out_logits
+            torch.stack(out_corners),  # out_corners
+            torch.stack(out_refs),  # out_refs
             pre_bboxes,
             pre_scores,
         )

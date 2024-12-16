@@ -44,7 +44,6 @@ class DETR(BaseModule):
         decoder: nn.Module,
         num_classes: int,
         criterion: nn.Module | None = None,
-        criterion2=None,
         optimizer_configuration: list[dict] | None = None,
         multi_scale: list[int] | None = None,
         num_top_queries: int = 300,
@@ -72,7 +71,6 @@ class DETR(BaseModule):
                 alpha=0.75,
             )
         )
-        self.criterion2 = criterion2
         self.optimizer_configuration = optimizer_configuration
 
     def _forward_features(self, images: Tensor, targets: dict[str, Any] | None = None) -> dict[str, Tensor]:

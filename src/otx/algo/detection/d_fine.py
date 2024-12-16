@@ -14,10 +14,8 @@ from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxFormat
 
-from otx.algo.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from otx.algo.detection.detectors import DETR
 from otx.algo.detection.detectors.dfine.dfine_criterion import DFINECriterion
-from otx.algo.detection.detectors.dfine.dfine_criterion_otx import _DFINECriterion
 from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
 from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors.dfine.hybrid_encoder import HybridEncoder
@@ -105,9 +103,6 @@ class DFine(ExplainableOTXDetModel):
             num_classes=num_classes,
         )
         criterion = DFINECriterion(
-            matcher=HungarianMatcher(
-                cost_dict={"cost_class": 2, "cost_bbox": 5, "cost_giou": 2},
-            ),
             weight_dict={
                 "loss_vfl": 1,
                 "loss_bbox": 5,
@@ -115,23 +110,9 @@ class DFine(ExplainableOTXDetModel):
                 "loss_fgl": 0.15,
                 "loss_ddf": 1.5,
             },
-            losses=["vfl", "boxes", "local"],
             alpha=0.75,
             gamma=2.0,
             reg_max=32,
-            num_classes=num_classes,
-        )
-
-        criterion2 = _DFINECriterion(
-            weight_dict={
-                "loss_vfl": 1.0,
-                "loss_bbox": 5.0,
-                "loss_giou": 2.0,
-                "loss_fgl": 0.15,
-                "loss_ddf": 1.5,
-            },
-            alpha=0.75,
-            gamma=2.0,
             num_classes=num_classes,
         )
 
@@ -162,7 +143,6 @@ class DFine(ExplainableOTXDetModel):
             encoder=encoder,
             decoder=decoder,
             criterion=criterion,
-            criterion2=criterion2,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
         )
