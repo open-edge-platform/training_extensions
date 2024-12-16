@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.core.model.base &#8212; OpenVINO™ Training Extensions 2.2.1 documentation</title>
+    <title>otx.core.model.base &#8212; OpenVINO™ Training Extensions 2.2.2 documentation</title>
   
   
   
@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../../_static/documentation_options.js?v=192a11e6"></script>
+    <script src="../../../../_static/documentation_options.js?v=399b8b0d"></script>
     <script src="../../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -692,6 +692,11 @@
         <span class="k">if</span> <span class="n">ckpt_label_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Checkpoint should have `label_info`.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">ckpt_label_info</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ckpt_label_info</span><span class="p">,</span> <span class="s2">&quot;label_ids&quot;</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Loading checkpoint from OTX &lt; 2.2.1, label_ids are assigned automatically&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">ckpt_label_info</span><span class="o">.</span><span class="n">label_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ckpt_label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">)]</span>
 
         <span class="k">if</span> <span class="n">ckpt_label_info</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>

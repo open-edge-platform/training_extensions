@@ -4,6 +4,17 @@ Releases
 .. toctree::
   :maxdepth: 1
 
+v2.2.2 (2024.12)
+----------------
+
+Enhancements
+^^^^^^^^^^^^
+
+Bug fixes
+^^^^^^^^^
+
+- BC improvement
+
 v2.2.1 (2024.12)
 ----------------
 
