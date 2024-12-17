@@ -1,9 +1,8 @@
-"""D-FINE: Redefine Regression Task of DETRs as Fine-grained Distribution Refinement
-Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
----------------------------------------------------------------------------------
-Modified from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
-Copyright (c) 2023 lyuwenyu. All Rights Reserved.
-"""
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+"""D-FINE criterion implementations. Modified from https://github.com/Peterande/D-FINE."""
+
 
 from __future__ import annotations
 
@@ -11,8 +10,8 @@ from typing import Callable
 
 import torch
 import torch.distributed
-import torch.nn.functional as F
-from torch import nn
+import torch.nn.functional as f
+from torch import Tensor, nn
 from torchvision.ops import box_convert
 
 from otx.algo.common.utils.assigners.hungarian_matcher import HungarianMatcher
@@ -22,7 +21,19 @@ from .dfine_utils import bbox2distance
 
 
 class DFINECriterion(nn.Module):
-    """This class computes the loss for D-FINE."""
+    """D-Fine criterion with FGL and DDF losses.
+
+    The process happens in two steps:
+    1) we compute hungarian assignment between ground truth boxes and the outputs of the model
+    2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
+
+    Args:
+        weight_dict (dict[str, int | float]): A dictionary containing the weights for different loss components.
+        alpha (float, optional): The alpha parameter for the loss calculation. Defaults to 0.2.
+        gamma (float, optional): The gamma parameter for the loss calculation. Defaults to 2.0.
+        num_classes (int, optional): The number of classes. Defaults to 80.
+        reg_max (int, optional): The maximum number of bin targets. Defaults to 32.
+    """
 
     def __init__(
         self,
@@ -32,26 +43,39 @@ class DFINECriterion(nn.Module):
         num_classes: int = 80,
         reg_max: int = 32,
     ):
-        """Create the criterion.
-        Parameters:
-            matcher: module able to compute a matching between targets and proposals.
-            weight_dict: dict containing as key the names of the losses and as values their relative weight.
-            losses: list of all the losses to be applied. See get_loss for list of available losses.
-            num_classes: number of object categories, omitting the special no-object category.
-            reg_max (int): Max number of the discrete bins in D-FINE.
-        """
         super().__init__()
         self.num_classes = num_classes
         self.matcher = HungarianMatcher(
-            cost_dict={"cost_class": 2, "cost_bbox": 5, "cost_giou": 2},
+            cost_dict={
+                "cost_class": 2.0,
+                "cost_bbox": 5.0,
+                "cost_giou": 2.0,
+            },
         )
         self.weight_dict = weight_dict
         self.alpha = alpha
         self.gamma = gamma
         self.reg_max = reg_max
-        self.num_pos, self.num_neg = None, None
+        self.num_pos, self.num_neg = 0.0, 0.0
 
-    def loss_labels_vfl(self, outputs, targets, indices, num_boxes):
+    def loss_labels_vfl(
+        self,
+        outputs: dict[str, Tensor],
+        targets: list[dict[str, Tensor]],
+        indices: list[tuple[int, int]],
+        num_boxes: int,
+    ) -> dict[str, Tensor]:
+        """Varifocal Loss (VFL) for label prediction.
+
+        Args:
+            outputs (dict[str, Tensor]): Model outputs.
+            targets (List[Dict[str, Tensor]]): List of target dictionaries.
+            indices (List[Tuple[int, int]]): List of tuples of indices.
+            num_boxes (int): Number of predicted boxes.
+
+        Returns:
+            dict[str, Tensor]: The loss dictionary.
+        """
         idx = self._get_src_permutation_idx(indices)
         src_boxes = outputs["pred_boxes"][idx]
         target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
@@ -65,29 +89,45 @@ class DFINECriterion(nn.Module):
         target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
         target_classes = torch.full(src_logits.shape[:2], self.num_classes, dtype=torch.int64, device=src_logits.device)
         target_classes[idx] = target_classes_o
-        target = F.one_hot(target_classes, num_classes=self.num_classes + 1)[..., :-1]
+        target = f.one_hot(target_classes, num_classes=self.num_classes + 1)[..., :-1]
 
         target_score_o = torch.zeros_like(target_classes, dtype=src_logits.dtype)
         target_score_o[idx] = ious.to(target_score_o.dtype)
         target_score = target_score_o.unsqueeze(-1) * target
 
-        pred_score = F.sigmoid(src_logits).detach()
+        pred_score = f.sigmoid(src_logits).detach()
         weight = self.alpha * pred_score.pow(self.gamma) * (1 - target) + target_score
 
-        loss = F.binary_cross_entropy_with_logits(src_logits, target_score, weight=weight, reduction="none")
+        loss = f.binary_cross_entropy_with_logits(src_logits, target_score, weight=weight, reduction="none")
         loss = loss.mean(1).sum() * src_logits.shape[1] / num_boxes
         return {"loss_vfl": loss}
 
-    def loss_boxes(self, outputs, targets, indices, num_boxes):
-        """Compute the losses related to the bounding boxes, the L1 regression loss and the GIoU loss
-        targets dicts must contain the key "boxes" containing a tensor of dim [nb_target_boxes, 4]
+    def loss_boxes(
+        self,
+        outputs: dict[str, Tensor],
+        targets: list[dict[str, Tensor]],
+        indices: list[tuple[int, int]],
+        num_boxes: int,
+    ) -> dict[str, Tensor]:
+        """Compute the losses re)L1 regression loss and the GIoU loss.
+
+        Targets dicts must contain the key "boxes" containing a tensor of dim [nb_target_boxes, 4]
         The target boxes are expected in format (center_x, center_y, w, h), normalized by the image size.
+
+        Args:
+            outputs (dict[str, Tensor]): The outputs of the model.
+            targets (list[dict[str, Tensor]]): The targets.
+            indices (list[tuple[int, int]]): The indices of the matched boxes.
+            num_boxes (int): The number of boxes.
+
+        Returns:
+            dict[str, Tensor]: The losses.
         """
         idx = self._get_src_permutation_idx(indices)
         src_boxes = outputs["pred_boxes"][idx]
         target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
         losses = {}
-        loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction="none")
+        loss_bbox = f.l1_loss(src_boxes, target_boxes, reduction="none")
         losses["loss_bbox"] = loss_bbox.sum() / num_boxes
 
         loss_giou = 1 - torch.diag(
@@ -95,15 +135,32 @@ class DFINECriterion(nn.Module):
                 box_convert(src_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
                 box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
                 mode="giou",
-                is_aligned=True,
             ),
         )
         losses["loss_giou"] = loss_giou.sum() / num_boxes
 
         return losses
 
-    def loss_local(self, outputs, targets, indices, num_boxes, T=5):
-        """Compute Fine-Grained Localization (FGL) Loss and Decoupled Distillation Focal (DDF) Loss."""
+    def loss_local(
+        self,
+        outputs: dict[str, Tensor],
+        targets: list[dict[str, Tensor]],
+        indices: list[tuple[int, int]],
+        num_boxes: int,
+        temperature: int = 5,
+    ) -> dict[str, Tensor]:
+        """Compute Fine-Grained Localization (FGL) Loss and Decoupled Distillation Focal (DDF) Loss.
+
+        Args:
+            outputs (dict[str, Tensor]): The outputs of the model.
+            targets (list[dict[str, Tensor]]): The targets.
+            indices (list[tuple[int, int]]): The indices of the matched boxes.
+            num_boxes (int): The number of boxes.
+            temperature (int, optional): Temperature for distillation. Defaults to 5.
+
+        Returns:
+            dict[str, Tensor]: FGL and DDF losses.
+        """
         losses = {}
         if "pred_corners" in outputs:
             idx = self._get_src_permutation_idx(indices)
@@ -131,7 +188,7 @@ class DFINECriterion(nn.Module):
             )
             weight_targets = ious.unsqueeze(-1).repeat(1, 1, 4).reshape(-1).detach()
 
-            losses["loss_fgl"] = self.unimodal_distribution_focal_loss(
+            losses["loss_fgl"] = DFINECriterion.fgl_loss(
                 pred_corners,
                 target_corners,
                 weight_right,
@@ -140,6 +197,7 @@ class DFINECriterion(nn.Module):
                 avg_factor=num_boxes,
             )
 
+            # Compute Decoupled Distillation Focal (DDF) Loss
             if "teacher_corners" in outputs and outputs["teacher_corners"] is not None:
                 pred_corners = outputs["pred_corners"].reshape(-1, (self.reg_max + 1))
                 target_corners = outputs["teacher_corners"].reshape(-1, (self.reg_max + 1))
@@ -159,11 +217,11 @@ class DFINECriterion(nn.Module):
 
                     loss_match_local = (
                         weight_targets_local
-                        * (T**2)
+                        * (temperature**2)
                         * (
                             nn.KLDivLoss(reduction="none")(
-                                F.log_softmax(pred_corners / T, dim=1),
-                                F.softmax(target_corners.detach() / T, dim=1),
+                                f.log_softmax(pred_corners / temperature, dim=1),
+                                f.softmax(target_corners.detach() / temperature, dim=1),
                             )
                         ).sum(-1)
                     )
@@ -181,20 +239,26 @@ class DFINECriterion(nn.Module):
 
         return losses
 
-    def _get_src_permutation_idx(self, indices):
+    def _get_src_permutation_idx(
+        self,
+        indices: list[tuple[Tensor, Tensor]],
+    ) -> tuple[Tensor, Tensor]:
         # permute predictions following indices
         batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
         src_idx = torch.cat([src for (src, _) in indices])
         return batch_idx, src_idx
 
-    def _get_tgt_permutation_idx(self, indices):
-        # permute targets following indices
-        batch_idx = torch.cat([torch.full_like(tgt, i) for i, (_, tgt) in enumerate(indices)])
-        tgt_idx = torch.cat([tgt for (_, tgt) in indices])
-        return batch_idx, tgt_idx
+    def _get_go_indices(
+        self,
+        indices: list[tuple[Tensor, Tensor]],
+        indices_aux_list: list[tuple[Tensor, Tensor]],
+    ) -> list[Tensor, Tensor]:
+        """Get a matching union set across all decoder layers.
 
-    def _get_go_indices(self, indices, indices_aux_list):
-        """Get a matching union set across all decoder layers."""
+        Args:
+            indices: matching indices of the last decoder layer
+            indices_aux_list: matching indices of all decoder layers
+        """
         results = []
         for indices_aux in indices_aux_list:
             indices = [
@@ -220,12 +284,20 @@ class DFINECriterion(nn.Module):
     def _available_losses(self) -> tuple[Callable]:
         return (self.loss_boxes, self.loss_labels_vfl, self.loss_local)  # type: ignore[return-value]
 
-    def forward(self, outputs, targets):
+    def forward(
+        self,
+        outputs: dict[str, Tensor],
+        targets: list[dict[str, Tensor]],
+    ) -> dict[str, Tensor]:
         """This performs the loss computation.
-        Parameters:
-            outputs: dict of tensors, see the output specification of the model for the format
-            targets: list of dicts, such that len(targets) == batch_size.
+
+        Args:
+            outputs (dict[str, torch.Tensor]): dict of tensors, see the output
+                specification of the model for the format
+            targets (list[dict[str, torch.Tensor]]): list of dicts, such that len(targets) == batch_size.
                     The expected keys in each dict depends on the losses applied, see each loss' doc
+        Returns:
+            dict[str, torch.Tensor]: dict of losses
         """
         outputs_without_aux = {k: v for k, v in outputs.items() if "aux" not in k}
 
@@ -234,11 +306,11 @@ class DFINECriterion(nn.Module):
 
         # Get the matching union set across all decoder layers.
         indices_aux_list, cached_indices, cached_indices_enc = [], [], []
-        for i, aux_outputs in enumerate(outputs["aux_outputs"] + [outputs["pre_outputs"]]):
+        for aux_outputs in outputs["aux_outputs"] + [outputs["pre_outputs"]]:
             indices_aux = self.matcher(aux_outputs, targets)
             cached_indices.append(indices_aux)
             indices_aux_list.append(indices_aux)
-        for i, aux_outputs in enumerate(outputs["enc_aux_outputs"]):
+        for aux_outputs in outputs["enc_aux_outputs"]:
             indices_enc = self.matcher(aux_outputs, targets)
             cached_indices_enc.append(indices_enc)
             indices_aux_list.append(indices_enc)
@@ -340,8 +412,16 @@ class DFINECriterion(nn.Module):
         return losses
 
     @staticmethod
-    def get_cdn_matched_indices(dn_meta, targets):
-        """get_cdn_matched_indices"""
+    def get_cdn_matched_indices(
+        dn_meta: dict[str, list[Tensor]],
+        targets: list[dict[str, Tensor]],
+    ) -> list[tuple[torch.Tensor, torch.Tensor]]:
+        """get_cdn_matched_indices.
+
+        Args:
+            dn_meta (dict[str, list[torch.Tensor]]): meta data for cdn
+            targets (list[dict[str, torch.Tensor]]): targets
+        """
         dn_positive_idx, dn_num_group = dn_meta["dn_positive_idx"], dn_meta["dn_num_group"]
         num_gts = [len(t["labels"]) for t in targets]
         device = targets[0]["labels"].device
@@ -351,7 +431,9 @@ class DFINECriterion(nn.Module):
             if num_gt > 0:
                 gt_idx = torch.arange(num_gt, dtype=torch.int64, device=device)
                 gt_idx = gt_idx.tile(dn_num_group)
-                assert len(dn_positive_idx[i]) == len(gt_idx)
+                if len(dn_positive_idx[i]) != len(gt_idx):
+                    msg = "The number of positive indices should be equal to the number of ground truths."
+                    raise ValueError(msg)
                 dn_match_indices.append((dn_positive_idx[i], gt_idx))
             else:
                 dn_match_indices.append(
@@ -363,24 +445,46 @@ class DFINECriterion(nn.Module):
 
         return dn_match_indices
 
-    def unimodal_distribution_focal_loss(
-        self,
-        preds,
-        targets,
-        weight_right,
-        weight_left,
-        iou_weight=None,
-        reduction="sum",
-        avg_factor=None,
-    ):
+    @staticmethod
+    def fgl_loss(
+        preds: Tensor,
+        targets: Tensor,
+        weight_right: Tensor,
+        weight_left: Tensor,
+        iou_weight: Tensor | None = None,
+        reduction: str = "sum",
+        avg_factor: float | None = None,
+    ) -> Tensor:
+        """Fine-Grained Localization (FGL) Loss.
+
+        Args:
+            preds (Tensor): predicted distances
+            targets (Tensor): target distances
+            weight_right (Tensor): weight for right distance
+            weight_left (Tensor): weight for left distance
+            iou_weight (Tensor, optional): IoU weight. Defaults to None.
+            reduction (str, optional): reduction method. Defaults to "sum".
+            avg_factor (float, optional): average factor. Defaults to None.
+
+        Returns:
+            Tensor: FGL loss
+        """
         dis_left = targets.long()
         dis_right = dis_left + 1
 
-        loss = F.cross_entropy(preds, dis_left, reduction="none") * weight_left.reshape(-1) + F.cross_entropy(
+        loss_left = f.cross_entropy(
+            preds,
+            dis_left,
+            reduction="none",
+        ) * weight_left.reshape(-1)
+
+        loss_right = f.cross_entropy(
             preds,
             dis_right,
             reduction="none",
         ) * weight_right.reshape(-1)
+
+        loss = loss_left + loss_right
 
         if iou_weight is not None:
             iou_weight = iou_weight.float()

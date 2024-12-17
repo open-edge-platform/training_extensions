@@ -436,7 +436,6 @@ class DFINETransformerModule(nn.Module):
         eval_spatial_size=None,
         eval_idx=-1,
         eps=1e-2,
-        aux_loss=True,
         reg_max=32,
         reg_scale=4.0,
         layer_scale=1,
@@ -458,7 +457,6 @@ class DFINETransformerModule(nn.Module):
         self.eps = eps
         self.num_layers = num_layers
         self.eval_spatial_size = eval_spatial_size
-        self.aux_loss = aux_loss
         self.reg_max = reg_max
 
         # backbone feature projection
@@ -831,13 +829,6 @@ class DFINETransformerModule(nn.Module):
                 "up": self.up,
                 "reg_scale": self.reg_scale,
             }
-        else:
-            out = {
-                "pred_logits": out_logits[-1],
-                "pred_boxes": out_bboxes[-1],
-            }
-
-        if self.training and self.aux_loss:
             out["aux_outputs"] = self._set_aux_loss2(
                 outputs_class=out_logits[:-1],
                 outputs_coord=out_bboxes[:-1],
@@ -869,6 +860,11 @@ class DFINETransformerModule(nn.Module):
                     "pred_boxes": dn_pre_bboxes,
                 }
                 out["dn_meta"] = dn_meta
+        else:
+            out = {
+                "pred_logits": out_logits[-1],
+                "pred_boxes": out_bboxes[-1],
+            }
 
         return out
 
