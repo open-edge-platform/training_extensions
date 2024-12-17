@@ -314,6 +314,7 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
 
         copied_head_config = copy(head_config)
         copied_head_config["step_size"] = (ceil(self.input_size[0] / 32), ceil(self.input_size[1] / 32))
+        in_channels = 960 if self.mode == "large" else 576
 
         backbone = MobileNetV3Backbone(mode=self.mode, input_size=self.input_size)
         return HLabelClassifier(

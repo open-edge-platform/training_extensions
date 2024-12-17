@@ -54,8 +54,8 @@ learning_parameters:
     default_value: 100
     description:
       In this periods of initial training iterations, the model will be trained in low learning rate,
-      which will be increased incrementally up to the expected learning rate setting.
-      This warm-up phase is known to be helpful to stabilize training, thus result in better performance.
+      which will be increased linearly up to the expected learning rate setting.
+      This warm-up phase is known to be helpful to stabilize training, therefore, can lead to increased performance.
     editable: true
     header: Number of iterations for learning rate warmup
     max_value: 10000
@@ -74,11 +74,11 @@ learning_parameters:
     auto_hpo_state: not_possible
     auto_hpo_value: null
     default_value: 200
-    description:
-      Increasing this value causes the results to be more robust but training
-      time will be longer.
+    description: Maximum number of epochs to train a model.
+      Increasing this value may result in longer training, but potentially in a more robust model.
+      Note, if the early stopping is enabled, the actual number of epochs may be less than this value.
     editable: true
-    header: Number of training iterations
+    header: Number of training epochs
     max_value: 1000
     min_value: 1
     type: INTEGER
@@ -109,7 +109,7 @@ learning_parameters:
       operator: AND
       rules: []
       type: UI_RULES
-    value: 0
+    value: 2
     visible_in_ui: true
     warning: null
   enable_early_stopping:
@@ -143,7 +143,7 @@ learning_parameters:
     visible_in_ui: false
   early_stop_patience:
     affects_outcome_of: TRAINING
-    default_value: 7
+    default_value: 10
     description: Training will stop if the model does not improve within the number of epochs of patience.
     editable: true
     header: Patience for early stopping
@@ -156,25 +156,6 @@ learning_parameters:
       rules: []
       type: UI_RULES
     value: 5
-    visible_in_ui: true
-    warning: This is applied exclusively when early stopping is enabled.
-  early_stop_iteration_patience:
-    affects_outcome_of: TRAINING
-    default_value: 0
-    description:
-      Training will stop if the model does not improve within the number of iterations of patience.
-      This ensures the model is trained enough with the number of iterations of patience before early stopping.
-    editable: true
-    header: Iteration patience for early stopping
-    max_value: 1000
-    min_value: 0
-    type: INTEGER
-    ui_rules:
-      action: DISABLE_EDITING
-      operator: AND
-      rules: []
-      type: UI_RULES
-    value: 0
     visible_in_ui: true
     warning: This is applied exclusively when early stopping is enabled.
   enable_supcon:
@@ -219,7 +200,7 @@ learning_parameters:
   auto_num_workers:
     affects_outcome_of: TRAINING
     default_value: false
-    description: Adapt num_workers according to current hardware status automatically.
+    description: Adapt number of workers according to current hardware status automatically.
     editable: true
     header: Enable auto adaptive num_workers
     type: BOOLEAN

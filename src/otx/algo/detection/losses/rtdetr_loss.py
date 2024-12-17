@@ -77,7 +77,7 @@ class DetrCriterion(nn.Module):
         src_logits = outputs["pred_logits"]
         target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
         target_classes = torch.full(src_logits.shape[:2], self.num_classes, dtype=torch.int64, device=src_logits.device)
-        target_classes[idx] = target_classes_o
+        target_classes[idx] = target_classes_o.long()
         target = nn.functional.one_hot(target_classes, num_classes=self.num_classes + 1)[..., :-1]
 
         target_score_o = torch.zeros_like(target_classes, dtype=src_logits.dtype)

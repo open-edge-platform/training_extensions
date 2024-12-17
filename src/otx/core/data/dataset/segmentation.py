@@ -168,6 +168,7 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
         stack_images: bool = True,
         to_tv_image: bool = True,
         ignore_index: int = 255,
+        data_format: str = "",
     ) -> None:
         super().__init__(
             dm_subset,
@@ -188,6 +189,7 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
             label_names=self.label_info.label_names,
             label_groups=self.label_info.label_groups,
             ignore_index=ignore_index,
+            label_ids=self.label_info.label_ids,
         )
         self.ignore_index = ignore_index
 

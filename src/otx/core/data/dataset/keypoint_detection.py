@@ -54,9 +54,11 @@ class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
         self.dm_subset = self._get_single_bbox_dataset(dm_subset)
 
         if self.dm_subset.categories():
+            kp_labels = self.dm_subset.categories()[AnnotationType.points][0].labels
             self.label_info = LabelInfo(
-                label_names=self.dm_subset.categories()[AnnotationType.points][0].labels,
+                label_names=kp_labels,
                 label_groups=[],
+                label_ids=[str(i) for i in range(len(kp_labels))],
             )
         else:
             self.label_info = NullLabelInfo()

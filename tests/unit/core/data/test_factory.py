@@ -102,6 +102,7 @@ class TestOTXDatasetFactory:
                 cfg_subset=cfg_subset,
                 vpm_config=vpm_config,
                 image_color_channel=image_color_channel,
+                data_format="",
             ),
             dataset_cls,
         )

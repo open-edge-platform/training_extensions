@@ -22,7 +22,10 @@ from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
     Compose,
+<<<<<<< HEAD
     Decode3DInputsAffineTransforms,
+=======
+>>>>>>> releases/2.2.0
     DecodeVideo,
     FilterAnnotations,
     GetBBoxCenterScale,

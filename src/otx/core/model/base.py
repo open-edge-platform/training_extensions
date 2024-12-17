@@ -404,6 +404,11 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             msg = "Checkpoint should have `label_info`."
             raise ValueError(msg, ckpt_label_info)
 
+        if not hasattr(ckpt_label_info, "label_ids"):
+            msg = "Loading checkpoint from OTX < 2.2.1, label_ids are assigned automatically"
+            logger.info(msg)
+            ckpt_label_info.label_ids = [str(i) for i, _ in enumerate(ckpt_label_info.label_names)]
+
         if ckpt_label_info != self.label_info:
             msg = (
                 "Load model state dictionary incrementally: "
@@ -757,7 +762,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             return super().lr_scheduler_step(scheduler=scheduler, metric=metric)
 
         if len(warmup_schedulers) != 1:
-            msg = "No more than two warmup schedulers coexist."
+            msg = "No more than one warmup schedulers coexist."
             raise RuntimeError(msg)
 
         warmup_scheduler = next(iter(warmup_schedulers))
@@ -822,7 +827,11 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         if isinstance(label_info, int):
             return LabelInfo.from_num_classes(num_classes=label_info)
         if isinstance(label_info, Sequence) and all(isinstance(name, str) for name in label_info):
-            return LabelInfo(label_names=label_info, label_groups=[label_info])
+            return LabelInfo(
+                label_names=label_info,
+                label_groups=[label_info],
+                label_ids=[str(i) for i in range(len(label_info))],
+            )
         if isinstance(label_info, LabelInfo):
             return label_info
 
@@ -1115,7 +1124,7 @@ class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
             )
 
             logger.warning(msg)
-            return LabelInfo(label_names=label_names, label_groups=[label_names])
+            return LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=[])
 
         msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
         raise ValueError(msg)

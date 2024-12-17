@@ -63,6 +63,7 @@ def mask_target_single(
     mask_size: list[int],
     meta_info: dict,
 ) -> Tensor:
+<<<<<<< HEAD
     """Compute mask target for each positive proposal in the image.
 
     Args:
@@ -76,6 +77,10 @@ def mask_target_single(
         Tensor: Mask target, has shape (num_pos, w, h).
     """
     mask_size = _pair(mask_size)
+=======
+    """Compute mask target for each positive proposal in the image."""
+    mask_size = _pair(cfg["mask_size"])
+>>>>>>> releases/2.2.0
     if len(gt_masks) == 0:
         warnings.warn("No ground truth masks are provided!", stacklevel=2)
         return pos_proposals.new_zeros((0, *mask_size))

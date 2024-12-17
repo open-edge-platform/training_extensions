@@ -12,6 +12,16 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4066>)
 - Add GPU memory monitor hook
   (<https://github.com/openvinotoolkit/training_extensions/pull/4118>)
+- Add YOLOv9 model for Object Detection
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3917>, <https://github.com/openvinotoolkit/training_extensions/pull/4026>)
+- Add OV inference for keypoint detection
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3970>)
+- Add tiling for semantic segmentation
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3954>)
+- Add 3D Object Detection task with MonoDETR model
+  (<https://github.com/openvinotoolkit/training_extensions/pull/3979>)
+- Add OpenVINO inference for 3D Object Detection task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
 
 ### Enhancements
 
@@ -29,29 +39,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4123>)
 - Improve FMetric computation
   (<https://github.com/openvinotoolkit/training_extensions/pull/4130>)
-
-### Bug fixes
-
-- Fix MaskDINO, MonoDETR recipes
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4080>)
-
-## \[2.3.0\]
-
-### New features
-
-- Add YOLOv9 model for Object Detection
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3917>, <https://github.com/openvinotoolkit/training_extensions/pull/4026>)
-- Add OV inference for keypoint detection
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3970>)
-- Add tiling for semantic segmentation
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3954>)
-- Add 3D Object Detection task with MonoDETR model
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3979>)
-- Add OpenVINO inference for 3D Object Detection task
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
-
-### Enhancements
-
 - Upgrade OV, MAPI, and NNCF dependencies
   (<https://github.com/openvinotoolkit/training_extensions/pull/3967>)
 - Instance Segmentation Model refactoring
@@ -63,12 +50,43 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
+- Fix MaskDINO, MonoDETR recipes
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4080>)
 - Fix a wrong HPO log
   (<https://github.com/openvinotoolkit/training_extensions/pull/3972>)
 - Update model name in rotated detection recipes
   (<https://github.com/openvinotoolkit/training_extensions/pull/4028>)
 - Fix SupCon flag
   (https://github.com/openvinotoolkit/training_extensions/pull/4076)
+
+## \[2.2.2\]
+
+### Bug fixes
+
+- BC improvement
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4154>)
+
+## \[2.2.1\]
+
+### Bug fixes
+
+- Fix empty annotation in tiling
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4124>)
+- Fix patching early stopping in tools/converter.py, update headers in templates, change training schedule for classification
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4131>)
+- Fix tensor type compatibility in dynamic soft label assigner and RTMDet head
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4140>)
+- Fix DETR target class indices are of type long in loss calculations
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4143>)
+- Fix arrow format reader for multiclass ROI case
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4145>)
+
+### Enhancements
+
+- Decouple DinoV2 for semantic segmentation task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4136>)
+- Update Label Info handling
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4127>)
 
 ## \[2.2.0\]
 
@@ -194,6 +212,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4105>)
 - Disable tiling classifier toggle in configurable parameters
   (<https://github.com/openvinotoolkit/training_extensions/pull/4107>)
+- Fix Ellipse shapes for Instance Segmentation
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4152>)
 
 ## \[v2.1.0\]
 

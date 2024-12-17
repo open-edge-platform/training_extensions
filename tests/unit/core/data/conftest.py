@@ -193,6 +193,7 @@ def fxt_mock_hlabelinfo():
     return HLabelInfo(
         label_names=_LABEL_NAMES,
         label_groups=[["Non-Rigid", "Rigid"], ["Rectangle", "Triangle"], ["Circle"], ["Lion"], ["Panda"]],
+        label_ids=_LABEL_NAMES,
         num_multiclass_heads=2,
         num_multilabel_classes=3,
         head_idx_to_logits_range={"0": (0, 2), "1": (2, 4)},

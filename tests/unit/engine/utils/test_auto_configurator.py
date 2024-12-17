@@ -131,9 +131,9 @@ class TestAutoConfigurator:
         # With label_info
         label_names = ["class1", "class2", "class3"]
         label_info = (
-            LabelInfo(label_names=label_names, label_groups=[label_names])
+            LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=label_names)
             if fxt_task != OTXTaskType.SEMANTIC_SEGMENTATION
-            else SegLabelInfo(label_names=label_names, label_groups=[label_names])
+            else SegLabelInfo(label_names=label_names, label_groups=[label_names], label_ids=label_names)
         )
         model = auto_configurator.get_model(label_info=label_info)
         assert isinstance(model, OTXModel)
@@ -147,7 +147,7 @@ class TestAutoConfigurator:
     def test_get_model_set_input_size(self) -> None:
         auto_configurator = AutoConfigurator(task=OTXTaskType.MULTI_CLASS_CLS)
         label_names = ["class1", "class2", "class3"]
-        label_info = LabelInfo(label_names=label_names, label_groups=[label_names])
+        label_info = LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=label_names)
         input_size = 300
 
         model = auto_configurator.get_model(label_info=label_info, input_size=input_size)

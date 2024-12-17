@@ -53,7 +53,7 @@ class TestSingleStageDetector:
         inputs = torch.randn(1, 3, 32, 32)
         return DetBatchDataEntity(
             batch_size=1,
-            imgs_info=[LabelInfo(["a"], [["a"]])],
+            imgs_info=[LabelInfo(["a"], ["0"], [["a"]])],
             images=inputs,
             bboxes=[torch.tensor([[0.5, 0.5, 0.5, 0.5]])],
             labels=[torch.tensor([0])],
