@@ -14,12 +14,12 @@ from torch import nn
 from otx.algo.classification.backbones.torchvision import TorchvisionBackbone, TVModelType
 from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier, SemiSLClassifier
 from otx.algo.classification.heads import (
+    HierarchicalCBAMClsHead,
     LinearClsHead,
     MultiLabelLinearClsHead,
     SemiSLLinearClsHead,
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
-from otx.algo.classification.mobilenet_v3 import HierarchicalCBAMClsHead
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.classification.utils import get_classification_layers
 from otx.core.data.entity.classification import (
@@ -315,8 +315,11 @@ class TVModelForHLabelCls(OTXHlabelClsModel):
         backbone = TorchvisionBackbone(backbone=self.backbone, pretrained=self.pretrained)
         return HLabelClassifier(
             backbone=backbone,
-            neck=GlobalAveragePooling(dim=2),
-            head=HierarchicalCBAMClsHead(**head_config, in_channels=backbone.in_features),
+            neck=nn.Identity(),
+            head=HierarchicalCBAMClsHead(
+                in_channels=backbone.in_features,
+                **head_config,
+            ),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )

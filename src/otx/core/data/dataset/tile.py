@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import logging as log
 import operator
-import warnings
-from collections import defaultdict
 from copy import deepcopy
 from itertools import product
 from typing import TYPE_CHECKING, Callable
@@ -16,9 +14,9 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 import shapely.geometry as sg
 import torch
-from datumaro import Bbox, DatasetItem, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
-from datumaro.components.annotation import AnnotationType
+from datumaro import DatasetItem, Image
+from datumaro.components.annotation import AnnotationType, Bbox, ExtractedMask, Polygon
 from datumaro.plugins.tiling import Tile
 from datumaro.plugins.tiling.tile import _apply_offset
 from datumaro.plugins.tiling.util import (
@@ -98,7 +96,7 @@ class OTXTileTransform(Tile):
         )
         self._tile_size = tile_size
         self._tile_ann_func_map[AnnotationType.polygon] = OTXTileTransform._tile_polygon
-        self._tile_ann_func_map[AnnotationType.ellipse] = OTXTileTransform._tile_ellipse
+        self._tile_ann_func_map[AnnotationType.mask] = OTXTileTransform._tile_masks
         self.with_full_img = with_full_img
 
     @staticmethod
@@ -140,42 +138,27 @@ class OTXTileTransform(Tile):
         )
 
     @staticmethod
-    def _tile_ellipse(
-        ann: Ellipse,
-        roi_box: sg.Polygon,
-        threshold_drop_ann: float = 0.8,
+    def _tile_masks(
+        ann: ExtractedMask,
+        roi_int: BboxIntCoords,
         *args,  # noqa: ARG004
         **kwargs,  # noqa: ARG004
-    ) -> Polygon | None:
-        polygon = sg.Polygon(ann.get_points(num_points=10))
+    ) -> ExtractedMask:
+        """Extracts a tile mask from the given annotation.
 
-        # NOTE: polygon may be invalid, e.g. self-intersecting
-        if not roi_box.intersects(polygon) or not polygon.is_valid:
-            return None
+        Note: Original Datumaro _tile_masks does not work with ExtractedMask.
 
-        # NOTE: intersection may return a GeometryCollection or MultiPolygon
-        inter = polygon.intersection(roi_box)
-        if isinstance(inter, (sg.GeometryCollection, sg.MultiPolygon)):
-            shapes = [(geom, geom.area) for geom in list(inter.geoms) if geom.is_valid]
-            if not shapes:
-                return None
+        Args:
+            ann (ExtractedMask): datumaro ExtractedMask annotation.
+            roi_int (BboxIntCoords): ROI coordinates.
 
-            inter, _ = max(shapes, key=operator.itemgetter(1))
-
-            if not isinstance(inter, sg.Polygon) and not inter.is_valid:
-                return None
-
-        prop_area = inter.area / polygon.area
-
-        if prop_area < threshold_drop_ann:
-            return None
-
-        inter = _apply_offset(inter, roi_box)
-
-        return Polygon(
-            points=[p for xy in inter.exterior.coords for p in xy],
+        Returns:
+            ExtractedMask: ExtractedMask annotation.
+        """
+        x, y, w, h = roi_int
+        return ann.wrap(
+            index_mask=ann.index_mask()[y : y + h, x : x + w],
             attributes=deepcopy(ann.attributes),
-            label=ann.label,
         )
 
     def _extract_rois(self, image: Image) -> list[BboxIntCoords]:
@@ -271,7 +254,6 @@ class OTXTileDataset(OTXDataset):
             dataset.image_color_channel,
             dataset.stack_images,
             dataset.to_tv_image,
-            data_format=dataset.data_format,
         )
         self.tile_config = tile_config
         self._dataset = dataset
@@ -434,17 +416,14 @@ class OTXTileDetTestDataset(OTXTileDataset):
         img = item.media_as(Image)
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
-        gt_bboxes = [ann for ann in item.annotations if isinstance(ann, Bbox)]
-
-        if empty_anno := len(gt_bboxes) == 0:
-            warnings.warn(f"Empty annotation for image {item.id}!", stacklevel=2)
+        bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
 
         bboxes = (
-            np.empty((0, 4), dtype=np.float32)
-            if empty_anno
-            else np.stack([ann.points for ann in gt_bboxes], axis=0).astype(np.float32)
+            np.stack([ann.points for ann in bbox_anns], axis=0).astype(np.float32)
+            if len(bbox_anns) > 0
+            else np.zeros((0, 4), dtype=np.float32)
         )
-        labels = torch.as_tensor([ann.label for ann in gt_bboxes])
+        labels = torch.as_tensor([ann.label for ann in bbox_anns])
 
         tile_entities, tile_attrs = self.get_tiles(img_data, item, index)
 
@@ -528,51 +507,24 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
         img = item.media_as(Image)
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
-        anno_collection: dict[str, list] = defaultdict(list)
-        for anno in item.annotations:
-            anno_collection[anno.__class__.__name__].append(anno)
-
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 
-        # TODO(Eugene): https://jira.devtools.intel.com/browse/CVS-159363
-        # Temporary solution to handle multiple annotation types.
-        # Ideally, we should pre-filter annotations during initialization of the dataset.
-
-        if Polygon.__name__ in anno_collection:  # Polygon for InstSeg has higher priority
-            for poly in anno_collection[Polygon.__name__]:
-                bbox = Bbox(*poly.get_bbox()).points
+        for annotation in item.annotations:
+            if isinstance(annotation, Polygon):
+                bbox = np.array(annotation.get_bbox(), dtype=np.float32)
                 gt_bboxes.append(bbox)
-                gt_labels.append(poly.label)
+                gt_labels.append(annotation.label)
 
                 if self._dataset.include_polygons:
-                    gt_polygons.append(poly)
+                    gt_polygons.append(annotation)
                 else:
-                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
-        elif Bbox.__name__ in anno_collection:
-            boxes = anno_collection[Bbox.__name__]
-            gt_bboxes = [ann.points for ann in boxes]
-            gt_labels = [ann.label for ann in boxes]
-            for box in boxes:
-                poly = Polygon(box.as_polygon())
-                if self._dataset.include_polygons:
-                    gt_polygons.append(poly)
-                else:
-                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
-        elif Ellipse.__name__ in anno_collection:
-            for ellipse in anno_collection[Ellipse.__name__]:
-                bbox = Bbox(*ellipse.get_bbox()).points
-                gt_bboxes.append(bbox)
-                gt_labels.append(ellipse.label)
-                poly = Polygon(ellipse.as_polygon(num_points=10))
-                if self._dataset.include_polygons:
-                    gt_polygons.append(poly)
-                else:
-                    gt_masks.append(polygon_to_bitmap([poly], *img_shape)[0])
-        else:
-            warnings.warn(f"No valid annotations found for image {item.id}!", stacklevel=2)
+                    gt_masks.append(polygon_to_bitmap([annotation], *img_shape)[0])
 
-        bboxes = np.stack(gt_bboxes, dtype=np.float32) if gt_bboxes else np.empty((0, 4), dtype=np.float32)
-        masks = np.stack(gt_masks, axis=0) if gt_masks else np.empty((0, *img_shape), dtype=bool)
+        # convert xywh to xyxy format
+        bboxes = np.array(gt_bboxes, dtype=np.float32)
+        bboxes[:, 2:] += bboxes[:, :2]
+
+        masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((0, *img_shape), dtype=bool)
         labels = np.array(gt_labels, dtype=np.int64)
 
         tile_entities, tile_attrs = self.get_tiles(img_data, item, index)

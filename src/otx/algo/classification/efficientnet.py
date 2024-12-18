@@ -14,7 +14,7 @@ from torch import Tensor, nn
 from otx.algo.classification.backbones.efficientnet import EFFICIENTNET_VERSION, EfficientNetBackbone
 from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier, SemiSLClassifier
 from otx.algo.classification.heads import (
-    HierarchicalLinearClsHead,
+    HierarchicalCBAMClsHead,
     LinearClsHead,
     MultiLabelLinearClsHead,
     SemiSLLinearClsHead,
@@ -272,8 +272,11 @@ class EfficientNetForHLabelCls(OTXHlabelClsModel):
 
         return HLabelClassifier(
             backbone=backbone,
-            neck=GlobalAveragePooling(dim=2),
-            head=HierarchicalLinearClsHead(**copied_head_config, in_channels=backbone.num_features),
+            neck=nn.Identity(),
+            head=HierarchicalCBAMClsHead(
+                in_channels=backbone.num_features,
+                **copied_head_config,
+            ),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )
