@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 import torchvision
-from otx.algo.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from otx.algo.detection.detectors.dfine.dfine_criterion import DFINECriterion
 from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
 from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
@@ -20,7 +19,7 @@ class TestDFine:
     @pytest.fixture()
     def dfine_model(self):
         num_classes = 10
-        model_name = "dfine_hgnetv2_n"
+        model_name = "dfine_hgnetv2_x"
         backbone = HGNetv2(model_name=model_name)
         encoder = HybridEncoder(model_name=model_name)
         decoder = DFINETransformer(
@@ -28,9 +27,6 @@ class TestDFine:
             num_classes=num_classes,
         )
         criterion = DFINECriterion(
-            matcher=HungarianMatcher(
-                cost_dict={"cost_class": 2, "cost_bbox": 5, "cost_giou": 2},
-            ),
             weight_dict={
                 "loss_vfl": 1,
                 "loss_bbox": 5,
@@ -38,7 +34,6 @@ class TestDFine:
                 "loss_fgl": 0.15,
                 "loss_ddf": 1.5,
             },
-            losses=["vfl", "boxes", "local"],
             alpha=0.75,
             gamma=2.0,
             reg_max=32,

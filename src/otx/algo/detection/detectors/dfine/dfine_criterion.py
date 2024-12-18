@@ -17,7 +17,7 @@ from torchvision.ops import box_convert
 from otx.algo.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
 
-from .dfine_utils import bbox2distance
+from .utils import bbox2distance
 
 
 class DFINECriterion(nn.Module):
