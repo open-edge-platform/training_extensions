@@ -1,11 +1,7 @@
 model:
   class_path: otx.algo.classification.timm_model.TimmModelForHLabelCls
   init_args:
-<<<<<<< HEAD
     model_name: tf_efficientnetv2_s.in21k
-=======
-    backbone: tf_efficientnetv2_s.in21k
->>>>>>> releases/2.2.0
 
     optimizer:
       class_path: torch.optim.SGD
@@ -14,8 +10,6 @@ model:
         momentum: 0.9
         weight_decay: 0.0001
 
-<<<<<<< HEAD
-=======
     scheduler:
       class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
       init_args:
@@ -28,7 +22,6 @@ model:
             patience: 3
             monitor: val/accuracy
 
->>>>>>> releases/2.2.0
 engine:
   task: H_LABEL_CLS
   device: auto
@@ -44,16 +37,11 @@ overrides:
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
-<<<<<<< HEAD
-        patience: 3
-        warmup_iters: 750
-=======
         warmup_iters: 750
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
         patience: 5
 
->>>>>>> releases/2.2.0
   data:
     task: H_LABEL_CLS
     data_format: datumaro

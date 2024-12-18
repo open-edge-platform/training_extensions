@@ -18,7 +18,7 @@ import shapely.geometry as sg
 import torch
 from datumaro import Bbox, DatasetItem, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
-from datumaro.components.annotation import AnnotationType, Bbox, Polygon
+from datumaro.components.annotation import AnnotationType
 from datumaro.plugins.tiling import Tile
 from datumaro.plugins.tiling.tile import _apply_offset
 from datumaro.plugins.tiling.util import (

@@ -24,7 +24,7 @@ from otx.algo.classification.heads import (
     VisionTransformerClsHead,
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
-from otx.algo.classification.mobilenet_v3 import HierarchicalLinearClsHead
+from otx.algo.classification.mobilenet_v3 import HierarchicalCBAMClsHead
 from otx.algo.classification.utils import get_classification_layers
 from otx.algo.explain.explain_algo import ViTReciproCAM, feature_vector_fn
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
@@ -466,7 +466,7 @@ class VisionTransformerForHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel
         return HLabelClassifier(
             backbone=vit_backbone,
             neck=None,
-            head=HierarchicalLinearClsHead(**head_config, in_channels=vit_backbone.embed_dim),
+            head=HierarchicalCBAMClsHead(**head_config, in_channels=vit_backbone.embed_dim),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
             init_cfg=init_cfg,

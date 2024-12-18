@@ -2,11 +2,7 @@ model:
   class_path: otx.algo.classification.timm_model.TimmModelForMulticlassCls
   init_args:
     label_info: 1000
-<<<<<<< HEAD:src/otx/recipe/classification/multi_class_cls/semisl/efficientnet_v2_semisl.yml
     model_name: tf_efficientnetv2_s.in21k
-=======
-    backbone: tf_efficientnetv2_s.in21k
->>>>>>> releases/2.2.0:src/otx/recipe/classification/multi_class_cls/semisl/efficientnet_v2_semisl.yaml
     train_type: SEMI_SUPERVISED
 
     optimizer:

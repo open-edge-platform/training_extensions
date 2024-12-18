@@ -2,11 +2,7 @@ model:
   class_path: otx.algo.classification.timm_model.TimmModelForMultilabelCls
   init_args:
     label_info: 1000
-<<<<<<< HEAD
     model_name: tf_efficientnetv2_s.in21k
-=======
-    backbone: tf_efficientnetv2_s.in21k
->>>>>>> releases/2.2.0
 
     optimizer:
       class_path: torch.optim.SGD
