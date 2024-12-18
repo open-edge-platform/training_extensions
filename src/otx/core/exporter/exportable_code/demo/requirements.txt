@@ -1,7 +1,3 @@
-<<<<<<< HEAD
 openvino==2024.5.0
-=======
-openvino==2024.3.0
->>>>>>> releases/2.2.0
 openvino-model-api==0.2.5
 numpy==1.26.4
