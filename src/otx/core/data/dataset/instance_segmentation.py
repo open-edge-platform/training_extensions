@@ -43,13 +43,10 @@ class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
         img = item.media_as(Image)
         ignored_labels: list[int] = []
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-<<<<<<< HEAD
-=======
 
         anno_collection: dict[str, list] = defaultdict(list)
         for anno in item.annotations:
             anno_collection[anno.__class__.__name__].append(anno)
->>>>>>> releases/2.2.0
 
         gt_bboxes, gt_labels, gt_masks, gt_polygons = [], [], [], []
 

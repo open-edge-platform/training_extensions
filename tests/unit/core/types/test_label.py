@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from datumaro import LabelCategories
 from datumaro.components.annotation import GroupType
-<<<<<<< HEAD
-from otx.core.types.label import HLabelInfo, NullLabelInfo, SegLabelInfo
-=======
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
->>>>>>> releases/2.2.0
 
 
 def test_as_json(fxt_label_info):
@@ -54,10 +50,6 @@ def test_seg_label_info():
     assert SegLabelInfo.from_num_classes(0) == NullLabelInfo()
 
 
-<<<<<<< HEAD
-# Unit test
-=======
->>>>>>> releases/2.2.0
 def test_hlabel_info():
     labels = [
         LabelCategories.Category(name="car", parent="vehicle"),
@@ -86,8 +78,6 @@ def test_hlabel_info():
     assert list(hlabel_info.class_to_group_idx.keys()) == list(
         hlabel_info.label_to_idx.keys(),
     ), "class_to_group_idx and label_to_idx keys do not match"
-<<<<<<< HEAD
-=======
 
 
 def test_hlabel_info_arrow():
@@ -123,4 +113,3 @@ def test_hlabel_info_arrow():
     assert "No class" not in hlabel_info.label_names
     for label in ["car", "truck", "plush toy"]:
         assert label in hlabel_info.label_names
->>>>>>> releases/2.2.0

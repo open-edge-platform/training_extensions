@@ -139,43 +139,6 @@ class TestCommonSettingMixin:
             ori_shape=ori_shape,
         )
 
-<<<<<<< HEAD
-=======
-
-class TestSAM:
-    @pytest.fixture()
-    def sam(self) -> SAM:
-        return SAM(backbone_type="tiny_vit")
-
-    def test_initialization(self, mocker) -> None:
-        mock_freeze_networks = mocker.patch.object(CommonSettingMixin, "freeze_networks")
-        mock_load_checkpoint = mocker.patch.object(CommonSettingMixin, "load_checkpoint")
-
-        sam = SAM(backbone_type="tiny_vit")
-
-        assert sam.backbone_type == "tiny_vit"
-        assert sam.image_size == 1024
-        assert sam.image_embedding_size == 64
-        assert sam.use_stability_score is False
-        assert sam.return_single_mask is True
-        assert sam.return_extra_metrics is False
-        assert sam.stability_score_offset == 1.0
-
-        mock_load_checkpoint.assert_called_once_with(load_from=sam.load_from["tiny_vit"])
-        mock_freeze_networks.assert_called_once_with(True, True, False)
-
-    def test_build_model(self, sam: SAM) -> None:
-        segment_anything = sam._build_model()
-        assert segment_anything is not None
-        assert isinstance(segment_anything, torch.nn.Module)
-        assert segment_anything.__class__.__name__ == "SegmentAnything"
-
-        assert isinstance(segment_anything.image_encoder, TinyViT)
-        assert isinstance(segment_anything.prompt_encoder, SAMPromptEncoder)
-        assert isinstance(segment_anything.mask_decoder, SAMMaskDecoder)
-        assert isinstance(segment_anything.criterion, SAMCriterion)
-
->>>>>>> releases/2.2.0
 
 class TestSAM:
     @pytest.fixture()

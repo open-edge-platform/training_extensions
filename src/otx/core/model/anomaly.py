@@ -4,11 +4,7 @@
 
 from __future__ import annotations
 
-<<<<<<< HEAD
 from typing import TYPE_CHECKING, Any, Sequence, TypeAlias
-=======
-from typing import TYPE_CHECKING, Any, TypeAlias
->>>>>>> releases/2.2.0
 
 import torch
 from anomalib import TaskType as AnomalibTaskType
@@ -49,10 +45,6 @@ if TYPE_CHECKING:
     from torch.optim.optimizer import Optimizer
     from torchmetrics import Metric
 
-<<<<<<< HEAD
-=======
-    from otx.core.types.label import LabelInfoTypes
->>>>>>> releases/2.2.0
 
 AnomalyModelInputs: TypeAlias = (
     AnomalyClassificationDataBatch | AnomalySegmentationDataBatch | AnomalyDetectionDataBatch
@@ -70,13 +62,8 @@ class OTXAnomaly(OTXModel):
             Model input size in the order of height and width. Defaults to None.
     """
 
-<<<<<<< HEAD
     def __init__(self) -> None:
         super().__init__(label_info=AnomalyLabelInfo(), input_size=self.input_size)
-=======
-    def __init__(self, label_info: LabelInfoTypes, input_size: tuple[int, int]) -> None:
-        super().__init__(label_info=label_info, input_size=input_size)
->>>>>>> releases/2.2.0
         self.optimizer: list[OptimizerCallable] | OptimizerCallable = None
         self.scheduler: list[LRSchedulerCallable] | LRSchedulerCallable = None
         self.trainer: Trainer
