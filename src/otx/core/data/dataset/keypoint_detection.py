@@ -50,7 +50,7 @@ class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
             image_color_channel,
             stack_images,
             to_tv_image,
-            data_format
+            data_format,
         )
 
         self.dm_subset = self._get_single_bbox_dataset(dm_subset)

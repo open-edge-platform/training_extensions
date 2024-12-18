@@ -18,7 +18,7 @@ import shapely.geometry as sg
 import torch
 from datumaro import Dataset as DmDataset
 from datumaro import DatasetItem, Image
-from datumaro.components.annotation import AnnotationType, Bbox, ExtractedMask, Polygon, Ellipse
+from datumaro.components.annotation import AnnotationType, Bbox, Ellipse, ExtractedMask, Polygon
 from datumaro.plugins.tiling import Tile
 from datumaro.plugins.tiling.tile import _apply_offset
 from datumaro.plugins.tiling.util import (
@@ -164,6 +164,7 @@ class OTXTileTransform(Tile):
             attributes=deepcopy(ann.attributes),
         )
 
+    @staticmethod
     def _tile_ellipse(
         ann: Ellipse,
         roi_box: sg.Polygon,
