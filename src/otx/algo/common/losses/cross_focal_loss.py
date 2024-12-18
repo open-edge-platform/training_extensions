@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional
 from otx.utils.device import get_available_device
 from torch import Tensor, nn
-from torch.amp import custom_fwd
+from torch.cuda.amp import custom_fwd
 
 from .focal_loss import py_sigmoid_focal_loss
 
