@@ -364,13 +364,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">OTXDataset</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_hyperparameters</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input_size&quot;</span><span class="p">])</span>
 
-        <span class="c1"># TODO (Jaeguk): This is workaround for a bug in Datumaro.</span>
-        <span class="c1"># These lines should be removed after next datumaro release.</span>
-        <span class="c1"># https://github.com/openvinotoolkit/datumaro/pull/1223/files</span>
-        <span class="kn">from</span> <span class="nn">datumaro.plugins.data_formats.video</span> <span class="kn">import</span> <span class="n">VIDEO_EXTENSIONS</span>
-
-        <span class="n">VIDEO_EXTENSIONS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;.mp4&quot;</span><span class="p">)</span>
-
         <span class="n">dataset</span> <span class="o">=</span> <span class="n">DmDataset</span><span class="o">.</span><span class="n">import_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_root</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">!=</span> <span class="s2">&quot;H_LABEL_CLS&quot;</span><span class="p">:</span>
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">pre_filtering</span><span class="p">(</span>
@@ -452,6 +445,7 @@
                 <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">as_dataset</span><span class="p">(),</span>
                 <span class="n">cfg_subset</span><span class="o">=</span><span class="n">config_mapping</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
                 <span class="n">mem_cache_handler</span><span class="o">=</span><span class="n">mem_cache_handler</span><span class="p">,</span>
+                <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
                 <span class="n">mem_cache_img_max_size</span><span class="o">=</span><span class="n">mem_cache_img_max_size</span><span class="p">,</span>
                 <span class="n">image_color_channel</span><span class="o">=</span><span class="n">image_color_channel</span><span class="p">,</span>
                 <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
@@ -495,6 +489,7 @@
                         <span class="n">include_polygons</span><span class="o">=</span><span class="n">include_polygons</span><span class="p">,</span>
                         <span class="n">ignore_index</span><span class="o">=</span><span class="n">ignore_index</span><span class="p">,</span>
                         <span class="n">vpm_config</span><span class="o">=</span><span class="n">vpm_config</span><span class="p">,</span>
+                        <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">transform_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">unlabeled_dataset</span>
             <span class="k">else</span><span class="p">:</span>
@@ -509,6 +504,7 @@
                     <span class="n">include_polygons</span><span class="o">=</span><span class="n">include_polygons</span><span class="p">,</span>
                     <span class="n">ignore_index</span><span class="o">=</span><span class="n">ignore_index</span><span class="p">,</span>
                     <span class="n">vpm_config</span><span class="o">=</span><span class="n">vpm_config</span><span class="p">,</span>
+                    <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">unlabeled_dataset</span>
 

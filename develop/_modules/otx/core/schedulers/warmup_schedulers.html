@@ -276,8 +276,9 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Linear Warmup scheduler.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        num_warmup_steps: Learning rate will linearly increased during the period same as this number.</span>
-<span class="sd">        warmup_interval: If &quot;epoch&quot;, count the number of steps for the warmup period.</span>
+<span class="sd">        optimizer (Optimizer): Optimizer to apply the scheduler.</span>
+<span class="sd">        num_warmup_steps (int): Learning rate will linearly increased during the period same as this number.</span>
+<span class="sd">        interval (Literal[&quot;step&quot;, &quot;epoch&quot;]): If &quot;epoch&quot;, count the number of epochs for the warmup period.</span>
 <span class="sd">            Otherwise, the iteration step will be the warmup period.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -318,7 +319,7 @@
 <span class="sd">        main_scheduler_callable: Callable to create a LR scheduler that will be mainly used.</span>
 <span class="sd">        num_warmup_steps: Learning rate will linearly increased during the period same as this number.</span>
 <span class="sd">            If it is less than equal to zero, do not create `LinearWarmupScheduler`.</span>
-<span class="sd">        warmup_interval: If &quot;epoch&quot;, count the number of steps for the warmup period.</span>
+<span class="sd">        warmup_interval: If &quot;epoch&quot;, count the number of epochs for the warmup period.</span>
 <span class="sd">            Otherwise, the iteration step will be the warmup period.</span>
 <span class="sd">        monitor: If given, override the main scheduler&#39;s `monitor` attribute.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

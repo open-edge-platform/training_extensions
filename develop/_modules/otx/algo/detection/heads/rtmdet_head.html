@@ -746,7 +746,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_inds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># point-based</span>
             <span class="n">pos_bbox_targets</span> <span class="o">=</span> <span class="n">sampling_result</span><span class="o">.</span><span class="n">pos_gt_bboxes</span>
-            <span class="n">bbox_targets</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">pos_bbox_targets</span>
+            <span class="n">bbox_targets</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">pos_bbox_targets</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">bbox_targets</span><span class="p">)</span>
 
             <span class="n">labels</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampling_result</span><span class="o">.</span><span class="n">pos_gt_labels</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_cfg</span><span class="p">[</span><span class="s2">&quot;pos_weight&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>

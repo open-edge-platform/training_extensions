@@ -517,40 +517,11 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.segmentation.backbones.LiteHRNetBackbone" title="otx.algo.segmentation.backbones.LiteHRNetBackbone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LiteHRNetBackbone</span></code></a>(model_name)</p></td>
 <td><p>LiteHRNet backbone factory.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.segmentation.backbones.DinoVisionTransformer" title="otx.algo.segmentation.backbones.DinoVisionTransformer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DinoVisionTransformer</span></code></a>(model_name, ...[, ...])</p></td>
-<td><p>DINO-v2 Model.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.segmentation.backbones.MSCAN" title="otx.algo.segmentation.backbones.MSCAN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MSCAN</span></code></a>(model_name)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.segmentation.backbones.MSCAN" title="otx.algo.segmentation.backbones.MSCAN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MSCAN</span></code></a>(model_name)</p></td>
 <td><p>MSCAN backbone factory.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py class">
-<dt class="sig sig-object py" id="otx.algo.segmentation.backbones.DinoVisionTransformer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.segmentation.backbones.</span></span><span class="sig-name descname"><span class="pre">DinoVisionTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_backbone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/segmentation/backbones/dinov2.html#DinoVisionTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.segmentation.backbones.DinoVisionTransformer" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>DINO-v2 Model.</p>
-<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.segmentation.backbones.DinoVisionTransformer.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imgs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../../_modules/otx/algo/segmentation/backbones/dinov2.html#DinoVisionTransformer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.segmentation.backbones.DinoVisionTransformer.forward" title="Link to this definition">#</a></dt>
-<dd><p>Forward function.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.segmentation.backbones.DinoVisionTransformer.init_weights">
-<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/algo/segmentation/backbones/dinov2.html#DinoVisionTransformer.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.segmentation.backbones.DinoVisionTransformer.init_weights" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the weights.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.segmentation.backbones.DinoVisionTransformer.load_pretrained_weights">
-<span class="sig-name descname"><span class="pre">load_pretrained_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/algo/segmentation/backbones/dinov2.html#DinoVisionTransformer.load_pretrained_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.segmentation.backbones.DinoVisionTransformer.load_pretrained_weights" title="Link to this definition">#</a></dt>
-<dd><p>Initialize weights.</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="otx.algo.segmentation.backbones.LiteHRNetBackbone">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.segmentation.backbones.</span></span><span class="sig-name descname"><span class="pre">LiteHRNetBackbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/segmentation/backbones/litehrnet.html#LiteHRNetBackbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.segmentation.backbones.LiteHRNetBackbone" title="Link to this definition">#</a></dt>
@@ -607,44 +578,6 @@
 </div>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.algo.segmentation.backbones.DinoVisionTransformer">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     DinoVisionTransformer
-    </span>
-   </code>
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.segmentation.backbones.DinoVisionTransformer.forward">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DinoVisionTransformer.forward()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.segmentation.backbones.DinoVisionTransformer.init_weights">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DinoVisionTransformer.init_weights()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.segmentation.backbones.DinoVisionTransformer.load_pretrained_weights">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DinoVisionTransformer.load_pretrained_weights()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#otx.algo.segmentation.backbones.LiteHRNetBackbone">
    <code class="docutils literal notranslate">

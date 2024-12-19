@@ -533,8 +533,9 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>num_warmup_steps</strong> – Learning rate will linearly increased during the period same as this number.</p></li>
-<li><p><strong>warmup_interval</strong> – If “epoch”, count the number of steps for the warmup period.
+<li><p><strong>optimizer</strong> (<em>Optimizer</em>) – Optimizer to apply the scheduler.</p></li>
+<li><p><strong>num_warmup_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Learning rate will linearly increased during the period same as this number.</p></li>
+<li><p><strong>interval</strong> (<em>Literal</em><em>[</em><em>&quot;step&quot;</em><em>, </em><em>&quot;epoch&quot;</em><em>]</em>) – If “epoch”, count the number of epochs for the warmup period.
 Otherwise, the iteration step will be the warmup period.</p></li>
 </ul>
 </dd>
@@ -564,7 +565,7 @@ Otherwise, the iteration step will be the warmup period.</p></li>
 <li><p><strong>main_scheduler_callable</strong> – Callable to create a LR scheduler that will be mainly used.</p></li>
 <li><p><strong>num_warmup_steps</strong> – Learning rate will linearly increased during the period same as this number.
 If it is less than equal to zero, do not create <cite>LinearWarmupScheduler</cite>.</p></li>
-<li><p><strong>warmup_interval</strong> – If “epoch”, count the number of steps for the warmup period.
+<li><p><strong>warmup_interval</strong> – If “epoch”, count the number of epochs for the warmup period.
 Otherwise, the iteration step will be the warmup period.</p></li>
 <li><p><strong>monitor</strong> – If given, override the main scheduler’s <cite>monitor</cite> attribute.</p></li>
 </ul>

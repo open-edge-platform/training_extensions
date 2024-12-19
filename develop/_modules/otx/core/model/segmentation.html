@@ -350,7 +350,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">unsupervised_weight</span> <span class="o">=</span> <span class="n">unsupervised_weight</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">semisl_start_epoch</span> <span class="o">=</span> <span class="n">semisl_start_epoch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">drop_unreliable_pixels_percent</span> <span class="o">=</span> <span class="n">drop_unreliable_pixels_percent</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">label_info</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span>
             <span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span>
@@ -511,7 +510,11 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label_info</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">SegLabelInfo</span><span class="o">.</span><span class="n">from_num_classes</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="n">label_info</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label_info</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">label_info</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">SegLabelInfo</span><span class="p">(</span><span class="n">label_names</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span> <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">label_info</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">SegLabelInfo</span><span class="p">(</span>
+                <span class="n">label_names</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span>
+                <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">label_info</span><span class="p">],</span>
+                <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label_info</span><span class="p">))],</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label_info</span><span class="p">,</span> <span class="n">SegLabelInfo</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">label_info</span>
 
