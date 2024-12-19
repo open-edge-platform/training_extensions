@@ -19,8 +19,9 @@ class LinearWarmupScheduler(LambdaLR):
     """Linear Warmup scheduler.
 
     Args:
-        num_warmup_steps: Learning rate will linearly increased during the period same as this number.
-        warmup_interval: If "epoch", count the number of steps for the warmup period.
+        optimizer (Optimizer): Optimizer to apply the scheduler.
+        num_warmup_steps (int): Learning rate will linearly increased during the period same as this number.
+        interval (Literal["step", "epoch"]): If "epoch", count the number of epochs for the warmup period.
             Otherwise, the iteration step will be the warmup period.
     """
 
@@ -55,7 +56,7 @@ class LinearWarmupSchedulerCallable:
         main_scheduler_callable: Callable to create a LR scheduler that will be mainly used.
         num_warmup_steps: Learning rate will linearly increased during the period same as this number.
             If it is less than equal to zero, do not create `LinearWarmupScheduler`.
-        warmup_interval: If "epoch", count the number of steps for the warmup period.
+        warmup_interval: If "epoch", count the number of epochs for the warmup period.
             Otherwise, the iteration step will be the warmup period.
         monitor: If given, override the main scheduler's `monitor` attribute.
     """

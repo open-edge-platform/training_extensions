@@ -491,7 +491,7 @@ class RTMDetHead(ATSSHeadModule):
         if len(pos_inds) > 0:
             # point-based
             pos_bbox_targets = sampling_result.pos_gt_bboxes
-            bbox_targets[pos_inds, :] = pos_bbox_targets
+            bbox_targets[pos_inds, :] = pos_bbox_targets.to(bbox_targets)
 
             labels[pos_inds] = sampling_result.pos_gt_labels
             if self.train_cfg["pos_weight"] <= 0:

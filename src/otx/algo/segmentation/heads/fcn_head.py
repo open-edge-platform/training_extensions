@@ -216,7 +216,7 @@ class FCNHead:
             "aggregator_merge_norm": "None",
             "aggregator_use_concat": False,
         },
-        "dinov2_vits14": {
+        "dinov2-small-seg": {
             "in_channels": [384, 384, 384, 384],
             "in_index": [0, 1, 2, 3],
             "input_transform": "resize_concat",
@@ -233,7 +233,7 @@ class FCNHead:
 
         normalization = (
             partial(build_norm_layer, nn.SyncBatchNorm, requires_grad=True)
-            if model_name == "dinov2_vits14"
+            if model_name == "dinov2-small-seg"
             else partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True)
         )
 

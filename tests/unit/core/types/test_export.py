@@ -52,3 +52,4 @@ def test_wrap(fxt_label_info, task_type):
     assert ("model_info", "tile_size") in metadata
     assert ("model_info", "tiles_overlap") in metadata
     assert ("model_info", "max_pred_number") in metadata
+    assert ("model_info", "otx_version") in metadata

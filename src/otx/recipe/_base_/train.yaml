@@ -40,6 +40,8 @@ callbacks:
     init_args:
       max_interval: 5
       decay: -0.025
+      min_earlystop_patience: 5
+      min_lrschedule_patience: 3
 logger:
   - class_path: lightning.pytorch.loggers.csv_logs.CSVLogger
     init_args:

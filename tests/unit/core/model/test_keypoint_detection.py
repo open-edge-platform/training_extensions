@@ -34,6 +34,7 @@ class TestOTXKeypointDetectionModel:
         return LabelInfo(
             label_names=["label_0", "label_1"],
             label_groups=[["label_0", "label_1"]],
+            label_ids=["0", "1"],
         )
 
     @pytest.fixture()
@@ -61,8 +62,16 @@ class TestOTXKeypointDetectionModel:
         ("label_info", "expected_label_info"),
         [
             (
-                LabelInfo(label_names=["label1", "label2", "label3"], label_groups=[["label1", "label2", "label3"]]),
-                LabelInfo(label_names=["label1", "label2", "label3"], label_groups=[["label1", "label2", "label3"]]),
+                LabelInfo(
+                    label_names=["label1", "label2", "label3"],
+                    label_groups=[["label1", "label2", "label3"]],
+                    label_ids=["0", "1", "2"],
+                ),
+                LabelInfo(
+                    label_names=["label1", "label2", "label3"],
+                    label_groups=[["label1", "label2", "label3"]],
+                    label_ids=["0", "1", "2"],
+                ),
             ),
             (LabelInfo.from_num_classes(num_classes=5), LabelInfo.from_num_classes(num_classes=5)),
         ],

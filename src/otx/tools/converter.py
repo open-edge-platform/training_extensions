@@ -248,6 +248,9 @@ class ConfigConverter:
         task_info = TEMPLATE_ID_DICT[template_config["model_template_id"]]
         if param_dict.get("enable_tiling", None) and not task_info["model_name"].endswith("_tile"):
             task_info["model_name"] += "_tile"
+        # classification task type can't be deducted from template name, try to extract from config
+        if "sub_task_type" in template_config and "_CLS" in task_info["task"]:
+            task_info["task"] = template_config["sub_task_type"]
         if task is not None:
             task_info["task"] = task
         default_config = ConfigConverter._get_default_config(task_info)
@@ -317,13 +320,16 @@ class ConfigConverter:
             config["data"]["test_subset"]["num_workers"] = param_value
 
         def update_enable_early_stopping(param_value: bool) -> None:
-            idx = ConfigConverter._get_callback_idx(config["callbacks"], "lightning.pytorch.callbacks.EarlyStopping")
+            idx = ConfigConverter._get_callback_idx(
+                config["callbacks"],
+                "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+            )
             if not param_value and idx > -1:
                 config["callbacks"].pop(idx)
 
         def update_early_stop_patience(param_value: int) -> None:
             for callback in config["callbacks"]:
-                if callback["class_path"] == "lightning.pytorch.callbacks.EarlyStopping":
+                if callback["class_path"] == "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup":
                     callback["init_args"]["patience"] = param_value
                     break
 

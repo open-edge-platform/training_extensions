@@ -20,7 +20,7 @@ model:
           init_args:
             mode: max
             factor: 0.5
-            patience: 1
+            patience: 3
             monitor: val/accuracy
 
 engine:
@@ -32,7 +32,8 @@ callback_monitor: val/accuracy
 data: ../../_base_/data/classification.yaml
 overrides:
   max_epochs: 90
+
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
-        patience: 3
+        patience: 5
