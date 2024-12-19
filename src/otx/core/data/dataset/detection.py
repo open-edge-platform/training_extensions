@@ -22,7 +22,6 @@ from .base import OTXDataset
 class OTXDetectionDataset(OTXDataset[DetDataEntity]):
     """OTXDataset class for detection task."""
 
-    # @timing
     def _get_item_impl(self, index: int) -> DetDataEntity | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)

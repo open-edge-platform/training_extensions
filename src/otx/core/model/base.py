@@ -148,9 +148,6 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             # TODO (sungchul): check this in distributed training
             return None if self.trainer.world_size == 1 else torch.tensor(0.0, device=self.device)
 
-        # if batch_idx == 0:
-        #     self.vis(batch.images[0], batch.bboxes[0])
-
         if isinstance(train_loss, Tensor):
             self.log(
                 "train/loss",

@@ -68,11 +68,6 @@ class OTXNativeModelExporter(OTXModelExporter):
         """
         dummy_tensor = torch.rand(self.input_size).to(next(model.parameters()).device)
 
-        # TODO(Eugene): Benchmark the performance of the model after conversion.
-        # for m in model.modules():
-        #     if hasattr(m, 'convert_to_deploy'):
-        #         m.convert_to_deploy()
-
         if self.via_onnx:
             with tempfile.TemporaryDirectory() as tmpdirname:
                 tmp_dir = Path(tmpdirname)
