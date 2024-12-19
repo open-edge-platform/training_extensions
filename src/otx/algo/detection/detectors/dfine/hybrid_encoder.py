@@ -351,7 +351,7 @@ class HybridEncoderModule(nn.Module):
 
         return torch.concat([out_w.sin(), out_w.cos(), out_h.sin(), out_h.cos()], dim=1)[None, :, :]
 
-    def forward(self, feats: torch.Tensor) -> list[torch.Tensor]:
+    def forward(self, feats: Tensor) -> list[Tensor]:
         """Forward pass."""
         if len(feats) != len(self.in_channels):
             msg = f"Input feature size {len(feats)} does not match the number of input channels {len(self.in_channels)}"
