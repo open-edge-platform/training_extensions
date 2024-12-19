@@ -14,11 +14,11 @@ import torch
 import torch.nn.functional as f
 from torch import Tensor, nn
 from torch.nn import init
+from torchvision.ops import box_convert
 
 from otx.algo.common.utils.utils import inverse_sigmoid
 from otx.algo.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
 from otx.algo.utils.weight_init import bias_init_with_prob
-from torchvision.ops import box_convert
 
 
 def weighting_function(reg_max: int, up: Tensor, reg_scale: Tensor) -> Tensor:
@@ -68,9 +68,6 @@ def distance2bbox(points: Tensor, distance: Tensor, reg_scale: float):
     return box_convert(bboxes, in_fmt="xyxy", out_fmt="cxcywh")
 
 
-
-
-
 def get_activation(
     act: str,
     inplace: bool = True,
@@ -101,7 +98,6 @@ def get_activation(
     if hasattr(m, "inplace"):
         m.inplace = inplace
     return m
-
 
 
 def deformable_attention_core_func_v2(

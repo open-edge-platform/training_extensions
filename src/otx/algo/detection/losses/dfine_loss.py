@@ -16,7 +16,6 @@ from torchvision.ops import box_convert
 
 from otx.algo.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
-
 from otx.algo.detection.heads.dfine_decoder import weighting_function
 
 
@@ -85,6 +84,7 @@ def translate_gt(gt: Tensor, reg_max: int, reg_scale: Tensor, up: Tensor) -> tup
     indices[invalid_idx_mask_pos] = reg_max - 0.1
 
     return indices, weight_right, weight_left
+
 
 def bbox2distance(
     points: Tensor,
