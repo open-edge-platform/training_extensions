@@ -53,3 +53,17 @@ def test_wrap(fxt_label_info, task_type):
     assert ("model_info", "tiles_overlap") in metadata
     assert ("model_info", "max_pred_number") in metadata
     assert ("model_info", "otx_version") in metadata
+
+
+def test_wrap_label_consistency(fxt_label_info):
+    fxt_label_info.label_ids.append("new id")
+    print(fxt_label_info)
+    params = TaskLevelExportParameters(
+        model_type="dummy model",
+        task_type="instance_segmentation",
+        label_info=fxt_label_info,
+        optimization_config={},
+    )
+
+    with pytest.raises(RuntimeError, match="incorrect"):
+        params.to_metadata()
