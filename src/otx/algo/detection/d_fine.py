@@ -14,11 +14,11 @@ from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxFormat
 
+from otx.algo.detection.backbones.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors import DETR
-from otx.algo.detection.detectors.dfine.dfine_criterion import DFINECriterion
 from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
-from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
-from otx.algo.detection.detectors.dfine.hybrid_encoder import HybridEncoder
+from otx.algo.detection.losses.dfine_loss import DFINECriterion
+from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.algo.utils.mmengine_utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity

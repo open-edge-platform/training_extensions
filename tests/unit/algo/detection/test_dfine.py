@@ -8,10 +8,10 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 import torchvision
-from otx.algo.detection.detectors.dfine.dfine_criterion import DFINECriterion
-from otx.algo.detection.detectors.dfine.dfine_decoder import DFINETransformer
-from otx.algo.detection.detectors.dfine.hgnetv2 import HGNetv2
-from otx.algo.detection.detectors.dfine.hybrid_encoder import HybridEncoder
+from otx.algo.detection.backbones.hgnetv2 import HGNetv2
+from otx.algo.detection.heads.dfine_decoder import DFINETransformer
+from otx.algo.detection.losses.dfine_loss import DFINECriterion
+from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.algo.detection.rtdetr import DETR
 
 

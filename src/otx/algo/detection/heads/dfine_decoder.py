@@ -18,13 +18,139 @@ from torch.nn import init
 from otx.algo.common.utils.utils import inverse_sigmoid
 from otx.algo.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
 from otx.algo.utils.weight_init import bias_init_with_prob
+from torchvision.ops import box_convert
 
-from .utils import (
-    deformable_attention_core_func_v2,
-    distance2bbox,
-    get_activation,
-    weighting_function,
-)
+
+def weighting_function(reg_max: int, up: Tensor, reg_scale: Tensor) -> Tensor:
+    """Generates the non-uniform Weighting Function W(n) for bounding box regression.
+
+    Args:
+        reg_max (int): Max number of the discrete bins.
+        up (Tensor): Controls upper bounds of the sequence, where maximum offset is ±up * H / W.
+        reg_scale (Tensor): Controls the curvature of the Weighting Function.
+                        Larger values result in flatter weights near the central axis W(reg_max/2)=0
+                        and steeper weights at both ends.
+        deploy (bool): If True, uses deployment mode settings.
+
+    Returns:
+        Tensor: Sequence of Weighting Function.
+    """
+    upper_bound1 = abs(up[0]) * abs(reg_scale)
+    upper_bound2 = abs(up[0]) * abs(reg_scale) * 2
+    step = (upper_bound1 + 1) ** (2 / (reg_max - 2))
+    left_values = [-((step) ** i) + 1 for i in range(reg_max // 2 - 1, 0, -1)]
+    right_values = [(step) ** i - 1 for i in range(1, reg_max // 2)]
+    values = [-upper_bound2] + left_values + [torch.zeros_like(up[0][None])] + right_values + [upper_bound2]
+    return torch.cat(values, 0)
+
+
+def distance2bbox(points: Tensor, distance: Tensor, reg_scale: float):
+    """Decodes edge-distances into bounding box coordinates.
+
+    Args:
+        points (Tensor): (B, N, 4) or (N, 4) format, representing [x, y, w, h],
+                        where (x, y) is the center and (w, h) are width and height.
+        distance (Tensor): (B, N, 4) or (N, 4), representing distances from the
+                        point to the left, top, right, and bottom boundaries.
+
+        reg_scale (float): Controls the curvature of the Weighting Function.
+
+    Returns:
+        Tensor: Bounding boxes in (N, 4) or (B, N, 4) format [cx, cy, w, h].
+    """
+    reg_scale = abs(reg_scale)
+    x1 = points[..., 0] - (0.5 * reg_scale + distance[..., 0]) * (points[..., 2] / reg_scale)
+    y1 = points[..., 1] - (0.5 * reg_scale + distance[..., 1]) * (points[..., 3] / reg_scale)
+    x2 = points[..., 0] + (0.5 * reg_scale + distance[..., 2]) * (points[..., 2] / reg_scale)
+    y2 = points[..., 1] + (0.5 * reg_scale + distance[..., 3]) * (points[..., 3] / reg_scale)
+
+    bboxes = torch.stack([x1, y1, x2, y2], -1)
+    return box_convert(bboxes, in_fmt="xyxy", out_fmt="cxcywh")
+
+
+
+
+
+def get_activation(
+    act: str,
+    inplace: bool = True,
+) -> nn.Module:
+    """Get activation
+
+    Args:
+        act (str): name of activation
+        inpace (bool, optional): modify input directly. Defaults to True.
+
+    Raises:
+        RuntimeError: _description_
+
+    Returns:
+        nn.Module: _description_
+    """
+    act = act.lower()
+    if act == "silu" or act == "swish":
+        m = nn.SiLU()
+    elif act == "relu":
+        m = nn.ReLU()
+    elif act == "gelu":
+        m = nn.GELU()
+    else:
+        msg = f"Activation function '{act}' is not supported"
+        raise RuntimeError(msg)
+
+    if hasattr(m, "inplace"):
+        m.inplace = inplace
+    return m
+
+
+
+def deformable_attention_core_func_v2(
+    value: torch.Tensor,
+    value_spatial_shapes,
+    sampling_locations: torch.Tensor,
+    attention_weights: torch.Tensor,
+    num_points_list: list[int],
+):
+    """Deformable Attention Core Function V2 from RTDETRv2.
+
+    Args:
+        value (Tensor): [bs, value_length, n_head, c]
+        value_spatial_shapes (Tensor|List): [n_levels, 2]
+        value_level_start_index (Tensor|List): [n_levels]
+        sampling_locations (Tensor): [bs, query_length, n_head, n_levels * n_points, 2]
+        attention_weights (Tensor): [bs, query_length, n_head, n_levels * n_points]
+
+    Returns:
+        output (Tensor): [bs, Length_{query}, C]
+    """
+    bs, n_head, c, _ = value[0].shape
+    _, len_q, _, _, _ = sampling_locations.shape
+
+    # sampling_offsets [8, 480, 8, 12, 2]
+    sampling_grids = 2 * sampling_locations - 1
+
+    sampling_grids = sampling_grids.permute(0, 2, 1, 3, 4).flatten(0, 1)
+    sampling_locations_list = sampling_grids.split(num_points_list, dim=-2)
+
+    sampling_value_list = []
+    for level, (h, w) in enumerate(value_spatial_shapes):
+        value_l = value[level].reshape(bs * n_head, c, h, w)
+        sampling_grid_l = sampling_locations_list[level]
+        sampling_value_l = f.grid_sample(
+            value_l,
+            sampling_grid_l,
+            mode="bilinear",
+            padding_mode="zeros",
+            align_corners=False,
+        )
+
+        sampling_value_list.append(sampling_value_l)
+
+    attn_weights = attention_weights.permute(0, 2, 1, 3).reshape(bs * n_head, 1, len_q, sum(num_points_list))
+    weighted_sample_locs = torch.concat(sampling_value_list, dim=-1) * attn_weights
+    output = weighted_sample_locs.sum(-1).reshape(bs, n_head * c, len_q)
+
+    return output.permute(0, 2, 1)
 
 
 class MLP(nn.Module):

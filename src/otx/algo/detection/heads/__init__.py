@@ -3,10 +3,19 @@
 """Custom head implementations for detection task."""
 
 from .atss_head import ATSSHead
+from .dfine_decoder import DFINETransformer
 from .rtdetr_decoder import RTDETRTransformer
 from .rtmdet_head import RTMDetSepBNHead
 from .ssd_head import SSDHead
 from .yolo_head import YOLOHead
 from .yolox_head import YOLOXHead
 
-__all__ = ["ATSSHead", "RTDETRTransformer", "RTMDetSepBNHead", "SSDHead", "YOLOHead", "YOLOXHead"]
+__all__ = [
+    "ATSSHead",
+    "DFINETransformer",
+    "RTDETRTransformer",
+    "RTMDetSepBNHead",
+    "SSDHead",
+    "YOLOHead",
+    "YOLOXHead",
+]
