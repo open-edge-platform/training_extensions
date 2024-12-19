@@ -79,12 +79,12 @@ base = [
     "lightning==2.4.0",
     "pytorchcv==0.0.67",
     "timm==1.0.3",
-    "openvino==2024.5",
-    "openvino-dev==2024.5",
+    "openvino==2024.6",
+    "openvino-dev==2024.6",
     "openvino-model-api==0.2.5",
     "onnx==1.17.0",
     "onnxconverter-common==1.14.0",
-    "nncf==2.14.0",
+    "nncf==2.14.1",
     "anomalib[core]==1.1.0",
 ]
 
