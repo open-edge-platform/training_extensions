@@ -358,7 +358,7 @@ class DFINECriterion(nn.Module):
     def _get_go_indices(
         self,
         indices: list[tuple[Tensor, Tensor]],
-        indices_aux_list: list[tuple[Tensor, Tensor]],
+        indices_aux_list: list[list[tuple[Tensor, Tensor]]],
     ) -> list[Tensor]:
         """Get a matching union set across all decoder layers.
 
