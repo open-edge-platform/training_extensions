@@ -101,6 +101,11 @@ class TaskLevelExportParameters:
         """
         all_labels = ""
         all_label_ids = ""
+
+        if len(self.label_info.label_names) != len(self.label_info.label_ids):
+            msg = "Label info is incorrect: label names and IDs do not match"
+            raise RuntimeError(msg)
+
         for lbl in self.label_info.label_names:
             all_labels += lbl.replace(" ", "_") + " "
         for lbl_id in self.label_info.label_ids:

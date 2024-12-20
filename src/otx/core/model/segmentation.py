@@ -192,6 +192,7 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
             # remove otx background label for export
             modified_label_info = copy.deepcopy(self.label_info)
             modified_label_info.label_names.pop(0)
+            modified_label_info.label_ids.pop(0)
         else:
             modified_label_info = self.label_info
 

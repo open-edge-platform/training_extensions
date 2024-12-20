@@ -184,6 +184,7 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
         if self.has_polygons:
             # insert background class at index 0 since polygons represent only objects
             self.label_info.label_names.insert(0, "otx_background_lbl")
+            self.label_info.label_ids.insert(0, "None")
 
         self.label_info = SegLabelInfo(
             label_names=self.label_info.label_names,

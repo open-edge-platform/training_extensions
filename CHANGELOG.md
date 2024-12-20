@@ -47,6 +47,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3843>)
 - Add mAP metric to evaluate multilabel classification
   (<https://github.com/openvinotoolkit/training_extensions/pull/3985>)
+- Bump OV to 2024.6, update empty label handling
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4162>)
 
 ### Bug fixes
 

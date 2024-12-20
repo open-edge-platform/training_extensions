@@ -1,6 +1,8 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from copy import deepcopy
+
 import pytest
 from otx.core.config.data import TileConfig
 from otx.core.types.export import TaskLevelExportParameters
@@ -53,3 +55,18 @@ def test_wrap(fxt_label_info, task_type):
     assert ("model_info", "tiles_overlap") in metadata
     assert ("model_info", "max_pred_number") in metadata
     assert ("model_info", "otx_version") in metadata
+
+
+def test_to_metadata_label_consistency(fxt_label_info):
+    label_info = deepcopy(fxt_label_info)
+    label_info.label_ids.append("new id")
+
+    params = TaskLevelExportParameters(
+        model_type="dummy model",
+        task_type="instance_segmentation",
+        label_info=label_info,
+        optimization_config={},
+    )
+
+    with pytest.raises(RuntimeError, match="incorrect"):
+        params.to_metadata()
