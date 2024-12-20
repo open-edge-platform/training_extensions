@@ -359,7 +359,7 @@ class DFINECriterion(nn.Module):
         self,
         indices: list[tuple[Tensor, Tensor]],
         indices_aux_list: list[tuple[Tensor, Tensor]],
-    ) -> list[Tensor, Tensor]:
+    ) -> list[Tensor]:
         """Get a matching union set across all decoder layers.
 
         Args:

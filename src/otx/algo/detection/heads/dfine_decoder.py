@@ -8,7 +8,8 @@ from __future__ import annotations
 import copy
 import math
 from collections import OrderedDict
-from typing import Any, ClassVar
+from functools import partial
+from typing import Any, Callable, ClassVar
 
 import torch
 import torch.nn.functional as f
@@ -16,6 +17,7 @@ from torch import Tensor, nn
 from torch.nn import init
 from torchvision.ops import box_convert
 
+from otx.algo.common.layers.transformer_layers import MLP
 from otx.algo.common.utils.utils import inverse_sigmoid
 from otx.algo.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
 from otx.algo.utils.weight_init import bias_init_with_prob
@@ -44,7 +46,7 @@ def weighting_function(reg_max: int, up: Tensor, reg_scale: Tensor) -> Tensor:
     return torch.cat(values, 0)
 
 
-def distance2bbox(points: Tensor, distance: Tensor, reg_scale: float):
+def distance2bbox(points: Tensor, distance: Tensor, reg_scale: Tensor) -> Tensor:
     """Decodes edge-distances into bounding box coordinates.
 
     Args:
@@ -68,45 +70,13 @@ def distance2bbox(points: Tensor, distance: Tensor, reg_scale: float):
     return box_convert(bboxes, in_fmt="xyxy", out_fmt="cxcywh")
 
 
-def get_activation(
-    act: str,
-    inplace: bool = True,
-) -> nn.Module:
-    """Get activation
-
-    Args:
-        act (str): name of activation
-        inpace (bool, optional): modify input directly. Defaults to True.
-
-    Raises:
-        RuntimeError: _description_
-
-    Returns:
-        nn.Module: _description_
-    """
-    act = act.lower()
-    if act == "silu" or act == "swish":
-        m = nn.SiLU()
-    elif act == "relu":
-        m = nn.ReLU()
-    elif act == "gelu":
-        m = nn.GELU()
-    else:
-        msg = f"Activation function '{act}' is not supported"
-        raise RuntimeError(msg)
-
-    if hasattr(m, "inplace"):
-        m.inplace = inplace
-    return m
-
-
 def deformable_attention_core_func_v2(
-    value: torch.Tensor,
-    value_spatial_shapes,
-    sampling_locations: torch.Tensor,
-    attention_weights: torch.Tensor,
+    value: Tensor,
+    value_spatial_shapes: list[list[int]],
+    sampling_locations: Tensor,
+    attention_weights: Tensor,
     num_points_list: list[int],
-):
+) -> Tensor:
     """Deformable Attention Core Function V2 from RTDETRv2.
 
     Args:
@@ -149,40 +119,8 @@ def deformable_attention_core_func_v2(
     return output.permute(0, 2, 1)
 
 
-class MLP(nn.Module):
-    """Multi-Layer Perceptron
-
-    Args:
-    input_dim (int): The number of expected features in the input.
-    hidden_dim (int): The number of features in the hidden layers.
-    output_dim (int): The number of features in the output layer.
-    num_layers (int): The number of layers in the MLP.
-    act (str, optional): The activation function. Defaults to relu.
-    """
-
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_dim: int,
-        output_dim: int,
-        num_layers: int,
-        act: str = "relu",
-    ) -> None:
-        super().__init__()
-        self.num_layers = num_layers
-        h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
-        self.act = get_activation(act)
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward function of MLP."""
-        for i, layer in enumerate(self.layers):
-            x = self.act(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x
-
-
 class MSDeformableAttentionV2(nn.Module):
-    """Multi-Scale Deformable Attention Module.
+    """Multi-Scale Deformable Attention Module V2.
 
     Note:
         This is different from vanilla MSDeformableAttention where it uses
@@ -201,8 +139,8 @@ class MSDeformableAttentionV2(nn.Module):
         embed_dim: int = 256,
         num_heads: int = 8,
         num_levels: int = 4,
-        num_points_list: list[int] = [3, 6, 3],
-    ):
+        num_points_list: list[int] = [3, 6, 3],  # noqa: B006
+    ) -> None:
         super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
@@ -228,7 +166,7 @@ class MSDeformableAttentionV2(nn.Module):
         init.constant_(self.sampling_offsets.weight, 0)
         thetas = torch.arange(self.num_heads, dtype=torch.float32) * (2.0 * math.pi / self.num_heads)
         grid_init = torch.stack([thetas.cos(), thetas.sin()], -1)
-        grid_init = grid_init / grid_init.abs().max(-1, keepdim=True).values
+        grid_init = grid_init / grid_init.abs().max(-1, keepdim=True).values  # noqa: PD011
         grid_init = grid_init.reshape(self.num_heads, 1, 2).tile([1, sum(self.num_points_list), 1])
         scaling = torch.concat([torch.arange(1, n + 1) for n in self.num_points_list]).reshape(1, -1, 1)
         grid_init *= scaling
@@ -243,7 +181,7 @@ class MSDeformableAttentionV2(nn.Module):
         query: Tensor,
         reference_points: Tensor,
         value: Tensor,
-        value_spatial_shapes: list[int],
+        value_spatial_shapes: list[list[int]],
     ) -> Tensor:
         """Forward function of MSDeformableAttention.
 
@@ -314,10 +252,9 @@ class TransformerDecoderLayer(nn.Module):
         n_head (int): The number of heads in the multiheadattention models. Defaults to 8.
         dim_feedforward (int): The dimension of the feedforward network model. Defaults to 1024.
         dropout (float): The dropout value. Defaults to 0.0.
-        activation (str): activation. Defaults to "relu".
+        activation (Callable[..., nn.Module] | None, optional): The activation function. Defaults to None.
         n_levels (int): The number of levels in MSDeformableAttention. Defaults to 4.
-        num_points_list (list[int], optional): _description_. Defaults to [3, 6, 3].
-        layer_scale (int | None, optional): Number of distinct points for each layer. Defaults to None.
+        num_points_list (list[int], optional): Number of distinct points for each layer. Defaults to [3, 6, 3].
     """
 
     def __init__(
@@ -326,15 +263,11 @@ class TransformerDecoderLayer(nn.Module):
         n_head: int = 8,
         dim_feedforward: int = 1024,
         dropout: float = 0.0,
-        activation: str = "relu",
+        activation: Callable[..., nn.Module] = partial(nn.ReLU, inplace=True),
         n_levels: int = 4,
-        num_points_list: list[int] = [3, 6, 3],
-        layer_scale: int | None = None,
+        num_points_list: list[int] = [3, 6, 3],  # noqa: B006
     ):
         super().__init__()
-        if layer_scale is not None:
-            dim_feedforward = round(layer_scale * dim_feedforward)
-            d_model = round(layer_scale * d_model)
 
         # self attention
         self.self_attn = nn.MultiheadAttention(
@@ -360,7 +293,7 @@ class TransformerDecoderLayer(nn.Module):
 
         # ffn
         self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.activation = get_activation(activation)
+        self.activation = activation()
         self.dropout3 = nn.Dropout(dropout)
         self.linear2 = nn.Linear(dim_feedforward, d_model)
         self.dropout4 = nn.Dropout(dropout)
@@ -368,7 +301,8 @@ class TransformerDecoderLayer(nn.Module):
 
         self._reset_parameters()
 
-    def _reset_parameters(self):
+    def _reset_parameters(self) -> None:
+        """Reset parameters of the model."""
         init.xavier_uniform_(self.linear1.weight)
         init.xavier_uniform_(self.linear2.weight)
 
@@ -385,10 +319,23 @@ class TransformerDecoderLayer(nn.Module):
         target: Tensor,
         reference_points: Tensor,
         value: Tensor,
-        spatial_shapes: list[tuple[int, int]],
+        spatial_shapes: list[list[int]],
         attn_mask: Tensor | None = None,
         query_pos_embed: Tensor | None = None,
     ) -> Tensor:
+        """Forward function of the Transformer Decoder Layer.
+
+        Args:
+            target (Tensor): _description_
+            reference_points (Tensor): _description_
+            value (Tensor): _description_
+            spatial_shapes (list[list[int]]): _description_
+            attn_mask (Tensor | None, optional): _description_. Defaults to None.
+            query_pos_embed (Tensor | None, optional): _description_. Defaults to None.
+
+        Returns:
+            Tensor: _description_
+        """
         # self attention
         q = k = self.with_pos_embed(target, query_pos_embed)
 
@@ -413,15 +360,30 @@ class TransformerDecoderLayer(nn.Module):
 
 
 class Gate(nn.Module):
-    def __init__(self, d_model):
-        super(Gate, self).__init__()
+    """Target Gating Layers.
+
+    Args:
+        d_model (int): The number of expected features in the input.
+    """
+
+    def __init__(self, d_model: int) -> None:
+        super().__init__()
         self.gate = nn.Linear(2 * d_model, 2 * d_model)
         bias = bias_init_with_prob(0.5)
         init.constant_(self.gate.bias, bias)
         init.constant_(self.gate.weight, 0)
         self.norm = nn.LayerNorm(d_model)
 
-    def forward(self, x1, x2):
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        """Forward function of the gate.
+
+        Args:
+            x1 (Tensor): first target input tensor.
+            x2 (Tensor): second target input tensor.
+
+        Returns:
+            Tensor: gated target tensor.
+        """
         gate_input = torch.cat([x1, x2], dim=-1)
         gates = torch.sigmoid(self.gate(gate_input))
         gate1, gate2 = gates.chunk(2, dim=-1)
@@ -440,19 +402,35 @@ class Integral(nn.Module):
                         It can be adjusted based on the dataset or task requirements.
     """
 
-    def __init__(self, reg_max=32):
-        super(Integral, self).__init__()
+    def __init__(self, reg_max: int = 32):
+        super().__init__()
         self.reg_max = reg_max
 
-    def forward(self, x, project):
+    def forward(self, x: Tensor, box_distance_weight: Tensor) -> Tensor:
+        """Forward function of the Integral layer."""
         shape = x.shape
         x = f.softmax(x.reshape(-1, self.reg_max + 1), dim=1)
-        x = f.linear(x, project.to(x.device)).reshape(-1, 4)
-        return x.reshape(list(shape[:-1]) + [-1])
+        x = f.linear(x, box_distance_weight).reshape(-1, 4)
+        return x.reshape([*list(shape[:-1]), -1])
 
 
 class LQE(nn.Module):
-    def __init__(self, k, hidden_dim, num_layers, reg_max):
+    """Localization Quality Estimation.
+
+    Args:
+        k (int): number of edge points.
+        hidden_dim (int): The number of expected features in the input.
+        num_layers (int): The number of layers in the MLP.
+        reg_max (int): Max number of the discrete bins.
+    """
+
+    def __init__(
+        self,
+        k: int,
+        hidden_dim: int,
+        num_layers: int,
+        reg_max: int,
+    ):
         super().__init__()
         self.k = k
         self.reg_max = reg_max
@@ -461,16 +439,26 @@ class LQE(nn.Module):
             hidden_dim=hidden_dim,
             output_dim=1,
             num_layers=num_layers,
+            activation=partial(nn.ReLU, inplace=True),
         )
         init.constant_(self.reg_conf.layers[-1].bias, 0)
         init.constant_(self.reg_conf.layers[-1].weight, 0)
 
-    def forward(self, scores, pred_corners):
-        b, l, _ = pred_corners.size()
-        prob = f.softmax(pred_corners.reshape(b, l, 4, self.reg_max + 1), dim=-1)
+    def forward(self, scores: Tensor, pred_corners: Tensor) -> Tensor:
+        """Forward function of the LQE layer.
+
+        Args:
+            scores (Tensor): Prediction scores.
+            pred_corners (Tensor): Predicted bounding box corners.
+
+        Returns:
+            Tensor: Updated scores.
+        """
+        b, num_pred, _ = pred_corners.size()
+        prob = f.softmax(pred_corners.reshape(b, num_pred, 4, self.reg_max + 1), dim=-1)
         prob_topk, _ = prob.topk(self.k, dim=-1)
         stat = torch.cat([prob_topk, prob_topk.mean(dim=-1, keepdim=True)], dim=-1)
-        quality_score = self.reg_conf(stat.reshape(b, l, -1))
+        quality_score = self.reg_conf(stat.reshape(b, num_pred, -1))
         return scores + quality_score
 
 
@@ -482,35 +470,32 @@ class TransformerDecoder(nn.Module):
     to improve bounding box accuracy and robustness.
 
     Args:
-        hidden_dim (int): _description_
-        decoder_layer (_type_): _description_
-        decoder_layer_wide (_type_): _description_
-        num_layers (_type_): _description_
-        num_head (_type_): _description_
-        reg_max (_type_): _description_
-        reg_scale (_type_): _description_
-        up (_type_): _description_
-        eval_idx (int, optional): _description_. Defaults to -1.
-        layer_scale (int, optional): _description_. Defaults to 2.
+        hidden_dim (int): The number of expected features in the input.
+        decoder_layer (nn.Module): The decoder layer module.
+        decoder_layer_wide (nn.Module): The wide decoder layer module.
+        num_layers (int): The number of layers.
+        num_head (int): The number of heads in the multi-head attention models.
+        reg_max (int): The number of discrete bins for bounding box regression.
+        reg_scale (Tensor): The curvature of the Weighting Function.
+        up (Tensor): The upper bound of the sequence.
+        eval_idx (int, optional): evaluation index. Defaults to -1.
     """
 
     def __init__(
         self,
-        hidden_dim,
-        decoder_layer,
-        decoder_layer_wide,
-        num_layers,
-        num_head,
-        reg_max,
-        reg_scale,
-        up,
-        eval_idx=-1,
-        layer_scale=2,
+        hidden_dim: int,
+        decoder_layer: nn.Module,
+        decoder_layer_wide: nn.Module,
+        num_layers: int,
+        num_head: int,
+        reg_max: int,
+        reg_scale: Tensor,
+        up: Tensor,
+        eval_idx: int = -1,
     ) -> None:
         super().__init__()
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
-        self.layer_scale = layer_scale
         self.num_head = num_head
         self.eval_idx = eval_idx if eval_idx >= 0 else num_layers + eval_idx
         self.up, self.reg_scale, self.reg_max = up, reg_scale, reg_max
@@ -519,21 +504,20 @@ class TransformerDecoder(nn.Module):
             + [copy.deepcopy(decoder_layer_wide) for _ in range(num_layers - self.eval_idx - 1)],
         )
         self.lqe_layers = nn.ModuleList([copy.deepcopy(LQE(4, 64, 2, reg_max)) for _ in range(num_layers)])
-        self.project = weighting_function(self.reg_max, self.up, self.reg_scale)
+        self.box_distance_weight = nn.Parameter(
+            weighting_function(self.reg_max, self.up, self.reg_scale),
+            requires_grad=False,
+        )
 
-    def value_op(self, memory, value_proj, value_scale, memory_mask, memory_spatial_shapes):
+    def value_op(
+        self,
+        memory: Tensor,
+        memory_spatial_shapes: list[list[int]],
+    ) -> tuple[Tensor, ...]:
         """Preprocess values for MSDeformableAttention."""
-        value = value_proj(memory) if value_proj is not None else memory
-        value = f.interpolate(memory, size=value_scale) if value_scale is not None else value
-        if memory_mask is not None:
-            value = value * memory_mask.to(value.dtype).unsqueeze(-1)
-        value = value.reshape(value.shape[0], value.shape[1], self.num_head, -1)
+        memory = memory.reshape(memory.shape[0], memory.shape[1], self.num_head, -1)
         split_shape = [h * w for h, w in memory_spatial_shapes]
-        return value.permute(0, 2, 3, 1).split(split_shape, dim=-1)
-
-    def convert_to_deploy(self):
-        self.layers = self.layers[: self.eval_idx + 1]
-        self.lqe_layers = nn.ModuleList([nn.Identity()] * (self.eval_idx) + [self.lqe_layers[self.eval_idx]])
+        return memory.permute(0, 2, 3, 1).split(split_shape, dim=-1)
 
     def forward(
         self,
@@ -548,49 +532,46 @@ class TransformerDecoder(nn.Module):
         integral: nn.Module,
         reg_scale: Tensor,
         attn_mask: Tensor | None = None,
-        memory_mask: Tensor | None = None,
-    ):
-        """_summary_
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
+        """Forward function of the Transformer Decoder.
 
         Args:
-            target (Tensor): _description_
-            ref_points_unact (Tensor): _description_
-            memory (Tensor): _description_
-            spatial_shapes (list[list[int]]): _description_
-            bbox_head (nn.Module): _description_
-            score_head (nn.Module): _description_
-            query_pos_head (nn.Module): _description_
-            pre_bbox_head (nn.Module): _description_
-            integral (nn.Module): _description_
-            reg_scale (Tensor): _description_
-            attn_mask (Tensor | None, optional): _description_. Defaults to None.
-            memory_mask (Tensor | None, optional): _description_. Defaults to None.
+            target (Tensor): target feature tensor.
+            ref_points_unact (Tensor): reference points tensor.
+            memory (Tensor): memory tensor.
+            spatial_shapes (list[list[int]]): spatial shapes of the memory tensor.
+            bbox_head (nn.Module): bounding box head.
+            score_head (nn.Module): label score head.
+            query_pos_head (nn.Module): query position head.
+            pre_bbox_head (nn.Module): pre-bounding box head.
+            integral (nn.Module): integral module.
+            reg_scale (Tensor): number of discrete bins for bounding box regression.
+            attn_mask (Tensor | None, optional): attention mask tensor. Defaults to None.
 
         Returns:
-            _type_: _description_
+            tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
+                out_bboxes (Tensor): bounding box predictions from all layers
+                out_logits (Tensor): label score predictions from all layers
+                out_corners (Tensor): bounding box corner predictions from all layers
+                out_refs (Tensor): reference points from all layers
+                pre_bboxes (Tensor): initial bounding box predictions
+                pre_scores (Tensor): initial label score predictions
         """
         output = target
         output_detach = pred_corners_undetach = 0
-        value = self.value_op(memory, None, None, memory_mask, spatial_shapes)
+        value = self.value_op(memory, spatial_shapes)
 
         out_bboxes = []
         out_logits = []
         out_corners = []
         out_refs = []
-        project = self.project
+        box_distance_weight = self.box_distance_weight
 
         ref_points_detach = f.sigmoid(ref_points_unact)
 
         for i, layer in enumerate(self.layers):
             ref_points_input = ref_points_detach.unsqueeze(2)
             query_pos_embed = query_pos_head(ref_points_detach).clamp(min=-10, max=10)
-
-            if i >= self.eval_idx + 1 and self.layer_scale > 1:
-                query_pos_embed = f.interpolate(query_pos_embed, scale_factor=self.layer_scale)
-                value = self.value_op(memory, None, query_pos_embed.shape[-1], memory_mask, spatial_shapes)
-                output = f.interpolate(output, size=query_pos_embed.shape[-1])
-                output_detach = output.detach()
-
             output = layer(output, ref_points_input, value, spatial_shapes, attn_mask, query_pos_embed)
 
             if i == 0:
@@ -603,7 +584,7 @@ class TransformerDecoder(nn.Module):
             pred_corners = bbox_head[i](output + output_detach) + pred_corners_undetach
             inter_ref_bbox = distance2bbox(
                 initial_ref_boxes,
-                integral(pred_corners, project),
+                integral(pred_corners, box_distance_weight),
                 reg_scale,
             )
 
@@ -634,42 +615,61 @@ class TransformerDecoder(nn.Module):
 
 
 class DFINETransformerModule(nn.Module):
+    """D-FINE Transformer Module.
+
+    Args:
+        num_classes (int, optional): num of classes. Defaults to 80.
+        hidden_dim (int, optional): Hidden dimension size.. Defaults to 256.
+        num_queries (int, optional): Number of queries. Defaults to 300.
+        feat_channels (list[int], optional): List of feature channels. Defaults to [256, 256, 256].
+        num_points_list (list[int], optional): Number of points for each level. Defaults to [3, 6, 3].
+        num_decoder_layers (int, optional): Number of decoder layers. Defaults to 6.
+        dim_feedforward (int, optional): Dimension of the feedforward network. Defaults to 1024.
+        dropout (float, optional): dropout rate. Defaults to 0.0.
+        activation (Callable[..., nn.Module], optional): activation layer. Defaults to nn.ReLU.
+        num_denoising (int, optional): Number of denoising samples. Defaults to 100.
+        label_noise_ratio (float, optional): Ratio of label noise. Defaults to 0.5.
+        box_noise_scale (float, optional): Scale of box noise. Defaults to 1.0.
+        eval_spatial_size (list[int], optional): Spatial size for evaluation. Defaults to [640, 640].
+        eval_idx (int, optional): Evaluation index. Defaults to -1.
+        reg_scale (float, optional): The weight curvature. Defaults to 4.0.
+        reg_max (int, optional): The number of bins for box regression. Defaults to 32.
+    """
+
     def __init__(
         self,
         num_classes: int = 80,
         hidden_dim: int = 256,
         num_queries: int = 300,
-        feat_channels: list[int] = [256, 256, 256],
-        feat_strides: list[int] = [8, 16, 32],
+        feat_channels: list[int] = [256, 256, 256],  # noqa: B006
+        feat_strides: list[int] = [8, 16, 32],  # noqa: B006
         num_levels: int = 3,
-        num_points_list: list[int] = [3, 6, 3],
+        num_points_list: list[int] = [3, 6, 3],  # noqa: B006
         nhead: int = 8,
-        num_layers: int = 6,
+        num_decoder_layers: int = 6,
         dim_feedforward: int = 1024,
         dropout: float = 0.0,
-        activation="relu",
+        activation: Callable[..., nn.Module] = nn.ReLU,
         num_denoising: int = 100,
         label_noise_ratio: float = 0.5,
         box_noise_scale: float = 1.0,
-        eval_spatial_size=None,
+        eval_spatial_size: list[int] = [640, 640],  # noqa: B006
         eval_idx: int = -1,
-        eps: float = 1e-2,
+        reg_scale: float = 4.0,
         reg_max: int = 32,
-        layer_scale: int = 1,
     ):
         super().__init__()
         for _ in range(num_levels - len(feat_strides)):
             feat_strides.append(feat_strides[-1] * 2)
 
         self.hidden_dim = hidden_dim
-        scaled_dim = round(layer_scale * hidden_dim)
         self.nhead = nhead
         self.feat_strides = feat_strides
         self.num_levels = num_levels
         self.num_classes = num_classes
         self.num_queries = num_queries
-        self.eps = eps
-        self.num_layers = num_layers
+        self.eps = 1e-2
+        self.num_decoder_layers = num_decoder_layers
         self.eval_spatial_size = eval_spatial_size
         self.reg_max = reg_max
 
@@ -678,7 +678,7 @@ class DFINETransformerModule(nn.Module):
 
         # Transformer module
         self.up = nn.Parameter(torch.tensor([0.5]), requires_grad=False)
-        self.reg_scale = nn.Parameter(torch.tensor([4.0]), requires_grad=False)
+        self.reg_scale = nn.Parameter(torch.tensor([reg_scale]), requires_grad=False)
         decoder_layer = TransformerDecoderLayer(
             hidden_dim,
             nhead,
@@ -696,19 +696,17 @@ class DFINETransformerModule(nn.Module):
             activation,
             num_levels,
             num_points_list,
-            layer_scale=layer_scale,
         )
         self.decoder = TransformerDecoder(
             hidden_dim,
             decoder_layer,
             decoder_layer_wide,
-            num_layers,
+            num_decoder_layers,
             nhead,
             reg_max,
             self.reg_scale,
             self.up,
             eval_idx,
-            layer_scale,
         )
         # denoising
         self.num_denoising = num_denoising
@@ -724,8 +722,10 @@ class DFINETransformerModule(nn.Module):
             hidden_dim=2 * hidden_dim,
             output_dim=hidden_dim,
             num_layers=2,
+            activation=partial(nn.ReLU, inplace=True),
         )
 
+        # encoder head
         self.enc_output = nn.Sequential(
             OrderedDict(
                 [
@@ -734,28 +734,18 @@ class DFINETransformerModule(nn.Module):
                 ],
             ),
         )
-
         self.enc_score_head = nn.Linear(hidden_dim, num_classes)
         self.enc_bbox_head = MLP(
             input_dim=hidden_dim,
             hidden_dim=hidden_dim,
             output_dim=4,
             num_layers=3,
+            activation=partial(nn.ReLU, inplace=True),
         )
 
         # decoder head
-        self.eval_idx = eval_idx if eval_idx >= 0 else num_layers + eval_idx
-        self.dec_score_head = nn.ModuleList(
-            [nn.Linear(hidden_dim, num_classes) for _ in range(self.eval_idx + 1)]
-            + [nn.Linear(scaled_dim, num_classes) for _ in range(num_layers - self.eval_idx - 1)],
-        )
-        self.pre_bbox_head = MLP(
-            input_dim=hidden_dim,
-            hidden_dim=hidden_dim,
-            output_dim=4,
-            num_layers=3,
-        )
-
+        self.eval_idx = eval_idx if eval_idx >= 0 else num_decoder_layers + eval_idx
+        self.dec_score_head = nn.ModuleList([nn.Linear(hidden_dim, num_classes) for _ in range(num_decoder_layers)])
         # distribution refinement over num of self.reg_max bins
         self.dec_bbox_head = nn.ModuleList(
             [
@@ -764,41 +754,29 @@ class DFINETransformerModule(nn.Module):
                     hidden_dim=hidden_dim,
                     output_dim=4 * (self.reg_max + 1),
                     num_layers=3,
+                    activation=partial(nn.ReLU, inplace=True),
                 )
-                for _ in range(self.eval_idx + 1)
-            ]
-            + [
-                MLP(
-                    input_dim=scaled_dim,
-                    hidden_dim=scaled_dim,
-                    output_dim=4 * (self.reg_max + 1),
-                    num_layers=3,
-                )
-                for _ in range(num_layers - self.eval_idx - 1)
+                for _ in range(num_decoder_layers)
             ],
         )
+        self.pre_bbox_head = MLP(
+            input_dim=hidden_dim,
+            hidden_dim=hidden_dim,
+            output_dim=4,
+            num_layers=3,
+            activation=partial(nn.ReLU, inplace=True),
+        )
+
         self.integral = Integral(self.reg_max)
 
-        # init encoder output anchors and valid_mask
-        if self.eval_spatial_size:
-            anchors, valid_mask = self._generate_anchors()
-            self.register_buffer("anchors", anchors)
-            self.register_buffer("valid_mask", valid_mask)
         # init encoder output anchors and valid_mask
         if self.eval_spatial_size:
             self.anchors, self.valid_mask = self._generate_anchors()
 
         self._reset_parameters(feat_channels)
 
-    def convert_to_deploy(self):
-        self.dec_score_head = nn.ModuleList(
-            [nn.Identity()] * (self.eval_idx) + [self.dec_score_head[self.eval_idx]],
-        )
-        self.dec_bbox_head = nn.ModuleList(
-            [self.dec_bbox_head[i] if i <= self.eval_idx else nn.Identity() for i in range(len(self.dec_bbox_head))],
-        )
-
-    def _reset_parameters(self, feat_channels):
+    def _reset_parameters(self, feat_channels: list[int]) -> None:
+        """Reset parameters of the module."""
         bias = bias_init_with_prob(0.01)
         init.constant_(self.enc_score_head.bias, bias)
         init.constant_(self.enc_bbox_head.layers[-1].weight, 0)
@@ -820,7 +798,8 @@ class DFINETransformerModule(nn.Module):
             if in_channels != self.hidden_dim:
                 init.xavier_uniform_(m[0].weight)
 
-    def _build_input_proj_layer(self, feat_channels):
+    def _build_input_proj_layer(self, feat_channels: list[int]) -> None:
+        """Build input projection layer."""
         self.input_proj = nn.ModuleList()
         for in_channels in feat_channels:
             if in_channels == self.hidden_dim:
@@ -855,7 +834,17 @@ class DFINETransformerModule(nn.Module):
                 )
                 in_channels = self.hidden_dim
 
-    def _get_encoder_input(self, feats: list[torch.Tensor]):
+    def _get_encoder_input(self, feats: list[Tensor]) -> tuple[Tensor, list[list[int]]]:
+        """Flatten feature maps and get spatial shapes for encoder input.
+
+        Args:
+            feats (list[Tensor]): List of feature maps.
+
+        Returns:
+            tuple[Tensor, list[list[int]]]:
+                Tensor: Flattened feature maps.
+                list[list[int]]: List of spatial shapes for each feature map.
+        """
         # get projection features
         proj_feats = [self.input_proj[i](feat) for i, feat in enumerate(feats)]
         if self.num_levels > len(proj_feats):
@@ -869,7 +858,7 @@ class DFINETransformerModule(nn.Module):
         # get encoder inputs
         feat_flatten = []
         spatial_shapes = []
-        for i, feat in enumerate(proj_feats):
+        for feat in proj_feats:
             _, _, h, w = feat.shape
             # [b, c, h, w] -> [b, h*w, c]
             feat_flatten.append(feat.flatten(2).permute(0, 2, 1))
@@ -882,11 +871,11 @@ class DFINETransformerModule(nn.Module):
 
     def _generate_anchors(
         self,
-        spatial_shapes=None,
-        grid_size=0.05,
-        dtype=torch.float32,
-        device="cpu",
-    ):
+        spatial_shapes: list[list[int]] | None = None,
+        grid_size: float = 0.05,
+        dtype: torch.dtype = torch.float32,
+        device: str = "cpu",
+    ) -> tuple[Tensor, Tensor]:
         if spatial_shapes is None:
             spatial_shapes = []
             eval_h, eval_w = self.eval_spatial_size
@@ -902,12 +891,12 @@ class DFINETransformerModule(nn.Module):
             lvl_anchors = torch.concat([grid_xy, wh], dim=-1).reshape(-1, h * w, 4)
             anchors.append(lvl_anchors)
 
-        anchors = torch.concat(anchors, dim=1).to(device)
-        valid_mask = ((anchors > self.eps) * (anchors < 1 - self.eps)).all(-1, keepdim=True)
-        anchors = torch.log(anchors / (1 - anchors))
-        anchors = torch.where(valid_mask, anchors, torch.inf)
+        tensor_anchors = torch.concat(anchors, dim=1).to(device)
+        valid_mask = ((tensor_anchors > self.eps) * (tensor_anchors < 1 - self.eps)).all(-1, keepdim=True)
+        tensor_anchors = torch.log(tensor_anchors / (1 - tensor_anchors))
+        tensor_anchors = torch.where(valid_mask, tensor_anchors, torch.inf)
 
-        return anchors, valid_mask
+        return tensor_anchors, valid_mask
 
     def _get_decoder_input(
         self,
@@ -915,13 +904,13 @@ class DFINETransformerModule(nn.Module):
         spatial_shapes: list[list[int]],
         denoising_logits: Tensor | None = None,
         denoising_bbox_unact: Tensor | None = None,
-    ):
+    ) -> tuple[torch.Tensor, ...]:
         # prepare input for decoder
         if self.training or self.eval_spatial_size is None:
             anchors, valid_mask = self._generate_anchors(spatial_shapes, device=memory.device)
         else:
-            anchors = self.anchors
-            valid_mask = self.valid_mask
+            anchors, valid_mask = self.anchors.to(memory.device), self.valid_mask.to(memory.device)
+
         if memory.shape[0] > 1:
             anchors = anchors.repeat(memory.shape[0], 1, 1)
 
@@ -960,11 +949,25 @@ class DFINETransformerModule(nn.Module):
 
     def _select_topk(
         self,
-        memory: torch.Tensor,
-        outputs_logits: torch.Tensor,
-        outputs_anchors_unact: torch.Tensor,
+        memory: Tensor,
+        outputs_logits: Tensor,
+        outputs_anchors_unact: Tensor,
         topk: int,
-    ):
+    ) -> tuple[Tensor, Tensor, Tensor]:
+        """Select top-k memory, logits, and anchors.
+
+        Args:
+            memory (Tensor): memory tensor.
+            outputs_logits (Tensor): logits tensor.
+            outputs_anchors_unact (Tensor): unactivated anchors tensor.
+            topk (int): number of top-k to select.
+
+        Returns:
+            tuple[Tensor, Tensor, Tensor]:
+                Tensor: top-k memory tensor.
+                Tensor: top-k logits tensor.
+                Tensor: top-k anchors tensor.
+        """
         _, topk_ind = torch.topk(outputs_logits.max(-1).values, topk, dim=-1)
         topk_anchors = outputs_anchors_unact.gather(
             dim=1,
@@ -981,12 +984,13 @@ class DFINETransformerModule(nn.Module):
 
         return topk_memory, topk_logits, topk_anchors
 
-    def forward(self, feats, targets=None):
+    def forward(self, feats: Tensor, targets: list[dict[str, Tensor]] | None = None) -> dict[str, Tensor]:
+        """Forward pass of the DFine Transformer module."""
         # input projection and embedding
         memory, spatial_shapes = self._get_encoder_input(feats)
 
         # prepare denoising training
-        if self.training and self.num_denoising > 0:
+        if self.training and self.num_denoising > 0 and targets is not None:
             denoising_logits, denoising_bbox_unact, attn_mask, dn_meta = get_contrastive_denoising_training_group(
                 targets,
                 self.num_classes,
@@ -1079,7 +1083,7 @@ class DFINETransformerModule(nn.Module):
         return out
 
     @torch.jit.unused
-    def _set_aux_loss(self, outputs_class, outputs_coord):
+    def _set_aux_loss(self, outputs_class: Tensor, outputs_coord: Tensor) -> list[dict[str, Tensor]]:
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
@@ -1088,13 +1092,13 @@ class DFINETransformerModule(nn.Module):
     @torch.jit.unused
     def _set_aux_loss2(
         self,
-        outputs_class,
-        outputs_coord,
-        outputs_corners,
-        outputs_ref,
-        teacher_corners,
-        teacher_logits,
-    ):
+        outputs_class: Tensor,
+        outputs_coord: Tensor,
+        outputs_corners: Tensor,
+        outputs_ref: Tensor,
+        teacher_corners: Tensor,
+        teacher_logits: Tensor,
+    ) -> list[dict[str, Tensor]]:
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
@@ -1112,6 +1116,8 @@ class DFINETransformerModule(nn.Module):
 
 
 class DFINETransformer:
+    """DFINETransformer factory for detection."""
+
     decoder_cfg: ClassVar[dict[str, Any]] = {
         "dfine_hgnetv2_n": {
             "feat_channels": [128, 128],
@@ -1145,6 +1151,7 @@ class DFINETransformer:
         },
     }
 
-    def __new__(cls, model_name, num_classes) -> DFINETransformerModule:
+    def __new__(cls, model_name: str, num_classes: int) -> DFINETransformerModule:
+        """Constructor for DFINETransformerModule."""
         cfg = cls.decoder_cfg[model_name]
         return DFINETransformerModule(num_classes=num_classes, **cfg)

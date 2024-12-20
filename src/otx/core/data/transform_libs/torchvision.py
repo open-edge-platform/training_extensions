@@ -3924,6 +3924,18 @@ class TorchVisionTransformLib:
 
 
 class RandomIoUCrop(tvt_v2.RandomIoUCrop):
+    """Random IoU crop with the option to set probability.
+
+    Args:
+        min_scale (float, optional): the same as RandomIoUCrop. Defaults to 0.3.
+        max_scale (float, optional): the same as RandomIoUCrop. Defaults to 1.
+        min_aspect_ratio (float, optional): the same as RandomIoUCrop. Defaults to 0.5.
+        max_aspect_ratio (float, optional): the same as RandomIoUCrop. Defaults to 2.
+        sampler_options (list[float] | None, optional): the same as RandomIoUCrop. Defaults to None.
+        trials (int, optional): the same as RandomIoUCrop. Defaults to 40.
+        p (float, optional): probability. Defaults to 1.0.
+    """
+
     def __init__(
         self,
         min_scale: float = 0.3,
@@ -3944,7 +3956,8 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         )
         self.p = p
 
-    def __call__(self, *inputs: Any) -> Any:
+    def __call__(self, *inputs: Any) -> Any:  # noqa: ANN401
+        """Apply the transform to the given inputs."""
         if torch.rand(1) >= self.p:
             return inputs if len(inputs) > 1 else inputs[0]
 

@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""RTDetr model implementations."""
+"""D-Fine model implementations."""
 
 from __future__ import annotations
 
@@ -125,7 +125,8 @@ class DFine(ExplainableOTXDetModel):
         elif self.model_name in ("dfine_hgnetv2_l", "dfine_hgnetv2_x"):
             backbone_lr = 0.0000125
         else:
-            raise ValueError(f"Unsupported model name: {self.model_name}")
+            msg = f"Unsupported model name: {self.model_name}"
+            raise ValueError(msg)
 
         optimizer_configuration = [
             # no weight decay for norm layers in backbone
