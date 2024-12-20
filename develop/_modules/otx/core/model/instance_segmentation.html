@@ -546,6 +546,7 @@
         <span class="n">modified_label_info</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
         <span class="c1"># Instance segmentation needs to add empty label to satisfy MAPI wrapper requirements</span>
         <span class="n">modified_label_info</span><span class="o">.</span><span class="n">label_names</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;otx_empty_lbl&quot;</span><span class="p">)</span>
+        <span class="n">modified_label_info</span><span class="o">.</span><span class="n">label_ids</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
             <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;MaskRCNN&quot;</span><span class="p">,</span>
@@ -1063,6 +1064,7 @@
             <span class="c1"># workaround to hide extra otx_empty_lbl</span>
             <span class="k">if</span> <span class="n">ir_label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;otx_empty_lbl&quot;</span><span class="p">:</span>
                 <span class="n">ir_label_info</span><span class="o">.</span><span class="n">label_names</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">ir_label_info</span><span class="o">.</span><span class="n">label_ids</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">ir_label_info</span><span class="o">.</span><span class="n">label_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ir_label_info</span>
 
