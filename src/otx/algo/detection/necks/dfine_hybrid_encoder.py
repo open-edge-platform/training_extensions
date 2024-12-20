@@ -78,9 +78,9 @@ class RepNCSPELAN4(nn.Module):
         c3 (int): c3 channel size. Refer to GELAN paper.
         c4 (int): c4 channel size. Refer to GELAN paper.
         n (int, optional): number of blocks. Defaults to 3.
-        bias (bool, optional): _description_. Defaults to False.
-        activation (Callable[..., nn.Module] | None, optional): _description_. Defaults to None.
-        normalization (Callable[..., nn.Module] | None, optional): _description_. Defaults to None.
+        bias (bool, optional): use bias. Defaults to False.
+        activation (Callable[..., nn.Module] | None, optional): activation function. Defaults to None.
+        normalization (Callable[..., nn.Module] | None, optional): norm layer. Defaults to None.
     """
 
     def __init__(

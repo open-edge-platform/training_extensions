@@ -334,15 +334,15 @@ class TransformerDecoderLayer(nn.Module):
         """Forward function of the Transformer Decoder Layer.
 
         Args:
-            target (Tensor): _description_
-            reference_points (Tensor): _description_
-            value (Tensor): _description_
-            spatial_shapes (list[list[int]]): _description_
-            attn_mask (Tensor | None, optional): _description_. Defaults to None.
-            query_pos_embed (Tensor | None, optional): _description_. Defaults to None.
+            target (Tensor): target feature tensor.
+            reference_points (Tensor): reference points tensor.
+            value (Tensor): value tensor.
+            spatial_shapes (list[list[int]]): spatial shapes of the value tensor.
+            attn_mask (Tensor | None, optional): attention mask. Defaults to None.
+            query_pos_embed (Tensor | None, optional): query positional embedding. Defaults to None.
 
         Returns:
-            Tensor: _description_
+            Tensor: updated target tensor.
         """
         # self attention
         q = k = self.with_pos_embed(target, query_pos_embed)
@@ -1133,20 +1133,20 @@ class DFINETransformer:
             "hidden_dim": 128,
             "dim_feedforward": 512,
             "num_levels": 2,
-            "num_layers": 3,
+            "num_decoder_layers": 3,
             "eval_idx": -1,
             "num_points_list": [6, 6],
             "eval_spatial_size": [640, 640],
         },
         "dfine_hgnetv2_s": {
             "feat_channels": [256, 256, 256],
-            "num_layers": 3,
+            "num_decoder_layers": 3,
             "eval_idx": -1,
             "eval_spatial_size": [640, 640],
             "num_points_list": [3, 6, 3],
         },
         "dfine_hgnetv2_m": {
-            "num_layers": 4,
+            "num_decoder_layers": 4,
             "eval_idx": -1,
             "eval_spatial_size": [640, 640],
         },
