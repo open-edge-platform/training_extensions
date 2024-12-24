@@ -369,7 +369,7 @@ class HybridEncoderModule(nn.Module):
                         src_flatten.device,
                     )
                 else:
-                    pos_embed = getattr(self, f"pos_embed{enc_ind}", None)
+                    pos_embed = getattr(self, f"pos_embed{enc_ind}").to(src_flatten.device)
 
                 memory = self.encoder[i](src_flatten, pos_embed=pos_embed)
                 proj_feats[enc_ind] = memory.permute(0, 2, 1).reshape(-1, self.hidden_dim, h, w).contiguous()
