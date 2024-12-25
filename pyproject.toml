@@ -90,7 +90,7 @@ base = [
 
 transformers = [
     "transformers==4.47.1",
-    "diffusers==0.31.0",
+    "diffusers==0.32.1",
     "torchmetrics[image]>=0.7.0"
 ]
 
@@ -117,7 +117,7 @@ ci_benchmark = [
     "pandas<2.3",       # To avoid conflict with nncf==2.9.0
     "matplotlib==3.10.0",
     "nbconvert==7.16.4",
-    "ipython==8.30.0",
+    "ipython==8.31.0",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
     "mlflow==2.19.0",
