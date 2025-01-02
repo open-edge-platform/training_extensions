@@ -10,9 +10,9 @@ from torch._dynamo.testing import CompileCounter
 
 
 class TestDinoV2Seg:
-    @pytest.fixture(scope="class")
+    @pytest.fixture()
     def fxt_dino_v2_seg(self) -> DinoV2Seg:
-        return DinoV2Seg(label_info=10, model_name="dinov2_vits14", input_size=(560, 560))
+        return DinoV2Seg(label_info=10, model_name="dinov2-small-seg", input_size=(518, 518))
 
     def test_dino_v2_seg_init(self, fxt_dino_v2_seg):
         assert isinstance(fxt_dino_v2_seg, DinoV2Seg)
@@ -21,7 +21,7 @@ class TestDinoV2Seg:
     def test_exporter(self, fxt_dino_v2_seg):
         exporter = fxt_dino_v2_seg._exporter
         assert isinstance(exporter, OTXModelExporter)
-        assert exporter.input_size == (1, 3, 560, 560)
+        assert exporter.input_size == (1, 3, 518, 518)
 
     def test_optimization_config(self, fxt_dino_v2_seg):
         config = fxt_dino_v2_seg._optimization_config
@@ -32,7 +32,7 @@ class TestDinoV2Seg:
     @pytest.mark.parametrize(
         "model",
         [
-            DinoV2Seg(model_name="dinov2_vits14", label_info=3),
+            DinoV2Seg(model_name="dinov2-small-seg", label_info=3, input_size=(518, 518)),
         ],
     )
     def test_compiled_model(self, model):
@@ -44,6 +44,6 @@ class TestDinoV2Seg:
         model.model = torch.compile(model.model, backend=cnt)
 
         # Prepare inputs
-        x = torch.randn(1, 3, 560, 560)
+        x = torch.randn(1, 3, 518, 518)
         model.model(x)
         assert cnt.frame_count == 1

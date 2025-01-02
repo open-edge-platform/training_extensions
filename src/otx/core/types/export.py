@@ -9,6 +9,7 @@ import json
 from dataclasses import dataclass, fields
 from enum import Enum
 
+import otx
 from otx.core.config.data import TileConfig
 from otx.core.types.label import HLabelInfo, LabelInfo
 
@@ -100,9 +101,15 @@ class TaskLevelExportParameters:
         """
         all_labels = ""
         all_label_ids = ""
+
+        if len(self.label_info.label_names) != len(self.label_info.label_ids):
+            msg = "Label info is incorrect: label names and IDs do not match"
+            raise RuntimeError(msg)
+
         for lbl in self.label_info.label_names:
             all_labels += lbl.replace(" ", "_") + " "
-            all_label_ids += lbl.replace(" ", "_") + " "
+        for lbl_id in self.label_info.label_ids:
+            all_label_ids += lbl_id + " "
 
         metadata = {
             # Common
@@ -112,6 +119,7 @@ class TaskLevelExportParameters:
             ("model_info", "labels"): all_labels.strip(),
             ("model_info", "label_ids"): all_label_ids.strip(),
             ("model_info", "optimization_config"): json.dumps(self.optimization_config),
+            ("model_info", "otx_version"): otx.__version__,
         }
 
         if isinstance(self.label_info, HLabelInfo):

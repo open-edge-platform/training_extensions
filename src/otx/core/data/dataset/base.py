@@ -70,6 +70,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         max_refetch: Maximum number of images to fetch in cache
         image_color_channel: Color channel of images
         stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
+        data_format: Source data format, which was originally passed to datumaro (could be arrow for instance).
 
     """
 
@@ -83,6 +84,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
+        data_format: str = "",
     ) -> None:
         self.dm_subset = dm_subset
         self.transforms = transforms
@@ -92,8 +94,11 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         self.image_color_channel = image_color_channel
         self.stack_images = stack_images
         self.to_tv_image = to_tv_image
+        self.data_format = data_format
 
-        if self.dm_subset.categories():
+        if self.dm_subset.categories() and data_format == "arrow":
+            self.label_info = LabelInfo.from_dm_label_groups_arrow(self.dm_subset.categories()[AnnotationType.label])
+        elif self.dm_subset.categories():
             self.label_info = LabelInfo.from_dm_label_groups(self.dm_subset.categories()[AnnotationType.label])
         else:
             self.label_info = NullLabelInfo()

@@ -196,7 +196,7 @@ class DynamicSoftLabelAssigner:
         assigned_labels = assigned_gt_inds.new_full((num_bboxes,), -1)
         assigned_labels[valid_mask] = gt_labels[matched_gt_inds].long()
         max_overlaps = assigned_gt_inds.new_full((num_bboxes,), -INF, dtype=torch.float32)
-        max_overlaps[valid_mask] = matched_pred_ious
+        max_overlaps[valid_mask] = matched_pred_ious.to(max_overlaps)
         return AssignResult(num_gt, assigned_gt_inds, max_overlaps, labels=assigned_labels)
 
     def dynamic_k_matching(

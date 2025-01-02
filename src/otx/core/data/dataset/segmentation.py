@@ -168,6 +168,7 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
         stack_images: bool = True,
         to_tv_image: bool = True,
         ignore_index: int = 255,
+        data_format: str = "",
     ) -> None:
         super().__init__(
             dm_subset,
@@ -183,11 +184,13 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
         if self.has_polygons:
             # insert background class at index 0 since polygons represent only objects
             self.label_info.label_names.insert(0, "otx_background_lbl")
+            self.label_info.label_ids.insert(0, "None")
 
         self.label_info = SegLabelInfo(
             label_names=self.label_info.label_names,
             label_groups=self.label_info.label_groups,
             ignore_index=ignore_index,
+            label_ids=self.label_info.label_ids,
         )
         self.ignore_index = ignore_index
 

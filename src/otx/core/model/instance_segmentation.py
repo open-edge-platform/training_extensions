@@ -280,6 +280,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
         modified_label_info = copy.deepcopy(self.label_info)
         # Instance segmentation needs to add empty label to satisfy MAPI wrapper requirements
         modified_label_info.label_names.insert(0, "otx_empty_lbl")
+        modified_label_info.label_ids.insert(0, "None")
 
         return super()._export_parameters.wrap(
             model_type="MaskRCNN",
@@ -773,6 +774,7 @@ class OVInstanceSegmentationModel(
             # workaround to hide extra otx_empty_lbl
             if ir_label_info.label_names[0] == "otx_empty_lbl":
                 ir_label_info.label_names.pop(0)
+                ir_label_info.label_ids.pop(0)
                 ir_label_info.label_groups[0].pop(0)
             return ir_label_info
 

@@ -93,7 +93,6 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
         self.unsupervised_weight = unsupervised_weight
         self.semisl_start_epoch = semisl_start_epoch
         self.drop_unreliable_pixels_percent = drop_unreliable_pixels_percent
-
         super().__init__(
             label_info=label_info,
             input_size=input_size,
@@ -193,6 +192,7 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
             # remove otx background label for export
             modified_label_info = copy.deepcopy(self.label_info)
             modified_label_info.label_names.pop(0)
+            modified_label_info.label_ids.pop(0)
         else:
             modified_label_info = self.label_info
 
@@ -254,7 +254,11 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
         if isinstance(label_info, int):
             return SegLabelInfo.from_num_classes(num_classes=label_info)
         if isinstance(label_info, Sequence) and all(isinstance(name, str) for name in label_info):
-            return SegLabelInfo(label_names=label_info, label_groups=[label_info])
+            return SegLabelInfo(
+                label_names=label_info,
+                label_groups=[label_info],
+                label_ids=[str(i) for i in range(len(label_info))],
+            )
         if isinstance(label_info, SegLabelInfo):
             return label_info
 

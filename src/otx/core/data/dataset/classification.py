@@ -39,7 +39,10 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
             labels_ids = [
                 label["label"]["_id"] for label in roi["labels"] if label["label"]["domain"] == "CLASSIFICATION"
             ]
-            label_anns = [self.label_info.label_names.index(label_id) for label_id in labels_ids]
+            if self.data_format == "arrow":
+                label_anns = [self.label_info.label_ids.index(label_id) for label_id in labels_ids]
+            else:
+                label_anns = [self.label_info.label_names.index(label_id) for label_id in labels_ids]
         else:
             # extract labels from annotations
             label_anns = [ann.label for ann in item.annotations if isinstance(ann, Label)]
@@ -80,17 +83,21 @@ class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
-        label_anns = []
+        label_ids = set()
         for ann in item.annotations:
+            # multilabel information stored in 'multi_label_ids' attribute when the source format is arrow
+            if "multi_label_ids" in ann.attributes:
+                for lbl_idx in ann.attributes["multi_label_ids"]:
+                    label_ids.add(lbl_idx)
+
             if isinstance(ann, Label):
-                label_anns.append(ann)
+                label_ids.add(ann.label)
             else:
                 # If the annotation is not Label, it should be converted to Label.
                 # For Chained Task: Detection (Bbox) -> Classification (Label)
                 label = Label(label=ann.label)
-                if label not in label_anns:
-                    label_anns.append(label)
-        labels = torch.as_tensor([ann.label for ann in label_anns])
+                label_ids.add(label.label)
+        labels = torch.as_tensor(list(label_ids))
 
         entity = MultilabelClsDataEntity(
             image=img_data,
@@ -128,13 +135,22 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         self.dm_categories = self.dm_subset.categories()[AnnotationType.label]
 
         # Hlabel classification used HLabelInfo to insert the HLabelData.
-        self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
+        if self.data_format == "arrow":
+            # arrow format stores label IDs as names, have to deal with that here
+            self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
+        else:
+            self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
+
+        self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))
+        self.id_to_name_mapping[""] = ""
+
         if self.label_info.num_multiclass_heads == 0:
             msg = "The number of multiclass heads should be larger than 0."
             raise ValueError(msg)
 
-        for dm_item in self.dm_subset:
-            self._add_ancestors(dm_item.annotations)
+        if self.data_format != "arrow":
+            for dm_item in self.dm_subset:
+                self._add_ancestors(dm_item.annotations)
 
     def _add_ancestors(self, label_anns: list[Label]) -> None:
         """Add ancestors recursively if some label miss the ancestor information.
@@ -149,7 +165,7 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         """
 
         def _label_idx_to_name(idx: int) -> str:
-            return self.label_info.label_names[idx]
+            return self.dm_categories[idx].name
 
         def _label_name_to_idx(name: str) -> int:
             indices = [idx for idx, val in enumerate(self.label_info.label_names) if val == name]
@@ -157,6 +173,8 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
 
         def _get_label_group_idx(label_name: str) -> int:
             if isinstance(self.label_info, HLabelInfo):
+                if self.data_format == "arrow":
+                    return self.label_info.class_to_group_idx[self.id_to_name_mapping[label_name]][0]
                 return self.label_info.class_to_group_idx[label_name][0]
             msg = f"self.label_info should have HLabelInfo type, got {type(self.label_info)}"
             raise ValueError(msg)
@@ -197,17 +215,22 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
 
-        label_anns = []
+        label_ids = set()
         for ann in item.annotations:
+            # in h-cls scenario multilabel information stored in 'multi_label_ids' attribute
+            if "multi_label_ids" in ann.attributes:
+                for lbl_idx in ann.attributes["multi_label_ids"]:
+                    label_ids.add(lbl_idx)
+
             if isinstance(ann, Label):
-                label_anns.append(ann)
+                label_ids.add(ann.label)
             else:
                 # If the annotation is not Label, it should be converted to Label.
                 # For Chained Task: Detection (Bbox) -> Classification (Label)
                 label = Label(label=ann.label)
-                if label not in label_anns:
-                    label_anns.append(label)
-        hlabel_labels = self._convert_label_to_hlabel_format(label_anns, ignored_labels)
+                label_ids.add(label.label)
+
+        hlabel_labels = self._convert_label_to_hlabel_format([Label(label=idx) for idx in label_ids], ignored_labels)
 
         entity = HlabelClsDataEntity(
             image=img_data,
@@ -256,18 +279,18 @@ class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
             class_indices[i] = -1
 
         for ann in label_anns:
-            ann_name = self.dm_categories.items[ann.label].name
-            ann_parent = self.dm_categories.items[ann.label].parent
+            if self.data_format == "arrow":
+                # skips unknown labels for instance, the empty one
+                if self.dm_categories.items[ann.label].name not in self.id_to_name_mapping:
+                    continue
+                ann_name = self.id_to_name_mapping[self.dm_categories.items[ann.label].name]
+            else:
+                ann_name = self.dm_categories.items[ann.label].name
             group_idx, in_group_idx = self.label_info.class_to_group_idx[ann_name]
-            (parent_group_idx, parent_in_group_idx) = (
-                self.label_info.class_to_group_idx[ann_parent] if ann_parent else (None, None)
-            )
 
             if group_idx < num_multiclass_heads:
                 class_indices[group_idx] = in_group_idx
-                if parent_group_idx is not None and parent_in_group_idx is not None:
-                    class_indices[parent_group_idx] = parent_in_group_idx
-            elif not ignored_labels or ann.label not in ignored_labels:
+            elif ann.label not in ignored_labels:
                 class_indices[num_multiclass_heads + in_group_idx] = 1
             else:
                 class_indices[num_multiclass_heads + in_group_idx] = -1

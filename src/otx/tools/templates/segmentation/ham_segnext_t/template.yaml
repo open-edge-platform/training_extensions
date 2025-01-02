@@ -25,14 +25,8 @@ hyper_parameters:
       learning_rate:
         default_value: 0.00006
         auto_hpo_state: POSSIBLE
-      learning_rate_warmup_iters:
-        default_value: 100
-      num_iters:
-        default_value: 200
       early_stop_start:
         default_value: 100
-      early_stop_patience:
-        default_value: 10
 
 # Training resources.
 max_nodes: 1

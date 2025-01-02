@@ -4,6 +4,35 @@ Releases
 .. toctree::
   :maxdepth: 1
 
+v2.2.2 (2024.12)
+----------------
+
+Enhancements
+^^^^^^^^^^^^
+
+Bug fixes
+^^^^^^^^^
+
+- BC improvement
+
+v2.2.1 (2024.12)
+----------------
+
+Enhancements
+^^^^^^^^^^^^
+
+- Decouple DinoV2 for semantic segmentation task
+- Update Label Info handling
+
+Bug fixes
+^^^^^^^^^
+
+- Fix empty annotation in tiling
+- Fix patching early stopping in tools/converter.py, update headers in templates, change training schedule for classification
+- Fix tensor type compatibility in dynamic soft label assigner and RTMDet head
+- Fix DETR target class indices are of type long in loss calculations
+- Fix arrow format reader for multiclass ROI case
+
 v2.2.0 (2024.10)
 ----------------
 
@@ -22,6 +51,8 @@ New features
 - Add Semi-SL MeanTeacher algorithm for Semantic Segmentation
 - Update head and h-label format for hierarchical label classification
 - Support configurable input size
+- Revert the old workaround for detection confidence threshold
+- Add Keypoint Detection legacy template
 
 Enhancements
 ^^^^^^^^^^^^
@@ -40,21 +71,38 @@ Enhancements
 - Change sematic segmentation to consider bbox only annotations
 - Relieve memory usage criteria on batch size 2 during adaptive batch size
 - Remove background label from RT Info for segmentation task
+- Enable export of the feature vectors for semantic segmentation task
 - Prevent using too low confidence thresholds in detection
+- Update HPO interface
+- Bump onnx to 1.17.0 to omit CVE-2024-5187
 
 Bug fixes
 ^^^^^^^^^
 
+- Update anomaly base transforms to use square resizing
 - Fix Combined Dataloader & unlabeled warmup loss in Semi-SL
 - Revert #3579 to fix issues with replacing coco_instance with a different format in some dataset
 - Add num_devices in Engine for multi-gpu training
 - Add missing tile recipes and various tile recipe changes
 - Change categories mapping logic
 - Fix config converter for tiling
+- Fix `BboxOverlaps2D` handling of empty ground-truth annotations in datasets.
 - Fix num_trials calculation on dataset length less than num_class
 - Fix out_features in HierarchicalCBAMClsHead
 - Fix multilabel_accuracy of MixedHLabelAccuracy
 - Fix wrong indices setting in HLabelInfo
+- Add legacy template LiteHRNet_18 template
+- Model templates: rename model_status value 'DISCONTINUED' to 'OBSOLETE'
+- Update MRCNN model export to include feature vector and saliency map
+- Upgrade MAPI in 2.2
+- Fix applying model's hparams when loading model from checkpoint
+- Fix incorrect all_groups order configuration in HLabelInfo
+- Fix RTDETR recipes
+- Fix wrong model name in converter & template
+- Fix RTMDet Inst Explain Mode
+- Fix RTDETR Explain Mode
+- Fix classification and semantic segmentation tasks, when ROI provided for images
+- Disable tiling classifier toggle in configurable parameters
 
 v2.1.0 (2024.07)
 ----------------

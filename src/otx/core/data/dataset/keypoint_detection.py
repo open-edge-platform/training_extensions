@@ -39,6 +39,7 @@ class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
+        data_format: str = "",
     ) -> None:
         super().__init__(
             dm_subset,
@@ -49,14 +50,17 @@ class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
             image_color_channel,
             stack_images,
             to_tv_image,
+            data_format,
         )
 
         self.dm_subset = self._get_single_bbox_dataset(dm_subset)
 
         if self.dm_subset.categories():
+            kp_labels = self.dm_subset.categories()[AnnotationType.points][0].labels
             self.label_info = LabelInfo(
-                label_names=self.dm_subset.categories()[AnnotationType.points][0].labels,
+                label_names=kp_labels,
                 label_groups=[],
+                label_ids=[str(i) for i in range(len(kp_labels))],
             )
         else:
             self.label_info = NullLabelInfo()

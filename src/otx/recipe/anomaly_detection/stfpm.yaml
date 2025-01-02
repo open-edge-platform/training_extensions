@@ -21,7 +21,7 @@ overrides:
   precision: 32
   max_epochs: 100
   callbacks:
-    - class_path: lightning.pytorch.callbacks.EarlyStopping
+    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
         patience: 5
         mode: max

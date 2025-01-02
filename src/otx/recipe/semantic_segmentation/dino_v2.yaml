@@ -2,10 +2,10 @@ model:
   class_path: otx.algo.segmentation.dino_v2_seg.DinoV2Seg
   init_args:
     label_info: 2
-    model_name: dinov2_vits14
+    model_name: dinov2-small-seg
     input_size:
-      - 560
-      - 560
+      - 518
+      - 518
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -17,11 +17,15 @@ model:
         weight_decay: 0.0001
 
     scheduler:
-      class_path: torch.optim.lr_scheduler.PolynomialLR
+      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
       init_args:
-        total_iters: 150
-        power: 0.9
-        last_epoch: -1
+        num_warmup_steps: 0
+        main_scheduler_callable:
+          class_path: torch.optim.lr_scheduler.PolynomialLR
+          init_args:
+            total_iters: 150
+            power: 0.9
+            last_epoch: -1
 
 engine:
   task: SEMANTIC_SEGMENTATION
@@ -33,8 +37,8 @@ data: ../_base_/data/semantic_segmentation.yaml
 overrides:
   data:
     input_size:
-      - 560
-      - 560
+      - 518
+      - 518
     train_subset:
       transforms:
         - class_path: otx.core.data.transform_libs.torchvision.RandomResizedCrop

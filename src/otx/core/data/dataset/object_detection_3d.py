@@ -40,6 +40,7 @@ class OTX3DObjectDetectionDataset(OTXDataset[Det3DDataEntity]):
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = False,
+        data_format: str = "",
         max_objects: int = 50,
     ) -> None:
         super().__init__(
@@ -51,6 +52,7 @@ class OTX3DObjectDetectionDataset(OTXDataset[Det3DDataEntity]):
             image_color_channel,
             stack_images,
             to_tv_image,
+            data_format,
         )
         self.max_objects = max_objects
         self.subset_type = list(self.dm_subset.get_subset_info())[-1].split(":")[0]
