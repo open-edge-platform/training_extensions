@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import copy
-import math
 from collections import OrderedDict
 from functools import partial
 from typing import Any, Callable, ClassVar
@@ -15,241 +14,12 @@ import torch
 import torch.nn.functional as f
 from torch import Tensor, nn
 from torch.nn import init
-from torchvision.ops import box_convert
 
-from otx.algo.common.layers.transformer_layers import MLP
+from otx.algo.common.layers.transformer_layers import MLP, MSDeformableAttentionV2
 from otx.algo.common.utils.utils import inverse_sigmoid
 from otx.algo.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
+from otx.algo.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
 from otx.algo.utils.weight_init import bias_init_with_prob
-
-
-def weighting_function(reg_max: int, up: Tensor, reg_scale: Tensor) -> Tensor:
-    """Generates the non-uniform Weighting Function W(n) for bounding box regression.
-
-    Args:
-        reg_max (int): Max number of the discrete bins.
-        up (Tensor): Controls upper bounds of the sequence, where maximum offset is ±up * H / W.
-        reg_scale (Tensor): Controls the curvature of the Weighting Function.
-                        Larger values result in flatter weights near the central axis W(reg_max/2)=0
-                        and steeper weights at both ends.
-        deploy (bool): If True, uses deployment mode settings.
-
-    Returns:
-        Tensor: Sequence of Weighting Function.
-    """
-    upper_bound1 = abs(up[0]) * abs(reg_scale)
-    upper_bound2 = abs(up[0]) * abs(reg_scale) * 2
-    step = (upper_bound1 + 1) ** (2 / (reg_max - 2))
-    left_values = [-((step) ** i) + 1 for i in range(reg_max // 2 - 1, 0, -1)]
-    right_values = [(step) ** i - 1 for i in range(1, reg_max // 2)]
-    return torch.cat(
-        [
-            -upper_bound2,
-            torch.cat(left_values),
-            torch.zeros_like(up[0][None]),
-            torch.cat(right_values),
-            upper_bound2,
-        ],
-        0,
-    )
-
-
-def distance2bbox(points: Tensor, distance: Tensor, reg_scale: Tensor) -> Tensor:
-    """Decodes edge-distances into bounding box coordinates.
-
-    Args:
-        points (Tensor): (B, N, 4) or (N, 4) format, representing [x, y, w, h],
-                        where (x, y) is the center and (w, h) are width and height.
-        distance (Tensor): (B, N, 4) or (N, 4), representing distances from the
-                        point to the left, top, right, and bottom boundaries.
-
-        reg_scale (float): Controls the curvature of the Weighting Function.
-
-    Returns:
-        Tensor: Bounding boxes in (N, 4) or (B, N, 4) format [cx, cy, w, h].
-    """
-    reg_scale = abs(reg_scale)
-    x1 = points[..., 0] - (0.5 * reg_scale + distance[..., 0]) * (points[..., 2] / reg_scale)
-    y1 = points[..., 1] - (0.5 * reg_scale + distance[..., 1]) * (points[..., 3] / reg_scale)
-    x2 = points[..., 0] + (0.5 * reg_scale + distance[..., 2]) * (points[..., 2] / reg_scale)
-    y2 = points[..., 1] + (0.5 * reg_scale + distance[..., 3]) * (points[..., 3] / reg_scale)
-
-    bboxes = torch.stack([x1, y1, x2, y2], -1)
-    return box_convert(bboxes, in_fmt="xyxy", out_fmt="cxcywh")
-
-
-def deformable_attention_core_func_v2(
-    value: Tensor,
-    value_spatial_shapes: list[list[int]],
-    sampling_locations: Tensor,
-    attention_weights: Tensor,
-    num_points_list: list[int],
-) -> Tensor:
-    """Deformable Attention Core Function V2 from RTDETRv2.
-
-    Args:
-        value (Tensor): [bs, value_length, n_head, c]
-        value_spatial_shapes (Tensor|List): [n_levels, 2]
-        value_level_start_index (Tensor|List): [n_levels]
-        sampling_locations (Tensor): [bs, query_length, n_head, n_levels * n_points, 2]
-        attention_weights (Tensor): [bs, query_length, n_head, n_levels * n_points]
-
-    Returns:
-        output (Tensor): [bs, Length_{query}, C]
-    """
-    bs, n_head, c, _ = value[0].shape
-    _, len_q, _, _, _ = sampling_locations.shape
-
-    # sampling_offsets [8, 480, 8, 12, 2]
-    sampling_grids = 2 * sampling_locations - 1
-
-    sampling_grids = sampling_grids.permute(0, 2, 1, 3, 4).flatten(0, 1)
-    sampling_locations_list = sampling_grids.split(num_points_list, dim=-2)
-
-    sampling_value_list = []
-    for level, (h, w) in enumerate(value_spatial_shapes):
-        value_l = value[level].reshape(bs * n_head, c, h, w)
-        sampling_grid_l = sampling_locations_list[level]
-        sampling_value_l = f.grid_sample(
-            value_l,
-            sampling_grid_l,
-            mode="bilinear",
-            padding_mode="zeros",
-            align_corners=False,
-        )
-
-        sampling_value_list.append(sampling_value_l)
-
-    attn_weights = attention_weights.permute(0, 2, 1, 3).reshape(bs * n_head, 1, len_q, sum(num_points_list))
-    weighted_sample_locs = torch.concat(sampling_value_list, dim=-1) * attn_weights
-    output = weighted_sample_locs.sum(-1).reshape(bs, n_head * c, len_q)
-
-    return output.permute(0, 2, 1)
-
-
-class MSDeformableAttentionV2(nn.Module):
-    """Multi-Scale Deformable Attention Module V2.
-
-    Note:
-        This is different from vanilla MSDeformableAttention where it uses
-        distinct number of sampling points for features at different scales.
-        Refer to RTDETRv2.
-
-    Args:
-        embed_dim (int): The number of expected features in the input.
-        num_heads (int): The number of heads in the multiheadattention models.
-        num_levels (int): The number of levels in MSDeformableAttention.
-        num_points_list (list[int]): Number of distinct points for each layer. Defaults to [3, 6, 3].
-    """
-
-    def __init__(
-        self,
-        embed_dim: int = 256,
-        num_heads: int = 8,
-        num_levels: int = 4,
-        num_points_list: list[int] = [3, 6, 3],  # noqa: B006
-    ) -> None:
-        super().__init__()
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.num_levels = num_levels
-        self.num_points_list = num_points_list
-
-        num_points_scale = [1 / n for n in num_points_list for _ in range(n)]
-        self.register_buffer(
-            "num_points_scale",
-            torch.tensor(num_points_scale, dtype=torch.float32),
-        )
-
-        self.total_points = num_heads * sum(num_points_list)
-        self.head_dim = embed_dim // num_heads
-
-        self.sampling_offsets = nn.Linear(embed_dim, self.total_points * 2)
-        self.attention_weights = nn.Linear(embed_dim, self.total_points)
-
-        self._reset_parameters()
-
-    def _reset_parameters(self) -> None:
-        """Reset parameters of the model."""
-        init.constant_(self.sampling_offsets.weight, 0)
-        thetas = torch.arange(self.num_heads, dtype=torch.float32) * (2.0 * math.pi / self.num_heads)
-        grid_init = torch.stack([thetas.cos(), thetas.sin()], -1)
-        grid_init = grid_init / grid_init.abs().max(-1, keepdim=True).values  # noqa: PD011
-        grid_init = grid_init.reshape(self.num_heads, 1, 2).tile([1, sum(self.num_points_list), 1])
-        scaling = torch.concat([torch.arange(1, n + 1) for n in self.num_points_list]).reshape(1, -1, 1)
-        grid_init *= scaling
-        self.sampling_offsets.bias.data[...] = grid_init.flatten()
-
-        # attention_weights
-        init.constant_(self.attention_weights.weight, 0)
-        init.constant_(self.attention_weights.bias, 0)
-
-    def forward(
-        self,
-        query: Tensor,
-        reference_points: Tensor,
-        value: Tensor,
-        value_spatial_shapes: list[list[int]],
-    ) -> Tensor:
-        """Forward function of MSDeformableAttention.
-
-        Args:
-            query (Tensor): [bs, query_length, C]
-            reference_points (Tensor): [bs, query_length, n_levels, 2], range in [0, 1], top-left (0,0),
-                bottom-right (1, 1), including padding area
-            value (Tensor): [bs, value_length, C]
-            value_spatial_shapes (List): [n_levels, 2], [(H_0, W_0), (H_1, W_1), ..., (H_{L-1}, W_{L-1})]
-
-        Returns:
-            output (Tensor): [bs, Length_{query}, C]
-        """
-        bs, len_q = query.shape[:2]
-
-        sampling_offsets = self.sampling_offsets(query).reshape(
-            bs,
-            len_q,
-            self.num_heads,
-            sum(self.num_points_list),
-            2,
-        )
-
-        attention_weights = self.attention_weights(query).reshape(
-            bs,
-            len_q,
-            self.num_heads,
-            sum(self.num_points_list),
-        )
-        attention_weights = f.softmax(attention_weights, dim=-1)
-
-        if reference_points.shape[-1] == 2:
-            offset_normalizer = torch.tensor(value_spatial_shapes)
-            offset_normalizer = offset_normalizer.flip([1]).reshape(1, 1, 1, self.num_levels, 1, 2)
-            sampling_locations = (
-                reference_points.reshape(
-                    bs,
-                    len_q,
-                    1,
-                    self.num_levels,
-                    1,
-                    2,
-                )
-                + sampling_offsets / offset_normalizer
-            )
-        elif reference_points.shape[-1] == 4:
-            num_points_scale = self.num_points_scale.to(query).unsqueeze(-1)
-            offset = sampling_offsets * num_points_scale * reference_points[:, :, None, :, 2:] * 0.5
-            sampling_locations = reference_points[:, :, None, :, :2] + offset
-        else:
-            msg = (f"Last dim of reference_points must be 2 or 4, but get {reference_points.shape[-1]} instead.",)
-            raise ValueError(msg)
-
-        return deformable_attention_core_func_v2(
-            value,
-            value_spatial_shapes,
-            sampling_locations,
-            attention_weights,
-            self.num_points_list,
-        )
 
 
 class TransformerDecoderLayer(nn.Module):
@@ -513,7 +283,7 @@ class TransformerDecoder(nn.Module):
         )
         self.lqe_layers = nn.ModuleList([copy.deepcopy(LQE(4, 64, 2, reg_max)) for _ in range(num_layers)])
         self.box_distance_weight = nn.Parameter(
-            weighting_function(self.reg_max, self.up, self.reg_scale),
+            dfine_weighting_function(self.reg_max, self.up, self.reg_scale),
             requires_grad=False,
         )
 
@@ -590,7 +360,7 @@ class TransformerDecoder(nn.Module):
 
             # Refine bounding box corners using FDR, integrating previous layer's corrections
             pred_corners = bbox_head[i](output + output_detach) + pred_corners_undetach
-            inter_ref_bbox = distance2bbox(
+            inter_ref_bbox = dfine_distance2bbox(
                 initial_ref_boxes,
                 integral(pred_corners, box_distance_weight),
                 reg_scale,
