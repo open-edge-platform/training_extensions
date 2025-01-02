@@ -245,6 +245,7 @@ select = [
     "RUF",  # Ruff-specific rules (`RUF`)
 ]
 
+# to be removed when updating to ruff>=2.0
 preview = true
 explicit-preview-rules = true
 extend-select = ["CPY001"]
