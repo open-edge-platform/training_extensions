@@ -243,7 +243,7 @@ class HPOConfigurator:
 
         if "prior_hyper_parameters" not in self._hpo_config:  # default hyper parameters are tried first
             self._hpo_config["prior_hyper_parameters"] = {
-                hp: get_using_dot_delimited_key(hp, self._engine) # noqa: SIM118
+                hp: get_using_dot_delimited_key(hp, self._engine)
                 for hp in self._hpo_config["search_space"].keys()  # noqa: SIM118
             }
 
