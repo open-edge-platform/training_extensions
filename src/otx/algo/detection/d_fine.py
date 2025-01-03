@@ -309,4 +309,12 @@ class DFine(ExplainableOTXDetModel):
     @property
     def _optimization_config(self) -> dict[str, Any]:
         """PTQ config for D-FINE."""
-        return {"model_type": "transformer"}
+        return {
+            "model_type": "transformer",
+            "advanced_parameters": {
+                "activations_range_estimator_params": {
+                    "min": {"statistics_type": "QUANTILE", "aggregator_type": "MIN", "quantile_outlier_prob": 1e-4},
+                    "max": {"statistics_type": "QUANTILE", "aggregator_type": "MAX", "quantile_outlier_prob": 1e-4},
+                },
+            },
+        }
