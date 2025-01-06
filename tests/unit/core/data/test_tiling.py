@@ -427,6 +427,8 @@ class TestOTXTiling:
         )  # updated from OTXDetectionModel to avoid NotImplementedError in _build_model
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
+        data_config["mem_cache_size"] = "0"
+        data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.DETECTION,
             **data_config,
@@ -447,6 +449,8 @@ class TestOTXTiling:
         )  # updated from OTXDetectionModel to avoid NotImplementedError in _build_model
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True, enable_adaptive_tiling=False)
+        data_config["mem_cache_size"] = "0"
+        data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.DETECTION,
             **data_config,
@@ -506,6 +510,8 @@ class TestOTXTiling:
         model = LiteHRNet(label_info=3, model_name="lite_hrnet_18")
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
+        data_config["mem_cache_size"] = "0"
+        data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.SEMANTIC_SEGMENTATION,
             **data_config,
