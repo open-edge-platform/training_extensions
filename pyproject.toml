@@ -33,7 +33,7 @@ dependencies = [
     "psutil==6.1.1", # Mem cache needs system checks
     "ftfy==6.3.1",
     "regex==2024.11.6",
-    "importlib_resources==6.4.5",
+    "importlib_resources==6.5.2",
     "docstring_parser==0.16", # CLI help-formatter
     "rich_argparse==1.6.0", # CLI help-formatter
     "einops==0.8.0",
