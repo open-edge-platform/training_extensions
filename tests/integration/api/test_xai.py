@@ -51,6 +51,10 @@ def test_forward_explain(
         # TODO(Eugene): maskdino not support yet.
         pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
 
+    if "dfine" in model_name:
+        # TODO(Eugene): D-Fine not support yet.
+        pytest.skip(f"There's issue with D-Fine: {model_name}. Skip for now.")
+
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
@@ -117,6 +121,10 @@ def test_predict_with_explain(
     if "maskdino" in model_name:
         # TODO(Eugene): maskdino not support yet.
         pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
+
+    if "dfine" in model_name:
+        # TODO(Eugene): D-Fine not support yet.
+        pytest.skip(f"There's issue with D-Fine: {model_name}. Skip for now.")
 
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)

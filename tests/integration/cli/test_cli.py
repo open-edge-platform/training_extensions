@@ -331,6 +331,10 @@ def test_otx_explain_e2e(
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
+    if "dfine" in model_name:
+        # TODO(Eugene): D-Fine not support yet.
+        pytest.skip(f"There's issue with D-Fine: {model_name}. Skip for now.")
+
     if "maskrcnn_r50_tv" in model_name:
         pytest.skip("MaskRCNN R50 Torchvision model doesn't support explain.")
     elif "rtdetr" in recipe:
