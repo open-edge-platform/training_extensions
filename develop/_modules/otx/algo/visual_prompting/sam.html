@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,44 +258,44 @@
 
 <span class="sd">&quot;&quot;&quot;Segment Anything model for the OTX visual prompting.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
-<span class="kn">import</span> <span class="nn">pickle</span>  <span class="c1"># nosec  B403   used pickle for dumping object</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">log</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>  <span class="c1"># nosec  B403   used pickle for dumping object</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torchvision.transforms.v2</span> <span class="k">as</span> <span class="nn">tvt_v2</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torchvision.tv_tensors</span> <span class="kn">import</span> <span class="n">BoundingBoxes</span><span class="p">,</span> <span class="n">Image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms.v2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tvt_v2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.tv_tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundingBoxes</span><span class="p">,</span> <span class="n">Image</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.visual_prompting.decoders</span> <span class="kn">import</span> <span class="n">SAMMaskDecoder</span>
-<span class="kn">from</span> <span class="nn">otx.algo.visual_prompting.encoders</span> <span class="kn">import</span> <span class="n">SAMImageEncoder</span><span class="p">,</span> <span class="n">SAMPromptEncoder</span>
-<span class="kn">from</span> <span class="nn">otx.algo.visual_prompting.losses.sam_loss</span> <span class="kn">import</span> <span class="n">SAMCriterion</span>
-<span class="kn">from</span> <span class="nn">otx.algo.visual_prompting.visual_prompters</span> <span class="kn">import</span> <span class="n">SegmentAnything</span><span class="p">,</span> <span class="n">ZeroShotSegmentAnything</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.base</span> <span class="kn">import</span> <span class="n">OTXBatchLossEntity</span><span class="p">,</span> <span class="n">Points</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.visual_prompting</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.visual_prompting.decoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAMMaskDecoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.visual_prompting.encoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAMImageEncoder</span><span class="p">,</span> <span class="n">SAMPromptEncoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.visual_prompting.losses.sam_loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAMCriterion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.visual_prompting.visual_prompters</span><span class="w"> </span><span class="kn">import</span> <span class="n">SegmentAnything</span><span class="p">,</span> <span class="n">ZeroShotSegmentAnything</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXBatchLossEntity</span><span class="p">,</span> <span class="n">Points</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.visual_prompting</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ZeroShotPromptType</span><span class="p">,</span>
     <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">,</span>
     <span class="n">ZeroShotVisualPromptingBatchPredEntity</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.metrics.visual_prompting</span> <span class="kn">import</span> <span class="n">VisualPromptingMetricCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.model.base</span> <span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.model.visual_prompting</span> <span class="kn">import</span> <span class="n">OTXVisualPromptingModel</span><span class="p">,</span> <span class="n">OTXZeroShotVisualPromptingModel</span>
-<span class="kn">from</span> <span class="nn">otx.core.schedulers</span> <span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.label</span> <span class="kn">import</span> <span class="n">LabelInfoTypes</span><span class="p">,</span> <span class="n">NullLabelInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics.visual_prompting</span><span class="w"> </span><span class="kn">import</span> <span class="n">VisualPromptingMetricCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.visual_prompting</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXVisualPromptingModel</span><span class="p">,</span> <span class="n">OTXZeroShotVisualPromptingModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span><span class="p">,</span> <span class="n">NullLabelInfo</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.cli</span> <span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
 
-    <span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
 
 
-<span class="k">class</span> <span class="nc">CommonSettingMixin</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CommonSettingMixin</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin class for common settings in SAM.</span>
 
 <span class="sd">    Attributes:</span>
@@ -312,7 +312,7 @@
         <span class="s2">&quot;vit_h&quot;</span><span class="p">:</span> <span class="s2">&quot;https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -366,7 +366,7 @@
                 <span class="sa">f</span><span class="s2">&quot;To manually load </span><span class="si">{</span><span class="n">load_from</span><span class="si">}</span><span class="s2">, try to set it to trainer.checkpoint.&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">freeze_networks</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze_networks</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">freeze_image_encoder</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">freeze_prompt_encoder</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -389,7 +389,7 @@
             <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">freeze_mask_decoder</span>
 
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">forward_for_tracing</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">image_embeddings</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">point_coords</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -432,12 +432,12 @@
 
 <div class="viewcode-block" id="SAM">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.SAM">[docs]</a>
-<span class="k">class</span> <span class="nc">SAM</span><span class="p">(</span><span class="n">CommonSettingMixin</span><span class="p">,</span> <span class="n">OTXVisualPromptingModel</span><span class="p">):</span>  <span class="c1"># type: ignore[misc]</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SAM</span><span class="p">(</span><span class="n">CommonSettingMixin</span><span class="p">,</span> <span class="n">OTXVisualPromptingModel</span><span class="p">):</span>  <span class="c1"># type: ignore[misc]</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX visual prompting model class for Segment Anything Model (SAM).&quot;&quot;&quot;</span>
 
     <span class="n">input_size_multiplier</span> <span class="o">=</span> <span class="mi">16</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">backbone_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tiny_vit&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_b&quot;</span><span class="p">],</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span> <span class="o">=</span> <span class="n">NullLabelInfo</span><span class="p">(),</span>
@@ -479,7 +479,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">load_from</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load_from</span><span class="p">[</span><span class="n">backbone_type</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">freeze_networks</span><span class="p">(</span><span class="n">freeze_image_encoder</span><span class="p">,</span> <span class="n">freeze_prompt_encoder</span><span class="p">,</span> <span class="n">freeze_mask_decoder</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">image_encoder</span> <span class="o">=</span> <span class="n">SAMImageEncoder</span><span class="p">(</span><span class="n">backbone_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backbone_type</span><span class="p">,</span> <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_size</span><span class="p">)</span>
         <span class="n">prompt_encoder</span> <span class="o">=</span> <span class="n">SAMPromptEncoder</span><span class="p">(</span>
             <span class="n">image_embedding_size</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_embedding_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_embedding_size</span><span class="p">),</span>
@@ -503,10 +503,10 @@
 
 <div class="viewcode-block" id="ZeroShotSAM">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM">[docs]</a>
-<span class="k">class</span> <span class="nc">ZeroShotSAM</span><span class="p">(</span><span class="n">CommonSettingMixin</span><span class="p">,</span> <span class="n">OTXZeroShotVisualPromptingModel</span><span class="p">):</span>  <span class="c1"># type: ignore[misc]</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ZeroShotSAM</span><span class="p">(</span><span class="n">CommonSettingMixin</span><span class="p">,</span> <span class="n">OTXZeroShotVisualPromptingModel</span><span class="p">):</span>  <span class="c1"># type: ignore[misc]</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Zero-Shot Visual Prompting model.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">backbone_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tiny_vit&quot;</span><span class="p">,</span> <span class="s2">&quot;vit_b&quot;</span><span class="p">],</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span> <span class="o">=</span> <span class="n">NullLabelInfo</span><span class="p">(),</span>
@@ -572,7 +572,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">initialize_reference_info</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">image_encoder</span> <span class="o">=</span> <span class="n">SAMImageEncoder</span><span class="p">(</span><span class="n">backbone_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">backbone_type</span><span class="p">,</span> <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_size</span><span class="p">)</span>
         <span class="n">prompt_encoder</span> <span class="o">=</span> <span class="n">SAMPromptEncoder</span><span class="p">(</span>
             <span class="n">image_embedding_size</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_embedding_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_embedding_size</span><span class="p">),</span>
@@ -596,7 +596,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.forward">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ZeroShotVisualPromptingBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
@@ -607,7 +607,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.learn">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.learn">[docs]</a>
-    <span class="k">def</span> <span class="nf">learn</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">learn</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">,</span>
         <span class="n">reference_feats</span><span class="p">:</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -629,7 +629,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.infer">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.infer">[docs]</a>
-    <span class="k">def</span> <span class="nf">infer</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">infer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">,</span>
         <span class="n">reference_feats</span><span class="p">:</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -649,7 +649,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_gather_prompts_with_labels</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_gather_prompts_with_labels</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ZeroShotPromptType</span><span class="p">]]]:</span>
@@ -667,7 +667,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.apply_image">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.apply_image">[docs]</a>
-    <span class="k">def</span> <span class="nf">apply_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Image</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Image</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess image to be used in the model.&quot;&quot;&quot;</span>
         <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
         <span class="n">target_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_preprocess_shape</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">target_length</span><span class="p">)</span>
@@ -676,7 +676,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.apply_coords">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.apply_coords">[docs]</a>
-    <span class="k">def</span> <span class="nf">apply_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">ori_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">ori_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess points to be used in the model.&quot;&quot;&quot;</span>
         <span class="n">old_h</span><span class="p">,</span> <span class="n">old_w</span> <span class="o">=</span> <span class="n">ori_shape</span>
         <span class="n">new_h</span><span class="p">,</span> <span class="n">new_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_preprocess_shape</span><span class="p">(</span><span class="n">ori_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ori_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">target_length</span><span class="p">)</span>
@@ -688,14 +688,14 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.apply_points">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.apply_points">[docs]</a>
-    <span class="k">def</span> <span class="nf">apply_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">Points</span><span class="p">,</span> <span class="n">ori_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Points</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">Points</span><span class="p">,</span> <span class="n">ori_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Points</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess points to be used in the model.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">apply_coords</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">ori_shape</span><span class="p">,</span> <span class="n">target_length</span><span class="p">),</span> <span class="n">canvas_size</span><span class="o">=</span><span class="p">(</span><span class="n">target_length</span><span class="p">,</span> <span class="n">target_length</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="ZeroShotSAM.apply_boxes">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.apply_boxes">[docs]</a>
-    <span class="k">def</span> <span class="nf">apply_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">:</span> <span class="n">BoundingBoxes</span><span class="p">,</span> <span class="n">ori_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BoundingBoxes</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">:</span> <span class="n">BoundingBoxes</span><span class="p">,</span> <span class="n">ori_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BoundingBoxes</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess boxes to be used in the model.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">BoundingBoxes</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">apply_coords</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">ori_shape</span><span class="p">,</span> <span class="n">target_length</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
@@ -706,7 +706,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.apply_prompts">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.apply_prompts">[docs]</a>
-    <span class="k">def</span> <span class="nf">apply_prompts</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_prompts</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">prompts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ZeroShotPromptType</span><span class="p">],</span>
         <span class="n">ori_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
@@ -726,7 +726,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.get_preprocess_shape">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.get_preprocess_shape">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_preprocess_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oldh</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">oldw</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_preprocess_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oldh</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">oldw</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get preprocess shape.&quot;&quot;&quot;</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="n">target_length</span> <span class="o">*</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">oldh</span><span class="p">,</span> <span class="n">oldw</span><span class="p">)</span>
         <span class="n">newh</span><span class="p">,</span> <span class="n">neww</span> <span class="o">=</span> <span class="n">oldh</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">oldw</span> <span class="o">*</span> <span class="n">scale</span>
@@ -737,7 +737,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.preprocess">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.preprocess">[docs]</a>
-    <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalize pixel values and pad to a square input.&quot;&quot;&quot;</span>
         <span class="c1"># Normalize colors</span>
         <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_mean</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_std</span>
@@ -749,7 +749,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.transforms">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.transforms">[docs]</a>
-    <span class="k">def</span> <span class="nf">transforms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transforms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ZeroShotVisualPromptingBatchDataEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transforms for ZeroShotVisualPromptingBatchDataEntity.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">entity</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
             <span class="n">images</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">apply_image</span><span class="p">(</span><span class="n">image</span><span class="p">))</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">],</span>
@@ -762,7 +762,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.initialize_reference_info">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.initialize_reference_info">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_reference_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initialize_reference_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize reference information.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;reference_feats&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prompt_encoder</span><span class="o">.</span><span class="n">embed_dim</span><span class="p">),</span> <span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;used_indices&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span> <span class="kc">False</span><span class="p">)</span></div>
@@ -770,7 +770,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.save_reference_info">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.save_reference_info">[docs]</a>
-    <span class="k">def</span> <span class="nf">save_reference_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_root_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_reference_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_root_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Save reference info.&quot;&quot;&quot;</span>
         <span class="n">reference_info</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;reference_feats&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_feats</span><span class="p">,</span>
@@ -790,7 +790,7 @@
 
 <div class="viewcode-block" id="ZeroShotSAM.load_reference_info">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.visual_prompting.html#otx.algo.visual_prompting.ZeroShotSAM.load_reference_info">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_reference_info</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_reference_info</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">default_root_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">,</span>

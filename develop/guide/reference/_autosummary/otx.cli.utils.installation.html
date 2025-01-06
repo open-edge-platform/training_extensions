@@ -25,7 +25,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=6232a102" />
@@ -570,7 +570,7 @@ Defaults to False.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">Requirement</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pkg_resources</span><span class="w"> </span><span class="kn">import</span> <span class="n">Requirement</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">req</span> <span class="o">=</span> <span class="s2">&quot;torch&gt;=1.13.0, &lt;=2.0.1&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">requirement</span> <span class="o">=</span> <span class="n">Requirement</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">requirement</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">requirement</span><span class="o">.</span><span class="n">specs</span>
@@ -799,7 +799,7 @@ and its corresponding torchvision requirement.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">Requirement</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pkg_resources</span><span class="w"> </span><span class="kn">import</span> <span class="n">Requirement</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">requriment</span> <span class="o">=</span> <span class="s2">&quot;torch&gt;=1.13.0&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_torch_install_args</span><span class="p">(</span><span class="n">requirement</span><span class="p">)</span>
 <span class="go">[&#39;--extra-index-url&#39;, &#39;https://download.pytorch.org/whl/cpu&#39;,</span>

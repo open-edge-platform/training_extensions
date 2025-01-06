@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -260,21 +260,21 @@
 <span class="sd">Reference : https://github.com/WongKinYiu/YOLO</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.detection.layers</span> <span class="kn">import</span> <span class="n">ELAN</span><span class="p">,</span> <span class="n">AConv</span><span class="p">,</span> <span class="n">ADown</span><span class="p">,</span> <span class="n">RepNCSPELAN</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.utils.utils</span> <span class="kn">import</span> <span class="n">auto_pad</span><span class="p">,</span> <span class="n">set_info_into_instance</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules</span> <span class="kn">import</span> <span class="n">Conv2dModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ELAN</span><span class="p">,</span> <span class="n">AConv</span><span class="p">,</span> <span class="n">ADown</span><span class="p">,</span> <span class="n">RepNCSPELAN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">auto_pad</span><span class="p">,</span> <span class="n">set_info_into_instance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv2dModule</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">GELANModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GELANModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generalized Efficient Layer Aggregation Network (GELAN) implementation for YOLOv9.</span>
 
 <span class="sd">    Args:</span>
@@ -285,7 +285,7 @@
 <span class="sd">        is_aconv_adown (str, optional): The type of downsampling module. Defaults to &quot;AConv&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">first_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">block_entry_cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
@@ -350,7 +350,7 @@
                 <span class="p">),</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass for GELAN.&quot;&quot;&quot;</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">x</span><span class="p">}</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">:</span>
@@ -367,7 +367,7 @@
 
 <div class="viewcode-block" id="GELAN">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.backbones.html#otx.algo.detection.backbones.GELAN">[docs]</a>
-<span class="k">class</span> <span class="nc">GELAN</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GELAN</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;GELAN factory for detection.&quot;&quot;&quot;</span>
 
     <span class="n">GELAN_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -396,7 +396,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GELANModule</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GELANModule</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for GELAN for v7 and v9.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">GELAN_CFG</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model type &#39;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&#39; is not supported&quot;</span>

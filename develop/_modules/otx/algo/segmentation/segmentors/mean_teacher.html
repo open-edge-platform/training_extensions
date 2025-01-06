@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -257,24 +257,24 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Base mean teacher algorithm for semi-supervised semantic segmentation learning.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.utils</span> <span class="kn">import</span> <span class="n">cut_mixer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">cut_mixer</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">otx.core.data.entity.base</span> <span class="kn">import</span> <span class="n">ImageInfo</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
 
 
 <div class="viewcode-block" id="MeanTeacher">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.segmentation.segmentors.html#otx.algo.segmentation.segmentors.MeanTeacher">[docs]</a>
-<span class="k">class</span> <span class="nc">MeanTeacher</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanTeacher</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;MeanTeacher for Semi-supervised learning.</span>
 
 <span class="sd">    Args:</span>
@@ -285,7 +285,7 @@
 <span class="sd">        filter_pixels_epochs (int, optional): filter pixels epochs. Defaults to 100.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">unsup_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -308,7 +308,7 @@
 
 <div class="viewcode-block" id="MeanTeacher.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.segmentation.segmentors.html#otx.algo.segmentation.segmentors.MeanTeacher.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">unlabeled_weak_images</span><span class="p">:</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -374,7 +374,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">img_metas</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_generate_pseudo_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ul_w_img</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">percent_unreliable</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_pseudo_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ul_w_img</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">percent_unreliable</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate pseudo labels from teacher model, apply filter loss method.</span>
 
 <span class="sd">        Args:</span>

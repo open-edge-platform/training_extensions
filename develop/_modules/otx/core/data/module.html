@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,44 +258,44 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;LightningDataModule extension for OTX.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">log</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">log</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">datumaro</span> <span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
-<span class="kn">from</span> <span class="nn">lightning</span> <span class="kn">import</span> <span class="n">LightningDataModule</span>
-<span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
-<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">RandomSampler</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningDataModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">RandomSampler</span>
 
-<span class="kn">from</span> <span class="nn">otx.core.config.data</span> <span class="kn">import</span> <span class="n">TileConfig</span><span class="p">,</span> <span class="n">UnlabeledDataConfig</span><span class="p">,</span> <span class="n">VisualPromptingConfig</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.dataset.tile</span> <span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.factory</span> <span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.mem_cache</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span><span class="p">,</span> <span class="n">UnlabeledDataConfig</span><span class="p">,</span> <span class="n">VisualPromptingConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.mem_cache</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">MemCacheHandlerSingleton</span><span class="p">,</span>
     <span class="n">parse_mem_cache_size_to_int</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.pre_filtering</span> <span class="kn">import</span> <span class="n">pre_filtering</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.utils</span> <span class="kn">import</span> <span class="n">adapt_input_size_to_dataset</span><span class="p">,</span> <span class="n">adapt_tile_config</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.device</span> <span class="kn">import</span> <span class="n">DeviceType</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.image</span> <span class="kn">import</span> <span class="n">ImageColorChannel</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.label</span> <span class="kn">import</span> <span class="n">LabelInfo</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.task</span> <span class="kn">import</span> <span class="n">OTXTaskType</span>
-<span class="kn">from</span> <span class="nn">otx.core.utils.instantiators</span> <span class="kn">import</span> <span class="n">instantiate_sampler</span>
-<span class="kn">from</span> <span class="nn">otx.core.utils.utils</span> <span class="kn">import</span> <span class="n">get_adaptive_num_workers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.pre_filtering</span><span class="w"> </span><span class="kn">import</span> <span class="n">pre_filtering</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_input_size_to_dataset</span><span class="p">,</span> <span class="n">adapt_tile_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageColorChannel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.instantiators</span><span class="w"> </span><span class="kn">import</span> <span class="n">instantiate_sampler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adaptive_num_workers</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.utilities.parsing</span> <span class="kn">import</span> <span class="n">AttributeDict</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AttributeDict</span>
 
-    <span class="kn">from</span> <span class="nn">otx.core.config.data</span> <span class="kn">import</span> <span class="n">SubsetConfig</span>
-    <span class="kn">from</span> <span class="nn">otx.core.data.dataset.base</span> <span class="kn">import</span> <span class="n">OTXDataset</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubsetConfig</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
 
 
 <div class="viewcode-block" id="OTXDataModule">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule">[docs]</a>
-<span class="k">class</span> <span class="nc">OTXDataModule</span><span class="p">(</span><span class="n">LightningDataModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXDataModule</span><span class="p">(</span><span class="n">LightningDataModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;LightningDataModule extension for OTX pipeline.</span>
 
 <span class="sd">    Args:</span>
@@ -311,7 +311,7 @@
 <span class="sd">            a model requries multiple of specific value as input_size. Defaults to 1.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="p">,</span>
         <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -514,11 +514,11 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">label_infos</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_is_meta_info_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_infos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LabelInfo</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_meta_info_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_infos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LabelInfo</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether there are mismatches in the metainfo for the all subsets.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">label_info</span> <span class="o">==</span> <span class="n">label_infos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">label_info</span> <span class="ow">in</span> <span class="n">label_infos</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_get_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataset</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataset</span><span class="p">:</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">dataset</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">subset</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Dataset has no &#39;</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&#39;. Available subsets = </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -526,7 +526,7 @@
 
 <div class="viewcode-block" id="OTXDataModule.train_dataloader">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.train_dataloader">[docs]</a>
-    <span class="k">def</span> <span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get train dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">subset_name</span><span class="p">)</span>
@@ -557,7 +557,7 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">unlabeled_dataloader</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_dataloader</span><span class="p">())</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Utilize the CombinedLoader provided by Lightning to bundle multiple dataloaders.</span>
             <span class="c1"># https://lightning.ai/docs/pytorch/stable/data/iterables.html</span>
-            <span class="kn">from</span> <span class="nn">lightning.pytorch.utilities</span> <span class="kn">import</span> <span class="n">CombinedLoader</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">CombinedLoader</span>
 
             <span class="n">iterables</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;labeled&quot;</span><span class="p">:</span> <span class="n">dataloader</span><span class="p">,</span>
@@ -574,7 +574,7 @@
 
 <div class="viewcode-block" id="OTXDataModule.val_dataloader">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.val_dataloader">[docs]</a>
-    <span class="k">def</span> <span class="nf">val_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">val_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get val dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_subset</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">subset_name</span><span class="p">)</span>
@@ -592,7 +592,7 @@
 
 <div class="viewcode-block" id="OTXDataModule.test_dataloader">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.test_dataloader">[docs]</a>
-    <span class="k">def</span> <span class="nf">test_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">subset_name</span><span class="p">)</span>
@@ -610,7 +610,7 @@
 
 <div class="viewcode-block" id="OTXDataModule.predict_dataloader">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.predict_dataloader">[docs]</a>
-    <span class="k">def</span> <span class="nf">predict_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">subset_name</span><span class="p">)</span>
@@ -628,7 +628,7 @@
 
 <div class="viewcode-block" id="OTXDataModule.unlabeled_dataloader">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.unlabeled_dataloader">[docs]</a>
-    <span class="k">def</span> <span class="nf">unlabeled_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unlabeled_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dictionary of unlabeled dataloaders.</span>
 
 <span class="sd">        The method creates and returns dataloaders for unlabeled datasets based on the configuration settings.</span>
@@ -688,20 +688,20 @@
 
 <div class="viewcode-block" id="OTXDataModule.setup">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.setup">[docs]</a>
-    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup for each stage.&quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="OTXDataModule.teardown">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.teardown">[docs]</a>
-    <span class="k">def</span> <span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Teardown for each stage.&quot;&quot;&quot;</span></div>
 
         <span class="c1"># clean up after fit or test</span>
         <span class="c1"># called on every process in DDP</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">hparams_initial</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AttributeDict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hparams_initial</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AttributeDict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The collection of hyperparameters saved with `save_hyperparameters()`. It is read-only.</span>
 
 <span class="sd">        The reason why we override is that we have some custom resolvers for `DictConfig`.</span>
@@ -716,7 +716,7 @@
 
         <span class="k">return</span> <span class="n">hp</span>
 
-    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Re-initialize object when unpickled.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>

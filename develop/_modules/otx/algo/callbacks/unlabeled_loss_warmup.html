@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,15 +258,15 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span> <span class="nn">lightning</span> <span class="kn">import</span> <span class="n">Callback</span><span class="p">,</span> <span class="n">LightningModule</span><span class="p">,</span> <span class="n">Trainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span><span class="p">,</span> <span class="n">LightningModule</span><span class="p">,</span> <span class="n">Trainer</span>
 
 
 <div class="viewcode-block" id="UnlabeledLossWarmUpCallback">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.callbacks.unlabeled_loss_warmup.html#otx.algo.callbacks.unlabeled_loss_warmup.UnlabeledLossWarmUpCallback">[docs]</a>
-<span class="k">class</span> <span class="nc">UnlabeledLossWarmUpCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UnlabeledLossWarmUpCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Hook for SemiSL for classification.</span>
 
 <span class="sd">    This hook includes unlabeled warm-up loss coefficient (default: True):</span>
@@ -277,7 +277,7 @@
 <span class="sd">        warmup_steps_ratio (float): Ratio of warm-up steps to total steps (default: 0.2).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warmup_steps_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warmup_steps_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps_ratio</span> <span class="o">=</span> <span class="n">warmup_steps_ratio</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_steps</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_coef</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span>
@@ -285,7 +285,7 @@
 
 <div class="viewcode-block" id="UnlabeledLossWarmUpCallback.on_train_batch_start">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.callbacks.unlabeled_loss_warmup.html#otx.algo.callbacks.unlabeled_loss_warmup.UnlabeledLossWarmUpCallback.on_train_batch_start">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_train_batch_start</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_batch_start</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">trainer</span><span class="p">:</span> <span class="n">Trainer</span><span class="p">,</span>
         <span class="n">pl_module</span><span class="p">:</span> <span class="n">LightningModule</span><span class="p">,</span>

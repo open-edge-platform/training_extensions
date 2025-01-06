@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,22 +258,22 @@
 
 <span class="sd">&quot;&quot;&quot;Callback for early stopping with warmup possibility.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">from</span> <span class="nn">lightning.pytorch.callbacks.early_stopping</span> <span class="kn">import</span> <span class="n">EarlyStopping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.callbacks.early_stopping</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">lightning.pytorch</span> <span class="k">as</span> <span class="nn">pl</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">lightning.pytorch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
 
 
 <div class="viewcode-block" id="EarlyStoppingWithWarmup">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.callbacks.adaptive_early_stopping.html#otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup">[docs]</a>
-<span class="k">class</span> <span class="nc">EarlyStoppingWithWarmup</span><span class="p">(</span><span class="n">EarlyStopping</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EarlyStoppingWithWarmup</span><span class="p">(</span><span class="n">EarlyStopping</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;EarlyStoppingWithWarmup callback.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">monitor</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">min_delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
@@ -334,7 +334,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">warmup_iters</span> <span class="o">=</span> <span class="n">warmup_iters</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span> <span class="o">=</span> <span class="n">warmup_epochs</span>
 
-    <span class="k">def</span> <span class="nf">_should_skip_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainer</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Trainer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_should_skip_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainer</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Trainer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="n">warmup_threshold</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span> <span class="o">*</span> <span class="n">trainer</span><span class="o">.</span><span class="n">num_training_batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_iters</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_should_skip_check</span><span class="p">(</span><span class="n">trainer</span><span class="p">)</span> <span class="ow">or</span> <span class="n">trainer</span><span class="o">.</span><span class="n">global_step</span> <span class="o">&lt;</span> <span class="n">warmup_threshold</span></div>
 

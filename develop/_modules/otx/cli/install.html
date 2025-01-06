@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=6232a102" />
@@ -258,18 +258,18 @@
 
 <span class="sd">&quot;&quot;&quot;OTX CLI Installation.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">from</span> <span class="nn">jsonargparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
-<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">Requirement</span>
-<span class="kn">from</span> <span class="nn">rich.console</span> <span class="kn">import</span> <span class="n">Console</span>
-<span class="kn">from</span> <span class="nn">rich.logging</span> <span class="kn">import</span> <span class="n">RichHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pkg_resources</span><span class="w"> </span><span class="kn">import</span> <span class="n">Requirement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Console</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">RichHandler</span>
 
-<span class="kn">from</span> <span class="nn">otx.cli.utils.installation</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.cli.utils.installation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_mmcv_install_args</span><span class="p">,</span>
     <span class="n">get_requirements</span><span class="p">,</span>
     <span class="n">get_torch_install_args</span><span class="p">,</span>
@@ -279,7 +279,7 @@
 <span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">jsonargparse._actions</span> <span class="kn">import</span> <span class="n">_ActionSubCommands</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse._actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">_ActionSubCommands</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;pip&quot;</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>  <span class="c1"># setLevel: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET</span>
@@ -294,7 +294,7 @@
 
 <div class="viewcode-block" id="add_install_parser">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.cli.install.html#otx.cli.install.add_install_parser">[docs]</a>
-<span class="k">def</span> <span class="nf">add_install_parser</span><span class="p">(</span><span class="n">subcommands_action</span><span class="p">:</span> <span class="n">_ActionSubCommands</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_install_parser</span><span class="p">(</span><span class="n">subcommands_action</span><span class="p">:</span> <span class="n">_ActionSubCommands</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add subparser for install command.</span>
 
 <span class="sd">    Args:</span>
@@ -333,7 +333,7 @@
 
 <div class="viewcode-block" id="otx_install">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.cli.install.html#otx.cli.install.otx_install">[docs]</a>
-<span class="k">def</span> <span class="nf">otx_install</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">otx_install</span><span class="p">(</span>
     <span class="n">option</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">do_not_install_torch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -354,7 +354,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        int: Status code of the pip install command.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pip._internal.commands</span> <span class="kn">import</span> <span class="n">create_command</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pip._internal.commands</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_command</span>
 
     <span class="n">requirements_dict</span> <span class="o">=</span> <span class="n">get_requirements</span><span class="p">(</span><span class="s2">&quot;otx&quot;</span><span class="p">)</span>
     <span class="c1"># Add base and openvino requirements.</span>

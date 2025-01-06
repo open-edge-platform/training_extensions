@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -264,32 +264,32 @@
 <span class="c1"># This is because the output will be assigned to OTXBatchPredEntity.saliency_map,</span>
 <span class="c1"># but this has `list[np.ndarray | torch.Tensor]` typing, so that it makes a mismatch.</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">datumaro</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
-<span class="kn">from</span> <span class="nn">otx.core.config.explain</span> <span class="kn">import</span> <span class="n">ExplainConfig</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.classification</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExplainConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
     <span class="n">MulticlassClsBatchPredEntity</span><span class="p">,</span>
     <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.detection</span> <span class="kn">import</span> <span class="n">DetBatchPredEntity</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.instance_segmentation</span> <span class="kn">import</span> <span class="n">InstanceSegBatchPredEntity</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.explain</span> <span class="kn">import</span> <span class="n">TargetExplainGroup</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.label</span> <span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchPredEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.instance_segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegBatchPredEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">TargetExplainGroup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.utilities.types</span> <span class="kn">import</span> <span class="n">EVAL_DATALOADERS</span>
-    <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">LongTensor</span><span class="p">,</span> <span class="n">Tensor</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">EVAL_DATALOADERS</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">LongTensor</span><span class="p">,</span> <span class="n">Tensor</span>
 
-    <span class="kn">from</span> <span class="nn">otx.core.data.module</span> <span class="kn">import</span> <span class="n">OTXDataModule</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
 <span class="n">ProcessedSaliencyMaps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span>
 <span class="n">OTXBatchPredEntitiesSupportXAI</span> <span class="o">=</span> <span class="p">(</span>
@@ -303,14 +303,14 @@
 
 <div class="viewcode-block" id="process_saliency_maps_in_pred_entity">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity">[docs]</a>
-<span class="k">def</span> <span class="nf">process_saliency_maps_in_pred_entity</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_saliency_maps_in_pred_entity</span><span class="p">(</span>
     <span class="n">predict_result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">],</span>
     <span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span><span class="p">,</span>
     <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Process saliency maps in PredEntity.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_process</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process</span><span class="p">(</span>
         <span class="n">predict_result_per_batch</span><span class="p">:</span> <span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">:</span>
@@ -357,7 +357,7 @@
 
 <div class="viewcode-block" id="process_saliency_maps">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.process_saliency_maps">[docs]</a>
-<span class="k">def</span> <span class="nf">process_saliency_maps</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_saliency_maps</span><span class="p">(</span>
     <span class="n">saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
     <span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span><span class="p">,</span>
     <span class="n">pred_labels</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
@@ -391,7 +391,7 @@
 
 <div class="viewcode-block" id="convert_maps_to_dict_all">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.convert_maps_to_dict_all">[docs]</a>
-<span class="k">def</span> <span class="nf">convert_maps_to_dict_all</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_maps_to_dict_all</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert salincy maps to dict for TargetExplainGroup.ALL.&quot;&quot;&quot;</span>
     <span class="n">processed_saliency_maps</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">maps_per_image</span> <span class="ow">in</span> <span class="n">saliency_map</span><span class="p">:</span>
@@ -411,7 +411,7 @@
 
 <div class="viewcode-block" id="convert_maps_to_dict_predictions">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.convert_maps_to_dict_predictions">[docs]</a>
-<span class="k">def</span> <span class="nf">convert_maps_to_dict_predictions</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_maps_to_dict_predictions</span><span class="p">(</span>
     <span class="n">saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
     <span class="n">pred_labels</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]:</span>
@@ -432,7 +432,7 @@
 
 <div class="viewcode-block" id="convert_maps_to_dict_image">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.convert_maps_to_dict_image">[docs]</a>
-<span class="k">def</span> <span class="nf">convert_maps_to_dict_image</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_maps_to_dict_image</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert salincy maps to dict for TargetExplainGroup.IMAGE.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">saliency_map</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Shape mismatch.&quot;</span>
@@ -443,7 +443,7 @@
 
 <div class="viewcode-block" id="postprocess">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.postprocess">[docs]</a>
-<span class="k">def</span> <span class="nf">postprocess</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">output_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">postprocess</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">output_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Postprocess single saliency map.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">saliency_map</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Shape mismatch.&quot;</span>
@@ -458,7 +458,7 @@
 
 <div class="viewcode-block" id="dump_saliency_maps">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.dump_saliency_maps">[docs]</a>
-<span class="k">def</span> <span class="nf">dump_saliency_maps</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dump_saliency_maps</span><span class="p">(</span>
     <span class="n">predict_result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">],</span>
     <span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span><span class="p">,</span>
     <span class="n">datamodule</span><span class="p">:</span> <span class="n">EVAL_DATALOADERS</span> <span class="o">|</span> <span class="n">OTXDataModule</span><span class="p">,</span>
@@ -493,7 +493,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_image_data_name</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_image_data_name</span><span class="p">(</span>
     <span class="n">datamodule</span><span class="p">:</span> <span class="n">EVAL_DATALOADERS</span> <span class="o">|</span> <span class="n">OTXDataModule</span><span class="p">,</span>
     <span class="n">img_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">subset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
@@ -506,13 +506,13 @@
     <span class="k">return</span> <span class="n">img_data</span><span class="p">,</span> <span class="n">image_save_name</span>
 
 
-<span class="k">def</span> <span class="nf">_get_overlay</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">s_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_overlay</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">s_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="n">overlay</span> <span class="o">=</span> <span class="n">img</span> <span class="o">*</span> <span class="n">weight</span> <span class="o">+</span> <span class="n">s_map</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">weight</span><span class="p">)</span>
     <span class="n">overlay</span><span class="p">[</span><span class="n">overlay</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">]</span> <span class="o">=</span> <span class="mi">255</span>
     <span class="k">return</span> <span class="n">overlay</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_crop_padded_map</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_crop_padded_map</span><span class="p">(</span>
     <span class="n">batch_saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]],</span>
     <span class="n">image_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
     <span class="n">paddings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
@@ -534,7 +534,7 @@
     <span class="k">return</span> <span class="n">batch_saliency_map</span>
 
 
-<span class="k">def</span> <span class="nf">_convert_labels_from_hcls_format</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_labels_from_hcls_format</span><span class="p">(</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LongTensor</span><span class="p">],</span>
     <span class="n">scores</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
     <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span><span class="p">,</span>
@@ -563,7 +563,7 @@
 
 <div class="viewcode-block" id="set_crop_padded_map_flag">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.set_crop_padded_map_flag">[docs]</a>
-<span class="k">def</span> <span class="nf">set_crop_padded_map_flag</span><span class="p">(</span><span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span><span class="p">,</span> <span class="n">datamodule</span><span class="p">:</span> <span class="n">OTXDataModule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExplainConfig</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_crop_padded_map_flag</span><span class="p">(</span><span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span><span class="p">,</span> <span class="n">datamodule</span><span class="p">:</span> <span class="n">OTXDataModule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExplainConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;If resize with keep_ratio = True was used, set crop_padded_map flag to True.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">test_subset</span><span class="o">.</span><span class="n">transforms</span><span class="p">:</span>
         <span class="n">tranf_name</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>

@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -280,14 +280,14 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Pylogger for OTX logger.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">lightning.pytorch.utilities</span> <span class="kn">import</span> <span class="n">rank_zero_only</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">rank_zero_only</span>
 
 
 <div class="viewcode-block" id="get_pylogger">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.pylogger.html#otx.core.utils.pylogger.get_pylogger">[docs]</a>
-<span class="k">def</span> <span class="nf">get_pylogger</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="vm">__name__</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_pylogger</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="vm">__name__</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializes a multi-GPU-friendly python command line logger.</span>
 
 <span class="sd">    :param name: The name of the logger, defaults to ``__name__``.</span>

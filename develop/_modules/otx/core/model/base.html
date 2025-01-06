@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -259,77 +259,77 @@
 
 <span class="c1"># mypy: disable-error-code=&quot;arg-type&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">contextlib</span>
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">openvino</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">datumaro</span> <span class="kn">import</span> <span class="n">LabelCategories</span>
-<span class="kn">from</span> <span class="nn">jsonargparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
-<span class="kn">from</span> <span class="nn">lightning</span> <span class="kn">import</span> <span class="n">LightningModule</span><span class="p">,</span> <span class="n">Trainer</span>
-<span class="kn">from</span> <span class="nn">model_api.models</span> <span class="kn">import</span> <span class="n">Model</span>
-<span class="kn">from</span> <span class="nn">model_api.tilers</span> <span class="kn">import</span> <span class="n">Tiler</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">ConstantLR</span>
-<span class="kn">from</span> <span class="nn">torch.optim.sgd</span> <span class="kn">import</span> <span class="n">SGD</span>
-<span class="kn">from</span> <span class="nn">torchmetrics</span> <span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">openvino</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelCategories</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningModule</span><span class="p">,</span> <span class="n">Trainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_api.tilers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tiler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstantLR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.sgd</span><span class="w"> </span><span class="kn">import</span> <span class="n">SGD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricCollection</span>
 
-<span class="kn">from</span> <span class="nn">otx</span> <span class="kn">import</span> <span class="n">__version__</span>
-<span class="kn">from</span> <span class="nn">otx.core.config.data</span> <span class="kn">import</span> <span class="n">TileConfig</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.base</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ImageInfo</span><span class="p">,</span>
     <span class="n">OTXBatchDataEntity</span><span class="p">,</span>
     <span class="n">OTXBatchLossEntity</span><span class="p">,</span>
     <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span>
     <span class="n">T_OTXBatchPredEntity</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.tile</span> <span class="kn">import</span> <span class="n">OTXTileBatchDataEntity</span>
-<span class="kn">from</span> <span class="nn">otx.core.exporter.native</span> <span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
-<span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricInput</span><span class="p">,</span> <span class="n">NullMetricCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.optimizer.callable</span> <span class="kn">import</span> <span class="n">OptimizerCallableSupportHPO</span>
-<span class="kn">from</span> <span class="nn">otx.core.schedulers</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileBatchDataEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span><span class="p">,</span> <span class="n">NullMetricCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.optimizer.callable</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerCallableSupportHPO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearWarmupScheduler</span><span class="p">,</span>
     <span class="n">LinearWarmupSchedulerCallable</span><span class="p">,</span>
     <span class="n">LRSchedulerListCallable</span><span class="p">,</span>
     <span class="n">SchedulerCallableSupportHPO</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.export</span> <span class="kn">import</span> <span class="n">OTXExportFormatType</span><span class="p">,</span> <span class="n">TaskLevelExportParameters</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.label</span> <span class="kn">import</span> <span class="n">LabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span><span class="p">,</span> <span class="n">NullLabelInfo</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.precision</span> <span class="kn">import</span> <span class="n">OTXPrecisionType</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.task</span> <span class="kn">import</span> <span class="n">OTXTrainType</span>
-<span class="kn">from</span> <span class="nn">otx.core.utils.build</span> <span class="kn">import</span> <span class="n">get_default_num_async_infer_requests</span>
-<span class="kn">from</span> <span class="nn">otx.core.utils.miscellaneous</span> <span class="kn">import</span> <span class="n">ensure_callable</span>
-<span class="kn">from</span> <span class="nn">otx.core.utils.utils</span> <span class="kn">import</span> <span class="n">is_ckpt_for_finetuning</span><span class="p">,</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">,</span> <span class="n">remove_state_dict_prefix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXExportFormatType</span><span class="p">,</span> <span class="n">TaskLevelExportParameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span><span class="p">,</span> <span class="n">NullLabelInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPrecisionType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTrainType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.build</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_num_async_infer_requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.miscellaneous</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_ckpt_for_finetuning</span><span class="p">,</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">,</span> <span class="n">remove_state_dict_prefix</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.cli</span> <span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.utilities.types</span> <span class="kn">import</span> <span class="n">LRSchedulerTypeUnion</span><span class="p">,</span> <span class="n">OptimizerLRScheduler</span>
-    <span class="kn">from</span> <span class="nn">model_api.adapters</span> <span class="kn">import</span> <span class="n">OpenvinoAdapter</span>
-    <span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">LRScheduler</span>
-    <span class="kn">from</span> <span class="nn">torch.optim.optimizer</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">params_t</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerTypeUnion</span><span class="p">,</span> <span class="n">OptimizerLRScheduler</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenvinoAdapter</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRScheduler</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">params_t</span>
 
-    <span class="kn">from</span> <span class="nn">otx.core.data.module</span> <span class="kn">import</span> <span class="n">OTXDataModule</span>
-    <span class="kn">from</span> <span class="nn">otx.core.exporter.base</span> <span class="kn">import</span> <span class="n">OTXModelExporter</span>
-    <span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">_default_optimizer_callable</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">params_t</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optimizer</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_optimizer_callable</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">params_t</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optimizer</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">SGD</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_default_scheduler_callable</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_scheduler_callable</span><span class="p">(</span>
     <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optimizer</span><span class="p">,</span>
     <span class="n">interval</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;epoch&quot;</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -346,7 +346,7 @@
 
 <div class="viewcode-block" id="OTXModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OTXModel</span><span class="p">(</span><span class="n">LightningModule</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXModel</span><span class="p">(</span><span class="n">LightningModule</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the models used in OTX.</span>
 
 <span class="sd">    Args:</span>
@@ -362,7 +362,7 @@
     <span class="n">_OPTIMIZED_MODEL_BASE_NAME</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;optimized_model&quot;</span>
     <span class="n">input_size_multiplier</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -399,7 +399,7 @@
 
 <div class="viewcode-block" id="OTXModel.training_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.training_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">training_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">training_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Step for model training.&quot;&quot;&quot;</span>
         <span class="n">train_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">batch</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">train_loss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -441,7 +441,7 @@
 
 <div class="viewcode-block" id="OTXModel.validation_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.validation_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">validation_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validation_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a single validation step on a batch of data from the validation set.</span>
 
 <span class="sd">        :param batch: A batch of data (a tuple) containing the input tensor of images and target</span>
@@ -469,7 +469,7 @@
 
 <div class="viewcode-block" id="OTXModel.test_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.test_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a single test step on a batch of data from the test set.</span>
 
 <span class="sd">        :param batch: A batch of data (a tuple) containing the input tensor of images and target</span>
@@ -497,7 +497,7 @@
 
 <div class="viewcode-block" id="OTXModel.predict_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.predict_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">predict_step</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span>
         <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -517,49 +517,49 @@
 
 <div class="viewcode-block" id="OTXModel.on_validation_start">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_validation_start">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_validation_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_validation_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Called at the beginning of validation.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">configure_metric</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.on_test_start">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_test_start">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_test_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_test_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Called at the beginning of testing.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">configure_metric</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.on_validation_epoch_start">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_validation_epoch_start">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_validation_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_validation_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback triggered when the validation epoch starts.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.on_test_epoch_start">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_test_epoch_start">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_test_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_test_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback triggered when the test epoch starts.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.on_validation_epoch_end">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_validation_epoch_end">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_validation_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_validation_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback triggered when the validation epoch ends.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.on_test_epoch_end">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_test_epoch_end">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_test_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_test_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback triggered when the test epoch ends.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.setup">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.setup">[docs]</a>
-    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Lightning hook that is called at the beginning of fit (train + validate), validate, test, or predict.</span>
 
 <span class="sd">        This is a good hook when you need to build models dynamically or adjust something about</span>
@@ -582,7 +582,7 @@
 
 <div class="viewcode-block" id="OTXModel.configure_optimizers">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.configure_optimizers">[docs]</a>
-    <span class="k">def</span> <span class="nf">configure_optimizers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizerLRScheduler</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configure_optimizers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizerLRScheduler</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure an optimizer and learning-rate schedulers.</span>
 
 <span class="sd">        Configure an optimizer and learning-rate schedulers</span>
@@ -597,7 +597,7 @@
         <span class="n">optimizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
         <span class="n">schedulers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">ensure_list</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">ensure_list</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
             <span class="k">return</span> <span class="n">item</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">item</span><span class="p">]</span>
 
         <span class="n">lr_scheduler_configs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -614,7 +614,7 @@
 
 <div class="viewcode-block" id="OTXModel.configure_metric">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.configure_metric">[docs]</a>
-    <span class="k">def</span> <span class="nf">configure_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configure_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure the metric.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_callable</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_callable</span><span class="p">)</span>
@@ -629,12 +629,12 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span> <span class="o">|</span> <span class="n">MetricCollection</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Metric</span> <span class="o">|</span> <span class="n">MetricCollection</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Metric module for this OTX model.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span>
@@ -642,7 +642,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert given inputs to a Python dictionary for the metric computation.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="k">def</span> <span class="nf">_log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meter</span><span class="p">:</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">compute_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meter</span><span class="p">:</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">compute_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">meter</span><span class="o">.</span><span class="n">compute</span><span class="p">)</span>
         <span class="n">filtered_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">compute_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">removed_kwargs</span> <span class="o">:=</span> <span class="nb">set</span><span class="p">(</span><span class="n">compute_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">filtered_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
@@ -670,7 +670,7 @@
 
 <div class="viewcode-block" id="OTXModel.on_save_checkpoint">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_save_checkpoint">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_save_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_save_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback on saving checkpoint.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">torch_compile</span><span class="p">:</span>
             <span class="c1"># If torch_compile is True, a prefix key named _orig_mod. is added to the state_dict. Remove this.</span>
@@ -685,7 +685,7 @@
 
 <div class="viewcode-block" id="OTXModel.on_load_checkpoint">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.on_load_checkpoint">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_load_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_load_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback on loading checkpoint.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_load_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
 
@@ -698,7 +698,7 @@
 
 <div class="viewcode-block" id="OTXModel.load_state_dict_incrementally">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.load_state_dict_incrementally">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_state_dict_incrementally</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict_incrementally</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load state dict incrementally.&quot;&quot;&quot;</span>
         <span class="n">ckpt_label_info</span><span class="p">:</span> <span class="n">LabelInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label_info&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ckpt_label_info_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span>
@@ -737,7 +737,7 @@
 
 <div class="viewcode-block" id="OTXModel.load_state_dict">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.load_state_dict">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load state dictionary from checkpoint state dictionary.</span>
 
 <span class="sd">        It successfully loads the checkpoint from OTX v1.x and for finetune and for resume.</span>
@@ -759,7 +759,7 @@
 
 <div class="viewcode-block" id="OTXModel.load_from_otx_v1_ckpt">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
@@ -767,22 +767,22 @@
 <div class="viewcode-block" id="OTXModel.get_ckpt_label_info_v1">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.get_ckpt_label_info_v1">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_ckpt_label_info_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_ckpt_label_info_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate label info from OTX v1 checkpoint.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">LabelInfo</span><span class="o">.</span><span class="n">from_dm_label_groups</span><span class="p">(</span><span class="n">LabelCategories</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">ckpt</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span></div>
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get this model label information.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_info</span>
 
     <span class="nd">@label_info</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set this model label information.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_label_info</span><span class="p">(</span><span class="n">label_info</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_set_label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Actual implementation for set this model label information.</span>
 
 <span class="sd">        Derived classes should override this function.</span>
@@ -813,29 +813,29 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_label_info</span> <span class="o">=</span> <span class="n">new_label_info</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns model&#39;s number of classes. Can be redefined at the model&#39;s level.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">num_classes</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">explain_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">explain_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get model explain mode.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explain_mode</span>
 
     <span class="nd">@explain_mode</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">explain_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">explain_mode</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">explain_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">explain_mode</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set model explain mode.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_explain_mode</span> <span class="o">=</span> <span class="n">explain_mode</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a PyTorch model for this class.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize OTX input batch data entity if needed for your model.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span>
@@ -845,7 +845,7 @@
 
 <div class="viewcode-block" id="OTXModel.forward">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
@@ -869,7 +869,7 @@
 
 <div class="viewcode-block" id="OTXModel.forward_explain">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.forward_explain">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward explain function.&quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Derived model class should implement this class to support the explain pipeline.&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
@@ -877,7 +877,7 @@
 
 <div class="viewcode-block" id="OTXModel.forward_for_tracing">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.forward_for_tracing">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function used for the model tracing during model exportation.&quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;Derived model class should implement this class to support the export pipeline. &quot;</span>
@@ -888,14 +888,14 @@
 
 <div class="viewcode-block" id="OTXModel.get_explain_fn">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.get_explain_fn">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_explain_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_explain_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns explain function.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.forward_tiles">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.forward_tiles">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_tiles</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_tiles</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
@@ -905,7 +905,7 @@
 
 <div class="viewcode-block" id="OTXModel.register_load_state_dict_pre_hook">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.register_load_state_dict_pre_hook">[docs]</a>
-    <span class="k">def</span> <span class="nf">register_load_state_dict_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ckpt_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_load_state_dict_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ckpt_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Register load_state_dict_pre_hook.</span>
 
 <span class="sd">        Args:</span>
@@ -919,7 +919,7 @@
 
 <div class="viewcode-block" id="OTXModel.load_state_dict_pre_hook">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.load_state_dict_pre_hook">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_state_dict_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify input state_dict according to class name matching before weight loading.&quot;&quot;&quot;</span>
         <span class="n">model2ckpt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_class_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_classes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_classes</span><span class="p">)</span>
 
@@ -947,7 +947,7 @@
 <div class="viewcode-block" id="OTXModel.map_class_names">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.map_class_names">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">map_class_names</span><span class="p">(</span><span class="n">src_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">dst_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">map_class_names</span><span class="p">(</span><span class="n">src_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">dst_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes src to dst index mapping.</span>
 
 <span class="sd">        src2dst[src_idx] = dst_idx</span>
@@ -969,7 +969,7 @@
 
 <div class="viewcode-block" id="OTXModel.optimize">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.optimize">[docs]</a>
-    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">data_module</span><span class="p">:</span> <span class="n">OTXDataModule</span><span class="p">,</span> <span class="n">ptq_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">data_module</span><span class="p">:</span> <span class="n">OTXDataModule</span><span class="p">,</span> <span class="n">ptq_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Runs quantization of the model with NNCF.PTQ on the passed data. Works only for OpenVINO models.</span>
 
 <span class="sd">        PTQ performs int-8 quantization on the input model, so the resulting model</span>
@@ -989,7 +989,7 @@
 
 <div class="viewcode-block" id="OTXModel.export">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.export">[docs]</a>
-    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
         <span class="n">base_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1033,7 +1033,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines exporter of the model. Should be overridden in subclasses.&quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;To export this OTXModel, you should implement an appropriate exporter for it. &quot;</span>
@@ -1042,7 +1042,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines export parameters sharable at a task level.</span>
 
 <span class="sd">        To export OTXModel which is compatible with ModelAPI,</span>
@@ -1078,7 +1078,7 @@
             <span class="n">optimization_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimization_config</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_reset_prediction_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reset_prediction_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset its prediction layer with a given number of classes.</span>
 
 <span class="sd">        Args:</span>
@@ -1087,12 +1087,12 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_optimization_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_optimization_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="OTXModel.lr_scheduler_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.lr_scheduler_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">lr_scheduler_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerTypeUnion</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lr_scheduler_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerTypeUnion</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;It is required to prioritize the warmup lr scheduler than other lr scheduler during a warmup period.</span>
 
 <span class="sd">        It will ignore other lr scheduler&#39;s stepping if the warmup scheduler is currently activated.</span>
@@ -1126,7 +1126,7 @@
 
 <div class="viewcode-block" id="OTXModel.patch_optimizer_and_scheduler_for_hpo">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.patch_optimizer_and_scheduler_for_hpo">[docs]</a>
-    <span class="k">def</span> <span class="nf">patch_optimizer_and_scheduler_for_hpo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">patch_optimizer_and_scheduler_for_hpo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Patch optimizer and scheduler for hyperparameter optimization and adaptive batch size.</span>
 
 <span class="sd">        This is inplace function changing inner states (`optimizer_callable` and `scheduler_callable`).</span>
@@ -1144,12 +1144,12 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">tile_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TileConfig</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tile_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TileConfig</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get tiling configurations.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tile_config</span>
 
     <span class="nd">@tile_config</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">tile_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tile_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set tiling configurations.&quot;&quot;&quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;Assign new tile_config to the model. &quot;</span>
@@ -1163,7 +1163,7 @@
 
 <div class="viewcode-block" id="OTXModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchDataEntity</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchDataEntity</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a dummy input, suitable for launching forward() on it.</span>
 
 <span class="sd">        Args:</span>
@@ -1176,7 +1176,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_dispatch_label_info</span><span class="p">(</span><span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dispatch_label_info</span><span class="p">(</span><span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label_info</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">LabelInfo</span><span class="o">.</span><span class="n">from_num_classes</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="n">label_info</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label_info</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">label_info</span><span class="p">):</span>
@@ -1190,7 +1190,7 @@
 
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">label_info</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
             <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_size_multiplier</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_size_multiplier</span> <span class="o">!=</span> <span class="mi">0</span>
         <span class="p">):</span>
@@ -1201,7 +1201,7 @@
 
 <div class="viewcode-block" id="OVModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OVModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the OpenVINO model.</span>
 
 <span class="sd">    This is a base class representing interface for interacting with OpenVINO</span>
@@ -1214,7 +1214,7 @@
 <span class="sd">        num_classes: Number of classes this model can predict.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1245,20 +1245,20 @@
         <span class="k">if</span> <span class="n">tile_enabled</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_setup_tiler</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_setup_tiler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_tiler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup tiler for tile task.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="k">def</span> <span class="nf">_get_hparams_from_adapter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_adapter</span><span class="p">:</span> <span class="n">OpenvinoAdapter</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_hparams_from_adapter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_adapter</span><span class="p">:</span> <span class="n">OpenvinoAdapter</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reads model configuration from ModelAPI OpenVINO adapter.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            model_adapter (OpenvinoAdapter): target adapter to read the config</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a OV model with help of Model API.&quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">model_api.adapters</span> <span class="kn">import</span> <span class="n">OpenvinoAdapter</span><span class="p">,</span> <span class="n">create_core</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenvinoAdapter</span><span class="p">,</span> <span class="n">create_core</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -1294,12 +1294,12 @@
 
         <span class="k">return</span> <span class="n">Model</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="n">model_adapter</span><span class="p">,</span> <span class="n">model_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span> <span class="n">configuration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_api_configuration</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="c1"># restore original numpy image</span>
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">images</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function.&quot;&quot;&quot;</span>
         <span class="n">numpy_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)[</span><span class="s2">&quot;inputs&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">async_inference</span><span class="p">:</span>
@@ -1316,32 +1316,32 @@
 
 <div class="viewcode-block" id="OVModel.forward">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span></div>
 
 
 <div class="viewcode-block" id="OVModel.forward_explain">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel.forward_explain">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward explain function.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span></div>
 
 
 <div class="viewcode-block" id="OVModel.optimize">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel.optimize">[docs]</a>
-    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
         <span class="n">data_module</span><span class="p">:</span> <span class="n">OTXDataModule</span><span class="p">,</span>
         <span class="n">ptq_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Runs NNCF quantization.&quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">nncf</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">nncf</span>
 
         <span class="n">output_model_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_OPTIMIZED_MODEL_BASE_NAME</span> <span class="o">+</span> <span class="s2">&quot;.xml&quot;</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">check_if_quantized</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">check_if_quantized</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">openvino</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Checks if OpenVINO model is already quantized.&quot;&quot;&quot;</span>
             <span class="n">nodes</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_ops</span><span class="p">()</span>
             <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">get_type_name</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;FakeQuantize&quot;</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">)</span>
@@ -1376,7 +1376,7 @@
 
 <div class="viewcode-block" id="OVModel.export">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel.export">[docs]</a>
-    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
         <span class="n">base_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1413,7 +1413,7 @@
 
 <div class="viewcode-block" id="OVModel.transform_fn">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel.transform_fn">[docs]</a>
-    <span class="k">def</span> <span class="nf">transform_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Data transform function for PTQ.&quot;&quot;&quot;</span>
         <span class="n">np_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customize_inputs</span><span class="p">(</span><span class="n">data_batch</span><span class="p">)</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">np_data</span><span class="p">[</span><span class="s2">&quot;inputs&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
@@ -1424,7 +1424,7 @@
         <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">_change_layout</span><span class="p">(</span><span class="n">resized_image</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_read_ptq_config_from_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ov_model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_ptq_config_from_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ov_model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates the PTQ (Post-Training Quantization) configuration from the meta data of the given OpenVINO model.</span>
 
 <span class="sd">        Args:</span>
@@ -1433,10 +1433,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            dict: The PTQ configuration as a dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">nncf</span> <span class="kn">import</span> <span class="n">IgnoredScope</span>  <span class="c1"># type: ignore[attr-defined]</span>
-        <span class="kn">from</span> <span class="nn">nncf.common.quantization.structs</span> <span class="kn">import</span> <span class="n">QuantizationPreset</span>  <span class="c1"># type: ignore[attr-defined]</span>
-        <span class="kn">from</span> <span class="nn">nncf.parameters</span> <span class="kn">import</span> <span class="n">ModelType</span>
-        <span class="kn">from</span> <span class="nn">nncf.quantization.advanced_parameters</span> <span class="kn">import</span> <span class="n">AdvancedQuantizationParameters</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">nncf</span><span class="w"> </span><span class="kn">import</span> <span class="n">IgnoredScope</span>  <span class="c1"># type: ignore[attr-defined]</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">nncf.common.quantization.structs</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantizationPreset</span>  <span class="c1"># type: ignore[attr-defined]</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">nncf.parameters</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelType</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">nncf.quantization.advanced_parameters</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdvancedQuantizationParameters</span>
 
         <span class="k">if</span> <span class="s2">&quot;optimization_config&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ov_model</span><span class="o">.</span><span class="n">rt_info</span><span class="p">[</span><span class="s2">&quot;model_info&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="p">{}</span>
@@ -1461,7 +1461,7 @@
         <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">instantiate_classes</span><span class="p">(</span><span class="n">initial_ptq_config</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXNativeModelExporter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXNativeModelExporter</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Exporter of the OVModel for exportable code.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">OTXNativeModelExporter</span><span class="p">(</span>
             <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_parameters</span><span class="p">,</span>
@@ -1469,16 +1469,16 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">model_adapter_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">model_adapter_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model parameters for export.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">_set_label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_label_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set this model label information.&quot;&quot;&quot;</span>
         <span class="n">new_label_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dispatch_label_info</span><span class="p">(</span><span class="n">label_info</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_label_info</span> <span class="o">=</span> <span class="n">new_label_info</span>
 
-    <span class="k">def</span> <span class="nf">_create_label_info_from_ov_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_label_info_from_ov_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
         <span class="n">ov_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_model</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">ov_model</span><span class="o">.</span><span class="n">has_rt_info</span><span class="p">([</span><span class="s2">&quot;model_info&quot;</span><span class="p">,</span> <span class="s2">&quot;label_info&quot;</span><span class="p">]):</span>
@@ -1502,7 +1502,7 @@
 
 <div class="viewcode-block" id="OVModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchDataEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for base OV model.&quot;&quot;&quot;</span>
         <span class="c1"># Resize is embedded to the OV model, which means we don&#39;t need to know the actual size</span>
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>

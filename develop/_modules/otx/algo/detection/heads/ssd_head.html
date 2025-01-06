@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -261,21 +261,21 @@
 <span class="sd">Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/dense_heads/ssd_head.py</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.coders</span> <span class="kn">import</span> <span class="n">BaseBBoxCoder</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.prior_generators</span> <span class="kn">import</span> <span class="n">BasePriorGenerator</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.samplers</span> <span class="kn">import</span> <span class="n">PseudoSampler</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.heads.anchor_head</span> <span class="kn">import</span> <span class="n">AnchorHead</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.detection</span> <span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.coders</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseBBoxCoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.prior_generators</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasePriorGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.samplers</span><span class="w"> </span><span class="kn">import</span> <span class="n">PseudoSampler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.heads.anchor_head</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnchorHead</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
 
 
-<span class="k">class</span> <span class="nc">SSDHeadModule</span><span class="p">(</span><span class="n">AnchorHead</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSDHeadModule</span><span class="p">(</span><span class="n">AnchorHead</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of `SSD head &lt;https://arxiv.org/abs/1512.02325&gt;`_.</span>
 
 <span class="sd">    Args:</span>
@@ -301,7 +301,7 @@
 <span class="sd">            classification prediction. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">anchor_generator</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">bbox_coder</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
@@ -341,7 +341,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">assigner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_cfg</span><span class="p">[</span><span class="s2">&quot;assigner&quot;</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">PseudoSampler</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># type: ignore[no-untyped-call]</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward features from the upstream network.</span>
 
 <span class="sd">        Args:</span>
@@ -365,7 +365,7 @@
             <span class="n">bbox_preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reg_conv</span><span class="p">(</span><span class="n">feat</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">cls_scores</span><span class="p">,</span> <span class="n">bbox_preds</span>
 
-    <span class="k">def</span> <span class="nf">prepare_loss_inputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_loss_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">entity</span><span class="p">:</span> <span class="n">DetBatchDataEntity</span><span class="p">,</span>
@@ -420,7 +420,7 @@
             <span class="s2">&quot;avg_factor&quot;</span><span class="p">:</span> <span class="n">avg_factor</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize layers of the head.</span>
 
 <span class="sd">        This modificaiton is needed for smart weight loading</span>
@@ -462,7 +462,7 @@
 
 <div class="viewcode-block" id="SSDHead">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.heads.html#otx.algo.detection.heads.SSDHead">[docs]</a>
-<span class="k">class</span> <span class="nc">SSDHead</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSDHead</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SSDHead factory for detection.&quot;&quot;&quot;</span>
 
     <span class="n">SSDHEAD_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -472,7 +472,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>

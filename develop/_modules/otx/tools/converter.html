@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=6232a102" />
@@ -258,24 +258,24 @@
 
 <span class="sd">&quot;&quot;&quot;Converter for v1 config.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">argparse</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
-<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
-<span class="kn">from</span> <span class="nn">jsonargparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">Namespace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">Namespace</span>
 
-<span class="kn">from</span> <span class="nn">otx.core.config.data</span> <span class="kn">import</span> <span class="n">SamplerConfig</span><span class="p">,</span> <span class="n">SubsetConfig</span><span class="p">,</span> <span class="n">TileConfig</span><span class="p">,</span> <span class="n">UnlabeledDataConfig</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.module</span> <span class="kn">import</span> <span class="n">OTXDataModule</span>
-<span class="kn">from</span> <span class="nn">otx.core.model.base</span> <span class="kn">import</span> <span class="n">OTXModel</span>
-<span class="kn">from</span> <span class="nn">otx.core.types</span> <span class="kn">import</span> <span class="n">PathLike</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.task</span> <span class="kn">import</span> <span class="n">OTXTaskType</span>
-<span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
-<span class="kn">from</span> <span class="nn">otx.engine.utils.auto_configurator</span> <span class="kn">import</span> <span class="n">AutoConfigurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SamplerConfig</span><span class="p">,</span> <span class="n">SubsetConfig</span><span class="p">,</span> <span class="n">TileConfig</span><span class="p">,</span> <span class="n">UnlabeledDataConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">PathLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.auto_configurator</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoConfigurator</span>
 
 <span class="n">TEMPLATE_ID_DICT</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># MULTI_CLASS_CLS</span>
@@ -457,7 +457,7 @@
 
 <div class="viewcode-block" id="ConfigConverter">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter">[docs]</a>
-<span class="k">class</span> <span class="nc">ConfigConverter</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConfigConverter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.</span>
 
 <span class="sd">    This class is used to convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.</span>
@@ -487,7 +487,7 @@
 <div class="viewcode-block" id="ConfigConverter.convert">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter.convert">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a configuration file to a default configuration dictionary.</span>
 
 <span class="sd">        Args:</span>
@@ -521,12 +521,12 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_default_config</span><span class="p">(</span><span class="n">task_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_default_config</span><span class="p">(</span><span class="n">task_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return default otx conifg for template use.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">AutoConfigurator</span><span class="p">(</span><span class="o">**</span><span class="n">task_info</span><span class="p">)</span><span class="o">.</span><span class="n">config</span>  <span class="c1"># type: ignore[arg-type]</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_params</span><span class="p">(</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_params</span><span class="p">(</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get configuraable parameters from ModelTemplate config hyperparameters field.&quot;&quot;&quot;</span>
         <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_info</span> <span class="ow">in</span> <span class="n">hyperparameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -539,28 +539,28 @@
         <span class="k">return</span> <span class="n">param_dict</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_update_params</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: C901</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_params</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: C901</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update params of OTX recipe from Geit configurable params.&quot;&quot;&quot;</span>
         <span class="n">unused_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">param_dict</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">update_mem_cache_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_mem_cache_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;mem_cache_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">param_value</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000000</span><span class="p">)</span><span class="si">}</span><span class="s2">MB&quot;</span>
 
-        <span class="k">def</span> <span class="nf">update_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
-        <span class="k">def</span> <span class="nf">update_inference_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_inference_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;val_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;test_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
-        <span class="k">def</span> <span class="nf">update_learning_rate</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_learning_rate</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">optimizer</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;init_args&quot;</span> <span class="ow">in</span> <span class="n">optimizer</span><span class="p">:</span>
                 <span class="n">optimizer</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: learning_rate is not updated&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">update_learning_rate_warmup_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_learning_rate_warmup_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">scheduler</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;scheduler&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="nb">isinstance</span><span class="p">(</span><span class="n">scheduler</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
@@ -571,15 +571,15 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: learning_rate_warmup_iters is not updated&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">update_num_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_num_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
-        <span class="k">def</span> <span class="nf">update_num_workers</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_num_workers</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;val_subset&quot;</span><span class="p">][</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;test_subset&quot;</span><span class="p">][</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
-        <span class="k">def</span> <span class="nf">update_enable_early_stopping</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_enable_early_stopping</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_get_callback_idx</span><span class="p">(</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup&quot;</span><span class="p">,</span>
@@ -587,13 +587,13 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">param_value</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">update_early_stop_patience</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_early_stop_patience</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup&quot;</span><span class="p">:</span>
                     <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
                     <span class="k">break</span>
 
-        <span class="k">def</span> <span class="nf">update_use_adaptive_interval</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_use_adaptive_interval</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_get_callback_idx</span><span class="p">(</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling&quot;</span><span class="p">,</span>
@@ -601,13 +601,13 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">param_value</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">update_auto_num_workers</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_auto_num_workers</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;auto_num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
-        <span class="k">def</span> <span class="nf">update_auto_adapt_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_auto_adapt_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;adaptive_bs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
-        <span class="k">def</span> <span class="nf">update_enable_tiling</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_enable_tiling</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_tiler&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
             <span class="k">if</span> <span class="n">param_value</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_adaptive_tiling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;enable_adaptive_params&quot;</span><span class="p">]</span>
@@ -656,7 +656,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">param_value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_callback_idx</span><span class="p">(</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_callback_idx</span><span class="p">(</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return required callbacks index from callback list.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">callback</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">callbacks</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
@@ -664,7 +664,7 @@
         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_remove_unused_key</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_unused_key</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove unused keys from the config dictionary.</span>
 
 <span class="sd">        Args:</span>
@@ -676,7 +676,7 @@
 <div class="viewcode-block" id="ConfigConverter.instantiate">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter.instantiate">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">instantiate</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">instantiate</span><span class="p">(</span>
         <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
         <span class="n">work_dir</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">data_root</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -257,16 +257,16 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="sd">&quot;&quot;&quot;Class definition for classification model entity used in OTX.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
 
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.base</span> <span class="kn">import</span> <span class="n">OTXBatchLossEntity</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.classification</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXBatchLossEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
     <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
     <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
@@ -274,33 +274,33 @@
     <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
     <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.exporter.base</span> <span class="kn">import</span> <span class="n">OTXModelExporter</span>
-<span class="kn">from</span> <span class="nn">otx.core.exporter.native</span> <span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
-<span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricInput</span>
-<span class="kn">from</span> <span class="nn">otx.core.metrics.accuracy</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics.accuracy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HLabelClsMetricCallable</span><span class="p">,</span>
     <span class="n">MultiClassClsMetricCallable</span><span class="p">,</span>
     <span class="n">MultiLabelClsMetricCallable</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.model.base</span> <span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span> <span class="n">OTXModel</span><span class="p">,</span> <span class="n">OVModel</span>
-<span class="kn">from</span> <span class="nn">otx.core.schedulers</span> <span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.export</span> <span class="kn">import</span> <span class="n">TaskLevelExportParameters</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.label</span> <span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.task</span> <span class="kn">import</span> <span class="n">OTXTrainType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span> <span class="n">OTXModel</span><span class="p">,</span> <span class="n">OVModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskLevelExportParameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTrainType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.cli</span> <span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
-    <span class="kn">from</span> <span class="nn">model_api.models.utils</span> <span class="kn">import</span> <span class="n">ClassificationResult</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.models.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationResult</span>
 
-    <span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
 
 
 <div class="viewcode-block" id="OTXMulticlassClsModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMulticlassClsModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OTXMulticlassClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXMulticlassClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the classification models used in OTX.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
@@ -321,7 +321,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
@@ -348,7 +348,7 @@
             <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
@@ -382,7 +382,7 @@
 
 <div class="viewcode-block" id="OTXMulticlassClsModel.training_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMulticlassClsModel.training_step">[docs]</a>
-    <span class="k">def</span> <span class="nf">training_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">training_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs a single training step on a batch of data.&quot;&quot;&quot;</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">training_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
         <span class="c1"># Collect metrics related to Semi-SL Training.</span>
@@ -407,7 +407,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines parameters required to export a particular model implementation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
             <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;Classification&quot;</span><span class="p">,</span>
@@ -418,7 +418,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates OTXModelExporter object that can export the model.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">OTXNativeModelExporter</span><span class="p">(</span>
             <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_parameters</span><span class="p">,</span>
@@ -433,7 +433,7 @@
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
@@ -445,12 +445,12 @@
             <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">target</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_reset_prediction_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reset_prediction_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
 
 <div class="viewcode-block" id="OTXMulticlassClsModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMulticlassClsModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for classification model.&quot;&quot;&quot;</span>
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span> <span class="o">*</span> <span class="n">batch_size</span>
@@ -459,7 +459,7 @@
 
 <div class="viewcode-block" id="OTXMulticlassClsModel.forward_for_tracing">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMulticlassClsModel.forward_for_tracing">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function used for the model tracing during model exportation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">image</span><span class="p">)</span></div>
 </div>
@@ -472,10 +472,10 @@
 
 <div class="viewcode-block" id="OTXMultilabelClsModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMultilabelClsModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OTXMultilabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXMultilabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-label classification models used in OTX.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
@@ -494,7 +494,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
@@ -509,7 +509,7 @@
             <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
@@ -541,7 +541,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines parameters required to export a particular model implementation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
             <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;Classification&quot;</span><span class="p">,</span>
@@ -553,7 +553,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates OTXModelExporter object that can export the model.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">OTXNativeModelExporter</span><span class="p">(</span>
             <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_parameters</span><span class="p">,</span>
@@ -568,7 +568,7 @@
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
@@ -580,14 +580,14 @@
 
 <div class="viewcode-block" id="OTXMultilabelClsModel.forward_for_tracing">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMultilabelClsModel.forward_for_tracing">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function used for the model tracing during model exportation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXMultilabelClsModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMultilabelClsModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for classification OV model.&quot;&quot;&quot;</span>
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span> <span class="o">*</span> <span class="n">batch_size</span>
@@ -598,12 +598,12 @@
 
 <div class="viewcode-block" id="OTXHlabelClsModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXHlabelClsModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OTXHlabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXHlabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;H-label classification models used in OTX.&quot;&quot;&quot;</span>
 
     <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span><span class="p">,</span>
         <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
@@ -622,7 +622,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
@@ -637,7 +637,7 @@
             <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
@@ -673,7 +673,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_export_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TaskLevelExportParameters</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines parameters required to export a particular model implementation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_export_parameters</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
             <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;Classification&quot;</span><span class="p">,</span>
@@ -685,7 +685,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates OTXModelExporter object that can export the model.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">OTXNativeModelExporter</span><span class="p">(</span>
             <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_parameters</span><span class="p">,</span>
@@ -700,7 +700,7 @@
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
@@ -721,7 +721,7 @@
         <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_dispatch_label_info</span><span class="p">(</span><span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dispatch_label_info</span><span class="p">(</span><span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label_info</span><span class="p">,</span> <span class="n">HLabelInfo</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">label_info</span><span class="p">)</span>
 
@@ -729,7 +729,7 @@
 
 <div class="viewcode-block" id="OTXHlabelClsModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXHlabelClsModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for classification OV model.&quot;&quot;&quot;</span>
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span> <span class="o">*</span> <span class="n">batch_size</span>
@@ -738,7 +738,7 @@
 
 <div class="viewcode-block" id="OTXHlabelClsModel.forward_for_tracing">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXHlabelClsModel.forward_for_tracing">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function used for the model tracing during model exportation.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">image</span><span class="p">)</span></div>
 </div>
@@ -747,7 +747,7 @@
 
 <div class="viewcode-block" id="OVMulticlassClassificationModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OVMulticlassClassificationModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OVMulticlassClassificationModel</span><span class="p">(</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVMulticlassClassificationModel</span><span class="p">(</span>
     <span class="n">OVModel</span><span class="p">[</span><span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">],</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Classification model compatible for OpenVINO IR inference.</span>
@@ -756,7 +756,7 @@
 <span class="sd">    and create the OTX classification model compatible for OTX testing pipeline.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Classification&quot;</span><span class="p">,</span>
@@ -777,7 +777,7 @@
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClassificationResult</span><span class="p">],</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
@@ -809,7 +809,7 @@
             <span class="n">labels</span><span class="o">=</span><span class="n">pred_labels</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
@@ -825,14 +825,14 @@
 
 <div class="viewcode-block" id="OVMultilabelClassificationModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OVMultilabelClassificationModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OVMultilabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVMultilabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Multilabel classification model compatible for OpenVINO IR inference.</span>
 
 <span class="sd">    It can consume OpenVINO IR model path or model name from Intel OMZ repository</span>
 <span class="sd">    and create the OTX classification model compatible for OTX testing pipeline.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Classification&quot;</span><span class="p">,</span>
@@ -855,7 +855,7 @@
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClassificationResult</span><span class="p">],</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
@@ -888,7 +888,7 @@
             <span class="n">labels</span><span class="o">=</span><span class="p">[],</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
@@ -902,14 +902,14 @@
 
 <div class="viewcode-block" id="OVHlabelClassificationModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OVHlabelClassificationModel">[docs]</a>
-<span class="k">class</span> <span class="nc">OVHlabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVHlabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Hierarchical classification model compatible for OpenVINO IR inference.</span>
 
 <span class="sd">    It can consume OpenVINO IR model path or model name from Intel OMZ repository</span>
 <span class="sd">    and create the OTX classification model compatible for OTX testing pipeline.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Classification&quot;</span><span class="p">,</span>
@@ -932,7 +932,7 @@
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_customize_outputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClassificationResult</span><span class="p">],</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
@@ -989,7 +989,7 @@
             <span class="n">labels</span><span class="o">=</span><span class="n">all_pred_labels</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
@@ -1008,7 +1008,7 @@
             <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">_create_label_info_from_ov_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HLabelInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_label_info_from_ov_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HLabelInfo</span><span class="p">:</span>
         <span class="n">ov_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_model</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">ov_model</span><span class="o">.</span><span class="n">has_rt_info</span><span class="p">([</span><span class="s2">&quot;model_info&quot;</span><span class="p">,</span> <span class="s2">&quot;label_info&quot;</span><span class="p">]):</span>

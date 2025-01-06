@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -259,16 +259,16 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;RTMDet criterion.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.utils</span> <span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
 
 
 <div class="viewcode-block" id="RTMDetCriterion">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.RTMDetCriterion">[docs]</a>
-<span class="k">class</span> <span class="nc">RTMDetCriterion</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RTMDetCriterion</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;RTMDetCriterion is a criterion module for RTM-based object detection.</span>
 
 <span class="sd">    Args:</span>
@@ -277,7 +277,7 @@
 <span class="sd">        loss_bbox (nn.Module): Bounding box regression loss module.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">loss_cls</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">loss_bbox</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">loss_cls</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">loss_bbox</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_cls</span> <span class="o">=</span> <span class="n">loss_cls</span>
@@ -294,7 +294,7 @@
 
 <div class="viewcode-block" id="RTMDetCriterion.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.RTMDetCriterion.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cls_score</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">bbox_pred</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -338,7 +338,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;loss_cls&quot;</span><span class="p">:</span> <span class="n">losses_cls</span><span class="p">,</span> <span class="s2">&quot;loss_bbox&quot;</span><span class="p">:</span> <span class="n">losses_bbox</span><span class="p">}</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cls_score</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">bbox_pred</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>

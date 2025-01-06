@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -259,19 +259,19 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;ATSS criterion.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.losses</span> <span class="kn">import</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span> <span class="n">CrossSigmoidFocalLoss</span><span class="p">,</span> <span class="n">QualityFocalLoss</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.bbox_overlaps</span> <span class="kn">import</span> <span class="n">bbox_overlaps</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.utils</span> <span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span> <span class="n">CrossSigmoidFocalLoss</span><span class="p">,</span> <span class="n">QualityFocalLoss</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.bbox_overlaps</span><span class="w"> </span><span class="kn">import</span> <span class="n">bbox_overlaps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
 
 
 <div class="viewcode-block" id="ATSSCriterion">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.ATSSCriterion">[docs]</a>
-<span class="k">class</span> <span class="nc">ATSSCriterion</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ATSSCriterion</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;ATSSCriterion is a loss criterion used in the Adaptive Training Sample Selection (ATSS) algorithm.</span>
 
 <span class="sd">    Args:</span>
@@ -289,7 +289,7 @@
 <span class="sd">            Defaults to -1.0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">bbox_coder</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
@@ -328,7 +328,7 @@
 
 <div class="viewcode-block" id="ATSSCriterion.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.ATSSCriterion.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">anchors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">cls_score</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -380,7 +380,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;loss_cls&quot;</span><span class="p">:</span> <span class="n">losses_cls</span><span class="p">,</span> <span class="s2">&quot;loss_bbox&quot;</span><span class="p">:</span> <span class="n">losses_bbox</span><span class="p">,</span> <span class="s2">&quot;loss_centerness&quot;</span><span class="p">:</span> <span class="n">loss_centerness</span><span class="p">}</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">anchors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">cls_score</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -475,7 +475,7 @@
 
 <div class="viewcode-block" id="ATSSCriterion.centerness_target">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.ATSSCriterion.centerness_target">[docs]</a>
-    <span class="k">def</span> <span class="nf">centerness_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">gts</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">centerness_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">gts</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the centerness between anchors and gts.</span>
 
 <span class="sd">        Only calculate pos centerness targets, otherwise there may be nan.</span>
@@ -502,11 +502,11 @@
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_pos_inds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_pos_inds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="n">bg_class_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span>
         <span class="k">return</span> <span class="p">((</span><span class="n">labels</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">labels</span> <span class="o">&lt;</span> <span class="n">bg_class_ind</span><span class="p">))</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_loss_bbox</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_loss_bbox</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">pos_bbox_targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">pos_bbox_pred</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -514,7 +514,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_bbox</span><span class="p">(</span><span class="n">pos_bbox_pred</span><span class="p">,</span> <span class="n">pos_bbox_targets</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">centerness_targets</span><span class="p">,</span> <span class="n">avg_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_loss_centerness</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_loss_centerness</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">avg_factor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">pos_centerness</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -522,7 +522,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_centerness</span><span class="p">(</span><span class="n">pos_centerness</span><span class="p">,</span> <span class="n">centerness_targets</span><span class="p">,</span> <span class="n">avg_factor</span><span class="o">=</span><span class="n">avg_factor</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_loss_cls</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_loss_cls</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cls_score</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">labels</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>

@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -258,21 +258,21 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Cross entropy loss for ignored mode in class-incremental learning.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>  <span class="c1"># noqa: N812</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">CrossEntropyLoss</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>  <span class="c1"># noqa: N812</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossEntropyLoss</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
 
 
 <div class="viewcode-block" id="CrossEntropyLossWithIgnore">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.segmentation.losses.html#otx.algo.segmentation.losses.CrossEntropyLossWithIgnore">[docs]</a>
-<span class="k">class</span> <span class="nc">CrossEntropyLossWithIgnore</span><span class="p">(</span><span class="n">CrossEntropyLoss</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CrossEntropyLossWithIgnore</span><span class="p">(</span><span class="n">CrossEntropyLoss</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;CrossEntropyLossWithIgnore with Ignore Mode Support for Class Incremental Learning.</span>
 
 <span class="sd">    When new classes are added through continual training cycles, images from previous cycles</span>
@@ -281,7 +281,7 @@
 <span class="sd">    CrossEntropyLossWithIgnore can be used to ignore the unseen classes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">weight</span><span class="p">:</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">size_average</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -310,7 +310,7 @@
 
 <div class="viewcode-block" id="CrossEntropyLossWithIgnore.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.segmentation.losses.html#otx.algo.segmentation.losses.CrossEntropyLossWithIgnore.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cls_score</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">label</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -359,7 +359,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">loss_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">loss_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Loss Name.</span>
 
 <span class="sd">        This function must be implemented and will return the name of this</span>
@@ -375,7 +375,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">weight_reduce_loss</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">weight_reduce_loss</span><span class="p">(</span>
     <span class="n">loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="n">weight</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
@@ -417,7 +417,7 @@
     <span class="k">return</span> <span class="n">loss</span>
 
 
-<span class="k">def</span> <span class="nf">reduce_loss</span><span class="p">(</span><span class="n">loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">reduce_loss</span><span class="p">(</span><span class="n">loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reduce loss as specified.</span>
 
 <span class="sd">    Args:</span>

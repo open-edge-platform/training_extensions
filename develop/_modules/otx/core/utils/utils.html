@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,25 +258,25 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Utility functions.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">importlib</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">cpu_count</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">cpu_count</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">datumaro.components.annotation</span> <span class="kn">import</span> <span class="n">AnnotationType</span><span class="p">,</span> <span class="n">LabelCategories</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.components.annotation</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnnotationType</span><span class="p">,</span> <span class="n">LabelCategories</span>
 
-<span class="kn">from</span> <span class="nn">otx.utils.device</span> <span class="kn">import</span> <span class="n">is_xpu_available</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.utils.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_xpu_available</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">datumaro</span> <span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
 
 
 <div class="viewcode-block" id="is_ckpt_from_otx_v1">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.is_ckpt_from_otx_v1">[docs]</a>
-<span class="k">def</span> <span class="nf">is_ckpt_from_otx_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_ckpt_from_otx_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check the checkpoint where it comes from.</span>
 
 <span class="sd">    Args:</span>
@@ -291,7 +291,7 @@
 
 <div class="viewcode-block" id="is_ckpt_for_finetuning">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.is_ckpt_for_finetuning">[docs]</a>
-<span class="k">def</span> <span class="nf">is_ckpt_for_finetuning</span><span class="p">(</span><span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_ckpt_for_finetuning</span><span class="p">(</span><span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check the checkpoint will be used to finetune.</span>
 
 <span class="sd">    Args:</span>
@@ -306,7 +306,7 @@
 
 <div class="viewcode-block" id="get_adaptive_num_workers">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.get_adaptive_num_workers">[docs]</a>
-<span class="k">def</span> <span class="nf">get_adaptive_num_workers</span><span class="p">(</span><span class="n">num_dataloader</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_adaptive_num_workers</span><span class="p">(</span><span class="n">num_dataloader</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Measure appropriate num_workers value and return it.&quot;&quot;&quot;</span>
     <span class="n">num_devices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">xpu</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_xpu_available</span><span class="p">()</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">num_devices</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -317,7 +317,7 @@
 
 <div class="viewcode-block" id="get_idx_list_per_classes">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.get_idx_list_per_classes">[docs]</a>
-<span class="k">def</span> <span class="nf">get_idx_list_per_classes</span><span class="p">(</span><span class="n">dm_dataset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">,</span> <span class="n">use_string_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_idx_list_per_classes</span><span class="p">(</span><span class="n">dm_dataset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">,</span> <span class="n">use_string_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute class statistics.&quot;&quot;&quot;</span>
     <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">labels</span> <span class="o">=</span> <span class="n">dm_dataset</span><span class="o">.</span><span class="n">categories</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">AnnotationType</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">LabelCategories</span><span class="p">())</span>
@@ -336,7 +336,7 @@
 
 <div class="viewcode-block" id="import_object_from_module">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.import_object_from_module">[docs]</a>
-<span class="k">def</span> <span class="nf">import_object_from_module</span><span class="p">(</span><span class="n">obj_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">import_object_from_module</span><span class="p">(</span><span class="n">obj_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get object from import format string.&quot;&quot;&quot;</span>
     <span class="n">module_name</span><span class="p">,</span> <span class="n">obj_name</span> <span class="o">=</span> <span class="n">obj_path</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
@@ -346,7 +346,7 @@
 
 <div class="viewcode-block" id="remove_state_dict_prefix">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.remove_state_dict_prefix">[docs]</a>
-<span class="k">def</span> <span class="nf">remove_state_dict_prefix</span><span class="p">(</span><span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_state_dict_prefix</span><span class="p">(</span><span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove prefix from state_dict keys.&quot;&quot;&quot;</span>
     <span class="n">new_state_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>

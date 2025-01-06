@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,22 +258,22 @@
 <span class="c1"># Copyright (C) 2024 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span>
 
-<span class="kn">from</span> <span class="nn">jsonargparse</span> <span class="kn">import</span> <span class="n">DefaultHelpFormatter</span>
-<span class="kn">from</span> <span class="nn">rich.markdown</span> <span class="kn">import</span> <span class="n">Markdown</span>
-<span class="kn">from</span> <span class="nn">rich.panel</span> <span class="kn">import</span> <span class="n">Panel</span>
-<span class="kn">from</span> <span class="nn">rich.theme</span> <span class="kn">import</span> <span class="n">Theme</span>
-<span class="kn">from</span> <span class="nn">rich_argparse</span> <span class="kn">import</span> <span class="n">RichHelpFormatter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultHelpFormatter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.markdown</span><span class="w"> </span><span class="kn">import</span> <span class="n">Markdown</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.panel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.theme</span><span class="w"> </span><span class="kn">import</span> <span class="n">Theme</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich_argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">RichHelpFormatter</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">argparse</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 
-    <span class="kn">from</span> <span class="nn">rich.console</span> <span class="kn">import</span> <span class="n">Console</span><span class="p">,</span> <span class="n">RenderableType</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Console</span><span class="p">,</span> <span class="n">RenderableType</span>
 
 
 <span class="n">BASE_ARGUMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;print_config&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">,</span> <span class="s2">&quot;engine&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;model.help&quot;</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">}</span>
@@ -331,7 +331,7 @@
 
 <div class="viewcode-block" id="get_verbosity_subcommand">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.get_verbosity_subcommand">[docs]</a>
-<span class="k">def</span> <span class="nf">get_verbosity_subcommand</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_verbosity_subcommand</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse command line arguments and returns a dictionary of key-value pairs.</span>
 
 <span class="sd">    Returns:</span>
@@ -380,7 +380,7 @@
 
 <div class="viewcode-block" id="get_cli_usage_docstring">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.get_cli_usage_docstring">[docs]</a>
-<span class="k">def</span> <span class="nf">get_cli_usage_docstring</span><span class="p">(</span><span class="n">component</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cli_usage_docstring</span><span class="p">(</span><span class="n">component</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Get the cli usage from the docstring.</span>
 
 <span class="sd">    Args:</span>
@@ -414,7 +414,7 @@
 
 <div class="viewcode-block" id="render_guide">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.render_guide">[docs]</a>
-<span class="k">def</span> <span class="nf">render_guide</span><span class="p">(</span><span class="n">subcommand</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_guide</span><span class="p">(</span><span class="n">subcommand</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render a guide for the specified subcommand.</span>
 
 <span class="sd">    Args:</span>
@@ -425,7 +425,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">subcommand</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">subcommand</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;install&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[]</span>
-    <span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
     <span class="n">contents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Panel</span> <span class="o">|</span> <span class="n">Markdown</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Markdown</span><span class="p">(</span><span class="n">INTRO_MARKDOWN</span><span class="p">)]</span>
     <span class="n">target_command</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Engine</span><span class="p">,</span> <span class="n">subcommand</span><span class="p">)</span>
@@ -440,7 +440,7 @@
 
 <div class="viewcode-block" id="CustomHelpFormatter">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.CustomHelpFormatter">[docs]</a>
-<span class="k">class</span> <span class="nc">CustomHelpFormatter</span><span class="p">(</span><span class="n">RichHelpFormatter</span><span class="p">,</span> <span class="n">DefaultHelpFormatter</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomHelpFormatter</span><span class="p">(</span><span class="n">RichHelpFormatter</span><span class="p">,</span> <span class="n">DefaultHelpFormatter</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A custom help formatter for OTX CLI.</span>
 
 <span class="sd">    This formatter extends the RichHelpFormatter and DefaultHelpFormatter classes to provide</span>
@@ -465,7 +465,7 @@
     <span class="n">verbosity_level</span> <span class="o">=</span> <span class="n">verbosity_dict</span><span class="p">[</span><span class="s2">&quot;verbosity&quot;</span><span class="p">]</span>
     <span class="n">subcommand</span> <span class="o">=</span> <span class="n">verbosity_dict</span><span class="p">[</span><span class="s2">&quot;subcommand&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">prog</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">indent_increment</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
@@ -480,7 +480,7 @@
 
 <div class="viewcode-block" id="CustomHelpFormatter.add_usage">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.CustomHelpFormatter.add_usage">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">usage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">usage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add usage information to the formatter.</span>
 
 <span class="sd">        Args:</span>
@@ -501,7 +501,7 @@
 
 <div class="viewcode-block" id="CustomHelpFormatter.add_argument">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.CustomHelpFormatter.add_argument">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an argument to the help formatter.</span>
 
 <span class="sd">        If the verbose level is set to 0, the argument is not added.</span>
@@ -520,7 +520,7 @@
 
 <div class="viewcode-block" id="CustomHelpFormatter.format_help">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.help_formatter.html#otx.cli.utils.help_formatter.CustomHelpFormatter.format_help">[docs]</a>
-    <span class="k">def</span> <span class="nf">format_help</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format_help</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Format the help message for the current command and returns it as a string.</span>
 
 <span class="sd">        The help message includes information about the command&#39;s arguments and options,</span>

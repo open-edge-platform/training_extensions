@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,20 +258,20 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Utility functions for config files.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">from</span> <span class="nn">omegaconf</span> <span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">mmengine.config</span> <span class="kn">import</span> <span class="n">Config</span> <span class="k">as</span> <span class="n">MMConfig</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mmengine.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span> <span class="k">as</span> <span class="n">MMConfig</span>
 
 
 <div class="viewcode-block" id="to_tuple">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.config.html#otx.core.utils.config.to_tuple">[docs]</a>
-<span class="k">def</span> <span class="nf">to_tuple</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_tuple</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Find and replace tuple or list values in dict to tuple recursively.&quot;&quot;&quot;</span>
     <span class="c1"># MMDET Mosaic asserts if &quot;img_shape&quot; is not tuple</span>
     <span class="c1"># File &quot;mmdet/datasets/transforms/transforms.py&quot;, line 2324, in __init__</span>
@@ -288,7 +288,7 @@
 
 <div class="viewcode-block" id="to_list">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.config.html#otx.core.utils.config.to_list">[docs]</a>
-<span class="k">def</span> <span class="nf">to_list</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_list</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Find and replace tuple or list values in dict to list recursively.&quot;&quot;&quot;</span>
     <span class="c1"># MMDET FPN asserts if &quot;in_channels&quot; is not list</span>
     <span class="c1"># File &quot;mmdet/models/necks/fpn.py&quot;, line 88, in __init__</span>
@@ -305,12 +305,12 @@
 
 <div class="viewcode-block" id="convert_conf_to_mmconfig_dict">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.config.html#otx.core.utils.config.convert_conf_to_mmconfig_dict">[docs]</a>
-<span class="k">def</span> <span class="nf">convert_conf_to_mmconfig_dict</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_conf_to_mmconfig_dict</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">DictConfig</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">to</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tuple&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tuple&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MMConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert OTX format config object to MMEngine config object.&quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">mmengine.config</span> <span class="kn">import</span> <span class="n">Config</span> <span class="k">as</span> <span class="n">MMConfig</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mmengine.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span> <span class="k">as</span> <span class="n">MMConfig</span>
 
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DictConfig</span><span class="p">)</span> <span class="k">else</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
     <span class="n">dict_cfg</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_container</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>

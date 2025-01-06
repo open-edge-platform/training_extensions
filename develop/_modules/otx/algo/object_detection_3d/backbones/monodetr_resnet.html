@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -257,27 +257,27 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;MonoDetr backbone implementations.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torchvision</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torchvision.models</span> <span class="kn">import</span> <span class="n">get_model_weights</span>
-<span class="kn">from</span> <span class="nn">torchvision.models._utils</span> <span class="kn">import</span> <span class="n">IntermediateLayerGetter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model_weights</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models._utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntermediateLayerGetter</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.layers.position_embed</span> <span class="kn">import</span> <span class="n">PositionEmbeddingSine</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.norm</span> <span class="kn">import</span> <span class="n">FrozenBatchNorm2d</span>
-<span class="kn">from</span> <span class="nn">otx.algo.object_detection_3d.utils.utils</span> <span class="kn">import</span> <span class="n">NestedTensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.layers.position_embed</span><span class="w"> </span><span class="kn">import</span> <span class="n">PositionEmbeddingSine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenBatchNorm2d</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.object_detection_3d.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">NestedTensor</span>
 
 
 <div class="viewcode-block" id="BackboneBase">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.backbones.monodetr_resnet.html#otx.algo.object_detection_3d.backbones.monodetr_resnet.BackboneBase">[docs]</a>
-<span class="k">class</span> <span class="nc">BackboneBase</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BackboneBase</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;BackboneBase module.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backbone</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">train_backbone</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">return_interm_layers</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backbone</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">train_backbone</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">return_interm_layers</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes BackboneBase module.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">backbone</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
@@ -295,7 +295,7 @@
 
 <div class="viewcode-block" id="BackboneBase.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.backbones.monodetr_resnet.html#otx.algo.object_detection_3d.backbones.monodetr_resnet.BackboneBase.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NestedTensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NestedTensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the BackboneBase module.</span>
 
 <span class="sd">        Args:</span>
@@ -316,10 +316,10 @@
 
 <div class="viewcode-block" id="Backbone">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.backbones.monodetr_resnet.html#otx.algo.object_detection_3d.backbones.monodetr_resnet.Backbone">[docs]</a>
-<span class="k">class</span> <span class="nc">Backbone</span><span class="p">(</span><span class="n">BackboneBase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Backbone</span><span class="p">(</span><span class="n">BackboneBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;ResNet backbone with frozen BatchNorm.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">train_backbone</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">return_interm_layers</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">dilation</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">train_backbone</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">return_interm_layers</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">dilation</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes Backbone module.&quot;&quot;&quot;</span>
         <span class="n">norm_layer</span> <span class="o">=</span> <span class="n">FrozenBatchNorm2d</span>
         <span class="n">backbone</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span>
@@ -335,10 +335,10 @@
 
 <div class="viewcode-block" id="Joiner">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.backbones.monodetr_resnet.html#otx.algo.object_detection_3d.backbones.monodetr_resnet.Joiner">[docs]</a>
-<span class="k">class</span> <span class="nc">Joiner</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Joiner</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Joiner module.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">backbone</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">position_embedding</span><span class="p">:</span> <span class="n">PositionEmbeddingSine</span><span class="p">,</span>
@@ -355,7 +355,7 @@
 
 <div class="viewcode-block" id="Joiner.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.backbones.monodetr_resnet.html#otx.algo.object_detection_3d.backbones.monodetr_resnet.Joiner.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">NestedTensor</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">NestedTensor</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the Joiner module.</span>
 
 <span class="sd">        Args:</span>
@@ -372,7 +372,7 @@
 
 <div class="viewcode-block" id="BackboneBuilder">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.backbones.monodetr_resnet.html#otx.algo.object_detection_3d.backbones.monodetr_resnet.BackboneBuilder">[docs]</a>
-<span class="k">class</span> <span class="nc">BackboneBuilder</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BackboneBuilder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DepthAwareTransformerBuilder.&quot;&quot;&quot;</span>
 
     <span class="n">CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -387,7 +387,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Joiner</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Joiner</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for Backbone MonoDetr.&quot;&quot;&quot;</span>
         <span class="c1"># TODO (Kirill): change backbone to already implemented in OTX</span>
         <span class="n">backbone</span> <span class="o">=</span> <span class="n">Backbone</span><span class="p">(</span><span class="o">**</span><span class="bp">cls</span><span class="o">.</span><span class="n">CFG</span><span class="p">[</span><span class="n">model_name</span><span class="p">])</span>

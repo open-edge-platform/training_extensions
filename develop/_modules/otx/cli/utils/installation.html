@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,21 +258,21 @@
 
 <span class="sd">&quot;&quot;&quot;OTX installation util functions.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">platform</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>  <span class="c1"># nosec B404</span>
-<span class="kn">from</span> <span class="nn">importlib.metadata</span> <span class="kn">import</span> <span class="n">requires</span>
-<span class="kn">from</span> <span class="nn">importlib.util</span> <span class="kn">import</span> <span class="n">find_spec</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>  <span class="c1"># nosec B404</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">requires</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_spec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
-<span class="kn">import</span> <span class="nn">pkg_resources</span>
-<span class="kn">from</span> <span class="nn">importlib_resources</span> <span class="kn">import</span> <span class="n">files</span>
-<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">Requirement</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pkg_resources</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib_resources</span><span class="w"> </span><span class="kn">import</span> <span class="n">files</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pkg_resources</span><span class="w"> </span><span class="kn">import</span> <span class="n">Requirement</span>
 
 <span class="n">AVAILABLE_TORCH_VERSIONS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;1.13.0&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;torchvision&quot;</span><span class="p">:</span> <span class="s2">&quot;0.14.0&quot;</span><span class="p">,</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;11.6&quot;</span><span class="p">,</span> <span class="s2">&quot;11.7&quot;</span><span class="p">)},</span>
@@ -303,7 +303,7 @@
 
 <div class="viewcode-block" id="get_requirements">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.get_requirements">[docs]</a>
-<span class="k">def</span> <span class="nf">get_requirements</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;otx&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Requirement</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_requirements</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;otx&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Requirement</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get requirements of module from importlib.metadata.</span>
 
 <span class="sd">    This function returns list of required packages from importlib_metadata.</span>
@@ -340,7 +340,7 @@
 
 <div class="viewcode-block" id="parse_requirements">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.parse_requirements">[docs]</a>
-<span class="k">def</span> <span class="nf">parse_requirements</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_requirements</span><span class="p">(</span>
     <span class="n">requirements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Requirement</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse requirements and returns torch, mmcv and task requirements.</span>
@@ -405,7 +405,7 @@
 
 <div class="viewcode-block" id="get_cuda_version">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.get_cuda_version">[docs]</a>
-<span class="k">def</span> <span class="nf">get_cuda_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cuda_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get CUDA version installed on the system.</span>
 
 <span class="sd">    Examples:</span>
@@ -452,7 +452,7 @@
 
 <div class="viewcode-block" id="update_cuda_version_with_available_torch_cuda_build">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.update_cuda_version_with_available_torch_cuda_build">[docs]</a>
-<span class="k">def</span> <span class="nf">update_cuda_version_with_available_torch_cuda_build</span><span class="p">(</span><span class="n">cuda_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">torch_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_cuda_version_with_available_torch_cuda_build</span><span class="p">(</span><span class="n">cuda_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">torch_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the installed CUDA version with the highest supported CUDA version by PyTorch.</span>
 
 <span class="sd">    Args:</span>
@@ -499,7 +499,7 @@
 
 <div class="viewcode-block" id="get_cuda_suffix">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.get_cuda_suffix">[docs]</a>
-<span class="k">def</span> <span class="nf">get_cuda_suffix</span><span class="p">(</span><span class="n">cuda_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cuda_suffix</span><span class="p">(</span><span class="n">cuda_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get CUDA suffix for PyTorch or mmX versions.</span>
 
 <span class="sd">    Args:</span>
@@ -530,7 +530,7 @@
 
 <div class="viewcode-block" id="get_hardware_suffix">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.get_hardware_suffix">[docs]</a>
-<span class="k">def</span> <span class="nf">get_hardware_suffix</span><span class="p">(</span><span class="n">with_available_torch_build</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">torch_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_hardware_suffix</span><span class="p">(</span><span class="n">with_available_torch_build</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">torch_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get hardware suffix for PyTorch or mmX versions.</span>
 
 <span class="sd">    Args:</span>
@@ -581,7 +581,7 @@
 
 <div class="viewcode-block" id="add_hardware_suffix_to_torch">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.add_hardware_suffix_to_torch">[docs]</a>
-<span class="k">def</span> <span class="nf">add_hardware_suffix_to_torch</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_hardware_suffix_to_torch</span><span class="p">(</span>
     <span class="n">requirement</span><span class="p">:</span> <span class="n">Requirement</span><span class="p">,</span>
     <span class="n">hardware_suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">with_available_torch_build</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -659,7 +659,7 @@
 
 <div class="viewcode-block" id="get_torch_install_args">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.get_torch_install_args">[docs]</a>
-<span class="k">def</span> <span class="nf">get_torch_install_args</span><span class="p">(</span><span class="n">requirement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Requirement</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_torch_install_args</span><span class="p">(</span><span class="n">requirement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Requirement</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the install arguments for Torch requirement.</span>
 
 <span class="sd">    This function will return the install arguments for the Torch requirement</span>
@@ -730,7 +730,7 @@
 
 <div class="viewcode-block" id="get_mmcv_install_args">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.get_mmcv_install_args">[docs]</a>
-<span class="k">def</span> <span class="nf">get_mmcv_install_args</span><span class="p">(</span><span class="n">torch_requirement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">mmcv_requirements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mmcv_install_args</span><span class="p">(</span><span class="n">torch_requirement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Requirement</span><span class="p">,</span> <span class="n">mmcv_requirements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the install arguments for MMCV.</span>
 
 <span class="sd">    Args:</span>
@@ -769,7 +769,7 @@
 
 <div class="viewcode-block" id="mim_installation">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.mim_installation">[docs]</a>
-<span class="k">def</span> <span class="nf">mim_installation</span><span class="p">(</span><span class="n">requirements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mim_installation</span><span class="p">(</span><span class="n">requirements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Installing libraries with mim api.</span>
 
 <span class="sd">    Args:</span>
@@ -781,7 +781,7 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;mim&quot;</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The mmX library installation requires mim. mim is not currently installed.&quot;</span>
         <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="kn">from</span> <span class="nn">mim</span> <span class="kn">import</span> <span class="n">install</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mim</span><span class="w"> </span><span class="kn">import</span> <span class="n">install</span>
 
     <span class="k">return</span> <span class="n">install</span><span class="p">(</span><span class="n">requirements</span><span class="p">)</span></div>
 
@@ -789,7 +789,7 @@
 
 <div class="viewcode-block" id="get_module_version">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.get_module_version">[docs]</a>
-<span class="k">def</span> <span class="nf">get_module_version</span><span class="p">(</span><span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_module_version</span><span class="p">(</span><span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the version of the specified Python module.</span>
 
 <span class="sd">    Args:</span>
@@ -809,7 +809,7 @@
 
 <div class="viewcode-block" id="patch_mmaction2">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.cli.utils.installation.html#otx.cli.utils.installation.patch_mmaction2">[docs]</a>
-<span class="k">def</span> <span class="nf">patch_mmaction2</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">patch_mmaction2</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Patch MMAction2==1.2.0 with the custom code.</span>
 
 <span class="sd">    The patch is at `src/otx/cli/patches/mmaction2.patch`.</span>

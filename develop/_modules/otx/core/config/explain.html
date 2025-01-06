@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -257,17 +257,17 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Config data type objects for export method.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
-<span class="kn">from</span> <span class="nn">otx.core.types.explain</span> <span class="kn">import</span> <span class="n">TargetExplainGroup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">TargetExplainGroup</span>
 
 
 <div class="viewcode-block" id="ExplainConfig">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.config.explain.html#otx.core.config.explain.ExplainConfig">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">ExplainConfig</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExplainConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Data Transfer Object (DTO) for explain configuration.&quot;&quot;&quot;</span>
 
     <span class="n">target_explain_group</span><span class="p">:</span> <span class="n">TargetExplainGroup</span> <span class="o">=</span> <span class="n">TargetExplainGroup</span><span class="o">.</span><span class="n">ALL</span>

@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,47 +258,47 @@
 
 <span class="sd">&quot;&quot;&quot;ViT model implementation.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">types</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span>
-<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.hub</span> <span class="kn">import</span> <span class="n">download_url_to_file</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.hub</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_url_to_file</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.classification.backbones.vision_transformer</span> <span class="kn">import</span> <span class="n">VIT_ARCH_TYPE</span><span class="p">,</span> <span class="n">VisionTransformer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.classification.classifier</span> <span class="kn">import</span> <span class="n">HLabelClassifier</span><span class="p">,</span> <span class="n">ImageClassifier</span><span class="p">,</span> <span class="n">SemiSLClassifier</span>
-<span class="kn">from</span> <span class="nn">otx.algo.classification.heads</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.backbones.vision_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="n">VIT_ARCH_TYPE</span><span class="p">,</span> <span class="n">VisionTransformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelClassifier</span><span class="p">,</span> <span class="n">ImageClassifier</span><span class="p">,</span> <span class="n">SemiSLClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.heads</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HierarchicalCBAMClsHead</span><span class="p">,</span>
     <span class="n">MultiLabelLinearClsHead</span><span class="p">,</span>
     <span class="n">SemiSLVisionTransformerClsHead</span><span class="p">,</span>
     <span class="n">VisionTransformerClsHead</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.algo.classification.losses</span> <span class="kn">import</span> <span class="n">AsymmetricAngularLossWithIgnore</span>
-<span class="kn">from</span> <span class="nn">otx.algo.classification.utils</span> <span class="kn">import</span> <span class="n">get_classification_layers</span>
-<span class="kn">from</span> <span class="nn">otx.algo.explain.explain_algo</span> <span class="kn">import</span> <span class="n">ViTReciproCAM</span><span class="p">,</span> <span class="n">feature_vector_fn</span>
-<span class="kn">from</span> <span class="nn">otx.algo.utils.support_otx_v1</span> <span class="kn">import</span> <span class="n">OTXv1Helper</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.base</span> <span class="kn">import</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span>
-<span class="kn">from</span> <span class="nn">otx.core.metrics.accuracy</span> <span class="kn">import</span> <span class="n">HLabelClsMetricCallable</span><span class="p">,</span> <span class="n">MultiClassClsMetricCallable</span><span class="p">,</span> <span class="n">MultiLabelClsMetricCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.model.base</span> <span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.model.classification</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsymmetricAngularLossWithIgnore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_classification_layers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.explain.explain_algo</span><span class="w"> </span><span class="kn">import</span> <span class="n">ViTReciproCAM</span><span class="p">,</span> <span class="n">feature_vector_fn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.support_otx_v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXv1Helper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics.accuracy</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelClsMetricCallable</span><span class="p">,</span> <span class="n">MultiClassClsMetricCallable</span><span class="p">,</span> <span class="n">MultiLabelClsMetricCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">OTXHlabelClsModel</span><span class="p">,</span>
     <span class="n">OTXMulticlassClsModel</span><span class="p">,</span>
     <span class="n">OTXMultilabelClsModel</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.core.schedulers</span> <span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.label</span> <span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
-<span class="kn">from</span> <span class="nn">otx.core.types.task</span> <span class="kn">import</span> <span class="n">OTXTrainType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTrainType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.cli</span> <span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
 
-    <span class="kn">from</span> <span class="nn">otx.core.metrics</span> <span class="kn">import</span> <span class="n">MetricCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
 
 <span class="n">augreg_url</span> <span class="o">=</span> <span class="s2">&quot;https://storage.googleapis.com/vit_models/augreg/&quot;</span>
 <span class="n">dinov2_url</span> <span class="o">=</span> <span class="s2">&quot;https://dl.fbaipublicfiles.com/dinov2/&quot;</span>
@@ -320,7 +320,7 @@
 
 <div class="viewcode-block" id="ForwardExplainMixInForViT">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.ForwardExplainMixInForViT">[docs]</a>
-<span class="k">class</span> <span class="nc">ForwardExplainMixInForViT</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchPredEntity</span><span class="p">,</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ForwardExplainMixInForViT</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchPredEntity</span><span class="p">,</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;ViT model which can attach a XAI (Explainable AI) branch.&quot;&quot;&quot;</span>
 
     <span class="n">explain_mode</span><span class="p">:</span> <span class="nb">bool</span>
@@ -330,7 +330,7 @@
 <div class="viewcode-block" id="ForwardExplainMixInForViT.head_forward_fn">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.ForwardExplainMixInForViT.head_forward_fn">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">head_forward_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">head_forward_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs model&#39;s neck and head forward.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="p">,</span> <span class="s2">&quot;blocks&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
@@ -354,7 +354,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_forward_explain_image_classifier</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward_explain_image_classifier</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">:</span> <span class="n">ImageClassifier</span><span class="p">,</span>
         <span class="n">images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tensor&quot;</span><span class="p">,</span>
@@ -404,7 +404,7 @@
 
 <div class="viewcode-block" id="ForwardExplainMixInForViT.get_explain_fn">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.ForwardExplainMixInForViT.get_explain_fn">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_explain_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_explain_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns explain function.&quot;&quot;&quot;</span>
         <span class="n">explainer</span> <span class="o">=</span> <span class="n">ViTReciproCAM</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">head_forward_fn</span><span class="p">,</span>
@@ -414,12 +414,12 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_optimization_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_optimization_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;PTQ config for DeitTinyForMultilabelCls.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;model_type&quot;</span><span class="p">:</span> <span class="s2">&quot;transformer&quot;</span><span class="p">}</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">has_gap</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_gap</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines if GAP is used right after backbone.</span>
 
 <span class="sd">        Note:</span>
@@ -427,7 +427,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_register</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_registered&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_vector_fn</span> <span class="o">=</span> <span class="n">feature_vector_fn</span>
@@ -436,7 +436,7 @@
 
 <div class="viewcode-block" id="ForwardExplainMixInForViT.forward_explain">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.ForwardExplainMixInForViT.forward_explain">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_explain</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_explain</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
@@ -463,7 +463,7 @@
 
 <div class="viewcode-block" id="ForwardExplainMixInForViT.forward_for_tracing">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.ForwardExplainMixInForViT.forward_for_tracing">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function used for the model tracing during model exportation.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_register</span><span class="p">()</span>
@@ -477,12 +477,12 @@
 
 <div class="viewcode-block" id="VisionTransformerForMulticlassCls">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.VisionTransformerForMulticlassCls">[docs]</a>
-<span class="k">class</span> <span class="nc">VisionTransformerForMulticlassCls</span><span class="p">(</span><span class="n">ForwardExplainMixInForViT</span><span class="p">,</span> <span class="n">OTXMulticlassClsModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VisionTransformerForMulticlassCls</span><span class="p">(</span><span class="n">ForwardExplainMixInForViT</span><span class="p">,</span> <span class="n">OTXMulticlassClsModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DeitTiny Model for multi-class classification task.&quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="n">ImageClassifier</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">arch</span><span class="p">:</span> <span class="n">VIT_ARCH_TYPE</span> <span class="o">=</span> <span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
@@ -511,7 +511,7 @@
 
 <div class="viewcode-block" id="VisionTransformerForMulticlassCls.load_from_otx_v1_ckpt">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.VisionTransformerForMulticlassCls.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">state_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">new_key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;patch_embed.projection&quot;</span><span class="p">,</span> <span class="s2">&quot;patch_embed.proj&quot;</span><span class="p">)</span>
@@ -525,7 +525,7 @@
         <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_cls_effnet_b0_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="s2">&quot;multiclass&quot;</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="c1"># Get classification_layers for class-incr learning</span>
         <span class="n">sample_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
         <span class="n">incremental_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
@@ -550,7 +550,7 @@
 
         <span class="k">return</span> <span class="n">model</span>
 
-    <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">init_cfg</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">{</span><span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="s2">&quot;Linear&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;TruncNormal&quot;</span><span class="p">},</span>
             <span class="p">{</span><span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="s2">&quot;LayerNorm&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Constant&quot;</span><span class="p">},</span>
@@ -582,12 +582,12 @@
 
 <div class="viewcode-block" id="VisionTransformerForMultilabelCls">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.VisionTransformerForMultilabelCls">[docs]</a>
-<span class="k">class</span> <span class="nc">VisionTransformerForMultilabelCls</span><span class="p">(</span><span class="n">ForwardExplainMixInForViT</span><span class="p">,</span> <span class="n">OTXMultilabelClsModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VisionTransformerForMultilabelCls</span><span class="p">(</span><span class="n">ForwardExplainMixInForViT</span><span class="p">,</span> <span class="n">OTXMultilabelClsModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DeitTiny Model for multi-class classification task.&quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="n">ImageClassifier</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">arch</span><span class="p">:</span> <span class="n">VIT_ARCH_TYPE</span> <span class="o">=</span> <span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
@@ -614,7 +614,7 @@
 
 <div class="viewcode-block" id="VisionTransformerForMultilabelCls.load_from_otx_v1_ckpt">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.VisionTransformerForMultilabelCls.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">state_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">new_key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;patch_embed.projection&quot;</span><span class="p">,</span> <span class="s2">&quot;patch_embed.proj&quot;</span><span class="p">)</span>
@@ -628,7 +628,7 @@
         <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_cls_effnet_b0_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="s2">&quot;multiclass&quot;</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="c1"># Get classification_layers for class-incr learning</span>
         <span class="n">sample_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
         <span class="n">incremental_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
@@ -652,7 +652,7 @@
             <span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">load_pretrained</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">cache_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">model</span>
 
-    <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">vit_backbone</span> <span class="o">=</span> <span class="n">VisionTransformer</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arch</span><span class="p">,</span> <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span> <span class="n">lora</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lora</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ImageClassifier</span><span class="p">(</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">vit_backbone</span><span class="p">,</span>
@@ -668,13 +668,13 @@
 
 <div class="viewcode-block" id="VisionTransformerForHLabelCls">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.VisionTransformerForHLabelCls">[docs]</a>
-<span class="k">class</span> <span class="nc">VisionTransformerForHLabelCls</span><span class="p">(</span><span class="n">ForwardExplainMixInForViT</span><span class="p">,</span> <span class="n">OTXHlabelClsModel</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VisionTransformerForHLabelCls</span><span class="p">(</span><span class="n">ForwardExplainMixInForViT</span><span class="p">,</span> <span class="n">OTXHlabelClsModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DeitTiny Model for hierarchical label classification task.&quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="n">ImageClassifier</span>
     <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span><span class="p">,</span>
         <span class="n">arch</span><span class="p">:</span> <span class="n">VIT_ARCH_TYPE</span> <span class="o">=</span> <span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
@@ -701,7 +701,7 @@
 
 <div class="viewcode-block" id="VisionTransformerForHLabelCls.load_from_otx_v1_ckpt">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.VisionTransformerForHLabelCls.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span> <span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">state_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">new_key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;patch_embed.projection&quot;</span><span class="p">,</span> <span class="s2">&quot;patch_embed.proj&quot;</span><span class="p">)</span>
@@ -715,7 +715,7 @@
         <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_cls_effnet_b0_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="s2">&quot;multiclass&quot;</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="c1"># Get classification_layers for class-incr learning</span>
         <span class="n">sample_config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">as_head_config_dict</span><span class="p">())</span>
         <span class="n">sample_config</span><span class="p">[</span><span class="s2">&quot;num_classes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
@@ -742,7 +742,7 @@
             <span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">load_pretrained</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">cache_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">model</span>
 
-    <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">,</span> <span class="n">HLabelInfo</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
         <span class="n">init_cfg</span> <span class="o">=</span> <span class="p">[</span>

@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,18 +258,18 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Cache Class for Trainer kwargs.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="TrainerArgumentsCache">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.cache.html#otx.core.utils.cache.TrainerArgumentsCache">[docs]</a>
-<span class="k">class</span> <span class="nc">TrainerArgumentsCache</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TrainerArgumentsCache</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Cache arguments.</span>
 
 <span class="sd">    Since the Engine class accepts PyTorch Lightning Trainer arguments, we store these arguments using this class</span>
@@ -299,13 +299,13 @@
 <span class="sd">        }</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cached_args</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_trainer_args_identical</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="TrainerArgumentsCache.update">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.cache.html#otx.core.utils.cache.TrainerArgumentsCache.update">[docs]</a>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace cached arguments with arguments retrieved from the model.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -319,7 +319,7 @@
 
 <div class="viewcode-block" id="TrainerArgumentsCache.requires_update">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.cache.html#otx.core.utils.cache.TrainerArgumentsCache.requires_update">[docs]</a>
-    <span class="k">def</span> <span class="nf">requires_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">requires_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the cached arguments need to be updated based on the provided keyword arguments.</span>
 
 <span class="sd">        Args:</span>
@@ -334,7 +334,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the cached arguments.</span>
 
 <span class="sd">        Returns:</span>
@@ -345,13 +345,13 @@
 <div class="viewcode-block" id="TrainerArgumentsCache.get_trainer_constructor_args">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.cache.html#otx.core.utils.cache.TrainerArgumentsCache.get_trainer_constructor_args">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_trainer_constructor_args</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_trainer_constructor_args</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the set of arguments accepted by the Trainer class constructor.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            set[str]: A set of argument names accepted by the Trainer class constructor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">lightning</span> <span class="kn">import</span> <span class="n">Trainer</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trainer</span>
 
         <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">Trainer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>

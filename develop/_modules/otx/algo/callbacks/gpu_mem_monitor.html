@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -257,22 +257,22 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Monitor GPU memory hook.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">from</span> <span class="nn">lightning.pytorch.callbacks.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.callbacks.callback</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">lightning</span> <span class="kn">import</span> <span class="n">LightningModule</span><span class="p">,</span> <span class="n">Trainer</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningModule</span><span class="p">,</span> <span class="n">Trainer</span>
 
 
 <div class="viewcode-block" id="GPUMemMonitor">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.callbacks.gpu_mem_monitor.html#otx.algo.callbacks.gpu_mem_monitor.GPUMemMonitor">[docs]</a>
-<span class="k">class</span> <span class="nc">GPUMemMonitor</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GPUMemMonitor</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Monitor GPU memory hook.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_get_and_log_device_stats</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_and_log_device_stats</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">trainer</span><span class="p">:</span> <span class="n">Trainer</span><span class="p">,</span>
         <span class="n">pl_module</span><span class="p">:</span> <span class="n">LightningModule</span><span class="p">,</span>
@@ -304,7 +304,7 @@
 
 <div class="viewcode-block" id="GPUMemMonitor.on_train_batch_start">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.callbacks.gpu_mem_monitor.html#otx.algo.callbacks.gpu_mem_monitor.GPUMemMonitor.on_train_batch_start">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_train_batch_start</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_batch_start</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">trainer</span><span class="p">:</span> <span class="n">Trainer</span><span class="p">,</span>
         <span class="n">pl_module</span><span class="p">:</span> <span class="n">LightningModule</span><span class="p">,</span>
@@ -327,7 +327,7 @@
 
 <div class="viewcode-block" id="GPUMemMonitor.on_validation_batch_start">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.callbacks.gpu_mem_monitor.html#otx.algo.callbacks.gpu_mem_monitor.GPUMemMonitor.on_validation_batch_start">[docs]</a>
-    <span class="k">def</span> <span class="nf">on_validation_batch_start</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_validation_batch_start</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">trainer</span><span class="p">:</span> <span class="n">Trainer</span><span class="p">,</span>
         <span class="n">pl_module</span><span class="p">:</span> <span class="n">LightningModule</span><span class="p">,</span>

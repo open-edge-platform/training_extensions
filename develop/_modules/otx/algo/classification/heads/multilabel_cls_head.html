@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -264,19 +264,19 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.modules.base_module</span> <span class="kn">import</span> <span class="n">BaseModule</span>
-<span class="kn">from</span> <span class="nn">otx.algo.utils.weight_init</span> <span class="kn">import</span> <span class="n">constant_init</span><span class="p">,</span> <span class="n">normal_init</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.base_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.weight_init</span><span class="w"> </span><span class="kn">import</span> <span class="n">constant_init</span><span class="p">,</span> <span class="n">normal_init</span>
 
 
-<span class="k">class</span> <span class="nc">AnglularLinear</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AnglularLinear</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes cos of angles between input vectors and weights vectors.</span>
 
 <span class="sd">    Args:</span>
@@ -284,7 +284,7 @@
 <span class="sd">        out_features (int): Number of output cosine logits.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">out_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Init function of AngularLinear class.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">in_features</span>
@@ -292,7 +292,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_features</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_features</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">normal_</span><span class="p">()</span><span class="o">.</span><span class="n">renorm_</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">)</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="mf">1e5</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function of AngularLinear class.&quot;&quot;&quot;</span>
         <span class="n">cos_theta</span> <span class="o">=</span> <span class="n">functional</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mm</span><span class="p">(</span>
             <span class="n">functional</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">t</span><span class="p">(),</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
@@ -300,7 +300,7 @@
         <span class="k">return</span> <span class="n">cos_theta</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">MultiLabelClsHead</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MultiLabelClsHead</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-label Classification Head module.</span>
 
 <span class="sd">    This module is responsible for calculating losses and performing inference</span>
@@ -314,7 +314,7 @@
 <span class="sd">        init_cfg (dict | None, optional): Initialize configuration key-values, Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -328,7 +328,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span> <span class="o">=</span> <span class="n">in_channels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="o">=</span> <span class="n">normalized</span>
 
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Inference without augmentation.</span>
 
 <span class="sd">        Args:</span>
@@ -346,11 +346,11 @@
         <span class="c1"># The part can not be traced by torch.fx</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_predictions</span><span class="p">(</span><span class="n">cls_score</span><span class="o">=</span><span class="n">cls_score</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls_score</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls_score</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the score from the classification score.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">cls_score</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">pre_logits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pre_logits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The process before the final classification head.</span>
 
 <span class="sd">        The input ``feats`` is a tuple of tensor, and each tensor is the</span>
@@ -366,7 +366,7 @@
 
 <div class="viewcode-block" id="MultiLabelLinearClsHead">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.heads.html#otx.algo.classification.heads.MultiLabelLinearClsHead">[docs]</a>
-<span class="k">class</span> <span class="nc">MultiLabelLinearClsHead</span><span class="p">(</span><span class="n">MultiLabelClsHead</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MultiLabelLinearClsHead</span><span class="p">(</span><span class="n">MultiLabelClsHead</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom Linear classification head for multilabel task.</span>
 
 <span class="sd">    Args:</span>
@@ -378,7 +378,7 @@
 
     <span class="n">fc</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -396,14 +396,14 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_layers</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">AnglularLinear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_weights</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize weights of head.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
             <span class="n">normal_init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -414,7 +414,7 @@
 
 <div class="viewcode-block" id="MultiLabelLinearClsHead.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.heads.html#otx.algo.classification.heads.MultiLabelLinearClsHead.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The forward process.&quot;&quot;&quot;</span>
         <span class="n">pre_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_logits</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
         <span class="c1"># The final classification head.</span>
@@ -425,7 +425,7 @@
 
 <div class="viewcode-block" id="MultiLabelNonLinearClsHead">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.heads.html#otx.algo.classification.heads.MultiLabelNonLinearClsHead">[docs]</a>
-<span class="k">class</span> <span class="nc">MultiLabelNonLinearClsHead</span><span class="p">(</span><span class="n">MultiLabelClsHead</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MultiLabelNonLinearClsHead</span><span class="p">(</span><span class="n">MultiLabelClsHead</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Non-linear classification head for multilabel task.</span>
 
 <span class="sd">    Args:</span>
@@ -439,7 +439,7 @@
 <span class="sd">        init_cfg (dict | None, optional): Initialize configuration key-values, Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -468,7 +468,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_layers</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the layers.&quot;&quot;&quot;</span>
         <span class="n">modules</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hid_channels</span><span class="p">),</span>
@@ -485,7 +485,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">modules</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_weights</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize weights of model.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
@@ -495,7 +495,7 @@
 
 <div class="viewcode-block" id="MultiLabelNonLinearClsHead.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.heads.html#otx.algo.classification.heads.MultiLabelNonLinearClsHead.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The forward process.&quot;&quot;&quot;</span>
         <span class="n">pre_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_logits</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">pre_logits</span><span class="p">)</span></div>

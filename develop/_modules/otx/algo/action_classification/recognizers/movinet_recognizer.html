@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -257,19 +257,19 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;MoViNet Recognizer for OTX compatibility.&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.action_classification.recognizers.recognizer</span> <span class="kn">import</span> <span class="n">BaseRecognizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.action_classification.recognizers.recognizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseRecognizer</span>
 
 
 <div class="viewcode-block" id="MoViNetRecognizer">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.action_classification.html#otx.algo.action_classification.MoViNetRecognizer">[docs]</a>
-<span class="k">class</span> <span class="nc">MoViNetRecognizer</span><span class="p">(</span><span class="n">BaseRecognizer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MoViNetRecognizer</span><span class="p">(</span><span class="n">BaseRecognizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;MoViNet recognizer model framework for OTX compatibility.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="c1"># Hooks for redirect state_dict load/save</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_register_state_dict_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_dict_hook</span><span class="p">)</span>
@@ -278,7 +278,7 @@
 <div class="viewcode-block" id="MoViNetRecognizer.state_dict_hook">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.action_classification.html#otx.algo.action_classification.MoViNetRecognizer.state_dict_hook">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">state_dict_hook</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: ARG004</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict_hook</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: ARG004</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Redirect model as output state_dict for OTX MoviNet compatibility.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">state_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -289,7 +289,7 @@
 <div class="viewcode-block" id="MoViNetRecognizer.load_state_dict_pre_hook">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.action_classification.html#otx.algo.action_classification.MoViNetRecognizer.load_state_dict_pre_hook">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">load_state_dict_pre_hook</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict_pre_hook</span><span class="p">(</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>  <span class="c1"># noqa: ARG004</span>
         <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
         <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>

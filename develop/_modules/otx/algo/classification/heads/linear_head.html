@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -265,20 +265,20 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.modules.base_module</span> <span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.base_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModule</span>
 
 
 <div class="viewcode-block" id="LinearClsHead">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.heads.html#otx.algo.classification.heads.LinearClsHead">[docs]</a>
-<span class="k">class</span> <span class="nc">LinearClsHead</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LinearClsHead</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Linear classifier head.</span>
 
 <span class="sd">    Args:</span>
@@ -293,7 +293,7 @@
 <span class="sd">            Defaults to ``dict(type=&#39;Normal&#39;, layer=&#39;Linear&#39;, std=0.01)``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -316,7 +316,7 @@
 
 <div class="viewcode-block" id="LinearClsHead.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.heads.html#otx.algo.classification.heads.LinearClsHead.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The forward process.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="n">feats</span> <span class="o">=</span> <span class="n">feats</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -326,7 +326,7 @@
 
 <div class="viewcode-block" id="LinearClsHead.predict">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.heads.html#otx.algo.classification.heads.LinearClsHead.predict">[docs]</a>
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -349,7 +349,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_predictions</span><span class="p">(</span><span class="n">cls_score</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls_score</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls_score</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the score from the classification score.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">functional</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">cls_score</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
 

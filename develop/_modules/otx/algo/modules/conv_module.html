@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -259,27 +259,27 @@
 
 <span class="sd">&quot;&quot;&quot;This implementation includes various Convolutional Module.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span>
 
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.nn.modules.batchnorm</span> <span class="kn">import</span> <span class="n">_BatchNorm</span> <span class="k">as</span> <span class="n">BatchNorm</span>
-<span class="kn">from</span> <span class="nn">torch.nn.modules.instancenorm</span> <span class="kn">import</span> <span class="n">_InstanceNorm</span> <span class="k">as</span> <span class="n">InstanceNorm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.modules.batchnorm</span><span class="w"> </span><span class="kn">import</span> <span class="n">_BatchNorm</span> <span class="k">as</span> <span class="n">BatchNorm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.modules.instancenorm</span><span class="w"> </span><span class="kn">import</span> <span class="n">_InstanceNorm</span> <span class="k">as</span> <span class="n">InstanceNorm</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.utils.weight_init</span> <span class="kn">import</span> <span class="n">constant_init</span><span class="p">,</span> <span class="n">kaiming_init</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.weight_init</span><span class="w"> </span><span class="kn">import</span> <span class="n">constant_init</span><span class="p">,</span> <span class="n">kaiming_init</span>
 
-<span class="kn">from</span> <span class="nn">.norm</span> <span class="kn">import</span> <span class="n">build_norm_layer</span><span class="p">,</span> <span class="n">infer_abbr</span>
-<span class="kn">from</span> <span class="nn">.padding</span> <span class="kn">import</span> <span class="n">build_padding_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span><span class="p">,</span> <span class="n">infer_abbr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.padding</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_padding_layer</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torch.nn.modules.conv</span> <span class="kn">import</span> <span class="n">_ConvNd</span> <span class="k">as</span> <span class="n">ConvNd</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.modules.conv</span><span class="w"> </span><span class="kn">import</span> <span class="n">_ConvNd</span> <span class="k">as</span> <span class="n">ConvNd</span>
 
 
-<span class="k">class</span> <span class="nc">ConvModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConvModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A conv block that bundles conv/norm/activation layers.</span>
 
 <span class="sd">    This block simplifies the usage of convolution layers, which are commonly</span>
@@ -328,7 +328,7 @@
     <span class="n">_abbr_</span> <span class="o">=</span> <span class="s2">&quot;conv_block&quot;</span>
     <span class="n">_conv_nd</span><span class="p">:</span> <span class="n">ConvNd</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -409,7 +409,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">with_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the conv module has activation.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_activation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># src/otx/algo/segmentation/heads/fcn_head.py L144</span>
@@ -417,7 +417,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="nd">@with_activation</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">with_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_activation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter for with_activation.</span>
 
 <span class="sd">        For src/otx/algo/segmentation/heads/fcn_head.py L144.</span>
@@ -425,7 +425,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_with_activation</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the normalization layer.</span>
 
 <span class="sd">        Returns:</span>
@@ -435,7 +435,7 @@
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Init weights function for ConvModule.&quot;&quot;&quot;</span>
         <span class="c1"># 1. It is mainly for customized conv layers with their own</span>
         <span class="c1">#    initialization manners by calling their own ``init_weights()``,</span>
@@ -457,7 +457,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_norm</span><span class="p">:</span>
             <span class="n">constant_init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the ConvModule.</span>
 
 <span class="sd">        Args:</span>
@@ -480,7 +480,7 @@
 
 <div class="viewcode-block" id="DepthwiseSeparableConvModule">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.modules.html#otx.algo.modules.DepthwiseSeparableConvModule">[docs]</a>
-<span class="k">class</span> <span class="nc">DepthwiseSeparableConvModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DepthwiseSeparableConvModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Depthwise separable convolution module.</span>
 
 <span class="sd">    See https://arxiv.org/pdf/1704.04861.pdf for details.</span>
@@ -529,7 +529,7 @@
 <span class="sd">            ConvModule. See ConvModule for ref.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -550,7 +550,7 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;groups should not be specified in DepthwiseSeparableConvModule.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">update_num_features</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_num_features</span><span class="p">(</span>
             <span class="n">normalization</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">num_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -602,7 +602,7 @@
 
 <div class="viewcode-block" id="DepthwiseSeparableConvModule.forward">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.modules.html#otx.algo.modules.DepthwiseSeparableConvModule.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depthwise_conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pointwise_conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
@@ -612,7 +612,7 @@
 
 <div class="viewcode-block" id="Conv2dModule">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.modules.html#otx.algo.modules.Conv2dModule">[docs]</a>
-<span class="k">class</span> <span class="nc">Conv2dModule</span><span class="p">(</span><span class="n">ConvModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Conv2dModule</span><span class="p">(</span><span class="n">ConvModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A conv2d block that bundles conv/norm/activation layers.&quot;&quot;&quot;</span>
 
     <span class="n">_conv_nd</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span></div>
@@ -621,7 +621,7 @@
 
 <div class="viewcode-block" id="Conv3dModule">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.modules.html#otx.algo.modules.Conv3dModule">[docs]</a>
-<span class="k">class</span> <span class="nc">Conv3dModule</span><span class="p">(</span><span class="n">ConvModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Conv3dModule</span><span class="p">(</span><span class="n">ConvModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A conv3d block that bundles conv/norm/activation layers.&quot;&quot;&quot;</span>
 
     <span class="n">_conv_nd</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv3d</span></div>

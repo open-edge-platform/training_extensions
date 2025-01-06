@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,22 +258,22 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Instantiator functions for OTX engine components.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">from</span> <span class="nn">lightning.pytorch.cli</span> <span class="kn">import</span> <span class="n">instantiate_class</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">instantiate_class</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pylogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">pylogger</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">lightning</span> <span class="kn">import</span> <span class="n">Callback</span>
-    <span class="kn">from</span> <span class="nn">lightning.pytorch.loggers</span> <span class="kn">import</span> <span class="n">Logger</span>
-    <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Sampler</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.loggers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Logger</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Sampler</span>
 
-    <span class="kn">from</span> <span class="nn">otx.core.config.data</span> <span class="kn">import</span> <span class="n">SamplerConfig</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SamplerConfig</span>
 
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">pylogger</span><span class="o">.</span><span class="n">get_pylogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -281,7 +281,7 @@
 
 <div class="viewcode-block" id="instantiate_callbacks">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.instantiators.html#otx.core.utils.instantiators.instantiate_callbacks">[docs]</a>
-<span class="k">def</span> <span class="nf">instantiate_callbacks</span><span class="p">(</span><span class="n">callbacks_cfg</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callback</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">instantiate_callbacks</span><span class="p">(</span><span class="n">callbacks_cfg</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callback</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate a list of callbacks based on the provided configuration.</span>
 
 <span class="sd">    Args:</span>
@@ -307,7 +307,7 @@
 
 <div class="viewcode-block" id="instantiate_loggers">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.instantiators.html#otx.core.utils.instantiators.instantiate_loggers">[docs]</a>
-<span class="k">def</span> <span class="nf">instantiate_loggers</span><span class="p">(</span><span class="n">logger_cfg</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Logger</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">instantiate_loggers</span><span class="p">(</span><span class="n">logger_cfg</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Logger</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate loggers based on the provided logger configuration.</span>
 
 <span class="sd">    Args:</span>
@@ -333,7 +333,7 @@
 
 <div class="viewcode-block" id="partial_instantiate_class">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.instantiators.html#otx.core.utils.instantiators.partial_instantiate_class">[docs]</a>
-<span class="k">def</span> <span class="nf">partial_instantiate_class</span><span class="p">(</span><span class="n">init</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">partial</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">partial_instantiate_class</span><span class="p">(</span><span class="n">init</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">partial</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Partially instantiates a class with the given initialization arguments.</span>
 
 <span class="sd">    Copy from lightning.pytorch.cli.instantiate_class and modify it to use partial.</span>
@@ -364,7 +364,7 @@
 
 <div class="viewcode-block" id="instantiate_sampler">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.instantiators.html#otx.core.utils.instantiators.instantiate_sampler">[docs]</a>
-<span class="k">def</span> <span class="nf">instantiate_sampler</span><span class="p">(</span><span class="n">sampler_config</span><span class="p">:</span> <span class="n">SamplerConfig</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sampler</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">instantiate_sampler</span><span class="p">(</span><span class="n">sampler_config</span><span class="p">:</span> <span class="n">SamplerConfig</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sampler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate a sampler object based on the provided configuration.</span>
 
 <span class="sd">    Args:</span>

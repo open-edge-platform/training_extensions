@@ -25,7 +25,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=6232a102" />
@@ -538,7 +538,7 @@ be distinguished by OpenVINO™ Training Extensions Datumaro manager:</p>
 <h2>Quick Start with auto-configuration<a class="headerlink" href="#quick-start-with-auto-configuration" title="Link to this heading">#</a></h2>
 <p>Once the dataset is ready, we can immediately start training with the model and data pipeline recommended by OpenVINO™ Training Extension through auto-configuration.
 The following code snippet demonstrates how to use the auto-configuration feature:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -548,7 +548,7 @@ The following code snippet demonstrates how to use the auto-configuration featur
 <p class="admonition-title">Note</p>
 <p>If dataset supports multiple Task types, this will default to the Task type detected by OpenVINO™ Training Extension.
 If you want to specify a specific Task type, you need to specify it like below:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;INSTANCE_SEGMENTATION&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -563,7 +563,7 @@ If you want to specify a specific Task type, you need to specify it like below:<
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 List of available model names</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine.utils.api</span> <span class="kn">import</span> <span class="n">list_models</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
 
 <span class="n">model_lists</span> <span class="o">=</span> <span class="n">list_models</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;DETECTION&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">model_lists</span><span class="p">)</span>
@@ -593,7 +593,7 @@ List of available model names</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 Print available configuration information</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine.utils.api</span> <span class="kn">import</span> <span class="n">list_models</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
 
 <span class="n">model_lists</span> <span class="o">=</span> <span class="n">list_models</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;DETECTION&quot;</span><span class="p">,</span> <span class="n">print_table</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -612,7 +612,7 @@ Print available configuration information</label><div class="sd-tab-content docu
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you’re looking for a specific name, use the pattern argument.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine.utils.api</span> <span class="kn">import</span> <span class="n">list_models</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
 
 <span class="n">model_lists</span> <span class="o">=</span> <span class="n">list_models</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;DETECTION&quot;</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;tile&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">model_lists</span><span class="p">)</span>
@@ -640,8 +640,8 @@ Print available configuration information</label><div class="sd-tab-content docu
 <p>Specify <code class="docutils literal notranslate"><span class="pre">task</span></code>. This is the task type for that <code class="docutils literal notranslate"><span class="pre">Engine</span></code> usage.
 You can set the task by referencing the <code class="docutils literal notranslate"><span class="pre">OTXTaskType</span></code> in <code class="docutils literal notranslate"><span class="pre">otx.core.types.task</span></code>.
 If no task is specified, the task is detected and used via <code class="docutils literal notranslate"><span class="pre">datamodule</span></code> or <code class="docutils literal notranslate"><span class="pre">data_root</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.types.task</span> <span class="kn">import</span> <span class="n">OTXTaskType</span>
-<span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">OTXTaskType</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">)</span>
 <span class="c1"># or</span>
@@ -653,7 +653,7 @@ If no task is specified, the task is detected and used via <code class="docutils
 </ol>
 <p>Specify <code class="docutils literal notranslate"><span class="pre">work_dir</span></code>. This is the workspace for that <code class="docutils literal notranslate"><span class="pre">Engine</span></code>, and where output is stored.
 The default value is currently <code class="docutils literal notranslate"><span class="pre">./otx-workspace</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">work_dir</span><span class="o">=</span><span class="s2">&quot;work_dir&quot;</span><span class="p">)</span>
 </pre></div>
@@ -663,8 +663,8 @@ The default value is currently <code class="docutils literal notranslate"><span 
 </ol>
 <p>You can set the device by referencing the <code class="docutils literal notranslate"><span class="pre">DeviceType</span></code> in <code class="docutils literal notranslate"><span class="pre">otx.core.types.device</span></code>.
 The current default setting is <code class="docutils literal notranslate"><span class="pre">auto</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.types.device</span> <span class="kn">import</span> <span class="n">DeviceType</span>
-<span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">DeviceType</span><span class="o">.</span><span class="n">gpu</span><span class="p">)</span>
 <span class="c1"># or</span>
@@ -676,7 +676,7 @@ Refer <a class="reference external" href="https://lightning.ai/docs/pytorch/stab
 <ol class="arabic simple" start="4">
 <li><p>Using the OpenVINO™ Training Extension configuration we can configure the Engine.</p></li>
 </ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;src/otx/recipe/detection/atss_mobilenetv2.yaml&quot;</span>
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
@@ -693,7 +693,7 @@ Refer <a class="reference external" href="https://lightning.ai/docs/pytorch/stab
 <ol class="arabic simple">
 <li><p>Below is an example using the <code class="docutils literal notranslate"><span class="pre">atss_mobilenetv2</span></code> model provided by OpenVINO™ Training Extension.</p></li>
 </ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;atss_mobilenetv2&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -702,7 +702,7 @@ Refer <a class="reference external" href="https://lightning.ai/docs/pytorch/stab
 <ol class="arabic simple" start="2">
 <li><p>Alternatively, we can use the configuration file.</p></li>
 </ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="s2">&quot;src/otx/recipe/detection/atss_mobilenetv2.yaml&quot;</span>
 
@@ -723,8 +723,8 @@ However, in this case, no arguments are specified for train.</p>
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 Custom Model</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.algo.detection.atss</span> <span class="kn">import</span> <span class="n">ATSS</span>
-<span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.atss</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
 
@@ -736,8 +736,8 @@ Custom Model</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
 Custom Model with checkpoint</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.algo.detection.atss</span> <span class="kn">import</span> <span class="n">ATSS</span>
-<span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.atss</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
 
@@ -749,10 +749,10 @@ Custom Model with checkpoint</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-4">
 Custom Optimizer &amp; Scheduler</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <span class="n">SGD</span>
-<span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">CosineAnnealingLR</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.atss</span> <span class="kn">import</span> <span class="n">ATSS</span>
-<span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">SGD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">CosineAnnealingLR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.atss</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
@@ -773,8 +773,8 @@ Custom Optimizer &amp; Scheduler</label><div class="sd-tab-content docutils">
 <li><p>If you want to specify the datamodule, you can do so as shown below:</p></li>
 </ol>
 <p>The datamodule used by the Engine is of type <code class="docutils literal notranslate"><span class="pre">otx.core.data.module.OTXDataModule</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.data.module</span> <span class="kn">import</span> <span class="n">OTXDataModule</span>
-<span class="kn">from</span> <span class="nn">otx.engine</span> <span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 
@@ -789,7 +789,7 @@ Custom Optimizer &amp; Scheduler</label><div class="sd-tab-content docutils">
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>You can get DataModule more easily using AutoConfigurator.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.engine.utils.auto_configuration</span> <span class="kn">import</span> <span class="n">AutoConfigurator</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.auto_configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoConfigurator</span>
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">AutoConfigurator</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">()</span>
 </pre></div>
@@ -829,7 +829,7 @@ Use Mixed Precision</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-8">
 Change Validation Metric</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.metrics.fmeasure</span> <span class="kn">import</span> <span class="n">FMeasure</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">FMeasure</span>
 
 <span class="n">metric</span> <span class="o">=</span> <span class="n">FMeasue</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
@@ -839,8 +839,8 @@ Change Validation Metric</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-9" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-9">
 Set Callbacks &amp; Logger</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">lightning.pytorch.callbacks</span> <span class="kn">import</span> <span class="n">EarlyStopping</span>
-<span class="kn">from</span> <span class="nn">lightning.pytorch.loggers.tensorboard</span> <span class="kn">import</span> <span class="n">TensorBoardLogger</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.loggers.tensorboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorBoardLogger</span>
 
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">EarlyStopping</span><span class="p">()],</span> <span class="n">loggers</span><span class="o">=</span><span class="p">[</span><span class="n">TensorBoardLogger</span><span class="p">()])</span>
 </pre></div>
@@ -886,7 +886,7 @@ Evaluate Model with different checkpoint</label><div class="sd-tab-content docut
 <input id="sd-tab-item-12" name="sd-tab-set-3" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-12">
 Evaluate Model with different datamodule or dataloader</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.data.module</span> <span class="kn">import</span> <span class="n">OTXDataModule</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>
@@ -896,7 +896,7 @@ Evaluate Model with different datamodule or dataloader</label><div class="sd-tab
 <input id="sd-tab-item-13" name="sd-tab-set-3" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-13">
 Evaluate Model with different metrics</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.metrics.fmeasure</span> <span class="kn">import</span> <span class="n">FMeasure</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">FMeasure</span>
 
 <span class="n">metric</span> <span class="o">=</span> <span class="n">FMeasue</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
@@ -967,7 +967,7 @@ Run XAI</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-20" name="sd-tab-set-5" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-20">
 Evaluate Model with different datamodule or dataloader</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.data.module</span> <span class="kn">import</span> <span class="n">OTXDataModule</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>
@@ -997,7 +997,7 @@ Run PTQ Optimization</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-23" name="sd-tab-set-6" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-23">
 Evaluate Model with different datamodule or dataloader</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">otx.core.data.module</span> <span class="kn">import</span> <span class="n">OTXDataModule</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>

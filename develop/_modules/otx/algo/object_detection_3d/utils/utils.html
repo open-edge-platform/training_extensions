@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -257,19 +257,19 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;utils for object detection 3D models.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
 
 
 <span class="c1"># TODO(Kirill): try to remove this class</span>
 <div class="viewcode-block" id="NestedTensor">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.utils.utils.html#otx.algo.object_detection_3d.utils.utils.NestedTensor">[docs]</a>
-<span class="k">class</span> <span class="nc">NestedTensor</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NestedTensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Nested tensor class for object detection 3D models.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a NestedTensor object.</span>
 
 <span class="sd">        Args:</span>
@@ -281,7 +281,7 @@
 
 <div class="viewcode-block" id="NestedTensor.to">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.utils.utils.html#otx.algo.object_detection_3d.utils.utils.NestedTensor.to">[docs]</a>
-    <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedTensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedTensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Move the NestedTensor object to the specified device.</span>
 
 <span class="sd">        Args:</span>
@@ -297,12 +297,12 @@
 
 <div class="viewcode-block" id="NestedTensor.decompose">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.utils.utils.html#otx.algo.object_detection_3d.utils.utils.NestedTensor.decompose">[docs]</a>
-    <span class="k">def</span> <span class="nf">decompose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decompose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Decompose the NestedTensor object into its constituent tensors and masks.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a string representation of the NestedTensor object.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensors</span><span class="p">)</span></div>
 
@@ -310,7 +310,7 @@
 
 <div class="viewcode-block" id="box_cxcylrtb_to_xyxy">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.utils.utils.html#otx.algo.object_detection_3d.utils.utils.box_cxcylrtb_to_xyxy">[docs]</a>
-<span class="k">def</span> <span class="nf">box_cxcylrtb_to_xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">box_cxcylrtb_to_xyxy</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform bbox from cxcylrtb to xyxy representation.&quot;&quot;&quot;</span>
     <span class="n">x_c</span><span class="p">,</span> <span class="n">y_c</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">bb</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x_c</span> <span class="o">-</span> <span class="n">k</span><span class="p">),</span> <span class="p">(</span><span class="n">y_c</span> <span class="o">-</span> <span class="n">t</span><span class="p">),</span> <span class="p">(</span><span class="n">x_c</span> <span class="o">+</span> <span class="n">r</span><span class="p">),</span> <span class="p">(</span><span class="n">y_c</span> <span class="o">+</span> <span class="n">b</span><span class="p">)]</span>

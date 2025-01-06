@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -258,29 +258,29 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Presnet backbones, modified from https://github.com/lyuwenyu/RT-DETR.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.modules</span> <span class="kn">import</span> <span class="n">build_activation_layer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.base_module</span> <span class="kn">import</span> <span class="n">BaseModule</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.conv_module</span> <span class="kn">import</span> <span class="n">Conv2dModule</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.norm</span> <span class="kn">import</span> <span class="n">FrozenBatchNorm2d</span><span class="p">,</span> <span class="n">build_norm_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_activation_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.base_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.conv_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv2dModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenBatchNorm2d</span><span class="p">,</span> <span class="n">build_norm_layer</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PResNet&quot;</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">BasicBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BasicBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;BasicBlock.&quot;&quot;&quot;</span>
 
     <span class="n">expansion</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">ch_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">ch_out</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -344,7 +344,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">act</span> <span class="o">=</span> <span class="n">activation</span><span class="p">()</span> <span class="k">if</span> <span class="n">activation</span> <span class="k">else</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch2a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch2b</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
@@ -355,12 +355,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">BottleNeck</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BottleNeck</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;BottleNeck.&quot;&quot;&quot;</span>
 
     <span class="n">expansion</span> <span class="o">=</span> <span class="mi">4</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">ch_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">ch_out</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -447,7 +447,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">act</span> <span class="o">=</span> <span class="n">activation</span><span class="p">()</span> <span class="k">if</span> <span class="n">activation</span> <span class="k">else</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch2a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch2b</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
@@ -459,8 +459,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Blocks</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Blocks</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">block</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">ch_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -490,7 +490,7 @@
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">ch_in</span> <span class="o">=</span> <span class="n">ch_out</span> <span class="o">*</span> <span class="n">block</span><span class="o">.</span><span class="n">expansion</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
@@ -498,7 +498,7 @@
         <span class="k">return</span> <span class="n">out</span>
 
 
-<span class="k">class</span> <span class="nc">PResNetModule</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PResNetModule</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;PResNet backbone.</span>
 
 <span class="sd">    Args:</span>
@@ -528,7 +528,7 @@
         <span class="mi">101</span><span class="p">:</span> <span class="s2">&quot;https://github.com/lyuwenyu/storage/releases/download/v0.1/ResNet101_vd_ssld_pretrained_from_paddle.pth&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">variant</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;d&quot;</span><span class="p">,</span>
@@ -610,11 +610,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Load PResNet</span><span class="si">{</span><span class="n">depth</span><span class="si">}</span><span class="s2"> state_dict&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_freeze_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_freeze_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
             <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">conv1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">max_pool2d</span><span class="p">(</span><span class="n">conv1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -628,7 +628,7 @@
 
 <div class="viewcode-block" id="PResNet">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.backbones.html#otx.algo.detection.backbones.PResNet">[docs]</a>
-<span class="k">class</span> <span class="nc">PResNet</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PResNet</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;PResNet factory for detection.&quot;&quot;&quot;</span>
 
     <span class="n">PRESNET_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -653,7 +653,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PResNetModule</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PResNetModule</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for PResNet.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">PRESNET_CFG</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model type &#39;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&#39; is not supported&quot;</span>

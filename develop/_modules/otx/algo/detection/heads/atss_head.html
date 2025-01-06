@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -261,33 +261,33 @@
 <span class="sd">Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/dense_heads/atss_head.py</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.coders</span> <span class="kn">import</span> <span class="n">BaseBBoxCoder</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.prior_generators</span> <span class="kn">import</span> <span class="n">BasePriorGenerator</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.utils</span> <span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.heads.anchor_head</span> <span class="kn">import</span> <span class="n">AnchorHead</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.heads.class_incremental_mixin</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.coders</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseBBoxCoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.prior_generators</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasePriorGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.heads.anchor_head</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnchorHead</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.heads.class_incremental_mixin</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ClassIncrementalMixin</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.utils.prior_generators.utils</span> <span class="kn">import</span> <span class="n">anchor_inside_flags</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.utils.utils</span> <span class="kn">import</span> <span class="n">unmap</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.conv_module</span> <span class="kn">import</span> <span class="n">Conv2dModule</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.norm</span> <span class="kn">import</span> <span class="n">build_norm_layer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.scale</span> <span class="kn">import</span> <span class="n">Scale</span>
-<span class="kn">from</span> <span class="nn">otx.algo.utils.mmengine_utils</span> <span class="kn">import</span> <span class="n">InstanceData</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.detection</span> <span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.utils.prior_generators.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">anchor_inside_flags</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">unmap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.conv_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv2dModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.scale</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scale</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.mmengine_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
 
 <span class="n">EPS</span> <span class="o">=</span> <span class="mf">1e-12</span>
 
 
-<span class="k">class</span> <span class="nc">ATSSHeadModule</span><span class="p">(</span><span class="n">ClassIncrementalMixin</span><span class="p">,</span> <span class="n">AnchorHead</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ATSSHeadModule</span><span class="p">(</span><span class="n">ClassIncrementalMixin</span><span class="p">,</span> <span class="n">AnchorHead</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Detection Head of `ATSS &lt;https://arxiv.org/abs/1912.02424&gt;`_.</span>
 
 <span class="sd">    ATSS head structure is similar with FCOS, however ATSS use anchor boxes</span>
@@ -311,7 +311,7 @@
 <span class="sd">            for classification prediction. Defaults to True.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -348,7 +348,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">sampling</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize layers of the head.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
@@ -396,7 +396,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span><span class="n">Scale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">strides</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward features from the upstream network.</span>
 
 <span class="sd">        Args:</span>
@@ -414,7 +414,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">multi_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_single</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">Scale</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">Scale</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>  <span class="c1"># type: ignore[override]</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward feature of a single scale level.</span>
 
 <span class="sd">        Args:</span>
@@ -442,7 +442,7 @@
         <span class="n">centerness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atss_centerness</span><span class="p">(</span><span class="n">reg_feat</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cls_score</span><span class="p">,</span> <span class="n">bbox_pred</span><span class="p">,</span> <span class="n">centerness</span>
 
-    <span class="k">def</span> <span class="nf">prepare_loss_inputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_loss_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">entity</span><span class="p">:</span> <span class="n">DetBatchDataEntity</span><span class="p">,</span>
@@ -499,7 +499,7 @@
             <span class="s2">&quot;avg_factor&quot;</span><span class="p">:</span> <span class="n">avg_factor</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">get_targets</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_targets</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">anchor_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
         <span class="n">valid_flag_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
@@ -523,7 +523,7 @@
             <span class="n">unmap_outputs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_targets_single</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_targets_single</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">flat_anchors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">valid_flags</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -633,7 +633,7 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">label_weights</span><span class="p">,</span> <span class="n">bbox_targets</span><span class="p">,</span> <span class="n">bbox_weights</span><span class="p">,</span> <span class="n">pos_inds</span><span class="p">,</span> <span class="n">neg_inds</span><span class="p">,</span> <span class="n">sampling_result</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_num_level_anchors_inside</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">inside_flags</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_num_level_anchors_inside</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">inside_flags</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of valid anchors in every level.&quot;&quot;&quot;</span>
         <span class="n">split_inside_flags</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">inside_flags</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">flags</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">flags</span> <span class="ow">in</span> <span class="n">split_inside_flags</span><span class="p">]</span>
@@ -641,7 +641,7 @@
 
 <div class="viewcode-block" id="ATSSHead">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.heads.html#otx.algo.detection.heads.ATSSHead">[docs]</a>
-<span class="k">class</span> <span class="nc">ATSSHead</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ATSSHead</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;ATSSHead factory for detection.&quot;&quot;&quot;</span>
 
     <span class="n">ATSSHEAD_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -654,7 +654,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>

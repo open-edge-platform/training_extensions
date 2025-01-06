@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -261,33 +261,33 @@
 <span class="sd">Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/dense_heads/yolox_head.py</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Sequence</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>  <span class="c1"># noqa: N812</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torchvision.ops</span> <span class="kn">import</span> <span class="n">box_convert</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>  <span class="c1"># noqa: N812</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">box_convert</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.nms</span> <span class="kn">import</span> <span class="n">batched_nms</span><span class="p">,</span> <span class="n">multiclass_nms</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.prior_generators</span> <span class="kn">import</span> <span class="n">MlvlPointGenerator</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.samplers</span> <span class="kn">import</span> <span class="n">PseudoSampler</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.utils</span> <span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
-<span class="kn">from</span> <span class="nn">otx.algo.detection.heads.base_head</span> <span class="kn">import</span> <span class="n">BaseDenseHead</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.activation</span> <span class="kn">import</span> <span class="n">Swish</span><span class="p">,</span> <span class="n">build_activation_layer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.conv_module</span> <span class="kn">import</span> <span class="n">Conv2dModule</span><span class="p">,</span> <span class="n">DepthwiseSeparableConvModule</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.norm</span> <span class="kn">import</span> <span class="n">build_norm_layer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.utils.mmengine_utils</span> <span class="kn">import</span> <span class="n">InstanceData</span>
-<span class="kn">from</span> <span class="nn">otx.core.data.entity.detection</span> <span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.nms</span><span class="w"> </span><span class="kn">import</span> <span class="n">batched_nms</span><span class="p">,</span> <span class="n">multiclass_nms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.prior_generators</span><span class="w"> </span><span class="kn">import</span> <span class="n">MlvlPointGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.samplers</span><span class="w"> </span><span class="kn">import</span> <span class="n">PseudoSampler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">multi_apply</span><span class="p">,</span> <span class="n">reduce_mean</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.heads.base_head</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDenseHead</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.activation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Swish</span><span class="p">,</span> <span class="n">build_activation_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.conv_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv2dModule</span><span class="p">,</span> <span class="n">DepthwiseSeparableConvModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.mmengine_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
 
-<span class="k">class</span> <span class="nc">YOLOXHeadModule</span><span class="p">(</span><span class="n">BaseDenseHead</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">YOLOXHeadModule</span><span class="p">(</span><span class="n">BaseDenseHead</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;YOLOXHead head used in `YOLOX &lt;https://arxiv.org/abs/2107.08430&gt;`_.</span>
 
 <span class="sd">    Args:</span>
@@ -320,7 +320,7 @@
 <span class="sd">            classification prediction. Defaults to True.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -379,7 +379,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_layers</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize heads for all level feature maps.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multi_level_cls_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multi_level_reg_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
@@ -394,7 +394,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">multi_level_conv_reg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conv_reg</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">multi_level_conv_obj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conv_obj</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_build_stacked_convs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_stacked_convs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize conv layers of a single level head.&quot;&quot;&quot;</span>
         <span class="n">conv</span> <span class="o">=</span> <span class="n">DepthwiseSeparableConvModule</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_depthwise</span> <span class="k">else</span> <span class="n">Conv2dModule</span>
         <span class="n">stacked_convs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -422,14 +422,14 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">stacked_convs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_build_predictor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_predictor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize predictor layers of a single level head.&quot;&quot;&quot;</span>
         <span class="n">conv_cls</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_out_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">conv_reg</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">conv_obj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">conv_cls</span><span class="p">,</span> <span class="n">conv_reg</span><span class="p">,</span> <span class="n">conv_obj</span>
 
-    <span class="k">def</span> <span class="nf">forward_single</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_single</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">cls_convs</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
@@ -448,7 +448,7 @@
 
         <span class="k">return</span> <span class="n">cls_score</span><span class="p">,</span> <span class="n">bbox_pred</span><span class="p">,</span> <span class="n">objectness</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward features from the upstream network.</span>
 
 <span class="sd">        Args:</span>
@@ -468,7 +468,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">multi_level_conv_obj</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">predict_by_feat</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_by_feat</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cls_scores</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">bbox_preds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
@@ -559,7 +559,7 @@
 
         <span class="k">return</span> <span class="n">result_list</span>
 
-    <span class="k">def</span> <span class="nf">export_by_feat</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_by_feat</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cls_scores</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">bbox_preds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
@@ -633,7 +633,7 @@
             <span class="n">keep_top_k</span><span class="o">=</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;max_per_img&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_bbox_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">bbox_preds</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bbox_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">priors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">bbox_preds</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Decode regression results (delta_x, delta_x, w, h) to bboxes (tl_x, tl_y, br_x, br_y).</span>
 
 <span class="sd">        Args:</span>
@@ -654,7 +654,7 @@
 
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">tl_x</span><span class="p">,</span> <span class="n">tl_y</span><span class="p">,</span> <span class="n">br_x</span><span class="p">,</span> <span class="n">br_y</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_bbox_post_process</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bbox_post_process</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">results</span><span class="p">:</span> <span class="n">InstanceData</span><span class="p">,</span>
         <span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -701,7 +701,7 @@
             <span class="n">results</span><span class="o">.</span><span class="n">scores</span> <span class="o">=</span> <span class="n">det_bboxes</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">results</span>
 
-    <span class="k">def</span> <span class="nf">prepare_loss_inputs</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_loss_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">entity</span><span class="p">:</span> <span class="n">DetBatchDataEntity</span><span class="p">,</span>
@@ -782,7 +782,7 @@
         <span class="p">}</span>
 
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">_get_targets_single</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_targets_single</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">priors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
         <span class="n">cls_preds</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -863,7 +863,7 @@
         <span class="n">foreground_mask</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">foreground_mask</span><span class="p">,</span> <span class="n">cls_target</span><span class="p">,</span> <span class="n">obj_target</span><span class="p">,</span> <span class="n">bbox_target</span><span class="p">,</span> <span class="n">l1_target</span><span class="p">,</span> <span class="n">num_pos_per_img</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_l1_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l1_target</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">gt_bboxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">priors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_l1_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l1_target</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">gt_bboxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">priors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert gt bboxes to center offset and log width height.&quot;&quot;&quot;</span>
         <span class="n">gt_cxcywh</span> <span class="o">=</span> <span class="n">box_convert</span><span class="p">(</span><span class="n">gt_bboxes</span><span class="p">,</span> <span class="n">in_fmt</span><span class="o">=</span><span class="s2">&quot;xyxy&quot;</span><span class="p">,</span> <span class="n">out_fmt</span><span class="o">=</span><span class="s2">&quot;cxcywh&quot;</span><span class="p">)</span>
         <span class="n">l1_target</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_cxcywh</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">priors</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">priors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:]</span>
@@ -873,7 +873,7 @@
 
 <div class="viewcode-block" id="YOLOXHead">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.heads.html#otx.algo.detection.heads.YOLOXHead">[docs]</a>
-<span class="k">class</span> <span class="nc">YOLOXHead</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">YOLOXHead</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;YOLOXHead factory for detection.&quot;&quot;&quot;</span>
 
     <span class="n">YOLOXHEAD_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -895,7 +895,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>

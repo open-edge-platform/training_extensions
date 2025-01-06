@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -258,14 +258,14 @@
 <span class="c1"># Copyright (c) OpenMMLab. All rights reserved.</span>
 
 <span class="sd">&quot;&quot;&quot;Copy from mmpretrain/models/backbones/vision_transformer.py.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">timm.layers</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">timm.layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LayerType</span><span class="p">,</span>
     <span class="n">Mlp</span><span class="p">,</span>
     <span class="n">PatchDropout</span><span class="p">,</span>
@@ -277,16 +277,16 @@
     <span class="n">resample_patch_embed</span><span class="p">,</span>
     <span class="n">trunc_normal_</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">timm.models._manipulate</span> <span class="kn">import</span> <span class="n">adapt_input_conv</span>
-<span class="kn">from</span> <span class="nn">timm.models.vision_transformer</span> <span class="kn">import</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">Block</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">timm.models._manipulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_input_conv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">timm.models.vision_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">Block</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.modules.base_module</span> <span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.base_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModule</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 
 <span class="n">VIT_ARCH_TYPE</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
@@ -314,7 +314,7 @@
 
 <div class="viewcode-block" id="VisionTransformer">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer">[docs]</a>
-<span class="k">class</span> <span class="nc">VisionTransformer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VisionTransformer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of Vision Transformer from Timm.</span>
 
 <span class="sd">    A PyTorch impl of : `An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale`</span>
@@ -462,7 +462,7 @@
         <span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">arch</span><span class="p">:</span> <span class="n">VIT_ARCH_TYPE</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vit-base&quot;</span><span class="p">,</span>
         <span class="n">img_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">224</span><span class="p">,</span>
@@ -600,7 +600,7 @@
 
 <div class="viewcode-block" id="VisionTransformer.init_weights">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer.init_weights">[docs]</a>
-    <span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the weights of the VisionTransformer.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
 
@@ -611,14 +611,14 @@
 <div class="viewcode-block" id="VisionTransformer.load_pretrained">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer.load_pretrained">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">load_pretrained</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_pretrained</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads the pretrained weight to the VisionTransformer.&quot;&quot;&quot;</span>
         <span class="n">checkpoint_ext</span> <span class="o">=</span> <span class="n">checkpoint_path</span><span class="o">.</span><span class="n">suffix</span>
         <span class="k">if</span> <span class="n">checkpoint_ext</span> <span class="o">==</span> <span class="s2">&quot;.npz&quot;</span><span class="p">:</span>  <span class="c1"># deit models</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_npz_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">checkpoint_ext</span> <span class="o">==</span> <span class="s2">&quot;.pth&quot;</span><span class="p">:</span>  <span class="c1"># dinov2 models</span>
 
-            <span class="k">def</span> <span class="nf">resize_positional_embeddings</span><span class="p">(</span><span class="n">pos_embed</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">new_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">resize_positional_embeddings</span><span class="p">(</span><span class="n">pos_embed</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">new_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
                 <span class="c1"># Resize the embeddings using bilinear interpolation.</span>
                 <span class="n">pos_embed</span> <span class="o">=</span> <span class="n">pos_embed</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">37</span><span class="p">)</span>  <span class="c1"># 560 (img_size) / 14 (patch_size) = 37</span>
                 <span class="n">pos_embed_resized</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span>
@@ -648,7 +648,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_pos_embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pos_embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Implements positional embedding.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_img_size</span><span class="p">:</span>
             <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
@@ -684,7 +684,7 @@
 
 <div class="viewcode-block" id="VisionTransformer.interpolate_pos_encoding">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer.interpolate_pos_encoding">[docs]</a>
-    <span class="k">def</span> <span class="nf">interpolate_pos_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interpolate_pos_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Interpolates the positional encoding to match the input dimensions.</span>
 
 <span class="sd">        Args:</span>
@@ -730,7 +730,7 @@
 
 <div class="viewcode-block" id="VisionTransformer.prepare_tokens_with_masks">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer.prepare_tokens_with_masks">[docs]</a>
-    <span class="k">def</span> <span class="nf">prepare_tokens_with_masks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">masks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_tokens_with_masks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">masks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare tokens with optional masks.</span>
 
 <span class="sd">        Args:</span>
@@ -761,7 +761,7 @@
         <span class="k">return</span> <span class="n">x</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_intermediate_layers_not_chunked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_intermediate_layers_not_chunked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get intermediate layers without chunking.</span>
 
 <span class="sd">        Args:</span>
@@ -786,7 +786,7 @@
 
 <div class="viewcode-block" id="VisionTransformer.get_intermediate_layers">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer.get_intermediate_layers">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_intermediate_layers</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_intermediate_layers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Layers or n last layers to take</span>
@@ -824,7 +824,7 @@
 
 <div class="viewcode-block" id="VisionTransformer.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer.forward">[docs]</a>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">out_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span> <span class="s2">&quot;cls_token&quot;</span><span class="p">,</span> <span class="s2">&quot;featmap&quot;</span><span class="p">,</span> <span class="s2">&quot;avg_featmap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cls_token&quot;</span><span class="p">,</span>
@@ -847,16 +847,16 @@
 
 
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">_load_npz_weights</span><span class="p">(</span>  <span class="c1"># noqa: C901</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_npz_weights</span><span class="p">(</span>  <span class="c1"># noqa: C901</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">VisionTransformer</span><span class="p">,</span>
         <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load weights from .npz checkpoints for official Google Brain Flax implementation.&quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-        <span class="k">def</span> <span class="nf">_n2p</span><span class="p">(</span><span class="n">w</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_n2p</span><span class="p">(</span><span class="n">w</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -1046,32 +1046,32 @@
 
 
 
-<span class="k">class</span> <span class="nc">LoRALayer</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LoRALayer</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;LoRA layer implementation for computing A, B composition.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="n">std</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the LoRA layer.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">AttentionWithLoRA</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AttentionWithLoRA</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add LoRA layer into QKV attention layer in VisionTransformer.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">:</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">:</span> <span class="n">Attention</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">qkv</span> <span class="o">=</span> <span class="n">qkv</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">qkv</span><span class="o">.</span><span class="n">in_features</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lora_q</span> <span class="o">=</span> <span class="n">LoRALayer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lora_v</span> <span class="o">=</span> <span class="n">LoRALayer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the AttentionWithLoRA.&quot;&quot;&quot;</span>
         <span class="n">qkv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qkv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">qkv</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lora_q</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>

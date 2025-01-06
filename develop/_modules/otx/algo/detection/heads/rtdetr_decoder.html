@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -258,26 +258,26 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;RTDETR decoder, modified from https://github.com/lyuwenyu/RT-DETR.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torchvision</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">init</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.layers.transformer_layers</span> <span class="kn">import</span> <span class="n">MLP</span><span class="p">,</span> <span class="n">MSDeformableAttention</span>
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.utils</span> <span class="kn">import</span> <span class="n">inverse_sigmoid</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.base_module</span> <span class="kn">import</span> <span class="n">BaseModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.layers.transformer_layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLP</span><span class="p">,</span> <span class="n">MSDeformableAttention</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">inverse_sigmoid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.base_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModule</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;RTDETRTransformer&quot;</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">get_contrastive_denoising_training_group</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_contrastive_denoising_training_group</span><span class="p">(</span>
     <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span>
     <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">num_queries</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -383,7 +383,7 @@
     <span class="k">return</span> <span class="n">input_query_class</span><span class="p">,</span> <span class="n">input_query_bbox</span><span class="p">,</span> <span class="n">attn_mask</span><span class="p">,</span> <span class="n">dn_meta</span>
 
 
-<span class="k">class</span> <span class="nc">TransformerDecoderLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerDecoderLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;TransformerDecoderLayer.</span>
 
 <span class="sd">    Args:</span>
@@ -397,7 +397,7 @@
 <span class="sd">        n_points (int): The number of points in MSDeformableAttention.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
         <span class="n">n_head</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
@@ -428,15 +428,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dropout4</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">norm3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">d_model</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">with_pos_embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">pos</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_pos_embed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">pos</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add positional embedding to the input tensor.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">tensor</span> <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">tensor</span> <span class="o">+</span> <span class="n">pos</span>
 
-    <span class="k">def</span> <span class="nf">forward_ffn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tgt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_ffn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tgt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function of feed forward network.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropout3</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="p">(</span><span class="n">tgt</span><span class="p">))))</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tgt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">reference_points</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -472,7 +472,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm3</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">TransformerDecoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerDecoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;TransformerDecoder.</span>
 
 <span class="sd">    Args:</span>
@@ -482,14 +482,14 @@
 <span class="sd">        eval_idx (int, optional): The index of evaluation layer.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">decoder_layer</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">num_layers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">eval_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">decoder_layer</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">num_layers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">eval_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">decoder_layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span> <span class="o">=</span> <span class="n">hidden_dim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_layers</span> <span class="o">=</span> <span class="n">num_layers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eval_idx</span> <span class="o">=</span> <span class="n">eval_idx</span> <span class="k">if</span> <span class="n">eval_idx</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">num_layers</span> <span class="o">+</span> <span class="n">eval_idx</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tgt</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">ref_points_unact</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -543,7 +543,7 @@
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">dec_out_bboxes</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">dec_out_logits</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">RTDETRTransformerModule</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RTDETRTransformerModule</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;RTDETRTransformer.</span>
 
 <span class="sd">    Args:</span>
@@ -571,7 +571,7 @@
 <span class="sd">        aux_loss (bool): Whether to include auxiliary loss.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">,</span>
         <span class="n">hidden_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
@@ -669,7 +669,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_spatial_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_anchors</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the weights of the RTDETRTransformer.&quot;&quot;&quot;</span>
         <span class="n">prob</span> <span class="o">=</span> <span class="mf">0.01</span>
         <span class="n">bias</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">prob</span><span class="p">)</span> <span class="o">/</span> <span class="n">prob</span><span class="p">))</span>
@@ -689,7 +689,7 @@
         <span class="n">init</span><span class="o">.</span><span class="n">xavier_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query_pos_head</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
         <span class="n">init</span><span class="o">.</span><span class="n">xavier_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query_pos_head</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_build_input_proj_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feat_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_input_proj_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feat_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">in_channels</span> <span class="ow">in</span> <span class="n">feat_channels</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">input_proj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -718,7 +718,7 @@
             <span class="p">)</span>
             <span class="n">in_channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span>
 
-    <span class="k">def</span> <span class="nf">_get_encoder_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_encoder_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
         <span class="c1"># get projection features</span>
         <span class="n">proj_feats</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_proj</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">feat</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">feat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">feats</span><span class="p">)]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_levels</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">proj_feats</span><span class="p">):</span>
@@ -747,7 +747,7 @@
         <span class="n">level_start_index</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">feat_flatten</span><span class="p">,</span> <span class="n">spatial_shapes</span><span class="p">,</span> <span class="n">level_start_index</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_generate_anchors</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_anchors</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">spatial_shapes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grid_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
@@ -783,7 +783,7 @@
 
         <span class="k">return</span> <span class="n">tensor_anchors</span><span class="p">,</span> <span class="n">valid_mask</span>
 
-    <span class="k">def</span> <span class="nf">_get_decoder_input</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_decoder_input</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">memory</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">spatial_shapes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
@@ -832,7 +832,7 @@
 
         <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">reference_points_unact</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">enc_topk_bboxes</span><span class="p">,</span> <span class="n">enc_topk_logits</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the RTDETRTransformer module.&quot;&quot;&quot;</span>
         <span class="c1"># input projection and embedding</span>
         <span class="p">(</span><span class="n">memory</span><span class="p">,</span> <span class="n">spatial_shapes</span><span class="p">,</span> <span class="n">level_start_index</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_encoder_input</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
@@ -888,7 +888,7 @@
         <span class="k">return</span> <span class="n">out</span>
 
     <span class="nd">@torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">unused</span>
-    <span class="k">def</span> <span class="nf">_set_aux_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs_class</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">outputs_coord</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_aux_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs_class</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">outputs_coord</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
         <span class="c1"># this is a workaround to make torchscript happy, as torchscript</span>
         <span class="c1"># doesn&#39;t support dictionary with non-homogeneous values, such</span>
         <span class="c1"># as a dict having both a Tensor and a list.</span>
@@ -897,7 +897,7 @@
 
 <div class="viewcode-block" id="RTDETRTransformer">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.heads.html#otx.algo.detection.heads.RTDETRTransformer">[docs]</a>
-<span class="k">class</span> <span class="nc">RTDETRTransformer</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RTDETRTransformer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;RTDETRTransformer factory for detection.&quot;&quot;&quot;</span>
 
     <span class="n">RTDETRTRANSFORMER_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -914,7 +914,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>

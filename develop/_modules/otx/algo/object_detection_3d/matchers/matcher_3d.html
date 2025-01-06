@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -258,21 +258,21 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;HungarianMatcher3D module for 3d object detection.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">linear_sum_assignment</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_sum_assignment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.common.utils.bbox_overlaps</span> <span class="kn">import</span> <span class="n">bbox_overlaps</span>
-<span class="kn">from</span> <span class="nn">otx.algo.object_detection_3d.utils.utils</span> <span class="kn">import</span> <span class="n">box_cxcylrtb_to_xyxy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.bbox_overlaps</span><span class="w"> </span><span class="kn">import</span> <span class="n">bbox_overlaps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.object_detection_3d.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">box_cxcylrtb_to_xyxy</span>
 
 
 <div class="viewcode-block" id="HungarianMatcher3D">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.matchers.html#otx.algo.object_detection_3d.matchers.HungarianMatcher3D">[docs]</a>
-<span class="k">class</span> <span class="nc">HungarianMatcher3D</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HungarianMatcher3D</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This class computes an assignment between the targets and the predictions of the network.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cost_class</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">cost_3dcenter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -296,7 +296,7 @@
 <div class="viewcode-block" id="HungarianMatcher3D.forward">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.object_detection_3d.matchers.html#otx.algo.object_detection_3d.matchers.HungarianMatcher3D.forward">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">group_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">11</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">group_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">11</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs the matching.</span>
 
 <span class="sd">        Args:</span>

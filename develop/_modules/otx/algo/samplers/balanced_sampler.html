@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,23 +258,23 @@
 
 <span class="sd">&quot;&quot;&quot;Balanced sampler for imbalanced data.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Sampler</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sampler</span>
 
-<span class="kn">from</span> <span class="nn">otx.core.utils.utils</span> <span class="kn">import</span> <span class="n">get_idx_list_per_classes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_idx_list_per_classes</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">otx.core.data.dataset.base</span> <span class="kn">import</span> <span class="n">OTXDataset</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
 
 
 <div class="viewcode-block" id="BalancedSampler">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.samplers.html#otx.algo.samplers.BalancedSampler">[docs]</a>
-<span class="k">class</span> <span class="nc">BalancedSampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BalancedSampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Balanced sampler for imbalanced data for class-incremental task.</span>
 
 <span class="sd">    This sampler is a sampler that creates an effective batch</span>
@@ -298,7 +298,7 @@
 <span class="sd">        n_repeats (int, optional) : number of iterations for manual setting</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dataset</span><span class="p">:</span> <span class="n">OTXDataset</span><span class="p">,</span>
         <span class="n">efficient_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -334,7 +334,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_num_samples</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_calculate_num_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_num_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="n">num_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_trials</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cls</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeat</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_replicas</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -355,7 +355,7 @@
 
         <span class="k">return</span> <span class="n">num_samples</span>
 
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Iter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">random_</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
@@ -400,7 +400,7 @@
 
         <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return length of selected samples.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_samples</span></div>
 

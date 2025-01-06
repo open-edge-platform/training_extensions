@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -260,26 +260,26 @@
 <span class="c1"># TODO(someone): Revisit mypy errors after deprecation of mmlab</span>
 <span class="c1"># mypy: ignore-errors</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">abc</span><span class="p">,</span> <span class="n">namedtuple</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">abc</span><span class="p">,</span> <span class="n">namedtuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">torch_dist</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.utils.model_zoo</span> <span class="kn">import</span> <span class="n">load_url</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">torch_dist</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.model_zoo</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_url</span>
 
 
 <div class="viewcode-block" id="get_dist_info">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.get_dist_info">[docs]</a>
-<span class="k">def</span> <span class="nf">get_dist_info</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_dist_info</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get distributed information of the given process group.</span>
 
 <span class="sd">    Note:</span>
@@ -305,7 +305,7 @@
 
 <div class="viewcode-block" id="load_checkpoint">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.load_checkpoint">[docs]</a>
-<span class="k">def</span> <span class="nf">load_checkpoint</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_checkpoint</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">map_location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
@@ -332,7 +332,7 @@
 
 <div class="viewcode-block" id="load_from_http">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.load_from_http">[docs]</a>
-<span class="k">def</span> <span class="nf">load_from_http</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_from_http</span><span class="p">(</span>
     <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">map_location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">model_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -369,8 +369,8 @@
 
 
 
-<span class="k">class</span> <span class="nc">_IncompatibleKeys</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;IncompatibleKeys&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;missing_keys&quot;</span><span class="p">,</span> <span class="s2">&quot;unexpected_keys&quot;</span><span class="p">])):</span>
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_IncompatibleKeys</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;IncompatibleKeys&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;missing_keys&quot;</span><span class="p">,</span> <span class="s2">&quot;unexpected_keys&quot;</span><span class="p">])):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_keys</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">unexpected_keys</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;&lt;All keys matched successfully&gt;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
@@ -380,7 +380,7 @@
 
 <div class="viewcode-block" id="load_state_dict">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.load_state_dict">[docs]</a>
-<span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load state_dict to a module.</span>
 
 <span class="sd">    This method is modified from :meth:`torch.nn.Module.load_state_dict`.</span>
@@ -405,7 +405,7 @@
         <span class="n">state_dict</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="n">metadata</span>  <span class="c1"># noqa: SLF001</span>
 
     <span class="c1"># use _load_from_state_dict to enable checkpoint version control</span>
-    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">local_state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">local_state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># recursively check parallel module in case that the model has a</span>
         <span class="c1"># complicated structure, e.g., nn.Module(nn.Module(DDP))</span>
         <span class="n">local_metadata</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prefix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">{})</span>
@@ -452,7 +452,7 @@
 
 <div class="viewcode-block" id="load_checkpoint_to_model">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.load_checkpoint_to_model">[docs]</a>
-<span class="k">def</span> <span class="nf">load_checkpoint_to_model</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_checkpoint_to_model</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -493,7 +493,7 @@
 
 <div class="viewcode-block" id="is_seq_of">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.is_seq_of">[docs]</a>
-<span class="k">def</span> <span class="nf">is_seq_of</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_seq_of</span><span class="p">(</span>
     <span class="n">seq</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
     <span class="n">expected_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">,</span>
     <span class="n">seq_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -527,7 +527,7 @@
 
 <div class="viewcode-block" id="is_tuple_of">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.is_tuple_of">[docs]</a>
-<span class="k">def</span> <span class="nf">is_tuple_of</span><span class="p">(</span><span class="n">seq</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_tuple_of</span><span class="p">(</span><span class="n">seq</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check whether it is a tuple of some type.</span>
 
 <span class="sd">    Copied from mmengine.utils.misc.is_tuple_of</span>
@@ -545,7 +545,7 @@
 
 <div class="viewcode-block" id="InstanceData">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData">[docs]</a>
-<span class="k">class</span> <span class="nc">InstanceData</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InstanceData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A base data interface that supports Tensor-like and dict-like operations.</span>
 
 <span class="sd">    This class is from https://github.com/open-mmlab/mmengine/blob/66fb81f7b392b2cd304fc1979d8af3cc71a011f5/mmengine/structures/instance_data.py</span>
@@ -559,7 +559,7 @@
 <span class="sd">            model predictions. Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metainfo</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metainfo</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metainfo_fields</span><span class="p">:</span> <span class="nb">set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_fields</span><span class="p">:</span> <span class="nb">set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
@@ -570,7 +570,7 @@
 
 <div class="viewcode-block" id="InstanceData.set_metainfo">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.set_metainfo">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_metainfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metainfo</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_metainfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metainfo</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set or change key-value pairs in ``metainfo_field`` by parameter ``metainfo``.</span>
 
 <span class="sd">        Args:</span>
@@ -584,7 +584,7 @@
 
 <div class="viewcode-block" id="InstanceData.set_data">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.set_data">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set or change key-value pairs in ``data_field`` by parameter ``data``.</span>
 
 <span class="sd">        Args:</span>
@@ -599,7 +599,7 @@
 
 <div class="viewcode-block" id="InstanceData.update">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.update">[docs]</a>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">InstanceData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">InstanceData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The method updates the InstanceData with the elements from another InstanceData object.</span>
 
 <span class="sd">        Args:</span>
@@ -612,7 +612,7 @@
 
 <div class="viewcode-block" id="InstanceData.new">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.new">[docs]</a>
-    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metainfo</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metainfo</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new data element with same type.</span>
 
 <span class="sd">        If ``metainfo`` and ``data`` are None, the new data element will have same metainfo and</span>
@@ -644,7 +644,7 @@
 
 <div class="viewcode-block" id="InstanceData.clone">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.clone">[docs]</a>
-    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Deep copy the current data element.</span>
 
 <span class="sd">        Returns:</span>
@@ -658,7 +658,7 @@
 
 <div class="viewcode-block" id="InstanceData.keys">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.keys">[docs]</a>
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns lits contains all keys in data_fields.&quot;&quot;&quot;</span>
         <span class="n">private_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_fields</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="nb">property</span><span class="p">)}</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_fields</span> <span class="o">-</span> <span class="n">private_keys</span><span class="p">)</span></div>
@@ -666,42 +666,42 @@
 
 <div class="viewcode-block" id="InstanceData.metainfo_keys">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.metainfo_keys">[docs]</a>
-    <span class="k">def</span> <span class="nf">metainfo_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metainfo_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns list contains all keys in metainfo_fields.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metainfo_fields</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="InstanceData.values">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.values">[docs]</a>
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns list contains all values in data.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span></div>
 
 
 <div class="viewcode-block" id="InstanceData.metainfo_values">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.metainfo_values">[docs]</a>
-    <span class="k">def</span> <span class="nf">metainfo_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metainfo_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns list contains all values in metainfo.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metainfo_keys</span><span class="p">()]</span></div>
 
 
 <div class="viewcode-block" id="InstanceData.all_keys">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.all_keys">[docs]</a>
-    <span class="k">def</span> <span class="nf">all_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">all_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns list contains all keys in metainfo and data.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metainfo_keys</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="InstanceData.all_values">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.all_values">[docs]</a>
-    <span class="k">def</span> <span class="nf">all_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">all_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns list contains all values in metainfo and data.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metainfo_values</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="InstanceData.all_items">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.all_items">[docs]</a>
-    <span class="k">def</span> <span class="nf">all_items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">all_items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns iterator object whose element is (key, value) tuple pairs for ``metainfo`` and ``data``.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_keys</span><span class="p">():</span>
             <span class="k">yield</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span></div>
@@ -709,7 +709,7 @@
 
 <div class="viewcode-block" id="InstanceData.items">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.items">[docs]</a>
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns iterator object whose element is (key, value) tuple pairs for ``data``.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">yield</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span></div>
@@ -717,18 +717,18 @@
 
 <div class="viewcode-block" id="InstanceData.metainfo_items">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.metainfo_items">[docs]</a>
-    <span class="k">def</span> <span class="nf">metainfo_items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metainfo_items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns iterator object whose element is (key, value) tuple pairs for ``metainfo``.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metainfo_keys</span><span class="p">():</span>
             <span class="k">yield</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span></div>
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">metainfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metainfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: A dict contains metainfo of current data element.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metainfo_items</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>  <span class="c1"># noqa: ANN401</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Setattr is only used to set data.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;_metainfo_fields&quot;</span><span class="p">,</span> <span class="s2">&quot;_data_fields&quot;</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
@@ -741,7 +741,7 @@
 
     <span class="fm">__setitem__</span> <span class="o">=</span> <span class="fm">__setattr__</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">IndexType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">IndexType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get item mehod.</span>
 
 <span class="sd">        Args:</span>
@@ -811,7 +811,7 @@
                 <span class="n">new_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">new_data</span>
 
-    <span class="k">def</span> <span class="fm">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the item in dataelement.</span>
 
 <span class="sd">        Args:</span>
@@ -831,7 +831,7 @@
 
 <div class="viewcode-block" id="InstanceData.get">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.get">[docs]</a>
-    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get property in data and metainfo as the same as python.&quot;&quot;&quot;</span>
         <span class="c1"># Use `getattr()` rather than `self.__dict__.get()` to allow getting</span>
         <span class="c1"># properties.</span>
@@ -840,7 +840,7 @@
 
 <div class="viewcode-block" id="InstanceData.pop">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.pop">[docs]</a>
-    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Pop property in data and metainfo as the same as python.&quot;&quot;&quot;</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metainfo_fields</span><span class="p">:</span>
@@ -859,7 +859,7 @@
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the item is in dataelement.</span>
 
 <span class="sd">        Args:</span>
@@ -869,7 +869,7 @@
 
 <div class="viewcode-block" id="InstanceData.set_field">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.set_field">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_field</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_field</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -893,7 +893,7 @@
     <span class="c1"># Tensor-like methods</span>
 <div class="viewcode-block" id="InstanceData.to">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.to">[docs]</a>
-    <span class="k">def</span> <span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply same name function to all tensors in data_fields.&quot;&quot;&quot;</span>
         <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -907,7 +907,7 @@
     <span class="c1"># Tensor-like methods</span>
 <div class="viewcode-block" id="InstanceData.cpu">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.cpu">[docs]</a>
-    <span class="k">def</span> <span class="nf">cpu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cpu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert all tensors to CPU in data.&quot;&quot;&quot;</span>
         <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -921,7 +921,7 @@
     <span class="c1"># Tensor-like methods</span>
 <div class="viewcode-block" id="InstanceData.cuda">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.cuda">[docs]</a>
-    <span class="k">def</span> <span class="nf">cuda</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cuda</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert all tensors to GPU in data.&quot;&quot;&quot;</span>
         <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -935,7 +935,7 @@
     <span class="c1"># Tensor-like methods</span>
 <div class="viewcode-block" id="InstanceData.detach">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.detach">[docs]</a>
-    <span class="k">def</span> <span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Detach all tensors in data.&quot;&quot;&quot;</span>
         <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -949,7 +949,7 @@
     <span class="c1"># Tensor-like methods</span>
 <div class="viewcode-block" id="InstanceData.numpy">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.numpy">[docs]</a>
-    <span class="k">def</span> <span class="nf">numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert all tensors to np.ndarray in data.&quot;&quot;&quot;</span>
         <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -962,7 +962,7 @@
 
 <div class="viewcode-block" id="InstanceData.to_tensor">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.to_tensor">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert all np.ndarray to tensor in data.&quot;&quot;&quot;</span>
         <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -979,15 +979,15 @@
 
 <div class="viewcode-block" id="InstanceData.to_dict">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.to_dict">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert InstanceData to dict.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">InstanceData</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_items</span><span class="p">()}</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Represent the object.&quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">_addindent</span><span class="p">(</span><span class="n">s_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_spaces</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_addindent</span><span class="p">(</span><span class="n">s_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_spaces</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;This func is modified from `pytorch`.</span>
 
 <span class="sd">            https://github.com/pytorch/</span>
@@ -1010,7 +1010,7 @@
             <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">first</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">s</span>
 
-        <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Represent the object.</span>
 
 <span class="sd">            Args:</span>
@@ -1038,7 +1038,7 @@
 
         <span class="k">return</span> <span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;int: The length of InstanceData.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_fields</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>

@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
@@ -258,24 +258,24 @@
 <span class="c1"># Copyright (c) OpenMMLab. All rights reserved.</span>
 
 <span class="sd">&quot;&quot;&quot;This implementation replaces the functionality of mmengine.model.weight_init.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="update_init_info">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.update_init_info">[docs]</a>
-<span class="k">def</span> <span class="nf">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">init_info</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">init_info</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the `_params_init_info` in the module if the value of parameters are changed.</span>
 
 <span class="sd">    Args:</span>
@@ -310,7 +310,7 @@
 
 <div class="viewcode-block" id="constant_init">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.constant_init">[docs]</a>
-<span class="k">def</span> <span class="nf">constant_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">constant_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the weights and biases of a module with constant values.</span>
 
 <span class="sd">    Copied from mmengine.model.weight_init.constant_init</span>
@@ -329,7 +329,7 @@
 
 <div class="viewcode-block" id="xavier_init">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.xavier_init">[docs]</a>
-<span class="k">def</span> <span class="nf">xavier_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">xavier_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the weights and biases of a module using Xavier initialization.</span>
 
 <span class="sd">    Args:</span>
@@ -352,7 +352,7 @@
 
 <div class="viewcode-block" id="normal_init">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.normal_init">[docs]</a>
-<span class="k">def</span> <span class="nf">normal_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">normal_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the weights and biases of a module using a normal distribution.</span>
 
 <span class="sd">    Copied from mmengine.model.weight_init.normal_init</span>
@@ -372,7 +372,7 @@
 
 <div class="viewcode-block" id="trunc_normal_init">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.trunc_normal_init">[docs]</a>
-<span class="k">def</span> <span class="nf">trunc_normal_init</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">trunc_normal_init</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -399,7 +399,7 @@
 
 <div class="viewcode-block" id="uniform_init">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.uniform_init">[docs]</a>
-<span class="k">def</span> <span class="nf">uniform_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">uniform_init</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the weights and biases of a module using a uniform distribution.</span>
 
 <span class="sd">    Args:</span>
@@ -417,7 +417,7 @@
 
 <div class="viewcode-block" id="kaiming_init">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.kaiming_init">[docs]</a>
-<span class="k">def</span> <span class="nf">kaiming_init</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">kaiming_init</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="n">a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;fan_out&quot;</span><span class="p">,</span>
@@ -457,22 +457,22 @@
 
 <div class="viewcode-block" id="bias_init_with_prob">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.bias_init_with_prob">[docs]</a>
-<span class="k">def</span> <span class="nf">bias_init_with_prob</span><span class="p">(</span><span class="n">prior_prob</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">bias_init_with_prob</span><span class="p">(</span><span class="n">prior_prob</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize conv/fc bias value according to a given probability value.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">prior_prob</span><span class="p">)</span> <span class="o">/</span> <span class="n">prior_prob</span><span class="p">))</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">_get_bases_name</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_bases_name</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="BaseInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.BaseInit">[docs]</a>
-<span class="k">class</span> <span class="nc">BaseInit</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseInit</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base Init class.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bias_prob</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bias_prob</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wholemodule</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bias</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;bias must be a number, but got a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">bias</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -497,14 +497,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">layer</span>
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, bias=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="ConstantInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.ConstantInit">[docs]</a>
-<span class="k">class</span> <span class="nc">ConstantInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConstantInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize module parameters with constant values.</span>
 
 <span class="sd">    Args:</span>
@@ -516,13 +516,13 @@
 <span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">=</span> <span class="n">val</span>
 
 <div class="viewcode-block" id="ConstantInit.__call__">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.ConstantInit.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the module parameters.</span>
 
 <span class="sd">        Args:</span>
@@ -532,7 +532,7 @@
 <span class="sd">            None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wholemodule</span><span class="p">:</span>
                 <span class="n">constant_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -546,14 +546,14 @@
             <span class="n">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">init_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_init_info</span><span class="p">())</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: val=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s2">, bias=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="XavierInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.XavierInit">[docs]</a>
-<span class="k">class</span> <span class="nc">XavierInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">XavierInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize module parameters with values according to the method described in the paper below.</span>
 
 <span class="sd">    `Understanding the difficulty of training deep feedforward</span>
@@ -571,14 +571,14 @@
 <span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gain</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gain</span> <span class="o">=</span> <span class="n">gain</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">=</span> <span class="n">distribution</span>
 
 <div class="viewcode-block" id="XavierInit.__call__">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.XavierInit.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the module parameters.</span>
 
 <span class="sd">        Args:</span>
@@ -588,7 +588,7 @@
 <span class="sd">            None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wholemodule</span><span class="p">:</span>
                 <span class="n">xavier_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -602,14 +602,14 @@
             <span class="n">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">init_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_init_info</span><span class="p">())</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: gain=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="si">}</span><span class="s2">, distribution=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="si">}</span><span class="s2">, bias=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="NormalInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.NormalInit">[docs]</a>
-<span class="k">class</span> <span class="nc">NormalInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NormalInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize module parameters with the values drawn from the normal distribution.</span>
 
 <span class="sd">    :math:`\mathcal{N}(\text{mean}, \text{std}^2)`.</span>
@@ -625,14 +625,14 @@
 <span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
 
 <div class="viewcode-block" id="NormalInit.__call__">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.NormalInit.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the module parameters.</span>
 
 <span class="sd">        Args:</span>
@@ -642,7 +642,7 @@
 <span class="sd">            None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wholemodule</span><span class="p">:</span>
                 <span class="n">normal_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -656,14 +656,14 @@
             <span class="n">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">init_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_init_info</span><span class="p">())</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: mean=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="si">}</span><span class="s2">, std=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="si">}</span><span class="s2">, bias=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="TruncNormalInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.TruncNormalInit">[docs]</a>
-<span class="k">class</span> <span class="nc">TruncNormalInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TruncNormalInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize module parameters with the values drawn from the normal distribution.</span>
 
 <span class="sd">    :math:`\mathcal{N}(\text{mean}, \text{std}^2)` with values</span>
@@ -682,7 +682,7 @@
 <span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
@@ -691,14 +691,14 @@
 
 <div class="viewcode-block" id="TruncNormalInit.__call__">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.TruncNormalInit.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply weight initialization to the given module.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            module (nn.Module): The module to initialize.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wholemodule</span><span class="p">:</span>
                 <span class="n">trunc_normal_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -712,14 +712,14 @@
             <span class="n">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">init_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_init_info</span><span class="p">())</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: a=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="si">}</span><span class="s2">, b=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="si">}</span><span class="s2">, mean=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="si">}</span><span class="s2">, std=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="si">}</span><span class="s2">, bias=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="UniformInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.UniformInit">[docs]</a>
-<span class="k">class</span> <span class="nc">UniformInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UniformInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize module parameters with values drawn from the uniform distribution :math:`\mathcal{U}(a, b)`.</span>
 
 <span class="sd">    Args:</span>
@@ -734,21 +734,21 @@
 <span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
 
 <div class="viewcode-block" id="UniformInit.__call__">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.UniformInit.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply weight initialization to the given module.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            module (nn.Module): The module to initialize.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wholemodule</span><span class="p">:</span>
                 <span class="n">uniform_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -762,14 +762,14 @@
             <span class="n">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">init_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_init_info</span><span class="p">())</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: a=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="si">}</span><span class="s2">, b=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="si">}</span><span class="s2">, bias=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
 
 <div class="viewcode-block" id="KaimingInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.KaimingInit">[docs]</a>
-<span class="k">class</span> <span class="nc">KaimingInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">KaimingInit</span><span class="p">(</span><span class="n">BaseInit</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize module parameters with the values according to the method described in the paper below.</span>
 
 <span class="sd">    `Delving deep into rectifiers: Surpassing human-level</span>
@@ -796,7 +796,7 @@
 <span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;fan_out&quot;</span><span class="p">,</span>
@@ -812,14 +812,14 @@
 
 <div class="viewcode-block" id="KaimingInit.__call__">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.KaimingInit.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the module parameters.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            module (nn.Module): The module to initialize.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wholemodule</span><span class="p">:</span>
                 <span class="n">kaiming_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -833,7 +833,7 @@
             <span class="n">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">init_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_init_info</span><span class="p">())</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: a=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="si">}</span><span class="s2">, mode=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">, &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;nonlinearity=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nonlinearity</span><span class="si">}</span><span class="s2">, &quot;</span>
@@ -844,7 +844,7 @@
 
 <div class="viewcode-block" id="PretrainedInit">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.PretrainedInit">[docs]</a>
-<span class="k">class</span> <span class="nc">PretrainedInit</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PretrainedInit</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize module by loading a pretrained model.</span>
 
 <span class="sd">    Args:</span>
@@ -858,20 +858,20 @@
 <span class="sd">        map_location (str): map tensors into proper locations. Defaults to cpu.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">map_location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">map_location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint</span> <span class="o">=</span> <span class="n">checkpoint</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">map_location</span> <span class="o">=</span> <span class="n">map_location</span>
 
 <div class="viewcode-block" id="PretrainedInit.__call__">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.PretrainedInit.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the module parameters by loading a pretrained model.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            module (nn.Module): The module to initialize.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">otx.algo.utils.mmengine_utils</span> <span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span><span class="p">,</span> <span class="n">load_state_dict</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.mmengine_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span><span class="p">,</span> <span class="n">load_state_dict</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -898,7 +898,7 @@
             <span class="n">update_init_info</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">init_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_init_info</span><span class="p">())</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_init_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: load from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
@@ -914,7 +914,7 @@
 <span class="p">}</span>
 
 
-<span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">wholemodule</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_initialize</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">wholemodule</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">cfg_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
     <span class="n">initialize_type</span> <span class="o">=</span> <span class="n">cfg_copy</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
     <span class="n">func</span> <span class="o">=</span> <span class="n">WEIGHT_INITIALIZERS</span><span class="p">[</span><span class="n">initialize_type</span><span class="p">](</span><span class="o">**</span><span class="n">cfg_copy</span><span class="p">)</span>
@@ -925,7 +925,7 @@
     <span class="n">func</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_initialize_override</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">override</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_initialize_override</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">override</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">override</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;override must be a dict or a list of dict, </span><span class="se">\</span>
 <span class="s2">                but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">override</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -957,7 +957,7 @@
 
 <div class="viewcode-block" id="initialize">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.initialize">[docs]</a>
-<span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">init_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">init_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize a module.</span>
 
 <span class="sd">    Args:</span>
@@ -1028,12 +1028,12 @@
 
 
 
-<span class="k">def</span> <span class="nf">_no_grad_trunc_normal_</span><span class="p">(</span><span class="n">tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_no_grad_trunc_normal_</span><span class="p">(</span><span class="n">tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="c1"># Method based on</span>
     <span class="c1"># https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf</span>
     <span class="c1"># Modified from</span>
     <span class="c1"># https://github.com/pytorch/pytorch/blob/master/torch/nn/init.py</span>
-    <span class="k">def</span> <span class="nf">norm_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">norm_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="c1"># Computes standard normal cumulative distribution function</span>
         <span class="k">return</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">erf</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)))</span> <span class="o">/</span> <span class="mf">2.0</span>
 
@@ -1070,7 +1070,7 @@
 
 <div class="viewcode-block" id="trunc_normal_">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.trunc_normal_">[docs]</a>
-<span class="k">def</span> <span class="nf">trunc_normal_</span><span class="p">(</span><span class="n">tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">trunc_normal_</span><span class="p">(</span><span class="n">tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fills the input Tensor with values drawn from a truncated normal distribution.</span>
 
 <span class="sd">    The values are effectively drawn from the</span>

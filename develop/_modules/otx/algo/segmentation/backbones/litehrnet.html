@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -262,25 +262,25 @@
 <span class="sd">- https://github.com/HRNet/Lite-HRNet</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.utils.checkpoint</span> <span class="k">as</span> <span class="nn">cp</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.utils.checkpoint</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.modules</span> <span class="kn">import</span> <span class="n">Conv2dModule</span><span class="p">,</span> <span class="n">build_activation_layer</span><span class="p">,</span> <span class="n">build_norm_layer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.segmentation.modules</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv2dModule</span><span class="p">,</span> <span class="n">build_activation_layer</span><span class="p">,</span> <span class="n">build_norm_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.segmentation.modules</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">channel_shuffle</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">otx.algo.utils.mmengine_utils</span> <span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.mmengine_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span>
 
 
-<span class="k">class</span> <span class="nc">NeighbourSupport</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NeighbourSupport</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Neighbour support module.</span>
 
 <span class="sd">    Args:</span>
@@ -292,7 +292,7 @@
 <span class="sd">            Defaults to None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
@@ -358,7 +358,7 @@
             <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])</span>
 
@@ -372,7 +372,7 @@
         <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
 
 
-<span class="k">class</span> <span class="nc">CrossResolutionWeighting</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CrossResolutionWeighting</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Cross resolution weighting.</span>
 
 <span class="sd">    Args:</span>
@@ -385,7 +385,7 @@
 <span class="sd">            Defaults to ``(nn.ReLU, nn.Sigmoid)``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">ratio</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
@@ -424,7 +424,7 @@
             <span class="n">activation</span><span class="o">=</span><span class="n">build_activation_layer</span><span class="p">(</span><span class="n">activation</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">min_size</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]]</span>
 
@@ -437,7 +437,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="o">*</span> <span class="n">functional</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="o">-</span><span class="mi">2</span><span class="p">:],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">)]</span>
 
 
-<span class="k">class</span> <span class="nc">SpatialWeighting</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpatialWeighting</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Spatial weighting.</span>
 
 <span class="sd">    Args:</span>
@@ -453,7 +453,7 @@
 <span class="sd">        TypeError: If activation is not a callable or a tuple of callables.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">ratio</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
@@ -488,7 +488,7 @@
             <span class="n">activation</span><span class="o">=</span><span class="n">build_activation_layer</span><span class="p">(</span><span class="n">activation</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_avgpool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
@@ -497,7 +497,7 @@
         <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">out</span>
 
 
-<span class="k">class</span> <span class="nc">SpatialWeightingV2</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpatialWeightingV2</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SpatialWeightingV2.</span>
 
 <span class="sd">    The original repo: https://github.com/DeLightCMU/PSA.</span>
@@ -510,7 +510,7 @@
 <span class="sd">        enable_norm (bool): Whether to enable normalization layers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">ratio</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
@@ -571,7 +571,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">global_avgpool</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_channel_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_channel_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;_channel_weighting.</span>
 
 <span class="sd">        Args:</span>
@@ -593,7 +593,7 @@
 
         <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span>
 
-    <span class="k">def</span> <span class="nf">_spatial_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_spatial_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;_spatial_weighting.</span>
 
 <span class="sd">        Args:</span>
@@ -618,7 +618,7 @@
 
         <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="n">y_channel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_channel_weighting</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">y_spatial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_weighting</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -626,7 +626,7 @@
         <span class="k">return</span> <span class="n">y_channel</span> <span class="o">+</span> <span class="n">y_spatial</span>
 
 
-<span class="k">class</span> <span class="nc">ConditionalChannelWeighting</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConditionalChannelWeighting</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Conditional channel weighting module.</span>
 
 <span class="sd">    Args:</span>
@@ -645,7 +645,7 @@
 <span class="sd">        ValueError: If stride is not 1 or 2.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">stride</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -719,7 +719,7 @@
         <span class="k">if</span> <span class="n">dropout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dropout</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span><span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">dropout</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">branch_channels</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">_inner_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inner_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;_inner_forward.</span>
 
 <span class="sd">        Args:</span>
@@ -747,12 +747,12 @@
 
         <span class="k">return</span> <span class="p">[</span><span class="n">channel_shuffle</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">out</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner_forward</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Stem</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Stem</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Stem.</span>
 
 <span class="sd">    Args:</span>
@@ -773,7 +773,7 @@
 <span class="sd">        ValueError: If len(strides) is not equal to num_stages + 1.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">stem_channels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
@@ -887,7 +887,7 @@
             <span class="n">activation</span><span class="o">=</span><span class="n">build_activation_layer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_inner_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inner_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;_inner_forward.</span>
 
 <span class="sd">        Args:</span>
@@ -915,12 +915,12 @@
 
         <span class="k">return</span> <span class="n">channel_shuffle</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner_forward</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">ShuffleUnit</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ShuffleUnit</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;InvertedResidual block for ShuffleNetV2 backbone.</span>
 
 <span class="sd">    Args:</span>
@@ -935,7 +935,7 @@
 <span class="sd">            memory while slowing down the training speed. Default: False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1012,7 +1012,7 @@
             <span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_inner_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inner_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;_inner_forward.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">branch1</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch2</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -1022,12 +1022,12 @@
 
         <span class="k">return</span> <span class="n">channel_shuffle</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inner_forward</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_cp</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">LiteHRModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LiteHRModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;LiteHR module.</span>
 
 <span class="sd">    Args:</span>
@@ -1046,7 +1046,7 @@
 <span class="sd">        neighbour_weighting (bool, optional): Whether to use neighbour weighting. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_branches</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">num_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1086,13 +1086,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_check_branches</span><span class="p">(</span><span class="n">num_branches</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_branches</span><span class="p">(</span><span class="n">num_branches</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check input to avoid ValueError.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">num_branches</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_channels</span><span class="p">):</span>
             <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;NUM_BRANCHES(</span><span class="si">{</span><span class="n">num_branches</span><span class="si">}</span><span class="s2">) != NUM_INCHANNELS(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">in_channels</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_make_weighting_blocks</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_weighting_blocks</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">reduce_ratio</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1115,7 +1115,7 @@
 
         <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_make_one_branch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branch_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_one_branch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branch_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make one branch.&quot;&quot;&quot;</span>
         <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">ShuffleUnit</span><span class="p">(</span>
@@ -1140,12 +1140,12 @@
 
         <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_make_naive_branches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_branches</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_naive_branches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_branches</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_blocks</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make branches.&quot;&quot;&quot;</span>
         <span class="n">branches</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_one_branch</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">num_blocks</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_branches</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">branches</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_make_fuse_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_fuse_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make fuse layer.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_branches</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -1231,7 +1231,7 @@
 
         <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">fuse_layers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_branches</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
@@ -1263,7 +1263,7 @@
         <span class="k">return</span> <span class="n">out</span>
 
 
-<span class="k">class</span> <span class="nc">LiteHRNetModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LiteHRNetModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Lite-HRNet backbone.</span>
 
 <span class="sd">    `High-Resolution Representations for Labeling Pixels and Regions</span>
@@ -1283,7 +1283,7 @@
 <span class="sd">            in resblocks to let them behave as identity.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_stages</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">stem_configuration</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
@@ -1332,7 +1332,7 @@
         <span class="k">if</span> <span class="n">pretrained_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_pretrained_weights</span><span class="p">(</span><span class="n">pretrained_weights</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;backbone&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_make_transition_layer</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_transition_layer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_channels_pre_layer</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">num_channels_cur_layer</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
@@ -1404,7 +1404,7 @@
 
         <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">transition_layers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_make_stage</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_stage</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">stages_spec</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
         <span class="n">stage_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1458,7 +1458,7 @@
 
         <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">modules</span><span class="p">),</span> <span class="n">in_channels</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function.&quot;&quot;&quot;</span>
         <span class="n">stem_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">stem_outputs</span>
@@ -1482,7 +1482,7 @@
 
         <span class="k">return</span> <span class="n">y_list</span>
 
-    <span class="k">def</span> <span class="nf">load_pretrained_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretrained</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_pretrained_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretrained</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize weights.&quot;&quot;&quot;</span>
         <span class="n">checkpoint</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pretrained</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">pretrained</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -1498,7 +1498,7 @@
 
 <div class="viewcode-block" id="LiteHRNetBackbone">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.segmentation.backbones.html#otx.algo.segmentation.backbones.LiteHRNetBackbone">[docs]</a>
-<span class="k">class</span> <span class="nc">LiteHRNetBackbone</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LiteHRNetBackbone</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;LiteHRNet backbone factory.&quot;&quot;&quot;</span>
 
     <span class="n">LITEHRNET_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -1547,7 +1547,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiteHRNetModule</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiteHRNetModule</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for LiteHRNet backbone.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">LITEHRNET_CFG</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model type &#39;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&#39; is not supported&quot;</span>

@@ -24,7 +24,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
@@ -258,25 +258,25 @@
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;Custom FCNHead modules for OTX segmentation model.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">otx.algo.modules</span> <span class="kn">import</span> <span class="n">Conv2dModule</span><span class="p">,</span> <span class="n">build_activation_layer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.modules.norm</span> <span class="kn">import</span> <span class="n">build_norm_layer</span>
-<span class="kn">from</span> <span class="nn">otx.algo.segmentation.modules</span> <span class="kn">import</span> <span class="n">IterativeAggregator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv2dModule</span><span class="p">,</span> <span class="n">build_activation_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.segmentation.modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">IterativeAggregator</span>
 
-<span class="kn">from</span> <span class="nn">.base_segm_head</span> <span class="kn">import</span> <span class="n">BaseSegmentationHead</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.base_segm_head</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSegmentationHead</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 
-<span class="k">class</span> <span class="nc">FCNHeadModule</span><span class="p">(</span><span class="n">BaseSegmentationHead</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FCNHeadModule</span><span class="p">(</span><span class="n">BaseSegmentationHead</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fully Convolution Networks for Semantic Segmentation with aggregation.</span>
 
 <span class="sd">    This head is implemented of `FCNNet &lt;https://arxiv.org/abs/1411.4038&gt;`_.</span>
@@ -291,7 +291,7 @@
 <span class="sd">        dilation (int): The dilation rate for convs in the head. Default: 1.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">in_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">in_index</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
@@ -408,7 +408,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">convs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">with_activation</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;activation&quot;</span><span class="p">)</span>  <span class="c1"># why we delete last activation?</span>
 
-    <span class="k">def</span> <span class="nf">_forward_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function for feature maps.</span>
 
 <span class="sd">        Args:</span>
@@ -424,12 +424,12 @@
             <span class="n">feats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_cat</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">feats</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">feats</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function.&quot;&quot;&quot;</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_feature</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_seg</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_transform_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transform_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform inputs for decoder.</span>
 
 <span class="sd">        Args:</span>
@@ -443,7 +443,7 @@
 
 <div class="viewcode-block" id="FCNHead">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.segmentation.heads.html#otx.algo.segmentation.heads.FCNHead">[docs]</a>
-<span class="k">class</span> <span class="nc">FCNHead</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FCNHead</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;FCNHead factory for segmentation.&quot;&quot;&quot;</span>
 
     <span class="n">FCNHEAD_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -482,7 +482,7 @@
         <span class="p">},</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FCNHeadModule</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FCNHeadModule</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for FCNHead.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">FCNHEAD_CFG</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model type &#39;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&#39; is not supported&quot;</span>
