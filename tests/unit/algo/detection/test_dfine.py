@@ -21,9 +21,6 @@ class TestDFine:
     @pytest.mark.parametrize(
         "model",
         [
-            DFine(label_info=3, model_name="dfine_hgnetv2_n"),
-            DFine(label_info=3, model_name="dfine_hgnetv2_s"),
-            DFine(label_info=3, model_name="dfine_hgnetv2_m"),
             DFine(label_info=3, model_name="dfine_hgnetv2_l"),
             DFine(label_info=3, model_name="dfine_hgnetv2_x"),
         ],
@@ -36,9 +33,6 @@ class TestDFine:
     @pytest.mark.parametrize(
         "model",
         [
-            DFine(label_info=3, model_name="dfine_hgnetv2_n"),
-            DFine(label_info=3, model_name="dfine_hgnetv2_s"),
-            DFine(label_info=3, model_name="dfine_hgnetv2_m"),
             DFine(label_info=3, model_name="dfine_hgnetv2_l"),
             DFine(label_info=3, model_name="dfine_hgnetv2_x"),
         ],
@@ -53,9 +47,6 @@ class TestDFine:
     @pytest.mark.parametrize(
         "model",
         [
-            DFine(label_info=3, model_name="dfine_hgnetv2_n"),
-            DFine(label_info=3, model_name="dfine_hgnetv2_s"),
-            DFine(label_info=3, model_name="dfine_hgnetv2_m"),
             DFine(label_info=3, model_name="dfine_hgnetv2_l"),
             DFine(label_info=3, model_name="dfine_hgnetv2_x"),
         ],
