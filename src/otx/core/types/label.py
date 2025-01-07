@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Dataclasses for label information."""
@@ -119,9 +119,28 @@ class LabelInfo:
             label_ids=label_ids,
         )
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self, normalize_label_names: bool = False) -> dict[str, Any]:
         """Return a dictionary including all params."""
-        return asdict(self)
+        result = asdict(self)
+
+        if normalize_label_names:
+
+            def normalize_fn(node: str | list | tuple | dict | int) -> str | list | tuple | dict | int:
+                """Normalizes the label names stored in various nested structures."""
+                if isinstance(node, str):
+                    return node.replace(" ", "_")
+                if isinstance(node, list):
+                    return [normalize_fn(item) for item in node]
+                if isinstance(node, tuple):
+                    return tuple(normalize_fn(item) for item in node)
+                if isinstance(node, dict):
+                    return {normalize_fn(key): normalize_fn(value) for key, value in node.items()}
+                return node
+
+            for k in result:
+                result[k] = normalize_fn(result[k])
+
+        return result
 
     def to_json(self) -> str:
         """Return JSON serialized string."""
