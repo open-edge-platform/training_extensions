@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Module for OTXSegmentationDataset."""
@@ -179,6 +179,7 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
             image_color_channel,
             stack_images,
             to_tv_image,
+            data_format=data_format,
         )
 
         if self.has_polygons:
