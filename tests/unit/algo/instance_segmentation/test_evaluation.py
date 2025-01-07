@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import torch
 from otx.core.metrics.mean_ap import MaskRLEMeanAveragePrecision
 from otx.core.utils.mask_util import encode_rle

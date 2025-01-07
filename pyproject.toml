@@ -212,7 +212,6 @@ select = [
     "B",    # flake8-bugbear (`B`)
     "A",    # flake8-builtins (`A`)
     "COM",  # flake8-commas (`COM`)
-    # "CPY",  # flake8-copyright (`CPY`) -> Rules included in the preview version of RUFF. It may be added in the future, but for now, disable it.
     "C4",   # flake8-comprehensions (`C4`)
     "DTZ",  # flake8-datatimez (`DTZ`)
     "T10",  # flake8-debugger (`T10`)
@@ -245,6 +244,11 @@ select = [
     # "FURB", # refurb (`FURB`) -> Rules included in the preview version of RUFF. It may be added in the future, but for now, disable it.
     "RUF",  # Ruff-specific rules (`RUF`)
 ]
+
+# to be removed when updating to ruff>=2.0
+preview = true
+explicit-preview-rules = true
+extend-select = ["CPY001"]
 
 ignore = [
     # pydocstyle
@@ -359,6 +363,12 @@ max-args = 20
 max-branches = 50
 max-statements = 150
 max-returns = 10
+
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = """
+# Copyright \\(C\\) (\\d{4}(-\\d{4})?) Intel Corporation
+# SPDX-License-Identifier: Apache-2\\.0
+"""
 
 [tool.ruff.per-file-ignores]
 # Declare an additional exclude rule for test code

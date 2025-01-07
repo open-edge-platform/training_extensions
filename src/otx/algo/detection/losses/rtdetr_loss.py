@@ -41,9 +41,9 @@ class DetrCriterion(nn.Module):
         super().__init__()
         self.num_classes = num_classes
         self.matcher = HungarianMatcher(cost_dict={"cost_class": 2, "cost_bbox": 5, "cost_giou": 2})
-        loss_bbox_weight = weight_dict["loss_bbox"] if "loss_bbox" in weight_dict else 1.0
-        loss_giou_weight = weight_dict["loss_giou"] if "loss_giou" in weight_dict else 1.0
-        self.loss_vfl_weight = weight_dict["loss_vfl"] if "loss_vfl" in weight_dict else 1.0
+        loss_bbox_weight = weight_dict.get("loss_bbox", 1.0)
+        loss_giou_weight = weight_dict.get("loss_giou", 1.0)
+        self.loss_vfl_weight = weight_dict.get("loss_vfl", 1.0)
         self.alpha = alpha
         self.gamma = gamma
         self.lossl1 = L1Loss(loss_weight=loss_bbox_weight)

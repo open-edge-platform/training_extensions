@@ -280,7 +280,7 @@ class HungarianMatcher(nn.Module):
                 "pred_masks": outputs["pred_masks"][i] if "pred_masks" in outputs else None,
                 "target_boxes": targets[i]["boxes"],
                 "target_labels": targets[i]["labels"].long(),
-                "target_mask": targets[i]["masks"] if "masks" in targets[i] else None,
+                "target_mask": targets[i].get("masks", None),
             }
             for i in range(batch_size)
         ]
