@@ -323,7 +323,7 @@ class MemCacheHandlerSingleton:
         """Check there is enough system memory to maintain memory caching pool.
 
         Parameters:
-            mem_size: Requested memory size (bytes) for the memory cahcing pool
+            mem_size: Requested memory size (bytes) for the memory caching pool
             available_cpu_mem: Memory capacity (bytes) of this system
         Returns:
             Return true if there is enough system memory. Otherwise, return false.
