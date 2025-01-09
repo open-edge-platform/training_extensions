@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
@@ -73,6 +73,11 @@ def test_hlabel_info():
     dm_label_categories = LabelCategories(items=labels, label_groups=label_groups)
 
     hlabel_info = HLabelInfo.from_dm_label_groups(dm_label_categories)
+
+    # check if label info can be normalized on export
+    dict_label_info = hlabel_info.as_dict(normalize_label_names=True)
+    for lbl in dict_label_info["label_names"]:
+        assert " " not in lbl
 
     # Check if class_to_group_idx and label_to_idx have the same keys
     assert list(hlabel_info.class_to_group_idx.keys()) == list(

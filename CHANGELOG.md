@@ -60,6 +60,10 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4028>)
 - Fix SupCon flag
   (https://github.com/openvinotoolkit/training_extensions/pull/4076)
+- Add h-cls label info normalization
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4173>)
+- Fix arrow support for semantic segmentation task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4172>)
 
 ## \[2.2.2\]
 
