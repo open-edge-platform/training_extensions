@@ -404,7 +404,7 @@ class TestOTXTiling:
                 else:
                     pytest.skip("Task not supported")
 
-    #@pytest.mark.heavy()
+    # @pytest.mark.heavy()
     def test_val_dataloader(self, fxt_data_config) -> None:
         for task, data_config in fxt_data_config.items():
             # Enable tile adapter
