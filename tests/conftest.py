@@ -42,7 +42,7 @@ def pytest_addoption(parser: pytest.Parser):
         action="store",
         default="all",
         choices=("speed", "balance", "accuracy", "default", "other", "all"),
-        help="Choose speed|balcence|accuracy|default|other|all. Defaults to all.",
+        help="Choose speed|balance|accuracy|default|other|all. Defaults to all.",
     )
     parser.addoption(
         "--data-group",

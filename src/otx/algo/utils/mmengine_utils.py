@@ -207,7 +207,7 @@ def load_checkpoint_to_model(
     state_dict = checkpoint["ema"]["module"] if "ema" in checkpoint else checkpoint.get("state_dict", checkpoint)
 
     # TODO(Eugene): remove this when MaskDINO weights is updloaded to openvino storage.
-    state_dict = state_dict["model"] if "model" in state_dict else state_dict
+    state_dict = state_dict.get("model", state_dict)
 
     # strip prefix of state_dict
     metadata = getattr(state_dict, "_metadata", OrderedDict())

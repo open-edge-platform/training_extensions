@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """OTX export-related types definition."""
@@ -123,10 +123,11 @@ class TaskLevelExportParameters:
         }
 
         if isinstance(self.label_info, HLabelInfo):
+            dict_info = self.label_info.as_dict(normalize_label_names=True)
             metadata[("model_info", "hierarchical_config")] = json.dumps(
                 {
-                    "cls_heads_info": self.label_info.as_dict(),
-                    "label_tree_edges": self.label_info.label_tree_edges,
+                    "cls_heads_info": dict_info,
+                    "label_tree_edges": dict_info["label_tree_edges"],
                 },
             )
 

@@ -198,8 +198,8 @@ class MaskDINOCriterion(nn.Module):
         self.num_classes = num_classes
         self.matcher = matcher
         self.weight_dict = weight_dict
-        loss_bbox_weight = weight_dict["loss_bbox"] if "loss_bbox" in weight_dict else 1.0
-        loss_giou_weight = weight_dict["loss_giou"] if "loss_giou" in weight_dict else 1.0
+        loss_bbox_weight = weight_dict.get("loss_bbox", 1.0)
+        loss_giou_weight = weight_dict.get("loss_giou", 1.0)
         self.lossl1 = L1Loss(loss_weight=loss_bbox_weight)
         self.giou = GIoULoss(loss_weight=loss_giou_weight)
 
