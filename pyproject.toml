@@ -399,6 +399,6 @@ markers = [
     "gpu",  # mark tests which require NVIDIA GPU
     "cpu",
     "xpu",  # mark tests which require Intel dGPU,
-    "heavy", # heavy unit tests which require better CI machines
+    "intense", # intense unit tests which require better CI machines
 ]
 python_files = "tests/**/*.py"
