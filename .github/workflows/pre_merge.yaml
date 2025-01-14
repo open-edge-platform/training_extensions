@@ -100,6 +100,8 @@ jobs:
             tox-env: "py311"
     name: Intense-Unit-Test-with-Python${{ matrix.python-version }}
     steps:
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-0 libsqlite3-dev
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install Python
