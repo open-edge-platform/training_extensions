@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """D-FINE Decoder. Modified from D-FINE (https://github.com/Peterande/D-FINE)."""
