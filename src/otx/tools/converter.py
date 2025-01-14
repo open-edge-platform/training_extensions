@@ -99,7 +99,7 @@ TEMPLATE_ID_DICT = {
     },
     "Object_Detection_DFine_X": {
         "task": OTXTaskType.DETECTION,
-        "model_name": "dfine_hgnetv2_x",
+        "model_name": "dfine_x",
     },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
