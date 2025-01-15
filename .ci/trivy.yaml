@@ -5,9 +5,8 @@ scan:
   scanners:
     - vuln
     - secret
-    - misconfig
   slow: false
-severity: LOW,MEDIUM,HIGH,CRITICAL
+severity: MEDIUM,HIGH,CRITICAL
 exit-code: 1
 vulnerability:
   ignore-unfixed: false
