@@ -36,12 +36,14 @@ jobs:
           format: spdx-json
           output: trivy-results.spdx.json   
       
-      - name: Trivy Scanning
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
+      - name: Run Trivy Scan (dockerfile and secrets)
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        if: always()
         with:
-          trivy-config: ".ci/trivy.yaml"
-          scan-type: "fs"
+          scan-type: fs
           scan-ref: .
+          scanners: misconfig,secret,vuln
+          output: trivy-results-misconfig.txt
           skip-setup-trivy: true
 
       - name: Upload Trivy results artifact
@@ -52,8 +54,10 @@ jobs:
           retention-days: 7
         # Use always() to always run this step to publish scan results when there are test failures
         if: ${{ always() }}
+      
       - name: Upload deps list
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        if: always()
         with:
           name: python-deps-list
           path: '${{ github.workspace }}/requirements.txt'
