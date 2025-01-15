@@ -45,6 +45,15 @@ jobs:
           output: trivy-results-misconfig.txt
           skip-setup-trivy: true
 
+      - name: Trivy Scanning (spdx)
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: spdx-json
+          output: trivy-results-spdx.json
+          skip-setup-trivy: true  
+
       - name: Upload Trivy results artifact
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
