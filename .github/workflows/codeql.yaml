@@ -12,7 +12,6 @@
 name: "CodeQL"
 
 on:
-  workflow_dispatch: # run on request (no need for PR)
   pull_request:
     types:
       - opened
