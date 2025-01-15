@@ -34,7 +34,8 @@ jobs:
           scan-type: fs
           scan-ref: requirements.txt
           scanners: vuln
-          output: trivy-results-vuln.txt
+          format: json
+          output: trivy-results-vuln.json
 
       - name: Trivy Scanning (spdx.json)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
@@ -46,7 +47,6 @@ jobs:
       
       - name: Run Trivy Scan (dockerfile and secrets)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
-        if: always()
         with:
           scan-type: fs
           scan-ref: .
