@@ -10,7 +10,6 @@ on:
     # every UTC 6PM from Mon to Fri
     - cron: "0 18 * * 1-5"
 
-# Declare default permissions as read only.
 permissions: {}
 
 jobs:
@@ -92,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: bandit-results
-          path: .tox/bandit-report.html
+          path: .tox/bandit-results.txt
           retention-days: 7
         # Use always() to always run this step to publish scan results when there are test failures
         if: ${{ always() }}
@@ -155,11 +154,7 @@ jobs:
     if: always()
     runs-on: ubuntu-22.04
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
-        with:
-          egress-policy: audit
-      
+     
       # Create directory first
       - name: Create results directory
         run: mkdir -p all-results
