@@ -31,9 +31,10 @@ jobs:
       - name: Trivy Scanning (spdx.json)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
         with:
-          trivy-config: ".ci/trivy-json.yaml"
-          scan-type: "fs"
+          scan-type: fs
           scan-ref: .
+          format: spdx-json
+          output: trivy-results.spdx.json   
       
       - name: Trivy Scanning
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
@@ -41,7 +42,8 @@ jobs:
           trivy-config: ".ci/trivy.yaml"
           scan-type: "fs"
           scan-ref: .
-      
+          skip-setup-trivy: true
+
       - name: Upload Trivy results artifact
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
@@ -78,7 +80,7 @@ jobs:
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: bandit-results
-          path: .tox/bandit-report.txt
+          path: .tox/bandit-report.html
           retention-days: 7
         # Use always() to always run this step to publish scan results when there are test failures
         if: ${{ always() }}
