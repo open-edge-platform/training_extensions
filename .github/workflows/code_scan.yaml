@@ -26,7 +26,7 @@ jobs:
         run: python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
       - name: Freeze dependencies
         run: pip-compile --extra=docs,base,mmlab,anomaly -o requirements.txt pyproject.toml
-      
+
       - name: Run Trivy Scan (vuln)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
         with:
@@ -34,7 +34,7 @@ jobs:
           scan-ref: requirements.txt
           scanners: vuln
           output: trivy-results-vuln.txt
-      
+
       - name: Run Trivy Scan (dockerfile and secrets)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
         with:
@@ -51,7 +51,7 @@ jobs:
           scan-ref: .
           format: spdx-json
           output: trivy-results-spdx.json
-          skip-setup-trivy: true  
+          skip-setup-trivy: true
 
       - name: Upload Trivy results artifact
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
@@ -61,15 +61,15 @@ jobs:
           retention-days: 7
         # Use always() to always run this step to publish scan results when there are test failures
         if: ${{ always() }}
-      
+
       - name: Upload deps list
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         if: always()
         with:
           name: python-deps-list
-          path: '${{ github.workspace }}/requirements.txt'
+          path: "${{ github.workspace }}/requirements.txt"
           retention-days: 7
-  
+
   Bandit:
     runs-on: ubuntu-22.04
     steps:
@@ -107,54 +107,52 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - language: python
-          build-mode: none
-        - language: actions # to scan workflows
-          build-mode: none
+          - language: python
+            build-mode: none
+          - language: actions # to scan workflows
+            build-mode: none
     steps:
-   
-    - name: Checkout repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
-      with:
-        category: "/language:${{matrix.language}}"
-    
-    - name: Generate CodeQL Report
-      uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        template: report
-        outputDir: codeql-${{ matrix.language }}
-        
-    - name: Rename Report
-      shell: bash
-      continue-on-error: true
-      run: |
-        cd codeql-${{ matrix.language }}
-        mv "report.pdf" "codeql-${{ matrix.language }}.pdf"
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
+        with:
+          category: "/language:${{matrix.language}}"
 
-    - name: Upload Report
-      uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
-      with:
-        name: codeql-${{ matrix.language }}-results
-        path: codeql-${{ matrix.language }}/*.pdf
-        retention-days: 7
+      - name: Generate CodeQL Report
+        uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          template: report
+          outputDir: codeql-${{ matrix.language }}
+
+      - name: Rename Report
+        shell: bash
+        continue-on-error: true
+        run: |
+          cd codeql-${{ matrix.language }}
+          mv "report.pdf" "codeql-${{ matrix.language }}.pdf"
+
+      - name: Upload Report
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: codeql-${{ matrix.language }}-results
+          path: codeql-${{ matrix.language }}/*.pdf
+          retention-days: 7
 
   Summarize:
     needs: [Trivy, Bandit, CodeQL]
     if: always()
     runs-on: ubuntu-22.04
     steps:
-     
       # Create directory first
       - name: Create results directory
         run: mkdir -p all-results
