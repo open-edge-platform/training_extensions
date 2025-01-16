@@ -122,6 +122,10 @@ def test_predict_with_explain(
         # TODO(Eugene): maskdino not support yet.
         pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
 
+    if "dfine" in model_name:
+        # TODO(Eugene): dfine not support yet.
+        pytest.skip(f"There's issue with dfine: {model_name}. Skip for now.")
+
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
         pytest.skip("rtmdet_tiny on detection is not supported yet.")
