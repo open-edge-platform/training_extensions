@@ -51,6 +51,10 @@ def test_forward_explain(
         # TODO(Eugene): maskdino not support yet.
         pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
 
+    if "dfine" in model_name:
+        # TODO(Eugene): dfine not support yet.
+        pytest.skip(f"There's issue with dfine: {model_name}. Skip for now.")
+
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
