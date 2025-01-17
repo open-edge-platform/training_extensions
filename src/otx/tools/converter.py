@@ -97,6 +97,10 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.DETECTION,
         "model_name": "rtmdet_tiny",
     },
+    "Object_Detection_DFine_X": {
+        "task": OTXTaskType.DETECTION,
+        "model_name": "dfine_x",
+    },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
         "task": OTXTaskType.INSTANCE_SEGMENTATION,
