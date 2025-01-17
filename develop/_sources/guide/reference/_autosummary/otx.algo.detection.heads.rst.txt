@@ -18,6 +18,7 @@ otx.algo.detection.heads
    .. autosummary::
    
       ATSSHead
+      DFINETransformer
       RTDETRTransformer
       RTMDetSepBNHead
       SSDHead

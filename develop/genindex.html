@@ -535,15 +535,19 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.detach">detach() (otx.algo.utils.mmengine_utils.InstanceData method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.core.utils.tile_merge.html#otx.core.utils.tile_merge.DetectionTileMerge">DetectionTileMerge (class in otx.core.utils.tile_merge)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DetrCriterion">DetrCriterion (class in otx.algo.detection.losses)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.device">device (otx.engine.Engine property)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.config.device.html#otx.core.config.device.DeviceConfig">DeviceConfig (class in otx.core.config.device)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion">DFINECriterion (class in otx.algo.detection.losses)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.algo.detection.heads.html#otx.algo.detection.heads.DFINETransformer">DFINETransformer (class in otx.algo.detection.heads)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.exporter.diffusion.html#otx.core.exporter.diffusion.DiffusionOTXModelExporter">DiffusionOTXModelExporter (class in otx.core.exporter.diffusion)</a>
 </li>
@@ -645,6 +649,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.algo.segmentation.heads.html#otx.algo.segmentation.heads.FCNHead">FCNHead (class in otx.algo.segmentation.heads)</a>
 </li>
+      <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion.fgl_loss">fgl_loss() (otx.algo.detection.losses.DFINECriterion static method)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.algo.action_classification.html#otx.algo.action_classification.MoViNetBackbone.fill_conv">fill_conv() (otx.algo.action_classification.MoViNetBackbone static method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.action_classification.html#otx.algo.action_classification.MoViNetBackbone.fill_se_config">fill_se_config() (otx.algo.action_classification.MoViNetBackbone static method)</a>
@@ -689,6 +695,8 @@
         <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.ATSSCriterion.forward">(otx.algo.detection.losses.ATSSCriterion method)</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DetrCriterion.forward">(otx.algo.detection.losses.DetrCriterion method)</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion.forward">(otx.algo.detection.losses.DFINECriterion method)</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.RTMDetCriterion.forward">(otx.algo.detection.losses.RTMDetCriterion method)</a>
 </li>
@@ -886,7 +894,11 @@
       <li><a href="guide/reference/_autosummary/otx.hpo.html#otx.hpo.HyperBand.get_best_config">get_best_config() (otx.hpo.HyperBand method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DetrCriterion.get_cdn_matched_indices">get_cdn_matched_indices() (otx.algo.detection.losses.DetrCriterion static method)</a>
+
+      <ul>
+        <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion.get_cdn_matched_indices">(otx.algo.detection.losses.DFINECriterion static method)</a>
 </li>
+      </ul></li>
       <li><a href="guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.get_ckpt_label_info_v1">get_ckpt_label_info_v1() (otx.core.model.base.OTXModel static method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.model.action_classification.html#otx.core.model.action_classification.OTXActionClsModel.get_classification_layers">get_classification_layers() (otx.core.model.action_classification.OTXActionClsModel method)</a>
@@ -1282,6 +1294,8 @@
       <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DetrCriterion.loss_boxes">loss_boxes() (otx.algo.detection.losses.DetrCriterion method)</a>
 
       <ul>
+        <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion.loss_boxes">(otx.algo.detection.losses.DFINECriterion method)</a>
+</li>
         <li><a href="guide/reference/_autosummary/otx.algo.object_detection_3d.losses.html#otx.algo.object_detection_3d.losses.MonoDETRCriterion.loss_boxes">(otx.algo.object_detection_3d.losses.MonoDETRCriterion method)</a>
 </li>
       </ul></li>
@@ -1296,6 +1310,12 @@
       <li><a href="guide/reference/_autosummary/otx.algo.object_detection_3d.losses.html#otx.algo.object_detection_3d.losses.MonoDETRCriterion.loss_labels">loss_labels() (otx.algo.object_detection_3d.losses.MonoDETRCriterion method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DetrCriterion.loss_labels_vfl">loss_labels_vfl() (otx.algo.detection.losses.DetrCriterion method)</a>
+
+      <ul>
+        <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion.loss_labels_vfl">(otx.algo.detection.losses.DFINECriterion method)</a>
+</li>
+      </ul></li>
+      <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion.loss_local">loss_local() (otx.algo.detection.losses.DFINECriterion method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.object_detection_3d.losses.html#otx.algo.object_detection_3d.losses.MonoDETRCriterion.loss_map">loss_map (otx.algo.object_detection_3d.losses.MonoDETRCriterion property)</a>
 </li>

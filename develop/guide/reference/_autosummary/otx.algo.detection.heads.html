@@ -517,19 +517,22 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.heads.ATSSHead" title="otx.algo.detection.heads.ATSSHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ATSSHead</span></code></a>(model_name, num_classes, ...[, ...])</p></td>
 <td><p>ATSSHead factory for detection.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.heads.RTDETRTransformer" title="otx.algo.detection.heads.RTDETRTransformer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RTDETRTransformer</span></code></a>(model_name, num_classes[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.heads.DFINETransformer" title="otx.algo.detection.heads.DFINETransformer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFINETransformer</span></code></a>(model_name, num_classes)</p></td>
+<td><p>DFINETransformer factory for detection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.heads.RTDETRTransformer" title="otx.algo.detection.heads.RTDETRTransformer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RTDETRTransformer</span></code></a>(model_name, num_classes[, ...])</p></td>
 <td><p>RTDETRTransformer factory for detection.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.heads.RTMDetSepBNHead" title="otx.algo.detection.heads.RTMDetSepBNHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RTMDetSepBNHead</span></code></a>(model_name, num_classes, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.heads.RTMDetSepBNHead" title="otx.algo.detection.heads.RTMDetSepBNHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RTMDetSepBNHead</span></code></a>(model_name, num_classes, ...)</p></td>
 <td><p>RTMDetSepBNHead factory for detection.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.heads.SSDHead" title="otx.algo.detection.heads.SSDHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SSDHead</span></code></a>(model_name, num_classes, ...[, test_cfg])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.heads.SSDHead" title="otx.algo.detection.heads.SSDHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SSDHead</span></code></a>(model_name, num_classes, ...[, test_cfg])</p></td>
 <td><p>SSDHead factory for detection.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.heads.YOLOHead" title="otx.algo.detection.heads.YOLOHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">YOLOHead</span></code></a>(model_name, num_classes)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.heads.YOLOHead" title="otx.algo.detection.heads.YOLOHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">YOLOHead</span></code></a>(model_name, num_classes)</p></td>
 <td><p>YOLOHead factory for detection.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.heads.YOLOXHead" title="otx.algo.detection.heads.YOLOXHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">YOLOXHead</span></code></a>(model_name, num_classes, train_cfg)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.heads.YOLOXHead" title="otx.algo.detection.heads.YOLOXHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">YOLOXHead</span></code></a>(model_name, num_classes, train_cfg)</p></td>
 <td><p>YOLOXHead factory for detection.</p></td>
 </tr>
 </tbody>
@@ -540,6 +543,14 @@
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>ATSSHead factory for detection.</p>
 <p>Constructor for ATSSHead.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.algo.detection.heads.DFINETransformer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.detection.heads.</span></span><span class="sig-name descname"><span class="pre">DFINETransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/detection/heads/dfine_decoder.html#DFINETransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.detection.heads.DFINETransformer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>DFINETransformer factory for detection.</p>
+<p>Constructor for DFINETransformerModule.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -627,6 +638,15 @@
    <code class="docutils literal notranslate">
     <span class="pre">
      ATSSHead
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.algo.detection.heads.DFINETransformer">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     DFINETransformer
     </span>
    </code>
   </a>

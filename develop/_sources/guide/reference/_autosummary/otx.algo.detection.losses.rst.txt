@@ -23,6 +23,7 @@ otx.algo.detection.losses
       SSDCriterion
       YOLOv9Criterion
       YOLOXCriterion
+      DFINECriterion
    
    
 
