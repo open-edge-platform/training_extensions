@@ -53,6 +53,7 @@ def test_forward_explain(
 
     if "dfine" in model_name:
         # TODO(Eugene): dfine not support yet.
+        # https://jira.devtools.intel.com/browse/CVS-160781
         pytest.skip(f"There's issue with dfine: {model_name}. Skip for now.")
 
     if "dino" in model_name:
@@ -124,6 +125,7 @@ def test_predict_with_explain(
 
     if "dfine" in model_name:
         # TODO(Eugene): dfine not support yet.
+        # https://jira.devtools.intel.com/browse/CVS-160781
         pytest.skip(f"There's issue with dfine: {model_name}. Skip for now.")
 
     if "rtmdet_tiny" in recipe:

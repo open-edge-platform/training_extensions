@@ -923,7 +923,7 @@ class DFINETransformer:
         "dfine_hgnetv2_l": {},
         "dfine_hgnetv2_x": {
             "feat_channels": [384, 384, 384],
-            "reg_scale": 8,
+            "reg_scale": 8.0,
             "eval_idx": -1,
             "eval_spatial_size": [640, 640],
         },

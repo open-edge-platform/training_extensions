@@ -19,7 +19,6 @@ from otx.algo.detection.detectors import DETR
 from otx.algo.detection.heads.dfine_decoder import DFINETransformer
 from otx.algo.detection.losses.dfine_loss import DFINECriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
-from otx.algo.utils.mmengine_utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -85,15 +84,6 @@ class DFine(ExplainableOTXDetModel):
             torch_compile=torch_compile,
             tile_config=tile_config,
         )
-
-    def _create_model(self) -> nn.Module:
-        detector = self._build_model(num_classes=self.label_info.num_classes)
-        if self.model_name != "dfine_hgnetv2_x" and hasattr(detector, "init_weights"):
-            detector.init_weights()
-        self.classification_layers = self.get_classification_layers(prefix="model.")
-        if self.load_from is not None:
-            load_checkpoint(detector, self.load_from, map_location="cpu")
-        return detector
 
     def _build_model(self, num_classes: int) -> DETR:
         backbone = HGNetv2(model_name=self.model_name)
@@ -207,10 +197,8 @@ class DFine(ExplainableOTXDetModel):
     def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
         """Configure an optimizer and learning-rate schedulers.
 
-        Configure an optimizer and learning-rate schedulers
-        from the given optimizer and scheduler or scheduler list callable in the constructor.
-        Generally, there is two lr schedulers. One is for a linear warmup scheduler and
-        the other is the main scheduler working after the warmup period.
+        Set up the optimizer and schedulers from the provided inputs.
+        Typically, a warmup scheduler is used initially, followed by the main scheduler.
 
         Returns:
             Two list. The former is a list that contains an optimizer
