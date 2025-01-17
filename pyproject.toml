@@ -398,6 +398,7 @@ convention = "google"
 markers = [
     "gpu",  # mark tests which require NVIDIA GPU
     "cpu",
-    "xpu",  # mark tests which require Intel dGPU
+    "xpu",  # mark tests which require Intel dGPU,
+    "intense", # intense unit tests which require better CI machines
 ]
 python_files = "tests/**/*.py"

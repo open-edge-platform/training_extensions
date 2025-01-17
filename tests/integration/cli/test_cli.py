@@ -252,6 +252,9 @@ def test_otx_e2e(
     if "dino" in model_name:
         return  # DINO is not supported.
 
+    if "dfine" in model_name:
+        return  # DFine is not supported.
+
     if "rtdetr" in model_name:
         return  # RT-DETR currently is not supported.
 
@@ -330,6 +333,9 @@ def test_otx_explain_e2e(
 
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
+
+    if "dfine" in model_name:
+        pytest.skip("DFine is not supported.")
 
     if "maskrcnn_r50_tv" in model_name:
         pytest.skip("MaskRCNN R50 Torchvision model doesn't support explain.")
