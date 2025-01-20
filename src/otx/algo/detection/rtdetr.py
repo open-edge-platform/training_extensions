@@ -128,6 +128,9 @@ class RTDETR(ExplainableOTXDetModel):
                 )
             targets.append({"boxes": scaled_bboxes, "labels": ll})
 
+        if self.explain_mode:
+            return {"entity": entity}
+
         return {
             "images": entity.images,
             "targets": targets,
