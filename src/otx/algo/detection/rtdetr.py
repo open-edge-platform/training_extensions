@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 import torch
 from torch import Tensor, nn
@@ -159,6 +159,33 @@ class RTDETR(ExplainableOTXDetModel):
         original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
 
+        if self.explain_mode:
+            if not isinstance(outputs, dict):
+                msg = f"Model output should be a dict, but got {type(outputs)}."
+                raise ValueError(msg)
+
+            if "feature_vector" not in outputs:
+                msg = "No feature vector in the model output."
+                raise ValueError(msg)
+
+            if "saliency_map" not in outputs:
+                msg = "No saliency maps in the model output."
+                raise ValueError(msg)
+
+            saliency_map = outputs["saliency_map"].detach().cpu().numpy()
+            feature_vector = outputs["feature_vector"].detach().cpu().numpy()
+
+            return DetBatchPredEntity(
+                batch_size=len(outputs),
+                images=inputs.images,
+                imgs_info=inputs.imgs_info,
+                scores=scores,
+                bboxes=bboxes,
+                labels=labels,
+                feature_vector=feature_vector,
+                saliency_map=saliency_map,
+            )
+
         return DetBatchPredEntity(
             batch_size=len(outputs),
             images=inputs.images,
@@ -274,3 +301,41 @@ class RTDETR(ExplainableOTXDetModel):
     def _optimization_config(self) -> dict[str, Any]:
         """PTQ config for RT-DETR."""
         return {"model_type": "transformer"}
+
+    @torch.no_grad()
+    def head_forward_fn(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward function for the score head of the model."""
+        x = x.squeeze()
+        return self.model.decoder.dec_score_head[-1](x)
+
+    def get_explain_fn(self) -> Callable:
+        """Returns explain function."""
+        from otx.algo.explain.explain_algo import ReciproCAM
+
+        explainer = ReciproCAM(
+            head_forward_fn=self.head_forward_fn,
+            num_classes=self.num_classes,
+            optimize_gap=True,
+        )
+        return explainer.func
+
+    @staticmethod
+    def _forward_explain_detection(
+        self,  # noqa: ANN001
+        entity: DetBatchDataEntity,
+        mode: str = "tensor",  # noqa: ARG004
+    ) -> dict[str, torch.Tensor]:
+        """Forward function for explainable detection model."""
+        backbone_feats = self.encoder(self.backbone(entity.images))
+        predictions = self.decoder(backbone_feats)
+
+        feature_vector = self.feature_vector_fn(backbone_feats)
+        saliency_map = self.explain_fn(backbone_feats[-1])
+        predictions.update(
+            {
+                "feature_vector": feature_vector,
+                "saliency_map": saliency_map,
+            },
+        )
+
+        return predictions
