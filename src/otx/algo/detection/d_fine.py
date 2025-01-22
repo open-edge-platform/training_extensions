@@ -157,6 +157,9 @@ class DFine(ExplainableOTXDetModel):
                 )
             targets.append({"boxes": scaled_bboxes, "labels": ll})
 
+        if self.explain_mode:
+            return {"entity": entity}
+
         return {
             "images": entity.images,
             "targets": targets,
@@ -184,6 +187,33 @@ class DFine(ExplainableOTXDetModel):
 
         original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
+
+        if self.explain_mode:
+            if not isinstance(outputs, dict):
+                msg = f"Model output should be a dict, but got {type(outputs)}."
+                raise ValueError(msg)
+
+            if "feature_vector" not in outputs:
+                msg = "No feature vector in the model output."
+                raise ValueError(msg)
+
+            if "saliency_map" not in outputs:
+                msg = "No saliency maps in the model output."
+                raise ValueError(msg)
+
+            saliency_map = outputs["saliency_map"].detach().cpu().numpy()
+            feature_vector = outputs["feature_vector"].detach().cpu().numpy()
+
+            return DetBatchPredEntity(
+                batch_size=len(outputs),
+                images=inputs.images,
+                imgs_info=inputs.imgs_info,
+                scores=scores,
+                bboxes=bboxes,
+                labels=labels,
+                feature_vector=feature_vector,
+                saliency_map=saliency_map,
+            )
 
         return DetBatchPredEntity(
             batch_size=len(outputs),
@@ -306,3 +336,35 @@ class DFine(ExplainableOTXDetModel):
                 },
             },
         }
+
+    @staticmethod
+    def _forward_explain_detection(
+        self,  # noqa: ANN001
+        entity: DetBatchDataEntity,
+        mode: str = "tensor",  # noqa: ARG004
+    ) -> dict[str, torch.Tensor]:
+        """Forward function for explainable detection model."""
+        backbone_feats = self.encoder(self.backbone(entity.images))
+        predictions = self.decoder(backbone_feats, explain_mode=True)
+
+        feature_vector = self.feature_vector_fn(backbone_feats)
+
+        splits = [f.shape[-2] * f.shape[-1] for f in backbone_feats]
+
+        # Permute and split logits in one line
+        raw_logits = torch.split(predictions["raw_logits"].permute(0, 2, 1), splits, dim=-1)
+
+        # Reshape each split in a list comprehension
+        raw_logits = [
+            logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1]) for logits, f in zip(raw_logits, backbone_feats)
+        ]
+
+        saliency_map = self.explain_fn(raw_logits)
+        predictions.update(
+            {
+                "feature_vector": feature_vector,
+                "saliency_map": saliency_map,
+            },
+        )
+
+        return predictions

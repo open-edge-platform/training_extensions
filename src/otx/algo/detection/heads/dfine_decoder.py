@@ -723,7 +723,7 @@ class DFINETransformerModule(nn.Module):
             enc_topk_bbox_unact = torch.concat([denoising_bbox_unact, enc_topk_bbox_unact], dim=1)
             content = torch.concat([denoising_logits, content], dim=1)
 
-        return content, enc_topk_bbox_unact, enc_topk_bboxes_list, enc_topk_logits_list
+        return content, enc_topk_bbox_unact, enc_topk_bboxes_list, enc_topk_logits_list, enc_outputs_logits
 
     def _select_topk(
         self,
@@ -762,8 +762,22 @@ class DFINETransformerModule(nn.Module):
 
         return topk_memory, topk_logits, topk_anchors
 
-    def forward(self, feats: Tensor, targets: list[dict[str, Tensor]] | None = None) -> dict[str, Tensor]:
-        """Forward pass of the DFine Transformer module."""
+    def forward(
+        self,
+        feats: Tensor,
+        targets: list[dict[str, Tensor]] | None = None,
+        explain_mode: bool = False,
+    ) -> dict[str, Tensor]:
+        """Forward function of the D-FINE Decoder Transformer Module.
+
+        Args:
+            feats (Tensor): Feature maps.
+            targets (list[dict[str, Tensor]] | None, optional): target annotations. Defaults to None.
+            explain_mode (bool, optional): Whether to return raw logits for explanation. Defaults to False.
+
+        Returns:
+            dict[str, Tensor]: Output dictionary containing predicted logits, losses and boxes.
+        """
         # input projection and embedding
         memory, spatial_shapes = self._get_encoder_input(feats)
 
@@ -781,7 +795,13 @@ class DFINETransformerModule(nn.Module):
         else:
             denoising_logits, denoising_bbox_unact, attn_mask, dn_meta = None, None, None, None
 
-        init_ref_contents, init_ref_points_unact, enc_topk_bboxes_list, enc_topk_logits_list = self._get_decoder_input(
+        (
+            init_ref_contents,
+            init_ref_points_unact,
+            enc_topk_bboxes_list,
+            enc_topk_logits_list,
+            raw_logits,
+        ) = self._get_decoder_input(
             memory,
             spatial_shapes,
             denoising_logits,
@@ -857,6 +877,9 @@ class DFINETransformerModule(nn.Module):
                 "pred_logits": out_logits[-1],
                 "pred_boxes": out_bboxes[-1],
             }
+
+        if explain_mode:
+            out["raw_logits"] = raw_logits
 
         return out
 

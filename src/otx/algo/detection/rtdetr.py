@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from torch import Tensor, nn
@@ -302,23 +302,6 @@ class RTDETR(ExplainableOTXDetModel):
         """PTQ config for RT-DETR."""
         return {"model_type": "transformer"}
 
-    @torch.no_grad()
-    def head_forward_fn(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward function for the score head of the model."""
-        x = x.squeeze()
-        return self.model.decoder.dec_score_head[-1](x)
-
-    def get_explain_fn(self) -> Callable:
-        """Returns explain function."""
-        from otx.algo.explain.explain_algo import ReciproCAM
-
-        explainer = ReciproCAM(
-            head_forward_fn=self.head_forward_fn,
-            num_classes=self.num_classes,
-            optimize_gap=True,
-        )
-        return explainer.func
-
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001
@@ -327,10 +310,21 @@ class RTDETR(ExplainableOTXDetModel):
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""
         backbone_feats = self.encoder(self.backbone(entity.images))
-        predictions = self.decoder(backbone_feats)
+        predictions = self.decoder(backbone_feats, explain_mode=True)
 
         feature_vector = self.feature_vector_fn(backbone_feats)
-        saliency_map = self.explain_fn(backbone_feats[-1])
+
+        splits = [f.shape[-2] * f.shape[-1] for f in backbone_feats]
+
+        # Permute and split logits in one line
+        raw_logits = torch.split(predictions["raw_logits"].permute(0, 2, 1), splits, dim=-1)
+
+        # Reshape each split in a list comprehension
+        raw_logits = [
+            logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1]) for logits, f in zip(raw_logits, backbone_feats)
+        ]
+
+        saliency_map = self.explain_fn(raw_logits)
         predictions.update(
             {
                 "feature_vector": feature_vector,
