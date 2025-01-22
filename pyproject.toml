@@ -39,15 +39,15 @@ dependencies = [
     "einops==0.8.0",
     "decord==0.6.0",
     "typeguard>=4.3,<4.5",
-    "numba==0.60.0",
+    "numba==0.61.0",
     # TODO(ashwinvaidya17): https://github.com/openvinotoolkit/anomalib/issues/2126
     "setuptools<70",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "tox==4.23.2",
-    "pre-commit==4.0.1",
+    "tox==4.24.1",
+    "pre-commit==4.1.0",
     "pylint",
     "pytest",
     "coverage",
@@ -89,7 +89,7 @@ base = [
 ]
 
 transformers = [
-    "transformers==4.48.0",
+    "transformers==4.48.1",
     "diffusers==0.32.2",
     "torchmetrics[image]>=0.7.0"
 ]
@@ -106,7 +106,7 @@ mmlab = [
 ]
 
 ci_tox = [
-    "tox==4.23.2",
+    "tox==4.24.1",
 ]
 
 ci_publish = [
