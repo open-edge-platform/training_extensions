@@ -347,19 +347,13 @@ class DFine(ExplainableOTXDetModel):
         backbone_feats = self.encoder(self.backbone(entity.images))
         predictions = self.decoder(backbone_feats, explain_mode=True)
 
-        feature_vector = self.feature_vector_fn(backbone_feats)
-
-        splits = [f.shape[-2] * f.shape[-1] for f in backbone_feats]
-
-        # Permute and split logits in one line
-        raw_logits = torch.split(predictions["raw_logits"].permute(0, 2, 1), splits, dim=-1)
-
-        # Reshape each split in a list comprehension
-        raw_logits = [
-            logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1]) for logits, f in zip(raw_logits, backbone_feats)
-        ]
+        raw_logits = DETR.split_and_reshape_logits(
+            backbone_feats,
+            predictions["raw_logits"],
+        )
 
         saliency_map = self.explain_fn(raw_logits)
+        feature_vector = self.feature_vector_fn(backbone_feats)
         predictions.update(
             {
                 "feature_vector": feature_vector,

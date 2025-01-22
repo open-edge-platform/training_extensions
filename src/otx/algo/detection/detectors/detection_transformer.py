@@ -103,16 +103,8 @@ class DETR(BaseModule):
             deploy_mode=True,
         )
         if explain_mode:
+            raw_logits = self.split_and_reshape_logits(backbone_feats, predictions["raw_logits"])
             feature_vector = self.feature_vector_fn(backbone_feats)
-            splits = [f.shape[-2] * f.shape[-1] for f in backbone_feats]
-            # Permute and split logits in one line
-            raw_logits = torch.split(predictions["raw_logits"].permute(0, 2, 1), splits, dim=-1)
-
-            # Reshape each split in a list comprehension
-            raw_logits = [
-                logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1])
-                for logits, f in zip(raw_logits, backbone_feats)
-            ]
             saliency_map = self.explain_fn(raw_logits)
             xai_output = {
                 "feature_vector": feature_vector,
@@ -120,6 +112,29 @@ class DETR(BaseModule):
             }
             results.update(xai_output)  # type: ignore[union-attr]
         return results
+
+    @staticmethod
+    def split_and_reshape_logits(
+        backbone_feats: tuple[Tensor, ...],
+        raw_logits: Tensor,
+    ) -> tuple[Tensor, ...]:
+        """Splits and reshapes raw logits for explain mode.
+
+        Args:
+            backbone_feats (tuple[Tensor,...]): Tuple of backbone features.
+            raw_logits (Tensor): Raw logits.
+
+        Returns:
+            tuple[Tensor,...]: The reshaped logits.
+        """
+        splits = [f.shape[-2] * f.shape[-1] for f in backbone_feats]
+        # Permute and split logits in one line
+        raw_logits = torch.split(raw_logits.permute(0, 2, 1), splits, dim=-1)
+
+        # Reshape each split in a list comprehension
+        return tuple(
+            logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1]) for logits, f in zip(raw_logits, backbone_feats)
+        )
 
     def postprocess(
         self,
