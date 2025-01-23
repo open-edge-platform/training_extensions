@@ -120,7 +120,7 @@ ci_benchmark = [
     "ipython==8.31.0",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
-    "mlflow==2.19.0",
+    "mlflow==2.20.0",
     "py-cpuinfo==9.0.0",
 ]
 
