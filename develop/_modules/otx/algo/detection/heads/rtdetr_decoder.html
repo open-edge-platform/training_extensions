@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.algo.detection.heads.rtdetr_decoder</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2024-2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;RTDETR decoder, modified from https://github.com/lyuwenyu/RT-DETR.&quot;&quot;&quot;</span>
@@ -801,10 +801,10 @@
 
         <span class="n">output_memory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc_output</span><span class="p">(</span><span class="n">memory</span><span class="p">)</span>
 
-        <span class="n">enc_outputs_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc_score_head</span><span class="p">(</span><span class="n">output_memory</span><span class="p">)</span>
+        <span class="n">enc_outputs_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc_score_head</span><span class="p">(</span><span class="n">output_memory</span><span class="p">)</span>
         <span class="n">enc_outputs_coord_unact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc_bbox_head</span><span class="p">(</span><span class="n">output_memory</span><span class="p">)</span> <span class="o">+</span> <span class="n">anchors</span>
 
-        <span class="n">_</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">enc_outputs_class</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_queries</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">topk_ind</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">enc_outputs_logits</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_queries</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="n">reference_points_unact</span> <span class="o">=</span> <span class="n">enc_outputs_coord_unact</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
             <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -815,9 +815,9 @@
         <span class="k">if</span> <span class="n">denoising_bbox_unact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">reference_points_unact</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">denoising_bbox_unact</span><span class="p">,</span> <span class="n">reference_points_unact</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="n">enc_topk_logits</span> <span class="o">=</span> <span class="n">enc_outputs_class</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
+        <span class="n">enc_topk_logits</span> <span class="o">=</span> <span class="n">enc_outputs_logits</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
             <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">enc_outputs_class</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">topk_ind</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">enc_outputs_logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
         <span class="p">)</span>
 
         <span class="c1"># extract region features</span>
@@ -830,10 +830,24 @@
         <span class="k">if</span> <span class="n">denoising_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">target</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">denoising_class</span><span class="p">,</span> <span class="n">target</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">reference_points_unact</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">enc_topk_bboxes</span><span class="p">,</span> <span class="n">enc_topk_logits</span>
+        <span class="k">return</span> <span class="n">target</span><span class="p">,</span> <span class="n">reference_points_unact</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">enc_topk_bboxes</span><span class="p">,</span> <span class="n">enc_topk_logits</span><span class="p">,</span> <span class="n">enc_outputs_logits</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the RTDETRTransformer module.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feats</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">explain_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function of RTDETRTransformer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feats (Tensor): Input features.</span>
+<span class="sd">            targets (List[Dict[str, Tensor]]): List of target dictionaries.</span>
+<span class="sd">            explain_mode (bool): Whether to return raw logits for explanation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict[str, Tensor]: Output dictionary containing predicted logits, losses and boxes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># input projection and embedding</span>
         <span class="p">(</span><span class="n">memory</span><span class="p">,</span> <span class="n">spatial_shapes</span><span class="p">,</span> <span class="n">level_start_index</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_encoder_input</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
 
@@ -851,7 +865,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">denoising_class</span><span class="p">,</span> <span class="n">denoising_bbox_unact</span><span class="p">,</span> <span class="n">attn_mask</span><span class="p">,</span> <span class="n">dn_meta</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
-        <span class="n">target</span><span class="p">,</span> <span class="n">init_ref_points_unact</span><span class="p">,</span> <span class="n">enc_topk_bboxes</span><span class="p">,</span> <span class="n">enc_topk_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_decoder_input</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span> <span class="n">init_ref_points_unact</span><span class="p">,</span> <span class="n">enc_topk_bboxes</span><span class="p">,</span> <span class="n">enc_topk_logits</span><span class="p">,</span> <span class="n">raw_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_decoder_input</span><span class="p">(</span>
             <span class="n">memory</span><span class="p">,</span>
             <span class="n">spatial_shapes</span><span class="p">,</span>
             <span class="n">denoising_class</span><span class="p">,</span>
@@ -884,6 +898,9 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="ow">and</span> <span class="n">dn_meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">out</span><span class="p">[</span><span class="s2">&quot;dn_aux_outputs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_aux_loss</span><span class="p">(</span><span class="n">dn_out_logits</span><span class="p">,</span> <span class="n">dn_out_bboxes</span><span class="p">)</span>
                 <span class="n">out</span><span class="p">[</span><span class="s2">&quot;dn_meta&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dn_meta</span>
+
+        <span class="k">if</span> <span class="n">explain_mode</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;raw_logits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_logits</span>
 
         <span class="k">return</span> <span class="n">out</span>
 

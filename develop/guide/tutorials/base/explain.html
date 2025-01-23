@@ -533,6 +533,7 @@ which are heatmaps with red-colored areas indicating focus. Here’s an example 
 CLI (with work_dir)</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>explain<span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
 <span class="w">                       </span>--dump<span class="w"> </span>True<span class="w"> </span><span class="c1"># Wherether to save saliency map images or not</span>
+<span class="w">                       </span>--explain_config.postprocess<span class="w"> </span>True<span class="w"> </span><span class="c1"># Resizes and applies colormap to the saliency map</span>
 </pre></div>
 </div>
 </div>
@@ -543,6 +544,7 @@ CLI (with config)</label><div class="sd-tab-content docutils">
 <span class="w">                       </span>--data_root<span class="w"> </span>data/wgisd<span class="w"> </span><span class="se">\</span>
 <span class="w">                       </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt<span class="w"> </span><span class="se">\</span>
 <span class="w">                       </span>--dump<span class="w"> </span>True<span class="w"> </span><span class="c1"># Wherether to save saliency map images or not</span>
+<span class="w">                       </span>--explain_config.postprocess<span class="w"> </span>True<span class="w"> </span><span class="c1"># Resizes and applies colormap to the saliency map</span>
 </pre></div>
 </div>
 </div>
@@ -552,7 +554,7 @@ API</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span>
     <span class="n">checkpoint</span><span class="o">=</span><span class="s2">&quot;&lt;checkpoint-path&gt;&quot;</span><span class="p">,</span>
     <span class="n">datamodule</span><span class="o">=</span><span class="n">OTXDataModule</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="c1"># The data module to use for predictions</span>
-    <span class="n">explain_config</span><span class="o">=</span><span class="n">ExplainConfig</span><span class="p">(</span><span class="n">postprocess</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">explain_config</span><span class="o">=</span><span class="n">ExplainConfig</span><span class="p">(</span><span class="n">postprocess</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="c1"># Resizes and applies colormap to the saliency map</span>
     <span class="n">dump</span><span class="o">=</span><span class="kc">True</span> <span class="c1"># Wherether to save saliency map images or not</span>
   <span class="p">)</span>
 </pre></div>

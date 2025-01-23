@@ -978,7 +978,7 @@
             <span class="n">enc_topk_bbox_unact</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">denoising_bbox_unact</span><span class="p">,</span> <span class="n">enc_topk_bbox_unact</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">content</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">denoising_logits</span><span class="p">,</span> <span class="n">content</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">content</span><span class="p">,</span> <span class="n">enc_topk_bbox_unact</span><span class="p">,</span> <span class="n">enc_topk_bboxes_list</span><span class="p">,</span> <span class="n">enc_topk_logits_list</span>
+        <span class="k">return</span> <span class="n">content</span><span class="p">,</span> <span class="n">enc_topk_bbox_unact</span><span class="p">,</span> <span class="n">enc_topk_bboxes_list</span><span class="p">,</span> <span class="n">enc_topk_logits_list</span><span class="p">,</span> <span class="n">enc_outputs_logits</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_select_topk</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1017,8 +1017,22 @@
 
         <span class="k">return</span> <span class="n">topk_memory</span><span class="p">,</span> <span class="n">topk_logits</span><span class="p">,</span> <span class="n">topk_anchors</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of the DFine Transformer module.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feats</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">explain_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function of the D-FINE Decoder Transformer Module.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feats (Tensor): Feature maps.</span>
+<span class="sd">            targets (list[dict[str, Tensor]] | None, optional): target annotations. Defaults to None.</span>
+<span class="sd">            explain_mode (bool, optional): Whether to return raw logits for explanation. Defaults to False.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict[str, Tensor]: Output dictionary containing predicted logits, losses and boxes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># input projection and embedding</span>
         <span class="n">memory</span><span class="p">,</span> <span class="n">spatial_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_encoder_input</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
 
@@ -1036,7 +1050,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">denoising_logits</span><span class="p">,</span> <span class="n">denoising_bbox_unact</span><span class="p">,</span> <span class="n">attn_mask</span><span class="p">,</span> <span class="n">dn_meta</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
-        <span class="n">init_ref_contents</span><span class="p">,</span> <span class="n">init_ref_points_unact</span><span class="p">,</span> <span class="n">enc_topk_bboxes_list</span><span class="p">,</span> <span class="n">enc_topk_logits_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_decoder_input</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">init_ref_contents</span><span class="p">,</span>
+            <span class="n">init_ref_points_unact</span><span class="p">,</span>
+            <span class="n">enc_topk_bboxes_list</span><span class="p">,</span>
+            <span class="n">enc_topk_logits_list</span><span class="p">,</span>
+            <span class="n">raw_logits</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_decoder_input</span><span class="p">(</span>
             <span class="n">memory</span><span class="p">,</span>
             <span class="n">spatial_shapes</span><span class="p">,</span>
             <span class="n">denoising_logits</span><span class="p">,</span>
@@ -1112,6 +1132,9 @@
                 <span class="s2">&quot;pred_logits&quot;</span><span class="p">:</span> <span class="n">out_logits</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
                 <span class="s2">&quot;pred_boxes&quot;</span><span class="p">:</span> <span class="n">out_bboxes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
             <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">explain_mode</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;raw_logits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_logits</span>
 
         <span class="k">return</span> <span class="n">out</span>
 
