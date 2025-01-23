@@ -32,6 +32,7 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
 
             (otx) ...$ otx explain --work_dir otx-workspace \
                                    --dump True # Wherether to save saliency map images or not
+                                   --explain_config.postprocess True # Resizes and applies colormap to the saliency map
 
     .. tab-item:: CLI (with config)
 
@@ -41,6 +42,7 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
                                    --data_root data/wgisd \
                                    --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt \
                                    --dump True # Wherether to save saliency map images or not
+                                   --explain_config.postprocess True # Resizes and applies colormap to the saliency map
 
     .. tab-item:: API
 
@@ -49,7 +51,7 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
             engine.explain(
                 checkpoint="<checkpoint-path>",
                 datamodule=OTXDataModule(...), # The data module to use for predictions
-                explain_config=ExplainConfig(postprocess=True),
+                explain_config=ExplainConfig(postprocess=True), # Resizes and applies colormap to the saliency map
                 dump=True # Wherether to save saliency map images or not
               )
 

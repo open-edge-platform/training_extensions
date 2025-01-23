@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """RTDETR decoder, modified from https://github.com/lyuwenyu/RT-DETR."""
@@ -546,10 +546,10 @@ class RTDETRTransformerModule(BaseModule):
 
         output_memory = self.enc_output(memory)
 
-        enc_outputs_class = self.enc_score_head(output_memory)
+        enc_outputs_logits = self.enc_score_head(output_memory)
         enc_outputs_coord_unact = self.enc_bbox_head(output_memory) + anchors
 
-        _, topk_ind = torch.topk(enc_outputs_class.max(-1).values, self.num_queries, dim=1)
+        _, topk_ind = torch.topk(enc_outputs_logits.max(-1).values, self.num_queries, dim=1)
 
         reference_points_unact = enc_outputs_coord_unact.gather(
             dim=1,
@@ -560,9 +560,9 @@ class RTDETRTransformerModule(BaseModule):
         if denoising_bbox_unact is not None:
             reference_points_unact = torch.concat([denoising_bbox_unact, reference_points_unact], 1)
 
-        enc_topk_logits = enc_outputs_class.gather(
+        enc_topk_logits = enc_outputs_logits.gather(
             dim=1,
-            index=topk_ind.unsqueeze(-1).repeat(1, 1, enc_outputs_class.shape[-1]),
+            index=topk_ind.unsqueeze(-1).repeat(1, 1, enc_outputs_logits.shape[-1]),
         )
 
         # extract region features
@@ -575,10 +575,24 @@ class RTDETRTransformerModule(BaseModule):
         if denoising_class is not None:
             target = torch.concat([denoising_class, target], 1)
 
-        return target, reference_points_unact.detach(), enc_topk_bboxes, enc_topk_logits
+        return target, reference_points_unact.detach(), enc_topk_bboxes, enc_topk_logits, enc_outputs_logits
 
-    def forward(self, feats: torch.Tensor, targets: list[dict[str, torch.Tensor]] | None = None) -> torch.Tensor:
-        """Forward pass of the RTDETRTransformer module."""
+    def forward(
+        self,
+        feats: torch.Tensor,
+        targets: list[dict[str, torch.Tensor]] | None = None,
+        explain_mode: bool = False,
+    ) -> dict[str, torch.Tensor]:
+        """Forward function of RTDETRTransformer.
+
+        Args:
+            feats (Tensor): Input features.
+            targets (List[Dict[str, Tensor]]): List of target dictionaries.
+            explain_mode (bool): Whether to return raw logits for explanation.
+
+        Returns:
+            dict[str, Tensor]: Output dictionary containing predicted logits, losses and boxes.
+        """
         # input projection and embedding
         (memory, spatial_shapes, level_start_index) = self._get_encoder_input(feats)
 
@@ -596,7 +610,7 @@ class RTDETRTransformerModule(BaseModule):
         else:
             denoising_class, denoising_bbox_unact, attn_mask, dn_meta = None, None, None, None
 
-        target, init_ref_points_unact, enc_topk_bboxes, enc_topk_logits = self._get_decoder_input(
+        target, init_ref_points_unact, enc_topk_bboxes, enc_topk_logits, raw_logits = self._get_decoder_input(
             memory,
             spatial_shapes,
             denoising_class,
@@ -629,6 +643,9 @@ class RTDETRTransformerModule(BaseModule):
             if self.training and dn_meta is not None:
                 out["dn_aux_outputs"] = self._set_aux_loss(dn_out_logits, dn_out_bboxes)
                 out["dn_meta"] = dn_meta
+
+        if explain_mode:
+            out["raw_logits"] = raw_logits
 
         return out
 

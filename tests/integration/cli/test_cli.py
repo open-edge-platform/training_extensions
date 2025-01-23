@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
@@ -252,12 +252,6 @@ def test_otx_e2e(
     if "dino" in model_name:
         return  # DINO is not supported.
 
-    if "dfine" in model_name:
-        return  # DFine is not supported.
-
-    if "rtdetr" in model_name:
-        return  # RT-DETR currently is not supported.
-
     if "yolov9" in model_name:
         return  # RT-DETR currently is not supported.
 
@@ -334,13 +328,8 @@ def test_otx_explain_e2e(
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
-    if "dfine" in model_name:
-        pytest.skip("DFine is not supported.")
-
     if "maskrcnn_r50_tv" in model_name:
         pytest.skip("MaskRCNN R50 Torchvision model doesn't support explain.")
-    elif "rtdetr" in recipe:
-        pytest.skip("rtdetr model is not supported yet with explain.")
     elif "keypoint" in recipe:
         pytest.skip("keypoint detection models don't support explain.")
     elif "yolov9" in recipe:

@@ -1,11 +1,10 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Base DETR model implementations."""
 
 from __future__ import annotations
 
-import warnings
 from typing import Any
 
 import numpy as np
@@ -96,21 +95,46 @@ class DETR(BaseModule):
         explain_mode: bool = False,
     ) -> dict[str, Any] | tuple[list[Any], list[Any], list[Any]]:
         """Exports the model."""
+        backbone_feats = self.encoder(self.backbone(batch_inputs))
+        predictions = self.decoder(backbone_feats, explain_mode=True)
         results = self.postprocess(
-            self._forward_features(batch_inputs),
+            predictions,
             [meta["img_shape"] for meta in batch_img_metas],
             deploy_mode=True,
         )
-
         if explain_mode:
-            # TODO(Eugene): Implement explain mode for DETR model.
-            warnings.warn("Explain mode is not supported for DETR model. Return dummy values.", stacklevel=2)
+            raw_logits = self.split_and_reshape_logits(backbone_feats, predictions["raw_logits"])
+            feature_vector = self.feature_vector_fn(backbone_feats)
+            saliency_map = self.explain_fn(raw_logits)
             xai_output = {
-                "feature_vector": torch.zeros(1, 1),
-                "saliency_map": torch.zeros(1),
+                "feature_vector": feature_vector,
+                "saliency_map": saliency_map,
             }
             results.update(xai_output)  # type: ignore[union-attr]
         return results
+
+    @staticmethod
+    def split_and_reshape_logits(
+        backbone_feats: tuple[Tensor, ...],
+        raw_logits: Tensor,
+    ) -> tuple[Tensor, ...]:
+        """Splits and reshapes raw logits for explain mode.
+
+        Args:
+            backbone_feats (tuple[Tensor,...]): Tuple of backbone features.
+            raw_logits (Tensor): Raw logits.
+
+        Returns:
+            tuple[Tensor,...]: The reshaped logits.
+        """
+        splits = [f.shape[-2] * f.shape[-1] for f in backbone_feats]
+        # Permute and split logits in one line
+        raw_logits = torch.split(raw_logits.permute(0, 2, 1), splits, dim=-1)
+
+        # Reshape each split in a list comprehension
+        return tuple(
+            logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1]) for logits, f in zip(raw_logits, backbone_feats)
+        )
 
     def postprocess(
         self,

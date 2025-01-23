@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -51,20 +51,12 @@ def test_forward_explain(
         # TODO(Eugene): maskdino not support yet.
         pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
 
-    if "dfine" in model_name:
-        # TODO(Eugene): dfine not support yet.
-        # https://jira.devtools.intel.com/browse/CVS-160781
-        pytest.skip(f"There's issue with dfine: {model_name}. Skip for now.")
-
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
         pytest.skip("rtmdet_tiny on detection is not supported yet.")
-
-    if "rtdetr" in recipe:
-        pytest.skip("rtdetr on detection is not supported yet.")
 
     if "yolov9" in recipe:
         pytest.skip("yolov9 on detection is not supported yet.")
@@ -123,11 +115,6 @@ def test_predict_with_explain(
         # TODO(Eugene): maskdino not support yet.
         pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
 
-    if "dfine" in model_name:
-        # TODO(Eugene): dfine not support yet.
-        # https://jira.devtools.intel.com/browse/CVS-160781
-        pytest.skip(f"There's issue with dfine: {model_name}. Skip for now.")
-
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
         pytest.skip("rtmdet_tiny on detection is not supported yet.")
@@ -135,9 +122,6 @@ def test_predict_with_explain(
     if "yolox_tiny_tile" in recipe:
         # TODO (Galina): required to update model-api to 2.1
         pytest.skip("yolox_tiny_tile on detection requires model-api update")
-
-    if "rtdetr" in recipe:
-        pytest.skip("rtdetr on detection is not supported yet.")
 
     if "yolov9" in recipe:
         pytest.skip("yolov9 on detection is not supported yet.")
