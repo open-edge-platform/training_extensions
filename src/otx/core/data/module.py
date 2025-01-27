@@ -115,6 +115,7 @@ class OTXDataModule(LightningDataModule):
                 self.unannotated_items_ratio,
                 ignore_index=self.ignore_index if self.task == "SEMANTIC_SEGMENTATION" else None,
             )
+
         unlabeled_dataset = None
         if self.unlabeled_subset.data_root is not None:
             # If unlabeled_subset's data_root is not None, use that folder as the Unlabeled dataset root.
@@ -181,6 +182,7 @@ class OTXDataModule(LightningDataModule):
             if name not in config_mapping:
                 log.warning(f"{name} is not available. Skip it")
                 continue
+
             dataset = OTXDatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset.as_dataset(),
