@@ -19,12 +19,12 @@ import torch
 import yaml
 from lightning import Callback
 
+from otx.backend.native.engine.adaptive_bs import adapt_batch_size
 from otx.core.config.hpo import HpoConfig
 from otx.core.optimizer.callable import OptimizerCallableSupportHPO
 from otx.core.schedulers import LinearWarmupSchedulerCallable, SchedulerCallableSupportHPO
 from otx.core.types.device import DeviceType
 from otx.core.types.task import OTXTaskType
-from otx.engine.adaptive_bs import adapt_batch_size
 from otx.hpo import HyperBand, run_hpo_loop
 from otx.utils.device import is_xpu_available
 from otx.utils.utils import (
@@ -85,7 +85,7 @@ def execute_hpo(
         train_args=train_args,
     )
     if (
-        train_args.get("adaptive_bs", None) == "Full"
+        train_args.get("adaptive_bs") == "Full"
         and "datamodule.train_subset.batch_size" in hpo_configurator.hpo_config["search_space"]
     ):
         logger.info("Because adaptive_bs is set as Full, batch size is excluded from HPO.")
