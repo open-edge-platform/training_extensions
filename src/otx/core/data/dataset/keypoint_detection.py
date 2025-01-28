@@ -81,9 +81,12 @@ class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
                     if isinstance(ann, Points) and max(ann.points) <= 0:
                         continue
                     available_types.append(ann.type)
-                if available_types != [AnnotationType.points, AnnotationType.bbox]:
+                if AnnotationType.points not in available_types:
                     continue
                 dm_items.append(item.wrap(id=item.id + "_" + str(ann_id), annotations=anns))
+        if len(dm_items) == 0:
+            msg = "No keypoints found in the dataset. Please, check dataset annotations."
+            raise ValueError(msg)
         return Dataset.from_iterable(dm_items, categories=self.dm_subset.categories())
 
     def _get_item_impl(self, index: int) -> KeypointDetDataEntity | None:
