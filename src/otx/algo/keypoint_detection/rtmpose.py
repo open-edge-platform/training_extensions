@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from otx.algo.common.backbones import CSPNeXt
@@ -25,6 +26,9 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
+logger = logging.getLogger()
+
+
 class RTMPose(OTXKeypointDetectionModel):
     """OTX keypoint detection model class for RTMPose."""
 
@@ -37,7 +41,7 @@ class RTMPose(OTXKeypointDetectionModel):
 
         if self.explain_mode:
             msg = "Export with explain is not supported for RTMPose model."
-            raise ValueError(msg)
+            logger.warning(msg)
 
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
