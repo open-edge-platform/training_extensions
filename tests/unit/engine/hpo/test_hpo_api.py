@@ -12,17 +12,18 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 import yaml
-from otx.core.config.hpo import HpoConfig
-from otx.core.optimizer.callable import OptimizerCallableSupportHPO
-from otx.core.schedulers import LinearWarmupSchedulerCallable, SchedulerCallableSupportHPO
-from otx.engine.hpo import hpo_api as target_file
-from otx.engine.hpo.hpo_api import (
+
+from otx.backend.native.engine.hpo import hpo_api as target_file
+from otx.backend.native.engine.hpo.hpo_api import (
     HPOConfigurator,
     _adjust_train_args,
     _remove_unused_model_weights,
     _update_hpo_progress,
     execute_hpo,
 )
+from otx.core.config.hpo import HpoConfig
+from otx.core.optimizer.callable import OptimizerCallableSupportHPO
+from otx.core.schedulers import LinearWarmupSchedulerCallable, SchedulerCallableSupportHPO
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -22,10 +22,10 @@ from .utils import find_trial_file, get_best_hpo_weight, get_hpo_weight_dir, get
 if TYPE_CHECKING:
     from lightning import LightningModule, Trainer
 
-    from otx.engine.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
 
-def update_hyper_parameter(engine: Engine, hyper_parameter: dict[str, Any]) -> None:
+def update_hyper_parameter(engine: OTXEngine, hyper_parameter: dict[str, Any]) -> None:
     """Update hyper parameter in the engine."""
     for key, val in hyper_parameter.items():
         set_using_dot_delimited_key(key, val, engine)
@@ -62,7 +62,7 @@ def run_hpo_trial(
     hp_config: dict[str, Any],
     report_func: Callable[[int | float, int | float, bool], None],
     hpo_workdir: Path,
-    engine: Engine,
+    engine: OTXEngine,
     callbacks: list[Callback] | Callback | None = None,
     metric_name: str | None = None,
     **train_args,
@@ -107,7 +107,7 @@ def run_hpo_trial(
     report_func(0, 0, done=True)  # type: ignore[call-arg]
 
 
-def _set_trial_hyper_parameter(hyper_parameter: dict[str, Any], engine: Engine, train_args: dict[str, Any]) -> None:
+def _set_trial_hyper_parameter(hyper_parameter: dict[str, Any], engine: OTXEngine, train_args: dict[str, Any]) -> None:
     train_args["max_epochs"] = round(hyper_parameter.pop("iterations"))
     update_hyper_parameter(engine, hyper_parameter)
 
@@ -119,7 +119,7 @@ def _find_last_weight(weight_dir: Path) -> Path | None:
 def _register_hpo_callback(
     report_func: Callable,
     callbacks: list[Callback] | Callback | None = None,
-    engine: Engine | None = None,
+    engine: OTXEngine | None = None,
     metric_name: str | None = None,
 ) -> list[Callback]:
     if isinstance(callbacks, Callback):
@@ -148,7 +148,7 @@ def _register_init_weight_callback(callbacks: list[Callback], save_path: Path) -
     return callbacks
 
 
-def _change_work_dir(work_dir: str, callbacks: list[Callback], engine: Engine) -> None:
+def _change_work_dir(work_dir: str, callbacks: list[Callback], engine: OTXEngine) -> None:
     for callback in callbacks:
         if isinstance(callback, ModelCheckpoint):
             callback.dirpath = work_dir

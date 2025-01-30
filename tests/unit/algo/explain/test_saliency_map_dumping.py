@@ -5,12 +5,13 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+
 from otx.algo.utils.xai_utils import dump_saliency_maps
+from otx.backend.native.engine.utils.auto_configurator import AutoConfigurator
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.classification import MulticlassClsBatchPredEntity
 from otx.core.types.task import OTXTaskType
-from otx.engine.utils.auto_configurator import AutoConfigurator
 
 NUM_CLASSES = 5
 BATCH_SIZE = 25

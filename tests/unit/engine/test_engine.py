@@ -5,23 +5,24 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
+
 from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
 from otx.algo.classification.torchvision_model import TVModelForMulticlassCls
+from otx.backend.native.engine import OTXEngine
 from otx.core.model.base import OTXModel, OVModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import NullLabelInfo
 from otx.core.types.precision import OTXPrecisionType
-from otx.engine import Engine
-from pytest_mock import MockerFixture
 
 
 @pytest.fixture()
-def fxt_engine(tmp_path) -> Engine:
+def fxt_engine(tmp_path) -> OTXEngine:
     recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
     data_root = "tests/assets/classification_dataset"
     task_type = "MULTI_CLASS_CLS"
 
-    return Engine.from_config(
+    return OTXEngine.from_config(
         config_path=recipe_path,
         data_root=data_root,
         task=task_type,
@@ -32,11 +33,11 @@ def fxt_engine(tmp_path) -> Engine:
 class TestEngine:
     def test_constructor(self, tmp_path) -> None:
         with pytest.raises(RuntimeError):
-            Engine(work_dir=tmp_path)
+            OTXEngine(work_dir=tmp_path)
 
         # Check auto-configuration
         data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root)
+        engine = OTXEngine(work_dir=tmp_path, data_root=data_root)
         assert engine.task == "MULTI_CLASS_CLS"
         assert engine.datamodule.task == "MULTI_CLASS_CLS"
         assert isinstance(engine.model, EfficientNetForMulticlassCls)
@@ -50,7 +51,7 @@ class TestEngine:
 
         # Create engine with no data_root
         with pytest.raises(ValueError, match="Given model class (.*) requires a valid label_info to instantiate."):
-            _ = Engine(work_dir=tmp_path, task="MULTI_CLASS_CLS")
+            _ = OTXEngine(work_dir=tmp_path, task="MULTI_CLASS_CLS")
 
     @pytest.fixture()
     def mock_datamodule(self, mocker):
@@ -61,13 +62,13 @@ class TestEngine:
         mock_datamodule.input_size = input_size
 
         return mocker.patch(
-            "otx.engine.utils.auto_configurator.AutoConfigurator.get_datamodule",
+            "otx.backend.native.engine.utils.auto_configurator.AutoConfigurator.get_datamodule",
             return_value=mock_datamodule,
         )
 
     def test_model_init(self, tmp_path, mock_datamodule):
         data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root)
+        engine = OTXEngine(work_dir=tmp_path, data_root=data_root)
 
         assert engine._model.input_size == (1234, 1234)
         assert engine._model.label_info.num_classes == 4321
@@ -75,7 +76,7 @@ class TestEngine:
     def test_model_init_datamodule_ipt_size_int(self, tmp_path, mock_datamodule):
         mock_datamodule.input_size = 1234
         data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root)
+        engine = OTXEngine(work_dir=tmp_path, data_root=data_root)
 
         assert engine._model.input_size == (1234, 1234)
         assert engine._model.label_info.num_classes == 4321
@@ -350,7 +351,7 @@ class TestEngine:
             "data.test_subset.subset_name": "TESTING",
         }
 
-        engine = Engine.from_model_name(
+        engine = OTXEngine.from_model_name(
             model_name=model_name,
             data_root=data_root,
             task=task_type,
@@ -363,7 +364,7 @@ class TestEngine:
         assert engine.datamodule.test_subset.subset_name == "TESTING"
 
         with pytest.raises(FileNotFoundError):
-            engine = Engine.from_model_name(
+            engine = OTXEngine.from_model_name(
                 model_name="wrong_model",
                 data_root=data_root,
                 task=task_type,
@@ -381,7 +382,7 @@ class TestEngine:
             "data.test_subset.subset_name": "TESTING",
         }
 
-        engine = Engine.from_config(
+        engine = OTXEngine.from_config(
             config_path=recipe_path,
             data_root=data_root,
             task=task_type,
@@ -430,6 +431,6 @@ class TestEngine:
         assert fxt_engine._cache.args.get("devices") == 2
 
         data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root, num_devices=3)
+        engine = OTXEngine(work_dir=tmp_path, data_root=data_root, num_devices=3)
         assert engine.num_devices == 3
         assert engine._cache.args.get("devices") == 3

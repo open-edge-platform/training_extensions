@@ -8,8 +8,9 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 import yaml
-from otx.cli import OTXCLI, main
 from rich.console import Console
+
+from otx.cli import OTXCLI, main
 
 
 class TestOTXCLI:
@@ -112,9 +113,9 @@ class TestOTXCLI:
 
         assert isinstance(cli.datamodule, OTXDataModule)
 
-        from otx.engine import Engine
+        from otx.backend.native.engine import OTXEngine
 
-        assert isinstance(cli.engine, Engine)
+        assert isinstance(cli.engine, OTXEngine)
 
         assert cli.datamodule == cli.engine.datamodule
         assert cli.model == cli.engine.model

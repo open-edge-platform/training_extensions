@@ -37,7 +37,7 @@ from otx.utils.utils import measure_flops
 
 from .adaptive_bs import adapt_batch_size
 from .hpo import execute_hpo, update_hyper_parameter
-from .utils.auto_configurator import DEFAULT_CONFIG_PER_TASK
+from .utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
 if TYPE_CHECKING:
     from lightning import Callback
@@ -69,7 +69,7 @@ def override_metric_callable(model: OTXModel, new_metric_callable: MetricCallabl
         model.metric_callable = orig_metric_callable
 
 
-class NativeEngine(Engine):
+class OTXEngine(Engine):
     """Native Engine."""
 
     """OTX Engine.
@@ -107,6 +107,9 @@ class NativeEngine(Engine):
         self,
         *,
         model: OTXModel | str | None = None,
+        data_root: PathLike | None = None,
+        task: OTXTaskType | None = None,
+        datamodule: OTXDataModule | None = None,
         data: OTXDataModule | None = None,
         work_dir: PathLike = "./otx-workspace",
         checkpoint: PathLike | None = None,
@@ -133,16 +136,33 @@ class NativeEngine(Engine):
         self.device = device  # type: ignore[assignment]
         self.num_devices = num_devices
 
-        self._datamodule: OTXDataModule | None = data
-        self.task = data.task if data is not None else self._auto_configurator.task
+        if data_root is not None:
+            msg = "data_root is deprecated. Please pass dataloader to `data` instead."
+            logging.warning(msg)
+
+        if datamodule is None:
+            msg = "datamodule is deprecated. Please pass data to `data` instead."
+            logging.warning(msg)
+            data = datamodule
+
+        self._auto_configurator = AutoConfigurator(
+            data_root=data_root,
+            task=data.task if data is not None else task,
+            model_name=None if isinstance(model, OTXModel) else model,
+        )
+
+        self._datamodule: OTXDataModule | None = data if data is not None else self._auto_configurator.get_datamodule()
+        self.task = task if task is not None else self._auto_configurator.task
 
         self._trainer: Trainer | None = None
         get_model_args: dict[str, Any] = {}
-        if data is not None:
-            get_model_args["label_info"] = data.label_info
-            if (input_size := data.input_size) is not None:
+        if self._datamodule is not None:
+            get_model_args["label_info"] = self._datamodule.label_info
+            if (input_size := self._datamodule.input_size) is not None:
                 get_model_args["input_size"] = (input_size, input_size) if isinstance(input_size, int) else input_size
-        self._model: OTXModel = model
+        self._model: OTXModel = (
+            model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
+        )
 
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points
@@ -504,7 +524,7 @@ class NativeEngine(Engine):
 
         return predict_result
 
-    def export(
+    def export(  # type: ignore[override]
         self,
         checkpoint: PathLike | None = None,
         export_format: OTXExportFormatType = OTXExportFormatType.OPENVINO,
@@ -606,7 +626,8 @@ class NativeEngine(Engine):
         self.model.explain_mode = False
         return exported_model_path
 
-    def optimize(
+    # TODO(ashwinvaidya17): temporary till the base class contains all kwargs
+    def optimize(  # type: ignore[override]
         self,
         checkpoint: PathLike | None = None,
         datamodule: TRAIN_DATALOADERS | OTXDataModule | None = None,

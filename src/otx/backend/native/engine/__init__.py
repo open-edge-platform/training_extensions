@@ -3,6 +3,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from .engine import NativeEngine
+from .engine import OTXEngine
 
-__all__ = ["NativeEngine"]
+__all__ = ["OTXEngine"]

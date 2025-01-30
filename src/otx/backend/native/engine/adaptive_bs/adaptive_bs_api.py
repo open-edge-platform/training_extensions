@@ -22,13 +22,13 @@ from .bs_search_algo import BsSearchAlgo
 if TYPE_CHECKING:
     from lightning import LightningModule, Trainer
 
-    from otx.engine.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
 logger = logging.getLogger(__name__)
 
 
 def adapt_batch_size(
-    engine: Engine,
+    engine: OTXEngine,
     not_increase: bool = True,
     callbacks: list[Callback] | Callback | None = None,
     **train_args,
@@ -94,7 +94,7 @@ def _adjust_train_args(train_args: dict[str, Any]) -> dict[str, Any]:
     return train_args
 
 
-def _train_model(bs: int, engine: Engine, callbacks: list[Callback] | Callback | None = None, **train_args) -> None:
+def _train_model(bs: int, engine: OTXEngine, callbacks: list[Callback] | Callback | None = None, **train_args) -> None:
     if bs <= 0:
         msg = f"Batch size should be greater than 0, but {bs} is given."
         raise ValueError(msg)
@@ -167,7 +167,7 @@ def _scale_batch_reset_params(trainer: Trainer, steps_per_trial: int) -> None:
         trainer.limit_val_batches = steps_per_trial
 
 
-def _apply_new_batch_size(engine: Engine, new_batch_size: int) -> None:
+def _apply_new_batch_size(engine: OTXEngine, new_batch_size: int) -> None:
     origin_bs = engine.datamodule.train_subset.batch_size
     if new_batch_size == origin_bs:
         return

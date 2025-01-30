@@ -9,18 +9,21 @@ import argparse
 import json
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
+from otx.backend.native.engine import OTXEngine
+from otx.backend.native.engine.utils.auto_configurator import AutoConfigurator
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig, UnlabeledDataConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types import PathLike
 from otx.core.types.task import OTXTaskType
-from otx.engine import Engine
-from otx.engine.utils.auto_configurator import AutoConfigurator
+
+if TYPE_CHECKING:
+    from otx.engine.engine import Engine
 
 TEMPLATE_ID_DICT = {
     # MULTI_CLASS_CLS
@@ -468,7 +471,7 @@ class ConfigConverter:
         # Instantiate Engine
         config_work_dir = config.pop("work_dir", config["engine"].pop("work_dir", None))
         config["engine"]["work_dir"] = work_dir if work_dir is not None else config_work_dir
-        engine = Engine(
+        engine = OTXEngine(
             model=model,
             datamodule=datamodule,
             **config.pop("engine"),
@@ -477,7 +480,7 @@ class ConfigConverter:
         # Instantiate Engine.train Arguments
         engine_parser = ArgumentParser()
         train_arguments = engine_parser.add_method_arguments(
-            Engine,
+            OTXEngine,
             "train",
             skip={"accelerator", "devices"},
             fail_untyped=False,

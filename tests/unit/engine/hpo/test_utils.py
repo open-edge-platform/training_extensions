@@ -8,7 +8,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from lightning.pytorch.callbacks.model_checkpoint import ModelCheckpoint
-from otx.engine.hpo.utils import (
+
+from otx.backend.native.engine.hpo.utils import (
     find_trial_file,
     get_best_hpo_weight,
     get_callable_args_name,

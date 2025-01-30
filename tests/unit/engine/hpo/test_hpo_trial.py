@@ -11,9 +11,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from lightning.pytorch.callbacks.model_checkpoint import ModelCheckpoint
+from torch import tensor
+
 from otx.algo.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
-from otx.engine.hpo import hpo_trial as target_file
-from otx.engine.hpo.hpo_trial import (
+from otx.backend.native.engine.hpo import hpo_trial as target_file
+from otx.backend.native.engine.hpo.hpo_trial import (
     HPOCallback,
     HPOInitWeightCallback,
     _get_hpo_initial_weight,
@@ -22,9 +24,8 @@ from otx.engine.hpo.hpo_trial import (
     run_hpo_trial,
     update_hyper_parameter,
 )
-from otx.engine.hpo.utils import get_hpo_weight_dir
+from otx.backend.native.engine.hpo.utils import get_hpo_weight_dir
 from otx.hpo import TrialStatus
-from torch import tensor
 
 if TYPE_CHECKING:
     from lightning import Callback

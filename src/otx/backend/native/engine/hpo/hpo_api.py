@@ -39,14 +39,14 @@ from .utils import find_trial_file, get_best_hpo_weight, get_callable_args_name,
 if TYPE_CHECKING:
     from lightning.pytorch.cli import OptimizerCallable
 
-    from otx.engine.engine import Engine
+    from otx.backend.native.engine import OTXEngine
     from otx.hpo.hpo_base import HpoBase
 
 logger = logging.getLogger(__name__)
 
 
 def execute_hpo(
-    engine: Engine,
+    engine: OTXEngine,
     max_epochs: int,
     hpo_config: HpoConfig,
     callbacks: list[Callback] | Callback | None = None,
@@ -163,7 +163,7 @@ class HPOConfigurator:
 
     def __init__(
         self,
-        engine: Engine,
+        engine: OTXEngine,
         max_epochs: int,
         hpo_config: HpoConfig,
         hpo_workdir: Path | None = None,

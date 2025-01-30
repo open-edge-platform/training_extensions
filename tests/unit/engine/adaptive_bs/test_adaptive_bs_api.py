@@ -9,9 +9,15 @@ from unittest.mock import MagicMock
 
 import pytest
 from lightning.pytorch.loggers.logger import DummyLogger
+
+from otx.backend.native.engine.adaptive_bs import adaptive_bs_api as target_file
+from otx.backend.native.engine.adaptive_bs.adaptive_bs_api import (
+    BatchSizeFinder,
+    _adjust_train_args,
+    _train_model,
+    adapt_batch_size,
+)
 from otx.core.types.task import OTXTaskType
-from otx.engine.adaptive_bs import adaptive_bs_api as target_file
-from otx.engine.adaptive_bs.adaptive_bs_api import BatchSizeFinder, _adjust_train_args, _train_model, adapt_batch_size
 
 
 @pytest.fixture()
