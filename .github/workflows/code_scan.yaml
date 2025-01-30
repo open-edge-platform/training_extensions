@@ -10,12 +10,11 @@ on:
     # every UTC 6PM from Mon to Fri
     - cron: "0 18 * * 1-5"
 
-# Declare default permissions as read only.
-permissions: read-all
+permissions: {}
 
 jobs:
-  Trivy-scan:
-    runs-on: ubuntu-latest
+  Trivy:
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -27,27 +26,52 @@ jobs:
         run: python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
       - name: Freeze dependencies
         run: pip-compile --extra=docs,base,mmlab,anomaly -o requirements.txt pyproject.toml
-      - name: Trivy Scanning (spdx.json)
+
+      - name: Run Trivy Scan (vuln)
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        with:
+          scan-type: fs
+          scan-ref: requirements.txt
+          scanners: vuln
+          output: trivy-results-vuln.txt
+
+      - name: Run Trivy Scan (dockerfile and secrets)
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: misconfig,secret
+          output: trivy-results-misconfig.txt
+          skip-setup-trivy: true
+
+      - name: Trivy Scanning (spdx)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
         with:
-          trivy-config: ".ci/trivy-json.yaml"
-          scan-type: "fs"
+          scan-type: fs
           scan-ref: .
-      - name: Trivy Scanning
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
-        with:
-          trivy-config: ".ci/trivy.yaml"
-          scan-type: "fs"
-          scan-ref: .
+          format: spdx-json
+          output: trivy-results-spdx.json
+          skip-setup-trivy: true
+
       - name: Upload Trivy results artifact
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: trivy-results
-          path: "${{ github.workspace }}/trivy-results.*"
+          path: "${{ github.workspace }}/trivy-results-*"
+          retention-days: 7
         # Use always() to always run this step to publish scan results when there are test failures
         if: ${{ always() }}
+
+      - name: Upload deps list
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        if: always()
+        with:
+          name: python-deps-list
+          path: "${{ github.workspace }}/requirements.txt"
+          retention-days: 7
+
   Bandit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -66,7 +90,87 @@ jobs:
       - name: Upload Bandit artifact
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
-          name: bandit-report
-          path: .tox/bandit-report.txt
+          name: bandit-results
+          path: .tox/bandit-results.txt
+          retention-days: 7
         # Use always() to always run this step to publish scan results when there are test failures
         if: ${{ always() }}
+
+  CodeQL:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-22.04
+    permissions:
+      # required for all workflows
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: python
+            build-mode: none
+          - language: actions # to scan workflows
+            build-mode: none
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
+        with:
+          category: "/language:${{matrix.language}}"
+
+      - name: Generate CodeQL Report
+        uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          template: report
+          outputDir: codeql-${{ matrix.language }}
+
+      - name: Rename Report
+        shell: bash
+        continue-on-error: true
+        run: |
+          cd codeql-${{ matrix.language }}
+          mv "report.pdf" "codeql-${{ matrix.language }}.pdf"
+
+      - name: Upload Report
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: codeql-${{ matrix.language }}-results
+          path: codeql-${{ matrix.language }}/*.pdf
+          retention-days: 7
+
+  Summarize:
+    needs: [Trivy, Bandit, CodeQL]
+    if: always()
+    runs-on: ubuntu-22.04
+    steps:
+      # Create directory first
+      - name: Create results directory
+        run: mkdir -p all-results
+
+      # Download artifacts with error handling
+      - name: Download all results
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        continue-on-error: true # Don't fail if some tools didn't generate results
+        with:
+          pattern: "*-results"
+          merge-multiple: true
+          path: all-results
+
+      # Only upload if there are files
+      - name: Upload combined results
+        if: hashFiles('all-results/**/*') != ''
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: security-scan-results
+          path: all-results
+          retention-days: 7

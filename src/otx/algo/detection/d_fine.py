@@ -1,7 +1,7 @@
-# Copyright (C) 2024-2025 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""RTDetr model implementations."""
+"""D-Fine model implementations."""
 
 from __future__ import annotations
 
@@ -14,10 +14,11 @@ from torch import Tensor, nn
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxFormat
 
-from otx.algo.detection.backbones import PResNet
+from otx.algo.detection.backbones.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors import DETR
-from otx.algo.detection.heads import RTDETRTransformer
-from otx.algo.detection.necks import HybridEncoder
+from otx.algo.detection.heads.dfine_decoder import DFINETransformer
+from otx.algo.detection.losses.dfine_loss import DFINECriterion
+from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -35,21 +36,19 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-PRETRAINED_ROOT: str = "https://github.com/lyuwenyu/storage/releases/download/v0.1/"
+PRETRAINED_ROOT: str = "https://github.com/Peterande/storage/releases/download/dfinev1.0/"
 
 PRETRAINED_WEIGHTS: dict[str, str] = {
-    "rtdetr_18": PRETRAINED_ROOT + "rtdetr_r18vd_5x_coco_objects365_from_paddle.pth",
-    "rtdetr_50": PRETRAINED_ROOT + "rtdetr_r50vd_2x_coco_objects365_from_paddle.pth",
-    "rtdetr_101": PRETRAINED_ROOT + "rtdetr_r101vd_2x_coco_objects365_from_paddle.pth",
+    "dfine_hgnetv2_n": PRETRAINED_ROOT + "dfine_n_coco.pth",
+    "dfine_hgnetv2_s": PRETRAINED_ROOT + "dfine_s_coco.pth",
+    "dfine_hgnetv2_m": PRETRAINED_ROOT + "dfine_m_coco.pth",
+    "dfine_hgnetv2_l": PRETRAINED_ROOT + "dfine_l_coco.pth",
+    "dfine_hgnetv2_x": PRETRAINED_ROOT + "dfine_x_coco.pth",
 }
 
 
-class RTDETR(ExplainableOTXDetModel):
-    """OTX Detection model class for RTDETR.
-
-    Default input size per model:
-        - ssd_mobilenetv2 : (640, 640)
-    """
+class DFine(ExplainableOTXDetModel):
+    """OTX Detection model class for D-Fine."""
 
     input_size_multiplier = 32
     mean: tuple[float, float, float] = (0.0, 0.0, 0.0)
@@ -57,16 +56,24 @@ class RTDETR(ExplainableOTXDetModel):
 
     def __init__(
         self,
-        model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"],
+        model_name: Literal[
+            "dfine_hgnetv2_n",
+            "dfine_hgnetv2_s",
+            "dfine_hgnetv2_m",
+            "dfine_hgnetv2_l",
+            "dfine_hgnetv2_x",
+        ],
         label_info: LabelInfoTypes,
         input_size: tuple[int, int] = (640, 640),
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
+        multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
+        self.multi_scale = multi_scale
         super().__init__(
             model_name=model_name,
             label_info=label_info,
@@ -79,33 +86,55 @@ class RTDETR(ExplainableOTXDetModel):
         )
 
     def _build_model(self, num_classes: int) -> DETR:
-        backbone = PResNet(model_name=self.model_name)
-        encoder = HybridEncoder(
-            model_name=self.model_name,
-            eval_spatial_size=self.input_size,
-        )
-        decoder = RTDETRTransformer(
+        backbone = HGNetv2(model_name=self.model_name)
+        encoder = HybridEncoder(model_name=self.model_name)
+        decoder = DFINETransformer(
             model_name=self.model_name,
             num_classes=num_classes,
-            eval_spatial_size=self.input_size,
         )
+        criterion = DFINECriterion(
+            weight_dict={
+                "loss_vfl": 1,
+                "loss_bbox": 5,
+                "loss_giou": 2,
+                "loss_fgl": 0.15,
+                "loss_ddf": 1.5,
+            },
+            alpha=0.75,
+            gamma=2.0,
+            reg_max=32,
+            num_classes=num_classes,
+        )
+
+        if self.model_name == "dfine_hgnetv2_n":
+            backbone_lr = 0.0004
+        elif self.model_name == "dfine_hgnetv2_s":
+            backbone_lr = 0.0001
+        elif self.model_name == "dfine_hgnetv2_m":
+            backbone_lr = 0.00002
+        elif self.model_name in ("dfine_hgnetv2_l", "dfine_hgnetv2_x"):
+            backbone_lr = 0.0000125
+        else:
+            msg = f"Unsupported model name: {self.model_name}"
+            raise ValueError(msg)
 
         optimizer_configuration = [
             # no weight decay for norm layers in backbone
-            {"params": "^(?=.*backbone)(?=.*norm).*$", "weight_decay": 0.0, "lr": 0.00001},
+            {"params": "^(?=.*backbone)(?=.*norm).*$", "weight_decay": 0.0, "lr": backbone_lr},
             # lr for the backbone, but not norm layers is 0.00001
-            {"params": "^(?=.*backbone)(?!.*norm).*$", "lr": 0.00001},
+            {"params": "^(?=.*backbone)(?!.*norm).*$", "lr": backbone_lr},
             # no weight decay for norm layers and biases in encoder and decoder layers
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
         ]
 
         return DETR(
+            multi_scale=None if self.multi_scale else [],
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,
+            criterion=criterion,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
-            input_size=self.input_size[0],
         )
 
     def _customize_inputs(
@@ -198,10 +227,8 @@ class RTDETR(ExplainableOTXDetModel):
     def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
         """Configure an optimizer and learning-rate schedulers.
 
-        Configure an optimizer and learning-rate schedulers
-        from the given optimizer and scheduler or scheduler list callable in the constructor.
-        Generally, there is two lr schedulers. One is for a linear warmup scheduler and
-        the other is the main scheduler working after the warmup period.
+        Set up the optimizer and schedulers from the provided inputs.
+        Typically, a warmup scheduler is used initially, followed by the main scheduler.
 
         Returns:
             Two list. The former is a list that contains an optimizer
@@ -299,8 +326,16 @@ class RTDETR(ExplainableOTXDetModel):
 
     @property
     def _optimization_config(self) -> dict[str, Any]:
-        """PTQ config for RT-DETR."""
-        return {"model_type": "transformer"}
+        """PTQ config for D-FINE."""
+        return {
+            "model_type": "transformer",
+            "advanced_parameters": {
+                "activations_range_estimator_params": {
+                    "min": {"statistics_type": "QUANTILE", "aggregator_type": "MIN", "quantile_outlier_prob": 1e-4},
+                    "max": {"statistics_type": "QUANTILE", "aggregator_type": "MAX", "quantile_outlier_prob": 1e-4},
+                },
+            },
+        }
 
     @staticmethod
     def _forward_explain_detection(

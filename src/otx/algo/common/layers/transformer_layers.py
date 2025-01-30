@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Implementation of common transformer layers."""
@@ -10,6 +10,7 @@ import math
 from typing import Callable
 
 import torch
+import torch.nn.functional as f
 from otx.algo.common.utils.utils import get_clones
 from otx.algo.modules.transformer import deformable_attention_core_func
 from torch import Tensor, nn
@@ -304,6 +305,151 @@ class MSDeformableAttention(nn.Module):
         output = self.ms_deformable_attn_core(value, value_spatial_shapes, sampling_locations, attention_weights)
 
         return self.output_proj(output)
+
+
+class MSDeformableAttentionV2(nn.Module):
+    """Multi-Scale Deformable Attention Module V2.
+
+    Note:
+        This is different from vanilla MSDeformableAttention where it uses
+        distinct number of sampling points for features at different scales.
+        Refer to RTDETRv2.
+
+    Args:
+        embed_dim (int): The number of expected features in the input.
+        num_heads (int): The number of heads in the multiheadattention models.
+        num_levels (int): The number of levels in MSDeformableAttention.
+        num_points_list (list[int]): Number of distinct points for each layer. Defaults to [3, 6, 3].
+    """
+
+    def __init__(
+        self,
+        embed_dim: int = 256,
+        num_heads: int = 8,
+        num_levels: int = 4,
+        num_points_list: list[int] = [3, 6, 3],  # noqa: B006
+    ) -> None:
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.num_levels = num_levels
+        self.num_points_list = num_points_list
+
+        num_points_scale = [1 / n for n in num_points_list for _ in range(n)]
+        self.register_buffer(
+            "num_points_scale",
+            torch.tensor(num_points_scale, dtype=torch.float32),
+        )
+
+        self.total_points = num_heads * sum(num_points_list)
+        self.head_dim = embed_dim // num_heads
+
+        self.sampling_offsets = nn.Linear(embed_dim, self.total_points * 2)
+        self.attention_weights = nn.Linear(embed_dim, self.total_points)
+
+        self._reset_parameters()
+
+    def _reset_parameters(self) -> None:
+        """Reset parameters of the model."""
+        init.constant_(self.sampling_offsets.weight, 0)
+        thetas = torch.arange(self.num_heads, dtype=torch.float32) * (2.0 * math.pi / self.num_heads)
+        grid_init = torch.stack([thetas.cos(), thetas.sin()], -1)
+        grid_init = grid_init / grid_init.abs().max(-1, keepdim=True).values  # noqa: PD011
+        grid_init = grid_init.reshape(self.num_heads, 1, 2).tile([1, sum(self.num_points_list), 1])
+        scaling = torch.concat([torch.arange(1, n + 1) for n in self.num_points_list]).reshape(1, -1, 1)
+        grid_init *= scaling
+        self.sampling_offsets.bias.data[...] = grid_init.flatten()
+
+        # attention_weights
+        init.constant_(self.attention_weights.weight, 0)
+        init.constant_(self.attention_weights.bias, 0)
+
+    def forward(
+        self,
+        query: Tensor,
+        reference_points: Tensor,
+        value: Tensor,
+        value_spatial_shapes: list[list[int]],
+    ) -> Tensor:
+        """Forward function of MSDeformableAttention.
+
+        Args:
+            query (Tensor): [bs, query_length, C]
+            reference_points (Tensor): [bs, query_length, n_levels, 2], range in [0, 1], top-left (0,0),
+                bottom-right (1, 1), including padding area
+            value (Tensor): [bs, value_length, C]
+            value_spatial_shapes (List): [n_levels, 2], [(H_0, W_0), (H_1, W_1), ..., (H_{L-1}, W_{L-1})]
+
+        Returns:
+            output (Tensor): [bs, Length_{query}, C]
+        """
+        bs, len_q = query.shape[:2]
+        _, n_head, c, _ = value[0].shape
+        num_points_list = self.num_points_list
+
+        sampling_offsets = self.sampling_offsets(query).reshape(
+            bs,
+            len_q,
+            self.num_heads,
+            sum(self.num_points_list),
+            2,
+        )
+
+        attention_weights = self.attention_weights(query).reshape(
+            bs,
+            len_q,
+            self.num_heads,
+            sum(self.num_points_list),
+        )
+        attention_weights = f.softmax(attention_weights, dim=-1)
+
+        if reference_points.shape[-1] == 2:
+            offset_normalizer = torch.tensor(value_spatial_shapes)
+            offset_normalizer = offset_normalizer.flip([1]).reshape(1, 1, 1, self.num_levels, 1, 2)
+            sampling_locations = (
+                reference_points.reshape(
+                    bs,
+                    len_q,
+                    1,
+                    self.num_levels,
+                    1,
+                    2,
+                )
+                + sampling_offsets / offset_normalizer
+            )
+        elif reference_points.shape[-1] == 4:
+            num_points_scale = self.num_points_scale.to(query).unsqueeze(-1)
+            offset = sampling_offsets * num_points_scale * reference_points[:, :, None, :, 2:] * 0.5
+            sampling_locations = reference_points[:, :, None, :, :2] + offset
+        else:
+            msg = (f"Last dim of reference_points must be 2 or 4, but get {reference_points.shape[-1]} instead.",)
+            raise ValueError(msg)
+
+        # sampling_offsets [8, 480, 8, 12, 2]
+        sampling_grids = 2 * sampling_locations - 1
+
+        sampling_grids = sampling_grids.permute(0, 2, 1, 3, 4).flatten(0, 1)
+        sampling_locations_list = sampling_grids.split(num_points_list, dim=-2)
+
+        sampling_value_list = []
+        for level, (h, w) in enumerate(value_spatial_shapes):
+            value_l = value[level].reshape(bs * n_head, c, h, w)
+            sampling_grid_l = sampling_locations_list[level]
+            sampling_value_l = f.grid_sample(
+                value_l,
+                sampling_grid_l,
+                mode="bilinear",
+                padding_mode="zeros",
+                align_corners=False,
+            )
+
+            sampling_value_list.append(sampling_value_l)
+
+        attn_weights = attention_weights.permute(0, 2, 1, 3).reshape(bs * n_head, 1, len_q, sum(num_points_list))
+        weighted_sample_locs = torch.concat(sampling_value_list, dim=-1) * attn_weights
+        output = weighted_sample_locs.sum(-1).reshape(bs, n_head * c, len_q)
+
+        return output.permute(0, 2, 1)
 
 
 class VisualEncoderLayer(nn.Module):

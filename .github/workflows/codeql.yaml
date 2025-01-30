@@ -12,20 +12,11 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches:
-      - develop
-      - releases/**
   pull_request:
     types:
       - opened
       - reopened
       - synchronize
-  schedule:
-    - cron: "0 0 * * 0"
-
-permissions:
-  contents: read
 
 jobs:
   analyze:
@@ -35,20 +26,20 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     permissions:
       # required for all workflows
       security-events: write
 
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
-
     strategy:
       fail-fast: false
       matrix:
-        language: ["python"]
+        include:
+          - language: python
+            build-mode: none
+          - language: actions # to scan workflows
+            build-mode: none
         # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
         # Use only 'java-kotlin' to analyze code written in Java, Kotlin or both
         # Use only 'javascript-typescript' to analyze code written in JavaScript, TypeScript or both
@@ -63,6 +54,7 @@ jobs:
         uses: github/codeql-action/init@df409f7d9260372bd5f19e5b04e83cb3c43714ae # v3.27.9
         with:
           languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
           # If you wish to specify custom queries, you can do so here or in a config file.
           # By default, queries listed here will override any specified in a config file.
           # Prefix the list here with "+" to use these queries and those in the config file.
@@ -74,13 +66,24 @@ jobs:
         uses: github/codeql-action/analyze@df409f7d9260372bd5f19e5b04e83cb3c43714ae # v3.27.9
         with:
           category: "/language:${{matrix.language}}"
+
       - name: Generate Security Report
         uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
         with:
           template: report
           token: ${{ secrets.GITHUB_TOKEN }}
+          outputDir: codeql-${{ matrix.language }}
+
+      - name: Rename Report
+        shell: bash
+        continue-on-error: true
+        run: |
+          cd codeql-${{ matrix.language }}
+          mv "report.pdf" "codeql-${{ matrix.language }}.pdf"
+
       - name: GitHub Upload Release Artifacts
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
-          name: codeql-report
-          path: "./report.pdf"
+          name: codeql-${{ matrix.language }}-results
+          path: codeql-${{ matrix.language }}/*.pdf
+          retention-days: 7

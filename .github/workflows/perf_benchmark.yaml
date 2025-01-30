@@ -172,7 +172,7 @@ jobs:
           python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
           rm /tmp/requirements.txt
       - name: Download benchmark results
-        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           path: tests/perf/history/latest
       - name: Summarize benchamrk results

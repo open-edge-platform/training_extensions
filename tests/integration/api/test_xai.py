@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -57,9 +57,6 @@ def test_forward_explain(
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
         pytest.skip("rtmdet_tiny on detection is not supported yet.")
-
-    if "rtdetr" in recipe:
-        pytest.skip("rtdetr on detection is not supported yet.")
 
     if "yolov9" in recipe:
         pytest.skip("yolov9 on detection is not supported yet.")
@@ -125,9 +122,6 @@ def test_predict_with_explain(
     if "yolox_tiny_tile" in recipe:
         # TODO (Galina): required to update model-api to 2.1
         pytest.skip("yolox_tiny_tile on detection requires model-api update")
-
-    if "rtdetr" in recipe:
-        pytest.skip("rtdetr on detection is not supported yet.")
 
     if "yolov9" in recipe:
         pytest.skip("yolov9 on detection is not supported yet.")

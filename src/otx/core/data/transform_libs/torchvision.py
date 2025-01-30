@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Helper to support TorchVision data transform functions."""
 
@@ -3921,3 +3921,44 @@ class TorchVisionTransformLib:
             raise TypeError(msg)
 
         return transform
+
+
+class RandomIoUCrop(tvt_v2.RandomIoUCrop):
+    """Random IoU crop with the option to set probability.
+
+    Args:
+        min_scale (float, optional): the same as RandomIoUCrop. Defaults to 0.3.
+        max_scale (float, optional): the same as RandomIoUCrop. Defaults to 1.
+        min_aspect_ratio (float, optional): the same as RandomIoUCrop. Defaults to 0.5.
+        max_aspect_ratio (float, optional): the same as RandomIoUCrop. Defaults to 2.
+        sampler_options (list[float] | None, optional): the same as RandomIoUCrop. Defaults to None.
+        trials (int, optional): the same as RandomIoUCrop. Defaults to 40.
+        p (float, optional): probability. Defaults to 1.0.
+    """
+
+    def __init__(
+        self,
+        min_scale: float = 0.3,
+        max_scale: float = 1,
+        min_aspect_ratio: float = 0.5,
+        max_aspect_ratio: float = 2,
+        sampler_options: list[float] | None = None,
+        trials: int = 40,
+        p: float = 1.0,
+    ):
+        super().__init__(
+            min_scale,
+            max_scale,
+            min_aspect_ratio,
+            max_aspect_ratio,
+            sampler_options,
+            trials,
+        )
+        self.p = p
+
+    def __call__(self, *inputs: Any) -> Any:  # noqa: ANN401
+        """Apply the transform to the given inputs."""
+        if torch.rand(1) >= self.p:
+            return inputs if len(inputs) > 1 else inputs[0]
+
+        return super().forward(*inputs)

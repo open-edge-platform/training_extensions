@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) OpenMMLab. All rights reserved.
 """Implementation of CSPLayer copied from mmdet.models.layers.csp_layer.py."""
@@ -193,7 +193,11 @@ class RepVggBlock(nn.Module):
             normalization=build_norm_layer(normalization, num_features=ch_out),
             activation=None,
         )
-        self.act = activation() if activation else nn.Identity()
+        if isinstance(activation, type):
+            activation = activation()
+        if activation is None:
+            activation = nn.Identity()
+        self.act = activation
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward function."""
@@ -378,7 +382,7 @@ class CSPRepLayer(nn.Module):
                 RepVggBlock(
                     hidden_channels,
                     hidden_channels,
-                    activation=activation,
+                    activation=build_activation_layer(activation),
                     normalization=normalization,
                 )
                 for _ in range(num_blocks)

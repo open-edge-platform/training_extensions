@@ -22,6 +22,10 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3979>)
 - Add OpenVINO inference for 3D Object Detection task
   (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
+- Add D-Fine Detection Algorithm
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4142>)
+- Add DETR XAI Explain Mode
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
 
 ### Enhancements
 
