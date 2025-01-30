@@ -55,6 +55,7 @@ DEFAULT_CONFIG_PER_TASK = {
 TASK_PER_DATA_FORMAT = {
     "imagenet_with_subset_dirs": [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.H_LABEL_CLS],
     "datumaro": [OTXTaskType.MULTI_LABEL_CLS],
+    "coco_person_keypoints": [OTXTaskType.KEYPOINT_DETECTION],
     "coco_instances": [
         OTXTaskType.DETECTION,
         OTXTaskType.ROTATED_DETECTION,
