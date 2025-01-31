@@ -5,4 +5,3 @@ onnx==1.16.0
 openvino-model-api==0.1.9.1
 openvino==2023.3.0
 openvino-dev==2023.3.0
-openvino-telemetry==2023.2.*
