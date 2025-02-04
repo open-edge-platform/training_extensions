@@ -33,16 +33,16 @@ jobs:
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
         with:
           scan-type: fs
-          format: 'sarif'
+          format: "sarif"
           scan-ref: requirements.txt
           scanners: vuln
           output: trivy-results-vuln.sarif
-      
+
       - name: Upload SARIF file
         if: ${{ always() }}
         uses: github/codeql-action/upload-sarif@17a820bf2e43b47be2c72b39cc905417bc1ab6d0 # v3.28.8
         with:
-          sarif_file: 'trivy-results-vuln.sarif'
+          sarif_file: "trivy-results-vuln.sarif"
 
       - name: Upload Trivy results artifact
         if: ${{ always() }}
@@ -51,7 +51,7 @@ jobs:
           name: trivy-results-vuln
           path: "${{ github.workspace }}/trivy-results-vuln.sarif"
           retention-days: 7
-        
+
       - name: Upload deps list
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         if: always()
@@ -59,7 +59,6 @@ jobs:
           name: python-deps-list
           path: "${{ github.workspace }}/requirements.txt"
           retention-days: 7
-
 
   Trivy-Scan-Misconfig:
     runs-on: ubuntu-22.04
@@ -73,16 +72,16 @@ jobs:
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
         with:
           scan-type: fs
-          format: 'sarif'
+          format: "sarif"
           scan-ref: .
           scanners: misconfig,secret
           output: trivy-results-misconfig.sarif
-     
+
       - name: Upload SARIF file
         if: ${{ always() }}
         uses: github/codeql-action/upload-sarif@17a820bf2e43b47be2c72b39cc905417bc1ab6d0 # v3.28.8
         with:
-          sarif_file: 'trivy-results-misconfig.sarif'
+          sarif_file: "trivy-results-misconfig.sarif"
 
       - name: Upload Trivy results artifact
         if: ${{ always() }}
@@ -114,8 +113,8 @@ jobs:
         if: ${{ always() }}
         uses: github/codeql-action/upload-sarif@17a820bf2e43b47be2c72b39cc905417bc1ab6d0 # v3.28.8
         with:
-          sarif_file: .tox/bandit-results.sarif     
-      
+          sarif_file: .tox/bandit-results.sarif
+
       - name: Upload Bandit artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
@@ -123,7 +122,6 @@ jobs:
           name: bandit-results
           path: .tox/bandit-results.sarif
           retention-days: 7
-
 
   CodeQL:
     name: Analyze (${{ matrix.language }})
