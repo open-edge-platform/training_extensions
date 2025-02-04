@@ -3,7 +3,6 @@
 
 from pathlib import Path
 from unittest.mock import MagicMock
-
 import pytest
 
 from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
@@ -16,7 +15,7 @@ from otx.engine import Engine
 from pytest_mock import MockerFixture
 
 
-@pytest.fixture
+@pytest.fixture()
 def fxt_engine(tmp_path) -> Engine:
     recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
     data_root = "tests/assets/classification_dataset"
@@ -53,7 +52,7 @@ class TestEngine:
         with pytest.raises(ValueError, match="Given model class (.*) requires a valid label_info to instantiate."):
             _ = Engine(work_dir=tmp_path, task="MULTI_CLASS_CLS")
 
-    @pytest.fixture
+    @pytest.fixture()
     def mock_datamodule(self, mocker):
         input_size = (1234, 1234)
         label_info = 4321
