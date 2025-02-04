@@ -370,12 +370,6 @@ For example, if you want to use the ``limit_val_batches`` feature provided by Tr
     # disable validation
     engine.train(limit_val_batches=0)
 
-6. It's also easy to use HPOs.
-
-.. code-block:: python
-
-    engine.train(run_hpo=True)
-
 
 ***********
 Evaluation

@@ -183,8 +183,6 @@ class Engine:
             resume (bool, optional): If True, tries to resume training from existing checkpoint.
             metric (MetricCallable | None): If not None, it will override `OTXModel.metric_callable` with the given
                 metric callable. It will temporarilly change the evaluation metric for the validation and test.
-            run_hpo (bool, optional): If True, optimizer hyper parameters before training a model.
-            hpo_config (HpoConfig | None, optional): Configuration for HPO.
             checkpoint (PathLike | None, optional): Path to the checkpoint file. Defaults to None.
             adaptive_bs (Literal["None", "Safe", "Full"]):
                 Change the actual batch size depending on the current GPU status.

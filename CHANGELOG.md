@@ -69,6 +69,11 @@ All notable changes to this project will be documented in this file.
 - Fix arrow support for semantic segmentation task
   (<https://github.com/openvinotoolkit/training_extensions/pull/4172>)
 
+### Removed
+
+- Remove HPO
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
+
 ## \[2.2.2\]
 
 ### Bug fixes
