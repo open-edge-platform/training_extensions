@@ -4,7 +4,6 @@
 from pathlib import Path
 from unittest.mock import MagicMock
 import pytest
-
 from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
 from otx.algo.classification.torchvision_model import TVModelForMulticlassCls
 from otx.core.model.base import OTXModel, OVModel
