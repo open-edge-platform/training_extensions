@@ -40,7 +40,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
     OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
     OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
-    OTXTaskType.ACTION_CLASSIFICATION: RECIPE_PATH / "action_classification" / "x3d.yaml",
     OTXTaskType.ANOMALY: RECIPE_PATH / "anomaly" / "padim.yaml",
     OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification" / "padim.yaml",
     OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
@@ -70,7 +69,6 @@ TASK_PER_DATA_FORMAT = {
     ],
     "coco_captions": [OTXTaskType.DIFFUSION],
     "common_semantic_segmentation_with_subset_dirs": [OTXTaskType.SEMANTIC_SEGMENTATION],
-    "kinetics": [OTXTaskType.ACTION_CLASSIFICATION],
     "mvtec": [
         OTXTaskType.ANOMALY,
         OTXTaskType.ANOMALY_CLASSIFICATION,
@@ -89,7 +87,6 @@ OVMODEL_PER_TASK = {
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.core.model.segmentation.OVSegmentationModel",
     OTXTaskType.VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVVisualPromptingModel",
     OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVZeroShotVisualPromptingModel",
-    OTXTaskType.ACTION_CLASSIFICATION: "otx.core.model.action_classification.OVActionClsModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",

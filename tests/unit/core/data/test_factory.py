@@ -6,7 +6,6 @@
 import pytest
 
 from otx.core.config.data import SubsetConfig, VisualPromptingConfig
-from otx.core.data.dataset.action_classification import OTXActionClsDataset
 from otx.core.data.dataset.anomaly import AnomalyDataset
 from otx.core.data.dataset.classification import (
     HLabelInfo,
@@ -72,7 +71,6 @@ class TestOTXDatasetFactory:
             (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset),
             (OTXTaskType.VISUAL_PROMPTING, OTXVisualPromptingDataset),
             (OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING, OTXZeroShotVisualPromptingDataset),
-            (OTXTaskType.ACTION_CLASSIFICATION, OTXActionClsDataset),
             (OTXTaskType.ANOMALY, AnomalyDataset),
             (OTXTaskType.ANOMALY_CLASSIFICATION, AnomalyDataset),
             (OTXTaskType.ANOMALY_DETECTION, AnomalyDataset),

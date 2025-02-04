@@ -52,9 +52,8 @@ OpenVINO™ Training Extensions supports the following computer vision tasks:
 - **Object detection** including rotated bounding box support
 - **Semantic segmentation**
 - **Instance segmentation** including tiling algorithm support
-- **Action recognition** including action classification and detection
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
-- **Visual Prompting** tasks including segment anything model, zero-shot visual prompting
+- **Visual Prompting** tasks including segment anything model
 
 OpenVINO™ Training Extensions supports the [following learning methods](https://openvinotoolkit.github.io/training_extensions/latest/guide/explanation/algorithms/index.html):
 
