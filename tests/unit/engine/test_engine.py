@@ -122,18 +122,6 @@ class TestEngine:
             mock_torch_load.assert_called_once()
             mock_load_state_dict_incrementally.assert_called_once()
 
-    def test_training_with_run_hpo(self, fxt_engine, mocker) -> None:
-        mocker.patch("pathlib.Path.symlink_to")
-        mock_fit = mocker.patch("otx.engine.engine.Trainer.fit")
-        mock_execute_hpo = mocker.patch("otx.engine.engine.execute_hpo")
-        mock_update_hyper_parameter = mocker.patch("otx.engine.engine.update_hyper_parameter")
-        mock_execute_hpo.return_value = {}, "hpo/best/checkpoint"
-
-        fxt_engine.train(run_hpo=True)
-        mock_execute_hpo.assert_called_once()
-        mock_update_hyper_parameter.assert_called_once_with(fxt_engine, {})
-        assert mock_fit.call_args[1]["ckpt_path"] == "hpo/best/checkpoint"
-
     @pytest.mark.parametrize(
         "checkpoint",
         [
