@@ -176,7 +176,7 @@ jobs:
           retention-days: 7
 
   Summarize:
-    needs: [Trivy, Bandit, CodeQL]
+    needs: [Trivy-Scan-Vuln, Trivy-Scan-Misconfig, Bandit, CodeQL]
     if: always()
     runs-on: ubuntu-22.04
     steps:
