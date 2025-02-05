@@ -424,7 +424,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         # Model weights
         state_dict: dict[str, Any] = ckpt.get("state_dict", {}) if not is_ckpt_from_otx_v1(ckpt) else ckpt
 
-        if state_dict is None:
+        if state_dict is None or state_dict == {}:
             msg = "Checkpoint should have `state_dict`."
             raise ValueError(msg, state_dict)
 

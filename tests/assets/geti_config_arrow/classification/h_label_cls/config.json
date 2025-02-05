@@ -28,7 +28,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-
         "enum_name": "TrainType",
         "options": {
           "Incremental": "Incremental",
@@ -52,7 +51,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 0,
         "max_value": 10000000000
       },
@@ -72,7 +70,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-
         "enum_name": "StorageCacheScheme",
         "options": {
           "NONE": "NONE",
@@ -141,7 +138,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 1,
         "max_value": 512
       },
@@ -181,7 +177,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 1,
         "max_value": 1000
       },
@@ -201,7 +196,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 1,
         "max_value": 1000
       },
@@ -221,7 +215,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 0,
         "max_value": 8
       },
@@ -241,7 +234,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 0,
         "max_value": 10000
       },
@@ -278,7 +270,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 0,
         "max_value": 1000
       },
@@ -298,7 +289,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 0,
         "max_value": 50
       },
@@ -352,7 +342,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-
         "enum_name": "BatchSizeAdaptType",
         "options": {
           "NONE": "None",
@@ -393,7 +382,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-
         "enum_name": "InputSizePreset",
         "options": {
           "DEFAULT": "Default",
@@ -508,7 +496,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-
         "enum_name": "POTQuantizationPreset",
         "options": {
           "MIXED": "Mixed",
@@ -531,7 +518,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 1,
         "max_value": 1000
       }

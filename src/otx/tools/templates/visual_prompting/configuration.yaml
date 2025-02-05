@@ -38,8 +38,7 @@ learning_parameters:
       type: BOOLEAN
     train_batch_size:
       affects_outcome_of: TRAINING
-       
-      auto_hpo_value: null
+
       default_value: 2
       description:
         The number of training samples seen in each iteration of training.
@@ -84,14 +83,12 @@ learning_parameters:
       value: 0.0001
       visible_in_ui: true
       warning: null
-       
 pot_parameters:
   description: POT Parameters
   header: POT Parameters
   preset:
     affects_outcome_of: NONE
-     
-    auto_hpo_value: null
+
     default_value: Mixed
     description: Quantization preset that defines quantization scheme
     editable: true
@@ -111,8 +108,7 @@ pot_parameters:
     warning: null
   stat_subset_size:
     affects_outcome_of: NONE
-     
-    auto_hpo_value: null
+
     default_value: 300
     description: Number of data samples used for post-training optimization
     editable: true

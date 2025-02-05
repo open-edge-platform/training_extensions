@@ -94,7 +94,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       }
     },
     "learning_parameters": {
@@ -118,8 +118,7 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "possible",
-        "auto_hpo_value": null,
+
         "min_value": 1,
         "max_value": 512
       },
@@ -158,8 +157,7 @@
           "rules": []
         },
         "type": "FLOAT",
-        "auto_hpo_state": "possible",
-        "auto_hpo_value": null,
+
         "min_value": 1e-7,
         "max_value": 0.1,
         "step_size": null
@@ -236,7 +234,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "early_stop_start": {
         "value": 3,
@@ -310,7 +308,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "auto_adapt_batch_size": {
         "value": "None",
@@ -350,7 +348,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "input_size": {
         "value": "Default",
@@ -400,7 +398,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "enable_pruning": {
         "value": false,
@@ -417,7 +415,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "pruning_supported": {
         "value": true,
@@ -434,7 +432,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "maximal_accuracy_degradation": {
         "value": 1.0,
@@ -516,7 +514,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "result_based_confidence_threshold": {
         "value": true,
@@ -533,7 +531,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       }
     },
     "pot_parameters": {
@@ -622,7 +620,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "enable_adaptive_params": {
         "value": true,
@@ -639,7 +637,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
+        "type": "BOOLEAN"
       },
       "tile_size": {
         "value": 400,

@@ -13,10 +13,7 @@ framework: OTXAnomalyClassification v0.1.0
 # Hyper Parameters
 hyper_parameters:
   base_path: ./configuration.yaml
-  parameter_overrides:
-    learning_parameters:
-      train_batch_size:
-      lr:
+
 # Training resources.
 max_nodes: 1
 training_targets:
