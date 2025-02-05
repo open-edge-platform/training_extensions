@@ -21,12 +21,10 @@ hyper_parameters:
     learning_parameters:
       batch_size:
         default_value: 4
-        auto_hpo_state: POSSIBLE
       inference_batch_size:
         default_value: 1
       learning_rate:
         default_value: 0.001
-        auto_hpo_state: POSSIBLE
       learning_rate_warmup_iters:
         default_value: 20
       num_iters:

@@ -16,10 +16,7 @@ hyper_parameters:
   parameter_overrides:
     learning_parameters:
       train_batch_size:
-        auto_hpo_state: POSSIBLE
       lr:
-        auto_hpo_state: POSSIBLE
-
 # Training resources.
 max_nodes: 1
 training_targets:
