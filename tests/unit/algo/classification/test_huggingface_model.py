@@ -5,15 +5,17 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
+
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import MulticlassClsBatchPredEntity
 from otx.core.exporter.native import OTXNativeModelExporter
 
 SKIP_TRANSFORMERS_TEST = False
 try:
+    from transformers.modeling_outputs import ImageClassifierOutput
+
     from otx.algo.classification import huggingface_model as target_file
     from otx.algo.classification.huggingface_model import HuggingFaceModelForMulticlassCls
-    from transformers.modeling_outputs import ImageClassifierOutput
 except ImportError:
     SKIP_TRANSFORMERS_TEST = True
 

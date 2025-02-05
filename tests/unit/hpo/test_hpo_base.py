@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from otx.hpo.hpo_base import Trial
 
 

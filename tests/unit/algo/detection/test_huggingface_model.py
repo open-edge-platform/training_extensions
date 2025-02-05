@@ -3,17 +3,19 @@
 
 import pytest
 import torch
-from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
 from torch._dynamo.testing import CompileCounter
 from torchvision import tv_tensors
 
+from otx.core.data.entity.base import ImageInfo
+from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
+
 SKIP_TRANSFORMERS_TEST = False
 try:
-    from otx.algo.detection.huggingface_model import HuggingFaceModelForDetection
     from transformers.models.detr.image_processing_detr import DetrImageProcessor
     from transformers.models.detr.modeling_detr import DetrForObjectDetection
     from transformers.utils.generic import ModelOutput
+
+    from otx.algo.detection.huggingface_model import HuggingFaceModelForDetection
 except ImportError:
     SKIP_TRANSFORMERS_TEST = True
 

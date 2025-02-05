@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import pytest
 import torch
+
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
 from otx.core.metrics.dice import SegmCallable

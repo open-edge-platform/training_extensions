@@ -4,6 +4,7 @@
 """Tests for MonoDetr backbone."""
 import pytest
 import torch
+
 from otx.algo.object_detection_3d.backbones.monodetr_resnet import BackboneBase, Joiner, PositionEmbeddingSine
 from otx.algo.object_detection_3d.utils.utils import NestedTensor
 

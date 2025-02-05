@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
+
 from otx.core.exporter.detection_3d import OTXObjectDetection3DExporter
 from otx.core.types.export import OTXExportFormatType
 

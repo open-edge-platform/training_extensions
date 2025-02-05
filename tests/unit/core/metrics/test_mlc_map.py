@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import pytest
 import torch
+
 from otx.core.metrics.mlc_map import MultilabelmAP
 from otx.core.types.label import LabelInfo
 

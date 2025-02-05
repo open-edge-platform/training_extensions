@@ -11,10 +11,11 @@ from typing import Callable
 
 import torch
 import torch.nn.functional as f
-from otx.algo.common.utils.utils import get_clones
-from otx.algo.modules.transformer import deformable_attention_core_func
 from torch import Tensor, nn
 from torch.nn import init
+
+from otx.algo.common.utils.utils import get_clones
+from otx.algo.modules.transformer import deformable_attention_core_func
 
 
 class TransformerEncoderLayer(nn.Module):

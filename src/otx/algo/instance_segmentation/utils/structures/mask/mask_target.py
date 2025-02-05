@@ -13,10 +13,11 @@ import warnings
 import numpy as np
 import torch
 from datumaro.components.annotation import Polygon
-from otx.core.utils.mask_util import crop_and_resize_masks, crop_and_resize_polygons
 from torch import Tensor
 from torch.nn.modules.utils import _pair
 from torchvision import tv_tensors
+
+from otx.core.utils.mask_util import crop_and_resize_masks, crop_and_resize_polygons
 
 
 def mask_target(

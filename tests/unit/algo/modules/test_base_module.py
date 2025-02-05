@@ -6,9 +6,10 @@ from unittest.mock import Mock
 
 import pytest
 import torch
-from otx.algo.modules.base_module import BaseModule, ModuleDict, ModuleList, Sequential
 from torch import nn
 from torch.nn.init import constant_
+
+from otx.algo.modules.base_module import BaseModule, ModuleDict, ModuleList, Sequential
 
 
 class FooConv1d(BaseModule):

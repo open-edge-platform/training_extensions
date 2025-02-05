@@ -3,6 +3,7 @@
 """Test of ELAN related layers for detection task."""
 
 import torch
+
 from otx.algo.detection.layers.elan_layer import ELAN, SPPELAN, RepConv, RepNCSPBottleneck, RepNCSPELAN
 
 

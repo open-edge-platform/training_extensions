@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 import torch
+
 from otx.algo.classification.backbones.timm import TimmBackbone
 
 

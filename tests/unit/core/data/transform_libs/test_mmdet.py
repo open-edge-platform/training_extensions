@@ -8,18 +8,20 @@ import numpy as np
 import pytest
 import torch
 from datumaro import Polygon
+from torch import LongTensor
+from torchvision import tv_tensors
+
 from otx.core.config.data import SubsetConfig
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.detection import DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
 from otx.core.data.entity.visual_prompting import VisualPromptingDataEntity
 from otx.core.types.transformer_libs import TransformLibType
-from torch import LongTensor
-from torchvision import tv_tensors
 
 SKIP_MMLAB_TEST = False
 try:
     from mmdet.structures.mask import PolygonMasks
+
     from otx.core.data.transform_libs.mmcv import LoadImageFromFile
     from otx.core.data.transform_libs.mmdet import (
         LoadAnnotations,

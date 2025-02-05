@@ -14,6 +14,8 @@ import pytest
 import torch
 from model_api.models import SAMLearnableVisualPrompter, SAMVisualPrompter
 from model_api.models.utils import PredictedMask
+from torchvision import tv_tensors
+
 from otx.core.data.entity.base import Points
 from otx.core.data.entity.visual_prompting import (
     VisualPromptingBatchPredEntity,
@@ -28,7 +30,6 @@ from otx.core.model.visual_prompting import (
     _inference_step,
 )
 from otx.core.types.export import TaskLevelExportParameters
-from torchvision import tv_tensors
 
 
 @pytest.fixture()

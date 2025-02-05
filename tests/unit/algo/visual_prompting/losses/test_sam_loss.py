@@ -3,8 +3,9 @@
 
 import pytest
 import torch
-from otx.algo.visual_prompting.losses.sam_loss import SAMCriterion
 from torch import Tensor
+
+from otx.algo.visual_prompting.losses.sam_loss import SAMCriterion
 
 
 class TestSAMCriterion:

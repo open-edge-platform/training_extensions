@@ -5,12 +5,13 @@
 
 import pytest
 import torch
+from torch import nn
+from torch._dynamo.testing import CompileCounter
+
 from otx.algo.detection.rtdetr import RTDETR
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
 from otx.core.types import LabelInfo
-from torch import nn
-from torch._dynamo.testing import CompileCounter
 
 
 class TestRTDETR:

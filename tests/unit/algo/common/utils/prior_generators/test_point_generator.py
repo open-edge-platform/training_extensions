@@ -4,6 +4,7 @@
 
 import pytest
 import torch
+
 from otx.algo.common.utils.prior_generators import MlvlPointGenerator
 
 

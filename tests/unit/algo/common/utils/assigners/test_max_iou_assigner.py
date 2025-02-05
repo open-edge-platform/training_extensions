@@ -3,6 +3,7 @@
 """Test Max Iou Assigner ."""
 
 import torch
+
 from otx.algo.common.utils.assigners.max_iou_assigner import perm_repeat_bboxes
 
 

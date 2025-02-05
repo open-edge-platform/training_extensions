@@ -11,9 +11,10 @@ from __future__ import annotations
 import math
 from typing import ClassVar
 
+from torch import nn
+
 from otx.algo.common.layers import ResLayer
 from otx.algo.modules.norm import build_norm_layer
-from torch import nn
 
 from .resnet import Bottleneck as _Bottleneck
 from .resnet import ResNet

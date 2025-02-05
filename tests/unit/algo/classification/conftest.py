@@ -8,11 +8,12 @@ from dataclasses import asdict
 import pytest
 import torch
 from omegaconf import DictConfig
+from torchvision import tv_tensors
+
 from otx.core.data.dataset.classification import MulticlassClsBatchDataEntity
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.classification import HlabelClsBatchDataEntity, MultilabelClsBatchDataEntity
 from otx.core.types.label import HLabelInfo
-from torchvision import tv_tensors
 
 
 @pytest.fixture()

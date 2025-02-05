@@ -3,6 +3,7 @@
 """Test of RTMCCBlock."""
 
 import torch
+
 from otx.algo.keypoint_detection.utils.rtmcc_block import RTMCCBlock
 
 

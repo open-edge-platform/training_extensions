@@ -4,10 +4,11 @@
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.segmentation.losses import CrossEntropyLossWithIgnore
 from otx.algo.segmentation.segmentors import BaseSegmentationModel, MeanTeacher
 from otx.core.data.entity.base import ImageInfo
-from torch import nn
 
 
 class TestMeanTeacher:

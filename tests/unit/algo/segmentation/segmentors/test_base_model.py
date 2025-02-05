@@ -3,6 +3,7 @@
 #
 import pytest
 import torch
+
 from otx.algo.segmentation.segmentors.base_model import BaseSegmentationModel
 from otx.core.data.entity.base import ImageInfo
 

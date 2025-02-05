@@ -8,6 +8,8 @@ from copy import deepcopy
 
 import pytest
 import torch
+from torchvision import tv_tensors
+
 from otx.algo.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
 from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder
 from otx.algo.instance_segmentation.losses import ROICriterion
@@ -15,7 +17,6 @@ from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
-from torchvision import tv_tensors
 
 
 @pytest.fixture()

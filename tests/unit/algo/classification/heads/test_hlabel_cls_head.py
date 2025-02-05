@@ -8,6 +8,9 @@ from typing import Any
 
 import pytest
 import torch
+from torch import nn
+from torch.nn.modules.loss import CrossEntropyLoss
+
 from otx.algo.classification.heads import (
     HierarchicalCBAMClsHead,
     HierarchicalLinearClsHead,
@@ -16,8 +19,6 @@ from otx.algo.classification.heads import (
 from otx.algo.classification.heads.hlabel_cls_head import CBAM, ChannelAttention, SpatialAttention
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.core.data.entity.base import ImageInfo
-from torch import nn
-from torch.nn.modules.loss import CrossEntropyLoss
 
 
 @pytest.fixture()

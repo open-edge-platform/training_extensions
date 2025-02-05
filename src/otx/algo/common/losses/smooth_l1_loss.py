@@ -9,8 +9,9 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/l
 from __future__ import annotations
 
 import torch
-from otx.algo.common.losses.utils import weighted_loss
 from torch import Tensor, nn
+
+from otx.algo.common.losses.utils import weighted_loss
 
 
 @weighted_loss

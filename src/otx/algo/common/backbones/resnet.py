@@ -14,11 +14,12 @@ from typing import Callable, ClassVar
 
 import torch
 import torch.utils.checkpoint as cp
+from torch import nn
+from torch.nn.modules.batchnorm import _BatchNorm
+
 from otx.algo.common.layers import ResLayer
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.modules.norm import build_norm_layer
-from torch import nn
-from torch.nn.modules.batchnorm import _BatchNorm
 
 
 class Bottleneck(BaseModule):

@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 import torch
+
 from otx.algo.common.losses import GIoULoss, QualityFocalLoss
 from otx.algo.instance_segmentation.losses import DiceLoss, RTMDetInstCriterion
 

@@ -9,6 +9,8 @@ from datumaro import Label, Polygon
 from datumaro.components.annotation import AnnotationType, LabelCategories
 from datumaro.components.dataset import Dataset, DatasetItem
 from datumaro.components.media import Image
+from torchvision import tv_tensors
+
 from otx.core.config import register_configs
 from otx.core.data.entity.base import ImageInfo, Points
 from otx.core.data.entity.visual_prompting import (
@@ -19,7 +21,6 @@ from otx.core.data.entity.visual_prompting import (
     ZeroShotVisualPromptingBatchPredEntity,
     ZeroShotVisualPromptingDataEntity,
 )
-from torchvision import tv_tensors
 
 
 @pytest.fixture(scope="session", autouse=True)

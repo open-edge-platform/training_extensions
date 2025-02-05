@@ -4,8 +4,9 @@
 from functools import partial
 
 import pytest
-from otx.algo.modules.norm import build_norm_layer
 from torch import nn
+
+from otx.algo.modules.norm import build_norm_layer
 
 
 @pytest.mark.parametrize(

@@ -3,6 +3,7 @@
 
 import pytest
 import torch
+
 from otx.algo.classification.backbones import EfficientNetBackbone
 from otx.algo.classification.classifier import SemiSLClassifier
 from otx.algo.classification.heads import SemiSLLinearClsHead

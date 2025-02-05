@@ -7,6 +7,7 @@ from __future__ import annotations
 from itertools import product
 
 import numpy as np
+
 from otx.algo.keypoint_detection.utils.keypoint_eval import get_simcc_maximum, refine_simcc_dark
 
 

@@ -6,8 +6,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 import torch
-from otx.core.data.transform_libs.utils import get_image_shape, rescale_size, to_np_image
 from torch import Tensor
+
+from otx.core.data.transform_libs.utils import get_image_shape, rescale_size, to_np_image
 
 
 @pytest.mark.parametrize(("img", "expected_shape"), [(np.zeros((1, 2, 3)), (1, 2)), (torch.zeros((1, 2, 3)), (2, 3))])

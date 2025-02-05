@@ -4,10 +4,11 @@
 
 import pytest
 import torch
+from torchvision import tv_tensors
+
 from otx.algo.keypoint_detection.rtmpose import RTMPoseTiny
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
-from torchvision import tv_tensors
 
 
 class TestRTMPoseTiny:

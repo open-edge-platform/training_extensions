@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 import cv2
 import pytest
 from model_api.models import Model
+
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.export import OTXExportFormatType

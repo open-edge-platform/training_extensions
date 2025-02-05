@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import torch
+
 from otx.algo.classification.backbones.mobilenet_v3 import MobileNetV3Backbone
 
 

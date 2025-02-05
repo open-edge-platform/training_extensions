@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 
 

@@ -7,10 +7,11 @@ import torch
 from lightning import Trainer
 from lightning.pytorch.utilities.types import LRSchedulerConfig
 from model_api.models.utils import ClassificationResult
+from pytest_mock import MockerFixture
+
 from otx.core.data.entity.base import OTXBatchDataEntity
 from otx.core.model.base import OTXModel, OVModel
 from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler
-from pytest_mock import MockerFixture
 
 
 class MockNNModule(torch.nn.Module):

@@ -9,6 +9,7 @@ import random
 import numpy as np
 import pytest
 import torch
+
 from otx.algo.utils.mmengine_utils import InstanceData, is_seq_of, is_tuple_of
 
 

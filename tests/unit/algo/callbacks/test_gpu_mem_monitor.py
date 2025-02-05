@@ -7,6 +7,7 @@ import torch
 from lightning.pytorch import Trainer
 from lightning.pytorch.demos.boring_classes import BoringModel
 from lightning.pytorch.loggers import CSVLogger
+
 from otx.algo.callbacks.gpu_mem_monitor import GPUMemMonitor
 
 

@@ -7,6 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 from jsonargparse import ArgumentParser, Namespace
+
 from otx.cli.utils.jsonargparse import (
     apply_config,
     flatten_dict,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datumaro import LabelCategories
 from datumaro.components.annotation import GroupType
+
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 
 

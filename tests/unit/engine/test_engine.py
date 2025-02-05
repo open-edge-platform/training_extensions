@@ -5,6 +5,8 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
+
 from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
 from otx.algo.classification.torchvision_model import TVModelForMulticlassCls
 from otx.core.model.base import OTXModel, OVModel
@@ -12,7 +14,6 @@ from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import NullLabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.engine import Engine
-from pytest_mock import MockerFixture
 
 
 @pytest.fixture()

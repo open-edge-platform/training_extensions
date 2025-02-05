@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 import torchvision
+
 from otx.algo.detection.backbones.hgnetv2 import HGNetv2
 from otx.algo.detection.d_fine import DFine
 from otx.algo.detection.heads.dfine_decoder import DFINETransformer

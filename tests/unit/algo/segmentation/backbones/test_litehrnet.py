@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
+
 from otx.algo.segmentation.backbones.litehrnet import LiteHRNetModule, NeighbourSupport, SpatialWeightingV2, Stem
 
 

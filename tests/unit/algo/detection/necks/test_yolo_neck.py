@@ -4,6 +4,7 @@
 
 import pytest
 import torch
+
 from otx.algo.detection.necks.yolo_neck import YOLONeckModule
 
 

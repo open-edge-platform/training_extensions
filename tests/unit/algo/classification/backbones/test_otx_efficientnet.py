@@ -4,6 +4,7 @@
 
 import pytest
 import torch
+
 from otx.algo.classification.backbones.efficientnet import EfficientNetBackbone
 
 

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
+
 from otx.algo.segmentation.backbones import mscan as target_file
 from otx.algo.segmentation.backbones.mscan import DropPath, MSCANModule, drop_path
 

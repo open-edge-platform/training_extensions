@@ -4,6 +4,7 @@
 """Test for various MaskDINO heads."""
 import pytest
 import torch
+
 from otx.algo.instance_segmentation.heads import MaskDINODecoderHead, MaskDINOEncoderHead
 from otx.algo.instance_segmentation.losses import MaskDINOCriterion
 from otx.algo.instance_segmentation.utils.utils import ShapeSpec

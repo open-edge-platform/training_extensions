@@ -3,6 +3,7 @@
 """Test of SSDHead."""
 
 from omegaconf import DictConfig
+
 from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder
 from otx.algo.detection.heads.ssd_head import SSDHeadModule
 from otx.algo.detection.utils.prior_generators import SSDAnchorGeneratorClustered

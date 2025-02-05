@@ -4,6 +4,7 @@
 
 
 import torch
+
 from otx.algo.segmentation.modules import (
     IterativeAggregator,
     channel_shuffle,

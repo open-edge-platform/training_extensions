@@ -5,9 +5,10 @@ from __future__ import annotations
 
 import pytest
 import torch
+from torchvision import tv_tensors
+
 from otx.core.data.entity.base import BboxInfo, ImageInfo
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
-from torchvision import tv_tensors
 
 
 @pytest.fixture()

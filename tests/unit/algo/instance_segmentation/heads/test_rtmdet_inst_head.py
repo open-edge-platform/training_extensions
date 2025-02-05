@@ -9,6 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.common.utils.assigners import DynamicSoftLabelAssigner
 from otx.algo.common.utils.coders import DistancePointBBoxCoder
 from otx.algo.common.utils.prior_generators import MlvlPointGenerator
@@ -17,7 +19,6 @@ from otx.algo.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
 from otx.algo.modules.norm import build_norm_layer
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
-from torch import nn
 
 
 def set_mock_sampling_results_list(batch_size: int) -> list[Mock]:

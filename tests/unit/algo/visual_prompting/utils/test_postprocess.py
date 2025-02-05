@@ -3,8 +3,9 @@
 
 import pytest
 import torch
-from otx.algo.visual_prompting.utils.postprocess import get_prepadded_size, postprocess_masks
 from torch import Tensor
+
+from otx.algo.visual_prompting.utils.postprocess import get_prepadded_size, postprocess_masks
 
 
 @pytest.mark.parametrize(

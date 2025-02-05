@@ -4,6 +4,7 @@
 import numpy as np
 import pytest
 import torch
+
 from otx.core.config.data import SubsetConfig
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.classification import HlabelClsDataEntity, MulticlassClsDataEntity, MultilabelClsDataEntity
@@ -12,6 +13,7 @@ from otx.core.types.transformer_libs import TransformLibType
 SKIP_MMLAB_TEST = False
 try:
     from mmpretrain.registry import TRANSFORMS
+
     from otx.core.data.transform_libs.mmcv import LoadImageFromFile
     from otx.core.data.transform_libs.mmpretrain import MMPretrainTransformLib, PackInputs
 except ImportError:

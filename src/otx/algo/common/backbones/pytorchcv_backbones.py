@@ -9,12 +9,13 @@ from pathlib import Path
 from typing import Callable
 
 import torch
-from otx.algo.modules.norm import build_norm_layer
-from otx.algo.utils.mmengine_utils import get_dist_info
 from pytorchcv.model_provider import _models
 from pytorchcv.models.model_store import download_model
 from torch import distributed, nn
 from torch.nn.modules.batchnorm import _BatchNorm
+
+from otx.algo.modules.norm import build_norm_layer
+from otx.algo.utils.mmengine_utils import get_dist_info
 
 # ruff: noqa: SLF001
 

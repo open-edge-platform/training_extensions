@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+
 from otx.algo.action_classification.movinet import MoViNet
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 

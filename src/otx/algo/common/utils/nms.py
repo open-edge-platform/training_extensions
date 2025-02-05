@@ -15,10 +15,11 @@ from typing import Any, Callable
 
 import numpy as np
 import torch
-from otx.algo.common.utils.utils import dynamic_topk
 from torch import Tensor
 from torch.onnx import symbolic_helper as sym_help
 from torchvision.ops.boxes import nms as torch_nms
+
+from otx.algo.common.utils.utils import dynamic_topk
 
 
 class NMSop(torch.autograd.Function):

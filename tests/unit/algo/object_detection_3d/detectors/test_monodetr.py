@@ -5,6 +5,7 @@
 
 import pytest
 import torch
+
 from otx.algo.object_detection_3d.backbones.monodetr_resnet import BackboneBuilder
 from otx.algo.object_detection_3d.detectors.monodetr import MonoDETR
 from otx.algo.object_detection_3d.heads.depth_predictor import DepthPredictor

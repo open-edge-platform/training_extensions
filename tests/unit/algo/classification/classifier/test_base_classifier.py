@@ -3,12 +3,13 @@
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.classification.backbones import EfficientNetBackbone
 from otx.algo.classification.classifier import ImageClassifier
 from otx.algo.classification.heads import LinearClsHead, MultiLabelLinearClsHead
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
-from torch import nn
 
 
 class TestImageClassifier:

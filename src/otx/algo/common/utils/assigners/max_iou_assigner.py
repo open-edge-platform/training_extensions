@@ -12,9 +12,10 @@ import copy
 from typing import TYPE_CHECKING, Callable
 
 import torch
+from torch import Tensor
+
 from otx.algo.common.utils.assigners import BboxOverlaps2D
 from otx.algo.common.utils.structures import AssignResult
-from torch import Tensor
 
 if TYPE_CHECKING:
     from otx.algo.utils.mmengine_utils import InstanceData

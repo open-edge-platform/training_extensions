@@ -5,6 +5,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from otx.core.exporter.visual_prompting import OTXVisualPromptingModelExporter
 from otx.core.types.export import OTXExportFormatType
 

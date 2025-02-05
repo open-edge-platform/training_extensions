@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+
 from otx.core.config.data import SubsetConfig
 from otx.core.types.transformer_libs import TransformLibType
 
 SKIP_MMLAB_TEST = False
 try:
     from mmaction.registry import TRANSFORMS
+
     from otx.core.data.transform_libs.mmaction import MMActionTransformLib
 except ImportError:
     SKIP_MMLAB_TEST = True

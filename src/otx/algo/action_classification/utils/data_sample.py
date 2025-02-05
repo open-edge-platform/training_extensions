@@ -11,6 +11,7 @@ from typing import Sequence, Union
 
 import numpy as np
 import torch
+
 from otx.algo.utils.mmengine_utils import InstanceData
 
 LABEL_TYPE = Union[torch.Tensor, np.ndarray, Sequence, int]

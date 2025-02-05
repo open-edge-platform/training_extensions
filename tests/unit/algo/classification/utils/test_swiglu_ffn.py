@@ -5,8 +5,9 @@
 """Copy from https://github.com/open-mmlab/mmpretrain/blob/main/tests/test_models/test_utils/test_swiglu_ffn.py."""
 
 import torch
-from otx.algo.classification.utils.swiglu_ffn import SwiGLUFFN, SwiGLUFFNFused
 from torch import nn
+
+from otx.algo.classification.utils.swiglu_ffn import SwiGLUFFN, SwiGLUFFNFused
 
 
 class TestSwiGLUFFN:

@@ -3,6 +3,7 @@
 #
 """Unit test for MonoDETR loss."""
 import torch
+
 from otx.algo.object_detection_3d.losses.monodetr_loss import MonoDETRCriterion
 
 

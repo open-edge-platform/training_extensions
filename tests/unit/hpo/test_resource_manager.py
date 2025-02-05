@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+
 from otx.core.types.device import DeviceType
 from otx.hpo import resource_manager as target_file
 from otx.hpo.resource_manager import (
