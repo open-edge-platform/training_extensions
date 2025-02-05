@@ -118,7 +118,6 @@
           "rules": []
         },
         "type": "INTEGER",
-
         "min_value": 1,
         "max_value": 512
       },
@@ -157,7 +156,6 @@
           "rules": []
         },
         "type": "FLOAT",
-
         "min_value": 1e-7,
         "max_value": 0.1,
         "step_size": null

@@ -199,7 +199,7 @@ Entrypoint
    We have defined this natural workflow, and the end result is that
    the user is provided with a trained model, a model that is available on the edge device,
    and an optimized model.
-   
+
 2. **Designing Engine Classes for a Natural Workflow**
 
    +--------------------------------+

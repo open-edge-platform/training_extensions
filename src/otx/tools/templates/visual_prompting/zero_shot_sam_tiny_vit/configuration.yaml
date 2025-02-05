@@ -38,7 +38,6 @@ learning_parameters:
       type: BOOLEAN
     train_batch_size:
       affects_outcome_of: TRAINING
-
       default_value: 1
       description:
         The number of training samples seen in each iteration of training.
@@ -64,7 +63,6 @@ pot_parameters:
   header: POT Parameters
   preset:
     affects_outcome_of: NONE
-
     default_value: Mixed
     description: Quantization preset that defines quantization scheme
     editable: true
@@ -84,7 +82,6 @@ pot_parameters:
     warning: null
   stat_subset_size:
     affects_outcome_of: NONE
-
     default_value: 300
     description: Number of data samples used for post-training optimization
     editable: true

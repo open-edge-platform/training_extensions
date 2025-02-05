@@ -3,7 +3,6 @@ dataset:
   header: Dataset Parameters
   num_workers:
     affects_outcome_of: NONE
-
     default_value: 8
     description:
       Increasing this value might improve training speed however it might
@@ -30,7 +29,6 @@ id: ""
 learning_parameters:
   backbone:
     affects_outcome_of: NONE
-
     default_value: resnet18
     description: Pre-trained backbone used for feature extraction
     editable: false
@@ -52,7 +50,6 @@ learning_parameters:
   header: Learning Parameters
   train_batch_size:
     affects_outcome_of: TRAINING
-
     default_value: 32
     description:
       The number of training samples seen in each iteration of training.
@@ -79,7 +76,6 @@ nncf_optimization:
   description: Optimization by NNCF
   enable_pruning:
     affects_outcome_of: NONE
-
     default_value: false
     description: Enable filter pruning algorithm
     editable: true
@@ -95,7 +91,6 @@ nncf_optimization:
     warning: null
   enable_quantization:
     affects_outcome_of: NONE
-
     default_value: true
     description: Enable quantization algorithm
     editable: true
@@ -112,7 +107,6 @@ nncf_optimization:
   header: Optimization by NNCF
   pruning_supported:
     affects_outcome_of: TRAINING
-
     default_value: false
     description: Whether filter pruning is supported
     editable: false
@@ -133,7 +127,6 @@ pot_parameters:
   header: POT Parameters
   preset:
     affects_outcome_of: NONE
-
     default_value: Performance
     description: Quantization preset that defines quantization scheme
     editable: true
@@ -153,7 +146,6 @@ pot_parameters:
     warning: null
   stat_subset_size:
     affects_outcome_of: NONE
-
     default_value: 300
     description: Number of data samples used for post-training optimization
     editable: true
