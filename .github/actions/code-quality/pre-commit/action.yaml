@@ -107,6 +107,7 @@ runs:
       env:
         SKIP: ${{ inputs.skip }}
       run: |
+        ruff check --show-files
         if [ -n "$SKIP" ]; then
           # Run specific hooks if skip parameter is provided
           pre-commit run --all-files --hook-stage="$SKIP"
