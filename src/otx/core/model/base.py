@@ -394,7 +394,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
                 ckpt_label_info = LabelInfo(
                     label_groups=ckpt_label_info.label_groups,
                     label_names=ckpt_label_info.label_names,
-                    label_ids=[str(i) for i in range(len(ckpt_label_info.label_names))],
+                    label_ids=ckpt_label_info.label_names,
                 )
             self._label_info = ckpt_label_info
 
