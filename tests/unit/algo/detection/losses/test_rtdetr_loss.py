@@ -5,6 +5,7 @@
 
 import pytest
 import torch
+
 from otx.algo.detection.losses.rtdetr_loss import DetrCriterion
 
 

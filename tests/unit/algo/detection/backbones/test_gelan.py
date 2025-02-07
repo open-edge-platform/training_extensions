@@ -4,10 +4,11 @@
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.detection.backbones.gelan import GELAN, GELANModule
 from otx.algo.detection.utils.utils import auto_pad
 from otx.algo.modules import Conv2dModule
-from torch import nn
 
 
 class TestGELAN:

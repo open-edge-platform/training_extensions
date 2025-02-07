@@ -3,9 +3,10 @@
 import pickle
 
 import pytest
-from otx.core.optimizer import OptimizerCallableSupportHPO
 from torch import nn
 from torch.optim import SGD
+
+from otx.core.optimizer import OptimizerCallableSupportHPO
 
 
 class TestOptimizerCallableSupportHPO:

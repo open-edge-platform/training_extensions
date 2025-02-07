@@ -3,6 +3,7 @@
 
 import pytest
 import torch
+
 from otx.algo.classification.heads import SemiSLLinearClsHead
 
 

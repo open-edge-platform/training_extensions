@@ -5,9 +5,10 @@
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.modules.drop import DropPath
 from otx.algo.modules.transformer import FFN, AdaptivePadding, PatchEmbed
-from torch import nn
 
 
 def test_adaptive_padding():

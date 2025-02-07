@@ -7,6 +7,7 @@ import itertools
 
 import pytest
 from datumaro import Dataset as DmDataset
+
 from otx.core.config.data import SamplerConfig, SubsetConfig
 from otx.core.data.factory import OTXDatasetFactory
 from otx.core.data.mem_cache import MemCacheHandlerSingleton

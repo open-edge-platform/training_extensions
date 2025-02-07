@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-from otx.algo.modules.padding import build_padding_layer
 from torch import nn
+
+from otx.algo.modules.padding import build_padding_layer
 
 
 def test_build_padding_layer():

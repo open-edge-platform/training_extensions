@@ -8,8 +8,9 @@ from __future__ import annotations
 import math
 
 import torch
-from otx.algo.object_detection_3d.utils.utils import NestedTensor
 from torch import nn
+
+from otx.algo.object_detection_3d.utils.utils import NestedTensor
 
 
 class PositionEmbeddingSine(nn.Module):

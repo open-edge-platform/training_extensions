@@ -4,6 +4,7 @@
 
 
 import torch
+
 from otx.algo.segmentation.litehrnet import LiteHRNet
 from otx.core.data.entity.base import ImageInfo
 

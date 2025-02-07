@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import torch
+
 from otx.algo.classification.utils.embed import resize_pos_embed
 
 

@@ -4,10 +4,11 @@ import pickle
 
 import pytest
 from lightning.pytorch.cli import ReduceLROnPlateau
-from otx.core.schedulers import SchedulerCallableSupportHPO
 from torch import nn
 from torch.optim import SGD
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
+
+from otx.core.schedulers import SchedulerCallableSupportHPO
 
 
 class TestSchedulerCallableSupportHPO:

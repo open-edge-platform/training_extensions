@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import torch
+
 from otx.algo.keypoint_detection.rtmpose import RTMPoseTiny
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetBatchPredEntity

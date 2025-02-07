@@ -4,8 +4,9 @@
 import inspect
 from pathlib import Path
 
-import otx
 import pytest
+
+import otx
 from otx.core.utils.imports import get_otx_root_path
 
 

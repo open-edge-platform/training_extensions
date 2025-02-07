@@ -3,6 +3,7 @@
 
 
 import pytest
+
 from otx.algo.action_classification.x3d import X3D
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 

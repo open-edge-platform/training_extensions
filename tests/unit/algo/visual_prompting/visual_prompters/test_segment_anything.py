@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 import torch
+from torch import Tensor, nn
+from torchvision import tv_tensors
+
 from otx.algo.visual_prompting.decoders.sam_mask_decoder import SAMMaskDecoder
 from otx.algo.visual_prompting.encoders.sam_image_encoder import SAMImageEncoder
 from otx.algo.visual_prompting.encoders.sam_prompt_encoder import SAMPromptEncoder
@@ -14,8 +17,6 @@ from otx.algo.visual_prompting.visual_prompters.segment_anything import (
     ZeroShotSegmentAnything,
 )
 from otx.core.data.entity.base import Points
-from torch import Tensor, nn
-from torchvision import tv_tensors
 
 
 class TestSegmentAnything:

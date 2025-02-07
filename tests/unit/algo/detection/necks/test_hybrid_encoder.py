@@ -4,6 +4,7 @@
 """Test of HybridEncoder."""
 
 import torch
+
 from otx.algo.detection.necks.hybrid_encoder import HybridEncoderModule
 
 

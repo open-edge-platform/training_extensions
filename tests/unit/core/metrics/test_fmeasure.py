@@ -8,6 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 import torch
+
 from otx.core.metrics.fmeasure import FMeasure, get_n_false_negatives
 from otx.core.types.label import LabelInfo
 

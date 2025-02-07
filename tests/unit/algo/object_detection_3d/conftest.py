@@ -5,11 +5,12 @@
 
 import pytest
 import torch
+from torchvision.transforms.v2 import Normalize, ToDtype
+
 from otx.core.config.data import SubsetConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.data.transform_libs.torchvision import Decode3DInputsAffineTransforms
 from otx.core.types.task import OTXTaskType
-from torchvision.transforms.v2 import Normalize, ToDtype
 
 
 @pytest.fixture()

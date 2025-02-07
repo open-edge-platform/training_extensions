@@ -7,9 +7,10 @@ from functools import partial
 
 import pytest
 import torch
-from otx.algo.modules.activation import Swish, build_activation_layer
 from torch import nn
 from torch.nn import functional
+
+from otx.algo.modules.activation import Swish, build_activation_layer
 
 
 def test_swish():

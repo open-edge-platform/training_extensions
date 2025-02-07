@@ -4,8 +4,9 @@
 
 import pytest
 import torch
-from otx.algo.detection.layers import ChannelAttention
 from torch.nn import AdaptiveAvgPool2d, Conv2d, Hardsigmoid
+
+from otx.algo.detection.layers import ChannelAttention
 
 
 class TestChannelAttention:

@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
+
 from otx.algo.common.utils import nms as target_file
 from otx.algo.common.utils.nms import NMSop
 

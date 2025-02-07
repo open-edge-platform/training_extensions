@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
+
 from otx.algo.common.utils.structures import AssignResult, SamplingResult
 from otx.utils.device import is_xpu_available
 

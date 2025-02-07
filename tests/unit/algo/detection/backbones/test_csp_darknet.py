@@ -8,10 +8,11 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/tests/test_mod
 
 import pytest
 import torch
-from otx.algo.detection.backbones.csp_darknet import CSPDarknetModule, Focus
 from torch import nn
 from torch.nn.modules import GroupNorm
 from torch.nn.modules.batchnorm import _BatchNorm
+
+from otx.algo.detection.backbones.csp_darknet import CSPDarknetModule, Focus
 
 
 def check_norm_state(modules, train_state):

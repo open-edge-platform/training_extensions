@@ -6,9 +6,10 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 import torch
+from torch import Tensor
+
 from otx.algo.detection.losses.yolov9_loss import BCELoss, BoxLoss, BoxMatcher, DFLoss, YOLOv9Criterion, calculate_iou
 from otx.algo.detection.utils.utils import Vec2Box
-from torch import Tensor
 
 
 @pytest.mark.parametrize(

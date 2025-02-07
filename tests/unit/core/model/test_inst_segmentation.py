@@ -5,6 +5,7 @@
 
 import pytest
 import torch
+
 from otx.algo.explain.explain_algo import feature_vector_fn
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel

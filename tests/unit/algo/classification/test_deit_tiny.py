@@ -4,6 +4,7 @@
 
 
 import pytest
+
 from otx.algo.classification.vit import (
     VisionTransformerForHLabelCls,
     VisionTransformerForMulticlassCls,

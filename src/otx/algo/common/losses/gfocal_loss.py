@@ -11,8 +11,9 @@ from __future__ import annotations
 from functools import partial
 
 import torch.nn.functional as F  # noqa: N812
-from otx.algo.common.losses.utils import weighted_loss
 from torch import Tensor, nn
+
+from otx.algo.common.losses.utils import weighted_loss
 
 
 @weighted_loss

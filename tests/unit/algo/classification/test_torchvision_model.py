@@ -3,6 +3,7 @@
 
 import pytest
 import torch
+
 from otx.algo.classification.classifier import ImageClassifier
 from otx.algo.classification.heads import SemiSLLinearClsHead
 from otx.algo.classification.torchvision_model import (

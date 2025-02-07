@@ -18,6 +18,7 @@ from otx.core.model.keypoint_detection import OTXKeypointDetectionModel
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+
     from otx.core.exporter.base import OTXModelExporter
     from otx.core.metrics import MetricCallable
     from otx.core.schedulers import LRSchedulerListCallable

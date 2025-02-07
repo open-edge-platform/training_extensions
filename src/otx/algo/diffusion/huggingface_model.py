@@ -11,14 +11,16 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from diffusers import StableDiffusionPipeline
 from lightning.fabric.loggers.tensorboard import TensorBoardLogger
+from torch import nn
+
 from otx.core.data.entity.diffusion import DiffusionBatchPredEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.exporter.diffusion import DiffusionOTXModelExporter
 from otx.core.model.diffusion import OTXDiffusionModel
-from torch import nn
 
 if TYPE_CHECKING:
     from diffusers.models.unets.unet_2d_condition import UNet2DConditionModel
+
     from otx.core.data.entity.diffusion import (
         DiffusionBatchDataEntity,
     )

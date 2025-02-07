@@ -4,6 +4,7 @@
 
 import pytest
 import torch
+
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.instance_segmentation.maskrcnn_tv import MaskRCNNTV
 from otx.algo.utils.support_otx_v1 import OTXv1Helper

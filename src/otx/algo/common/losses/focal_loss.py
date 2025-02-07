@@ -12,8 +12,9 @@ import warnings
 from typing import TYPE_CHECKING
 
 import torch
-from otx.algo.common.losses.utils import weight_reduce_loss
 from torch import nn
+
+from otx.algo.common.losses.utils import weight_reduce_loss
 
 if TYPE_CHECKING:
     from torch import Tensor

@@ -3,6 +3,7 @@
 
 import pytest
 import torch
+
 from otx.algo.classification.classifier import ImageClassifier
 from otx.algo.classification.mobilenet_v3 import (
     MobileNetV3ForHLabelCls,

@@ -12,9 +12,10 @@ import warnings
 from typing import Literal
 
 import torch
+from torch import Tensor, nn
+
 from otx.algo.common.losses.utils import weighted_loss
 from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
-from torch import Tensor, nn
 
 
 class GIoULoss(nn.Module):

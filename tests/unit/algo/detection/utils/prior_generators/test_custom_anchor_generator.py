@@ -4,6 +4,7 @@
 
 import pytest
 import torch
+
 from otx.algo.detection.utils.prior_generators import SSDAnchorGeneratorClustered
 
 

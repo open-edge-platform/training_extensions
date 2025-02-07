@@ -5,6 +5,7 @@ import math
 
 import pytest
 from lightning import Trainer
+
 from otx.algo.callbacks.unlabeled_loss_warmup import UnlabeledLossWarmUpCallback
 from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
 

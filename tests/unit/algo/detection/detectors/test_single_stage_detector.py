@@ -7,11 +7,12 @@ import re
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.detection.detectors.single_stage_detector import SingleStageDetector
 from otx.algo.detection.yolov9 import YOLOv9
 from otx.core.data.entity.detection import DetBatchDataEntity
 from otx.core.types import LabelInfo
-from torch import nn
 
 
 class TestSingleStageDetector:

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pytest
 import torch
+
 from otx.algo.common.losses import IoULoss
 
 

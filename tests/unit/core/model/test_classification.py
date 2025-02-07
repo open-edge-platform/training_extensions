@@ -9,9 +9,10 @@ from unittest.mock import create_autospec
 
 import pytest
 from lightning.pytorch.cli import ReduceLROnPlateau
+from torch.optim import Optimizer
+
 from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel, OTXMultilabelClsModel
 from otx.core.types.export import TaskLevelExportParameters
-from torch.optim import Optimizer
 
 SKIP_MMLAB_TEST = False
 try:

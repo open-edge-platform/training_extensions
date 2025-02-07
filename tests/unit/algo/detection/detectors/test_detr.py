@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 import torchvision
+
 from otx.algo.detection.backbones import PResNet
 from otx.algo.detection.heads import RTDETRTransformer
 from otx.algo.detection.losses import DetrCriterion

@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from datumaro import Dataset as DmDataset
 from model_api.tilers import Tiler
+
 from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
 from otx.core.config.hpo import HpoConfig
 from otx.core.data.module import OTXDataModule
@@ -15,7 +16,6 @@ from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType
 from otx.engine import Engine
 from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
-
 from tests.test_helpers import CommonSemanticSegmentationExporter
 
 

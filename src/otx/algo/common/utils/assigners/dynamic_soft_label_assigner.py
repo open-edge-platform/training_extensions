@@ -15,8 +15,9 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 import torch
 import torch.nn.functional
-from otx.algo.common.utils.structures import AssignResult
 from torch import Tensor
+
+from otx.algo.common.utils.structures import AssignResult
 
 from .iou2d_calculator import BboxOverlaps2D
 

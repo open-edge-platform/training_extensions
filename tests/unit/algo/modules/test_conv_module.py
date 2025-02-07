@@ -5,9 +5,10 @@
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
 from otx.algo.modules.norm import build_norm_layer
-from torch import nn
 
 
 def test_conv_module():

@@ -7,6 +7,7 @@ from functools import partial
 from pathlib import Path
 
 import pytest
+
 from otx.utils.utils import (
     check_pickleable,
     find_file_recursively,

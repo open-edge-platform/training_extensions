@@ -7,6 +7,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/tests/test_mod
 """
 
 import torch
+
 from otx.algo.detection.necks.yolox_pafpn import YOLOXPAFPNModule
 from otx.algo.modules.conv_module import DepthwiseSeparableConvModule
 

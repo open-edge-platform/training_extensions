@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import pytest
 import torch
+
 from otx.core.metrics.pck import PCKMeasure
 from otx.core.types.label import LabelInfo
 

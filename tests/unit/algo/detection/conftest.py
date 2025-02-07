@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of custom algo modules of OTX Detection task."""
 import pytest
+from torchvision.transforms.v2 import Resize
+
 from otx.core.config.data import SubsetConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.types.task import OTXTaskType
-from torchvision.transforms.v2 import Resize
 
 
 @pytest.fixture()

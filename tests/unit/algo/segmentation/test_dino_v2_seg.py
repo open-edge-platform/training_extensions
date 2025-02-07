@@ -4,9 +4,10 @@
 
 import pytest
 import torch
+from torch._dynamo.testing import CompileCounter
+
 from otx.algo.segmentation.dino_v2_seg import DinoV2Seg
 from otx.core.exporter.base import OTXModelExporter
-from torch._dynamo.testing import CompileCounter
 
 
 class TestDinoV2Seg:

@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from otx.core.exporter.exportable_code import demo
 
 

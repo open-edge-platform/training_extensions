@@ -3,6 +3,7 @@
 
 import pytest
 import torch
+
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.diffusion import (
     DiffusionBatchDataEntity,
@@ -11,6 +12,7 @@ from otx.core.data.entity.diffusion import (
 SKIP_TRANSFORMERS_TEST = False
 try:
     from diffusers import StableDiffusionPipeline
+
     from otx.algo.diffusion.huggingface_model import HuggingFaceModelForDiffusion
 except ImportError:
     SKIP_TRANSFORMERS_TEST = True

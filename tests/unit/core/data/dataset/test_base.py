@@ -6,6 +6,7 @@ from unittest import mock
 import numpy as np
 import pytest
 from datumaro.components.media import Image
+
 from otx.core.data.dataset.base import OTXDataset
 
 

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+
 from otx.core.config.data import SubsetConfig
 from otx.core.data.entity.segmentation import SegDataEntity
 from otx.core.types.transformer_libs import TransformLibType
@@ -11,6 +12,7 @@ from otx.core.types.transformer_libs import TransformLibType
 SKIP_MMLAB_TEST = False
 try:
     from mmseg.registry import TRANSFORMS
+
     from otx.core.data.transform_libs.mmcv import LoadImageFromFile
     from otx.core.data.transform_libs.mmseg import LoadAnnotations, MMSegTransformLib, PackSegInputs
 except ImportError:

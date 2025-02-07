@@ -339,6 +339,9 @@ target-version = "py38"
 # Enumerate all fixed violations.
 show-fixes = true
 
+# Allow imports relative to the "src" and "tests" directories.
+src = ["src", "tests"]
+
 [tool.ruff.lint.flake8-bugbear]
 # Allow default arguments like, e.g., `data: List[str] = fastapi.Query(None)`.
 extend-immutable-calls = [

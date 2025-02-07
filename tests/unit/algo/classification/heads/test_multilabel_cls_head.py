@@ -6,9 +6,10 @@ from __future__ import annotations
 
 import pytest
 import torch
+from torch import nn
+
 from otx.algo.classification.heads import MultiLabelLinearClsHead, MultiLabelNonLinearClsHead
 from otx.core.data.entity.base import ImageInfo
-from torch import nn
 
 
 @pytest.fixture()

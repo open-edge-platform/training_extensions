@@ -8,9 +8,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from datumaro import Dataset as DmDataset
+from torchvision.transforms.v2 import Identity, Transform
+
 from otx.core.data.dataset.object_detection_3d import OTX3DObjectDetectionDataset
 from otx.core.data.entity.base import ImageInfo
-from torchvision.transforms.v2 import Identity, Transform
 
 
 class TestOTXObjectDetection3DDataset:

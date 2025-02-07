@@ -4,11 +4,12 @@
 
 import pytest
 import torch
+from torchvision import tv_tensors
+
 from otx.algo.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from otx.algo.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
 from otx.core.data.entity.base import BboxInfo, ImageInfo
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
-from torchvision import tv_tensors
 
 
 class TestRTMCCHead:

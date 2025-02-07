@@ -3,6 +3,7 @@
 """Test of OTX RTMDetInst architecture."""
 
 import torch
+
 from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInst
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 

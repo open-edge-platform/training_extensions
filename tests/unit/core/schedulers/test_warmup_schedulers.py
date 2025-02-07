@@ -3,10 +3,11 @@
 
 import pytest
 from lightning.pytorch.cli import ReduceLROnPlateau
-from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
 from torch import nn
 from torch.optim.lr_scheduler import StepLR
 from torch.optim.sgd import SGD
+
+from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
 
 
 @pytest.fixture()

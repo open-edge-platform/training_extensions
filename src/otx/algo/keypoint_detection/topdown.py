@@ -11,8 +11,9 @@ from otx.algo.modules.base_module import BaseModule
 if TYPE_CHECKING:
     import numpy as np
     import torch
-    from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
     from torch import Tensor, nn
+
+    from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
 
 
 class TopdownPoseEstimator(BaseModule):

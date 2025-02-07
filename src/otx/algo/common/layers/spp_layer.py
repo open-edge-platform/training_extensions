@@ -12,11 +12,12 @@ from functools import partial
 from typing import Callable
 
 import torch
+from torch import Tensor, nn
+
 from otx.algo.modules.activation import Swish, build_activation_layer
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.modules.conv_module import Conv2dModule
 from otx.algo.modules.norm import build_norm_layer
-from torch import Tensor, nn
 
 
 class SPPBottleneck(BaseModule):

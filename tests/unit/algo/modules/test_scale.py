@@ -3,6 +3,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # https://github.com/open-mmlab/mmcv/blob/main/tests/test_cnn/test_scale.py
 import torch
+
 from otx.algo.modules.scale import Scale
 
 

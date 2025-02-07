@@ -4,6 +4,7 @@
 
 import pytest
 import torch
+
 from otx.algo.instance_segmentation.heads import MaskDINOHead
 from otx.algo.instance_segmentation.maskdino import MaskDINO
 from otx.algo.utils.mmengine_utils import load_from_http

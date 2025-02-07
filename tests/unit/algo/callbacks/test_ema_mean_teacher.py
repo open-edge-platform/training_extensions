@@ -4,6 +4,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from otx.algo.callbacks.ema_mean_teacher import EMAMeanTeacher
 
 

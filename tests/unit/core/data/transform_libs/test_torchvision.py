@@ -12,6 +12,10 @@ import numpy as np
 import pytest
 import torch
 from datumaro import Polygon
+from torch import LongTensor
+from torchvision import tv_tensors
+from torchvision.transforms.v2 import functional as F  # noqa: N812
+
 from otx.core.data.entity.action_classification import ActionClsDataEntity
 from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity, VideoInfo
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
@@ -39,9 +43,6 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
-from torch import LongTensor
-from torchvision import tv_tensors
-from torchvision.transforms.v2 import functional as F  # noqa: N812
 
 if TYPE_CHECKING:
     from otx.core.data.entity.classification import MulticlassClsBatchDataEntity, MulticlassClsDataEntity

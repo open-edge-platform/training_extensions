@@ -4,9 +4,10 @@
 
 import pytest
 import torch
+from torch._dynamo.testing import CompileCounter
+
 from otx.algo.segmentation.segnext import SegNext
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from torch._dynamo.testing import CompileCounter
 
 
 class TestSegNext:

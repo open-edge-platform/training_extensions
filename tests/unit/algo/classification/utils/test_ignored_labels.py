@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import torch
+
 from otx.algo.classification.utils.ignored_labels import get_valid_label_mask
 from otx.core.data.entity.base import ImageInfo
 

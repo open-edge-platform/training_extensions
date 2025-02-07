@@ -5,17 +5,19 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
+from torch._dynamo.testing import CompileCounter
+
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
-from torch._dynamo.testing import CompileCounter
 
 SKIP_TRANSFORMERS_TEST = False
 try:
-    from otx.algo.segmentation import huggingface_model as target_file
-    from otx.algo.segmentation.huggingface_model import HuggingFaceModelForSegmentation
     from transformers.modeling_outputs import SemanticSegmenterOutput
     from transformers.models.segformer.image_processing_segformer import SegformerImageProcessor
     from transformers.models.segformer.modeling_segformer import SegformerForSemanticSegmentation
+
+    from otx.algo.segmentation import huggingface_model as target_file
+    from otx.algo.segmentation.huggingface_model import HuggingFaceModelForSegmentation
 except ImportError:
     SKIP_TRANSFORMERS_TEST = True
 

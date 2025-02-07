@@ -5,6 +5,7 @@ import os
 
 import pytest
 from omegaconf import DictConfig
+
 from otx.core.utils.build import get_default_num_async_infer_requests
 
 SKIP_MMLAB_TEST = False

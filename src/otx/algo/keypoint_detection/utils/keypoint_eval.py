@@ -8,6 +8,7 @@ from itertools import product
 
 import cv2
 import numpy as np
+
 from otx.core.metrics.pck import keypoint_pck_accuracy
 
 

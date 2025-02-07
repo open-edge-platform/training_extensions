@@ -7,10 +7,11 @@ from __future__ import annotations
 import math
 
 import torch
-from otx.algo.keypoint_detection.utils.scale_norm import ScaleNorm
-from otx.algo.modules.drop import DropPath
 from torch import nn
 from torch.nn import functional
+
+from otx.algo.keypoint_detection.utils.scale_norm import ScaleNorm
+from otx.algo.modules.drop import DropPath
 
 
 def rope(x: torch.Tensor, dim: int | list[int]) -> torch.Tensor:

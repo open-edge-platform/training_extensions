@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import openvino.runtime as ov
 import pytest
+
 from otx.core.data.entity.base import OTXBatchPredEntity
 from otx.engine import Engine
 

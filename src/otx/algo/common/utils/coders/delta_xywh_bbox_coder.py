@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import numpy as np
 import torch
-from otx.algo.detection.utils.utils import clip_bboxes
 from torch import Tensor
+
+from otx.algo.detection.utils.utils import clip_bboxes
 
 from .base_bbox_coder import BaseBBoxCoder
 

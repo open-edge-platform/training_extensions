@@ -4,12 +4,13 @@
 
 import pytest
 import torch
+from torch._dynamo.testing import CompileCounter
+
 from otx.algo.detection.atss import ATSS
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.types.export import TaskLevelExportParameters
-from torch._dynamo.testing import CompileCounter
 
 
 class TestATSS:

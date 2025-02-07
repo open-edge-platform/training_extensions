@@ -6,6 +6,7 @@
 import sys
 
 import atheris
+
 from otx.cli import main as cli_main
 
 from .helper import FuzzingHelper

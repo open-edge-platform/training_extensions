@@ -5,6 +5,7 @@ import copy
 import math
 
 import pytest
+
 from otx.hpo.search_space import SearchSpace, SingleSearchSpace
 
 ALL_TYPE = ["uniform", "loguniform", "quniform", "qloguniform", "choice"]

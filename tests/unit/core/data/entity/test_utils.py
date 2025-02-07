@@ -3,6 +3,7 @@
 """Unit tests of utils for data entity."""
 
 import torch
+
 from otx.core.data.entity.base import ImageInfo, OTXBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 

@@ -8,8 +8,9 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 import yaml
-from otx.cli import OTXCLI, main
 from rich.console import Console
+
+from otx.cli import OTXCLI, main
 
 
 class TestOTXCLI:

@@ -3,6 +3,7 @@
 """Test of ClassIncrementalMixin."""
 
 import torch
+
 from otx.algo.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, GIoULoss
 from otx.algo.common.utils.coders.delta_xywh_bbox_coder import DeltaXYWHBBoxCoder
 from otx.algo.detection.atss import ATSS

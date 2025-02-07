@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 import torch
+
 from otx.algo.detection.heads.yolo_head import (
     Anchor2Vec,
     CBFuse,

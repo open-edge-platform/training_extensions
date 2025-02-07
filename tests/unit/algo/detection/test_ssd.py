@@ -7,11 +7,12 @@ from pathlib import Path
 import pytest
 import torch
 from lightning import Trainer
+from torch._dynamo.testing import CompileCounter
+
 from otx.algo.detection.ssd import SSD
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.types.export import TaskLevelExportParameters
-from torch._dynamo.testing import CompileCounter
 
 
 class TestSSD:

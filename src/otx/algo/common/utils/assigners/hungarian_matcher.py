@@ -8,11 +8,12 @@ from __future__ import annotations
 from functools import partial
 
 import torch
-from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
-from otx.algo.common.utils.utils import sample_point
 from scipy.optimize import linear_sum_assignment
 from torch import Tensor, nn
 from torchvision.ops import box_convert
+
+from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
+from otx.algo.common.utils.utils import sample_point
 
 
 def pair_wise_dice_loss(inputs: Tensor, labels: Tensor) -> Tensor:

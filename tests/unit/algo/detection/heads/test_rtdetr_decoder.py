@@ -5,6 +5,7 @@
 
 import pytest
 import torch
+
 from otx.algo.detection.heads.rtdetr_decoder import RTDETRTransformerModule
 
 

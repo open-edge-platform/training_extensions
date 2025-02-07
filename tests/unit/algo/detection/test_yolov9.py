@@ -6,12 +6,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 import torch
+from torch._dynamo.testing import CompileCounter
+
 from otx.algo.detection.backbones.gelan import GELANModule
 from otx.algo.detection.heads.yolo_head import YOLOHeadModule
 from otx.algo.detection.necks.yolo_neck import YOLONeckModule
 from otx.algo.detection.yolov9 import YOLOv9
 from otx.core.exporter.native import OTXNativeModelExporter
-from torch._dynamo.testing import CompileCounter
 
 
 class TestYOLOv9:

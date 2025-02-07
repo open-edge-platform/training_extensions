@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+
 from otx.core.config.data import SubsetConfig
 from otx.core.data.entity.base import ImageInfo, OTXDataEntity
 from otx.core.types.transformer_libs import TransformLibType
@@ -11,6 +12,7 @@ from otx.core.types.transformer_libs import TransformLibType
 SKIP_MMLAB_TEST = False
 try:
     from mmcv.transforms.builder import TRANSFORMS
+
     from otx.core.data.transform_libs.mmcv import LoadImageFromFile, MMCVTransformLib
 except ImportError:
     SKIP_MMLAB_TEST = True
