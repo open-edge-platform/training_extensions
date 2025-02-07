@@ -24,7 +24,6 @@ learning_parameters:
     warning:
       Increasing this value may cause the system to use more memory than available,
       potentially causing out of memory errors, please update with caution.
-    auto_hpo_state: NOT_POSSIBLE
   description: Learning Parameters
   header: Learning Parameters
   learning_rate:
@@ -46,11 +45,8 @@ learning_parameters:
     value: 0.001
     visible_in_ui: true
     warning: null
-    auto_hpo_state: NOT_POSSIBLE
   learning_rate_warmup_iters:
     affects_outcome_of: TRAINING
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 100
     description:
       In this periods of initial training iterations, the model will be trained in low learning rate,
@@ -71,8 +67,6 @@ learning_parameters:
     warning: null
   num_iters:
     affects_outcome_of: TRAINING
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 200
     description: Maximum number of epochs to train a model.
       Increasing this value may result in longer training, but potentially in a more robust model.
@@ -92,8 +86,6 @@ learning_parameters:
     warning: null
   num_workers:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 2
     description:
       Increasing this value might improve training speed however it might

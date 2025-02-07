@@ -22,7 +22,6 @@ from lightning.pytorch.plugins.precision import MixedPrecision
 
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
-from otx.core.config.hpo import HpoConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel, OVModel
 from otx.core.types import PathLike
@@ -35,7 +34,6 @@ from otx.utils.device import is_xpu_available
 from otx.utils.utils import measure_flops
 
 from .adaptive_bs import adapt_batch_size
-from .hpo import execute_hpo, update_hyper_parameter
 from .utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
 if TYPE_CHECKING:
@@ -166,8 +164,6 @@ class Engine:
         logger: Logger | Iterable[Logger] | bool | None = None,
         resume: bool = False,
         metric: MetricCallable | None = None,
-        run_hpo: bool = False,
-        hpo_config: HpoConfig = HpoConfig(),  # noqa: B008 https://github.com/omni-us/jsonargparse/issues/423
         checkpoint: PathLike | None = None,
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
         **kwargs,
@@ -187,8 +183,6 @@ class Engine:
             resume (bool, optional): If True, tries to resume training from existing checkpoint.
             metric (MetricCallable | None): If not None, it will override `OTXModel.metric_callable` with the given
                 metric callable. It will temporarilly change the evaluation metric for the validation and test.
-            run_hpo (bool, optional): If True, optimizer hyper parameters before training a model.
-            hpo_config (HpoConfig | None, optional): Configuration for HPO.
             checkpoint (PathLike | None, optional): Path to the checkpoint file. Defaults to None.
             adaptive_bs (Literal["None", "Safe", "Full"]):
                 Change the actual batch size depending on the current GPU status.
@@ -238,14 +232,6 @@ class Engine:
 
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
-
-        if run_hpo:
-            best_config, best_trial_weight = execute_hpo(engine=self, **locals())
-            if best_config is not None:
-                update_hyper_parameter(self, best_config)
-            if best_trial_weight is not None:
-                checkpoint = best_trial_weight
-                resume = True
 
         if seed is not None:
             seed_everything(seed, workers=True)

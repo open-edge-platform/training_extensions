@@ -39,12 +39,12 @@ from otx.core.data.entity.base import (
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import MetricInput, NullMetricCallable
-from otx.core.optimizer.callable import OptimizerCallableSupportHPO
+from otx.core.optimizer.callable import OptimizerCallableSupportAdaptiveBS
 from otx.core.schedulers import (
     LinearWarmupScheduler,
     LinearWarmupSchedulerCallable,
     LRSchedulerListCallable,
-    SchedulerCallableSupportHPO,
+    SchedulerCallableSupportAdaptiveBS,
 )
 from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
 from otx.core.types.label import LabelInfo, LabelInfoTypes, NullLabelInfo
@@ -388,16 +388,16 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         """Callback on loading checkpoint."""
         super().on_load_checkpoint(checkpoint)
 
-        if ckpt_label_info := checkpoint.get("label_info", None):
+        if ckpt_label_info := checkpoint.get("label_info"):
             self._label_info = ckpt_label_info
 
-        if ckpt_tile_config := checkpoint.get("tile_config", None):
+        if ckpt_tile_config := checkpoint.get("tile_config"):
             self.tile_config = ckpt_tile_config
 
     def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
         """Load state dict incrementally."""
         ckpt_label_info: LabelInfo | None = (
-            ckpt.get("label_info", None) if not is_ckpt_from_otx_v1(ckpt) else self.get_ckpt_label_info_v1(ckpt)
+            ckpt.get("label_info") if not is_ckpt_from_otx_v1(ckpt) else self.get_ckpt_label_info_v1(ckpt)
         )
 
         if ckpt_label_info is None:
@@ -422,9 +422,9 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             )
 
         # Model weights
-        state_dict: dict[str, Any] = ckpt.get("state_dict", None) if not is_ckpt_from_otx_v1(ckpt) else ckpt
+        state_dict: dict[str, Any] = ckpt.get("state_dict", {}) if not is_ckpt_from_otx_v1(ckpt) else ckpt
 
-        if state_dict is None:
+        if state_dict is None or state_dict == {}:
             msg = "Checkpoint should have `state_dict`."
             raise ValueError(msg, state_dict)
 
@@ -777,21 +777,21 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
 
         return super().lr_scheduler_step(scheduler=scheduler, metric=metric)
 
-    def patch_optimizer_and_scheduler_for_hpo(self) -> None:
-        """Patch optimizer and scheduler for hyperparameter optimization and adaptive batch size.
+    def patch_optimizer_and_scheduler_for_adaptive_bs(self) -> None:
+        """Patch optimizer and scheduler for adaptive batch size.
 
         This is inplace function changing inner states (`optimizer_callable` and `scheduler_callable`).
         Both will be changed to be picklable. In addition, `optimizer_callable` is changed
         to make its hyperparameters gettable.
         """
-        if not isinstance(self.optimizer_callable, OptimizerCallableSupportHPO):
-            self.optimizer_callable = OptimizerCallableSupportHPO.from_callable(self.optimizer_callable)
+        if not isinstance(self.optimizer_callable, OptimizerCallableSupportAdaptiveBS):
+            self.optimizer_callable = OptimizerCallableSupportAdaptiveBS.from_callable(self.optimizer_callable)
 
-        if not isinstance(self.scheduler_callable, SchedulerCallableSupportHPO) and not isinstance(
+        if not isinstance(self.scheduler_callable, SchedulerCallableSupportAdaptiveBS) and not isinstance(
             self.scheduler_callable,
-            LinearWarmupSchedulerCallable,  # LinearWarmupSchedulerCallable natively supports HPO
+            LinearWarmupSchedulerCallable,  # LinearWarmupSchedulerCallable natively supports adaptive batch size
         ):
-            self.scheduler_callable = SchedulerCallableSupportHPO.from_callable(self.scheduler_callable)
+            self.scheduler_callable = SchedulerCallableSupportAdaptiveBS.from_callable(self.scheduler_callable)
 
     @property
     def tile_config(self) -> TileConfig:

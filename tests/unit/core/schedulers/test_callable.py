@@ -8,10 +8,10 @@ from torch import nn
 from torch.optim import SGD
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 
-from otx.core.schedulers import SchedulerCallableSupportHPO
+from otx.core.schedulers import SchedulerCallableSupportAdaptiveBS
 
 
-class TestSchedulerCallableSupportHPO:
+class TestSchedulerCallableSupportAdaptiveBS:
     @pytest.fixture()
     def fxt_optimizer(self):
         model = nn.Linear(10, 10)
@@ -31,7 +31,7 @@ class TestSchedulerCallableSupportHPO:
 
     def test_succeed(self, fxt_scheduler_cls_and_kwargs, fxt_optimizer):
         scheduler_cls, scheduler_kwargs = fxt_scheduler_cls_and_kwargs
-        scheduler_callable = SchedulerCallableSupportHPO(
+        scheduler_callable = SchedulerCallableSupportAdaptiveBS(
             scheduler_cls=scheduler_cls,
             scheduler_kwargs=scheduler_kwargs,
         )
@@ -47,7 +47,7 @@ class TestSchedulerCallableSupportHPO:
 
     def test_from_callable(self, fxt_scheduler_cls_and_kwargs, fxt_optimizer):
         scheduler_cls, scheduler_kwargs = fxt_scheduler_cls_and_kwargs
-        scheduler_callable = SchedulerCallableSupportHPO.from_callable(
+        scheduler_callable = SchedulerCallableSupportAdaptiveBS.from_callable(
             func=lambda optimizer: scheduler_cls(optimizer, **scheduler_kwargs),
         )
         scheduler = scheduler_callable(fxt_optimizer)
@@ -62,7 +62,7 @@ class TestSchedulerCallableSupportHPO:
 
     def test_picklable(self, fxt_scheduler_cls_and_kwargs, fxt_optimizer):
         scheduler_cls, scheduler_kwargs = fxt_scheduler_cls_and_kwargs
-        scheduler_callable = SchedulerCallableSupportHPO(
+        scheduler_callable = SchedulerCallableSupportAdaptiveBS(
             scheduler_cls=scheduler_cls,
             scheduler_kwargs=scheduler_kwargs,
         )

@@ -6,10 +6,10 @@ import pytest
 from torch import nn
 from torch.optim import SGD
 
-from otx.core.optimizer import OptimizerCallableSupportHPO
+from otx.core.optimizer import OptimizerCallableSupportAdaptiveBS
 
 
-class TestOptimizerCallableSupportHPO:
+class TestOptimizerCallableSupportAdaptiveBS:
     @pytest.fixture()
     def fxt_params(self):
         model = nn.Linear(10, 10)
@@ -27,7 +27,7 @@ class TestOptimizerCallableSupportHPO:
         return NotOptimizer
 
     def test_succeed(self, fxt_optimizer_cls, fxt_params):
-        optimizer_callable = OptimizerCallableSupportHPO(
+        optimizer_callable = OptimizerCallableSupportAdaptiveBS(
             optimizer_cls=fxt_optimizer_cls,
             optimizer_kwargs={
                 "lr": 0.1,
@@ -48,7 +48,7 @@ class TestOptimizerCallableSupportHPO:
         assert all(param["weight_decay"] == 1e-4 for param in fxt_params)
 
     def test_from_callable(self, fxt_params):
-        optimizer_callable = OptimizerCallableSupportHPO.from_callable(
+        optimizer_callable = OptimizerCallableSupportAdaptiveBS.from_callable(
             func=lambda params: SGD(params, lr=0.1, momentum=0.9, weight_decay=1e-4),
         )
         optimizer = optimizer_callable(fxt_params)
@@ -64,7 +64,7 @@ class TestOptimizerCallableSupportHPO:
         assert all(param["weight_decay"] == 1e-4 for param in fxt_params)
 
     def test_picklable(self, fxt_optimizer_cls):
-        optimizer_callable = OptimizerCallableSupportHPO(
+        optimizer_callable = OptimizerCallableSupportAdaptiveBS(
             optimizer_cls=fxt_optimizer_cls,
             optimizer_kwargs={
                 "lr": 0.1,
@@ -76,6 +76,6 @@ class TestOptimizerCallableSupportHPO:
         pickled = pickle.dumps(optimizer_callable)
         unpickled = pickle.loads(pickled)  # noqa: S301
 
-        assert isinstance(unpickled, OptimizerCallableSupportHPO)
+        assert isinstance(unpickled, OptimizerCallableSupportAdaptiveBS)
         assert optimizer_callable.optimizer_path == unpickled.optimizer_path
         assert optimizer_callable.optimizer_kwargs == unpickled.optimizer_kwargs

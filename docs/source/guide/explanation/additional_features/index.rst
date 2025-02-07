@@ -7,7 +7,6 @@ Additional Features
    :maxdepth: 1
 
    models_optimization
-   hpo
    auto_configuration
    adaptive_training
    xai

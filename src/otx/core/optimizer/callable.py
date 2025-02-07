@@ -1,6 +1,7 @@
-# Copyright (C) 2024 Intel Corporation
+"""Optimizer callable to support adaptive batch size."""
+
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Optimizer callable to support hyper-parameter optimization (HPO) algorithm."""
 
 from __future__ import annotations
 
@@ -15,11 +16,11 @@ if TYPE_CHECKING:
     from torch.optim.optimizer import params_t
 
 
-class OptimizerCallableSupportHPO:
-    """Optimizer callable supports OTX hyper-parameter optimization (HPO) algorithm.
+class OptimizerCallableSupportAdaptiveBS:
+    """Optimizer callable supports OTX adaptive batch size.
 
     It makes OptimizerCallable pickelable and accessible to parameters.
-    It is used for HPO and adaptive batch size.
+    It is used for adaptive batch size.
 
     Args:
         optimizer_cls: Optimizer class type or string class import path. See examples for details.
@@ -35,7 +36,7 @@ class OptimizerCallableSupportHPO:
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,
-            optimizer=OptimizerCallableSupportHPO(
+            optimizer=OptimizerCallableSupportAdaptiveBS(
                 optimizer_cls=SGD,
                 optimizer_kwargs={
                     "lr": 0.1,
@@ -53,7 +54,7 @@ class OptimizerCallableSupportHPO:
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,
-            optimizer=OptimizerCallableSupportHPO(
+            optimizer=OptimizerCallableSupportAdaptiveBS(
                 optimizer_cls="torch.optim.SGD",
                 optimizer_kwargs={
                     "lr": 0.1,
@@ -97,14 +98,14 @@ class OptimizerCallableSupportHPO:
         )
 
     @classmethod
-    def from_callable(cls, func: OptimizerCallable) -> OptimizerCallableSupportHPO:
+    def from_callable(cls, func: OptimizerCallable) -> OptimizerCallableSupportAdaptiveBS:
         """Create this class instance from an existing optimizer callable."""
         dummy_params = [nn.Parameter()]
         optimizer = func(dummy_params)
 
         param_group = next(iter(optimizer.param_groups))
 
-        return OptimizerCallableSupportHPO(
+        return OptimizerCallableSupportAdaptiveBS(
             optimizer_cls=optimizer.__class__,
             optimizer_kwargs={key: value for key, value in param_group.items() if key != "params"},
         )
