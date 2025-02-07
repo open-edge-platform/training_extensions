@@ -13,8 +13,10 @@ on:
 permissions: {}
 
 jobs:
-  Trivy:
+  Trivy-Scan-Vuln:
     runs-on: ubuntu-22.04
+    permissions:
+      security-events: write
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -31,36 +33,24 @@ jobs:
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
         with:
           scan-type: fs
+          format: "sarif"
           scan-ref: requirements.txt
           scanners: vuln
-          output: trivy-results-vuln.txt
+          output: trivy-results-vuln.sarif
 
-      - name: Run Trivy Scan (dockerfile and secrets)
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+      - name: Upload SARIF file
+        if: ${{ always() }}
+        uses: github/codeql-action/upload-sarif@17a820bf2e43b47be2c72b39cc905417bc1ab6d0 # v3.28.8
         with:
-          scan-type: fs
-          scan-ref: .
-          scanners: misconfig,secret
-          output: trivy-results-misconfig.txt
-          skip-setup-trivy: true
-
-      - name: Trivy Scanning (spdx)
-        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # 0.29.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: spdx-json
-          output: trivy-results-spdx.json
-          skip-setup-trivy: true
+          sarif_file: "trivy-results-vuln.sarif"
 
       - name: Upload Trivy results artifact
+        if: ${{ always() }}
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
-          name: trivy-results
-          path: "${{ github.workspace }}/trivy-results-*"
+          name: trivy-vuln-results
+          path: "${{ github.workspace }}/trivy-results-vuln.sarif"
           retention-days: 7
-        # Use always() to always run this step to publish scan results when there are test failures
-        if: ${{ always() }}
 
       - name: Upload deps list
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
@@ -70,8 +60,41 @@ jobs:
           path: "${{ github.workspace }}/requirements.txt"
           retention-days: 7
 
+  Trivy-Scan-Misconfig:
+    runs-on: ubuntu-22.04
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Run Trivy Scan (dockerfile and secrets)
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        with:
+          scan-type: fs
+          format: "sarif"
+          scan-ref: .
+          scanners: misconfig,secret
+          output: trivy-results-misconfig.sarif
+
+      - name: Upload SARIF file
+        if: ${{ always() }}
+        uses: github/codeql-action/upload-sarif@17a820bf2e43b47be2c72b39cc905417bc1ab6d0 # v3.28.8
+        with:
+          sarif_file: "trivy-results-misconfig.sarif"
+
+      - name: Upload Trivy results artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: trivy-misconfig-results
+          path: "${{ github.workspace }}/trivy-results-misconfig.sarif"
+          retention-days: 7
+
   Bandit:
     runs-on: ubuntu-22.04
+    permissions:
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -87,14 +110,20 @@ jobs:
           rm /tmp/requirements.txt
       - name: Bandit Scanning
         run: tox -e bandit-scan
+
+      - name: Upload SARIF file
+        if: ${{ always() }}
+        uses: github/codeql-action/upload-sarif@17a820bf2e43b47be2c72b39cc905417bc1ab6d0 # v3.28.8
+        with:
+          sarif_file: .tox/bandit-results.sarif
+
       - name: Upload Bandit artifact
+        if: ${{ always() }}
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: bandit-results
-          path: .tox/bandit-results.txt
+          path: .tox/bandit-results.sarif
           retention-days: 7
-        # Use always() to always run this step to publish scan results when there are test failures
-        if: ${{ always() }}
 
   CodeQL:
     name: Analyze (${{ matrix.language }})
@@ -149,7 +178,7 @@ jobs:
           retention-days: 7
 
   Summarize:
-    needs: [Trivy, Bandit, CodeQL]
+    needs: [Trivy-Scan-Vuln, Trivy-Scan-Misconfig, Bandit, CodeQL]
     if: always()
     runs-on: ubuntu-22.04
     steps:
