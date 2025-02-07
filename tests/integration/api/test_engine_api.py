@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from datumaro import Dataset as DmDataset
 from model_api.tilers import Tiler
+
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType

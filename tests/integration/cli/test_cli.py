@@ -444,7 +444,6 @@ def test_otx_ov_test(
     assert len(metric_result) > 0
 
 
-
 @pytest.mark.parametrize("task", pytest.TASK_LIST)
 @pytest.mark.parametrize("bs_adapt_type", ["Safe", "Full"])
 def test_otx_adaptive_bs_e2e(

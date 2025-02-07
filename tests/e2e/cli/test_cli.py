@@ -10,7 +10,6 @@ import pytest
 import yaml
 
 from otx.core.types.task import OTXTaskType
-from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK
 from tests.e2e.cli.utils import run_main
 from tests.utils import ExportCase2Test
 
@@ -412,4 +411,3 @@ def test_otx_explain_e2e_cli(
             actual_sal_vals = (actual_sal_vals[:10, 0, 0]).astype(np.int16)
         ref_sal_vals = reference_sal_vals[test_case_name][0]
         assert np.max(np.abs(actual_sal_vals - ref_sal_vals) <= sal_diff_thresh)
-
