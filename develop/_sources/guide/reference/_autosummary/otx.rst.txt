@@ -31,7 +31,6 @@
    otx.cli
    otx.core
    otx.engine
-   otx.hpo
    otx.recipe
    otx.tools
    otx.utils

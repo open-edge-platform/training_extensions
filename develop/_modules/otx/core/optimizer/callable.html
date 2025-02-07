@@ -253,9 +253,10 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.core.optimizer.callable</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+<span></span><span class="sd">&quot;&quot;&quot;Optimizer callable to support adaptive batch size.&quot;&quot;&quot;</span>
+
+<span class="c1"># Copyright (C) 2024-2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
-<span class="sd">&quot;&quot;&quot;Optimizer callable to support hyper-parameter optimization (HPO) algorithm.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -270,13 +271,13 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">params_t</span>
 
 
-<div class="viewcode-block" id="OptimizerCallableSupportHPO">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.optimizer.html#otx.core.optimizer.OptimizerCallableSupportHPO">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OptimizerCallableSupportHPO</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimizer callable supports OTX hyper-parameter optimization (HPO) algorithm.</span>
+<div class="viewcode-block" id="OptimizerCallableSupportAdaptiveBS">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.optimizer.html#otx.core.optimizer.OptimizerCallableSupportAdaptiveBS">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OptimizerCallableSupportAdaptiveBS</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimizer callable supports OTX adaptive batch size.</span>
 
 <span class="sd">    It makes OptimizerCallable pickelable and accessible to parameters.</span>
-<span class="sd">    It is used for HPO and adaptive batch size.</span>
+<span class="sd">    It is used for adaptive batch size.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        optimizer_cls: Optimizer class type or string class import path. See examples for details.</span>
@@ -292,7 +293,7 @@
 
 <span class="sd">        model = MobileNetV3ForMulticlassCls(</span>
 <span class="sd">            num_classes=3,</span>
-<span class="sd">            optimizer=OptimizerCallableSupportHPO(</span>
+<span class="sd">            optimizer=OptimizerCallableSupportAdaptiveBS(</span>
 <span class="sd">                optimizer_cls=SGD,</span>
 <span class="sd">                optimizer_kwargs={</span>
 <span class="sd">                    &quot;lr&quot;: 0.1,</span>
@@ -310,7 +311,7 @@
 
 <span class="sd">        model = MobileNetV3ForMulticlassCls(</span>
 <span class="sd">            num_classes=3,</span>
-<span class="sd">            optimizer=OptimizerCallableSupportHPO(</span>
+<span class="sd">            optimizer=OptimizerCallableSupportAdaptiveBS(</span>
 <span class="sd">                optimizer_cls=&quot;torch.optim.SGD&quot;,</span>
 <span class="sd">                optimizer_kwargs={</span>
 <span class="sd">                    &quot;lr&quot;: 0.1,</span>
@@ -343,8 +344,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span> <span class="o">=</span> <span class="n">optimizer_kwargs</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">optimizer_kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OptimizerCallableSupportHPO.__call__">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.optimizer.html#otx.core.optimizer.OptimizerCallableSupportHPO.__call__">[docs]</a>
+<div class="viewcode-block" id="OptimizerCallableSupportAdaptiveBS.__call__">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.optimizer.html#otx.core.optimizer.OptimizerCallableSupportAdaptiveBS.__call__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">params_t</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optimizer</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create `torch.optim.Optimizer` instance for the given parameters.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_init</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span><span class="p">)</span></div>
@@ -356,17 +357,17 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="OptimizerCallableSupportHPO.from_callable">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.optimizer.html#otx.core.optimizer.OptimizerCallableSupportHPO.from_callable">[docs]</a>
+<div class="viewcode-block" id="OptimizerCallableSupportAdaptiveBS.from_callable">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.optimizer.html#otx.core.optimizer.OptimizerCallableSupportAdaptiveBS.from_callable">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_callable</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">OptimizerCallable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizerCallableSupportHPO</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_callable</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">OptimizerCallable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizerCallableSupportAdaptiveBS</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create this class instance from an existing optimizer callable.&quot;&quot;&quot;</span>
         <span class="n">dummy_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">()]</span>
         <span class="n">optimizer</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">dummy_params</span><span class="p">)</span>
 
         <span class="n">param_group</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">OptimizerCallableSupportHPO</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">OptimizerCallableSupportAdaptiveBS</span><span class="p">(</span>
             <span class="n">optimizer_cls</span><span class="o">=</span><span class="n">optimizer</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
             <span class="n">optimizer_kwargs</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">param_group</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;params&quot;</span><span class="p">},</span>
         <span class="p">)</span></div>

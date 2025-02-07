@@ -17,7 +17,7 @@ otx.core.optimizer
 
    .. autosummary::
    
-      OptimizerCallableSupportHPO
+      OptimizerCallableSupportAdaptiveBS
    
    
 

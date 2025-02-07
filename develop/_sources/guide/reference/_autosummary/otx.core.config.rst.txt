@@ -42,5 +42,4 @@ otx.core.config
    otx.core.config.data
    otx.core.config.device
    otx.core.config.explain
-   otx.core.config.hpo
 

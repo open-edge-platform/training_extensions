@@ -195,7 +195,6 @@ Entrypoint
    Basically, OpenVINO™ Training Extensions provide a recipe that allows user to run
    the training and change the training parameters.
 
-   Users can also use HPO to help the machine find the optimal parameters.
    After training, the user can evaluate the model and deploy it to the edge device.
    We have defined this natural workflow, and the end result is that
    the user is provided with a trained model, a model that is available on the edge device,

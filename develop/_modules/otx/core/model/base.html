@@ -294,12 +294,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileBatchDataEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span><span class="p">,</span> <span class="n">NullMetricCallable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.optimizer.callable</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerCallableSupportHPO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.optimizer.callable</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerCallableSupportAdaptiveBS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearWarmupScheduler</span><span class="p">,</span>
     <span class="n">LinearWarmupSchedulerCallable</span><span class="p">,</span>
     <span class="n">LRSchedulerListCallable</span><span class="p">,</span>
-    <span class="n">SchedulerCallableSupportHPO</span><span class="p">,</span>
+    <span class="n">SchedulerCallableSupportAdaptiveBS</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXExportFormatType</span><span class="p">,</span> <span class="n">TaskLevelExportParameters</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span><span class="p">,</span> <span class="n">NullLabelInfo</span>
@@ -689,10 +689,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback on loading checkpoint.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_load_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">ckpt_label_info</span> <span class="o">:=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label_info&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ckpt_label_info</span> <span class="o">:=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label_info&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_label_info</span> <span class="o">=</span> <span class="n">ckpt_label_info</span>
 
-        <span class="k">if</span> <span class="n">ckpt_tile_config</span> <span class="o">:=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tile_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ckpt_tile_config</span> <span class="o">:=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tile_config&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="n">ckpt_tile_config</span></div>
 
 
@@ -701,7 +701,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict_incrementally</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load state dict incrementally.&quot;&quot;&quot;</span>
         <span class="n">ckpt_label_info</span><span class="p">:</span> <span class="n">LabelInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label_info&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ckpt_label_info_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span>
+            <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label_info&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ckpt_label_info_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ckpt_label_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -726,9 +726,9 @@
             <span class="p">)</span>
 
         <span class="c1"># Model weights</span>
-        <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state_dict&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span> <span class="k">else</span> <span class="n">ckpt</span>
+        <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state_dict&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span> <span class="k">else</span> <span class="n">ckpt</span>
 
-        <span class="k">if</span> <span class="n">state_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">state_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">state_dict</span> <span class="o">==</span> <span class="p">{}:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Checkpoint should have `state_dict`.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">)</span>
 
@@ -1124,23 +1124,23 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">lr_scheduler_step</span><span class="p">(</span><span class="n">scheduler</span><span class="o">=</span><span class="n">scheduler</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="OTXModel.patch_optimizer_and_scheduler_for_hpo">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.patch_optimizer_and_scheduler_for_hpo">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">patch_optimizer_and_scheduler_for_hpo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Patch optimizer and scheduler for hyperparameter optimization and adaptive batch size.</span>
+<div class="viewcode-block" id="OTXModel.patch_optimizer_and_scheduler_for_adaptive_bs">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.patch_optimizer_and_scheduler_for_adaptive_bs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">patch_optimizer_and_scheduler_for_adaptive_bs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Patch optimizer and scheduler for adaptive batch size.</span>
 
 <span class="sd">        This is inplace function changing inner states (`optimizer_callable` and `scheduler_callable`).</span>
 <span class="sd">        Both will be changed to be picklable. In addition, `optimizer_callable` is changed</span>
 <span class="sd">        to make its hyperparameters gettable.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_callable</span><span class="p">,</span> <span class="n">OptimizerCallableSupportHPO</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_callable</span> <span class="o">=</span> <span class="n">OptimizerCallableSupportHPO</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_callable</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_callable</span><span class="p">,</span> <span class="n">OptimizerCallableSupportAdaptiveBS</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_callable</span> <span class="o">=</span> <span class="n">OptimizerCallableSupportAdaptiveBS</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_callable</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span><span class="p">,</span> <span class="n">SchedulerCallableSupportHPO</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span><span class="p">,</span> <span class="n">SchedulerCallableSupportAdaptiveBS</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span><span class="p">,</span>
-            <span class="n">LinearWarmupSchedulerCallable</span><span class="p">,</span>  <span class="c1"># LinearWarmupSchedulerCallable natively supports HPO</span>
+            <span class="n">LinearWarmupSchedulerCallable</span><span class="p">,</span>  <span class="c1"># LinearWarmupSchedulerCallable natively supports adaptive batch size</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span> <span class="o">=</span> <span class="n">SchedulerCallableSupportHPO</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span> <span class="o">=</span> <span class="n">SchedulerCallableSupportAdaptiveBS</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_callable</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>

@@ -304,7 +304,6 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/models_optimization.html">Models Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/hpo.html">Hyperparameters Optimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/auto_configuration.html">Auto-configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/adaptive_training.html">Adaptive Training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/xai.html">Explainable AI (XAI)</a></li>
@@ -323,6 +322,9 @@
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="otx.html">otx</a><input checked class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.algo.html">otx.algo</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.algo.accelerators.html">otx.algo.accelerators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="otx.algo.strategies.html">otx.algo.strategies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="otx.algo.action_classification.html">otx.algo.action_classification</a></li>
+<li class="toctree-l4"><a class="reference internal" href="otx.algo.anomaly.html">otx.algo.anomaly</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.callbacks.html">otx.algo.callbacks</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_early_stopping.html">otx.algo.callbacks.adaptive_early_stopping</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_train_scheduling.html">otx.algo.callbacks.adaptive_train_scheduling</a></li>
@@ -332,9 +334,6 @@
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.unlabeled_loss_warmup.html">otx.algo.callbacks.unlabeled_loss_warmup</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="otx.algo.strategies.html">otx.algo.strategies</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.algo.action_classification.html">otx.algo.action_classification</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.algo.anomaly.html">otx.algo.anomaly</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.classification.html">otx.algo.classification</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.backbones.html">otx.algo.classification.backbones</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.heads.html">otx.algo.classification.heads</a></li>
@@ -407,7 +406,6 @@
 <li class="toctree-l5"><a class="reference internal" href="otx.core.config.data.html">otx.core.config.data</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.config.device.html">otx.core.config.device</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.config.explain.html">otx.core.config.explain</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.config.hpo.html">otx.core.config.hpo</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="otx.core.data.html">otx.core.data</a></li>
@@ -459,7 +457,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="otx.engine.html">otx.engine</a></li>
-<li class="toctree-l3"><a class="reference internal" href="otx.hpo.html">otx.hpo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.recipe.html">otx.recipe</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-31"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.converter.html">otx.tools.converter</a></li>
@@ -520,8 +517,8 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#otx.core.schedulers.LinearWarmupSchedulerCallable" title="otx.core.schedulers.LinearWarmupSchedulerCallable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LinearWarmupSchedulerCallable</span></code></a>(...[, ...])</p></td>
 <td><p>This callable can create the given main LR scheduler and <cite>LinearWarmupScheduler</cite> at the same time.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.core.schedulers.SchedulerCallableSupportHPO" title="otx.core.schedulers.SchedulerCallableSupportHPO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SchedulerCallableSupportHPO</span></code></a>(scheduler_cls, ...)</p></td>
-<td><p>LR scheduler callable supports OTX hyper-parameter optimization (HPO) algorithm.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS" title="otx.core.schedulers.SchedulerCallableSupportAdaptiveBS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SchedulerCallableSupportAdaptiveBS</span></code></a>(...)</p></td>
+<td><p>LR scheduler callable supports OTX adaptive batch size.</p></td>
 </tr>
 </tbody>
 </table>
@@ -580,12 +577,12 @@ Otherwise, the iteration step will be the warmup period.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="otx.core.schedulers.SchedulerCallableSupportHPO">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.core.schedulers.</span></span><span class="sig-name descname"><span class="pre">SchedulerCallableSupportHPO</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.13)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><span class="pre">LRScheduler</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduler_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/core/schedulers/callable.html#SchedulerCallableSupportHPO"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.schedulers.SchedulerCallableSupportHPO" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="otx.core.schedulers.SchedulerCallableSupportAdaptiveBS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.core.schedulers.</span></span><span class="sig-name descname"><span class="pre">SchedulerCallableSupportAdaptiveBS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.13)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><span class="pre">LRScheduler</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduler_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/core/schedulers/callable.html#SchedulerCallableSupportAdaptiveBS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>LR scheduler callable supports OTX hyper-parameter optimization (HPO) algorithm.</p>
+<p>LR scheduler callable supports OTX adaptive batch size.</p>
 <p>It makes SchedulerCallable pickelable and accessible to parameters.
-It is used for HPO and adaptive batch size.</p>
+It is used for adaptive batch size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -602,7 +599,7 @@ from torch.optim.lr_scheduler import StepLR
 from otx.algo.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls</p>
 <dl>
 <dt>model = MobileNetV3ForMulticlassCls(</dt><dd><p>num_classes=3,
-scheduler=SchedulerCallableSupportHPO(</p>
+scheduler=SchedulerCallableSupportAdaptiveBS(</p>
 <blockquote>
 <div><p>scheduler_cls=StepLR,
 scheduler_kwargs={</p>
@@ -622,7 +619,7 @@ scheduler_kwargs={</p>
 from otx.algo.classification.mobilenet_v3_large import MobileNetV3ForMulticlassCls</p>
 <dl>
 <dt>model = MobileNetV3ForMulticlassCls(</dt><dd><p>num_classes=3,
-optimizer=SchedulerCallableSupportHPO(</p>
+optimizer=SchedulerCallableSupportAdaptiveBS(</p>
 <blockquote>
 <div><p>scheduler_cls=”torch.optim.lr_scheduler.StepLR”,
 scheduler_kwargs={</p>
@@ -639,14 +636,14 @@ scheduler_kwargs={</p>
 <section id="id10">
 <h2>)<a class="headerlink" href="#id10" title="Link to this heading">#</a></h2>
 <dl class="py method">
-<dt class="sig sig-object py" id="otx.core.schedulers.SchedulerCallableSupportHPO.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optimizer</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LRScheduler</span></span></span><a class="reference internal" href="../../../_modules/otx/core/schedulers/callable.html#SchedulerCallableSupportHPO.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.schedulers.SchedulerCallableSupportHPO.__call__" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="otx.core.schedulers.SchedulerCallableSupportAdaptiveBS.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optimizer</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LRScheduler</span></span></span><a class="reference internal" href="../../../_modules/otx/core/schedulers/callable.html#SchedulerCallableSupportAdaptiveBS.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS.__call__" title="Link to this definition">#</a></dt>
 <dd><p>Create <cite>torch.optim.LRScheduler</cite> instance for the given parameters.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="otx.core.schedulers.SchedulerCallableSupportHPO.from_callable">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_callable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LRSchedulerCallable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.core.schedulers.SchedulerCallableSupportHPO" title="otx.core.schedulers.SchedulerCallableSupportHPO"><span class="pre">SchedulerCallableSupportHPO</span></a></span></span><a class="reference internal" href="../../../_modules/otx/core/schedulers/callable.html#SchedulerCallableSupportHPO.from_callable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.schedulers.SchedulerCallableSupportHPO.from_callable" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="otx.core.schedulers.SchedulerCallableSupportAdaptiveBS.from_callable">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_callable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LRSchedulerCallable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS" title="otx.core.schedulers.SchedulerCallableSupportAdaptiveBS"><span class="pre">SchedulerCallableSupportAdaptiveBS</span></a></span></span><a class="reference internal" href="../../../_modules/otx/core/schedulers/callable.html#SchedulerCallableSupportAdaptiveBS.from_callable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS.from_callable" title="Link to this definition">#</a></dt>
 <dd><p>Create this class instance from an existing optimizer callable.</p>
 </dd></dl>
 
@@ -743,28 +740,28 @@ scheduler_kwargs={</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.core.schedulers.SchedulerCallableSupportHPO">
+  <a class="reference internal nav-link" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS">
    <code class="docutils literal notranslate">
     <span class="pre">
-     SchedulerCallableSupportHPO
+     SchedulerCallableSupportAdaptiveBS
     </span>
    </code>
   </a>
   <ul class="visible nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.core.schedulers.SchedulerCallableSupportHPO.__call__">
+    <a class="reference internal nav-link" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS.__call__">
      <code class="docutils literal notranslate">
       <span class="pre">
-       SchedulerCallableSupportHPO.__call__()
+       SchedulerCallableSupportAdaptiveBS.__call__()
       </span>
      </code>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.core.schedulers.SchedulerCallableSupportHPO.from_callable">
+    <a class="reference internal nav-link" href="#otx.core.schedulers.SchedulerCallableSupportAdaptiveBS.from_callable">
      <code class="docutils literal notranslate">
       <span class="pre">
-       SchedulerCallableSupportHPO.from_callable()
+       SchedulerCallableSupportAdaptiveBS.from_callable()
       </span>
      </code>
     </a>
