@@ -39,29 +39,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
 - Upgrade OpenVINO to 2024.5 and NNCF to 2.14.0
   (<https://github.com/openvinotoolkit/training_extensions/pull/4123>)
-
-### Bug fixes
-
-- Fix MaskDINO, MonoDETR recipes
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4080>)
-
-## \[2.3.0\]
-
-### New features
-
-- Add YOLOv9 model for Object Detection
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3917>, <https://github.com/openvinotoolkit/training_extensions/pull/4026>)
-- Add OV inference for keypoint detection
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3970>)
-- Add tiling for semantic segmentation
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3954>)
-- Add 3D Object Detection task with MonoDETR model
-  (<https://github.com/openvinotoolkit/training_extensions/pull/3979>)
-- Add OpenVINO inference for 3D Object Detection task
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
-
-### Enhancements
-
 - Upgrade OV, MAPI, and NNCF dependencies
   (<https://github.com/openvinotoolkit/training_extensions/pull/3967>)
 - Instance Segmentation Model refactoring
@@ -72,6 +49,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3985>)
 - Bump OV to 2024.6, update empty label handling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4162>)
+- Revert FMetric computation (PR: 4130)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4210>)
 
 ### Bug fixes
 
