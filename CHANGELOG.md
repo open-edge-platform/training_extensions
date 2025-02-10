@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Removed
+
+- Remove HPO
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
+- Remove Action Classification
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4202>)
+
+## \[2.2.3\]
+
 ### New features
 
 ### Enhancements
@@ -80,13 +89,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4199>)
 - Fix label info on loading checkpoint
   (<https://github.com/openvinotoolkit/training_extensions/pull/4200>)
-
-### Removed
-
-- Remove HPO
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
-- Remove Action Classification
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4202>)
 
 ## \[2.2.2\]
 
