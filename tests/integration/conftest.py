@@ -51,12 +51,8 @@ def get_task_list(task: str) -> list[OTXTaskType]:
         tasks = [OTXTaskType.H_LABEL_CLS]
     elif task == "classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
-    elif task == "visual_prompting_all":
-        tasks = [OTXTaskType.VISUAL_PROMPTING, OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING]
     elif task == "visual_prompting":
         tasks = [OTXTaskType.VISUAL_PROMPTING]
-    elif task == "zero_shot_visual_prompting":
-        tasks = [OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING]
     elif task == "anomaly":
         tasks = [
             OTXTaskType.ANOMALY,
@@ -134,7 +130,6 @@ def fxt_target_dataset_per_task() -> dict:
         "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset/supervised",
         "semantic_segmentation_semisl": "tests/assets/common_semantic_segmentation_dataset/unlabeled",
         "visual_prompting": "tests/assets/car_tree_bug",
-        "zero_shot_visual_prompting": "tests/assets/car_tree_bug_zero_shot",
         "anomaly": "tests/assets/anomaly_hazelnut",
         "anomaly_classification": "tests/assets/anomaly_hazelnut",
         "anomaly_detection": "tests/assets/anomaly_hazelnut",
@@ -155,7 +150,6 @@ def fxt_cli_override_command_per_task() -> dict:
         "instance_segmentation": [],
         "semantic_segmentation": [],
         "visual_prompting": [],
-        "zero_shot_visual_prompting": [],
         "anomaly": [],
         "anomaly_classification": [],
         "anomaly_detection": [],

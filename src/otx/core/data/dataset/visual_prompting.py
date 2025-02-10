@@ -10,14 +10,11 @@ from functools import partial
 from typing import Callable
 
 import torch
-from datumaro import Bbox as dmBbox
 from datumaro import Dataset as dmDataset
 from datumaro import Image as dmImage
-from datumaro import Mask as dmMask
-from datumaro import Points as dmPoints
 from datumaro import Polygon as dmPolygon
 from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import convert_bounding_box_format, to_image
+from torchvision.transforms.v2.functional import convert_bounding_box_format
 from torchvision.tv_tensors import BoundingBoxes as tvBoundingBoxes
 from torchvision.tv_tensors import BoundingBoxFormat as tvBoundingBoxFormat
 from torchvision.tv_tensors import Mask as tvMask
@@ -26,9 +23,6 @@ from otx.core.data.entity.base import ImageInfo, Points
 from otx.core.data.entity.visual_prompting import (
     VisualPromptingBatchDataEntity,
     VisualPromptingDataEntity,
-    ZeroShotPromptType,
-    ZeroShotVisualPromptingBatchDataEntity,
-    ZeroShotVisualPromptingDataEntity,
 )
 from otx.core.types.label import NullLabelInfo
 from otx.core.utils.mask_util import polygon_to_bitmap
@@ -169,136 +163,3 @@ class OTXVisualPromptingDataset(OTXDataset[VisualPromptingDataEntity]):
     def collate_fn(self) -> Callable:
         """Collection function to collect VisualPromptingDataEntity into VisualPromptingBatchDataEntity in data loader."""  # noqa: E501
         return partial(VisualPromptingBatchDataEntity.collate_fn, stack_images=self.stack_images)
-
-
-class OTXZeroShotVisualPromptingDataset(OTXDataset[ZeroShotVisualPromptingDataEntity]):
-    """OTXDataset class for zero-shot visual prompting.
-
-    Args:
-        dm_subset (dmDataset): The subset of the dataset.
-        transforms (Transforms): Data transformations to be applied.
-        use_mask (bool): Whether to use bitmap mask prompt for `learn`.
-            use_mask has the top priority rather than use_polygon, use_bbox, and use_point.
-            Defaults to False.
-        use_polygon (bool): Whether to use polygon prompt for `learn`.
-            use_polygon has higher priority than use_bbox and use_point.
-            Defaults to False.
-        use_bbox (bool): Whether to use bounding box prompt.
-            Defaults to True.
-        use_point (bool): Whether to use point prompt.
-            Defaults to False.
-        **kwargs: Additional keyword arguments passed to the base class.
-
-    Examples:
-        - use_mask == True : use bitmap mask as a prompt no matter what use_polygon, use_bbox, and use_point.
-        - use_mask == False and use_polygon == True : use polygon as a prompt no matter what use_bbox and use_point.
-        - use_mask == False and use_polygon == False
-            - use_bbox == False and use_point == False : set use_bbox to True as default.
-            - use_bbox == True and use_point == False : use bbox as a prompt.
-            - use_bbox == False and use_point == True : use point as a prompt.
-            - use_bbox == True and use_point == True : divide the probability into both.
-    """
-
-    def __init__(
-        self,
-        dm_subset: dmDataset,
-        transforms: Transforms,
-        use_mask: bool = False,
-        use_polygon: bool = False,
-        use_bbox: bool = True,
-        use_point: bool = False,
-        stack_images: bool = True,
-        **kwargs,
-    ) -> None:
-        super().__init__(dm_subset, transforms, stack_images=stack_images, **kwargs)
-        self.use_mask = use_mask
-        self.use_polygon = use_polygon
-        if not use_bbox and not use_point:
-            # if both are False, use bbox as default
-            use_bbox = True
-        self.prob = 1.0  # if using only bbox prompt
-        if use_bbox and use_point:
-            # if using both prompts, divide prob into both
-            self.prob = 0.5
-        if not use_bbox and use_point:
-            # if using only point prompt
-            self.prob = 0.0
-
-        self.label_info = NullLabelInfo()  # TODO (sungchul): update label_info for multi-label support
-
-    def _get_item_impl(self, index: int) -> ZeroShotVisualPromptingDataEntity | None:
-        item = self.dm_subset[index]
-        img = item.media_as(dmImage)
-        img_data, img_shape, _ = self._get_img_data_and_shape(img)
-
-        prompts: list[ZeroShotPromptType] = []
-        gt_masks: list[tvMask] = []
-        gt_polygons: list[dmPolygon] = []
-        gt_labels: list[int] = []
-        for annotation in item.annotations:
-            if isinstance(annotation, dmPolygon):
-                # generate prompts from polygon
-                mask = tvMask(polygon_to_bitmap([annotation], *img_shape)[0])
-                mask_points = torch.nonzero(mask)
-                if len(mask_points) == 0:
-                    # skip very small region
-                    continue
-
-                if self.use_mask:
-                    # get mask
-                    prompts.append(mask)
-
-                elif self.use_polygon:
-                    # get polygon
-                    prompts.append(annotation)
-
-                elif torch.rand(1) < self.prob:
-                    # get bbox
-                    bbox = tvBoundingBoxes(
-                        annotation.get_bbox(),
-                        format=tvBoundingBoxFormat.XYWH,
-                        canvas_size=img_shape,
-                        dtype=torch.float32,
-                    )
-                    bbox = convert_bounding_box_format(bbox, new_format=tvBoundingBoxFormat.XYXY)
-                    prompts.append(bbox)
-                else:
-                    # get center point
-                    point = Points(
-                        torch.tensor(annotation.get_points()).mean(dim=0),
-                        canvas_size=img_shape,
-                        dtype=torch.float32,
-                    )
-                    prompts.append(point)
-
-                gt_labels.append(annotation.label)
-                gt_masks.append(mask)
-                gt_polygons.append(annotation)
-
-            # TODO(sungchul): for mask, bounding box, and point annotation
-            elif isinstance(annotation, (dmBbox, dmMask, dmPoints)):
-                pass
-
-        if not prompts:
-            return None
-
-        labels = torch.as_tensor(gt_labels, dtype=torch.int64)
-        masks = tvMask(torch.stack(gt_masks, dim=0), dtype=torch.uint8)
-
-        return ZeroShotVisualPromptingDataEntity(
-            image=to_image(img_data),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-            ),
-            masks=masks,
-            labels=labels,
-            polygons=gt_polygons,
-            prompts=prompts,
-        )
-
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect ZeroShotVisualPromptingDataEntity into ZeroShotVisualPromptingBatchDataEntity in data loader."""  # noqa: E501
-        return partial(ZeroShotVisualPromptingBatchDataEntity.collate_fn, stack_images=self.stack_images)

@@ -91,8 +91,6 @@ V1_V2_NAME_MAP = {
     "Custom_Semantic_Segmentation_SegNext_t": "segnext_t",
     "Visual_Prompting_SAM_Tiny_ViT": "sam_tiny_vit",
     "Visual_Prompting_SAM_ViT_B": "sam_vit_b",
-    "Zero_Shot_SAM_Tiny_ViT": "sam_tiny_vit",
-    "Zero_Shot_SAM_ViT_B": "sam_vit_b",
     # Dataset names
     "anomaly/mvtec/bottle_small/1": "mvtec_bottle_small_1",
     "anomaly/mvtec/bottle_small/2": "mvtec_bottle_small_2",
@@ -154,7 +152,6 @@ V1_V2_NAME_MAP = {
     "visual_prompting/wgisd_small/3": "wgisd_small_3",
     "visual_prompting/coco_car_person_medium": "coco_car_person_medium",
     "visual_prompting/Vitens-Coliform-coco": "vitens_coliform",
-    "zero_shot_visual_prompting/coco_car_person_medium": "coco_car_person_medium",
     "keypoint_detection/coco_person_keypoint_medium": "coco_person_keypoint_medium",
 }
 
@@ -172,7 +169,6 @@ TASK_METRIC_MAP = {
     "semantic_segmentation": "dice",
     "semantic_segmentation_semisl": "dice",
     "visual_prompting": "dice",
-    "zero_shot_visual_prompting": "dice",
     "keypoint_detection": "accuracy",
 }
 
@@ -190,7 +186,6 @@ TASK_ABBR_MAP = {
     "semantic_segmentation": "sseg",
     "semantic_segmentation_semisl": "sseg_semisl",
     "visual_prompting": "vp",
-    "zero_shot_visual_prompting": "zvp",
     "keypoint_detection": "k_det",
 }
 

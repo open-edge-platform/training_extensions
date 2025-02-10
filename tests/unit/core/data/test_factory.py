@@ -16,7 +16,7 @@ from otx.core.data.dataset.classification import (
 from otx.core.data.dataset.detection import OTXDetectionDataset
 from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.core.data.dataset.segmentation import OTXSegmentationDataset
-from otx.core.data.dataset.visual_prompting import OTXVisualPromptingDataset, OTXZeroShotVisualPromptingDataset
+from otx.core.data.dataset.visual_prompting import OTXVisualPromptingDataset
 from otx.core.data.factory import OTXDatasetFactory, TransformLibFactory
 from otx.core.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.core.types.image import ImageColorChannel
@@ -70,7 +70,6 @@ class TestOTXDatasetFactory:
             (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset),
             (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset),
             (OTXTaskType.VISUAL_PROMPTING, OTXVisualPromptingDataset),
-            (OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING, OTXZeroShotVisualPromptingDataset),
             (OTXTaskType.ANOMALY, AnomalyDataset),
             (OTXTaskType.ANOMALY_CLASSIFICATION, AnomalyDataset),
             (OTXTaskType.ANOMALY_DETECTION, AnomalyDataset),

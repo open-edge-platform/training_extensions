@@ -355,10 +355,6 @@ class Engine:
         # So, it can't take the OTX1.x checkpoint.
         if checkpoint is not None and not is_ir_ckpt:
             kwargs_user_input: dict[str, Any] = {}
-            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-                # to update user's custom infer_reference_info_root through cli for zero-shot learning
-                # TODO (sungchul): revisit for better solution
-                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
 
             model_cls = model.__class__
             model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
@@ -456,10 +452,6 @@ class Engine:
 
         if checkpoint is not None and not is_ir_ckpt:
             kwargs_user_input: dict[str, Any] = {}
-            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-                # to update user's custom infer_reference_info_root through cli for zero-shot learning
-                # TODO (sungchul): revisit for better solution
-                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
 
             model_cls = model.__class__
             model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
@@ -574,10 +566,6 @@ class Engine:
 
         if not is_ir_ckpt:
             kwargs_user_input: dict[str, Any] = {}
-            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-                # to update user's custom infer_reference_info_root through cli for zero-shot learning
-                # TODO (sungchul): revisit for better solution
-                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
 
             model_cls = self.model.__class__
             if hasattr(self.model, "model_name"):
@@ -754,10 +742,6 @@ class Engine:
 
         if checkpoint is not None and not is_ir_ckpt:
             kwargs_user_input: dict[str, Any] = {}
-            if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-                # to update user's custom infer_reference_info_root through cli for zero-shot learning
-                # TODO (sungchul): revisit for better solution
-                kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
 
             model_cls = model.__class__
             model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
@@ -863,10 +847,6 @@ class Engine:
 
             if not is_ir_ckpt:
                 kwargs_user_input: dict[str, Any] = {}
-                if self.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-                    # to update user's custom infer_reference_info_root through cli for zero-shot learning
-                    # TODO (sungchul): revisit for better solution
-                    kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
 
                 model_cls = self.model.__class__
                 self.model = model_cls.load_from_checkpoint(

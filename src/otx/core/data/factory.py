@@ -141,13 +141,6 @@ class OTXDatasetFactory:
             use_point = getattr(vpm_config, "use_point", False)
             return OTXVisualPromptingDataset(use_bbox=use_bbox, use_point=use_point, **common_kwargs)
 
-        if task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-            from .dataset.visual_prompting import OTXZeroShotVisualPromptingDataset
-
-            use_bbox = getattr(vpm_config, "use_bbox", False)
-            use_point = getattr(vpm_config, "use_point", False)
-            return OTXZeroShotVisualPromptingDataset(use_bbox=use_bbox, use_point=use_point, **common_kwargs)
-
         if task == OTXTaskType.KEYPOINT_DETECTION:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset
 
