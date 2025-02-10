@@ -389,6 +389,13 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         super().on_load_checkpoint(checkpoint)
 
         if ckpt_label_info := checkpoint.get("label_info"):
+            if isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                ckpt_label_info = LabelInfo(
+                    label_groups=ckpt_label_info.label_groups,
+                    label_names=ckpt_label_info.label_names,
+                    label_ids=ckpt_label_info.label_names,
+                )
             self._label_info = ckpt_label_info
 
         if ckpt_tile_config := checkpoint.get("tile_config"):

@@ -580,6 +580,12 @@ class Engine:
                 kwargs_user_input.update(infer_reference_info_root=self.model.infer_reference_info_root)
 
             model_cls = self.model.__class__
+            if hasattr(self.model, "model_name"):
+                # NOTE: This is a solution to fix backward compatibility issue.
+                # If the model has `model_name` attribute, it will be passed to the `load_from_checkpoint` method,
+                # making sure previous model trained without model_name can be loaded.
+                kwargs_user_input["model_name"] = self.model.model_name
+
             self.model = model_cls.load_from_checkpoint(
                 checkpoint_path=checkpoint,
                 map_location="cpu",
