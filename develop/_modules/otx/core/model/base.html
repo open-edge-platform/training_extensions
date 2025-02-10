@@ -690,6 +690,13 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_load_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">ckpt_label_info</span> <span class="o">:=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;label_info&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ckpt_label_info</span><span class="p">,</span> <span class="n">LabelInfo</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ckpt_label_info</span><span class="p">,</span> <span class="s2">&quot;label_ids&quot;</span><span class="p">):</span>
+                <span class="c1"># NOTE: This is for backward compatibility</span>
+                <span class="n">ckpt_label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
+                    <span class="n">label_groups</span><span class="o">=</span><span class="n">ckpt_label_info</span><span class="o">.</span><span class="n">label_groups</span><span class="p">,</span>
+                    <span class="n">label_names</span><span class="o">=</span><span class="n">ckpt_label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">,</span>
+                    <span class="n">label_ids</span><span class="o">=</span><span class="n">ckpt_label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_label_info</span> <span class="o">=</span> <span class="n">ckpt_label_info</span>
 
         <span class="k">if</span> <span class="n">ckpt_tile_config</span> <span class="o">:=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tile_config&quot;</span><span class="p">):</span>

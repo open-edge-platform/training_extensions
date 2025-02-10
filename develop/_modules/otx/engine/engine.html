@@ -848,6 +848,12 @@
                 <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
 
             <span class="n">model_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;model_name&quot;</span><span class="p">):</span>
+                <span class="c1"># NOTE: This is a solution to fix backward compatibility issue.</span>
+                <span class="c1"># If the model has `model_name` attribute, it will be passed to the `load_from_checkpoint` method,</span>
+                <span class="c1"># making sure previous model trained without model_name can be loaded.</span>
+                <span class="n">kwargs_user_input</span><span class="p">[</span><span class="s2">&quot;model_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model_name</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span>
                 <span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span>
                 <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
