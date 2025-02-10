@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Removed
+
+- Remove HPO
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
+- Remove Action Classification
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4202>)
+
+## \[2.2.3\]
+
 ### New features
 
 ### Enhancements
