@@ -139,7 +139,7 @@ def test_otx_e2e_cli(
             ExportCase2Test("ONNX", False, "exported_model_decoder.onnx"),
             ExportCase2Test("OPENVINO", False, "exported_model_decoder.xml"),
         ]
-    elif task in ("ANOMALY", OTXTaskType.KEYPOINT_DETECTION, OTXTaskType.OBJECT_DETECTION_3D):
+    elif task in ("ANOMALY", OTXTaskType.KEYPOINT_DETECTION):
         fxt_export_list = [
             ExportCase2Test("ONNX", False, "exported_model.onnx"),
             ExportCase2Test("OPENVINO", False, "exported_model.xml"),
@@ -178,9 +178,6 @@ def test_otx_e2e_cli(
         )
         assert latest_dir.exists()
         assert (latest_dir / export_case.expected_output).exists()
-
-    if task == OTXTaskType.OBJECT_DETECTION_3D:
-        return  # "3D Object Detection is not supported for OV IR inference.
 
     # 4) infer of the exported models
     ov_output_dir = tmp_path_test / "outputs" / "OPENVINO"
