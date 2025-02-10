@@ -27,4 +27,3 @@ Contents
    segmentation/index
    anomaly/index
    visual_prompting/index
-   diffusion/index

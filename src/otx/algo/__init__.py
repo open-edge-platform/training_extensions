@@ -15,7 +15,6 @@ __all__ = [
     "classification",
     "common",
     "detection",
-    "diffusion",
     "keypoint_detection",
     "modules",
     "object_detection_3d",
