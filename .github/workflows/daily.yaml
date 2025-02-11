@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - task: "action"
           - task: "classification"
           - task: "detection"
           - task: "rotated_detection"

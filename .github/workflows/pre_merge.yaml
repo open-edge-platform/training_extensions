@@ -129,7 +129,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - task: "action"
           - task: "multi_cls_classification"
           - task: "multi_label_classification"
           - task: "hlabel_classification"
