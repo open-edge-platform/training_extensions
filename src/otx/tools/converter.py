@@ -199,7 +199,7 @@ TEMPLATE_ID_DICT = {
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
         "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny",
+        "model_name": "rtmpose_tiny_single_obj",
     },
 }
 
@@ -259,8 +259,6 @@ class ConfigConverter:
             task_info["task"] = task
         default_config = ConfigConverter._get_default_config(task_info)
         ConfigConverter._update_params(default_config, param_dict)
-        if (hpo_time_ratio := template_config.get("hpo_parameters", {}).get("hpo_time_ratio")) is not None:
-            default_config["hpo_config.expected_time_ratio"] = hpo_time_ratio
         ConfigConverter._remove_unused_key(default_config)
         return default_config
 

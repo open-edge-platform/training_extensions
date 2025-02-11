@@ -10,7 +10,6 @@ import pytest
 import yaml
 
 from otx.core.types.task import OTXTaskType
-from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK
 from tests.e2e.cli.utils import run_main
 from tests.utils import ExportCase2Test
 
@@ -412,89 +411,3 @@ def test_otx_explain_e2e_cli(
             actual_sal_vals = (actual_sal_vals[:10, 0, 0]).astype(np.int16)
         ref_sal_vals = reference_sal_vals[test_case_name][0]
         assert np.max(np.abs(actual_sal_vals - ref_sal_vals) <= sal_diff_thresh)
-
-
-@pytest.mark.parametrize("task", pytest.TASK_LIST)
-def test_otx_hpo_e2e_cli(
-    task: str,
-    tmp_path: Path,
-    fxt_accelerator: str,
-    fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
-    fxt_open_subprocess: bool,
-) -> None:
-    """
-    Test HPO e2e commands with default template of each task.
-
-    Args:
-        task (OTXTaskType): The task to run HPO with.
-        tmp_path (Path): The temporary path for storing the training outputs.
-
-    Returns:
-        None
-    """
-    task = task.upper()
-    if task not in DEFAULT_CONFIG_PER_TASK:
-        pytest.skip(f"Task {task} is not supported in the auto-configuration.")
-    if task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-        pytest.skip("ZERO_SHOT_VISUAL_PROMPTING doesn't support HPO.")
-
-    # Need to change model to stfpm because default anomaly model is 'padim' which doesn't support HPO
-    model_cfg = []
-    if task in {
-        OTXTaskType.ANOMALY,
-        OTXTaskType.ANOMALY_CLASSIFICATION,
-        OTXTaskType.ANOMALY_DETECTION,
-        OTXTaskType.ANOMALY_SEGMENTATION,
-    }:
-        model_cfg = ["--config", str(DEFAULT_CONFIG_PER_TASK[task].parent / "stfpm.yaml")]
-
-    if task == OTXTaskType.INSTANCE_SEGMENTATION:
-        dataset_path = fxt_target_dataset_per_task[task]["non_tiling"]
-    elif task == OTXTaskType.KEYPOINT_DETECTION:
-        dataset_path = fxt_target_dataset_per_task[task]["rtmpose_tiny"]
-    else:
-        dataset_path = fxt_target_dataset_per_task[task]
-
-    if isinstance(dataset_path, dict) and "supervised" in dataset_path:
-        dataset_path = dataset_path["supervised"]
-
-    tmp_path_hpo = tmp_path / f"otx_hpo_{task.lower()}"
-    tmp_path_hpo.mkdir(parents=True)
-
-    command_cfg = [
-        "otx",
-        "train",
-        *model_cfg,
-        "--task",
-        task,
-        "--data_root",
-        str(dataset_path),
-        "--work_dir",
-        str(tmp_path_hpo),
-        "--engine.device",
-        fxt_accelerator,
-        "--max_epochs",
-        "1" if task in (OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING) else "2",
-        "--run_hpo",
-        "true",
-        "--hpo_config.expected_time_ratio",
-        "2",
-        "--hpo_config.num_workers",
-        "1",
-        *fxt_cli_override_command_per_task[task],
-    ]
-
-    run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
-
-    latest_dir = max(
-        (p for p in tmp_path_hpo.iterdir() if p.is_dir() and p.name != ".latest"),
-        key=lambda p: p.stat().st_mtime,
-    )
-    hpo_work_dor = latest_dir / "hpo"
-    assert hpo_work_dor.exists()
-    # Anomaly doesn't do validation. Check just there is no error.
-    if task.startswith("anomaly"):
-        return
-
-    assert len([val for val in hpo_work_dor.rglob("*.json") if str(val.stem).isdigit()]) == 2

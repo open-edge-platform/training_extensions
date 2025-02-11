@@ -3,8 +3,6 @@ dataset:
   header: Dataset Parameters
   num_workers:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 8
     description:
       Increasing this value might improve training speed however it might
@@ -31,8 +29,6 @@ id: ""
 learning_parameters:
   backbone:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: resnet18
     description: Pre-trained backbone used for feature extraction
     editable: true
@@ -56,8 +52,6 @@ learning_parameters:
     header: Early Stopping Parameters
     metric:
       affects_outcome_of: NONE
-      auto_hpo_state: not_possible
-      auto_hpo_value: null
       default_value: image_F1Score
       description: The metric used to determine if the model should stop training
       editable: true
@@ -77,8 +71,6 @@ learning_parameters:
       warning: null
     patience:
       affects_outcome_of: TRAINING
-      auto_hpo_state: not_possible
-      auto_hpo_value: null
       default_value: 10
       description:
         Number of epochs to wait for an improvement in the monitored metric.
@@ -104,8 +96,6 @@ learning_parameters:
   header: Learning Parameters
   lr:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 0.4
     description: Learning rate used for optimizing the Student network.
     editable: true
@@ -123,8 +113,6 @@ learning_parameters:
     warning: null
   max_epochs:
     affects_outcome_of: TRAINING
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 100
     description: Maximum number of epochs to train the model for.
     editable: true
@@ -145,8 +133,6 @@ learning_parameters:
       desired result.
   momentum:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 0.9
     description: Momentum used for SGD optimizer
     editable: true
@@ -164,8 +150,6 @@ learning_parameters:
     warning: null
   train_batch_size:
     affects_outcome_of: TRAINING
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 32
     description:
       The number of training samples seen in each iteration of training.
@@ -190,8 +174,6 @@ learning_parameters:
   visible_in_ui: true
   weight_decay:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 0.0001
     description: Decay for SGD optimizer
     editable: true
@@ -211,8 +193,6 @@ nncf_optimization:
   description: Optimization by NNCF
   enable_pruning:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: false
     description: Enable filter pruning algorithm
     editable: true
@@ -228,8 +208,6 @@ nncf_optimization:
     warning: null
   enable_quantization:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: true
     description: Enable quantization algorithm
     editable: true
@@ -246,8 +224,6 @@ nncf_optimization:
   header: Optimization by NNCF
   pruning_supported:
     affects_outcome_of: TRAINING
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: false
     description: Whether filter pruning is supported
     editable: false
@@ -268,8 +244,6 @@ pot_parameters:
   header: POT Parameters
   preset:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: Performance
     description: Quantization preset that defines quantization scheme
     editable: true
@@ -289,8 +263,6 @@ pot_parameters:
     warning: null
   stat_subset_size:
     affects_outcome_of: NONE
-    auto_hpo_state: not_possible
-    auto_hpo_value: null
     default_value: 300
     description: Number of data samples used for post-training optimization
     editable: true

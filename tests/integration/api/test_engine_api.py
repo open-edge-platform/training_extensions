@@ -9,8 +9,6 @@ import pytest
 from datumaro import Dataset as DmDataset
 from model_api.tilers import Tiler
 
-from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
-from otx.core.config.hpo import HpoConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType
@@ -188,37 +186,3 @@ def test_engine_from_tile_recipe(
 METRIC_NAME = {
     OTXTaskType.MULTI_CLASS_CLS: "val/accuracy",
 }
-
-
-@pytest.mark.parametrize("task", pytest.TASK_LIST)
-def test_otx_hpo(
-    task: OTXTaskType,
-    tmp_path: Path,
-    fxt_target_dataset_per_task: dict,
-) -> None:
-    if task not in METRIC_NAME:
-        reason = f"test_otx_hpo for {task} isn't prepared yet."
-        pytest.xfail(reason=reason)
-
-    model = EfficientNetForMulticlassCls(label_info=2)
-    hpo_config = HpoConfig(
-        search_space={
-            "model.scheduler.factor": {
-                "type": "uniform",
-                "min": 0.05,
-                "max": 0.15,
-                "step": 0.01,
-            },
-        },
-        metric_name=METRIC_NAME[task],
-        expected_time_ratio=2,
-        num_workers=1,
-    )
-    work_dir = str(tmp_path)
-    engine = Engine(
-        data_root=fxt_target_dataset_per_task[task.lower()],
-        task=task,
-        work_dir=work_dir,
-        model=model,
-    )
-    engine.train(max_epochs=1, run_hpo=True, hpo_config=hpo_config)

@@ -69,7 +69,6 @@ def mock_bs_search_algo_cls(mocker, mock_bs_search_algo_ins) -> MagicMock:
 def train_args() -> dict[str, Any]:
     return {
         "self": MagicMock(),
-        "run_hpo": True,
         "adaptive_bs": True,
         "kwargs": {"kwargs_a": "kwargs_a"},
     }
@@ -98,8 +97,8 @@ def test_adapt_batch_size(
 ):
     adapt_batch_size(mock_engine, not_increase, **train_args)
 
-    # check patch_optimizer_and_scheduler_for_hpo is invoked
-    mock_engine.model.patch_optimizer_and_scheduler_for_hpo.assert_called_once()
+    # check patch_optimizer_and_scheduler_for_adaptive_bs is invoked
+    mock_engine.model.patch_optimizer_and_scheduler_for_adaptive_bs.assert_called_once()
     # check BsSearchAlgo is initialized well
     mock_bs_search_algo_cls.assert_called_once()
     assert mock_bs_search_algo_cls.call_args.kwargs["default_bs"] == default_bs
@@ -141,7 +140,7 @@ def test_adapt_batch_size_dist_main_proc(
     adapt_batch_size(mock_engine, not_increase, **train_args)
 
     # same as test_adapt_batch_size
-    mock_engine.model.patch_optimizer_and_scheduler_for_hpo.assert_called_once()
+    mock_engine.model.patch_optimizer_and_scheduler_for_adaptive_bs.assert_called_once()
     mock_bs_search_algo_cls.assert_called_once()
     assert mock_bs_search_algo_cls.call_args.kwargs["default_bs"] == default_bs
     assert mock_bs_search_algo_cls.call_args.kwargs["max_bs"] == train_set_size // num_devices
@@ -203,7 +202,6 @@ def test_adjust_train_args(train_args):
     adjusted_args = _adjust_train_args(train_args)
 
     assert "self" not in adjusted_args
-    assert "run_hpo" not in adjusted_args
     assert "adaptive_bs" not in adjusted_args
     assert adjusted_args["kwargs_a"] == "kwargs_a"
 

@@ -66,7 +66,6 @@ OpenVINO™ Training Extensions provides the following usability features:
 - [Datumaro](https://openvinotoolkit.github.io/datumaro/stable/index.html) data frontend: OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
 - **Distributed training** to accelerate the training process when you have multiple GPUs
 - **Mixed-precision training** to save GPUs memory and use larger batch sizes
-- Integrated, efficient [hyper-parameter optimization module (HPO)](https://openvinotoolkit.github.io/training_extensions/latest/guide/explanation/additional_features/hpo.html). Through dataset proxy and built-in hyper-parameter optimizer, you can get much faster hyper-parameter optimization compared to other off-the-shelf tools. The hyperparameter optimization is dynamically scheduled based on your resource budget.
 
 ---
 

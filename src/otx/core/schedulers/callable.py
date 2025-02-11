@@ -1,6 +1,7 @@
-# Copyright (C) 2024 Intel Corporation
+"""Scheduler callable to support adaptive batch size."""
+
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Scheduler callable to support hyper-parameter optimization (HPO) algorithm."""
 
 from __future__ import annotations
 
@@ -18,11 +19,11 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable
 
 
-class SchedulerCallableSupportHPO:
-    """LR scheduler callable supports OTX hyper-parameter optimization (HPO) algorithm.
+class SchedulerCallableSupportAdaptiveBS:
+    """LR scheduler callable supports OTX adaptive batch size.
 
     It makes SchedulerCallable pickelable and accessible to parameters.
-    It is used for HPO and adaptive batch size.
+    It is used for adaptive batch size.
 
     Args:
         scheduler_cls: `LRScheduler` class type or string class import path. See examples for details.
@@ -38,7 +39,7 @@ class SchedulerCallableSupportHPO:
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,
-            scheduler=SchedulerCallableSupportHPO(
+            scheduler=SchedulerCallableSupportAdaptiveBS(
                 scheduler_cls=StepLR,
                 scheduler_kwargs={
                     "step_size": 10,
@@ -55,7 +56,7 @@ class SchedulerCallableSupportHPO:
 
         model = MobileNetV3ForMulticlassCls(
             num_classes=3,
-            optimizer=SchedulerCallableSupportHPO(
+            optimizer=SchedulerCallableSupportAdaptiveBS(
                 scheduler_cls="torch.optim.lr_scheduler.StepLR",
                 scheduler_kwargs={
                     "step_size": 10,
@@ -98,7 +99,7 @@ class SchedulerCallableSupportHPO:
         )
 
     @classmethod
-    def from_callable(cls, func: LRSchedulerCallable) -> SchedulerCallableSupportHPO:
+    def from_callable(cls, func: LRSchedulerCallable) -> SchedulerCallableSupportAdaptiveBS:
         """Create this class instance from an existing optimizer callable."""
         dummy_params = [nn.Parameter()]
         optimizer = Optimizer(dummy_params, {"lr": 1.0})
@@ -117,7 +118,7 @@ class SchedulerCallableSupportHPO:
             key: value for key, value in scheduler.state_dict().items() if key in allow_names and key not in block_names
         }
 
-        return SchedulerCallableSupportHPO(
+        return SchedulerCallableSupportAdaptiveBS(
             scheduler_cls=scheduler.__class__,
             scheduler_kwargs=scheduler_kwargs,
         )

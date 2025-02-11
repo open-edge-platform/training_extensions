@@ -28,8 +28,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "enum_name": "TrainType",
         "options": {
           "Incremental": "Incremental",
@@ -52,8 +50,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 10000000000
       },
@@ -73,8 +69,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "enum_name": "StorageCacheScheme",
         "options": {
           "NONE": "NONE",
@@ -100,9 +94,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       }
     },
     "learning_parameters": {
@@ -126,8 +118,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "possible",
-        "auto_hpo_value": null,
         "min_value": 1,
         "max_value": 512
       },
@@ -147,8 +137,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 1,
         "max_value": 512
       },
@@ -168,8 +156,6 @@
           "rules": []
         },
         "type": "FLOAT",
-        "auto_hpo_state": "possible",
-        "auto_hpo_value": null,
         "min_value": 1e-7,
         "max_value": 0.1,
         "step_size": null
@@ -190,8 +176,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 10000
       },
@@ -211,8 +195,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 1,
         "max_value": 100000
       },
@@ -232,8 +214,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 8
       },
@@ -252,9 +232,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "early_stop_start": {
         "value": 3,
@@ -272,8 +250,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 1000
       },
@@ -293,8 +269,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 50
       },
@@ -314,8 +288,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 1000
       },
@@ -334,9 +306,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "auto_adapt_batch_size": {
         "value": "None",
@@ -354,8 +324,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "enum_name": "BatchSizeAdaptType",
         "options": {
           "NONE": "None",
@@ -378,9 +346,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "input_size": {
         "value": "Default",
@@ -398,8 +364,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "enum_name": "InputSizePreset",
         "options": {
           "DEFAULT": "Default",
@@ -432,9 +396,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "enable_pruning": {
         "value": false,
@@ -451,9 +413,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "pruning_supported": {
         "value": true,
@@ -470,9 +430,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "maximal_accuracy_degradation": {
         "value": 1.0,
@@ -490,8 +448,6 @@
           "rules": []
         },
         "type": "FLOAT",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0.0,
         "max_value": 100.0,
         "step_size": null
@@ -518,8 +474,6 @@
           "rules": []
         },
         "type": "FLOAT",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 1,
         "step_size": null
@@ -540,8 +494,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 10000
       },
@@ -560,9 +512,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "result_based_confidence_threshold": {
         "value": true,
@@ -579,9 +529,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       }
     },
     "pot_parameters": {
@@ -605,8 +553,6 @@
           "rules": []
         },
         "type": "SELECTABLE",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "enum_name": "POTQuantizationPreset",
         "options": {
           "MIXED": "Mixed",
@@ -629,8 +575,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 1,
         "max_value": 100000
       },
@@ -650,8 +594,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0,
         "max_value": 100000
       }
@@ -676,9 +618,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "enable_adaptive_params": {
         "value": true,
@@ -695,9 +635,7 @@
           "type": "UI_RULES",
           "rules": []
         },
-        "type": "BOOLEAN",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null
+        "type": "BOOLEAN"
       },
       "tile_size": {
         "value": 400,
@@ -715,8 +653,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 100,
         "max_value": 4096
       },
@@ -736,8 +672,6 @@
           "rules": []
         },
         "type": "FLOAT",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0.0,
         "max_value": 0.9,
         "step_size": null
@@ -758,8 +692,6 @@
           "rules": []
         },
         "type": "INTEGER",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 1,
         "max_value": 5000
       },
@@ -779,8 +711,6 @@
           "rules": []
         },
         "type": "FLOAT",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 1e-6,
         "max_value": 1.0,
         "step_size": null
@@ -801,8 +731,6 @@
           "rules": []
         },
         "type": "FLOAT",
-        "auto_hpo_state": "not_possible",
-        "auto_hpo_value": null,
         "min_value": 0.0,
         "max_value": 1.0,
         "step_size": null

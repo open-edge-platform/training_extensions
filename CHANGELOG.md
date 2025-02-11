@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ### New features
 
+### Enhancements
+
+### Bug fixes
+
+## \[2.3.0\]
+
+### New features
+
 - Turn on/off classification augmentations
   (<https://github.com/openvinotoolkit/training_extensions/pull/4039>)
 - Turn on/off detection and instance segmentation augmentations
@@ -68,6 +76,15 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4172>)
 - Revert FMetric computation
   (<https://github.com/openvinotoolkit/training_extensions/pull/4212>)
+- Fix backward compatibility issues in model checkpoint loading
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4199>)
+- Fix label info on loading checkpoint
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4200>)
+
+### Removed
+
+- Remove HPO
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
 
 ## \[2.2.2\]
 

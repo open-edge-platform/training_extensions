@@ -50,7 +50,7 @@ def adapt_batch_size(
         msg = "Zero shot visual prompting task doesn't support adaptive batch size."
         raise RuntimeError(msg)
 
-    engine.model.patch_optimizer_and_scheduler_for_hpo()
+    engine.model.patch_optimizer_and_scheduler_for_adaptive_bs()
     default_bs = engine.datamodule.train_subset.batch_size
 
     if "ADAPTIVE_BS_FOR_DIST" in os.environ:  # main process of distributed training already executes adapt_batch_size
@@ -89,7 +89,6 @@ def adapt_batch_size(
 def _adjust_train_args(train_args: dict[str, Any]) -> dict[str, Any]:
     train_args.update(train_args.pop("kwargs", {}))
     train_args.pop("self", None)
-    train_args.pop("run_hpo", None)
     train_args.pop("adaptive_bs")
     return train_args
 
