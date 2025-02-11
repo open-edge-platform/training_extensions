@@ -49,13 +49,10 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3985>)
 - Bump OV to 2024.6, update empty label handling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4162>)
-<<<<<<< HEAD
 - Bump MAPI to 0.2.5.1
   (<https://github.com/openvinotoolkit/training_extensions/pull/4211>)
-=======
 - Revert FMetric computation (PR: 4130)
   (<https://github.com/openvinotoolkit/training_extensions/pull/4210>)
->>>>>>> origin/releases/2.3.0
 
 ### Bug fixes
 
