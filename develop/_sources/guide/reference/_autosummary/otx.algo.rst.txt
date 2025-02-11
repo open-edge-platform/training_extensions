@@ -29,7 +29,6 @@ otx.algo
 
    otx.algo.accelerators
    otx.algo.strategies
-   otx.algo.action_classification
    otx.algo.anomaly
    otx.algo.callbacks
    otx.algo.classification
