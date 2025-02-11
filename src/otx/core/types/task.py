@@ -11,9 +11,6 @@ from enum import Enum
 class OTXTaskType(str, Enum):
     """OTX task type definition."""
 
-    # Action Recognition
-    ACTION_CLASSIFICATION = "ACTION_CLASSIFICATION"
-
     # Anomaly Detection
     ANOMALY = "ANOMALY"
     # TODO(ashwinvaidya17): Remove rest after greenlight from backend.

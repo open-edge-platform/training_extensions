@@ -10,7 +10,6 @@ from . import (
 
 __all__ = [
     "accelerators",
-    "action_classification",
     "anomaly",
     "callbacks",
     "classification",

@@ -134,11 +134,6 @@ class OTXDatasetFactory:
 
             return OTXSegmentationDataset(ignore_index=ignore_index, **common_kwargs)
 
-        if task == OTXTaskType.ACTION_CLASSIFICATION:
-            from .dataset.action_classification import OTXActionClsDataset
-
-            return OTXActionClsDataset(**common_kwargs)
-
         if task == OTXTaskType.VISUAL_PROMPTING:
             from .dataset.visual_prompting import OTXVisualPromptingDataset
 

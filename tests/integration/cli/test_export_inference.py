@@ -48,7 +48,6 @@ TASK_NAME_TO_MAIN_METRIC_NAME = {
     "instance_segmentation": "test/map_50",
     "visual_prompting": "test/f1-score",
     "zero_shot_visual_prompting": "test/f1-score",
-    "action_classification": "test/accuracy",
     "keypoint_detection": "test/PCK",
     "object_detection_3d": "test/AP_3d@0.5",
 }

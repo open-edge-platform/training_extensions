@@ -16,8 +16,7 @@ from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.core.data.entity.action_classification import ActionClsDataEntity
-from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity, VideoInfo
+from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetDataEntity
@@ -31,7 +30,6 @@ from otx.core.data.transform_libs.torchvision import (
     FilterAnnotations,
     GetBBoxCenterScale,
     MinIoURandomCrop,
-    PackVideo,
     Pad,
     PhotoMetricDistortion,
     RandomAffine,
@@ -78,25 +76,6 @@ class TestDecodeVideo:
 
         transform = DecodeVideo(test_mode=True, out_of_bound_opt="repeat_last")
         assert len(transform._transform(video, {})) == 8
-
-
-class TestPackVideo:
-    def test_forward(self):
-        entity = ActionClsDataEntity(
-            video=MockVideo(),
-            video_info=VideoInfo(),
-            image=[],
-            img_info=ImageInfo(
-                img_idx=0,
-                img_shape=(0, 0),
-                ori_shape=(0, 0),
-                image_color_channel=None,
-            ),
-            labels=torch.LongTensor([0]),
-        )
-        transform = PackVideo()
-        out = transform(entity)
-        assert out.image == entity.video
 
 
 @pytest.fixture()

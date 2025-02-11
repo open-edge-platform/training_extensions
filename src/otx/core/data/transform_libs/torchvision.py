@@ -31,7 +31,6 @@ from torchvision import tv_tensors
 from torchvision._utils import sequence_to_str
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.core.data.entity.action_classification import ActionClsDataEntity
 from otx.core.data.entity.base import (
     OTXDataEntity,
     Points,
@@ -346,14 +345,6 @@ class DecodeVideo(tvt_v2.Transform):
             ori_clip_len = self.clip_len * self.frame_interval
 
         return ori_clip_len
-
-
-class PackVideo(tvt_v2.Transform):
-    """Pack video for batch entity."""
-
-    def forward(self, *inputs: ActionClsDataEntity) -> ActionClsDataEntity:
-        """Replace ActionClsDataEntity's image to ActionClsDataEntity's video."""
-        return inputs[0].wrap(image=inputs[0].video, video=[])
 
 
 class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):

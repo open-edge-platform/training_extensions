@@ -38,8 +38,6 @@ def get_task_list(task: str) -> list[OTXTaskType]:
         return [task_type for task_type in OTXTaskType if task_type != OTXTaskType.DETECTION_SEMI_SL]
     if task == "classification":
         return [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
-    if task == "action":
-        return [OTXTaskType.ACTION_CLASSIFICATION]
     if task == "visual_prompting":
         return [OTXTaskType.VISUAL_PROMPTING, OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING]
     if task == "anomaly":
@@ -108,9 +106,6 @@ def fxt_target_dataset_per_task(fxt_ci_data_root) -> dict:
             "supervised": Path(fxt_ci_data_root / "v2/semantic_seg/kvasir_small/1"),
             "unlabeled": Path(fxt_ci_data_root / "v2/semantic_seg/semi-sl/unlabeled_images/kvasir"),
         },
-        OTXTaskType.ACTION_CLASSIFICATION: Path(
-            fxt_ci_data_root / "v2/action/action_classification/ucf_kinetics_30percent_medium",
-        ),
         OTXTaskType.VISUAL_PROMPTING: Path(fxt_ci_data_root / "v2/visual_prompting/coco_car_person_medium"),
         OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING: Path(
             fxt_ci_data_root / "v2/zero_shot_visual_prompting/coco_car_person_medium",
@@ -137,7 +132,6 @@ def fxt_cli_override_command_per_task() -> dict:
         OTXTaskType.ROTATED_DETECTION: [],
         OTXTaskType.INSTANCE_SEGMENTATION: [],
         OTXTaskType.SEMANTIC_SEGMENTATION: [],
-        OTXTaskType.ACTION_CLASSIFICATION: [],
         OTXTaskType.VISUAL_PROMPTING: [],
         OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING: [],
         OTXTaskType.ANOMALY: [],

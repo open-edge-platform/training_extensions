@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 import pytest
 from datumaro.components.annotation import Mask
 
-from otx.core.data.dataset.action_classification import OTXActionClsDataset
 from otx.core.data.dataset.classification import HLabelInfo
 from otx.core.data.dataset.segmentation import OTXSegmentationDataset
 
@@ -81,14 +80,13 @@ class TestDataset:
 
         # The returned image should be resized because it was resized before caching
         h_expected = w_expected = min(mem_cache_img_max_size)
-        if dataset_cls != OTXActionClsDataset:  # Action classification dataset handle video, not image.
-            assert item.image.shape[:2] == (h_expected, w_expected)
-            assert item.img_info.img_shape == (h_expected, w_expected)
+        assert item.image.shape[:2] == (h_expected, w_expected)
+        assert item.img_info.img_shape == (h_expected, w_expected)
 
-            item = dataset[0]  # Take from the cache
+        item = dataset[0]  # Take from the cache
 
-            assert item.image.shape[:2] == (h_expected, w_expected)
-            assert item.img_info.img_shape == (h_expected, w_expected)
+        assert item.image.shape[:2] == (h_expected, w_expected)
+        assert item.img_info.img_shape == (h_expected, w_expected)
 
 
 class TestOTXSegmentationDataset:

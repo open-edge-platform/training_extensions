@@ -579,11 +579,6 @@ if __name__ == "__main__":
 
     tasks = sorted(raw_data["task"].unique())
     for task in tasks:
-        # Skip action tasks
-        if task in ["action_classification", "action_detection"]:
-            print(f"Skipping task: {task}")
-            continue
-
         # Use summarize_table function to get a detailed summary for each task
         summary_data = summarize_table(raw_data, task)
 

@@ -34,8 +34,6 @@ def test_engine_from_config(
     """
     if task not in DEFAULT_CONFIG_PER_TASK:
         pytest.skip("Only the Task has Default config is tested to reduce unnecessary resources.")
-    if task.lower() in ("action_classification"):
-        pytest.xfail(reason="xFail until this root cause is resolved on the Datumaro side.")
     if task.lower() in ("h_label_cls"):
         pytest.skip(
             reason="H-labels require num_multiclass_head, num_multilabel_classes, which skip until we have the ability to automate this.",
@@ -71,7 +69,6 @@ def test_engine_from_config(
     # A Task that doesn't have Export implemented yet.
     # [TODO]: Enable should progress for all Tasks.
     if task in [
-        OTXTaskType.ACTION_CLASSIFICATION,
         OTXTaskType.H_LABEL_CLS,
         OTXTaskType.ROTATED_DETECTION,
         OTXTaskType.ANOMALY,
