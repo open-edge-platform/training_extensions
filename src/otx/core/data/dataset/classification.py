@@ -51,13 +51,13 @@ class OTXMulticlassClsDataset(OTXDataset[TorchDataItem]):
         image = self.transforms(image)
         return TorchDataItem(
             image=image,
-            label=torch.as_tensor(label_anns).squeeze(),
+            label=torch.as_tensor(label_anns),
         )
 
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect MulticlassClsDataEntity into MulticlassClsBatchDataEntity in data loader."""
-        return TorchDataItemBatch.collate_fn
+        return TorchDataItem.collate_fn
 
 
 class OTXMultilabelClsDataset(OTXDataset):
@@ -67,12 +67,14 @@ class OTXMultilabelClsDataset(OTXDataset):
         super().__init__(**kwargs)
         self.num_classes = len(self.dm_subset.categories()[AnnotationType.label])
 
-    def _get_item_impl(self, index: int) -> MultilabelClsDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-
+        img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        image = self.transforms(img_data)
+        
         label_ids = set()
         for ann in item.annotations:
             # multilabel information stored in 'multi_label_ids' attribute when the source format is arrow
@@ -89,19 +91,11 @@ class OTXMultilabelClsDataset(OTXDataset):
                 label_ids.add(label.label)
         labels = torch.as_tensor(list(label_ids))
 
-        entity = MultilabelClsDataEntity(
-            image=img_data,
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            labels=self._convert_to_onehot(labels, ignored_labels),
+        return TorchDataItem(
+            image=image,
+            label=self._convert_to_onehot(labels, ignored_labels),
         )
 
-        return self._apply_transforms(entity)
 
     def _convert_to_onehot(self, labels: torch.tensor, ignored_labels: list[int]) -> torch.tensor:
         """Convert label to one-hot vector format."""
@@ -114,7 +108,7 @@ class OTXMultilabelClsDataset(OTXDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect MultilabelClsDataEntity into MultilabelClsBatchDataEntity in data loader."""
-        return partial(MultilabelClsBatchDataEntity.collate_fn, stack_images=self.stack_images)
+        return TorchDataItem.collate_fn
 
 
 class OTXHlabelClsDataset(OTXDataset):
@@ -199,12 +193,12 @@ class OTXHlabelClsDataset(OTXDataset):
                     )
         label_anns.extend(ancestor_dm_labels)
 
-    def _get_item_impl(self, index: int) -> HlabelClsDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-
+        image = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
         label_ids = set()
         for ann in item.annotations:
             # in h-cls scenario multilabel information stored in 'multi_label_ids' attribute
@@ -222,19 +216,11 @@ class OTXHlabelClsDataset(OTXDataset):
 
         hlabel_labels = self._convert_label_to_hlabel_format([Label(label=idx) for idx in label_ids], ignored_labels)
 
-        entity = HlabelClsDataEntity(
-            image=img_data,
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            labels=torch.as_tensor(hlabel_labels),
+        return TorchDataItem(
+            image=image,
+            label=torch.as_tensor(hlabel_labels),
         )
 
-        return self._apply_transforms(entity)
 
     def _convert_label_to_hlabel_format(self, label_anns: list[Label], ignored_labels: list[int]) -> list[int]:
         """Convert format of the label to the h-label.
@@ -290,4 +276,4 @@ class OTXHlabelClsDataset(OTXDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect HlabelClsDataEntity into HlabelClsBatchDataEntity in data loader."""
-        return partial(HlabelClsBatchDataEntity.collate_fn, stack_images=self.stack_images)
+        return TorchDataItem.collate_fn
