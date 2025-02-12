@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
 - Remove Action Classification
   (<https://github.com/openvinotoolkit/training_extensions/pull/4202>)
+- Remove Diffusion task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4206>)
 
 ## \[2.3.0\]
 
