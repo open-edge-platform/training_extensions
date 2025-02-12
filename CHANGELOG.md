@@ -58,8 +58,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
 - Upgrade OpenVINO to 2024.5 and NNCF to 2.14.0
   (<https://github.com/openvinotoolkit/training_extensions/pull/4123>)
-- Improve FMetric computation
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4130>)
 - Upgrade OV, MAPI, and NNCF dependencies
   (<https://github.com/openvinotoolkit/training_extensions/pull/3967>)
 - Instance Segmentation Model refactoring
@@ -85,6 +83,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4173>)
 - Fix arrow support for semantic segmentation task
   (<https://github.com/openvinotoolkit/training_extensions/pull/4172>)
+- Revert FMetric computation
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4212>)
 - Fix backward compatibility issues in model checkpoint loading
   (<https://github.com/openvinotoolkit/training_extensions/pull/4199>)
 - Fix label info on loading checkpoint
