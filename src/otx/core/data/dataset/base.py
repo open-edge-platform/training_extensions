@@ -23,6 +23,7 @@ from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo, NullLabelInfo
+from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
     from datumaro import DatasetSubset, Image
@@ -135,7 +136,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
 
         return results
 
-    def __getitem__(self, index: int) -> T_OTXDataEntity:
+    def __getitem__(self, index: int) -> TorchDataItem:
         for _ in range(self.max_refetch):
             results = self._get_item_impl(index)
 
@@ -253,7 +254,7 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         return resized_img
 
     @abstractmethod
-    def _get_item_impl(self, idx: int) -> T_OTXDataEntity | None:
+    def _get_item_impl(self, idx: int) -> TorchDataItem | None:
         pass
 
     @property

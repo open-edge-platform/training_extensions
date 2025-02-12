@@ -34,6 +34,7 @@ from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallab
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
+from otx.data.torch import TorchDataItemBatch, TorchPredDataItem
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -86,7 +87,7 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
             nn.Module: base nn.Module model for supervised training
         """
 
-    def _customize_inputs(self, inputs: MulticlassClsBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: TorchDataItemBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -95,16 +96,15 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
             mode = "predict"
 
         return {
-            "images": inputs.stacked_images,
-            "labels": torch.cat(inputs.labels, dim=0),
-            "imgs_info": inputs.imgs_info,
+            "images": inputs.images,
+            "labels": inputs.labels,
             "mode": mode,
         }
 
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: MulticlassClsBatchDataEntity,
+        inputs: TorchDataItemBatch,
     ) -> MulticlassClsBatchPredEntity | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
@@ -125,12 +125,10 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
         scores = torch.unbind(logits, 0)
         preds = logits.argmax(-1, keepdim=True).unbind(0)
 
-        return MulticlassClsBatchPredEntity(
-            batch_size=inputs.batch_size,
-            images=inputs.stacked_images,
-            imgs_info=inputs.imgs_info,
-            scores=scores,
+        return TorchPredDataItem(
+            images=inputs.images,
             labels=preds,
+            scores=scores,
         )
 
     @property
@@ -162,11 +160,11 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: MulticlassClsBatchPredEntity,
-        inputs: MulticlassClsBatchDataEntity,
+        preds: TorchPredDataItem,
+        inputs: TorchDataItemBatch,
     ) -> MetricInput:
-        pred = torch.tensor(preds.labels)
-        target = torch.tensor(inputs.labels)
+        pred = torch.tensor(preds.labels, device=self.device)
+        target = torch.tensor(inputs.labels, device=self.device)
         return {
             "preds": pred,
             "target": target,

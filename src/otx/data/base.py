@@ -10,21 +10,25 @@ from typing import Any
 
 @dataclass
 class DataItem(ABC):
+    """Data item."""
+
     # TODO(ashwinvaidya17): This is temporary and needs to be replaced with the actual media type
-    media: Any
+    # media: Any
     label: Any
-    mask: Any
-    bboxes: Any
+    # mask: Any
+    # bboxes: Any
 
 
 @dataclass
 class DataItemBatch(ABC):
-    data_items: list[DataItem]
+    """Data item batch."""
+    # data_items: list[DataItem]
 
 
 @dataclass
 class PredDataItem(ABC):
-    mask: Any
-    bboxes: Any
-    label: Any
-    score: Any
+    """Pred data item."""
+    # mask: Any
+    # bboxes: Any
+    # label: Any
+    # score: Any

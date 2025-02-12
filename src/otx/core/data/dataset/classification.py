@@ -12,28 +12,29 @@ import torch
 from datumaro import Image, Label
 from datumaro.components.annotation import AnnotationType
 from torch.nn import functional
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.base import OTXDataset
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.classification import (
     HlabelClsBatchDataEntity,
     HlabelClsDataEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsDataEntity,
     MultilabelClsBatchDataEntity,
     MultilabelClsDataEntity,
 )
 from otx.core.types.label import HLabelInfo
+from otx.data.torch import TorchDataItem, TorchDataItemBatch
 
 
-class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
+class OTXMulticlassClsDataset(OTXDataset[TorchDataItem]):
     """OTXDataset class for multi-class classification task."""
 
-    def _get_item_impl(self, index: int) -> MulticlassClsDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         roi = item.attributes.get("roi", None)
         img_data, img_shape, _ = self._get_img_data_and_shape(img, roi)
+        image = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
         if roi:
             # extract labels from ROI
             labels_ids = [
@@ -51,23 +52,18 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
             msg = f"Multi-class Classification can't use the multi-label, currently len(labels) = {len(label_anns)}"
             raise ValueError(msg)
 
-        entity = MulticlassClsDataEntity(
-            image=img_data,
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-            ),
-            labels=torch.as_tensor(label_anns),
-        )
+        # apply transforms before converting to TorchDataItem
 
-        return self._apply_transforms(entity)
+        image = self.transforms(image)
+        return TorchDataItem(
+            image=image,
+            label=torch.as_tensor(label_anns).squeeze(),
+        )
 
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect MulticlassClsDataEntity into MulticlassClsBatchDataEntity in data loader."""
-        return partial(MulticlassClsBatchDataEntity.collate_fn, stack_images=self.stack_images)
+        return TorchDataItemBatch.collate_fn
 
 
 class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
