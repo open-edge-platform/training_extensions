@@ -16,12 +16,6 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.base import OTXDataset
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsDataEntity,
-    MultilabelClsBatchDataEntity,
-    MultilabelClsDataEntity,
-)
 from otx.core.types.label import HLabelInfo
 from otx.data.torch import TorchDataItem, TorchDataItemBatch
 
@@ -66,7 +60,7 @@ class OTXMulticlassClsDataset(OTXDataset[TorchDataItem]):
         return TorchDataItemBatch.collate_fn
 
 
-class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
+class OTXMultilabelClsDataset(OTXDataset):
     """OTXDataset class for multi-label classification task."""
 
     def __init__(self, **kwargs) -> None:
@@ -123,7 +117,7 @@ class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
         return partial(MultilabelClsBatchDataEntity.collate_fn, stack_images=self.stack_images)
 
 
-class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
+class OTXHlabelClsDataset(OTXDataset):
     """OTXDataset class for H-label classification task."""
 
     def __init__(self, **kwargs) -> None:

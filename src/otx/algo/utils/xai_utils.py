@@ -20,11 +20,7 @@ import torch
 from datumaro import Image
 
 from otx.core.config.explain import ExplainConfig
-from otx.core.data.entity.classification import (
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchPredEntity,
-)
+from otx.data.torch import TorchPredDataItem
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.types.explain import TargetExplainGroup
@@ -38,9 +34,7 @@ if TYPE_CHECKING:
 
 ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
 OTXBatchPredEntitiesSupportXAI = (
-    MulticlassClsBatchPredEntity
-    | MultilabelClsBatchPredEntity
-    | HlabelClsBatchPredEntity
+    TorchPredDataItem
     | DetBatchPredEntity
     | InstanceSegBatchPredEntity
 )

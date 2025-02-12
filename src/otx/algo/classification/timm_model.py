@@ -18,14 +18,6 @@ from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.metrics.accuracy import HLabelClsMetricCallable, MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.classification import (

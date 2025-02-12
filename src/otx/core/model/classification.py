@@ -14,14 +14,6 @@ from torch import Tensor, nn
 
 from otx.algo.classification.utils import get_classification_layers
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import MetricInput
@@ -43,7 +35,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity]):
+class OTXMulticlassClsModel(OTXModel):
     """Base class for the classification models used in OTX."""
 
     def __init__(
@@ -188,7 +180,7 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
 ### It'll be integrated after H-label classification integration with more advanced design.
 
 
-class OTXMultilabelClsModel(OTXModel[MultilabelClsBatchDataEntity, MultilabelClsBatchPredEntity]):
+class OTXMultilabelClsModel(OTXModel):
     """Multi-label classification models used in OTX."""
 
     def __init__(
@@ -327,7 +319,7 @@ class OTXMultilabelClsModel(OTXModel[MultilabelClsBatchDataEntity, MultilabelCls
         return MultilabelClsBatchDataEntity(batch_size, images, [], labels=labels)
 
 
-class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEntity]):
+class OTXHlabelClsModel(OTXModel):
     """H-label classification models used in OTX."""
 
     label_info: HLabelInfo
@@ -493,7 +485,7 @@ class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEnt
 
 
 class OVMulticlassClassificationModel(
-    OVModel[MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity],
+    OVModel,
 ):
     """Classification model compatible for OpenVINO IR inference.
 
@@ -567,7 +559,7 @@ class OVMulticlassClassificationModel(
         }
 
 
-class OVMultilabelClassificationModel(OVModel[MultilabelClsBatchDataEntity, MultilabelClsBatchPredEntity]):
+class OVMultilabelClassificationModel(OVModel):
     """Multilabel classification model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
@@ -641,7 +633,7 @@ class OVMultilabelClassificationModel(OVModel[MultilabelClsBatchDataEntity, Mult
         }
 
 
-class OVHlabelClassificationModel(OVModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEntity]):
+class OVHlabelClassificationModel(OVModel):
     """Hierarchical classification model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
