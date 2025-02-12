@@ -9,6 +9,7 @@ import warnings
 from random import sample
 from typing import TYPE_CHECKING
 
+from datumaro import AnnotationType
 from datumaro.components.annotation import Annotation, Bbox, Polygon
 from datumaro.components.dataset import Dataset as DmDataset
 
@@ -94,7 +95,12 @@ def remove_unused_labels(
         raise ValueError(msg)
     if len(used_labels) == len(original_categories):
         return dataset
-    if data_format == "arrow" and max(used_labels) != len(original_categories) - 1:
+    # this section removes an empty label from arrow dataset. Not applicable for keypoints data
+    if (
+        data_format == "arrow"
+        and max(used_labels) != len(original_categories) - 1
+        and AnnotationType.points not in dataset.categories()
+    ):
         # we assume that empty label is always the last one. If it is not explicitly added to the dataset,
         # (not in the used labels) it will be filtered out.
         mapping = {cat: cat for cat in original_categories[:-1]}
