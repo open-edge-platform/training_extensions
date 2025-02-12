@@ -118,6 +118,10 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.INSTANCE_SEGMENTATION,
         "model_name": "rtmdet_inst_tiny",
     },
+    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
+        "task": OTXTaskType.INSTANCE_SEGMENTATION,
+        "model_name": "maskrcnn_r50_tv",
+    },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
         "task": OTXTaskType.ROTATED_DETECTION,
