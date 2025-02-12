@@ -27,7 +27,7 @@ from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
 from otx.core.types.task import OTXTrainType
-from otx.data.torch import TorchDataItemBatch, TorchPredDataItem, TorchDataItem, TorchPredDataItemBatch
+from otx.data.torch import TorchDataItem, TorchDataItemBatch, TorchPredItem, TorchPredItemBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -98,16 +98,16 @@ class OTXMulticlassClsModel(OTXModel):
         self,
         outputs: Any,  # noqa: ANN401
         inputs: TorchDataItemBatch,
-    ) -> TorchPredDataItemBatch | OTXBatchLossEntity:
+    ) -> TorchPredItemBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
         if self.explain_mode:
-            return TorchPredDataItemBatch(
+            return TorchPredItemBatch(
                 images=inputs.images,
                 labels=outputs["labels"],
                 scores=outputs["scores"],
-                # saliency_map=outputs["saliency_map"],
+                saliency_map=outputs["saliency_map"],
                 feature_vector=outputs["feature_vector"],
             )
 
@@ -116,7 +116,7 @@ class OTXMulticlassClsModel(OTXModel):
         scores = torch.unbind(logits, 0)
         preds = logits.argmax(-1, keepdim=True).unbind(0)
 
-        return TorchPredDataItemBatch(
+        return TorchPredItemBatch(
             images=inputs.images,
             labels=torch.stack(preds),
             scores=torch.stack(scores),
@@ -151,7 +151,7 @@ class OTXMulticlassClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredDataItem,
+        preds: TorchPredItem,
         inputs: TorchDataItemBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels, device=self.device)
@@ -241,24 +241,24 @@ class OTXMultilabelClsModel(OTXModel):
         self,
         outputs: Any,  # noqa: ANN401
         inputs: TorchDataItemBatch,
-    ) -> TorchPredDataItemBatch | OTXBatchLossEntity:
+    ) -> TorchPredItemBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
         if self.explain_mode:
-            return TorchPredDataItemBatch(
+            return TorchPredItemBatch(
                 images=inputs.images,
                 labels=outputs["labels"],
                 scores=outputs["scores"],
-                # saliency_map=outputs["saliency_map"],
-                # feature_vector=outputs["feature_vector"],
+                saliency_map=outputs["saliency_map"],
+                feature_vector=outputs["feature_vector"],
             )
 
         # To list, batch-wise
         logits = outputs if isinstance(outputs, torch.Tensor) else outputs["logits"]
         scores = torch.unbind(logits, 0)
 
-        return TorchPredDataItemBatch(
+        return TorchPredItemBatch(
             images=inputs.images,
             labels=torch.stack(logits.argmax(-1, keepdim=True).unbind(0)),
             scores=torch.stack(scores),
@@ -294,12 +294,12 @@ class OTXMultilabelClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredDataItem,
+        preds: TorchPredItem,
         inputs: TorchDataItem,
     ) -> MetricInput:
         return {
             "preds": preds.scores,
-            "target": inputs.labels
+            "target": inputs.labels,
         }
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
@@ -380,7 +380,7 @@ class OTXHlabelClsModel(OTXModel):
         self,
         outputs: Any,  # noqa: ANN401
         inputs: TorchDataItemBatch,
-    ) -> TorchPredDataItemBatch | OTXBatchLossEntity:
+    ) -> TorchPredItemBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -393,7 +393,7 @@ class OTXHlabelClsModel(OTXModel):
             labels = outputs.argmax(-1, keepdim=True)
 
         if self.explain_mode:
-            return TorchPredDataItemBatch(
+            return TorchPredItemBatch(
                 images=inputs.images,
                 labels=labels,
                 scores=scores,
@@ -401,7 +401,7 @@ class OTXHlabelClsModel(OTXModel):
                 # feature_vector=outputs["feature_vector"],
             )
 
-        return TorchPredDataItemBatch(
+        return TorchPredItemBatch(
             images=inputs.images,
             labels=labels,
             scores=scores,
@@ -437,7 +437,7 @@ class OTXHlabelClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredDataItem,
+        preds: TorchPredItem,
         inputs: TorchDataItem,
     ) -> MetricInput:
         hlabel_info: HLabelInfo = self.label_info  # type: ignore[assignment]
@@ -507,7 +507,7 @@ class OVMulticlassClassificationModel(
         self,
         outputs: list[ClassificationResult],
         inputs: TorchDataItemBatch,
-    ) -> TorchPredDataItem:
+    ) -> TorchPredItem:
         pred_labels = [torch.tensor(out.top_labels[0][0], dtype=torch.long, device=self.device) for out in outputs]
         pred_scores = [torch.tensor(out.top_labels[0][2], device=self.device) for out in outputs]
 
@@ -517,15 +517,15 @@ class OVMulticlassClassificationModel(
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredDataItem(
+            return TorchPredItem(
                 images=inputs.images,
                 labels=pred_labels,
                 scores=pred_scores,
-                # saliency_map=predicted_s_maps,
-                # feature_vector=predicted_f_vectors,
+                saliency_map=predicted_s_maps,
+                feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredDataItem(
+        return TorchPredItem(
             images=inputs.images,
             labels=pred_labels,
             scores=pred_scores,
@@ -533,7 +533,7 @@ class OVMulticlassClassificationModel(
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredDataItem,
+        preds: TorchPredItem,
         inputs: TorchDataItemBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels)
@@ -578,7 +578,7 @@ class OVMultilabelClassificationModel(OVModel):
         self,
         outputs: list[ClassificationResult],
         inputs: TorchDataItemBatch,
-    ) -> TorchPredDataItem:
+    ) -> TorchPredItem:
         pred_scores = [
             torch.tensor([top_label[2] for top_label in out.top_labels], device=self.device) for out in outputs
         ]
@@ -589,15 +589,15 @@ class OVMultilabelClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredDataItem(
+            return TorchPredItem(
                 images=inputs.images,
                 labels=[],
                 scores=pred_scores,
-                # saliency_map=predicted_s_maps,
-                # feature_vector=predicted_f_vectors,
+                saliency_map=predicted_s_maps,
+                feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredDataItem(
+        return TorchPredItem(
             images=inputs.images,
             labels=[],
             scores=pred_scores,
@@ -605,7 +605,7 @@ class OVMultilabelClassificationModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredDataItem,
+        preds: TorchPredItem,
         inputs: TorchDataItemBatch,
     ) -> MetricInput:
         return {
@@ -648,7 +648,7 @@ class OVHlabelClassificationModel(OVModel):
         self,
         outputs: list[ClassificationResult],
         inputs: TorchDataItemBatch,
-    ) -> TorchPredDataItem:
+    ) -> TorchPredItem:
         all_pred_labels = []
         all_pred_scores = []
         for output in outputs:
@@ -683,15 +683,15 @@ class OVHlabelClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredDataItem(
+            return TorchPredItem(
                 images=inputs.images,
                 labels=all_pred_labels,
                 scores=all_pred_scores,
-                # saliency_map=predicted_s_maps,
-                # feature_vector=predicted_f_vectors,
+                saliency_map=predicted_s_maps,
+                feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredDataItem(
+        return TorchPredItem(
             images=inputs.images,
             labels=all_pred_labels,
             scores=all_pred_scores,
@@ -699,7 +699,7 @@ class OVHlabelClassificationModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredDataItem,
+        preds: TorchPredItem,
         inputs: TorchDataItemBatch,
     ) -> MetricInput:
         cls_heads_info = self.model.hierarchical_info["cls_heads_info"]

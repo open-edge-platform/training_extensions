@@ -4,24 +4,25 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
-T = TypeVar('T')  # Type for image/tensor data
-L = TypeVar('L')  # Type for label data
+TENSOR_TYPE = TypeVar("TENSOR_TYPE")
+
 
 @dataclass
-class DataItem(Generic[T, L], ABC):
+class DataItem(Generic[TENSOR_TYPE], ABC):
     """Abstract base class for data items.
-    
+
     Args:
-        image: Image data of type T
-        label: Label data of type L
+        image: Image data
+        label: Label data
     """
 
-    image: T
-    label: L
+    image: TENSOR_TYPE
+    label: TENSOR_TYPE
     # mask: Any
     # bboxes: Any
 
@@ -40,16 +41,16 @@ class DataItem(Generic[T, L], ABC):
 
 
 @dataclass
-class DataItemBatch(Generic[T, L], ABC):
+class DataItemBatch(Generic[TENSOR_TYPE], ABC):
     """Abstract base class for batched data items.
-    
+
     Args:
         images: Batch of image data of type T
         labels: Batch of label data of type L
     """
 
-    images: T
-    labels: L
+    images: TENSOR_TYPE
+    labels: TENSOR_TYPE
 
     def __post_init__(self) -> None:
         """Validate all data after initialization."""
@@ -66,43 +67,58 @@ class DataItemBatch(Generic[T, L], ABC):
 
 
 @dataclass
-class PredDataItem(DataItem[T, L], ABC):
+class PredItem(DataItem[TENSOR_TYPE], ABC):
     """Abstract base class for prediction data items.
-    
+
     Args:
-        image: Image data of type T
-        label: Predicted label data of type L
-        scores: Confidence scores for predictions of type T
+        image: Image data
+        label: Predicted label data
+        scores: Confidence scores for predictions
     """
 
-    score: T
+    score: TENSOR_TYPE
 
     @abstractmethod
     def validate_score(self) -> None:
         """Validate prediction score format and type."""
 
-    def __post_init__(self) -> None:
-        """Validate all data after initialization."""
-        super().__post_init__()
-        self.validate_score()
+    @abstractmethod
+    def validate_feature_vector(self) -> None:
+        """Validate feature vector format and type."""
+
+    @abstractmethod
+    def validate_saliency_map(self) -> None:
+        """Validate saliency map format and type."""
+
 
 @dataclass
-class PredDataItemBatch(DataItemBatch[T, L], ABC):
+class PredItemBatch(DataItemBatch[TENSOR_TYPE], ABC):
     """Abstract base class for batched prediction data items.
-    
+
     Args:
-        images: Batch of image data of type T
-        labels: Batch of label data of type L
+        images: Batch of image data
+        labels: Batch of label data
     """
-    scores: T
+
+    scores: TENSOR_TYPE | None = None
+    saliency_map: TENSOR_TYPE | None = None
+    feature_vector: TENSOR_TYPE | None = None
 
     def __post_init__(self) -> None:
         """Validate all data after initialization."""
         super().__post_init__()
         self.validate_scores()
+        self.validate_saliency_map()
+        self.validate_feature_vector()
 
     @abstractmethod
     def validate_scores(self) -> None:
         """Validate prediction scores format and type."""
-        
 
+    @abstractmethod
+    def validate_saliency_map(self) -> None:
+        """Validate saliency map format and type."""
+
+    @abstractmethod
+    def validate_feature_vector(self) -> None:
+        """Validate feature vector format and type."""

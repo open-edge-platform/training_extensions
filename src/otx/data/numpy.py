@@ -8,13 +8,13 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from .base import DataItem, DataItemBatch, PredDataItem
+from .base import DataItem, DataItemBatch, PredItem
 
 
 @dataclass
 class NumpyDataItem(DataItem[NDArray, NDArray]):
     """NumPy data item implementation.
-    
+
     Args:
         image: Image array of shape (H, W, C) and type float32
         label: Label array, either scalar for multi-class or 1D for multi-label
@@ -22,7 +22,7 @@ class NumpyDataItem(DataItem[NDArray, NDArray]):
 
     def validate_image(self) -> None:
         """Validate image array format.
-        
+
         Raises:
             ValueError: If image is not a 3D float32 array with shape (H, W, 3)
         """
@@ -36,13 +36,13 @@ class NumpyDataItem(DataItem[NDArray, NDArray]):
 
     def validate_label(self) -> None:
         """Validate label array format.
-        
+
         Raises:
             ValueError: If label is not a scalar or 1D int64 array
         """
         if not isinstance(self.label, np.ndarray):
             raise ValueError("Label must be a numpy.ndarray")
-            
+
         if not (
             (self.label.ndim == 0 and self.label.dtype == np.int64)  # Multi-class
             or (self.label.ndim == 1 and self.label.dtype == np.int64)  # Multi-label/hierarchical
@@ -57,10 +57,10 @@ class NumpyDataItemBatch(DataItemBatch[NDArray, NDArray]):
     @classmethod
     def collate_fn(cls, items: list[NumpyDataItem]) -> "NumpyDataItemBatch":
         """Collate NumpyDataItems into a batch.
-        
+
         Args:
             items: List of NumpyDataItems to batch
-            
+
         Returns:
             Batched NumpyDataItems with stacked arrays
         """
@@ -70,8 +70,8 @@ class NumpyDataItemBatch(DataItemBatch[NDArray, NDArray]):
         )
 
 
-@dataclass 
-class NumpyPredDataItem(PredDataItem[NDArray, NDArray]):
+@dataclass
+class NumpyPredDataItem(PredItem[NDArray, NDArray]):
     """NumPy prediction data item implementation."""
 
     def validate_image(self) -> None:

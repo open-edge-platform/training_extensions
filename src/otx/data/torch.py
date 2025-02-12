@@ -10,11 +10,11 @@ from dataclasses import dataclass
 import torch
 from torch import Tensor
 
-from .base import DataItem, DataItemBatch, PredDataItem, PredDataItemBatch
+from .base import DataItem, DataItemBatch, PredItem, PredItemBatch
 
 
 @dataclass
-class TorchDataItem(DataItem[Tensor, Tensor]):
+class TorchDataItem(DataItem[Tensor]):
     """Torch data item implementation.
 
     Args:
@@ -34,7 +34,7 @@ class TorchDataItem(DataItem[Tensor, Tensor]):
         """
         return TorchDataItemBatch(
             images=torch.stack([item.image for item in items]),
-            labels=torch.stack([item.label for item in items])
+            labels=torch.stack([item.label for item in items]),
         )
 
     def validate_image(self) -> None:
@@ -71,18 +71,15 @@ class TorchDataItem(DataItem[Tensor, Tensor]):
 
 
 @dataclass
-class TorchDataItemBatch(DataItemBatch[Tensor, Tensor]):
+class TorchDataItemBatch(DataItemBatch[Tensor]):
     """Torch data item batch implementation."""
 
     def validate_image(self) -> None:
         """Validate image tensor format."""
-        if not (
-            isinstance(self.images, Tensor)
-            and self.images.ndim == 4
-        ):
+        if not (isinstance(self.images, Tensor) and self.images.ndim == 4):
             msg = f"Image must have shape (B, C, H, W), but got {self.images.shape}"
             raise ValueError(msg)
-        
+
     def validate_label(self) -> None:
         """Validate label tensor format."""
         if self.labels.ndim != 2:
@@ -91,7 +88,7 @@ class TorchDataItemBatch(DataItemBatch[Tensor, Tensor]):
 
 
 @dataclass
-class TorchPredDataItem(PredDataItem[Tensor, Tensor]):
+class TorchPredItem(PredItem[Tensor]):
     """Torch prediction data item implementation."""
 
     def validate_image(self) -> None:
@@ -109,7 +106,7 @@ class TorchPredDataItem(PredDataItem[Tensor, Tensor]):
             return
         msg = "Label must have shape (B, )"
         raise ValueError(msg)
-    
+
     def validate_score(self) -> None:
         """Validate score tensor format."""
         # check if score has shape (B, C)
@@ -120,24 +117,18 @@ class TorchPredDataItem(PredDataItem[Tensor, Tensor]):
 
 
 @dataclass
-class TorchPredDataItemBatch(PredDataItemBatch[Tensor, Tensor]):
+class TorchPredItemBatch(PredItemBatch[Tensor]):
     """Torch prediction data item batch implementation."""
 
     def validate_image(self) -> None:
         """Validate image tensor format."""
-        if not (
-            isinstance(self.images, Tensor)
-            and self.images.ndim == 4
-        ):
+        if not (isinstance(self.images, Tensor) and self.images.ndim == 4):
             msg = f"Image must have shape (B, C, H, W), but got {self.images.shape}"
             raise ValueError(msg)
-        
+
     def validate_label(self) -> None:
         """Validate label tensor format."""
-        if not (
-            isinstance(self.labels, Tensor)
-            and self.labels.ndim == 2
-        ):
+        if not (isinstance(self.labels, Tensor) and self.labels.ndim == 2):
             msg = f"Label must have shape (B, ), but got {self.labels.shape}"
             raise ValueError(msg)
 
@@ -148,3 +139,15 @@ class TorchPredDataItemBatch(PredDataItemBatch[Tensor, Tensor]):
             return
         msg = f"Scores must have shape (B, C), but got {self.scores.shape}"
         raise ValueError(msg)
+
+    def validate_feature_vector(self) -> None:
+        if self.feature_vector is None:
+            return
+        msg = "Not implemented"
+        raise NotImplementedError(msg)
+
+    def validate_saliency_map(self) -> None:
+        if self.saliency_map is None:
+            return
+        msg = "Not implemented"
+        raise NotImplementedError(msg)
