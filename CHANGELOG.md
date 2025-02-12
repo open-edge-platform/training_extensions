@@ -93,6 +93,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4199>)
 - Fix label info on loading checkpoint
   (<https://github.com/openvinotoolkit/training_extensions/pull/4200>)
+- Don't filter empty label from kp arrow
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4214>)
 
 ## \[2.2.2\]
 
