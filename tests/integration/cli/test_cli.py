@@ -377,9 +377,6 @@ def test_otx_ov_test(
         "h_label_cls",
         "visual_prompting",
         "anomaly",
-        "anomaly_classification",
-        "anomaly_detection",
-        "anomaly_segmentation",
     ]:
         # OMZ doesn't have proper model for Pytorch MaskRCNN interface
         # TODO(Kirill):  Need to change this test when export enabled
