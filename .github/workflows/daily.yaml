@@ -1,36 +1,33 @@
-name: Daily Test
+name: Daily Integration Test
 
 on:
-  workflow_dispatch: # run on request (no need for PR)
+  workflow_dispatch: # Allows manual trigger
   schedule:
-    # every UTC 7PM from Mon to Fri
-    - cron: "0 19 * * 1-5"
+    # every UTC/GMT 8PM from Mon to Fri
+    - cron: "0 20 * * 1-5"
 
 # Declare default permissions as read only.
 permissions: read-all
 
 jobs:
-  Daily-e2e-tests:
-    runs-on: [otx-gpu-a10g-1]
-    container:
-      image: 219678651685.dkr.ecr.eu-west-1.amazonaws.com/ote-ci:11.7.1.2-devel-ubuntu20.04
-      options: "--runtime=nvidia --env-file=/home/runner/.nvidia.env --ipc=host"
+  Daily-Integration-Tests:
+    runs-on: [otx-ci-3090-03-all]
     strategy:
       fail-fast: false
       matrix:
         include:
-          - task: "classification"
-          - task: "detection"
-          - task: "rotated_detection"
-          - task: "keypoint_detection"
-          - task: "instance_segmentation"
-          - task: "semantic_segmentation"
+          - task: "multi_cls_classification"
+          - task: "multi_label_classification"
+          - task: "hlabel_classification"
           - task: "visual_prompting"
           - task: "anomaly"
-    name: E2E-Test-${{ matrix.task }}-py310
-    # This is what will cancel the job concurrency
+          - task: "keypoint_detection"
+          - task: "detection"
+          - task: "instance_segmentation"
+          - task: "semantic_segmentation"
+    name: Daily-Integration-Test-${{ matrix.task }}-py310
     concurrency:
-      group: ${{ github.workflow }}-E2E-${{ github.event.pull_request.number || github.ref }}-${{ matrix.task }}
+      group: Daily-${{ github.workflow }}-${{ github.ref }}-${{ matrix.task }}
       cancel-in-progress: true
     steps:
       - name: Checkout repository
@@ -45,11 +42,5 @@ jobs:
           pip-compile --generate-hashes --output-file=/tmp/requirements.txt --extra=ci_tox pyproject.toml
           python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
           rm /tmp/requirements.txt
-      - name: Run E2E Test
-        run: tox -vv -e e2e-test-${{ matrix.task }}
-      - name: Upload test results
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
-        with:
-          name: ${{ matrix.task }}-py310
-          path: .tox/e2e-test-${{ matrix.task }}.csv
-        if: ${{ always() }}
+      - name: Run Integration Test
+        run: tox -vv -e daily-integration-test-${{ matrix.task }}

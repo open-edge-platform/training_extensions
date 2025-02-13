@@ -133,9 +133,7 @@ jobs:
           - task: "multi_label_classification"
           - task: "hlabel_classification"
           - task: "visual_prompting"
-          - task: "anomaly_classification"
-          - task: "anomaly_detection"
-          - task: "anomaly_segmentation"
+          - task: "anomaly"
           - task: "keypoint_detection"
     name: Integration-Test-${{ matrix.task }}-py310
     steps:
