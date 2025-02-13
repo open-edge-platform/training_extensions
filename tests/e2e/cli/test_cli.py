@@ -73,7 +73,7 @@ def test_otx_e2e_cli(
         "--engine.device",
         fxt_accelerator,
         "--max_epochs",
-        "1" if task in (OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING) else "2",
+        "2",
         *fxt_cli_override_command_per_task[task],
     ]
 
@@ -134,7 +134,7 @@ def test_otx_e2e_cli(
     assert (latest_dir / "csv").exists()
 
     # 3) otx export
-    if task in (OTXTaskType.VISUAL_PROMPTING, OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING):
+    if task == OTXTaskType.VISUAL_PROMPTING:
         fxt_export_list = [
             ExportCase2Test("ONNX", False, "exported_model_decoder.onnx"),
             ExportCase2Test("OPENVINO", False, "exported_model_decoder.xml"),
@@ -186,7 +186,7 @@ def test_otx_e2e_cli(
         msg = "There is no OV IR."
         raise RuntimeError(msg)
     exported_model_path = str(ov_files[0])
-    if task in (OTXTaskType.VISUAL_PROMPTING, OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING):
+    if task == OTXTaskType.VISUAL_PROMPTING:
         recipe = str(Path(recipe).parents[0] / "openvino_model.yaml")
 
     overrides = fxt_cli_override_command_per_task[task]

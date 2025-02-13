@@ -39,10 +39,6 @@ def test_auto_configuration(
     tmp_path_train = tmp_path / f"auto_train_{task}"
     data_root = fxt_target_dataset_per_task[task.lower()]
     engine = Engine(data_root=data_root, task=task, work_dir=tmp_path_train, device=fxt_accelerator)
-    if task.lower() == "zero_shot_visual_prompting":
-        engine.model.infer_reference_info_root = Path(tmp_path_train)
-        # update litmodule.hparams to reflect changed hparams
-        engine.model.hparams.update({"infer_reference_info_root": str(engine.model.infer_reference_info_root)})
 
     # Check OTXModel & OTXDataModule
     assert isinstance(engine.model, OTXModel)
@@ -63,10 +59,9 @@ def test_auto_configuration(
     drop_model_config = lambda cfg: {key: value for key, value in cfg.items() if key != "model"}
     assert drop_model_config(engine._auto_configurator.config) == drop_model_config(default_config)
 
-    max_epochs = 2 if task.lower() != "zero_shot_visual_prompting" else 1
+    max_epochs = 2
     train_metric = engine.train(max_epochs=max_epochs)
-    if task.lower() != "zero_shot_visual_prompting":
-        assert len(train_metric) > 0
+    assert len(train_metric) > 0
 
     test_metric = engine.test()
     assert len(test_metric) > 0

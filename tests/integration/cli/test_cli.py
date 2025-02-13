@@ -47,7 +47,7 @@ def fxt_trained_model(
         "--engine.device",
         fxt_accelerator,
         "--max_epochs",
-        "1" if task in ("zero_shot_visual_prompting") else "2",
+        "2",
         *fxt_cli_override_command_per_task[task],
     ]
 
@@ -125,15 +125,6 @@ def test_otx_e2e(
         "--checkpoint",
         str(ckpt_file),
     ]
-    # Zero-shot visual prompting needs to specify `infer_reference_info_root`
-    if task in ["zero_shot_visual_prompting"]:
-        idx_task = str(ckpt_file).split("/").index(f"otx_train_{model_name}")
-        command_cfg.extend(
-            [
-                "--model.init_args.infer_reference_info_root",
-                str(ckpt_file.parents[-idx_task] / f"otx_train_{model_name}/outputs/.latest/train"),
-            ],
-        )
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
 
@@ -153,7 +144,7 @@ def test_otx_e2e(
         ]
     ):
         return
-    if task in ("visual_prompting", "zero_shot_visual_prompting"):
+    if task == "visual_prompting":
         fxt_export_list = [
             ExportCase2Test("ONNX", False, "exported_model_decoder.onnx"),
             ExportCase2Test("OPENVINO", False, "exported_model_decoder.xml"),
@@ -198,7 +189,7 @@ def test_otx_e2e(
         msg = "There is no OV IR."
         raise RuntimeError(msg)
     exported_model_path = str(ov_files[0])
-    if task in ("visual_prompting", "zero_shot_visual_prompting"):
+    if task == "visual_prompting":
         recipe = str(Path(recipe).parents[0] / "openvino_model.yaml")
 
     overrides = fxt_cli_override_command_per_task[task]
@@ -220,15 +211,6 @@ def test_otx_e2e(
         "--checkpoint",
         exported_model_path,
     ]
-    # Zero-shot visual prompting needs to specify `infer_reference_info_root`
-    if task in ["zero_shot_visual_prompting"]:
-        idx_task = str(ckpt_file).split("/").index(f"otx_train_{model_name}")
-        command_cfg.extend(
-            [
-                "--model.init_args.infer_reference_info_root",
-                str(ckpt_file.parents[-idx_task] / f"otx_train_{model_name}/outputs/.latest/train"),
-            ],
-        )
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
 
@@ -394,7 +376,6 @@ def test_otx_ov_test(
         "instance_segmentation",
         "h_label_cls",
         "visual_prompting",
-        "zero_shot_visual_prompting",
         "anomaly",
         "anomaly_classification",
         "anomaly_detection",
@@ -460,8 +441,6 @@ def test_otx_adaptive_bs_e2e(
         pytest.skip("Adaptive batch size only supports GPU and XPU.")
     if task not in DEFAULT_CONFIG_PER_TASK:
         pytest.skip(f"Task {task} is not supported in the auto-configuration.")
-    if task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-        pytest.skip("ZERO_SHOT_VISUAL_PROMPTING doesn't support adaptive batch size.")
 
     task = task.lower()
     tmp_path_adap_bs = tmp_path / f"otx_adaptive_bs_{task}"
@@ -509,8 +488,6 @@ def test_otx_configurable_input_size_e2e(
     """
     if task not in DEFAULT_CONFIG_PER_TASK:
         pytest.skip(f"Task {task} is not supported in the auto-configuration.")
-    if task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-        pytest.skip(f"{task} doesn't support configurable input size.")
     if task == OTXTaskType.KEYPOINT_DETECTION:
         pytest.skip(f"{task} doesn't support configurable input size.")
 

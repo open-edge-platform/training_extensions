@@ -133,7 +133,6 @@ jobs:
           - task: "multi_label_classification"
           - task: "hlabel_classification"
           - task: "visual_prompting"
-          - task: "zero_shot_visual_prompting"
           - task: "anomaly_classification"
           - task: "anomaly_detection"
           - task: "anomaly_segmentation"

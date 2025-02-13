@@ -45,7 +45,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
     OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection" / "padim.yaml",
     OTXTaskType.VISUAL_PROMPTING: RECIPE_PATH / "visual_prompting" / "sam_tiny_vit.yaml",
-    OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING: RECIPE_PATH / "zero_shot_visual_prompting" / "sam_tiny_vit.yaml",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
@@ -83,7 +82,6 @@ OVMODEL_PER_TASK = {
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.core.model.instance_segmentation.OVInstanceSegmentationModel",
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.core.model.segmentation.OVSegmentationModel",
     OTXTaskType.VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVVisualPromptingModel",
-    OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVZeroShotVisualPromptingModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
