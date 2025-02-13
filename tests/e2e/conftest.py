@@ -118,7 +118,6 @@ def fxt_target_dataset_per_task(fxt_ci_data_root) -> dict:
             "rtmpose_tiny": Path(fxt_ci_data_root / "v2/keypoint_detection/coco_keypoint/medium"),
             "rtmpose_tiny_single_obj": Path(fxt_ci_data_root / "v2/keypoint_detection/coco_keypoint_single_obj/medium"),
         },
-        OTXTaskType.OBJECT_DETECTION_3D: Path(fxt_ci_data_root / "v2/object_detection_3d/medium_pedestrian_cyclist"),
     }
 
 
@@ -139,5 +138,4 @@ def fxt_cli_override_command_per_task() -> dict:
         OTXTaskType.ANOMALY_DETECTION: [],
         OTXTaskType.ANOMALY_SEGMENTATION: [],
         OTXTaskType.KEYPOINT_DETECTION: [],
-        OTXTaskType.OBJECT_DETECTION_3D: [],
     }
