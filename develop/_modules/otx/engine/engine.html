@@ -617,10 +617,6 @@
         <span class="c1"># So, it can&#39;t take the OTX1.x checkpoint.</span>
         <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
             <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
-                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
-                <span class="c1"># TODO (sungchul): revisit for better solution</span>
-                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
 
             <span class="n">model_cls</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">)</span>
@@ -721,10 +717,6 @@
 
         <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
             <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
-                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
-                <span class="c1"># TODO (sungchul): revisit for better solution</span>
-                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
 
             <span class="n">model_cls</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">)</span>
@@ -842,10 +834,6 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
             <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
-                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
-                <span class="c1"># TODO (sungchul): revisit for better solution</span>
-                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
 
             <span class="n">model_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;model_name&quot;</span><span class="p">):</span>
@@ -1028,10 +1016,6 @@
 
         <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
             <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
-                <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
-                <span class="c1"># TODO (sungchul): revisit for better solution</span>
-                <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
 
             <span class="n">model_cls</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="o">=</span><span class="n">checkpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_user_input</span><span class="p">)</span>
@@ -1140,10 +1124,6 @@
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ir_ckpt</span><span class="p">:</span>
                 <span class="n">kwargs_user_input</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ZERO_SHOT_VISUAL_PROMPTING</span><span class="p">:</span>
-                    <span class="c1"># to update user&#39;s custom infer_reference_info_root through cli for zero-shot learning</span>
-                    <span class="c1"># TODO (sungchul): revisit for better solution</span>
-                    <span class="n">kwargs_user_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">infer_reference_info_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">infer_reference_info_root</span><span class="p">)</span>
 
                 <span class="n">model_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load_from_checkpoint</span><span class="p">(</span>
