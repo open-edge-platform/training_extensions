@@ -332,7 +332,7 @@
 <div class="viewcode-block" id="OTXDatasetFactory.create">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDatasetFactory.create">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>  <span class="c1"># noqa: PLR0911</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">OTXDatasetFactory</span><span class="p">],</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="p">,</span>
         <span class="n">dm_subset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">,</span>
@@ -417,11 +417,6 @@
             <span class="kn">from</span><span class="w"> </span><span class="nn">.dataset.keypoint_detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXKeypointDetectionDataset</span>
 
             <span class="k">return</span> <span class="n">OTXKeypointDetectionDataset</span><span class="p">(</span><span class="o">**</span><span class="n">common_kwargs</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">OBJECT_DETECTION_3D</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">.dataset.object_detection_3d</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTX3DObjectDetectionDataset</span>
-
-            <span class="k">return</span> <span class="n">OTX3DObjectDetectionDataset</span><span class="p">(</span><span class="o">**</span><span class="n">common_kwargs</span><span class="p">)</span>
 
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">task</span><span class="p">)</span></div>
 </div>

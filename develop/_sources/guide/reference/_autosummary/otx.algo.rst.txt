@@ -34,7 +34,6 @@ otx.algo
    otx.algo.classification
    otx.algo.detection
    otx.algo.modules
-   otx.algo.object_detection_3d
    otx.algo.samplers
    otx.algo.segmentation
    otx.algo.utils
