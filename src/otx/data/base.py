@@ -11,25 +11,30 @@ from typing import Generic, TypeVar
 
 TENSOR_TYPE = TypeVar("TENSOR_TYPE")
 
+@dataclass
+class BaseItem(Generic[TENSOR_TYPE], ABC):
+    """Abstract base class for all data items."""
+
+    def __post_init__(self) -> None:
+        """Validate all fields after initialization."""
+        for method_name in dir(self):
+            if method_name.startswith('validate_'):
+                method = getattr(self, method_name)
+                if callable(method):
+                    method()
 
 @dataclass
-class DataItem(Generic[TENSOR_TYPE], ABC):
+class DataItem(BaseItem[TENSOR_TYPE], ABC):
     """Abstract base class for data items.
 
     Args:
         image: Image data
         label: Label data
     """
-
     image: TENSOR_TYPE
     label: TENSOR_TYPE
     # mask: Any
     # bboxes: Any
-
-    def __post_init__(self) -> None:
-        """Validate data after initialization."""
-        self.validate_image()
-        self.validate_label()
 
     @abstractmethod
     def validate_image(self) -> None:
@@ -39,9 +44,8 @@ class DataItem(Generic[TENSOR_TYPE], ABC):
     def validate_label(self) -> None:
         """Validate label data format and type."""
 
-
 @dataclass
-class DataItemBatch(Generic[TENSOR_TYPE], ABC):
+class DataItemBatch(BaseItem[TENSOR_TYPE], ABC):
     """Abstract base class for batched data items.
 
     Args:
@@ -51,11 +55,8 @@ class DataItemBatch(Generic[TENSOR_TYPE], ABC):
 
     images: TENSOR_TYPE
     labels: TENSOR_TYPE
-
-    def __post_init__(self) -> None:
-        """Validate all data after initialization."""
-        self.validate_image()
-        self.validate_label()
+    masks: TENSOR_TYPE | None = None
+    boxes: TENSOR_TYPE | None = None
 
     @abstractmethod
     def validate_image(self) -> None:
@@ -65,6 +66,13 @@ class DataItemBatch(Generic[TENSOR_TYPE], ABC):
     def validate_label(self) -> None:
         """Validate label data format and type."""
 
+    @abstractmethod
+    def validate_masks(self) -> None:
+        """Validate masks data format and type."""
+
+    @abstractmethod
+    def validate_boxes(self) -> None:
+        """Validate boxes data format and type."""
 
 @dataclass
 class PredItem(DataItem[TENSOR_TYPE], ABC):
@@ -90,7 +98,6 @@ class PredItem(DataItem[TENSOR_TYPE], ABC):
     def validate_saliency_map(self) -> None:
         """Validate saliency map format and type."""
 
-
 @dataclass
 class PredItemBatch(DataItemBatch[TENSOR_TYPE], ABC):
     """Abstract base class for batched prediction data items.
@@ -103,13 +110,6 @@ class PredItemBatch(DataItemBatch[TENSOR_TYPE], ABC):
     scores: TENSOR_TYPE | None = None
     saliency_map: TENSOR_TYPE | None = None
     feature_vector: TENSOR_TYPE | None = None
-
-    def __post_init__(self) -> None:
-        """Validate all data after initialization."""
-        super().__post_init__()
-        self.validate_scores()
-        self.validate_saliency_map()
-        self.validate_feature_vector()
 
     @abstractmethod
     def validate_scores(self) -> None:

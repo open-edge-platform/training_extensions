@@ -19,16 +19,9 @@ from datumaro.components.annotation import AnnotationType, Bbox, Ellipse, Polygo
 from datumaro.components.media import ImageFromBytes, ImageFromFile
 from torchvision import io
 from torchvision.tv_tensors import BoundingBoxes, BoundingBoxFormat, Mask
-
+from otx.data.torch import TorchDataItem, TorchDataItemBatch
 from otx.core.data.dataset.base import OTXDataset, Transforms
-from otx.core.data.entity.anomaly import (
-    AnomalyClassificationDataBatch,
-    AnomalyClassificationDataItem,
-    AnomalyDetectionDataBatch,
-    AnomalyDetectionDataItem,
-    AnomalySegmentationDataBatch,
-    AnomalySegmentationDataItem,
-)
+from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
@@ -39,8 +32,8 @@ from otx.core.types.task import OTXTaskType
 class AnomalyLabel(Enum):
     """Anomaly label to tensor mapping."""
 
-    NORMAL = torch.tensor(0.0)
-    ANOMALOUS = torch.tensor(1.0)
+    NORMAL = torch.tensor(0.0, dtype=torch.long)
+    ANOMALOUS = torch.tensor(1.0, dtype=torch.long)
 
 
 class AnomalyDataset(OTXDataset):
@@ -76,49 +69,35 @@ class AnomalyDataset(OTXDataset):
     def _get_item_impl(
         self,
         index: int,
-    ) -> AnomalyClassificationDataItem | AnomalySegmentationDataBatch | AnomalyDetectionDataBatch:
+    ) -> TorchDataItem:
         datumaro_item = self.dm_subset[index]
         img = datumaro_item.media_as(Image)
         # returns image in RGB format if self.image_color_channel is RGB
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
+        img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
 
         label = self._get_label(datumaro_item)
+        # TODO apply transforms
+        img_data = self.transforms(img_data)
+        # TODO test with masks and boxes
 
-        item: AnomalyClassificationDataItem | AnomalySegmentationDataItem | AnomalyDetectionDataItem
+        item: TorchDataItem
         if self.task_type in (OTXTaskType.ANOMALY, OTXTaskType.ANOMALY_CLASSIFICATION):
-            item = AnomalyClassificationDataItem(
+            item = TorchDataItem(
                 image=img_data,
-                img_info=ImageInfo(
-                    img_idx=index,
-                    img_shape=img_shape,
-                    ori_shape=img_shape,
-                    image_color_channel=self.image_color_channel,
-                ),
                 label=label,
             )
         elif self.task_type == OTXTaskType.ANOMALY_SEGMENTATION:
             # Note: this part of code is brittle. Ideally Datumaro should return masks
             # Another major problem with this is that it assumes that the dataset passed is in MVTec format
-            item = AnomalySegmentationDataItem(
+            item = TorchDataItem(
                 image=img_data,
-                img_info=ImageInfo(
-                    img_idx=index,
-                    img_shape=img_shape,
-                    ori_shape=img_shape,
-                    image_color_channel=self.image_color_channel,
-                ),
                 label=label,
                 mask=Mask(self._get_mask(datumaro_item, label, img_shape)),
             )
         elif self.task_type == OTXTaskType.ANOMALY_DETECTION:
-            item = AnomalyDetectionDataItem(
+            item = TorchDataItem(
                 image=img_data,
-                img_info=ImageInfo(
-                    img_idx=index,
-                    img_shape=img_shape,
-                    ori_shape=img_shape,
-                    image_color_channel=self.image_color_channel,
-                ),
                 label=label,
                 boxes=self._get_boxes(datumaro_item, label, img_shape),
                 # mask is used for pixel-level metric computation. We can't assume that this will always be available
@@ -131,8 +110,8 @@ class AnomalyDataset(OTXDataset):
         # without ignore the following error is returned
         # Incompatible return value type (got "Any | None", expected
         # "AnomalyClassificationDataItem | AnomalySegmentationDataBatch | AnomalyDetectionDataBatch")
-        return self._apply_transforms(item)  # type: ignore[return-value]
-
+        return item
+    
     def _get_mask(self, datumaro_item: DatasetItem, label: torch.Tensor, img_shape: tuple[int, int]) -> torch.Tensor:
         """Get mask from datumaro_item.
 
@@ -238,11 +217,4 @@ class AnomalyDataset(OTXDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect SegDataEntity into SegBatchDataEntity in data loader."""
-        if self.task_type in (OTXTaskType.ANOMALY, OTXTaskType.ANOMALY_CLASSIFICATION):
-            return AnomalyClassificationDataBatch.collate_fn
-        if self.task_type == OTXTaskType.ANOMALY_SEGMENTATION:
-            return AnomalySegmentationDataBatch.collate_fn
-        if self.task_type == OTXTaskType.ANOMALY_DETECTION:
-            return AnomalyDetectionDataBatch.collate_fn
-        msg = f"Task {self.task_type} is not supported yet."
-        raise NotImplementedError(msg)
+        return TorchDataItem.collate_fn

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, ClassVar
 
 import torch
 from torch import Tensor
@@ -13,14 +14,60 @@ from torch import Tensor
 from .base import DataItem, DataItemBatch, PredItem, PredItemBatch
 
 
+class TorchValidationMixin:
+    """Mixin class providing common tensor validation methods."""
+
+    def _validate_tensor(
+        self,
+        tensor: Any,
+        expected_ndim: int,
+        expected_dtype: torch.dtype,
+        name: str,
+        optional: bool = False,
+        **dim_constraints: int,
+    ) -> None:
+        """Validate tensor properties.
+
+        Args:
+            tensor: Tensor to validate
+            expected_ndim: Expected number of dimensions
+            expected_dtype: Expected dtype
+            name: Name of tensor for error messages
+            optional: Whether tensor can be None
+            **dim_constraints: Expected size for specific dimensions (e.g. dim0=3)
+        """
+        if optional and tensor is None:
+            return
+
+        if not isinstance(tensor, Tensor):
+            msg = f"{name} must be a torch.Tensor"
+            raise TypeError(msg)
+
+        if tensor.ndim != expected_ndim:
+            msg = f"{name} must have {expected_ndim} dimensions, got {tensor.ndim}"
+            raise ValueError(msg)
+
+        if tensor.dtype != expected_dtype:
+            msg = f"{name} must have dtype {expected_dtype}, got {tensor.dtype}"
+            raise ValueError(msg)
+
+        for dim, size in dim_constraints.items():
+            if tensor.shape[int(dim[-1])] != size:
+                msg = f"{name} must have size {size} in dimension {dim}, got {tensor.shape[int(dim[-1])]}"
+                raise ValueError(msg)
+
+
 @dataclass
-class TorchDataItem(DataItem[Tensor]):
+class TorchDataItem(DataItem[Tensor], TorchValidationMixin):
     """Torch data item implementation.
 
     Args:
         image: Image tensor of shape (C, H, W) and type float32
         label: Label tensor, either scalar for multi-class or 1D for multi-label
     """
+
+    # Class constants for validation
+    IMAGE_CHANNELS: ClassVar[int] = 3
 
     @staticmethod
     def collate_fn(items: list[TorchDataItem]) -> TorchDataItemBatch:
@@ -34,120 +81,177 @@ class TorchDataItem(DataItem[Tensor]):
         """
         return TorchDataItemBatch(
             images=torch.stack([item.image for item in items]),
-            labels=torch.stack([item.label for item in items]),
+            labels=torch.vstack([item.label for item in items]),
         )
 
     def validate_image(self) -> None:
-        """Validate image tensor format.
-
-        Raises:
-            ValueError: If image is not a 3D float32 tensor with shape (3, H, W)
-        """
-        if not (
-            isinstance(self.image, Tensor)
-            and self.image.ndim == 3
-            and self.image.shape[0] == 3
-            and self.image.dtype == torch.float32
-        ):
-            msg = "Image must be a float32 tensor with shape (3, H, W)"
-            raise ValueError(msg)
+        """Validate image tensor format."""
+        self._validate_tensor(
+            self.image,
+            expected_ndim=3,
+            expected_dtype=torch.float32,
+            name="Image",
+            dim0=self.IMAGE_CHANNELS,
+        )
 
     def validate_label(self) -> None:
-        """Validate label tensor format.
-
-        Raises:
-            ValueError: If label is not a scalar or 1D long tensor
-        """
-        if not isinstance(self.label, Tensor):
-            msg = "Label must be a torch.Tensor"
-            raise TypeError(msg)
-
-        if not (
-            (self.label.ndim == 0 and self.label.dtype == torch.long)  # Multi-class
-            or (self.label.ndim == 1 and self.label.dtype == torch.long)  # Multi-label/hierarchical
-        ):
-            msg = "Label must be a scalar or 1D long tensor"
-            raise ValueError(msg)
+        """Validate label tensor format."""
+        if self.label.ndim == 0:  # Multi-class
+            self._validate_tensor(
+                self.label,
+                expected_ndim=0,
+                expected_dtype=torch.long,
+                name="Label",
+            )
+        else:  # Multi-label/hierarchical
+            self._validate_tensor(
+                self.label,
+                expected_ndim=1,
+                expected_dtype=torch.long,
+                name="Label",
+            )
 
 
 @dataclass
-class TorchDataItemBatch(DataItemBatch[Tensor]):
+class TorchDataItemBatch(DataItemBatch[Tensor], TorchValidationMixin):
     """Torch data item batch implementation."""
 
     def validate_image(self) -> None:
         """Validate image tensor format."""
-        if not (isinstance(self.images, Tensor) and self.images.ndim == 4):
-            msg = f"Image must have shape (B, C, H, W), but got {self.images.shape}"
-            raise ValueError(msg)
+        self._validate_tensor(
+            self.images,
+            expected_ndim=4,
+            expected_dtype=torch.float32,
+            name="Images",
+            dim1=TorchDataItem.IMAGE_CHANNELS,
+        )
 
     def validate_label(self) -> None:
         """Validate label tensor format."""
-        if self.labels.ndim != 2:
-            msg = f"Label must have shape (B, ), but got {self.labels.shape}"
-            raise ValueError(msg)
+        self._validate_tensor(
+            self.labels,
+            expected_ndim=2,
+            expected_dtype=torch.long,
+            name="Labels",
+        )
+
+    def validate_masks(self) -> None:
+        """Validate masks tensor format."""
+        self._validate_tensor(
+            self.masks,
+            expected_ndim=4,
+            expected_dtype=torch.bool,
+            name="Masks",
+            optional=True,
+        )
+
+    def validate_boxes(self) -> None:
+        """Validate boxes tensor format."""
+        self._validate_tensor(
+            self.boxes,
+            expected_ndim=3,
+            expected_dtype=torch.float32,
+            name="Boxes",
+            optional=True,
+            dim2=4,  # boxes should have 4 coordinates
+        )
 
 
 @dataclass
-class TorchPredItem(PredItem[Tensor]):
+class TorchPredItem(PredItem[Tensor], TorchValidationMixin):
     """Torch prediction data item implementation."""
 
     def validate_image(self) -> None:
         """Validate image tensor format."""
-        # check if image has shape (B, C, H, W)
-        if self.image.ndim == 4 and self.image.shape[0] > 1:
-            return
-        msg = "Image must have shape (B, C, H, W)"
-        raise ValueError(msg)
+        self._validate_tensor(
+            self.image,
+            expected_ndim=4,
+            expected_dtype=torch.float32,
+            name="Image",
+            dim1=TorchDataItem.IMAGE_CHANNELS,
+        )
 
     def validate_label(self) -> None:
         """Validate label tensor format."""
-        # check if label has shape (B, )
-        if self.label.ndim == 2 and self.label.shape[1] == 1:
-            return
-        msg = "Label must have shape (B, )"
-        raise ValueError(msg)
+        self._validate_tensor(
+            self.label,
+            expected_ndim=2,
+            expected_dtype=torch.long,
+            name="Label",
+        )
 
     def validate_score(self) -> None:
         """Validate score tensor format."""
-        # check if score has shape (B, C)
-        if self.score.ndim == 2 and self.score.shape[1] > 1:
-            return
-        msg = "Score must have shape (B, C)"
-        raise ValueError(msg)
+        self._validate_tensor(
+            self.score,
+            expected_ndim=2,
+            expected_dtype=torch.float32,
+            name="Score",
+        )
+
+    def validate_feature_vector(self) -> None:
+        """Validate feature vector format."""
+        self._validate_tensor(
+            self.feature_vector,
+            expected_ndim=2,
+            expected_dtype=torch.float32,
+            name="Feature vector",
+            optional=True,
+        )
+
+    def validate_saliency_map(self) -> None:
+        """Validate saliency map format."""
+        self._validate_tensor(
+            self.saliency_map,
+            expected_ndim=4,
+            expected_dtype=torch.float32,
+            name="Saliency map",
+            optional=True,
+        )
 
 
 @dataclass
-class TorchPredItemBatch(PredItemBatch[Tensor]):
+class TorchPredItemBatch(PredItemBatch[Tensor], TorchValidationMixin):
     """Torch prediction data item batch implementation."""
 
-    def validate_image(self) -> None:
-        """Validate image tensor format."""
-        if not (isinstance(self.images, Tensor) and self.images.ndim == 4):
-            msg = f"Image must have shape (B, C, H, W), but got {self.images.shape}"
-            raise ValueError(msg)
-
-    def validate_label(self) -> None:
-        """Validate label tensor format."""
-        if not (isinstance(self.labels, Tensor) and self.labels.ndim == 2):
-            msg = f"Label must have shape (B, ), but got {self.labels.shape}"
-            raise ValueError(msg)
-
     def validate_scores(self) -> None:
-        """Validate prediction scores tensor format."""
-        # check if scores has shape (B, C)
-        if self.scores.ndim == 2 and self.scores.shape[1] > 1:
-            return
-        msg = f"Scores must have shape (B, C), but got {self.scores.shape}"
-        raise ValueError(msg)
+        """Validate scores tensor format."""
+        self._validate_tensor(
+            self.scores,
+            expected_ndim=2,
+            expected_dtype=torch.float32,
+            name="Scores",
+            optional=True,
+        )
+
+    def validate_saliency_map(self) -> None:
+        """Validate saliency map tensor format."""
+        self._validate_tensor(
+            self.saliency_map,
+            expected_ndim=4,
+            expected_dtype=torch.float32,
+            name="Saliency map",
+            optional=True,
+        )
 
     def validate_feature_vector(self) -> None:
-        if self.feature_vector is None:
+        """Validate feature vector tensor format."""
+        self._validate_tensor(
+            self.feature_vector,
+            expected_ndim=2,
+            expected_dtype=torch.float32,
+            name="Feature vector",
+            optional=True,
+        )
+
+    def validate_boxes(self) -> None:
+        if self.boxes is None:
             return
         msg = "Not implemented"
         raise NotImplementedError(msg)
-
-    def validate_saliency_map(self) -> None:
-        if self.saliency_map is None:
+    
+    def validate_masks(self) -> None:
+        if self.masks is None:
             return
         msg = "Not implemented"
         raise NotImplementedError(msg)

@@ -20,10 +20,9 @@ from anomalib.metrics import create_metric_collection
 from lightning import Callback, Trainer
 from torchvision.transforms.functional import resize
 
-from otx.core.data.entity.anomaly import AnomalyClassificationDataBatch
+from otx.data.torch import TorchDataItemBatch
 from otx.core.data.module import OTXDataModule
 from otx.core.metrics.types import MetricCallable, NullMetricCallable
-from otx.core.model.anomaly import AnomalyModelInputs
 from otx.core.model.base import OVModel
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
@@ -49,7 +48,7 @@ class _OVMetricCallback(Callback):
         trainer: Trainer,
         pl_module: AnomalyOpenVINO,
         outputs: list[AnomalyResult],
-        batch: AnomalyModelInputs,
+        batch: TorchDataItemBatch,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
@@ -60,7 +59,7 @@ class _OVMetricCallback(Callback):
             ),
             "labels": torch.tensor(batch.labels) if batch.batch_size == 1 else torch.vstack(batch.labels),
         }
-        if not isinstance(batch, AnomalyClassificationDataBatch):
+        if not isinstance(batch, TorchDataItemBatch):
             score_dict["anomaly_maps"] = torch.tensor(np.array([output.anomaly_map for output in outputs])) / 255.0
             score_dict["masks"] = batch.masks if batch.batch_size == 1 else torch.vstack(batch.masks)
             # resize masks and anomaly maps to 256,256 as this is the size used in Anomalib
