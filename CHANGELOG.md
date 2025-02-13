@@ -74,6 +74,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4200>)
 - Don't filter empty label from kp arrow
   (<https://github.com/openvinotoolkit/training_extensions/pull/4214>)
+- Revert h-cls head to linear one
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4221>)
 
 ## \[2.2.2\]
 
