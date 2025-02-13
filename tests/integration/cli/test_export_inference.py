@@ -49,7 +49,6 @@ TASK_NAME_TO_MAIN_METRIC_NAME = {
     "visual_prompting": "test/f1-score",
     "zero_shot_visual_prompting": "test/f1-score",
     "keypoint_detection": "test/PCK",
-    "object_detection_3d": "test/AP_3d@0.5",
 }
 
 

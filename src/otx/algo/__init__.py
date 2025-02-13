@@ -17,7 +17,6 @@ __all__ = [
     "detection",
     "keypoint_detection",
     "modules",
-    "object_detection_3d",
     "plugins",
     "samplers",
     "segmentation",
