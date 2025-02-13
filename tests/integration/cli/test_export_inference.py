@@ -47,7 +47,6 @@ TASK_NAME_TO_MAIN_METRIC_NAME = {
     "detection": "test/map_50",
     "instance_segmentation": "test/map_50",
     "visual_prompting": "test/f1-score",
-    "zero_shot_visual_prompting": "test/f1-score",
     "keypoint_detection": "test/PCK",
 }
 
@@ -58,7 +57,7 @@ TASK_NAME_TO_MAIN_METRIC_NAME = {
     pytest.RECIPE_LIST,
     ids=lambda x: "/".join(Path(x).parts[-2:]),
 )
-def test_otx_export_infer(  # noqa: C901
+def test_otx_export_infer(
     recipe: str,
     tmp_path: Path,
     fxt_local_seed: int,
@@ -108,7 +107,7 @@ def test_otx_export_infer(  # noqa: C901
         "--engine.device",
         fxt_accelerator,
         "--max_epochs",
-        "1" if task in ("zero_shot_visual_prompting") else "2",
+        "2",
         "--seed",
         f"{fxt_local_seed}",
         *fxt_cli_override_command_per_task[task],
@@ -190,21 +189,6 @@ def test_otx_export_infer(  # noqa: C901
     checkpoint_path: str = str(ckpt_files[-1])
     tmp_path_test = __run_cli_test(recipe, checkpoint_path, Path("outputs") / "torch", with_benchmark=True)
 
-    if task == "zero_shot_visual_prompting":
-        # Check when using reference infos obtained by otx train
-        idx_task = checkpoint_path.split("/").index(f"otx_train_{model_name}")
-        infer_reference_info_root = [
-            "--model.init_args.infer_reference_info_root",
-            str(Path(checkpoint_path).parents[-idx_task] / f"otx_train_{model_name}/outputs/.latest/train"),
-        ]
-
-        tmp_path_test = __run_cli_test(
-            recipe,
-            checkpoint_path,
-            Path("outputs") / "torch",
-            cli_override_command=infer_reference_info_root,
-        )
-
     assert (tmp_path_test / "outputs").exists()
     assert (tmp_path_test / "outputs" / "torch" / ".latest" / "benchmark" / "benchmark_report.csv").exists()
 
@@ -237,7 +221,7 @@ def test_otx_export_infer(  # noqa: C901
             key=lambda p: p.stat().st_mtime,
         )
         assert latest_dir.exists()
-        if task in ("visual_prompting", "zero_shot_visual_prompting"):
+        if task == "visual_prompting":
             assert (latest_dir / f"exported_model_image_encoder.{ext}").exists()
             assert (latest_dir / f"exported_model_decoder.{ext}").exists()
         else:
@@ -258,28 +242,13 @@ def test_otx_export_infer(  # noqa: C901
             else:
                 export_test_recipe = f"src/otx/recipe/{task}/openvino_model.yaml"
 
-            if task in ("visual_prompting", "zero_shot_visual_prompting"):
+            if task == "visual_prompting":
                 exported_model_path = str(latest_dir / "exported_model_decoder.xml")
             else:
                 exported_model_path = str(latest_dir / "exported_model.xml")
 
             tmp_path_test = __run_cli_test(export_test_recipe, exported_model_path, Path("outputs") / "openvino", "cpu")
             assert (tmp_path_test / "outputs").exists()
-
-            if task == "zero_shot_visual_prompting":
-                # Check when using reference infos obtained by otx train
-                idx_task = exported_model_path.split("/").index(f"otx_test_{model_name}")
-                infer_reference_info_root = [
-                    "--model.init_args.infer_reference_info_root",
-                    str(Path(exported_model_path).parents[-idx_task] / f"otx_train_{model_name}/outputs/.latest/train"),
-                ]
-                tmp_path_test = __run_cli_test(
-                    export_test_recipe,
-                    exported_model_path,
-                    Path("outputs") / "openvino",
-                    "cpu",
-                    cli_override_command=infer_reference_info_root,
-                )
 
             # 5) test optimize
             command_cfg = [
@@ -306,7 +275,7 @@ def test_otx_export_infer(  # noqa: C901
                 key=lambda p: p.stat().st_mtime,
             )
             assert latest_dir.exists()
-            if task in ("visual_prompting", "zero_shot_visual_prompting"):
+            if task == "visual_prompting":
                 optimized_model_path = str(latest_dir / "optimized_model_decoder.xml")
             else:
                 optimized_model_path = str(latest_dir / "optimized_model.xml")
@@ -318,22 +287,6 @@ def test_otx_export_infer(  # noqa: C901
                 Path("outputs") / "nncf_ptq",
                 "cpu",
             )
-            if task == "zero_shot_visual_prompting":
-                # Check when using reference infos obtained by otx train
-                idx_task = optimized_model_path.split("/").index(f"otx_test_{model_name}")
-                infer_reference_info_root = [
-                    "--model.init_args.infer_reference_info_root",
-                    str(
-                        Path(optimized_model_path).parents[-idx_task] / f"otx_train_{model_name}/outputs/.latest/train",
-                    ),
-                ]
-                tmp_path_test = __run_cli_test(
-                    export_test_recipe,
-                    optimized_model_path,
-                    Path("outputs") / "nncf_ptq",
-                    "cpu",
-                    cli_override_command=infer_reference_info_root,
-                )
 
             torch_outputs_dir = tmp_path_test / "outputs" / "torch"
             torch_latest_dir = max(
@@ -370,7 +323,7 @@ def test_otx_export_infer(  # noqa: C901
             log.info(msg)
 
             # Not compare w/ instance segmentation and visual prompting tasks because training isn't able to be deterministic, which can lead to unstable test result.
-            if "maskrcnn_efficientnetb2b" in recipe or task in ("visual_prompting", "zero_shot_visual_prompting"):
+            if "maskrcnn_efficientnetb2b" in recipe or task == "visual_prompting":
                 return
 
             # This test seems flaky, so let's disable it.

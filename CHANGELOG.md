@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4206>)
 - Remove 3D Object Detection task
   (<https://github.com/openvinotoolkit/training_extensions/pull/4208>)
+- Remove Zero Shot Visual Prompting
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4209>)
 
 ## \[2.3.0\]
 

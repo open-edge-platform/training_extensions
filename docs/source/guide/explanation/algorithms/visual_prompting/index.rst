@@ -6,4 +6,3 @@ Visual Prompting
 
 
    fine_tuning
-   zero_shot

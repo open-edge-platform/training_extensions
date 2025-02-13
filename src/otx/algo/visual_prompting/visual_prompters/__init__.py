@@ -3,6 +3,6 @@
 #
 """Visual prompter modules for OTX visual prompting model."""
 
-from .segment_anything import SegmentAnything, ZeroShotSegmentAnything
+from .segment_anything import SegmentAnything
 
-__all__ = ["SegmentAnything", "ZeroShotSegmentAnything"]
+__all__ = ["SegmentAnything"]
