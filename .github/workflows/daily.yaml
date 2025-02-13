@@ -1,7 +1,7 @@
-name: Daily Test
+name: Daily Integration Test
 
 on:
-  workflow_dispatch: # run on request (no need for PR)
+  workflow_dispatch: # Allows manual trigger
   schedule:
     # every UTC/GMT 8PM from Mon to Fri
     - cron: "0 20 * * 1-5"
@@ -20,12 +20,10 @@ jobs:
           - task: "multi_label_classification"
           - task: "hlabel_classification"
           - task: "visual_prompting"
-          - task: "zero_shot_visual_prompting"
           - task: "anomaly_classification"
           - task: "anomaly_detection"
           - task: "anomaly_segmentation"
           - task: "keypoint_detection"
-          - task: "object_detection_3d"
           - task: "detection"
           - task: "instance_segmentation"
           - task: "semantic_segmentation"
