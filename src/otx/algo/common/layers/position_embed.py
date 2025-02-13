@@ -8,7 +8,7 @@ from __future__ import annotations
 import math
 
 import torch
-from torch import Tensor, nn
+from torch import nn
 
 
 class PositionEmbeddingSine(nn.Module):
