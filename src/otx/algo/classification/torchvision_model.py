@@ -13,7 +13,7 @@ from torch import nn
 from otx.algo.classification.backbones.torchvision import TorchvisionBackbone, TVModelType
 from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
 from otx.algo.classification.heads import (
-    HierarchicalCBAMClsHead,
+    HierarchicalLinearClsHead,
     LinearClsHead,
     MultiLabelLinearClsHead,
 )
@@ -252,11 +252,8 @@ class TVModelForHLabelCls(OTXHlabelClsModel):
         backbone = TorchvisionBackbone(backbone=self.backbone, pretrained=self.pretrained)
         return HLabelClassifier(
             backbone=backbone,
-            neck=nn.Identity(),
-            head=HierarchicalCBAMClsHead(
-                in_channels=backbone.in_features,
-                **head_config,
-            ),
+            neck=GlobalAveragePooling(dim=2),
+            head=HierarchicalLinearClsHead(**head_config, in_channels=backbone.in_features),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )

@@ -13,7 +13,7 @@ from torch import Tensor, nn
 
 from otx.algo.classification.backbones.efficientnet import EFFICIENTNET_VERSION, EfficientNetBackbone
 from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
-from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelLinearClsHead
+from otx.algo.classification.heads import HierarchicalLinearClsHead, LinearClsHead, MultiLabelLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.classification.utils import get_classification_layers
@@ -225,11 +225,8 @@ class EfficientNetForHLabelCls(OTXHlabelClsModel):
 
         return HLabelClassifier(
             backbone=backbone,
-            neck=nn.Identity(),
-            head=HierarchicalCBAMClsHead(
-                in_channels=backbone.num_features,
-                **copied_head_config,
-            ),
+            neck=GlobalAveragePooling(dim=2),
+            head=HierarchicalLinearClsHead(**copied_head_config, in_channels=backbone.num_features),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )
