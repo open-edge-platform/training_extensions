@@ -11,7 +11,7 @@ permissions: read-all
 
 jobs:
   Daily-Integration-Tests:
-    runs-on: [otx-ci-3090-03-all]
+    runs-on: otx-ci-3090-03-all
     strategy:
       fail-fast: false
       matrix:
