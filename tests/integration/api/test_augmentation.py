@@ -73,9 +73,7 @@ def _test_augmentation(
             assert img_shape == data.img_info.img_shape
 
 
-CLS_RECIPES = [
-    recipe for recipe in pytest.RECIPE_LIST if "_cls" in recipe and "semi" not in recipe and "tv_" not in recipe
-]
+CLS_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "_cls" in recipe and "tv_" not in recipe]
 DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/detection/" in recipe]
 INST_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/instance_segmentation/" in recipe]
 

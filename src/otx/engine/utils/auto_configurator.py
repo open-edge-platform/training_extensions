@@ -14,7 +14,7 @@ from warnings import warn
 import datumaro
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig, UnlabeledDataConfig, VisualPromptingConfig
+from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig, VisualPromptingConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel, OVModel
 from otx.core.types import PathLike
@@ -225,7 +225,6 @@ class AutoConfigurator:
         train_config = data_config.pop("train_subset")
         val_config = data_config.pop("val_subset")
         test_config = data_config.pop("test_subset")
-        unlabeled_config = data_config.pop("unlabeled_subset", {})
         tile_config = data_config.pop("tile_config", {})
         vpm_config = data_config.pop("vpm_config", {})
 
@@ -240,10 +239,6 @@ class AutoConfigurator:
             train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
             val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
             test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
-            unlabeled_subset=UnlabeledDataConfig(
-                sampler=SamplerConfig(**unlabeled_config.pop("sampler", {})),
-                **unlabeled_config,
-            ),
             tile_config=TileConfig(**tile_config),
             vpm_config=VisualPromptingConfig(**vpm_config),
             **data_config,
@@ -414,7 +409,6 @@ class AutoConfigurator:
         subset_config.to_tv_image = ov_config[f"{subset}_subset"]["to_tv_image"]
         datamodule.image_color_channel = ov_config["image_color_channel"]
         datamodule.tile_config.enable_tiler = False
-        datamodule.unlabeled_subset.data_root = None
         msg = (
             f"For OpenVINO IR models, Update the following {subset} \n"
             f"\t transforms: {subset_config.transforms} \n"
@@ -431,7 +425,6 @@ class AutoConfigurator:
             train_subset=datamodule.train_subset,
             val_subset=datamodule.val_subset,
             test_subset=datamodule.test_subset,
-            unlabeled_subset=datamodule.unlabeled_subset,
             tile_config=datamodule.tile_config,
             vpm_config=datamodule.vpm_config,
             image_color_channel=datamodule.image_color_channel,

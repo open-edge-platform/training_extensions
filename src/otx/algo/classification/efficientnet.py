@@ -7,18 +7,13 @@ from __future__ import annotations
 
 from copy import copy, deepcopy
 from math import ceil
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from torch import Tensor, nn
 
 from otx.algo.classification.backbones.efficientnet import EFFICIENTNET_VERSION, EfficientNetBackbone
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier, SemiSLClassifier
-from otx.algo.classification.heads import (
-    HierarchicalCBAMClsHead,
-    LinearClsHead,
-    MultiLabelLinearClsHead,
-    SemiSLLinearClsHead,
-)
+from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
+from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.classification.utils import get_classification_layers
@@ -36,7 +31,6 @@ from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallab
 from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel, OTXMultilabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
-from otx.core.types.task import OTXTrainType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -57,7 +51,6 @@ class EfficientNetForMulticlassCls(OTXMulticlassClsModel):
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
         input_size: tuple[int, int] = (224, 224),
-        train_type: Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED] = OTXTrainType.SUPERVISED,
     ) -> None:
         self.version = version
         self.pretrained = pretrained
@@ -69,37 +62,11 @@ class EfficientNetForMulticlassCls(OTXMulticlassClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
-            train_type=train_type,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(num_classes=self.num_classes)
-        model.init_weights()
-        return model
 
     def _build_model(self, num_classes: int) -> nn.Module:
         backbone = EfficientNetBackbone(version=self.version, input_size=self.input_size, pretrained=self.pretrained)
         neck = GlobalAveragePooling(dim=2)
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED:
-            return SemiSLClassifier(
-                backbone=backbone,
-                neck=neck,
-                head=SemiSLLinearClsHead(
-                    num_classes=num_classes,
-                    in_channels=backbone.num_features,
-                ),
-                loss=nn.CrossEntropyLoss(reduction="none"),
-            )
-
         return ImageClassifier(
             backbone=backbone,
             neck=neck,
@@ -161,20 +128,6 @@ class EfficientNetForMultilabelCls(OTXMultilabelClsModel):
             torch_compile=torch_compile,
             input_size=input_size,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(num_classes=self.num_classes)
-        model.init_weights()
-        return model
 
     def _build_model(self, num_classes: int) -> nn.Module:
         backbone = EfficientNetBackbone(version=self.version, input_size=self.input_size, pretrained=self.pretrained)
