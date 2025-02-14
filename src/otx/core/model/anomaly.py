@@ -199,7 +199,7 @@ class OTXAnomaly(OTXModel):
             images=inputs.images,
             labels=inputs.labels,
             scores=outputs["pred_scores"].unsqueeze(1),
-            saliency_map=outputs["anomaly_maps"],
+            saliency_maps=outputs["anomaly_maps"],
             boxes=outputs.get("boxes"),
         )
 
