@@ -19,7 +19,6 @@ __all__ = [
     "diffusion",
     "keypoint_detection",
     "modules",
-    "object_detection_3d",
     "plugins",
     "samplers",
     "segmentation",
