@@ -8,7 +8,6 @@ from __future__ import annotations
 import math
 
 import torch
-from otx.algo.object_detection_3d.utils.utils import NestedTensor
 from torch import nn
 
 
@@ -41,14 +40,11 @@ class PositionEmbeddingSine(nn.Module):
             scale = 2 * math.pi
         self.scale = scale
 
-    def forward(self, tensor_list: NestedTensor | torch.Tensor) -> torch.Tensor:
+    def forward(self, tensor_list: torch.Tensor) -> torch.Tensor:
         """Forward function for PositionEmbeddingSine module."""
         if isinstance(tensor_list, torch.Tensor):
             x = tensor_list
             mask = torch.zeros((x.size(0), x.size(2), x.size(3)), device=x.device, dtype=torch.bool)
-        elif isinstance(tensor_list, NestedTensor):
-            x = tensor_list.tensors
-            mask = tensor_list.mask
         else:
             msg = f"Unrecognized type {type(tensor_list)}"
             raise TypeError(msg)

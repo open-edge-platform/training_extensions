@@ -75,6 +75,11 @@ All notable changes to this project will be documented in this file.
 - Revert h-cls head to linear one
   (<https://github.com/openvinotoolkit/training_extensions/pull/4221>)
 
+### Removed
+
+- Remove object detection 3D task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4223>)
+
 ## \[2.2.2\]
 
 ### Bug fixes
