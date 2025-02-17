@@ -15,5 +15,5 @@ __all__ = [
     "HierarchicalLinearClsHead",
     "HierarchicalNonLinearClsHead",
     "HierarchicalCBAMClsHead",
-    "VisionTransformerClsHead"
+    "VisionTransformerClsHead",
 ]
