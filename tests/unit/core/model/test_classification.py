@@ -9,8 +9,8 @@ from unittest.mock import create_autospec
 
 import pytest
 from lightning.pytorch.cli import ReduceLROnPlateau
-from torch.optim import Optimizer
 from torch import nn
+from torch.optim import Optimizer
 
 from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel, OTXMultilabelClsModel
 from otx.core.types.export import TaskLevelExportParameters
@@ -26,11 +26,10 @@ class MockClsModel(nn.Module):
         pass
 
 
-
 class TestOTXMulticlassClsModel:
     @pytest.fixture(autouse=True)
-    def mock_model(self):
-        OTXMulticlassClsModel._build_model = lambda self, num_classes: MockClsModel()
+    def mock_model(self, mocker):
+        OTXMulticlassClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
 
     @pytest.fixture()
     def mock_optimizer(self):
@@ -46,7 +45,6 @@ class TestOTXMulticlassClsModel:
         mock_scheduler,
         fxt_hlabel_multilabel_info,
     ) -> None:
-
         model = OTXMulticlassClsModel(
             label_info=1,
             input_size=(224, 224),
@@ -68,7 +66,6 @@ class TestOTXMulticlassClsModel:
         mock_scheduler,
         fxt_multi_class_cls_data_entity,
     ) -> None:
-
         model = OTXMulticlassClsModel(
             label_info=1,
             input_size=(224, 224),
@@ -88,8 +85,8 @@ class TestOTXMulticlassClsModel:
 
 class TestOTXMultilabelClsModel:
     @pytest.fixture(autouse=True)
-    def mock_model(self):
-        OTXMultilabelClsModel._build_model = lambda self, num_classes: MockClsModel()
+    def mock_model(self, mocker):
+        OTXMultilabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
 
     @pytest.fixture()
     def mock_optimizer(self):
@@ -143,8 +140,8 @@ class TestOTXMultilabelClsModel:
 
 class TestOTXHlabelClsModel:
     @pytest.fixture(autouse=True)
-    def mock_model(self):
-        OTXHlabelClsModel._build_model = lambda self, head_config: MockClsModel()
+    def mock_model(self, mocker):
+        OTXHlabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
 
     @pytest.fixture()
     def mock_optimizer(self):
