@@ -263,7 +263,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span><span class="p">,</span> <span class="n">OTXTrainType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">dtype</span>
@@ -399,13 +399,13 @@
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.core.config.html#otx.core.config.otx_str_type_representer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">otx_str_type_representer</span><span class="p">(</span>
     <span class="n">dumper</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Dumper</span> <span class="o">|</span> <span class="n">yaml</span><span class="o">.</span><span class="n">representer</span><span class="o">.</span><span class="n">SafeRepresenter</span><span class="p">,</span>
-    <span class="n">data</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">|</span> <span class="n">OTXTrainType</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">yaml</span><span class="o">.</span><span class="n">ScalarNode</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Representer function for converting OTXTaskType or OTXTrainType to a YAML string representation.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Representer function for converting OTXTaskType to a YAML string representation.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        dumper (yaml.Dumper | yaml.representer.SafeRepresenter): The YAML dumper or safe representer object.</span>
-<span class="sd">        data (OTXTaskType | OTXTrainType): The OTXTaskType or OTXTrainType object to be represented.</span>
+<span class="sd">        data (OTXTaskType): The OTXTaskType object to be represented.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        yaml.ScalarNode: The YAML ScalarNode representation of the given object.</span>
@@ -430,8 +430,7 @@
     <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">dtype_representer</span><span class="p">)</span>
     <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">_SpecialForm</span><span class="p">,</span> <span class="n">any_representer</span><span class="p">)</span>  <span class="c1"># typing.Any for DictConfig</span>
     <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="o">.</span><span class="n">ignore_aliases</span> <span class="o">=</span> <span class="n">ignore_aliases</span>  <span class="c1"># type: ignore  # noqa: PGH003</span>
-    <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">OTXTaskType</span><span class="p">,</span> <span class="n">otx_str_type_representer</span><span class="p">)</span>
-    <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">OTXTrainType</span><span class="p">,</span> <span class="n">otx_str_type_representer</span><span class="p">)</span></div>
+    <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">OTXTaskType</span><span class="p">,</span> <span class="n">otx_str_type_representer</span><span class="p">)</span></div>
 
 
 

@@ -320,10 +320,8 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.callbacks.html">otx.algo.callbacks</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_early_stopping.html">otx.algo.callbacks.adaptive_early_stopping</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_train_scheduling.html">otx.algo.callbacks.adaptive_train_scheduling</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.ema_mean_teacher.html">otx.algo.callbacks.ema_mean_teacher</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.gpu_mem_monitor.html">otx.algo.callbacks.gpu_mem_monitor</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.iteration_timer.html">otx.algo.callbacks.iteration_timer</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.unlabeled_loss_warmup.html">otx.algo.callbacks.unlabeled_loss_warmup</a></li>
 </ul>
 </li>
 <li class="toctree-l4 current active has-children"><a class="reference internal" href="otx.algo.classification.html">otx.algo.classification</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
@@ -500,12 +498,6 @@
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.classification.heads.VisionTransformerClsHead" title="otx.algo.classification.heads.VisionTransformerClsHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VisionTransformerClsHead</span></code></a>(num_classes, ...[, ...])</p></td>
 <td><p>Vision Transformer classifier head.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.classification.heads.SemiSLLinearClsHead" title="otx.algo.classification.heads.SemiSLLinearClsHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SemiSLLinearClsHead</span></code></a>(num_classes, in_channels)</p></td>
-<td><p>LinearClsHead for OTXSemiSLClsHead.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.classification.heads.SemiSLVisionTransformerClsHead" title="otx.algo.classification.heads.SemiSLVisionTransformerClsHead"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SemiSLVisionTransformerClsHead</span></code></a>(num_classes, ...)</p></td>
-<td><p>VisionTransformerClsHead for OTXSemiSLClsHead.</p></td>
 </tr>
 </tbody>
 </table>
@@ -709,42 +701,6 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">nn.ReLU
 <dd><p>The forward process.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="otx.algo.classification.heads.SemiSLLinearClsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.classification.heads.</span></span><span class="sig-name descname"><span class="pre">SemiSLLinearClsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dynamic_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/classification/heads/semi_sl_head.html#SemiSLLinearClsHead"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.classification.heads.SemiSLLinearClsHead" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXSemiSLClsHead</span></code>, <a class="reference internal" href="#otx.algo.classification.heads.LinearClsHead" title="otx.algo.classification.heads.linear_head.LinearClsHead"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearClsHead</span></code></a></p>
-<p>LinearClsHead for OTXSemiSLClsHead.</p>
-<p>Initializes the OTXSemiSLClsHead class.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The number of classes.</p></li>
-<li><p><strong>use_dynamic_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use a dynamic threshold for pseudo-label selection.
-Defaults to True.</p></li>
-<li><p><strong>min_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The minimum threshold for pseudo-label selection. Defaults to 0.5.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="otx.algo.classification.heads.SemiSLVisionTransformerClsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.classification.heads.</span></span><span class="sig-name descname"><span class="pre">SemiSLVisionTransformerClsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dynamic_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{'layer':</span> <span class="pre">'Linear',</span> <span class="pre">'type':</span> <span class="pre">'Constant',</span> <span class="pre">'val':</span> <span class="pre">0}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/classification/heads/semi_sl_head.html#SemiSLVisionTransformerClsHead"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.classification.heads.SemiSLVisionTransformerClsHead" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXSemiSLClsHead</span></code>, <a class="reference internal" href="#otx.algo.classification.heads.VisionTransformerClsHead" title="otx.algo.classification.heads.vision_transformer_head.VisionTransformerClsHead"><code class="xref py py-class docutils literal notranslate"><span class="pre">VisionTransformerClsHead</span></code></a></p>
-<p>VisionTransformerClsHead for OTXSemiSLClsHead.</p>
-<p>Initializes the OTXSemiSLClsHead class.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The number of classes.</p></li>
-<li><p><strong>use_dynamic_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use a dynamic threshold for pseudo-label selection.
-Defaults to True.</p></li>
-<li><p><strong>min_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The minimum threshold for pseudo-label selection. Defaults to 0.5.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -987,24 +943,6 @@ will be used to classify. The shape of every item should be
     </a>
    </li>
   </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.algo.classification.heads.SemiSLLinearClsHead">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     SemiSLLinearClsHead
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.algo.classification.heads.SemiSLVisionTransformerClsHead">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     SemiSLVisionTransformerClsHead
-    </span>
-   </code>
-  </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#otx.algo.classification.heads.VisionTransformerClsHead">

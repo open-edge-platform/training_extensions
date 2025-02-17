@@ -261,16 +261,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">log</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">RandomSampler</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span><span class="p">,</span> <span class="n">UnlabeledDataConfig</span><span class="p">,</span> <span class="n">VisualPromptingConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span><span class="p">,</span> <span class="n">VisualPromptingConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.mem_cache</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -319,7 +317,6 @@
         <span class="n">train_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span><span class="p">,</span>
         <span class="n">val_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span><span class="p">,</span>
         <span class="n">test_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span><span class="p">,</span>
-        <span class="n">unlabeled_subset</span><span class="p">:</span> <span class="n">UnlabeledDataConfig</span> <span class="o">=</span> <span class="n">UnlabeledDataConfig</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>  <span class="c1"># noqa: B008</span>
         <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span> <span class="o">=</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
         <span class="n">vpm_config</span><span class="p">:</span> <span class="n">VisualPromptingConfig</span> <span class="o">=</span> <span class="n">VisualPromptingConfig</span><span class="p">(),</span>  <span class="c1"># noqa: B008</span>
         <span class="n">mem_cache_size</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;1GB&quot;</span><span class="p">,</span>
@@ -344,7 +341,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span> <span class="o">=</span> <span class="n">train_subset</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">val_subset</span> <span class="o">=</span> <span class="n">val_subset</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span> <span class="o">=</span> <span class="n">test_subset</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span> <span class="o">=</span> <span class="n">unlabeled_subset</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="n">tile_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vpm_config</span> <span class="o">=</span> <span class="n">vpm_config</span>
@@ -373,18 +369,6 @@
                 <span class="n">ignore_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;SEMANTIC_SEGMENTATION&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="n">unlabeled_dataset</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">data_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># If unlabeled_subset&#39;s data_root is not None, use that folder as the Unlabeled dataset root.</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Unlabeled dataset is loaded from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">data_root</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">unlabeled_dataset</span> <span class="o">=</span> <span class="n">DmDataset</span><span class="o">.</span><span class="n">import_from</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">data_root</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
-                <span class="n">subset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">subset_name</span><span class="p">,</span>
-            <span class="p">)</span>
-
         <span class="k">if</span> <span class="n">adaptive_input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">input_size</span> <span class="o">=</span> <span class="n">adapt_input_size_to_dataset</span><span class="p">(</span>
                 <span class="n">dataset</span><span class="p">,</span>
@@ -394,7 +378,7 @@
                 <span class="n">input_size_multiplier</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">subset_cfg</span> <span class="ow">in</span> <span class="p">[</span><span class="n">train_subset</span><span class="p">,</span> <span class="n">val_subset</span><span class="p">,</span> <span class="n">test_subset</span><span class="p">,</span> <span class="n">unlabeled_subset</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">subset_cfg</span> <span class="ow">in</span> <span class="p">[</span><span class="n">train_subset</span><span class="p">,</span> <span class="n">val_subset</span><span class="p">,</span> <span class="n">test_subset</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
@@ -464,50 +448,6 @@
             <span class="n">label_infos</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">label_info</span><span class="p">]</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Add name: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">, self.subsets: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">unlabeled_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">subset_name</span>
-            <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">unlabeled_dataset</span><span class="o">.</span><span class="n">subsets</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">transforms</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="c1"># When applying multi-transforms to a single unlabeled dataset</span>
-                <span class="c1"># This adds as many subsets as the number of keys in the transforms. The dataset is the same,</span>
-                <span class="c1"># only the transforms are different.</span>
-                <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">as_dataset</span><span class="p">()</span>
-                <span class="k">for</span> <span class="n">transform_key</span><span class="p">,</span> <span class="n">transforms</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">unlabeled_config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="p">)</span>
-                    <span class="c1"># TODO (harimkang): Revisit this with core.config.data.UnlabeledDataConfig.transforms.</span>
-                    <span class="n">unlabeled_config</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">transforms</span>  <span class="c1"># type: ignore[assignment]</span>
-
-                    <span class="n">unlabeled_dataset</span> <span class="o">=</span> <span class="n">OTXDatasetFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-                        <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
-                        <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
-                        <span class="n">cfg_subset</span><span class="o">=</span><span class="n">unlabeled_config</span><span class="p">,</span>
-                        <span class="n">mem_cache_handler</span><span class="o">=</span><span class="n">mem_cache_handler</span><span class="p">,</span>
-                        <span class="n">mem_cache_img_max_size</span><span class="o">=</span><span class="n">mem_cache_img_max_size</span><span class="p">,</span>
-                        <span class="n">image_color_channel</span><span class="o">=</span><span class="n">image_color_channel</span><span class="p">,</span>
-                        <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
-                        <span class="n">include_polygons</span><span class="o">=</span><span class="n">include_polygons</span><span class="p">,</span>
-                        <span class="n">ignore_index</span><span class="o">=</span><span class="n">ignore_index</span><span class="p">,</span>
-                        <span class="n">vpm_config</span><span class="o">=</span><span class="n">vpm_config</span><span class="p">,</span>
-                        <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">transform_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">unlabeled_dataset</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">unlabeled_dataset</span> <span class="o">=</span> <span class="n">OTXDatasetFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-                    <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
-                    <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">as_dataset</span><span class="p">(),</span>
-                    <span class="n">cfg_subset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="p">,</span>
-                    <span class="n">mem_cache_handler</span><span class="o">=</span><span class="n">mem_cache_handler</span><span class="p">,</span>
-                    <span class="n">mem_cache_img_max_size</span><span class="o">=</span><span class="n">mem_cache_img_max_size</span><span class="p">,</span>
-                    <span class="n">image_color_channel</span><span class="o">=</span><span class="n">image_color_channel</span><span class="p">,</span>
-                    <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
-                    <span class="n">include_polygons</span><span class="o">=</span><span class="n">include_polygons</span><span class="p">,</span>
-                    <span class="n">ignore_index</span><span class="o">=</span><span class="n">ignore_index</span><span class="p">,</span>
-                    <span class="n">vpm_config</span><span class="o">=</span><span class="n">vpm_config</span><span class="p">,</span>
-                    <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">unlabeled_dataset</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_meta_info_valid</span><span class="p">(</span><span class="n">label_infos</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All data meta infos of subsets should be the same.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -526,7 +466,7 @@
 
 <div class="viewcode-block" id="OTXDataModule.train_dataloader">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.train_dataloader">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get train dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">subset_name</span><span class="p">)</span>
@@ -553,23 +493,7 @@
                     <span class="s2">&quot;sampler&quot;</span><span class="p">:</span> <span class="n">RandomSampler</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">num_samples</span><span class="p">),</span>
                 <span class="p">},</span>
             <span class="p">)</span>
-        <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">**</span><span class="n">common_args</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">unlabeled_dataloader</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_dataloader</span><span class="p">())</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Utilize the CombinedLoader provided by Lightning to bundle multiple dataloaders.</span>
-            <span class="c1"># https://lightning.ai/docs/pytorch/stable/data/iterables.html</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">CombinedLoader</span>
-
-            <span class="n">iterables</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;labeled&quot;</span><span class="p">:</span> <span class="n">dataloader</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">unlabeled_dataloader</span><span class="p">,</span>
-            <span class="p">}</span>
-            <span class="c1"># CombinedLoader should always behave relative to the labeled dataloader.</span>
-            <span class="c1"># if len(labeled_dataloader) &lt; len(unlabeled_dataloader), the mode should be &quot;min_size&quot;</span>
-            <span class="c1"># if len(labeled_dataloader) &gt; len(unlabeled_dataloader), the mode should be &quot;max_size_cycle&quot;</span>
-            <span class="n">min_unlabeled_length</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span> <span class="k">for</span> <span class="n">loader</span> <span class="ow">in</span> <span class="n">unlabeled_dataloader</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-            <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;min_size&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_unlabeled_length</span> <span class="k">else</span> <span class="s2">&quot;max_size_cycle&quot;</span>
-            <span class="k">return</span> <span class="n">CombinedLoader</span><span class="p">(</span><span class="n">iterables</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">dataloader</span></div>
+        <span class="k">return</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">**</span><span class="n">common_args</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXDataModule.val_dataloader">
@@ -626,66 +550,6 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="OTXDataModule.unlabeled_dataloader">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.unlabeled_dataloader">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">unlabeled_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataLoader</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dictionary of unlabeled dataloaders.</span>
-
-<span class="sd">        The method creates and returns dataloaders for unlabeled datasets based on the configuration settings.</span>
-<span class="sd">        If the data root is not specified in the configuration, it returns None.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            dict[str, DataLoader] | None: A dictionary containing unlabeled dataloaders, where the keys are the names of</span>
-<span class="sd">            the datasets and the values are the corresponding DataLoader objects.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span>
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">data_root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">common_args</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="s2">&quot;num_workers&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
-            <span class="s2">&quot;pin_memory&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="s2">&quot;persistent_workers&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="p">}</span>
-
-        <span class="n">dataloaders</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">transforms</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unlabeled dataset has multiple transforms : </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">common_args</span><span class="p">[</span><span class="s2">&quot;worker_init_fn&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># type: ignore[assignment]</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">transforms</span><span class="p">:</span>
-                <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-                <span class="c1"># For unlabeled datasets using Multi-Transforms, must use generators and samplers</span>
-                <span class="c1"># with the same seed to get the same data.</span>
-                <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">()</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-                <span class="n">sampler</span> <span class="o">=</span> <span class="n">instantiate_sampler</span><span class="p">(</span>
-                    <span class="n">config</span><span class="o">.</span><span class="n">sampler</span><span class="p">,</span>
-                    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
-                    <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-                    <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">,</span>
-                <span class="p">)</span>
-
-                <span class="n">dataloaders</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-                    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
-                    <span class="n">collate_fn</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
-                    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-                    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">common_args</span><span class="p">,</span>
-                <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">subset_name</span><span class="p">)</span>
-            <span class="n">sampler</span> <span class="o">=</span> <span class="n">instantiate_sampler</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">sampler</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">)</span>
-            <span class="n">dataloaders</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">subset_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
-                <span class="n">collate_fn</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
-                <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-                <span class="n">shuffle</span><span class="o">=</span><span class="n">sampler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">common_args</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">dataloaders</span></div>
-
-
 <div class="viewcode-block" id="OTXDataModule.setup">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule.setup">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -727,7 +591,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">val_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">vpm_config</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">mem_cache_size</span><span class="p">,</span>

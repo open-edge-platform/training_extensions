@@ -260,24 +260,18 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">ceil</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.backbones.timm</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimmBackbone</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelClassifier</span><span class="p">,</span> <span class="n">ImageClassifier</span><span class="p">,</span> <span class="n">SemiSLClassifier</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.heads</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">HierarchicalCBAMClsHead</span><span class="p">,</span>
-    <span class="n">LinearClsHead</span><span class="p">,</span>
-    <span class="n">MultiLabelLinearClsHead</span><span class="p">,</span>
-    <span class="n">SemiSLLinearClsHead</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelClassifier</span><span class="p">,</span> <span class="n">ImageClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">HierarchicalCBAMClsHead</span><span class="p">,</span> <span class="n">LinearClsHead</span><span class="p">,</span> <span class="n">MultiLabelLinearClsHead</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.losses.asymmetric_angular_loss_with_ignore</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsymmetricAngularLossWithIgnore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.necks.gap</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlobalAveragePooling</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_classification_layers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.support_otx_v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXv1Helper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
@@ -296,7 +290,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTrainType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
@@ -321,7 +314,6 @@
 <span class="sd">        metric (MetricCallable, optional): The metric callable for evaluating the model.</span>
 <span class="sd">            Defaults to MultiClassClsMetricCallable.</span>
 <span class="sd">        torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.</span>
-<span class="sd">        train_type (Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED], optional): The training type.</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        1. API</span>
@@ -345,7 +337,6 @@
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">MultiClassClsMetricCallable</span><span class="p">,</span>
         <span class="n">torch_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">train_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SUPERVISED</span><span class="p">,</span> <span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SEMI_SUPERVISED</span><span class="p">]</span> <span class="o">=</span> <span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SUPERVISED</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span> <span class="o">=</span> <span class="n">pretrained</span>
@@ -357,36 +348,11 @@
             <span class="n">scheduler</span><span class="o">=</span><span class="n">scheduler</span><span class="p">,</span>
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
             <span class="n">torch_compile</span><span class="o">=</span><span class="n">torch_compile</span><span class="p">,</span>
-            <span class="n">train_type</span><span class="o">=</span><span class="n">train_type</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
-        <span class="c1"># Get classification_layers for class-incr learning</span>
-        <span class="n">sample_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="n">incremental_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">classification_layers</span> <span class="o">=</span> <span class="n">get_classification_layers</span><span class="p">(</span>
-            <span class="n">sample_model_dict</span><span class="p">,</span>
-            <span class="n">incremental_model_dict</span><span class="p">,</span>
-            <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;model.&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">model</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">backbone</span> <span class="o">=</span> <span class="n">TimmBackbone</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span><span class="p">)</span>
         <span class="n">neck</span> <span class="o">=</span> <span class="n">GlobalAveragePooling</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_type</span> <span class="o">==</span> <span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SEMI_SUPERVISED</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">SemiSLClassifier</span><span class="p">(</span>
-                <span class="n">backbone</span><span class="o">=</span><span class="n">backbone</span><span class="p">,</span>
-                <span class="n">neck</span><span class="o">=</span><span class="n">neck</span><span class="p">,</span>
-                <span class="n">head</span><span class="o">=</span><span class="n">SemiSLLinearClsHead</span><span class="p">(</span>
-                    <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
-                    <span class="n">in_channels</span><span class="o">=</span><span class="n">backbone</span><span class="o">.</span><span class="n">num_features</span><span class="p">,</span>
-                <span class="p">),</span>
-                <span class="n">loss</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">),</span>
-            <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">ImageClassifier</span><span class="p">(</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">backbone</span><span class="p">,</span>
@@ -486,20 +452,6 @@
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
             <span class="n">torch_compile</span><span class="o">=</span><span class="n">torch_compile</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
-        <span class="c1"># Get classification_layers for class-incr learning</span>
-        <span class="n">sample_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="n">incremental_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">classification_layers</span> <span class="o">=</span> <span class="n">get_classification_layers</span><span class="p">(</span>
-            <span class="n">sample_model_dict</span><span class="p">,</span>
-            <span class="n">incremental_model_dict</span><span class="p">,</span>
-            <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;model.&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">model</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">backbone</span> <span class="o">=</span> <span class="n">TimmBackbone</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span><span class="p">)</span>
@@ -605,23 +557,6 @@
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
             <span class="n">torch_compile</span><span class="o">=</span><span class="n">torch_compile</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
-        <span class="c1"># Get classification_layers for class-incr learning</span>
-        <span class="n">sample_config</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">as_head_config_dict</span><span class="p">())</span>
-        <span class="n">sample_config</span><span class="p">[</span><span class="s2">&quot;num_classes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
-        <span class="n">sample_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">head_config</span><span class="o">=</span><span class="n">sample_config</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="n">sample_config</span><span class="p">[</span><span class="s2">&quot;num_classes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">6</span>
-        <span class="n">incremental_model_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">head_config</span><span class="o">=</span><span class="n">sample_config</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">classification_layers</span> <span class="o">=</span> <span class="n">get_classification_layers</span><span class="p">(</span>
-            <span class="n">sample_model_dict</span><span class="p">,</span>
-            <span class="n">incremental_model_dict</span><span class="p">,</span>
-            <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;model.&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">head_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">as_head_config_dict</span><span class="p">())</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">model</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">backbone</span> <span class="o">=</span> <span class="n">TimmBackbone</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained</span><span class="p">)</span>

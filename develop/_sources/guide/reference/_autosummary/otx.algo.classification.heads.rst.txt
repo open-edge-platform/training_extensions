@@ -24,8 +24,6 @@ otx.algo.classification.heads
       HierarchicalNonLinearClsHead
       HierarchicalCBAMClsHead
       VisionTransformerClsHead
-      SemiSLLinearClsHead
-      SemiSLVisionTransformerClsHead
    
    
 

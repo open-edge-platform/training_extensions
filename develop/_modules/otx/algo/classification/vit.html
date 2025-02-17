@@ -263,7 +263,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">types</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -272,11 +272,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.hub</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_url_to_file</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.backbones.vision_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="n">VIT_ARCH_TYPE</span><span class="p">,</span> <span class="n">VisionTransformer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelClassifier</span><span class="p">,</span> <span class="n">ImageClassifier</span><span class="p">,</span> <span class="n">SemiSLClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelClassifier</span><span class="p">,</span> <span class="n">ImageClassifier</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.heads</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HierarchicalCBAMClsHead</span><span class="p">,</span>
     <span class="n">MultiLabelLinearClsHead</span><span class="p">,</span>
-    <span class="n">SemiSLVisionTransformerClsHead</span><span class="p">,</span>
     <span class="n">VisionTransformerClsHead</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsymmetricAngularLossWithIgnore</span>
@@ -293,7 +292,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTrainType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
@@ -493,7 +491,6 @@
         <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">MultiClassClsMetricCallable</span><span class="p">,</span>
         <span class="n">torch_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">),</span>
-        <span class="n">train_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SUPERVISED</span><span class="p">,</span> <span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SEMI_SUPERVISED</span><span class="p">]</span> <span class="o">=</span> <span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SUPERVISED</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arch</span> <span class="o">=</span> <span class="n">arch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lora</span> <span class="o">=</span> <span class="n">lora</span>
@@ -506,7 +503,6 @@
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
             <span class="n">torch_compile</span><span class="o">=</span><span class="n">torch_compile</span><span class="p">,</span>
             <span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span>
-            <span class="n">train_type</span><span class="o">=</span><span class="n">train_type</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="VisionTransformerForMulticlassCls.load_from_otx_v1_ckpt">
@@ -556,16 +552,6 @@
             <span class="p">{</span><span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="s2">&quot;LayerNorm&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Constant&quot;</span><span class="p">},</span>
         <span class="p">]</span>
         <span class="n">vit_backbone</span> <span class="o">=</span> <span class="n">VisionTransformer</span><span class="p">(</span><span class="n">arch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arch</span><span class="p">,</span> <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span> <span class="n">lora</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lora</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_type</span> <span class="o">==</span> <span class="n">OTXTrainType</span><span class="o">.</span><span class="n">SEMI_SUPERVISED</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">SemiSLClassifier</span><span class="p">(</span>
-                <span class="n">backbone</span><span class="o">=</span><span class="n">vit_backbone</span><span class="p">,</span>
-                <span class="n">neck</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">head</span><span class="o">=</span><span class="n">SemiSLVisionTransformerClsHead</span><span class="p">(</span>
-                    <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
-                    <span class="n">in_channels</span><span class="o">=</span><span class="n">vit_backbone</span><span class="o">.</span><span class="n">embed_dim</span><span class="p">,</span>
-                <span class="p">),</span>
-                <span class="n">loss</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">),</span>
-            <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">ImageClassifier</span><span class="p">(</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">vit_backbone</span><span class="p">,</span>

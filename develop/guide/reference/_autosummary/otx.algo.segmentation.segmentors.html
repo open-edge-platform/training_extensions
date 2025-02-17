@@ -320,10 +320,8 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.callbacks.html">otx.algo.callbacks</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_early_stopping.html">otx.algo.callbacks.adaptive_early_stopping</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_train_scheduling.html">otx.algo.callbacks.adaptive_train_scheduling</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.ema_mean_teacher.html">otx.algo.callbacks.ema_mean_teacher</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.gpu_mem_monitor.html">otx.algo.callbacks.gpu_mem_monitor</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.iteration_timer.html">otx.algo.callbacks.iteration_timer</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.unlabeled_loss_warmup.html">otx.algo.callbacks.unlabeled_loss_warmup</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.classification.html">otx.algo.classification</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -483,9 +481,6 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.segmentation.segmentors.BaseSegmentationModel" title="otx.algo.segmentation.segmentors.BaseSegmentationModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseSegmentationModel</span></code></a>(backbone, decode_head)</p></td>
 <td><p>Base Segmentation Model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.segmentation.segmentors.MeanTeacher" title="otx.algo.segmentation.segmentors.MeanTeacher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MeanTeacher</span></code></a>(model[, unsup_weight, ...])</p></td>
-<td><p>MeanTeacher for Semi-supervised learning.</p></td>
-</tr>
 </tbody>
 </table>
 <dl class="py class">
@@ -578,46 +573,6 @@ If None, use CrossEntropyLoss with ignore_index=255.</p></li>
 
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="otx.algo.segmentation.segmentors.MeanTeacher">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.segmentation.segmentors.</span></span><span class="sig-name descname"><span class="pre">MeanTeacher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unsup_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_unrel_pixels_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semisl_start_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_pixels_epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/segmentation/segmentors/mean_teacher.html#MeanTeacher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.segmentation.segmentors.MeanTeacher" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>MeanTeacher for Semi-supervised learning.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>nn.Module</em>) – model</p></li>
-<li><p><strong>unsup_weight</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – unsupervised weight. Defaults to 1.0.</p></li>
-<li><p><strong>drop_unrel_pixels_percent</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – drop unrel pixels percent. Defaults to 20.</p></li>
-<li><p><strong>semisl_start_epoch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – semisl start epoch. Defaults to 0.</p></li>
-<li><p><strong>filter_pixels_epochs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – filter pixels epochs. Defaults to 100.</p></li>
-</ul>
-</dd>
-</dl>
-<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.segmentation.segmentors.MeanTeacher.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unlabeled_weak_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unlabeled_strong_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_metas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">ImageInfo</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unlabeled_img_metas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">ImageInfo</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tensor'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../../_modules/otx/algo/segmentation/segmentors/mean_teacher.html#MeanTeacher.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.segmentation.segmentors.MeanTeacher.forward" title="Link to this definition">#</a></dt>
-<dd><p>Step for model training.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>Tensor</em>) – input labeled images</p></li>
-<li><p><strong>unlabeled_weak_images</strong> (<em>Tensor</em><em>, </em><em>optional</em>) – unlabeled images with weak augmentations. Defaults to None.</p></li>
-<li><p><strong>unlabeled_strong_images</strong> (<em>Tensor</em><em>, </em><em>optional</em>) – unlabeled images with strong augmentations. Defaults to None.</p></li>
-<li><p><strong>global_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – global step. Defaults to None.</p></li>
-<li><p><strong>steps_per_epoch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – steps per epoch. Defaults to None.</p></li>
-<li><p><strong>img_metas</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><em>ImageInfo</em><em>]</em><em>, </em><em>optional</em>) – image meta information. Defaults to None.</p></li>
-<li><p><strong>unlabeled_img_metas</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><em>ImageInfo</em><em>]</em><em>, </em><em>optional</em>) – unlabeled image meta information. Defaults to None.</p></li>
-<li><p><strong>masks</strong> (<em>Tensor</em><em>, </em><em>optional</em>) – ground truth masks for training. Defaults to None.</p></li>
-<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – mode of forward. Defaults to “tensor”.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 
 
@@ -699,26 +654,6 @@ If None, use CrossEntropyLoss with ignore_index=255.</p></li>
      <code class="docutils literal notranslate">
       <span class="pre">
        BaseSegmentationModel.get_valid_label_mask()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.algo.segmentation.segmentors.MeanTeacher">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     MeanTeacher
-    </span>
-   </code>
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.segmentation.segmentors.MeanTeacher.forward">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MeanTeacher.forward()
       </span>
      </code>
     </a>

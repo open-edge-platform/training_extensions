@@ -320,10 +320,8 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.callbacks.html">otx.algo.callbacks</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_early_stopping.html">otx.algo.callbacks.adaptive_early_stopping</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_train_scheduling.html">otx.algo.callbacks.adaptive_train_scheduling</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.ema_mean_teacher.html">otx.algo.callbacks.ema_mean_teacher</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.gpu_mem_monitor.html">otx.algo.callbacks.gpu_mem_monitor</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.iteration_timer.html">otx.algo.callbacks.iteration_timer</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.unlabeled_loss_warmup.html">otx.algo.callbacks.unlabeled_loss_warmup</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.classification.html">otx.algo.classification</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -489,10 +487,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.core.config.data.TileConfig" title="otx.core.config.data.TileConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileConfig</span></code></a>([enable_tiler, ...])</p></td>
 <td><p>DTO for tiler configuration.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.core.config.data.UnlabeledDataConfig" title="otx.core.config.data.UnlabeledDataConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnlabeledDataConfig</span></code></a>(batch_size, subset_name, ...)</p></td>
-<td><p>DTO for unlabeled data.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.core.config.data.VisualPromptingConfig" title="otx.core.config.data.VisualPromptingConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VisualPromptingConfig</span></code></a>([use_bbox, use_point])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.core.config.data.VisualPromptingConfig" title="otx.core.config.data.VisualPromptingConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VisualPromptingConfig</span></code></a>([use_bbox, use_point])</p></td>
 <td><p>DTO for visual prompting data module configuration.</p></td>
 </tr>
 </tbody>
@@ -645,13 +640,6 @@ num_workers=2,</p>
 <dd><p>Return a deep copied one of this instance.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="otx.core.config.data.UnlabeledDataConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.core.config.data.</span></span><span class="sig-name descname"><span class="pre">UnlabeledDataConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'unlabeled'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms:</span> <span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list[dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]]]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_lib_type:</span> <span class="pre">~otx.core.types.transformer_libs.TransformLibType</span> <span class="pre">=</span> <span class="pre">TransformLibType.TORCHVISION</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler:</span> <span class="pre">~otx.core.config.data.SamplerConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_tv_image:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size:</span> <span class="pre">~typing.Any</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_root:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'image_dir'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/core/config/data.html#UnlabeledDataConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.config.data.UnlabeledDataConfig" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#otx.core.config.data.SubsetConfig" title="otx.core.config.data.SubsetConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">SubsetConfig</span></code></a></p>
-<p>DTO for unlabeled data.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -812,15 +800,6 @@ num_workers=2,</p>
     </a>
    </li>
   </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.core.config.data.UnlabeledDataConfig">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     UnlabeledDataConfig
-    </span>
-   </code>
-  </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#otx.core.config.data.VisualPromptingConfig">
