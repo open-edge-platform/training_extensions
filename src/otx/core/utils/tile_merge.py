@@ -22,6 +22,29 @@ from otx.core.data.entity.detection import DetBatchPredEntity, DetPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity, InstanceSegPredEntity
 from otx.core.data.entity.segmentation import SegBatchPredEntity, SegPredEntity
 
+MAX_ELEMENTS: int = 2**31 - 1
+
+
+def keep_chunkify(tensor: torch.Tensor, max_element: int = MAX_ELEMENTS) -> torch.Tensor:
+    """Splits tensor into chunks and processes each chunk separately.
+
+    Args:
+        tensor (torch.Tensor): Input tensor of shape (B, H, W).
+
+    Returns:
+        torch.Tensor: Boolean mask of shape (B,) indicating nonzero sum.
+    """
+    _, h, w = tensor.shape
+    max_batch_size = int(max_element) // (h * w)
+    chunk_size = max(1, min(max_batch_size, tensor.shape[0]))
+
+    keep_indices = []
+    for i in range(0, tensor.shape[0], chunk_size):
+        chunk = tensor[i : i + chunk_size]
+        keep_indices.append(chunk.sum(dim=(1, 2)) > 0)  # Process chunk
+
+    return torch.cat(keep_indices, dim=0)
+
 
 class TileMerge(Generic[T_OTXDataEntity, T_OTXBatchPredEntity]):
     """Base class for tile merge.
@@ -333,7 +356,12 @@ class InstanceSegTileMerge(TileMerge):
                 feature_vectors,
                 strict=True,
             ):
-                keep_indices = tile_masks.to_sparse().sum((1, 2)).to_dense() > 0
+                # NOTE: RuntimeError: nonzero is not supported for tensors with more than INT_MAX elements,
+                # See https://github.com/pytorch/pytorch/issues/51871
+                if torch.numel(tile_masks) > MAX_ELEMENTS:
+                    keep_indices = keep_chunkify(tile_masks)
+                else:
+                    keep_indices = tile_masks.to_sparse().sum((1, 2)).to_dense() > 0
                 keep_indices = keep_indices.nonzero(as_tuple=True)[0]
                 _bboxes = tile_bboxes[keep_indices]
                 _labels = tile_labels[keep_indices]
