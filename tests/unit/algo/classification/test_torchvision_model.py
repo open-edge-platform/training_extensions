@@ -5,7 +5,7 @@ import pytest
 import torch
 
 from otx.algo.classification.classifier import ImageClassifier
-from otx.algo.classification.heads import SemiSLLinearClsHead
+from otx.algo.classification.heads import LinearClsHead
 from otx.algo.classification.torchvision_model import (
     TVModelForHLabelCls,
     TVModelForMulticlassCls,
@@ -52,12 +52,11 @@ class TestOTXTVModel:
     def test_create_model(self, fxt_tv_model):
         assert isinstance(fxt_tv_model.model, ImageClassifier)
 
-        semi_sl_model = TVModelForMulticlassCls(
+        model = TVModelForMulticlassCls(
             backbone="mobilenet_v3_small",
             label_info=10,
-            train_type="SEMI_SUPERVISED",
         )
-        assert isinstance(semi_sl_model.model.head, SemiSLLinearClsHead)
+        assert isinstance(model.model.head, LinearClsHead)
 
     @pytest.mark.parametrize(
         "fxt_tv_model_and_data_entity",

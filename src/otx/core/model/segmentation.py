@@ -8,17 +8,14 @@ from __future__ import annotations
 import copy
 import json
 import logging as log
-from abc import abstractmethod
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torch.nn.functional as f
 from model_api.tilers import SemanticSegmentationTiler
-from torch import nn
 from torchvision import tv_tensors
 
-from otx.algo.segmentation.segmentors import MeanTeacher
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
@@ -29,15 +26,11 @@ from otx.core.metrics import MetricInput
 from otx.core.metrics.dice import SegmCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
+from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
-from otx.core.types.precision import OTXPrecisionType
-from otx.core.types.task import OTXTrainType
 from otx.core.utils.tile_merge import SegmentationTileMerge
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import ImageResultWithSoftPrediction
     from torch import Tensor
@@ -60,10 +53,6 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
         torch_compile: bool = False,
-        train_type: Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED] = OTXTrainType.SUPERVISED,
-        unsupervised_weight: float = 0.7,
-        semisl_start_epoch: int = 2,
-        drop_unreliable_pixels_percent: int = 20,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ):
         """Base semantic segmentation model.
@@ -80,19 +69,8 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
                 Defaults to SegmCallable.
             torch_compile (bool, optional): Whether to compile the model using TorchScript.
                 Defaults to False.
-            train_type (Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED], optional):
-                The training type of the model. Defaults to OTXTrainType.SUPERVISED.
-            unsupervised_weight (float, optional): The weight of the unsupervised loss.
-                Only for semi-supervised learning. Defaults to 0.7.
-            semisl_start_epoch (int, optional): The epoch at which the semi-supervised learning starts.
-                Only for semi-supervised learning. Defaults to 2.
-            drop_unreliable_pixels_percent (int, optional): The percentage of unreliable pixels to drop.
-                Only for semi-supervised learning. Defaults to 20.
         """
         self.model_name = model_name
-        self.unsupervised_weight = unsupervised_weight
-        self.semisl_start_epoch = semisl_start_epoch
-        self.drop_unreliable_pixels_percent = drop_unreliable_pixels_percent
         super().__init__(
             label_info=label_info,
             input_size=input_size,
@@ -100,30 +78,9 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
-            train_type=train_type,
             tile_config=tile_config,
         )
         self.input_size: tuple[int, int]
-
-    def _create_model(self) -> nn.Module:
-        base_model = self._build_model()
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED:
-            return MeanTeacher(
-                base_model,
-                unsup_weight=self.unsupervised_weight,
-                drop_unrel_pixels_percent=self.drop_unreliable_pixels_percent,
-                semisl_start_epoch=self.semisl_start_epoch,
-            )
-
-        return base_model
-
-    @abstractmethod
-    def _build_model(self) -> nn.Module:
-        """Building base nn.Module model.
-
-        Returns:
-            nn.Module: base nn.Module model for supervised training
-        """
 
     def _customize_inputs(self, entity: SegBatchDataEntity) -> dict[str, Any]:
         if self.training:
@@ -132,23 +89,6 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
             mode = "explain"
         else:
             mode = "predict"
-
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED and mode == "loss":
-            if not isinstance(entity, dict):
-                msg = "unlabeled inputs should be provided for semi-sl training"
-                raise RuntimeError(msg)
-
-            return {
-                "inputs": entity["labeled"].images,
-                "unlabeled_weak_images": entity["weak_transforms"].images,
-                "unlabeled_strong_images": entity["strong_transforms"].images,
-                "global_step": self.trainer.global_step,
-                "steps_per_epoch": self.trainer.num_training_batches,
-                "img_metas": entity["labeled"].imgs_info,
-                "unlabeled_img_metas": entity["weak_transforms"].imgs_info,
-                "masks": torch.stack(entity["labeled"].masks).long(),
-                "mode": mode,
-            }
 
         masks = torch.stack(entity.masks).long() if mode == "loss" else None
         return {"inputs": entity.images, "img_metas": entity.imgs_info, "masks": masks, "mode": mode}
@@ -356,31 +296,6 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
                 ),
             )
         return SegBatchDataEntity(batch_size, images, infos, masks=[])
-
-    def export(
-        self,
-        output_dir: Path,
-        base_name: str,
-        export_format: OTXExportFormatType,
-        precision: OTXPrecisionType = OTXPrecisionType.FP32,
-        to_exportable_code: bool = False,
-    ) -> Path:
-        """Export this model to the specified output directory.
-
-        Args:
-            output_dir (Path): directory for saving the exported model
-            base_name: (str): base name for the exported model file. Extension is defined by the target export format
-            export_format (OTXExportFormatType): format of the output model
-            precision (OTXExportPrecisionType): precision of the output model
-            to_exportable_code (bool): flag to export model in exportable code with demo package
-
-        Returns:
-            Path: path to the exported model.
-        """
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED:
-            # use only teacher model for deployment
-            self.model = self.model.teacher_model
-        return super().export(output_dir, base_name, export_format, precision, to_exportable_code)
 
 
 class OVSegmentationModel(OVModel[SegBatchDataEntity, SegBatchPredEntity]):

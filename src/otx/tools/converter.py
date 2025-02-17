@@ -14,7 +14,7 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig, UnlabeledDataConfig
+from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types import PathLike
@@ -442,12 +442,10 @@ class ConfigConverter:
         train_config = data_config.pop("train_subset")
         val_config = data_config.pop("val_subset")
         test_config = data_config.pop("test_subset")
-        unlabeled_config = data_config.pop("unlabeled_subset")
         datamodule = OTXDataModule(
             train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
             val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
             test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
-            unlabeled_subset=UnlabeledDataConfig(**unlabeled_config),
             tile_config=TileConfig(**data_config.pop("tile_config", {})),
             **data_config,
         )

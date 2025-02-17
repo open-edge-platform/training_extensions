@@ -45,8 +45,7 @@ def test_forward_explain(
 
     recipe_split = recipe.split("/")
     model_name = recipe_split[-1].split(".")[0]
-    is_semisl = model_name.endswith("_semisl")
-    task = recipe_split[-2] if not is_semisl else recipe_split[-3]
+    task = recipe_split[-2]
 
     if "maskdino" in model_name:
         # TODO(Eugene): maskdino not support yet.
@@ -106,8 +105,7 @@ def test_predict_with_explain(
     """
     recipe_split = recipe.split("/")
     model_name = recipe_split[-1].split(".")[0]
-    is_semisl = model_name.endswith("_semisl")
-    task = recipe_split[-2] if not is_semisl else recipe_split[-3]
+    task = recipe_split[-2]
 
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")

@@ -122,13 +122,6 @@ def test_otx_export_infer(
                 "warn",
             ],
         )
-    if model_name.endswith("_semisl") and "multi_class_cls" in recipe:
-        command_cfg.extend(
-            [
-                "--data.unlabeled_subset.data_root",
-                fxt_target_dataset_per_task["multi_class_cls_semisl"],
-            ],
-        )
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
 

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from copy import copy, deepcopy
+from copy import copy
 from math import ceil
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -13,16 +13,10 @@ import torch
 from torch import Tensor, nn
 
 from otx.algo.classification.backbones import MobileNetV3Backbone
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier, SemiSLClassifier
-from otx.algo.classification.heads import (
-    HierarchicalCBAMClsHead,
-    LinearClsHead,
-    MultiLabelNonLinearClsHead,
-    SemiSLLinearClsHead,
-)
+from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
+from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelNonLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
-from otx.algo.classification.utils import get_classification_layers
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import (
@@ -39,7 +33,6 @@ from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallab
 from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel, OTXMultilabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
-from otx.core.types.task import OTXTrainType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -73,7 +66,6 @@ class MobileNetV3ForMulticlassCls(OTXMulticlassClsModel):
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
         input_size: tuple[int, int] = (224, 224),
-        train_type: Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED] = OTXTrainType.SUPERVISED,
     ) -> None:
         self.mode = mode
 
@@ -84,37 +76,12 @@ class MobileNetV3ForMulticlassCls(OTXMulticlassClsModel):
             metric=metric,
             torch_compile=torch_compile,
             input_size=input_size,
-            train_type=train_type,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(num_classes=self.num_classes)
-        model.init_weights()
-        return model
 
     def _build_model(self, num_classes: int) -> nn.Module:
         backbone = MobileNetV3Backbone(mode=self.mode, input_size=self.input_size)
         backbone_out_chennels = MobileNetV3Backbone.MV3_CFG[self.mode]["out_channels"]
         neck = GlobalAveragePooling(dim=2)
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED:
-            return SemiSLClassifier(
-                backbone=backbone,
-                neck=neck,
-                head=SemiSLLinearClsHead(
-                    num_classes=num_classes,
-                    in_channels=backbone_out_chennels,
-                ),
-                loss=nn.CrossEntropyLoss(reduction="none"),
-            )
 
         return ImageClassifier(
             backbone=backbone,
@@ -174,20 +141,6 @@ class MobileNetV3ForMultilabelCls(OTXMultilabelClsModel):
             torch_compile=torch_compile,
             input_size=input_size,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(num_classes=self.num_classes)
-        model.init_weights()
-        return model
 
     def _build_model(self, num_classes: int) -> nn.Module:
         backbone = MobileNetV3Backbone(mode=self.mode, input_size=self.input_size)
@@ -290,23 +243,6 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
             torch_compile=torch_compile,
             input_size=input_size,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_config = deepcopy(self.label_info.as_head_config_dict())
-        sample_config["num_classes"] = 5
-        sample_model_dict = self._build_model(head_config=sample_config).state_dict()
-        sample_config["num_classes"] = 6
-        incremental_model_dict = self._build_model(head_config=sample_config).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(head_config=self.label_info.as_head_config_dict())
-        model.init_weights()
-        return model
 
     def _build_model(self, head_config: dict) -> nn.Module:
         if not isinstance(self.label_info, HLabelInfo):

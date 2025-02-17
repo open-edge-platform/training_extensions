@@ -4,12 +4,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from abc import abstractmethod
+from copy import deepcopy
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 
+from otx.algo.classification.utils import get_classification_layers
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import (
     HlabelClsBatchDataEntity,
@@ -31,7 +34,6 @@ from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallab
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
-from otx.core.types.task import OTXTrainType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -51,7 +53,6 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
-        train_type: Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED] = OTXTrainType.SUPERVISED,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -60,9 +61,30 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
-            train_type=train_type,
         )
         self.input_size: tuple[int, int]
+
+    def _create_model(self) -> nn.Module:
+        # Get classification_layers for class-incr learning
+        sample_model_dict = self._build_model(num_classes=5).state_dict()
+        incremental_model_dict = self._build_model(num_classes=6).state_dict()
+        self.classification_layers = get_classification_layers(
+            sample_model_dict,
+            incremental_model_dict,
+            prefix="model.",
+        )
+
+        model = self._build_model(num_classes=self.num_classes)
+        model.init_weights()
+        return model
+
+    @abstractmethod
+    def _build_model(self, num_classes: int) -> nn.Module:
+        """Building base nn.Module model.
+
+        Returns:
+            nn.Module: base nn.Module model for supervised training
+        """
 
     def _customize_inputs(self, inputs: MulticlassClsBatchDataEntity) -> dict[str, Any]:
         if self.training:
@@ -71,18 +93,6 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
             mode = "explain"
         else:
             mode = "predict"
-
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED and isinstance(inputs, dict):
-            # When used with an unlabeled dataset, it comes in as a dict.
-            images = {key: inputs[key].images for key in inputs}
-            labels = {key: torch.cat(inputs[key].labels, dim=0) for key in inputs}
-            imgs_info = {key: inputs[key].imgs_info for key in inputs}
-            return {
-                "images": images,
-                "labels": labels,
-                "imgs_info": imgs_info,
-                "mode": mode,
-            }
 
         return {
             "images": inputs.stacked_images,
@@ -122,29 +132,6 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
             scores=scores,
             labels=preds,
         )
-
-    def training_step(self, batch: MulticlassClsBatchDataEntity, batch_idx: int) -> Tensor:
-        """Performs a single training step on a batch of data."""
-        loss = super().training_step(batch, batch_idx)
-        # Collect metrics related to Semi-SL Training.
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED:
-            if hasattr(self.model, "unlabeled_coef"):
-                self.log(
-                    "train/unlabeled_coef",
-                    self.model.unlabeled_coef,
-                    on_step=True,
-                    on_epoch=False,
-                    prog_bar=True,
-                )
-            if hasattr(self.model.head, "num_pseudo_label"):
-                self.log(
-                    "train/num_pseudo_label",
-                    self.model.head.num_pseudo_label,
-                    on_step=True,
-                    on_epoch=False,
-                    prog_bar=True,
-                )
-        return loss
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:
@@ -224,6 +211,28 @@ class OTXMultilabelClsModel(OTXModel[MultilabelClsBatchDataEntity, MultilabelCls
             torch_compile=torch_compile,
         )
         self.input_size: tuple[int, int]
+
+    def _create_model(self) -> nn.Module:
+        # Get classification_layers for class-incr learning
+        sample_model_dict = self._build_model(num_classes=5).state_dict()
+        incremental_model_dict = self._build_model(num_classes=6).state_dict()
+        self.classification_layers = get_classification_layers(
+            sample_model_dict,
+            incremental_model_dict,
+            prefix="model.",
+        )
+
+        model = self._build_model(num_classes=self.num_classes)
+        model.init_weights()
+        return model
+
+    @abstractmethod
+    def _build_model(self, num_classes: int) -> nn.Module:
+        """Building base nn.Module model.
+
+        Returns:
+            nn.Module: base nn.Module model for supervised training
+        """
 
     def _customize_inputs(self, inputs: MultilabelClsBatchDataEntity) -> dict[str, Any]:
         if self.training:
@@ -343,6 +352,31 @@ class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEnt
             torch_compile=torch_compile,
         )
         self.input_size: tuple[int, int]
+
+    def _create_model(self) -> nn.Module:
+        # Get classification_layers for class-incr learning
+        sample_config = deepcopy(self.label_info.as_head_config_dict())
+        sample_config["num_classes"] = 5
+        sample_model_dict = self._build_model(head_config=sample_config).state_dict()
+        sample_config["num_classes"] = 6
+        incremental_model_dict = self._build_model(head_config=sample_config).state_dict()
+        self.classification_layers = get_classification_layers(
+            sample_model_dict,
+            incremental_model_dict,
+            prefix="model.",
+        )
+
+        model = self._build_model(head_config=self.label_info.as_head_config_dict())
+        model.init_weights()
+        return model
+
+    @abstractmethod
+    def _build_model(self, head_config: dict) -> nn.Module:
+        """Building base nn.Module model.
+
+        Returns:
+            nn.Module: base nn.Module model for supervised training
+        """
 
     def _customize_inputs(self, inputs: HlabelClsBatchDataEntity) -> dict[str, Any]:
         if self.training:

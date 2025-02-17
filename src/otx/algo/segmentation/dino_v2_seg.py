@@ -32,7 +32,7 @@ class DinoV2Seg(OTXSegmentationModel):
         "dinov2-small-seg": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
     }
 
-    def _build_model(self) -> nn.Module:
+    def _create_model(self) -> nn.Module:
         if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
             msg = f"Model version {self.model_name} is not supported."
             raise ValueError(msg)
