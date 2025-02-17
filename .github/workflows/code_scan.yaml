@@ -27,8 +27,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
       - name: Freeze dependencies
-        run: pip-compile --extra=docs,base,mmlab,anomaly -o requirements.txt pyproject.toml
-
+        run: pip-compile --extra=docs,base,mmlab,anomaly,transformers -o requirements.txt pyproject.toml
       - name: Run Trivy Scan (vuln)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
         with:
