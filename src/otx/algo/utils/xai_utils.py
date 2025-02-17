@@ -24,7 +24,7 @@ from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.types.explain import TargetExplainGroup
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
-from otx.data.torch import TorchPredItem
+from otx.data.torch import TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from otx.core.data.module import OTXDataModule
 
 ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
-OTXBatchPredEntitiesSupportXAI = TorchPredItem | DetBatchPredEntity | InstanceSegBatchPredEntity
+OTXBatchPredEntitiesSupportXAI = TorchPredBatch | DetBatchPredEntity | InstanceSegBatchPredEntity
 
 
 def process_saliency_maps_in_pred_entity(

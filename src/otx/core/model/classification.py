@@ -27,7 +27,7 @@ from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
 from otx.core.types.task import OTXTrainType
-from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
+from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -97,8 +97,8 @@ class OTXMulticlassClsModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: TorchDataItem,
-    ) -> TorchPredItem | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -294,8 +294,8 @@ class OTXMultilabelClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,
-        inputs: TorchDataItem,
+        preds: TorchPredBatch,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         return {
             "preds": preds.scores,
@@ -397,8 +397,8 @@ class OTXHlabelClsModel(OTXModel):
                 images=inputs.images,
                 labels=labels,
                 scores=scores,
-                # saliency_map=outputs["saliency_map"],
-                # feature_vector=outputs["feature_vector"],
+                saliency_maps=outputs["saliency_map"],
+                feature_vectors=outputs["feature_vector"],
             )
 
         return TorchPredBatch(
@@ -437,8 +437,8 @@ class OTXHlabelClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,
-        inputs: TorchDataItem,
+        preds: TorchPredBatch,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         hlabel_info: HLabelInfo = self.label_info  # type: ignore[assignment]
 
@@ -521,8 +521,8 @@ class OVMulticlassClassificationModel(
                 images=inputs.images,
                 labels=pred_labels,
                 scores=pred_scores,
-                saliency_map=predicted_s_maps,
-                feature_vector=predicted_f_vectors,
+                saliency_maps=predicted_s_maps,
+                feature_vectors=predicted_f_vectors,
             )
 
         return TorchPredBatch(
@@ -593,8 +593,8 @@ class OVMultilabelClassificationModel(OVModel):
                 images=inputs.images,
                 labels=[],
                 scores=pred_scores,
-                saliency_map=predicted_s_maps,
-                feature_vector=predicted_f_vectors,
+                saliency_maps=predicted_s_maps,
+                feature_vectors=predicted_f_vectors,
             )
 
         return TorchPredBatch(

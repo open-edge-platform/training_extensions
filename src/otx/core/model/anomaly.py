@@ -22,7 +22,7 @@ from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.utils import remove_state_dict_prefix
-from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     import types
@@ -285,7 +285,7 @@ class AnomalyMixin:
 
     def training_step(
         self,
-        inputs: TorchDataItem,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call training step of the anomalib model."""
@@ -295,7 +295,7 @@ class AnomalyMixin:
 
     def validation_step(
         self,
-        inputs: TorchDataItem,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call validation step of the anomalib model."""
@@ -305,7 +305,7 @@ class AnomalyMixin:
 
     def test_step(
         self,
-        inputs: TorchDataItem,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -316,7 +316,7 @@ class AnomalyMixin:
 
     def predict_step(
         self,
-        inputs: TorchDataItem,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -327,8 +327,8 @@ class AnomalyMixin:
 
     def forward(
         self,
-        inputs: TorchDataItem,
-    ) -> TorchPredItem:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
         """Wrap forward method of the Anomalib model."""
         outputs = self.validation_step(inputs)
         # TODO(Ashwin): update forward implementation to comply with other OTX models
