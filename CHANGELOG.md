@@ -39,8 +39,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
 - Upgrade OpenVINO to 2024.5 and NNCF to 2.14.0
   (<https://github.com/openvinotoolkit/training_extensions/pull/4123>)
-- Improve FMetric computation
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4130>)
 - Upgrade OV, MAPI, and NNCF dependencies
   (<https://github.com/openvinotoolkit/training_extensions/pull/3967>)
 - Instance Segmentation Model refactoring
@@ -51,6 +49,10 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3985>)
 - Bump OV to 2024.6, update empty label handling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4162>)
+- Bump MAPI to 0.2.5.1
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4211>)
+- Revert FMetric computation (PR: 4130)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4210>)
 
 ### Bug fixes
 
@@ -70,9 +72,15 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4199>)
 - Fix label info on loading checkpoint
   (<https://github.com/openvinotoolkit/training_extensions/pull/4200>)
+- Revert h-cls head to linear one
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4221>)
 - Fix exportable code for tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4231>)
 
+### Removed
+
+- Remove object detection 3D task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4223>)
 
 ## \[2.2.2\]
 

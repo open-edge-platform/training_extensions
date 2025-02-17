@@ -17,7 +17,6 @@ from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity, VideoI
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetDataEntity
-from otx.core.data.entity.object_detection_3d import Det3DDataEntity
 from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
@@ -939,96 +938,6 @@ class TestDecode3DInputsAffineTransforms:
             "occluded": np.array([0]),
             "truncated": np.array([0.0]),
         }
-
-    @pytest.fixture()
-    def det_3d_data_entity(self, original_kitti_format) -> Det3DDataEntity:
-        return Det3DDataEntity(
-            image=np.random.rand(725, 1920, 3),
-            img_info=ImageInfo(
-                img_idx=0,
-                img_shape=(380, 1280),
-                ori_shape=(725, 1920),
-                image_color_channel=True,
-                ignored_labels=[],
-            ),
-            boxes=np.zeros((50, 4), dtype=np.float32),
-            labels=np.zeros((50), dtype=np.int8),
-            calib_matrix=np.array(
-                [
-                    [721.5377, 0.0, 609.5593, 44.85728],
-                    [0.0, 721.5377, 172.854, 0.2163791],
-                    [0.0, 0.0, 1.0, 0.002745884],
-                ],
-            ),
-            boxes_3d=np.zeros((50, 6), dtype=np.float32),
-            size_2d=np.zeros((50, 2), dtype=np.float32),
-            size_3d=np.zeros((50, 3), dtype=np.float32),
-            depth=np.zeros((50, 1), dtype=np.float32),
-            heading_angle=np.zeros((50, 2), dtype=np.float32),
-            original_kitti_format=deepcopy(original_kitti_format),
-        )
-
-    def test_general_call(
-        self,
-        decode_transform: Decode3DInputsAffineTransforms,
-        det_3d_data_entity: Det3DDataEntity,
-        original_kitti_format: dict[str, np.array],
-    ) -> None:
-        """Test __call__."""
-        results = decode_transform(det_3d_data_entity)
-
-        assert results.image.shape == (3, 380, 1280)
-        assert results.labels.dtype == torch.long
-        for key in ["boxes", "boxes_3d", "size_2d", "size_3d", "depth", "heading_angle"]:
-            assert hasattr(results, key)
-            assert getattr(results, key).size()[0] == 1  # only one object
-            if key != "boxes":
-                assert isinstance(getattr(results, key), torch.Tensor)
-                assert getattr(results, key).dtype == torch.float32
-            else:
-                assert isinstance(getattr(results, key), tv_tensors.BoundingBoxes)
-
-        assert results.boxes.format == tv_tensors.BoundingBoxFormat.XYXY
-        assert results.boxes_3d.shape == (1, 6)
-        assert results.calib_matrix.shape == (3, 4)
-        # dimensions are in the right position and differ from original_kitti_format
-        assert original_kitti_format["dimensions"][0, 0] == results.size_3d[0, 2]
-
-    def test_no_decode_annotations(
-        self,
-        decode_transform: Decode3DInputsAffineTransforms,
-        det_3d_data_entity: Det3DDataEntity,
-        mocker,
-    ) -> None:
-        """Test __call__."""
-        decode_transform.decode_annotations = False
-        results = decode_transform(det_3d_data_entity)
-
-        assert results.image.shape == (3, 380, 1280)
-        assert isinstance(results.image, torch.Tensor)
-        for key in ["boxes", "boxes_3d", "size_2d", "size_3d", "depth", "heading_angle"]:
-            assert hasattr(results, key)
-            assert getattr(results, key).size()[0] == 0  # all annotations filtered
-            if key != "boxes":
-                assert isinstance(getattr(results, key), torch.Tensor)
-            else:
-                assert isinstance(getattr(results, key), tv_tensors.BoundingBoxes)
-        assert results.calib_matrix.shape == (3, 4)
-        assert isinstance(results.calib_matrix, torch.Tensor)
-
-    def test_no_input_size(
-        self,
-        decode_transform: Decode3DInputsAffineTransforms,
-        det_3d_data_entity: Det3DDataEntity,
-        mocker,
-    ) -> None:
-        # no resize and affine transforms
-        decode_transform.input_size = None
-        decode_transform._affine_transforms = mocker.MagicMock()
-        results = decode_transform(det_3d_data_entity)
-        assert results.image.shape == (3, 725, 1920)  # no resize
-        assert isinstance(results.image, torch.Tensor)
-        assert decode_transform._affine_transforms.call_count == 0
 
     def test_affine_transforms(self, decode_transform):
         inputs = {
