@@ -52,7 +52,7 @@ from otx.core.types.precision import OTXPrecisionType
 from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
-from otx.data.torch import TorchDataItemBatch, TorchPredItem
+from otx.data.torch import TorchDataItem, TorchPredItem
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -339,7 +339,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: TorchPredItem,
-        inputs: TorchDataItemBatch,
+        inputs: TorchDataItem,
     ) -> MetricInput:
         """Convert given inputs to a Python dictionary for the metric computation."""
         raise NotImplementedError

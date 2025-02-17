@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence, TypeAlias
+from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 from anomalib import TaskType as AnomalibTaskType
@@ -15,8 +15,6 @@ from anomalib.callbacks.thresholding import _ThresholdCallback
 from torch import nn
 
 from otx import __version__
-from otx.data.torch import TorchDataItem, TorchDataItemBatch, TorchPredItem, TorchPredItemBatch
-from otx.core.data.entity.base import ImageInfo
 from otx.core.exporter.anomaly import OTXAnomalyModelExporter
 from otx.core.model.base import OTXModel
 from otx.core.types.export import OTXExportFormatType
@@ -24,6 +22,7 @@ from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.utils import remove_state_dict_prefix
+from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
 
 if TYPE_CHECKING:
     import types
@@ -37,7 +36,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import STEP_OUTPUT
     from torch.optim.optimizer import Optimizer
     from torchmetrics import Metric
-
 
 
 class OTXAnomaly(OTXModel):
@@ -160,7 +158,7 @@ class OTXAnomaly(OTXModel):
     def on_predict_batch_end(
         self,
         outputs: dict,
-        batch: TorchDataItemBatch,
+        batch: TorchDataBatch,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
@@ -177,7 +175,7 @@ class OTXAnomaly(OTXModel):
 
     def _customize_inputs(
         self,
-        inputs: TorchDataItemBatch,
+        inputs: TorchDataBatch,
     ) -> dict[str, Any]:
         """Customize inputs for the model."""
         return_dict = {"image": inputs.images, "label": inputs.labels.squeeze()}
@@ -193,9 +191,9 @@ class OTXAnomaly(OTXModel):
     def _customize_outputs(
         self,
         outputs: dict,
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItemBatch:
-        return TorchPredItemBatch(
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
+        return TorchPredBatch(
             images=inputs.images,
             labels=inputs.labels,
             scores=outputs["pred_scores"].unsqueeze(1),
@@ -259,15 +257,16 @@ class OTXAnomaly(OTXModel):
             to_exportable_code=to_exportable_code,
         )
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataItemBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
         """Returns a dummy input for anomaly model."""
         images = torch.rand(batch_size, 3, *self.input_size)
-        return TorchDataItemBatch(
+        return TorchDataBatch(
             images=images,
             labels=[torch.LongTensor(0)],
             masks=torch.tensor(0),
             boxes=torch.tensor(0),
         )
+
 
 class AnomalyMixin:
     """Mixin inherited before AnomalibModule to override OTXModel methods."""
@@ -286,7 +285,7 @@ class AnomalyMixin:
 
     def training_step(
         self,
-        inputs: TorchDataItemBatch,
+        inputs: TorchDataItem,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call training step of the anomalib model."""
@@ -296,7 +295,7 @@ class AnomalyMixin:
 
     def validation_step(
         self,
-        inputs: TorchDataItemBatch,
+        inputs: TorchDataItem,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call validation step of the anomalib model."""
@@ -306,7 +305,7 @@ class AnomalyMixin:
 
     def test_step(
         self,
-        inputs: TorchDataItemBatch,
+        inputs: TorchDataItem,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -317,7 +316,7 @@ class AnomalyMixin:
 
     def predict_step(
         self,
-        inputs: TorchDataItemBatch,
+        inputs: TorchDataItem,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -328,8 +327,8 @@ class AnomalyMixin:
 
     def forward(
         self,
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItemBatch:
+        inputs: TorchDataItem,
+    ) -> TorchPredItem:
         """Wrap forward method of the Anomalib model."""
         outputs = self.validation_step(inputs)
         # TODO(Ashwin): update forward implementation to comply with other OTX models

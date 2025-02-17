@@ -27,7 +27,7 @@ from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
 from otx.core.types.task import OTXTrainType
-from otx.data.torch import TorchDataItem, TorchDataItemBatch, TorchPredItem, TorchPredItemBatch
+from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -97,18 +97,18 @@ class OTXMulticlassClsModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItemBatch | OTXBatchLossEntity:
+        inputs: TorchDataItem,
+    ) -> TorchPredItem | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
         if self.explain_mode:
-            return TorchPredItemBatch(
+            return TorchPredBatch(
                 images=inputs.images,
                 labels=outputs["labels"],
                 scores=outputs["scores"],
-                saliency_map=outputs["saliency_map"],
-                feature_vector=outputs["feature_vector"],
+                saliency_maps=outputs["saliency_map"],
+                feature_vectors=outputs["feature_vector"],
             )
 
         # To list, batch-wise
@@ -116,7 +116,7 @@ class OTXMulticlassClsModel(OTXModel):
         scores = torch.unbind(logits, 0)
         preds = logits.argmax(-1, keepdim=True).unbind(0)
 
-        return TorchPredItemBatch(
+        return TorchPredBatch(
             images=inputs.images,
             labels=torch.stack(preds),
             scores=torch.stack(scores),
@@ -151,8 +151,8 @@ class OTXMulticlassClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,
-        inputs: TorchDataItemBatch,
+        preds: TorchPredBatch,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels, device=self.device)
         target = torch.tensor(inputs.labels, device=self.device)
@@ -164,11 +164,11 @@ class OTXMulticlassClsModel(OTXModel):
     def _reset_prediction_layer(self, num_classes: int) -> None:
         return
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataItemBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataItem:
         """Returns a dummy input for classification model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataItemBatch(batch_size, images, [], labels=labels)
+        return TorchDataItem(batch_size, images, [], labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
@@ -223,7 +223,7 @@ class OTXMultilabelClsModel(OTXModel):
             nn.Module: base nn.Module model for supervised training
         """
 
-    def _customize_inputs(self, inputs: TorchDataItemBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -240,13 +240,13 @@ class OTXMultilabelClsModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItemBatch | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
         if self.explain_mode:
-            return TorchPredItemBatch(
+            return TorchPredBatch(
                 images=inputs.images,
                 labels=outputs["labels"],
                 scores=outputs["scores"],
@@ -258,7 +258,7 @@ class OTXMultilabelClsModel(OTXModel):
         logits = outputs if isinstance(outputs, torch.Tensor) else outputs["logits"]
         scores = torch.unbind(logits, 0)
 
-        return TorchPredItemBatch(
+        return TorchPredBatch(
             images=inputs.images,
             labels=torch.stack(logits.argmax(-1, keepdim=True).unbind(0)),
             scores=torch.stack(scores),
@@ -306,11 +306,11 @@ class OTXMultilabelClsModel(OTXModel):
         """Model forward function used for the model tracing during model exportation."""
         return self.model.forward(image)
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataItemBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataItem:
         """Returns a dummy input for classification OV model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataItemBatch(batch_size, images, [], labels=labels)
+        return TorchDataItem(batch_size, images, [], labels=labels)
 
 
 class OTXHlabelClsModel(OTXModel):
@@ -362,7 +362,7 @@ class OTXHlabelClsModel(OTXModel):
             nn.Module: base nn.Module model for supervised training
         """
 
-    def _customize_inputs(self, inputs: TorchDataItemBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -379,8 +379,8 @@ class OTXHlabelClsModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItemBatch | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -393,7 +393,7 @@ class OTXHlabelClsModel(OTXModel):
             labels = outputs.argmax(-1, keepdim=True)
 
         if self.explain_mode:
-            return TorchPredItemBatch(
+            return TorchPredBatch(
                 images=inputs.images,
                 labels=labels,
                 scores=scores,
@@ -401,7 +401,7 @@ class OTXHlabelClsModel(OTXModel):
                 # feature_vector=outputs["feature_vector"],
             )
 
-        return TorchPredItemBatch(
+        return TorchPredBatch(
             images=inputs.images,
             labels=labels,
             scores=scores,
@@ -462,11 +462,11 @@ class OTXHlabelClsModel(OTXModel):
 
         return label_info
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataItemBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
         """Returns a dummy input for classification OV model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataItemBatch(batch_size, images, [], labels=labels)
+        return TorchDataBatch(batch_size, images, [], labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
@@ -506,8 +506,8 @@ class OVMulticlassClassificationModel(
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItem:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
         pred_labels = [torch.tensor(out.top_labels[0][0], dtype=torch.long, device=self.device) for out in outputs]
         pred_scores = [torch.tensor(out.top_labels[0][2], device=self.device) for out in outputs]
 
@@ -517,7 +517,7 @@ class OVMulticlassClassificationModel(
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredItem(
+            return TorchPredBatch(
                 images=inputs.images,
                 labels=pred_labels,
                 scores=pred_scores,
@@ -525,7 +525,7 @@ class OVMulticlassClassificationModel(
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredItem(
+        return TorchPredBatch(
             images=inputs.images,
             labels=pred_labels,
             scores=pred_scores,
@@ -533,8 +533,8 @@ class OVMulticlassClassificationModel(
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,
-        inputs: TorchDataItemBatch,
+        preds: TorchPredBatch,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels)
         target = torch.tensor(inputs.labels)
@@ -577,8 +577,8 @@ class OVMultilabelClassificationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItem:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
         pred_scores = [
             torch.tensor([top_label[2] for top_label in out.top_labels], device=self.device) for out in outputs
         ]
@@ -589,7 +589,7 @@ class OVMultilabelClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredItem(
+            return TorchPredBatch(
                 images=inputs.images,
                 labels=[],
                 scores=pred_scores,
@@ -597,7 +597,7 @@ class OVMultilabelClassificationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredItem(
+        return TorchPredBatch(
             images=inputs.images,
             labels=[],
             scores=pred_scores,
@@ -605,8 +605,8 @@ class OVMultilabelClassificationModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,
-        inputs: TorchDataItemBatch,
+        preds: TorchPredBatch,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         return {
             "preds": torch.stack(preds.scores),
@@ -647,8 +647,8 @@ class OVHlabelClassificationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataItemBatch,
-    ) -> TorchPredItem:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
         all_pred_labels = []
         all_pred_scores = []
         for output in outputs:
@@ -683,15 +683,15 @@ class OVHlabelClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredItem(
+            return TorchPredBatch(
                 images=inputs.images,
                 labels=all_pred_labels,
                 scores=all_pred_scores,
-                saliency_map=predicted_s_maps,
-                feature_vector=predicted_f_vectors,
+                saliency_maps=predicted_s_maps,
+                feature_vectors=predicted_f_vectors,
             )
 
-        return TorchPredItem(
+        return TorchPredBatch(
             images=inputs.images,
             labels=all_pred_labels,
             scores=all_pred_scores,
@@ -699,8 +699,8 @@ class OVHlabelClassificationModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,
-        inputs: TorchDataItemBatch,
+        preds: TorchPredBatch,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         cls_heads_info = self.model.hierarchical_info["cls_heads_info"]
         num_multilabel_classes = cls_heads_info["num_multilabel_classes"]

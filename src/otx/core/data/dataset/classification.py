@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-from functools import partial
 from typing import Callable
 
 import torch
@@ -15,9 +14,8 @@ from torch.nn import functional
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.base import OTXDataset
-from otx.core.data.entity.base import ImageInfo
 from otx.core.types.label import HLabelInfo
-from otx.data.torch import TorchDataItem, TorchDataItemBatch
+from otx.data.torch import TorchDataItem
 
 
 class OTXMulticlassClsDataset(OTXDataset[TorchDataItem]):
@@ -74,7 +72,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
         img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
         image = self.transforms(img_data)
-        
+
         label_ids = set()
         for ann in item.annotations:
             # multilabel information stored in 'multi_label_ids' attribute when the source format is arrow
@@ -95,7 +93,6 @@ class OTXMultilabelClsDataset(OTXDataset):
             image=image,
             label=self._convert_to_onehot(labels, ignored_labels),
         )
-
 
     def _convert_to_onehot(self, labels: torch.tensor, ignored_labels: list[int]) -> torch.tensor:
         """Convert label to one-hot vector format."""
@@ -220,7 +217,6 @@ class OTXHlabelClsDataset(OTXDataset):
             image=image,
             label=torch.as_tensor(hlabel_labels),
         )
-
 
     def _convert_label_to_hlabel_format(self, label_anns: list[Label], ignored_labels: list[int]) -> list[int]:
         """Convert format of the label to the h-label.

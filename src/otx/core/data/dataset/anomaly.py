@@ -18,15 +18,15 @@ from datumaro import DatasetItem, Image
 from datumaro.components.annotation import AnnotationType, Bbox, Ellipse, Polygon
 from datumaro.components.media import ImageFromBytes, ImageFromFile
 from torchvision import io
-from torchvision.tv_tensors import BoundingBoxes, BoundingBoxFormat, Mask
-from otx.data.torch import TorchDataItem, TorchDataItemBatch
-from otx.core.data.dataset.base import OTXDataset, Transforms
 from torchvision.transforms.v2.functional import to_dtype, to_image
-from otx.core.data.entity.base import ImageInfo
+from torchvision.tv_tensors import BoundingBoxes, BoundingBoxFormat, Mask
+
+from otx.core.data.dataset.base import OTXDataset, Transforms
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
+from otx.data.torch import TorchDataItem
 
 
 class AnomalyLabel(Enum):
@@ -111,7 +111,7 @@ class AnomalyDataset(OTXDataset):
         # Incompatible return value type (got "Any | None", expected
         # "AnomalyClassificationDataItem | AnomalySegmentationDataBatch | AnomalyDetectionDataBatch")
         return item
-    
+
     def _get_mask(self, datumaro_item: DatasetItem, label: torch.Tensor, img_shape: tuple[int, int]) -> torch.Tensor:
         """Get mask from datumaro_item.
 
