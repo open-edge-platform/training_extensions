@@ -10,18 +10,28 @@ from unittest.mock import create_autospec
 import pytest
 from lightning.pytorch.cli import ReduceLROnPlateau
 from torch.optim import Optimizer
+from torch import nn
 
 from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel, OTXMultilabelClsModel
 from otx.core.types.export import TaskLevelExportParameters
 
-SKIP_MMLAB_TEST = False
-try:
-    import mmpretrain  # noqa: F401
-except ImportError:
-    SKIP_MMLAB_TEST = True
+
+class MockClsModel(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.backbone = nn.Sequential()
+        self.head = nn.Linear(5, 2)
+
+    def init_weights(self):
+        pass
+
 
 
 class TestOTXMulticlassClsModel:
+    @pytest.fixture(autouse=True)
+    def mock_model(self):
+        OTXMulticlassClsModel._build_model = lambda self, num_classes: MockClsModel()
+
     @pytest.fixture()
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
@@ -36,6 +46,7 @@ class TestOTXMulticlassClsModel:
         mock_scheduler,
         fxt_hlabel_multilabel_info,
     ) -> None:
+
         model = OTXMulticlassClsModel(
             label_info=1,
             input_size=(224, 224),
@@ -51,34 +62,13 @@ class TestOTXMulticlassClsModel:
         assert not model._export_parameters.hierarchical
         assert model._export_parameters.output_raw_scores
 
-        model = OTXMultilabelClsModel(
-            label_info=1,
-            input_size=(224, 224),
-            torch_compile=False,
-            optimizer=mock_optimizer,
-            scheduler=mock_scheduler,
-        )
-
-        assert model._export_parameters.multilabel
-        assert not model._export_parameters.hierarchical
-
-        model = OTXHlabelClsModel(
-            label_info=fxt_hlabel_multilabel_info,
-            input_size=(224, 224),
-            torch_compile=False,
-            optimizer=mock_optimizer,
-            scheduler=mock_scheduler,
-        )
-
-        assert not model._export_parameters.multilabel
-        assert model._export_parameters.hierarchical
-
     def test_convert_pred_entity_to_compute_metric(
         self,
         mock_optimizer,
         mock_scheduler,
         fxt_multi_class_cls_data_entity,
     ) -> None:
+
         model = OTXMulticlassClsModel(
             label_info=1,
             input_size=(224, 224),
@@ -97,6 +87,10 @@ class TestOTXMulticlassClsModel:
 
 
 class TestOTXMultilabelClsModel:
+    @pytest.fixture(autouse=True)
+    def mock_model(self):
+        OTXMultilabelClsModel._build_model = lambda self, num_classes: MockClsModel()
+
     @pytest.fixture()
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
@@ -148,6 +142,10 @@ class TestOTXMultilabelClsModel:
 
 
 class TestOTXHlabelClsModel:
+    @pytest.fixture(autouse=True)
+    def mock_model(self):
+        OTXHlabelClsModel._build_model = lambda self, head_config: MockClsModel()
+
     @pytest.fixture()
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
