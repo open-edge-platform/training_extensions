@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
+- Fix exportable code for tiling
+  (<>)
+
 ### Removed
 
 - Remove HPO
