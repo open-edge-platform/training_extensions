@@ -14,12 +14,16 @@ class ValidateItemMixin:
     """Validate item mixin."""
 
     def __post_init__(self) -> None:
+        validators = {
+            "image": self._image_validator,
+            "label": self._label_validator,
+            "scores": self._scores_validator,
+            "feature_vector": self._feature_vector_validator,
+            "saliency_map": self._saliency_map_validator,
+        }
         for field in fields(self):
-            validator = getattr(self, f"_{field.name}_validator")
-            if validator is not None:
-                value = getattr(self, field.name)
-                if value is not None:
-                    validator(value)
+            if field.name in validators and (value := getattr(self, field.name)) is not None:
+                validators[field.name](value)
 
     @staticmethod
     def _image_validator(image: torch.Tensor) -> torch.Tensor:
@@ -53,7 +57,7 @@ class ValidateItemMixin:
         return label
 
     @staticmethod
-    def _validate_scores(scores: torch.Tensor) -> torch.Tensor:
+    def _scores_validator(scores: torch.Tensor) -> torch.Tensor:
         """Validate the scores."""
         if not isinstance(scores, torch.Tensor):
             msg = "Scores must be a torch tensor"
@@ -67,7 +71,7 @@ class ValidateItemMixin:
         return scores
 
     @staticmethod
-    def _validate_feature_vector(feature_vector: torch.Tensor) -> torch.Tensor:
+    def _feature_vector_validator(feature_vector: torch.Tensor) -> torch.Tensor:
         """Validate the feature vector."""
         if not isinstance(feature_vector, torch.Tensor):
             msg = "Feature vector must be a torch tensor"
@@ -81,7 +85,7 @@ class ValidateItemMixin:
         return feature_vector
 
     @staticmethod
-    def _validate_saliency_map(saliency_map: torch.Tensor) -> torch.Tensor:
+    def _saliency_map_validator(saliency_map: torch.Tensor) -> torch.Tensor:
         """Validate the saliency map."""
         if not isinstance(saliency_map, torch.Tensor):
             msg = "Saliency map must be a torch tensor"
@@ -99,12 +103,18 @@ class ValidateBatchMixin:
     """Validate batch mixin."""
 
     def __post_init__(self) -> None:
+        validators = {
+            "images": self._images_validator,
+            "labels": self._labels_validator,
+            "scores": self._scores_validator,
+            "feature_vectors": self._feature_vectors_validator,
+            "saliency_maps": self._saliency_maps_validator,
+            "masks": self._masks_validator,
+            "boxes": self._boxes_validator,
+        }
         for field in fields(self):
-            validator = getattr(self, f"_{field.name}_validator")
-            if validator is not None:
-                value = getattr(self, field.name)
-                if value is not None:
-                    validator(value)
+            if field.name in validators and (value := getattr(self, field.name)) is not None:
+                validators[field.name](value)
 
     @staticmethod
     def _images_validator(image_batch: torch.Tensor) -> torch.Tensor:

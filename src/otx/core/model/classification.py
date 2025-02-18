@@ -26,7 +26,6 @@ from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallab
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
-from otx.core.types.task import OTXTrainType
 from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch
 
 if TYPE_CHECKING:
