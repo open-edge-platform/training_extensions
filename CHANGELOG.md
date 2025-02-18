@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
+- Fix auto batch size with tiling
+  ()
+
 ### Removed
 
 - Remove HPO
