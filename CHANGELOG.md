@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Bug fixes
 
 - Fix auto batch size with tiling
-  ()
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4233>)
 
 ### Removed
 
