@@ -7,11 +7,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections import defaultdict
-from typing import Generic
+from typing import Callable, Generic
 
 import cv2
 import numpy as np
 import torch
+from packaging import version
 from torchvision import tv_tensors
 from torchvision.ops import batched_nms
 
@@ -22,7 +23,16 @@ from otx.core.data.entity.detection import DetBatchPredEntity, DetPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity, InstanceSegPredEntity
 from otx.core.data.entity.segmentation import SegBatchPredEntity, SegPredEntity
 
-MAX_ELEMENTS: int = 2**31 - 1
+# Maximum number of elements 2**31 -1
+MAX_ELEMENTS: int = np.iinfo(np.int32).max
+
+
+# NOTE: RuntimeError: nonzero is not supported for tensors with more than INT_MAX elements,
+# See https://github.com/pytorch/pytorch/issues/51871
+int_max_check_condition: Callable[[torch.Tensor], bool] = (
+    lambda tile_masks: version.parse(torch.__version__) < version.parse("2.6")
+    and torch.numel(tile_masks) > MAX_ELEMENTS
+)
 
 
 def keep_chunkify(tensor: torch.Tensor, max_element: int = MAX_ELEMENTS) -> torch.Tensor:
@@ -356,9 +366,7 @@ class InstanceSegTileMerge(TileMerge):
                 feature_vectors,
                 strict=True,
             ):
-                # NOTE: RuntimeError: nonzero is not supported for tensors with more than INT_MAX elements,
-                # See https://github.com/pytorch/pytorch/issues/51871
-                if torch.numel(tile_masks) > MAX_ELEMENTS:
+                if int_max_check_condition(tile_masks):
                     keep_indices = keep_chunkify(tile_masks)
                 else:
                     keep_indices = tile_masks.to_sparse().sum((1, 2)).to_dense() > 0
