@@ -97,24 +97,6 @@ class VisualPromptingConfig:
 
 
 @dataclass
-class UnlabeledDataConfig(SubsetConfig):
-    """DTO for unlabeled data."""
-
-    data_root: str | None = None
-    data_format: str = "image_dir"
-
-    batch_size: int = 0
-    subset_name: str = "unlabeled"
-
-    # TODO (harimkang): If not multi-transform, support for list type, as should support for other subsets.
-    transforms: dict[str, list[dict[str, Any]]] = field(default_factory=dict)  # type: ignore[assignment]
-
-    transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
-    num_workers: int = 2
-    to_tv_image: bool = True
-
-
-@dataclass
 class SamplerConfig:
     """Configuration class for defining the sampler used in the data loading process.
 

@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Callable
 
 import cv2
 import numpy as np
-import torch
 from datumaro.components.annotation import Bbox, Ellipse, Image, Mask, Polygon, RotatedBbox
 from torchvision import tv_tensors
 
@@ -209,16 +208,12 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
         ignored_labels: list[int] = []
         roi = item.attributes.get("roi", None)
         img_data, img_shape, roi_meta = self._get_img_data_and_shape(img, roi)
-        if item.annotations:
-            ori_shape = roi_meta["orig_image_shape"] if roi_meta else img_shape
-            extracted_mask = _extract_class_mask(item=item, img_shape=ori_shape, ignore_index=self.ignore_index)
-            if roi_meta:
-                extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
+        ori_shape = roi_meta["orig_image_shape"] if roi_meta else img_shape
+        extracted_mask = _extract_class_mask(item=item, img_shape=ori_shape, ignore_index=self.ignore_index)
+        if roi_meta:
+            extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
 
-            masks = tv_tensors.Mask(extracted_mask[None])
-        else:
-            # semi-supervised learning, unlabeled dataset
-            masks = torch.tensor([[0]])
+        masks = tv_tensors.Mask(extracted_mask[None])
 
         entity = SegDataEntity(
             image=img_data,

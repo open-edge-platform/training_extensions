@@ -8,7 +8,7 @@ from __future__ import annotations
 import types
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal
+from typing import TYPE_CHECKING, Any, Callable, Generic
 from urllib.parse import urlparse
 
 import numpy as np
@@ -17,11 +17,10 @@ from torch import nn
 from torch.hub import download_url_to_file
 
 from otx.algo.classification.backbones.vision_transformer import VIT_ARCH_TYPE, VisionTransformer
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier, SemiSLClassifier
+from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
 from otx.algo.classification.heads import (
     HierarchicalCBAMClsHead,
     MultiLabelLinearClsHead,
-    SemiSLVisionTransformerClsHead,
     VisionTransformerClsHead,
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
@@ -38,7 +37,6 @@ from otx.core.model.classification import (
 )
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
-from otx.core.types.task import OTXTrainType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -221,7 +219,6 @@ class VisionTransformerForMulticlassCls(ForwardExplainMixInForViT, OTXMulticlass
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
         input_size: tuple[int, int] = (224, 224),
-        train_type: Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED] = OTXTrainType.SUPERVISED,
     ) -> None:
         self.arch = arch
         self.lora = lora
@@ -234,7 +231,6 @@ class VisionTransformerForMulticlassCls(ForwardExplainMixInForViT, OTXMulticlass
             metric=metric,
             torch_compile=torch_compile,
             input_size=input_size,
-            train_type=train_type,
         )
 
     def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
@@ -281,16 +277,6 @@ class VisionTransformerForMulticlassCls(ForwardExplainMixInForViT, OTXMulticlass
             {"bias": 0.0, "val": 1.0, "layer": "LayerNorm", "type": "Constant"},
         ]
         vit_backbone = VisionTransformer(arch=self.arch, img_size=self.input_size, lora=self.lora)
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED:
-            return SemiSLClassifier(
-                backbone=vit_backbone,
-                neck=None,
-                head=SemiSLVisionTransformerClsHead(
-                    num_classes=num_classes,
-                    in_channels=vit_backbone.embed_dim,
-                ),
-                loss=nn.CrossEntropyLoss(reduction="none"),
-            )
 
         return ImageClassifier(
             backbone=vit_backbone,

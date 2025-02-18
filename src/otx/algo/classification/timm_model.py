@@ -5,24 +5,18 @@
 
 from __future__ import annotations
 
-from copy import copy, deepcopy
+from copy import copy
 from math import ceil
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import torch
 from torch import nn
 
 from otx.algo.classification.backbones.timm import TimmBackbone
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier, SemiSLClassifier
-from otx.algo.classification.heads import (
-    HierarchicalCBAMClsHead,
-    LinearClsHead,
-    MultiLabelLinearClsHead,
-    SemiSLLinearClsHead,
-)
+from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
+from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
-from otx.algo.classification.utils import get_classification_layers
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.classification import (
     HlabelClsBatchDataEntity,
@@ -41,7 +35,6 @@ from otx.core.model.classification import (
 )
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
-from otx.core.types.task import OTXTrainType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -64,7 +57,6 @@ class TimmModelForMulticlassCls(OTXMulticlassClsModel):
         metric (MetricCallable, optional): The metric callable for evaluating the model.
             Defaults to MultiClassClsMetricCallable.
         torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
-        train_type (Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED], optional): The training type.
 
     Example:
         1. API
@@ -88,7 +80,6 @@ class TimmModelForMulticlassCls(OTXMulticlassClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
-        train_type: Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED] = OTXTrainType.SUPERVISED,
     ) -> None:
         self.model_name = model_name
         self.pretrained = pretrained
@@ -100,36 +91,11 @@ class TimmModelForMulticlassCls(OTXMulticlassClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
-            train_type=train_type,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(num_classes=self.num_classes)
-        model.init_weights()
-        return model
 
     def _build_model(self, num_classes: int) -> nn.Module:
         backbone = TimmBackbone(model_name=self.model_name, pretrained=self.pretrained)
         neck = GlobalAveragePooling(dim=2)
-        if self.train_type == OTXTrainType.SEMI_SUPERVISED:
-            return SemiSLClassifier(
-                backbone=backbone,
-                neck=neck,
-                head=SemiSLLinearClsHead(
-                    num_classes=num_classes,
-                    in_channels=backbone.num_features,
-                ),
-                loss=nn.CrossEntropyLoss(reduction="none"),
-            )
 
         return ImageClassifier(
             backbone=backbone,
@@ -217,20 +183,6 @@ class TimmModelForMultilabelCls(OTXMultilabelClsModel):
             metric=metric,
             torch_compile=torch_compile,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(num_classes=self.num_classes)
-        model.init_weights()
-        return model
 
     def _build_model(self, num_classes: int) -> nn.Module:
         backbone = TimmBackbone(model_name=self.model_name, pretrained=self.pretrained)
@@ -324,23 +276,6 @@ class TimmModelForHLabelCls(OTXHlabelClsModel):
             metric=metric,
             torch_compile=torch_compile,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_config = deepcopy(self.label_info.as_head_config_dict())
-        sample_config["num_classes"] = 5
-        sample_model_dict = self._build_model(head_config=sample_config).state_dict()
-        sample_config["num_classes"] = 6
-        incremental_model_dict = self._build_model(head_config=sample_config).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(head_config=self.label_info.as_head_config_dict())
-        model.init_weights()
-        return model
 
     def _build_model(self, head_config: dict) -> nn.Module:
         backbone = TimmBackbone(model_name=self.model_name, pretrained=self.pretrained)

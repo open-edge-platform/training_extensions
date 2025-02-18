@@ -27,7 +27,7 @@ class SegNext(OTXSegmentationModel):
         "segnext_base",
     ]
 
-    def _build_model(self) -> nn.Module:
+    def _create_model(self) -> nn.Module:
         # initialize backbones
         if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
             msg = f"Model version {self.model_name} is not supported."

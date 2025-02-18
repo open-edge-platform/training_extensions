@@ -30,8 +30,7 @@ def fxt_trained_model(
     recipe = request.param
     recipe_split = recipe.split("/")
     model_name = recipe_split[-1].split(".")[0]
-    is_semisl = model_name.endswith("_semisl")
-    task = recipe_split[-2] if not is_semisl else recipe_split[-3]
+    task = recipe_split[-2]
 
     # 1) otx train
     tmp_path_train = tmp_path / f"otx_train_{model_name}"
@@ -50,14 +49,6 @@ def fxt_trained_model(
         "2",
         *fxt_cli_override_command_per_task[task],
     ]
-
-    if is_semisl:
-        command_cfg.extend(
-            [
-                "--data.unlabeled_subset.data_root",
-                fxt_target_dataset_per_task[f"{task}_semisl"],
-            ],
-        )
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
 

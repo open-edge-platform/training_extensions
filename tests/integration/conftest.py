@@ -42,7 +42,7 @@ def find_recipe_folder(base_path: Path, folder_name: str) -> Path:
 
 def get_task_list(task: str) -> list[OTXTaskType]:
     if task == "all":
-        tasks = [task_type for task_type in OTXTaskType if task_type != OTXTaskType.DETECTION_SEMI_SL]
+        tasks = list(OTXTaskType)
     elif task == "multi_cls_classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS]
     elif task == "multi_label_classification":
@@ -108,14 +108,12 @@ def fxt_asset_dir() -> Path:
 def fxt_target_dataset_per_task() -> dict:
     return {
         "multi_class_cls": "tests/assets/classification_dataset",
-        "multi_class_cls_semisl": "tests/assets/classification_semisl_dataset/unlabeled",
         "multi_label_cls": "tests/assets/multilabel_classification",
         "h_label_cls": "tests/assets/hlabel_classification",
         "detection": "tests/assets/car_tree_bug",
         "rotated_detection": "tests/assets/car_tree_bug",
         "instance_segmentation": "tests/assets/car_tree_bug",
-        "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset/supervised",
-        "semantic_segmentation_semisl": "tests/assets/common_semantic_segmentation_dataset/unlabeled",
+        "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset",
         "visual_prompting": "tests/assets/car_tree_bug",
         "anomaly": "tests/assets/anomaly_hazelnut",
         "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
