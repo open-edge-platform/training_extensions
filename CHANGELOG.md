@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Bug fixes
 
 - Fix exportable code for tiling
-  (<>)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4234>)
 
 ### Removed
 
