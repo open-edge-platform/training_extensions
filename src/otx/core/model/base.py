@@ -89,7 +89,7 @@ DefaultOptimizerCallable = _default_optimizer_callable
 DefaultSchedulerCallable = _default_scheduler_callable
 
 
-class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
+class OTXModel(LightningModule):
     """Base class for the models used in OTX.
 
     Args:

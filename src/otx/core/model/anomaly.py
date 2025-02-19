@@ -178,10 +178,10 @@ class OTXAnomaly(OTXModel):
         inputs: TorchDataBatch,
     ) -> dict[str, Any]:
         """Customize inputs for the model."""
-        return_dict = {"image": inputs.images, "label": inputs.labels.squeeze()}
-        if inputs.masks is not None:
+        return_dict = {"image": inputs.images, "label": torch.stack(inputs.labels)}
+        if inputs.masks is not None and inputs.masks[0] is not None:  # ground truth should have masks as 0s.
             return_dict["mask"] = inputs.masks
-        if inputs.boxes is not None:
+        if inputs.boxes is not None and inputs.boxes[0] is not None:
             return_dict["boxes"] = inputs.boxes
 
         if return_dict["label"].size() == torch.Size([]):  # when last batch size is 1
@@ -196,9 +196,9 @@ class OTXAnomaly(OTXModel):
         return TorchPredBatch(
             images=inputs.images,
             labels=inputs.labels,
-            scores=outputs["pred_scores"].unsqueeze(1),
-            saliency_maps=outputs["anomaly_maps"],
-            boxes=outputs.get("boxes"),
+            scores=list(outputs["pred_scores"]),
+            saliency_maps=list(outputs["anomaly_maps"]),
+            boxes=list(outputs.get("boxes")) if outputs.get("boxes") is not None else None,
         )
 
     @property

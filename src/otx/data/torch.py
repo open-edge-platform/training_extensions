@@ -6,13 +6,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import torch
+
+from otx.core.data.entity.base import ImageInfo
 
 from .validations import (
     ValidateBatchMixin,
     ValidateItemMixin,
 )
+
+if TYPE_CHECKING:
+    from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
 @dataclass
@@ -21,8 +27,9 @@ class TorchDataItem(ValidateItemMixin):
 
     image: torch.Tensor
     label: torch.Tensor | None = None
-    mask: torch.Tensor | None = None
-    boxes: torch.Tensor | None = None
+    mask: Mask | None = None
+    boxes: BoundingBoxes | None = None
+    imgs_info: ImageInfo | None = None
 
     @staticmethod
     def collate_fn(items: list[TorchDataItem]) -> TorchDataBatch:
@@ -36,7 +43,10 @@ class TorchDataItem(ValidateItemMixin):
         """
         return TorchDataBatch(
             images=torch.stack([item.image for item in items]),
-            labels=torch.vstack([item.label for item in items]),
+            labels=[item.label for item in items],
+            boxes=[item.boxes for item in items],
+            masks=[item.mask for item in items],
+            imgs_infos=[item.imgs_info for item in items],
         )
 
 
@@ -45,9 +55,10 @@ class TorchDataBatch(ValidateBatchMixin):
     """Torch data item batch implementation."""
 
     images: torch.Tensor
-    labels: torch.Tensor | None
-    masks: torch.Tensor | None = None
-    boxes: torch.Tensor | None = None
+    labels: list[torch.Tensor] | None
+    masks: list[Mask] | None = None
+    boxes: list[BoundingBoxes] | None = None
+    imgs_infos: list[ImageInfo] | None = None
 
 
 @dataclass
@@ -66,9 +77,9 @@ class TorchPredBatch(ValidateBatchMixin):
     """Torch prediction data item batch implementation."""
 
     images: torch.Tensor
-    labels: torch.Tensor | None
-    scores: torch.Tensor | None = None
-    feature_vectors: torch.Tensor | None = None
-    saliency_maps: torch.Tensor | None = None
-    masks: torch.Tensor | None = None
-    boxes: torch.Tensor | None = None
+    labels: list[torch.Tensor] | None
+    scores: list[torch.Tensor] | None = None
+    feature_vectors: list[torch.Tensor] | None = None
+    saliency_maps: list[torch.Tensor] | None = None
+    masks: list[torch.Tensor] | None = None
+    boxes: list[torch.Tensor] | None = None

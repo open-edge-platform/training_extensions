@@ -20,12 +20,12 @@ from otx.algo.detection.heads import RTDETRTransformer
 from otx.algo.detection.necks import HybridEncoder
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import ExplainableOTXDetModel
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -110,13 +110,13 @@ class RTDETR(ExplainableOTXDetModel):
 
     def _customize_inputs(
         self,
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
-        for bb, ll in zip(entity.bboxes, entity.labels):
+        for bb, ll in zip(entity.boxes, entity.labels):
             # convert to cxcywh if needed
             if len(scaled_bboxes := bb):
                 converted_bboxes = (
@@ -139,8 +139,8 @@ class RTDETR(ExplainableOTXDetModel):
     def _customize_outputs(
         self,
         outputs: list[torch.Tensor] | dict,  # type: ignore[override]
-        inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -156,7 +156,7 @@ class RTDETR(ExplainableOTXDetModel):
                     raise TypeError(msg)
             return losses
 
-        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]
+        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_infos]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
 
         if self.explain_mode:
@@ -175,24 +175,20 @@ class RTDETR(ExplainableOTXDetModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return DetBatchPredEntity(
-                batch_size=len(outputs),
+            return TorchPredBatch(
                 images=inputs.images,
-                imgs_info=inputs.imgs_info,
                 scores=scores,
-                bboxes=bboxes,
+                boxes=bboxes,
                 labels=labels,
-                feature_vector=feature_vector,
-                saliency_map=saliency_map,
+                feature_vectors=feature_vector,
+                saliency_maps=saliency_map,
             )
 
-        return DetBatchPredEntity(
-            batch_size=len(outputs),
+        return TorchPredBatch(
             images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            scores=scores,
-            bboxes=bboxes,
             labels=labels,
+            scores=scores,
+            boxes=bboxes,
         )
 
     def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
@@ -305,7 +301,7 @@ class RTDETR(ExplainableOTXDetModel):
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""

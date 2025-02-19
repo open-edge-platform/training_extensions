@@ -5,29 +5,29 @@
 
 from __future__ import annotations
 
-from functools import partial
 from typing import Callable
 
 import numpy as np
 import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 
 
-class OTXDetectionDataset(OTXDataset[DetDataEntity]):
+class OTXDetectionDataset(OTXDataset):
     """OTXDataset class for detection task."""
 
-    def _get_item_impl(self, index: int) -> DetDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-
+        image = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
         bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
 
         bboxes = (
@@ -35,28 +35,28 @@ class OTXDetectionDataset(OTXDataset[DetDataEntity]):
             if len(bbox_anns) > 0
             else np.zeros((0, 4), dtype=np.float32)
         )
+        boxes = tv_tensors.BoundingBoxes(
+            bboxes,
+            format=tv_tensors.BoundingBoxFormat.XYXY,
+            canvas_size=img_shape,
+            dtype=torch.float32,
+        )
+        image, boxes = self.transforms(image, boxes)
 
-        entity = DetDataEntity(
-            image=img_data,
-            img_info=ImageInfo(
+        return TorchDataItem(
+            image=image,
+            boxes=boxes,
+            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
+            imgs_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
                 ignored_labels=ignored_labels,
             ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-                dtype=torch.float32,
-            ),
-            labels=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
         )
-
-        return self._apply_transforms(entity)
 
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect DetDataEntity into DetBatchDataEntity in data loader."""
-        return partial(DetBatchDataEntity.collate_fn, stack_images=self.stack_images)
+        return TorchDataItem.collate_fn

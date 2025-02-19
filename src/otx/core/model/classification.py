@@ -79,7 +79,7 @@ class OTXMulticlassClsModel(OTXModel):
             nn.Module: base nn.Module model for supervised training
         """
 
-    def _customize_inputs(self, inputs: TorchDataItemBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -89,7 +89,7 @@ class OTXMulticlassClsModel(OTXModel):
 
         return {
             "images": inputs.images,
-            "labels": inputs.labels.squeeze(),
+            "labels": torch.tensor(inputs.labels, device=self.device),
             "mode": mode,
         }
 
@@ -117,8 +117,8 @@ class OTXMulticlassClsModel(OTXModel):
 
         return TorchPredBatch(
             images=inputs.images,
-            labels=torch.stack(preds),
-            scores=torch.stack(scores),
+            labels=list(preds),
+            scores=list(scores),
         )
 
     @property
@@ -232,7 +232,7 @@ class OTXMultilabelClsModel(OTXModel):
 
         return {
             "images": inputs.images,
-            "labels": inputs.labels,
+            "labels": torch.vstack(inputs.labels),
             "mode": mode,
         }
 
@@ -259,8 +259,8 @@ class OTXMultilabelClsModel(OTXModel):
 
         return TorchPredBatch(
             images=inputs.images,
-            labels=torch.stack(logits.argmax(-1, keepdim=True).unbind(0)),
-            scores=torch.stack(scores),
+            labels=list(logits.argmax(-1, keepdim=True).unbind(0)),
+            scores=list(scores),
         )
 
     @property
@@ -305,11 +305,11 @@ class OTXMultilabelClsModel(OTXModel):
         """Model forward function used for the model tracing during model exportation."""
         return self.model.forward(image)
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataItem:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
         """Returns a dummy input for classification OV model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataItem(batch_size, images, [], labels=labels)
+        return TorchDataBatch(images=images, labels=labels)
 
 
 class OTXHlabelClsModel(OTXModel):
@@ -371,7 +371,7 @@ class OTXHlabelClsModel(OTXModel):
 
         return {
             "images": inputs.images,
-            "labels": inputs.labels,
+            "labels": torch.vstack(inputs.labels),
             "mode": mode,
         }
 
@@ -394,16 +394,16 @@ class OTXHlabelClsModel(OTXModel):
         if self.explain_mode:
             return TorchPredBatch(
                 images=inputs.images,
-                labels=labels,
-                scores=scores,
+                labels=list(labels),
+                scores=list(scores),
                 saliency_maps=outputs["saliency_map"],
                 feature_vectors=outputs["feature_vector"],
             )
 
         return TorchPredBatch(
             images=inputs.images,
-            labels=labels,
-            scores=scores,
+            labels=list(labels),
+            scores=list(scores),
         )
 
     @property
@@ -451,7 +451,7 @@ class OTXHlabelClsModel(OTXModel):
             pred_result = _labels
         return {
             "preds": pred_result,
-            "target": inputs.labels,
+            "target": torch.vstack(inputs.labels),
         }
 
     @staticmethod
@@ -465,7 +465,7 @@ class OTXHlabelClsModel(OTXModel):
         """Returns a dummy input for classification OV model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataBatch(batch_size, images, [], labels=labels)
+        return TorchDataBatch(images=images, labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
