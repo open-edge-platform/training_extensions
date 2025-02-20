@@ -20,10 +20,6 @@ overrides:
   precision: 32
   max_epochs: 200
   num_sanity_val_steps: 0
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
-      init_args:
-        max_interval: 1
   data:
     input_size: [448, 448]
     train_subset:
