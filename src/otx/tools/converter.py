@@ -417,7 +417,7 @@ class ConfigConverter:
             config (dict): The configuration dictionary.
         """
         config.pop("config")  # Remove config key that for CLI
-        config["data"].pop("__path__")  # Remove __path__ key that for CLI overriding
+        config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
 
     @staticmethod
     def instantiate(
