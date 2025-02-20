@@ -25,6 +25,7 @@ overrides:
       init_args:
         max_interval: 1
   data:
+    input_size: [448, 448]
     train_subset:
       transforms:
         - class_path: torchvision.transforms.v2.Resize
