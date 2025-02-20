@@ -647,7 +647,7 @@ class OVInstanceSegmentationModel(
         self,
         outputs: list[InstanceSegmentationResult],
         inputs: InstanceSegBatchDataEntity,
-    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:  # type: ignore[override]
+    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
         # add label index
         bboxes = []
         scores = []
