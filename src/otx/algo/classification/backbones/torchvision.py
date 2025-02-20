@@ -9,7 +9,7 @@ import torch
 from torch import nn
 from torchvision.models import get_model, get_model_weights
 
-TVModelType = Literal[
+TVModels= Literal[
     "alexnet",
     "convnext_base",
     "convnext_large",
@@ -88,8 +88,8 @@ class TorchvisionBackbone(nn.Module):
 
     def __init__(
         self,
-        backbone: TVModelType,
-        pretrained: bool = False,
+        backbone: TVModels,
+        pretrained: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)

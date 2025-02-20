@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import InstanceSegmentationResult
     from torch import nn
-
+    from otx.core.model.base import DataInputParams
     from otx.core.metrics import MetricCallable
 
 
@@ -57,31 +57,39 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): scheduler
         metric (MetricCallable, optional): metric
         torch_compile (bool, optional): torch compile
+        weights_mean_std (tuple[tuple[float, float, float], tuple[float, float, float]], optional): mean and std for weights normalization
         tile_config (TileConfig, optional): tile configuration
+        explain_mode (bool, optional): enable explainable AI mode
     """
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (1024, 1024),
+        data_input_params: DataInputParams,
         model_name: str = "inst_segm_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
+        explain_mode: bool = False,
     ) -> None:
-        self.model_name = model_name
+        self.explain_mode = explain_mode
         super().__init__(
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
             tile_config=tile_config,
         )
-        self.input_size: tuple[int, int]
+
+        if self.explain_mode:
+            self.model.feature_vector_fn = feature_vector_fn
+            self.model.explain_fn = self.get_explain_fn()
+            self.model.get_results_from_head = self.get_results_from_head
 
     def _build_model(self, num_classes: int) -> nn.Module:
         raise NotImplementedError
@@ -111,7 +119,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
 
     def _customize_outputs(
         self,
-        outputs: list[InstanceData] | dict,  # TODO (sungchul): Remove `InstanceData`.
+        outputs: list[InstanceData] | dict,
         inputs: InstanceSegBatchDataEntity,
     ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
         if self.training:
@@ -124,7 +132,6 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
                     losses[loss_name] = loss_value
                 elif isinstance(loss_value, list):
                     losses[loss_name] = sum(_loss.mean() for _loss in loss_value)
-            # pop acc from losses
             losses.pop("acc", None)
             return losses
 
@@ -224,7 +231,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
         """Unpack instance segmentation tiles.
 
         Args:
-            inputs (TileBatchInstSegDataEntity): Tile batch data entity.
+            inputs (OTXTileBatchDataEntity): Tile batch data entity.
 
         Returns:
             InstanceSegBatchPredEntity: Merged instance segmentation prediction.
@@ -389,11 +396,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
 
     def get_dummy_input(self, batch_size: int = 1) -> InstanceSegBatchDataEntity:
         """Returns a dummy input for instance segmentation model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
-        images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
+        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         infos = []
         for i, img in enumerate(images):
             infos.append(
@@ -405,48 +408,6 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
             )
         return InstanceSegBatchDataEntity(batch_size, images, infos, bboxes=[], masks=[], labels=[], polygons=[])
 
-
-class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
-    """OTX Instance Segmentation model which can attach a XAI (Explainable AI) branch.
-
-    Args:
-        label_info (LabelInfoTypes): label information
-        input_size (tuple[int, int]): model input size
-        model_name (str): model name/version
-        optimizer (OptimizerCallable, optional): optimizer
-        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): scheduler
-        metric (MetricCallable, optional): metric
-        torch_compile (bool, optional): torch compile
-        tile_config (TileConfig, optional): tile configuration
-
-    """
-
-    def __init__(
-        self,
-        label_info: LabelInfoTypes,
-        model_name: str,
-        input_size: tuple[int, int] = (1024, 1024),
-        optimizer: OptimizerCallable = DefaultOptimizerCallable,
-        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
-        metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
-        torch_compile: bool = False,
-        tile_config: TileConfig = TileConfig(enable_tiler=False),
-    ) -> None:
-        super().__init__(
-            label_info=label_info,
-            input_size=input_size,
-            model_name=model_name,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            metric=metric,
-            torch_compile=torch_compile,
-            tile_config=tile_config,
-        )
-
-        self.model.feature_vector_fn = feature_vector_fn
-        self.model.explain_fn = self.get_explain_fn()
-        self.model.get_results_from_head = self.get_results_from_head
-
     def forward_explain(self, inputs: InstanceSegBatchDataEntity) -> InstanceSegBatchPredEntity:
         """Model forward function."""
         if isinstance(inputs, OTXTileBatchDataEntity):
@@ -455,16 +416,15 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-        # If customize_inputs is overridden
         outputs = (
             self._forward_explain_inst_seg(self.model, **self._customize_inputs(inputs))
-            if self._customize_inputs != ExplainableOTXInstanceSegModel._customize_inputs
+            if self._customize_inputs != OTXInstanceSegModel._customize_inputs
             else self._forward_explain_inst_seg(self.model, inputs)
         )
 
         return (
             self._customize_outputs(outputs, inputs)
-            if self._customize_outputs != ExplainableOTXInstanceSegModel._customize_outputs
+            if self._customize_outputs != OTXInstanceSegModel._customize_outputs
             else outputs["predictions"]
         )
 

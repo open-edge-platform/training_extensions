@@ -23,13 +23,13 @@ from otx.algo.instance_segmentation.losses import DiceLoss, RTMDetInstCriterion
 from otx.algo.modules.norm import build_norm_layer
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel
+from otx.core.model.instance_segmentation import OTXInstanceSegModel
 
 if TYPE_CHECKING:
     from torch import Tensor
 
 
-class RTMDetInst(ExplainableOTXInstanceSegModel):
+class RTMDetInst(OTXInstanceSegModel):
     """Implementation of RTMDet for instance segmentation."""
 
     load_from: ClassVar[dict[str, str]] = {

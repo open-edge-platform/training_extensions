@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 class DinoV2Seg(OTXSegmentationModel):
     """DinoV2Seg Model."""
 
-    AVAILABLE_MODEL_VERSIONS: ClassVar[list[str]] = [
+    AVAILABLE_MODELS: ClassVar[list[str]] = [
         "dinov2-small-seg",
     ]
     PRETRAINED_WEIGHTS: ClassVar[dict[str, str]] = {
@@ -33,7 +33,7 @@ class DinoV2Seg(OTXSegmentationModel):
     }
 
     def _create_model(self) -> nn.Module:
-        if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
+        if self.model_name not in self.AVAILABLE_MODELS:
             msg = f"Model version {self.model_name} is not supported."
             raise ValueError(msg)
         backbone = VisionTransformer(arch=self.model_name, img_size=self.input_size)

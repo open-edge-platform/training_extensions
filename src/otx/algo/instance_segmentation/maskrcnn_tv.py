@@ -29,10 +29,10 @@ from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntit
 from otx.core.data.entity.utils import stack_batch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel
+from otx.core.model.instance_segmentation import OTXInstanceSegModel
 
 
-class MaskRCNNTV(ExplainableOTXInstanceSegModel):
+class MaskRCNNTV(OTXInstanceSegModel):
     """Implementation of torchvision MaskRCNN for instance segmentation."""
 
     load_from: ClassVar[dict[str, Any]] = {"maskrcnn_resnet_50": MaskRCNN_ResNet50_FPN_V2_Weights.verify("DEFAULT")}

@@ -16,7 +16,6 @@ def get_classification_layers(
         if sample_model_dict[key].shape != incremental_model_dict[key].shape:
             sample_model_dim = sample_model_dict[key].shape[0]
             incremental_model_dim = incremental_model_dict[key].shape[0]
-            stride = incremental_model_dim - sample_model_dim
-            num_extra_classes = 6 * sample_model_dim - 5 * incremental_model_dim
-            classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
+            num_new_classes = incremental_model_dim - sample_model_dim
+            classification_layers[prefix + key] = {"num_new_classes": num_new_classes}
     return classification_layers

@@ -29,7 +29,7 @@ from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel
+from otx.core.model.instance_segmentation import OTXInstanceSegModel
 from otx.core.utils.mask_util import polygon_to_bitmap
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-class MaskDINO(ExplainableOTXInstanceSegModel):
+class MaskDINO(OTXInstanceSegModel):
     """OTX MaskDINO Instance Segmentation model."""
 
     backbone_cfg: ClassVar[dict[str, Any]] = {

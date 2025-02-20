@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 
     from otx.core.data.module import OTXDataModule
     from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
 
 
 # ruff: noqa: F401
@@ -145,8 +146,9 @@ class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPro
 
     def __init__(
         self,
-        label_info: LabelInfoTypes = NullLabelInfo(),  # TODO (sungchul): update label_info for multi-label support
-        input_size: tuple[int, int] = (1024, 1024),
+        data_input_params: DataInputParams,
+        label_info: LabelInfoTypes = NullLabelInfo(),
+        model_name: str = "visual_prompting_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = VisualPromptingMetricCallable,
@@ -155,14 +157,14 @@ class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPro
         msg = f"Given label_info={label_info} has no effect."
         log.debug(msg)
         super().__init__(
-            label_info=NullLabelInfo(),  # TODO (sungchul): update label_info for multi-label support
-            input_size=input_size,
+            label_info=NullLabelInfo(),
+            input_size=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
-        self.input_size: tuple[int, int]
 
     @abstractmethod
     def _build_model(self) -> nn.Module:
@@ -228,9 +230,7 @@ class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPro
         """Creates OTXModelExporter object that can export the model."""
         return OTXVisualPromptingModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=(123.675, 116.28, 103.53),
-            std=(58.395, 57.12, 57.375),
+            data_input_params=self.data_input_params,
             resize_mode="fit_to_window",
             via_onnx=True,
         )
@@ -305,7 +305,7 @@ class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPro
 
     def get_dummy_input(self, batch_size: int = 1) -> VisualPromptingBatchDataEntity:
         """Returns a dummy input for VPT model."""
-        images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
+        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         labels = [{"points": torch.LongTensor([0] * batch_size)}] * batch_size
         prompts = [torch.zeros((1, 2))] * batch_size
         return VisualPromptingBatchDataEntity(

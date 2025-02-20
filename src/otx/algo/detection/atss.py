@@ -22,7 +22,7 @@ from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.core.model.detection import ExplainableOTXDetModel
+from otx.core.model.detection import OTXDetectionModel
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -43,7 +43,7 @@ PRETRAINED_WEIGHTS: dict[str, str] = {
 }
 
 
-class ATSS(ExplainableOTXDetModel):
+class ATSS(OTXDetectionModel):
     """OTX Detection model class for ATSS.
 
     Default input size per model:

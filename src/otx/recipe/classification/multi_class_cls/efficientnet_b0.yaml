@@ -1,8 +1,12 @@
 model:
-  class_path: otx.algo.classification.efficientnet.EfficientNetForMulticlassCls
+  class_path: otx.algo.classification.multiclass_models.efficientnet.EfficientNetForMulticlassCls
   init_args:
     label_info: 1000
-    version: b0
+    model_name: efficientnet_b0
+    data_input_params:
+        input_size: [224, 224]
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
 
     optimizer:
       class_path: torch.optim.SGD

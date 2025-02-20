@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import STEP_OUTPUT
     from torch.optim.optimizer import Optimizer
     from torchmetrics import Metric
+    from otx.core.model.base import DataInputParams
 
 
 AnomalyModelInputs: TypeAlias = (
@@ -62,8 +63,8 @@ class OTXAnomaly(OTXModel):
             Model input size in the order of height and width. Defaults to None.
     """
 
-    def __init__(self) -> None:
-        super().__init__(label_info=AnomalyLabelInfo(), input_size=self.input_size)
+    def __init__(self, data_input_params: DataInputParams) -> None:
+        super().__init__(label_info=AnomalyLabelInfo(), data_input_params=data_input_params)
         self.optimizer: list[OptimizerCallable] | OptimizerCallable = None
         self.scheduler: list[LRSchedulerCallable] | LRSchedulerCallable = None
         self.trainer: Trainer
@@ -116,7 +117,7 @@ class OTXAnomaly(OTXModel):
         self,
     ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
         """Get the value requested value from default transforms."""
-        mean_value, std_value = (123.675, 116.28, 103.53), (58.395, 57.12, 57.375)
+        mean_value, std_value = self.data_input_params.mean, self.data_input_params.std # (123.675, 116.28, 103.53), (58.395, 57.12, 57.375)
         for transform in self.configure_transforms().transforms:  # type: ignore[attr-defined]
             name = transform.__class__.__name__
             if "Normalize" in name:
@@ -260,11 +261,9 @@ class OTXAnomaly(OTXModel):
             "input_names": ["input"],
             "output_names": ["output"],
         }
-        if self.input_size is None:
-            msg = "Input size is not defined"
-            raise ValueError(msg)
+
         return OTXAnomalyModelExporter(
-            image_shape=self.input_size,
+            image_shape=self.data_input_params.input_size,
             image_threshold=self.image_threshold.value.cpu().numpy().tolist(),
             pixel_threshold=self.pixel_threshold.value.cpu().numpy().tolist(),
             task=self.task,
@@ -306,7 +305,7 @@ class OTXAnomaly(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> AnomalyModelInputs:
         """Returns a dummy input for anomaly model."""
-        images = torch.rand(batch_size, 3, *self.input_size)
+        images = torch.rand(batch_size, 3, *self.data_input_params.input_size)
         infos = []
         for i, img in enumerate(images):
             infos.append(

@@ -41,12 +41,6 @@ if TYPE_CHECKING:
 class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
     """Base class for the detection models used in OTX."""
 
-    input_size: tuple[int, int]
-
-    def __init__(self, model_name: str, *args, **kwargs) -> None:
-        self.model_name = model_name
-        super().__init__(*args, **kwargs)
-
     def test_step(self, batch: DetBatchDataEntity, batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
 
@@ -372,11 +366,8 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
 
     def get_dummy_input(self, batch_size: int = 1) -> DetBatchDataEntity:
         """Returns a dummy input for detection model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
 
-        images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
+        images = [torch.rand(3, *self.data_input_params) for _ in range(batch_size)]
         infos = []
         for i, img in enumerate(images):
             infos.append(
@@ -387,36 +378,6 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
                 ),
             )
         return DetBatchDataEntity(batch_size, images, infos, bboxes=[], labels=[])
-
-
-class ExplainableOTXDetModel(OTXDetectionModel):
-    """OTX detection model which can attach a XAI (Explainable AI) branch."""
-
-    def __init__(
-        self,
-        model_name: str,
-        label_info: LabelInfoTypes,
-        input_size: tuple[int, int],
-        optimizer: OptimizerCallable = DefaultOptimizerCallable,
-        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
-        metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
-        torch_compile: bool = False,
-        tile_config: TileConfig = TileConfig(enable_tiler=False),
-    ) -> None:
-        from otx.algo.explain.explain_algo import feature_vector_fn
-
-        super().__init__(
-            model_name=model_name,
-            label_info=label_info,
-            input_size=input_size,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            metric=metric,
-            torch_compile=torch_compile,
-            tile_config=tile_config,
-        )
-        self.model.feature_vector_fn = feature_vector_fn
-        self.model.explain_fn = self.get_explain_fn()
 
     def forward_explain(self, inputs: DetBatchDataEntity) -> DetBatchPredEntity:
         """Model forward function."""
@@ -431,12 +392,12 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         # If customize_inputs is overridden
         outputs = (
             self._forward_explain_detection(self.model, **self._customize_inputs(inputs))
-            if self._customize_inputs != ExplainableOTXDetModel._customize_inputs
+            if self._customize_inputs != OTXDetectionModel._customize_inputs
             else self._forward_explain_detection(self.model, inputs)
         )
         return (
             self._customize_outputs(outputs, inputs)
-            if self._customize_outputs != ExplainableOTXDetModel._customize_outputs
+            if self._customize_outputs != OTXDetectionModel._customize_outputs
             else outputs["predictions"]
         )
 
@@ -446,7 +407,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         entity: DetBatchDataEntity,
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor]:
-        """Forward func of the BaseDetector instance, which located in is in ExplainableOTXDetModel().model."""
+        """Forward func of the BaseDetector instance, which located in is in OTXDetectionModel().model."""
         backbone_feat = self.extract_feat(entity.images)
         bbox_head_feat = self.bbox_head.forward(backbone_feat)
 

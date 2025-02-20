@@ -15,7 +15,7 @@ from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetBatchPredEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
+from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel, DataInputParams
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
@@ -32,7 +32,8 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int],
+        data_input_params: DataInputParams,
+        model_name: str = "keypoint_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = PCKMeasureCallable,
@@ -40,13 +41,13 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
     ) -> None:
         super().__init__(
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
-        self.input_size: tuple[int, int]
 
     @abstractmethod
     def _build_model(self, num_classes: int) -> nn.Module:
@@ -106,7 +107,7 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
     def configure_metric(self) -> None:
         """Configure the metric."""
         super().configure_metric()
-        self._metric.input_size = self.input_size
+        self._metric.input_size = self.data_input_params.input_size
 
     def _convert_pred_entity_to_compute_metric(
         self,
@@ -158,11 +159,7 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
         Returns:
             KeypointDetBatchDataEntity: An entity containing randomly generated inference data.
         """
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
-        images = torch.rand(batch_size, 3, *self.input_size)
+        images = torch.rand(batch_size, 3, *self.data_input_params.input_size)
         infos = []
         for i, img in enumerate(images):
             infos.append(
