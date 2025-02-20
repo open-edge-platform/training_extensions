@@ -18,8 +18,8 @@ from torchvision.ops import batched_nms
 from otx.algo.explain.explain_algo import InstSegExplainAlgo
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity, InstanceSegPredEntity
 from otx.core.data.entity.segmentation import SegBatchPredEntity, SegPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredBatch, TorchPredItem, TorchDataItem
 
 
 class TileMerge:
@@ -51,9 +51,9 @@ class TileMerge:
     def _merge_entities(
         self,
         img_info: ImageInfo,
-        entities: list[T_OTXDataEntity],
+        entities: list[TorchDataItem],
         explain_mode: bool = False,
-    ) -> T_OTXDataEntity:
+    ) -> TorchDataItem:
         """Merge tile predictions to one single full-size prediction data entity.
 
         Args:
@@ -69,9 +69,9 @@ class TileMerge:
     @abstractmethod
     def merge(
         self,
-        batch_tile_preds: list[T_OTXBatchPredEntity],
+        batch_tile_preds: list[TorchPredBatch],
         batch_tile_attrs: list[list[dict]],
-    ) -> list[T_OTXDataEntity]:
+    ) -> list[TorchPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:
@@ -105,9 +105,9 @@ class DetectionTileMerge(TileMerge):
 
     def merge(
         self,
-        batch_tile_preds: list[DetBatchPredEntity],
+        batch_tile_preds: list[TorchPredBatch],
         batch_tile_attrs: list[list[dict]],
-    ) -> list[DetPredEntity]:
+    ) -> list[TorchPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:
@@ -142,7 +142,7 @@ class DetectionTileMerge(TileMerge):
                     img_ids.append(tile_id)
                 tile_img_info.padding = tile_attr["roi"]
 
-                det_pred_entity = DetPredEntity(
+                det_pred_entity = TorchPredItem(
                     image=torch.empty(tile_img_info.ori_shape),
                     img_info=tile_img_info,
                     bboxes=tile_bboxes,
@@ -163,9 +163,9 @@ class DetectionTileMerge(TileMerge):
     def _merge_entities(
         self,
         img_info: ImageInfo,
-        entities: list[DetPredEntity],
+        entities: list[TorchPredItem],
         explain_mode: bool = False,
-    ) -> DetPredEntity:
+    ) -> TorchPredItem:
         """Merge tile predictions to one single prediction.
 
         Args:
@@ -174,7 +174,7 @@ class DetectionTileMerge(TileMerge):
             explain_mode (bool): Whether or not tiles have explain features. Default: False.
 
         Returns:
-            DetPredEntity: Merged prediction entity.
+            TorchPredItem: Merged prediction entity.
         """
         bboxes: list | torch.Tensor = []
         labels: list | torch.Tensor = []
@@ -200,7 +200,7 @@ class DetectionTileMerge(TileMerge):
 
         bboxes, labels, scores, _ = self.nms_postprocess(bboxes, scores, labels)
 
-        det_pred_entity = DetPredEntity(
+        det_pred_entity = TorchPredItem(
             image=torch.empty(img_size),
             img_info=img_info,
             score=scores,
@@ -306,9 +306,9 @@ class InstanceSegTileMerge(TileMerge):
 
     def merge(
         self,
-        batch_tile_preds: list[InstanceSegBatchPredEntity],
+        batch_tile_preds: list[TorchPredBatch],
         batch_tile_attrs: list[list[dict]],
-    ) -> list[InstanceSegPredEntity]:
+    ) -> list[TorchPredItem]:
         """Merge inst-seg tile predictions to one single prediction.
 
         Args:
@@ -348,7 +348,7 @@ class InstanceSegTileMerge(TileMerge):
                     img_ids.append(tile_id)
                 tile_img_info.padding = tile_attr["roi"]
 
-                inst_seg_pred_entity = InstanceSegPredEntity(
+                inst_seg_pred_entity = TorchPredItem(
                     image=torch.empty(tile_img_info.ori_shape),
                     img_info=tile_img_info,
                     bboxes=_bboxes,
@@ -371,9 +371,9 @@ class InstanceSegTileMerge(TileMerge):
     def _merge_entities(
         self,
         img_info: ImageInfo,
-        entities: list[InstanceSegPredEntity],
+        entities: list[TorchPredItem],
         explain_mode: bool = False,
-    ) -> InstanceSegPredEntity:
+    ) -> TorchPredItem:
         """Merge tile predictions to one single prediction.
 
         Args:
@@ -381,7 +381,7 @@ class InstanceSegTileMerge(TileMerge):
             entities (list[InstanceSegPredEntity]): List of tile prediction entities.
 
         Returns:
-            InstanceSegPredEntity: Merged prediction entity.
+            TorchPredItem: Merged prediction entity.
         """
         bboxes: list | torch.Tensor = []
         labels: list | torch.Tensor = []
@@ -414,14 +414,13 @@ class InstanceSegTileMerge(TileMerge):
 
         bboxes, labels, scores, masks = self.nms_postprocess(bboxes, scores, labels, masks)
 
-        inst_seg_pred_entity = InstanceSegPredEntity(
+        inst_seg_pred_entity = TorchPredItem(
             image=torch.empty(img_size),
             img_info=img_info,
-            score=scores,
-            bboxes=tv_tensors.BoundingBoxes(bboxes, canvas_size=img_size, format="XYXY"),
-            labels=labels,
-            masks=tv_tensors.Mask(masks, dtype=bool),
-            polygons=[],
+            scores=scores,
+            boxes=tv_tensors.BoundingBoxes(bboxes, canvas_size=img_size, format="XYXY"),
+            label=labels,
+            mask=tv_tensors.Mask(masks, dtype=bool),
         )
 
         if explain_mode:

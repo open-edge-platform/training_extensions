@@ -23,7 +23,7 @@ from otx.algo.instance_segmentation.utils.utils import ShapeSpec
 from otx.algo.modules.norm import AVAILABLE_NORMALIZATION_LIST, FrozenBatchNorm2d
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 from otx.core.data.entity.utils import stack_batch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
@@ -267,18 +267,18 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
                 params.append({"params": [value], **hyperparams})
         return params
 
-    def _customize_inputs(self, entity: InstanceSegBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
         """Customize inputs for MaskDINO model.
 
         Args:
-            entity (InstanceSegBatchDataEntity): InstanceSegBatchDataEntity object.
+            entity (TorchDataBatch): TorchDataBatch object.
 
         Returns:
             dict[str, Any]: Customized inputs for MaskDINO model.
         """
         if isinstance(entity.images, list):
             entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)
-        img_shapes = [img_info.img_shape for img_info in entity.imgs_info]
+        img_shapes = [img_info.img_shape for img_info in entity.imgs_infos]
         images = ImageList(entity.images, img_shapes)
 
         if self.training:
@@ -302,7 +302,7 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
 
         return {
             "images": images,
-            "imgs_info": entity.imgs_info,
+            "imgs_info": entity.imgs_infos,
             "targets": targets if self.training else None,
         }
 
@@ -310,8 +310,8 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
         self,
         outputs: dict[str, Tensor]  # type: ignore[override]
         | tuple[list[Tensor], list[torch.LongTensor], list[tv_tensors.Mask]],
-        inputs: InstanceSegBatchDataEntity,
-    ) -> OTXBatchLossEntity | InstanceSegBatchPredEntity:
+        inputs: TorchDataBatch,
+    ) -> OTXBatchLossEntity | TorchPredBatch:
         """Customize outputs for MaskDINO model.
 
         Args:
@@ -321,13 +321,13 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
                     list[Tensor]: bounding boxes and scores with shape [N, 5]
                     list[torch.LongTensor]: labels with shape [N]
                     list[tv_tensors.Mask]: masks with shape [N, H, W]
-            inputs (InstanceSegBatchDataEntity): InstanceSegBatchDataEntity object.
+            inputs (TorchDataBatch): TorchDataBatch object.
 
         Raises:
             NotImplementedError: If explain mode is not supported yet.
 
         Returns:
-            OTXBatchLossEntity | InstanceSegBatchPredEntity: Customized outputs for MaskDINO model.
+            OTXBatchLossEntity | TorchPredBatch: Customized outputs for MaskDINO model.
         """
         if self.training and isinstance(outputs, dict):
             return sum(outputs.values())  # type: ignore[return-value]
@@ -344,13 +344,10 @@ class MaskDINO(ExplainableOTXInstanceSegModel):
             msg = "Explain mode is not supported yet."
             raise NotImplementedError(msg)
 
-        return InstanceSegBatchPredEntity(
-            batch_size=inputs.batch_size,
+        return TorchPredBatch(
             images=inputs.images,
-            imgs_info=inputs.imgs_info,
             scores=batch_scores,
-            bboxes=batch_bboxes,
+            boxes=batch_bboxes,
             masks=batch_masks,
-            polygons=[],
             labels=batch_labels,
         )

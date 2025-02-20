@@ -329,7 +329,7 @@ class OTXInstanceSegModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,
+        preds: TorchPredBatch,
         inputs: TorchDataBatch,
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
@@ -354,7 +354,7 @@ class OTXInstanceSegModel(OTXModel):
         ):
             pred_info.append(
                 {
-                    "boxes": bboxes.data,
+                    "boxes": bboxes.data if bboxes is not None else [], # TODO(ashwinvaidya17): Check if this is correct
                     "masks": [encode_rle(mask) for mask in masks.data],
                     "scores": scores,
                     "labels": labels,
@@ -365,7 +365,7 @@ class OTXInstanceSegModel(OTXModel):
             rles = [encode_rle(mask) for mask in masks.data] if masks is not None and len(masks) > 0 else []
             target_info.append(
                 {
-                    "boxes": bboxes.data,
+                    "boxes": bboxes.data if bboxes is not None else [], # TODO(ashwinvaidya17): Check if this is correct
                     "masks": rles,
                     "labels": labels,
                 },

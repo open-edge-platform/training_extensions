@@ -10,14 +10,16 @@ from typing import TYPE_CHECKING, Callable
 
 import cv2
 import numpy as np
+import torch
 from datumaro.components.annotation import Bbox, Ellipse, Image, Mask, Polygon, RotatedBbox
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.segmentation import SegBatchDataEntity, SegDataEntity
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import SegLabelInfo
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 
@@ -153,7 +155,7 @@ def _extract_class_mask(item: DatasetItem, img_shape: tuple[int, int], ignore_in
     return class_mask
 
 
-class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
+class OTXSegmentationDataset(OTXDataset[TorchDataItem]):
     """OTXDataset class for segmentation task."""
 
     def __init__(
@@ -202,34 +204,36 @@ class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
             return True
         return False
 
-    def _get_item_impl(self, index: int) -> SegDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
         roi = item.attributes.get("roi", None)
         img_data, img_shape, roi_meta = self._get_img_data_and_shape(img, roi)
+        image = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+
         ori_shape = roi_meta["orig_image_shape"] if roi_meta else img_shape
         extracted_mask = _extract_class_mask(item=item, img_shape=ori_shape, ignore_index=self.ignore_index)
         if roi_meta:
             extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
 
-        masks = tv_tensors.Mask(extracted_mask[None])
+        # TODO(ashwinvaidya17): Check if there is loss due to change from uint8 to bool for masks
+        mask = tv_tensors.Mask(np.expand_dims(extracted_mask, 0), dtype=torch.bool) 
+        image, mask = self.transforms(image, mask)
 
-        entity = SegDataEntity(
-            image=img_data,
-            img_info=ImageInfo(
+        return TorchDataItem(
+            image=image,
+            mask=mask,
+            imgs_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
                 ignored_labels=ignored_labels,
             ),
-            masks=masks,
         )
-        transformed_entity = self._apply_transforms(entity)
-        return transformed_entity.wrap(masks=transformed_entity.masks[0]) if transformed_entity else None
 
     @property
     def collate_fn(self) -> Callable:
-        """Collection function to collect SegDataEntity into SegBatchDataEntity in data loader."""
-        return partial(SegBatchDataEntity.collate_fn, stack_images=self.stack_images)
+        """Collection function to collect TorchDataItems into batch."""
+        return TorchDataItem.collate_fn

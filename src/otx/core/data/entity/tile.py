@@ -15,7 +15,7 @@ from otx.core.data.entity.utils import stack_batch
 from otx.core.types.task import OTXTaskType
 
 from .base import ImageInfo, T_OTXBatchDataEntity, T_OTXDataEntity
-from .instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
+from otx.data.torch import TorchDataBatch, TorchPredBatch, TorchDataItem
 from .segmentation import SegBatchDataEntity, SegDataEntity
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class TileDataEntity(Generic[T_OTXDataEntity]):
+class TileDataEntity:
     """Base data entity for tile task.
 
     Attributes:
@@ -35,7 +35,7 @@ class TileDataEntity(Generic[T_OTXDataEntity]):
     """
 
     num_tiles: int
-    entity_list: Sequence[T_OTXDataEntity]
+    entity_list: Sequence[TorchDataItem]
     tile_attr_list: list[dict[str, int | str]]
     ori_img_info: ImageInfo
 
@@ -67,7 +67,7 @@ TileAttrDictList = list[dict[str, int | str]]
 
 
 @dataclass
-class OTXTileBatchDataEntity(Generic[T_OTXBatchDataEntity]):
+class OTXTileBatchDataEntity:
     """Base batch data entity for tile task.
 
     Attributes:
@@ -85,7 +85,7 @@ class OTXTileBatchDataEntity(Generic[T_OTXBatchDataEntity]):
     batch_tile_attr_list: list[TileAttrDictList]
     imgs_info: list[ImageInfo]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, T_OTXBatchDataEntity]]:
+    def unbind(self) -> list[tuple[TileAttrDictList, TorchDataBatch]]:
         """Unbind batch data entity."""
         raise NotImplementedError
 
@@ -102,7 +102,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
     bboxes: list[tv_tensors.BoundingBoxes]
     labels: list[LongTensor]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, DetBatchDataEntity]]:
+    def unbind(self) -> list[tuple[TileAttrDictList, TorchDataBatch]]:
         """Unbind batch data entity for detection task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
         tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
@@ -119,11 +119,10 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
                 tile_infos[i : i + self.batch_size],
             )
             batch_data_entities.append(
-                DetBatchDataEntity(
-                    batch_size=self.batch_size,
+                TorchDataBatch(
                     images=stacked_images,
-                    imgs_info=updated_img_info,
-                    bboxes=[[] for _ in range(self.batch_size)],
+                    imgs_infos=updated_img_info,
+                    boxes=[[] for _ in range(self.batch_size)],
                     labels=[[] for _ in range(self.batch_size)],
                 ),
             )
@@ -144,8 +143,8 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
                     msg = "collate_fn() input should include a single OTX task"
                     raise RuntimeError(msg)
 
-                if not isinstance(entity, DetDataEntity):
-                    msg = "All entities should be DetDataEntity before collate_fn()"
+                if not isinstance(entity, TorchDataItem):
+                    msg = "All entities should be TorchDataItem before collate_fn()"
                     raise TypeError(msg)
 
         return TileBatchDetDataEntity(

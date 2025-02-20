@@ -31,7 +31,7 @@ from torchvision import tv_tensors
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
+from otx.data.torch import TorchDataItem, TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.data.entity.segmentation import SegDataEntity
 from otx.core.data.entity.tile import (
     TileBatchDetDataEntity,
@@ -511,7 +511,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
 class OTXTileInstSegTestDataset(OTXTileDataset):
     """OTX tile inst-seg test dataset.
 
-    OTXTileDetTestDataset wraps a list of tiles (InstanceSegDataEntity) into a single TileDetDataEntity
+    OTXTileDetTestDataset wraps a list of tiles (TorchDataBatch) into a single TileDetDataEntity
     for testing/predicting.
 
     Args:
@@ -616,8 +616,8 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             ori_polygons=gt_polygons,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> InstanceSegDataEntity:
-        """Convert a tile dataset item to InstanceSegDataEntity."""
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataBatch:
+        """Convert a tile dataset item to TorchDataBatch."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
         tile_shape = tile_img.shape[:2]
@@ -626,7 +626,7 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return InstanceSegDataEntity(
+        return TorchDataBatch(
             image=tile_img,
             img_info=img_info,
             # we don't need tile-level annotations
