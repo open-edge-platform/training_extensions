@@ -15,7 +15,6 @@ from otx.core.data.entity.utils import stack_batch
 from otx.core.types.task import OTXTaskType
 
 from .base import ImageInfo, T_OTXBatchDataEntity, T_OTXDataEntity
-from .detection import DetBatchDataEntity, DetDataEntity
 from .instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from .segmentation import SegBatchDataEntity, SegDataEntity
 

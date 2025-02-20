@@ -19,7 +19,6 @@ from otx.algo.detection.utils.utils import unpack_det_entity
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.base import OTXBatchDataEntity
-from otx.core.data.entity.detection import DetBatchDataEntity
 
 
 class BaseDenseHead(BaseModule):

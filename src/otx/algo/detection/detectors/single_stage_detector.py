@@ -17,7 +17,6 @@ import torch
 from otx.algo.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstSepBNHead
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.mmengine_utils import InstanceData
-from otx.core.data.entity.detection import DetBatchDataEntity
 
 if TYPE_CHECKING:
     from torch import Tensor, nn

@@ -21,7 +21,6 @@ from otx.algo.detection.utils.utils import round_up, set_info_into_instance, aut
 from otx.algo.modules import Conv2dModule
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.base import OTXBatchDataEntity
-from otx.core.data.entity.detection import DetBatchDataEntity
 
 
 class Anchor2Vec(nn.Module):

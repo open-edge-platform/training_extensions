@@ -27,7 +27,6 @@ from otx.algo.modules.activation import Swish, build_activation_layer
 from otx.algo.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
 from otx.algo.modules.norm import build_norm_layer
 from otx.algo.utils.mmengine_utils import InstanceData
-from otx.core.data.entity.detection import DetBatchDataEntity
 
 logger = logging.getLogger()
 

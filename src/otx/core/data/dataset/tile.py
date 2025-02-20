@@ -31,7 +31,6 @@ from torchvision import tv_tensors
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
 from otx.core.data.entity.segmentation import SegDataEntity
 from otx.core.data.entity.tile import (

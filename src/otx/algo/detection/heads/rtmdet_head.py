@@ -31,7 +31,6 @@ from otx.algo.modules.norm import build_norm_layer, is_norm
 from otx.algo.modules.scale import Scale
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.algo.utils.weight_init import bias_init_with_prob, constant_init, normal_init
-from otx.core.data.entity.detection import DetBatchDataEntity
 
 
 class RTMDetHead(ATSSHeadModule):

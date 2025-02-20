@@ -17,13 +17,12 @@ from torchvision.ops import batched_nms
 
 from otx.algo.explain.explain_algo import InstSegExplainAlgo
 from otx.core.config.data import TileConfig
-from otx.core.data.entity.base import ImageInfo, T_OTXBatchPredEntity, T_OTXDataEntity
-from otx.core.data.entity.detection import DetBatchPredEntity, DetPredEntity
+from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity, InstanceSegPredEntity
 from otx.core.data.entity.segmentation import SegBatchPredEntity, SegPredEntity
 
 
-class TileMerge(Generic[T_OTXDataEntity, T_OTXBatchPredEntity]):
+class TileMerge:
     """Base class for tile merge.
 
     Args:

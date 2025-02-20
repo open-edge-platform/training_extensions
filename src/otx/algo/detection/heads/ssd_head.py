@@ -17,7 +17,6 @@ from otx.algo.common.utils.coders import BaseBBoxCoder
 from otx.algo.common.utils.prior_generators import BasePriorGenerator
 from otx.algo.common.utils.samplers import PseudoSampler
 from otx.algo.detection.heads.anchor_head import AnchorHead
-from otx.core.data.entity.detection import DetBatchDataEntity
 
 
 class SSDHeadModule(AnchorHead):

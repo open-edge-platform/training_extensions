@@ -20,7 +20,6 @@ from torch.autograd import Function
 from torchvision.ops import box_convert
 
 from otx.algo.utils.mmengine_utils import InstanceData
-from otx.core.data.entity.detection import DetBatchDataEntity
 
 if TYPE_CHECKING:
     from otx.algo.detection.detectors.single_stage_detector import SingleStageDetector
