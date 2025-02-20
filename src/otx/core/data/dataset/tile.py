@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 import shapely.geometry as sg
 import torch
+from otx.data.torch import TorchTileDataItem
 from datumaro import Dataset as DmDataset
 from datumaro import DatasetItem, Image
 from datumaro.components.annotation import AnnotationType, Bbox, Ellipse, ExtractedMask, Polygon
@@ -31,21 +32,20 @@ from torchvision import tv_tensors
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
 from otx.core.data.entity.segmentation import SegDataEntity
 from otx.core.data.entity.tile import (
-    TileBatchDetDataEntity,
     TileBatchInstSegDataEntity,
     TileBatchSegDataEntity,
-    TileDetDataEntity,
     TileInstSegDataEntity,
     TileSegDataEntity,
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from .base import OTXDataset
+from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
     from datumaro.components.media import BboxIntCoords
@@ -423,7 +423,7 @@ class OTXTileTrainDataset(OTXTileDataset):
 class OTXTileDetTestDataset(OTXTileDataset):
     """OTX tile detection test dataset.
 
-    OTXTileDetTestDataset wraps a list of tiles (DetDataEntity) into a single TileDetDataEntity for testing/predicting.
+    OTXTileDetTestDataset wraps a list of tiles (TorchDataItem) into a single TileDetDataEntity for testing/predicting.
 
     Args:
         dataset (OTXDetDataset): OTX detection dataset.
@@ -436,19 +436,19 @@ class OTXTileDetTestDataset(OTXTileDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collate function for tile detection test dataset."""
-        return TileBatchDetDataEntity.collate_fn
+        return TorchTileDataItem.collate_fn
 
-    def _get_item_impl(self, index: int) -> TileDetDataEntity:  # type: ignore[override]
+    def _get_item_impl(self, index: int) -> TorchTileDataItem:  # type: ignore[override]
         """Get item implementation.
 
         Transform a single dataset item to multiple tiles using Datumaro tiling plugin, and
-        wrap tiles into a single TileDetDataEntity.
+        wrap tiles into a single TorchTileDataItem.
 
         Args:
             index (int): Index of the dataset item.
 
         Returns:
-            TileDetDataEntity: tile detection data entity that wraps a list of detection data entities.
+            TorchTileDataItem: tile detection data item that wraps a list of detection data items.
 
         Note:
             Ignoring [override] check is necessary here since OTXDataset._get_item_impl exclusively permits
@@ -470,7 +470,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
 
         tile_entities, tile_attrs = self.get_tiles(img_data, item, index)
 
-        return TileDetDataEntity(
+        return TorchTileDataItem(
             num_tiles=len(tile_entities),
             entity_list=tile_entities,
             tile_attr_list=tile_attrs,
@@ -487,17 +487,18 @@ class OTXTileDetTestDataset(OTXTileDataset):
             ori_labels=labels,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> DetDataEntity:
-        """Convert a tile datumaro dataset item to DetDataEntity."""
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:
+        """Convert a tile datumaro dataset item to TorchDataItem."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
         tile_shape = tile_img.shape[:2]
+        tile_img = to_dtype(to_image(tile_img), dtype=torch.float32) / 255.0
         img_info = ImageInfo(
             img_idx=parent_idx,
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return DetDataEntity(
+        return TorchDataItem(
             image=tile_img,
             img_info=img_info,
             # we don't need tile-level annotations
@@ -506,7 +507,6 @@ class OTXTileDetTestDataset(OTXTileDataset):
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=tile_shape,
             ),
-            labels=torch.as_tensor([]),
         )
 
 

@@ -19,7 +19,7 @@ from torch.autograd import Function
 from torchvision.ops import box_convert
 
 from otx.algo.utils.mmengine_utils import InstanceData
-from otx.core.data.entity.detection import DetBatchDataEntity
+from otx.data.torch import TorchDataBatch
 
 
 def images_to_levels(target: list[Tensor], num_levels: list[int]) -> list[Tensor]:
@@ -50,11 +50,11 @@ def unmap(data: Tensor, count: int, inds: Tensor, fill: int = 0) -> Tensor:
     return ret
 
 
-def unpack_det_entity(entity: DetBatchDataEntity) -> tuple:
+def unpack_det_entity(entity: TorchDataBatch) -> tuple:
     """Unpack gt_instances, gt_instances_ignore and img_metas based on batch_data_samples.
 
     Args:
-        batch_data_samples (DetBatchDataEntity): Data entity from dataset.
+        batch_data_samples (TorchDataBatch): Data entity from dataset.
 
     Returns:
         tuple:

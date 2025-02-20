@@ -13,7 +13,7 @@ from torchvision import tv_tensors
 
 from otx.core.config.data import SubsetConfig
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetDataEntity
+from otx.data.torch import TorchDataItem, TorchDataBatch
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
 from otx.core.data.entity.visual_prompting import VisualPromptingDataEntity
 from otx.core.types.transformer_libs import TransformLibType
@@ -35,11 +35,11 @@ except ImportError:
 @pytest.mark.skipif(SKIP_MMLAB_TEST, reason="MMLab is not installed")
 class TestLoadAnnotations:
     def test_det_transform(self) -> None:
-        data_entity = DetDataEntity(
-            tv_tensors.Image(torch.randn(3, 224, 224)),
-            ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
-            tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(224, 224)),
-            LongTensor([1]),
+        data_entity = TorchDataItem(
+            image=tv_tensors.Image(torch.randn(3, 224, 224)),
+            img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
+            bboxes=tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(224, 224)),
+            label=LongTensor([1]),
         )
 
         data_entity = LoadImageFromFile().transform(data_entity)
@@ -78,15 +78,15 @@ class TestPackDetInputs:
         ("data_entity", "with_point", "expected"),
         [
             (
-                DetDataEntity(
-                    image=np.ndarray((224, 224, 3)),
+                TorchDataItem(
+                    image=torch.randn(3, 224, 224),
                     img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
                     bboxes=tv_tensors.BoundingBoxes(
                         data=torch.Tensor([0, 0, 50, 50]),
                         format="xywh",
                         canvas_size=(224, 224),
                     ),
-                    labels=LongTensor([1]),
+                    label=LongTensor([1]),
                 ),
                 False,
                 torch.Size([3, 224, 224]),
@@ -128,7 +128,7 @@ class TestPackDetInputs:
     )
     def test_transform(
         self,
-        data_entity: DetDataEntity | VisualPromptingDataEntity,
+        data_entity: TorchDataItem | VisualPromptingDataEntity,
         with_point: bool,
         expected: torch.Size,
     ) -> None:

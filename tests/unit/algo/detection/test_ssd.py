@@ -10,7 +10,7 @@ from lightning import Trainer
 from torch._dynamo.testing import CompileCounter
 
 from otx.algo.detection.ssd import SSD
-from otx.core.data.entity.detection import DetBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.types.export import TaskLevelExportParameters
 
@@ -75,7 +75,7 @@ class TestSSD:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         fxt_model.eval()
         output = fxt_model(data)
-        assert isinstance(output, DetBatchPredEntity)
+        assert isinstance(output, TorchPredBatch)
 
     def test_export(self, fxt_model):
         fxt_model.eval()

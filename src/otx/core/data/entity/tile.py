@@ -17,7 +17,7 @@ from otx.core.data.entity.utils import stack_batch
 from otx.core.types.task import OTXTaskType
 
 from .base import ImageInfo, T_OTXBatchDataEntity, T_OTXDataEntity
-from .detection import DetBatchDataEntity, DetDataEntity
+from otx.data.torch import TorchDataBatch, TorchDataItem
 from .instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from .segmentation import SegBatchDataEntity, SegDataEntity
 
@@ -91,77 +91,6 @@ class OTXTileBatchDataEntity:
     def unbind(self) -> list[tuple[TileAttrDictList, T_OTXBatchDataEntity]]:
         """Unbind batch data entity."""
         raise NotImplementedError
-
-
-@dataclass
-class TileBatchDetDataEntity(OTXTileBatchDataEntity):
-    """Batch data entity for detection tile task.
-
-    Attributes:
-        bboxes (list[tv_tensors.BoundingBoxes]): The bounding boxes of the original image.
-        labels (list[LongTensor]): The labels of the original image.
-    """
-
-    bboxes: list[tv_tensors.BoundingBoxes]
-    labels: list[LongTensor]
-
-    def unbind(self) -> list[tuple[TileAttrDictList, DetBatchDataEntity]]:
-        """Unbind batch data entity for detection task."""
-        tiles = [tile for tiles in self.batch_tiles for tile in tiles]
-        tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
-        tile_attr_list = [tile_attr for tile_attrs in self.batch_tile_attr_list for tile_attr in tile_attrs]
-
-        batch_tile_attr_list = [
-            tile_attr_list[i : i + self.batch_size] for i in range(0, len(tile_attr_list), self.batch_size)
-        ]
-
-        batch_data_entities = []
-        for i in range(0, len(tiles), self.batch_size):
-            stacked_images, updated_img_info = stack_batch(
-                tiles[i : i + self.batch_size],
-                tile_infos[i : i + self.batch_size],
-            )
-            batch_data_entities.append(
-                DetBatchDataEntity(
-                    batch_size=self.batch_size,
-                    images=stacked_images,
-                    imgs_info=updated_img_info,
-                    bboxes=[[] for _ in range(self.batch_size)],
-                    labels=[[] for _ in range(self.batch_size)],
-                ),
-            )
-        return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))
-
-    @classmethod
-    def collate_fn(cls, batch_entities: list[TileDetDataEntity]) -> TileBatchDetDataEntity:
-        """Collate function to collect TileDetDataEntity into TileBatchDetDataEntity in data loader."""
-        if (batch_size := len(batch_entities)) == 0:
-            msg = "collate_fn() input should have > 0 entities"
-            raise RuntimeError(msg)
-
-        task = batch_entities[0].task
-
-        for tile_entity in batch_entities:
-            for entity in tile_entity.entity_list:
-                if entity.task != task:
-                    msg = "collate_fn() input should include a single OTX task"
-                    raise RuntimeError(msg)
-
-                if not isinstance(entity, DetDataEntity):
-                    msg = "All entities should be DetDataEntity before collate_fn()"
-                    raise TypeError(msg)
-
-        return TileBatchDetDataEntity(
-            batch_size=batch_size,
-            batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
-            batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list] for tile_entity in batch_entities
-            ],
-            batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
-            imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],
-            bboxes=[tile_entity.ori_bboxes for tile_entity in batch_entities],
-            labels=[tile_entity.ori_labels for tile_entity in batch_entities],
-        )
 
 
 @dataclass

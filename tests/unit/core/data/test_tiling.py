@@ -28,10 +28,12 @@ from otx.core.config.data import (
     VisualPromptingConfig,
 )
 from otx.core.data.dataset.tile import OTXTileTransform
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredItem
+
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity
-from otx.core.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
+from otx.core.data.entity.tile import  TileBatchInstSegDataEntity, TileBatchSegDataEntity
+from otx.data.torch import TorchTileDataBatch, TorchTileDataItem, TorchPredBatch
 from otx.core.data.module import OTXDataModule
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.task import OTXTaskType
@@ -125,15 +127,15 @@ class TestOTXTiling:
         }
 
     @pytest.mark.intense()
-    def det_dummy_forward(self, x: DetBatchDataEntity) -> DetBatchPredEntity:
+    def det_dummy_forward(self, x: TorchDataBatch) -> TorchPredBatch:
         """Dummy detection forward function for testing.
 
         This function creates random bounding boxes for each image in the batch.
         Args:
-            x (DetBatchDataEntity): Input batch data entity.
+            x (TorchDataBatch): Input batch data entity.
 
         Returns:
-            DetBatchPredEntity: Output batch prediction entity.
+            TorchPredItem: Output batch prediction entity.
         """
         bboxes = []
         labels = []
@@ -165,7 +167,7 @@ class TestOTXTiling:
                 saliency_maps.append(np.zeros((3, 7, 7)))
                 feature_vectors.append(np.zeros((1, 32)))
 
-        pred_entity = DetBatchPredEntity(
+        pred_entity = TorchPredBatch(
             batch_size=x.batch_size,
             images=x.images,
             imgs_info=x.imgs_info,
@@ -374,7 +376,7 @@ class TestOTXTiling:
             for batch in tile_datamodule.train_dataloader():
                 count += batch.batch_size
                 if task is OTXTaskType.DETECTION:
-                    assert isinstance(batch, DetBatchDataEntity)
+                    assert isinstance(batch, TorchDataBatch)
                 elif task is OTXTaskType.INSTANCE_SEGMENTATION:
                     assert isinstance(batch, InstanceSegBatchDataEntity)
                 elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
@@ -396,7 +398,7 @@ class TestOTXTiling:
             tile_datamodule.prepare_data()
             for batch in tile_datamodule.train_dataloader():
                 if task is OTXTaskType.DETECTION:
-                    assert isinstance(batch, DetBatchDataEntity)
+                    assert isinstance(batch, TorchDataBatch)
                 elif task is OTXTaskType.INSTANCE_SEGMENTATION:
                     assert isinstance(batch, InstanceSegBatchDataEntity)
                 elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
@@ -416,7 +418,7 @@ class TestOTXTiling:
             tile_datamodule.prepare_data()
             for batch in tile_datamodule.val_dataloader():
                 if task is OTXTaskType.DETECTION:
-                    assert isinstance(batch, TileBatchDetDataEntity)
+                    assert isinstance(batch, TorchTileDataBatch)
                 elif task is OTXTaskType.INSTANCE_SEGMENTATION:
                     assert isinstance(batch, TileBatchInstSegDataEntity)
                 elif task is OTXTaskType.SEMANTIC_SEGMENTATION:

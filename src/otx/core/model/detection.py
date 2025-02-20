@@ -20,7 +20,7 @@ from torchvision import tv_tensors
 from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.metrics import MetricCallable, MetricInput
@@ -30,7 +30,7 @@ from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
 from otx.core.utils.tile_merge import DetectionTileMerge
-
+from otx.data.torch import TorchTileDataBatch
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.adapters import OpenvinoAdapter
@@ -49,7 +49,7 @@ class OTXDetectionModel(OTXModel):
         self.model_name = model_name
         super().__init__(*args, **kwargs)
 
-    def test_step(self, batch: DetBatchDataEntity, batch_idx: int) -> None:
+    def test_step(self, batch: TorchDataBatch, batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
@@ -76,10 +76,10 @@ class OTXDetectionModel(OTXModel):
 
     def predict_step(
         self,
-        batch: DetBatchDataEntity,
+        batch: TorchDataBatch,
         batch_idx: int,
         dataloader_idx: int = 0,
-    ) -> DetBatchPredEntity:
+    ) -> TorchPredItem:
         """Step function called during PyTorch Lightning Trainer's predict."""
         if self.explain_mode:
             return self._filter_outputs_by_threshold(self.forward_explain(inputs=batch))
@@ -91,7 +91,7 @@ class OTXDetectionModel(OTXModel):
 
         return outputs
 
-    def _filter_outputs_by_threshold(self, outputs: DetBatchPredEntity) -> DetBatchPredEntity:
+    def _filter_outputs_by_threshold(self, outputs: TorchPredItem) -> TorchPredItem:
         scores = []
         bboxes = []
         labels = []
@@ -121,7 +121,7 @@ class OTXDetectionModel(OTXModel):
 
     def _customize_inputs(
         self,
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
@@ -142,8 +142,8 @@ class OTXDetectionModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: list[InstanceData] | dict | None,
-        inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity | None:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity | None:
         if self.training:
             if outputs is None:
                 return outputs
@@ -196,7 +196,7 @@ class OTXDetectionModel(OTXModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return DetBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(predictions),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -207,7 +207,7 @@ class OTXDetectionModel(OTXModel):
                 feature_vector=feature_vector,
             )
 
-        return DetBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(predictions),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -231,16 +231,16 @@ class OTXDetectionModel(OTXModel):
                 classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
         return classification_layers
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> DetBatchPredEntity:
+    def forward_tiles(self, inputs: TorchTileDataBatch) -> TorchPredBatch:
         """Unpack detection tiles.
 
         Args:
-            inputs (TileBatchDetDataEntity): Tile batch data entity.
+            inputs (TorchTileDataBatch): Tile batch data entity.
 
         Returns:
-            DetBatchPredEntity: Merged detection prediction.
+            TorchPredBatch: Merged detection prediction.
         """
-        tile_preds: list[DetBatchPredEntity] = []
+        tile_preds: list[TorchPredItem] = []
         tile_attrs: list[list[dict[str, int | str]]] = []
         merger = DetectionTileMerge(
             inputs.imgs_info,
@@ -257,13 +257,13 @@ class OTXDetectionModel(OTXModel):
             tile_attrs.append(batch_tile_attrs)
         pred_entities = merger.merge(tile_preds, tile_attrs)
 
-        pred_entity = DetBatchPredEntity(
+        pred_entity = TorchPredBatch(
             batch_size=inputs.batch_size,
-            images=[pred_entity.image for pred_entity in pred_entities],
+            images=torch.stack([pred_entity.image for pred_entity in pred_entities]),
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
-            scores=[pred_entity.score for pred_entity in pred_entities],
+            scores=[pred_entity.scores for pred_entity in pred_entities],
             bboxes=[pred_entity.bboxes for pred_entity in pred_entities],
-            labels=[pred_entity.labels for pred_entity in pred_entities],
+            labels=[pred_entity.label for pred_entity in pred_entities],
         )
         if self.explain_mode:
             pred_entity.saliency_map = [pred_entity.saliency_map for pred_entity in pred_entities]
@@ -296,8 +296,8 @@ class OTXDetectionModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: DetBatchPredEntity,  # type: ignore[override]
-        inputs: DetBatchDataEntity,  # type: ignore[override]
+        preds: TorchPredItem,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         return {
             "preds": [
@@ -372,7 +372,7 @@ class OTXDetectionModel(OTXModel):
                 self._best_confidence_threshold = 0.5
         return self._best_confidence_threshold
 
-    def get_dummy_input(self, batch_size: int = 1) -> DetBatchDataEntity:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
         """Returns a dummy input for detection model."""
         if self.input_size is None:
             msg = f"Input size attribute is not set for {self.__class__}"
@@ -388,7 +388,7 @@ class OTXDetectionModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return DetBatchDataEntity(batch_size, images, infos, bboxes=[], labels=[])
+        return TorchDataBatch(batch_size, images, infos, bboxes=[], labels=[])
 
 
 class ExplainableOTXDetModel(OTXDetectionModel):
@@ -420,11 +420,11 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-    def forward_explain(self, inputs: DetBatchDataEntity) -> DetBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredItem:
         """Model forward function."""
         from otx.algo.explain.explain_algo import feature_vector_fn
 
-        if isinstance(inputs, OTXTileBatchDataEntity):
+        if isinstance(inputs, (OTXTileBatchDataEntity, TorchTileDataBatch)):
             return self.forward_tiles(inputs)
 
         self.model.feature_vector_fn = feature_vector_fn
@@ -445,7 +445,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
     @staticmethod
     def _forward_explain_detection(
         self: SingleStageDetector,
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor]:
         """Forward func of the BaseDetector instance, which located in is in ExplainableOTXDetModel().model."""
@@ -603,8 +603,8 @@ class OVDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectionResult],
-        inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredItem | OTXBatchLossEntity:
         # add label index
         bboxes = []
         scores = []
@@ -639,7 +639,7 @@ class OVDetectionModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return DetBatchPredEntity(
+            return TorchPredItem(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -650,7 +650,7 @@ class OVDetectionModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return DetBatchPredEntity(
+        return TorchPredItem(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -661,8 +661,8 @@ class OVDetectionModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: DetBatchPredEntity,  # type: ignore[override]
-        inputs: DetBatchDataEntity,  # type: ignore[override]
+        preds: TorchPredItem,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         return {
             "preds": [

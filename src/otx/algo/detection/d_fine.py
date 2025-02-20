@@ -21,7 +21,7 @@ from otx.algo.detection.losses.dfine_loss import DFINECriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -139,7 +139,7 @@ class DFine(ExplainableOTXDetModel):
 
     def _customize_inputs(
         self,
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
@@ -168,8 +168,8 @@ class DFine(ExplainableOTXDetModel):
     def _customize_outputs(
         self,
         outputs: list[torch.Tensor] | dict,  # type: ignore[override]
-        inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -204,7 +204,7 @@ class DFine(ExplainableOTXDetModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return DetBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -215,7 +215,7 @@ class DFine(ExplainableOTXDetModel):
                 saliency_map=saliency_map,
             )
 
-        return DetBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -340,7 +340,7 @@ class DFine(ExplainableOTXDetModel):
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""

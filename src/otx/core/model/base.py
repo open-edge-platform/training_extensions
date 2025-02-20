@@ -52,7 +52,7 @@ from otx.core.types.precision import OTXPrecisionType
 from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data.torch import TorchDataBatch, TorchPredBatch, TorchTileDataBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -540,7 +540,7 @@ class OTXModel(LightningModule):
     ) -> T_OTXBatchPredEntity | OTXBatchLossEntity:
         """Model forward function."""
         # If customize_inputs is overridden
-        if isinstance(inputs, OTXTileBatchDataEntity):
+        if isinstance(inputs, (OTXTileBatchDataEntity, TorchTileDataBatch)):
             return self.forward_tiles(inputs)
 
         outputs = (

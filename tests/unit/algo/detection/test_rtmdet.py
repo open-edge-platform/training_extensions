@@ -10,7 +10,7 @@ from otx.algo.common.backbones.cspnext import CSPNeXtModule
 from otx.algo.detection.heads.rtmdet_head import RTMDetSepBNHeadModule
 from otx.algo.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
 from otx.algo.detection.rtmdet import RTMDet
-from otx.core.data.entity.detection import DetBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.native import OTXNativeModelExporter
 
 
@@ -42,7 +42,7 @@ class TestRTMDet:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)
-        assert isinstance(output, DetBatchPredEntity)
+        assert isinstance(output, TorchPredBatch)
 
     @pytest.mark.parametrize("model", [RTMDet(model_name="rtmdet_tiny", label_info=3)])
     def test_export(self, model):

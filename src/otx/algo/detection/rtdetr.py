@@ -20,7 +20,7 @@ from otx.algo.detection.heads import RTDETRTransformer
 from otx.algo.detection.necks import HybridEncoder
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -110,23 +110,24 @@ class RTDETR(ExplainableOTXDetModel):
 
     def _customize_inputs(
         self,
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
-        for bb, ll in zip(entity.bboxes, entity.labels):
-            # convert to cxcywh if needed
-            if len(scaled_bboxes := bb):
-                converted_bboxes = (
-                    box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
-                )
-                # normalize the bboxes
-                scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
-                    converted_bboxes.device,
-                )
-            targets.append({"boxes": scaled_bboxes, "labels": ll})
+        if entity.bboxes is not None and entity.labels is not None:
+            for bb, ll in zip(entity.bboxes, entity.labels):
+                # convert to cxcywh if needed
+                if len(scaled_bboxes := bb):
+                    converted_bboxes = (
+                        box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
+                    )
+                    # normalize the bboxes
+                    scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
+                        converted_bboxes.device,
+                    )
+                targets.append({"boxes": scaled_bboxes, "labels": ll})
 
         if self.explain_mode:
             return {"entity": entity}
@@ -139,8 +140,8 @@ class RTDETR(ExplainableOTXDetModel):
     def _customize_outputs(
         self,
         outputs: list[torch.Tensor] | dict,  # type: ignore[override]
-        inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -175,7 +176,7 @@ class RTDETR(ExplainableOTXDetModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return DetBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -186,7 +187,7 @@ class RTDETR(ExplainableOTXDetModel):
                 saliency_map=saliency_map,
             )
 
-        return DetBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -305,7 +306,7 @@ class RTDETR(ExplainableOTXDetModel):
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""

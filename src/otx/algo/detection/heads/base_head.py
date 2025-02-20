@@ -19,7 +19,7 @@ from otx.algo.detection.utils.utils import unpack_det_entity
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.base import OTXBatchDataEntity
-from otx.core.data.entity.detection import DetBatchDataEntity
+from otx.data.torch import TorchDataBatch
 
 
 class BaseDenseHead(BaseModule):
@@ -63,14 +63,14 @@ class BaseDenseHead(BaseModule):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (DetBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.
@@ -84,7 +84,7 @@ class BaseDenseHead(BaseModule):
     def predict(
         self,
         x: tuple[Tensor],
-        entity: OTXBatchDataEntity,
+        entity: TorchDataBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Perform forward propagation of the detection head and predict detection results.
@@ -92,7 +92,7 @@ class BaseDenseHead(BaseModule):
         Args:
             x (tuple[Tensor]): Multi-level features from the
                 upstream network, each is a 4D-tensor.
-            entity (DetBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
             rescale (bool, optional): Whether to rescale the results.
                 Defaults to False.
 
