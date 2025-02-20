@@ -12,7 +12,7 @@ import json
 import logging
 import warnings
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import numpy as np
 import openvino
@@ -88,7 +88,7 @@ DefaultOptimizerCallable = _default_optimizer_callable
 DefaultSchedulerCallable = _default_scheduler_callable
 
 
-class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
+class OTXModel(LightningModule):
     """Base class for the models used in OTX.
 
     Args:
@@ -573,7 +573,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
 
     def forward_tiles(
         self,
-        inputs: OTXTileBatchDataEntity[T_OTXBatchDataEntity],
+        inputs: OTXTileBatchDataEntity,
     ) -> T_OTXBatchPredEntity | OTXBatchLossEntity:
         """Model forward function for tile task."""
         raise NotImplementedError
@@ -815,7 +815,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
 
         self._tile_config = tile_config
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXBatchDataEntity[Any]:
+    def get_dummy_input(self, batch_size: int = 1) -> OTXBatchDataEntity:
         """Generates a dummy input, suitable for launching forward() on it.
 
         Args:
@@ -849,7 +849,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             raise ValueError(msg)
 
 
-class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
+class OVModel(OTXModel):
     """Base class for the OpenVINO model.
 
     This is a base class representing interface for interacting with OpenVINO

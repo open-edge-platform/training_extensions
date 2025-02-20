@@ -26,7 +26,7 @@ from .base import OTXDataset
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
 
-class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
+class OTXKeypointDetectionDataset(OTXDataset):
     """OTXDataset class for keypoint detection task."""
 
     def __init__(

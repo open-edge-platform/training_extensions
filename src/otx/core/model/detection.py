@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for detection model entity used in OTX."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 import logging as log
@@ -38,7 +40,7 @@ if TYPE_CHECKING:
     from otx.algo.detection.detectors import SingleStageDetector
 
 
-class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
+class OTXDetectionModel(OTXModel):
     """Base class for the detection models used in OTX."""
 
     input_size: tuple[int, int]
@@ -229,7 +231,7 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
                 classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
         return classification_layers
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity[DetBatchDataEntity]) -> DetBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> DetBatchPredEntity:
         """Unpack detection tiles.
 
         Args:
@@ -418,7 +420,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-    def forward_explain(self, inputs: DetBatchDataEntity) -> DetBatchPredEntity:
+    def forward_explain(self, inputs: DetBatchDataEntity) -> DetBatchPredEntity:  # type: ignore[override]
         """Model forward function."""
         from otx.algo.explain.explain_algo import feature_vector_fn
 
@@ -540,7 +542,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         return [1] * 10
 
 
-class OVDetectionModel(OVModel[DetBatchDataEntity, DetBatchPredEntity]):
+class OVDetectionModel(OVModel):
     """Object detection model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
@@ -602,7 +604,7 @@ class OVDetectionModel(OVModel[DetBatchDataEntity, DetBatchPredEntity]):
         self,
         outputs: list[DetectionResult],
         inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+    ) -> DetBatchPredEntity | OTXBatchLossEntity:  # type: ignore[override]
         # add label index
         bboxes = []
         scores = []

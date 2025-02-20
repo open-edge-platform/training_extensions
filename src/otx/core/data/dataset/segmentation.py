@@ -153,7 +153,7 @@ def _extract_class_mask(item: DatasetItem, img_shape: tuple[int, int], ignore_in
     return class_mask
 
 
-class OTXSegmentationDataset(OTXDataset[SegDataEntity]):
+class OTXSegmentationDataset(OTXDataset):
     """OTXDataset class for segmentation task."""
 
     def __init__(

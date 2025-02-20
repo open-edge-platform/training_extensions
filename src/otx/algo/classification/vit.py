@@ -8,7 +8,7 @@ from __future__ import annotations
 import types
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Generic
+from typing import TYPE_CHECKING, Any, Callable
 from urllib.parse import urlparse
 
 import numpy as np
@@ -61,7 +61,7 @@ pretrained_urls = {
 }
 
 
-class ForwardExplainMixInForViT(Generic[T_OTXBatchPredEntity, T_OTXBatchDataEntity]):
+class ForwardExplainMixInForViT:
     """ViT model which can attach a XAI (Explainable AI) branch."""
 
     explain_mode: bool
