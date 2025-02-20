@@ -15,7 +15,33 @@ engine:
 callback_monitor: image_F1Score
 
 data: ../_base_/data/anomaly.yaml
+
 overrides:
   precision: 32
   max_epochs: 200
   num_sanity_val_steps: 0
+  callbacks:
+    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+      init_args:
+        max_interval: 1
+  data:
+    train_subset:
+      transforms:
+        - class_path: torchvision.transforms.v2.Resize
+          init_args:
+            size: [448, 448]
+            antialias: true
+    val_subset:
+      transforms:
+        - class_path: torchvision.transforms.v2.Resize
+          init_args:
+            size: [448, 448]
+            antialias: true
+      sampler:
+        class_path: torch.utils.data.RandomSampler
+    test_subset:
+      transforms:
+        - class_path: torchvision.transforms.v2.Resize
+          init_args:
+            size: [448, 448]
+            antialias: true
