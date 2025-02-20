@@ -1,0 +1,95 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""EfficientNet-B0 model implementation."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from torch import Tensor, nn
+
+from otx.algo.classification.backbones.efficientnet import EfficientNetBackbone
+from otx.algo.classification.classifier import ImageClassifier
+from otx.algo.classification.heads import MultiLabelLinearClsHead
+from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
+from otx.algo.classification.necks.gap import GlobalAveragePooling
+from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.core.data.entity.classification import (
+    MultilabelClsBatchDataEntity,
+    MultilabelClsBatchPredEntity,
+)
+from otx.core.metrics.accuracy import  MultiLabelClsMetricCallable
+from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.model.multilabel_classification import OTXMultilabelClsModel
+from otx.core.schedulers import LRSchedulerListCallable
+from otx.core.types.label import LabelInfoTypes
+
+if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+
+    from otx.core.metrics import MetricCallable
+
+
+class EfficientNetForMultilabelCls(OTXMultilabelClsModel):
+    """EfficientNet Model for multi-label classification task."""
+
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: str = "efficientnet_b0",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MultiLabelClsMetricCallable,
+        torch_compile: bool = False,
+    ) -> None:
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+        )
+
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        num_classes = num_classes if num_classes is not None else self.num_classes
+        backbone = EfficientNetBackbone(version=self.model_name, input_size=self.data_input_params.input_size)
+        return ImageClassifier(
+            backbone=backbone,
+            neck=GlobalAveragePooling(dim=2),
+            head=MultiLabelLinearClsHead(
+                num_classes=num_classes,
+                in_channels=backbone.num_features,
+                normalized=True,
+            ),
+            loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
+            loss_scale=7.0,
+        )
+
+    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
+        """Load the previous OTX ckpt according to OTX2.0."""
+        return OTXv1Helper.load_cls_effnet_b0_ckpt(state_dict, "multilabel", add_prefix)
+
+    def forward_explain(self, inputs: MultilabelClsBatchDataEntity) -> MultilabelClsBatchPredEntity:
+        """Model forward explain function."""
+        outputs = self.model(images=inputs.stacked_images, mode="explain")
+
+        return MultilabelClsBatchPredEntity(
+            batch_size=len(outputs["preds"]),
+            images=inputs.images,
+            imgs_info=inputs.imgs_info,
+            labels=outputs["preds"],
+            scores=outputs["scores"],
+            saliency_map=outputs["saliency_map"],
+            feature_vector=outputs["feature_vector"],
+        )
+
+    def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
+        """Model forward function used for the model tracing during model exportation."""
+        if self.explain_mode:
+            return self.model(images=image, mode="explain")
+
+        return self.model(images=image, mode="tensor")

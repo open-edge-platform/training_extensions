@@ -1,0 +1,137 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""MobileNetV3 model implementation."""
+
+from __future__ import annotations
+
+from copy import copy
+from math import ceil
+from typing import TYPE_CHECKING, Any, Literal
+
+import torch
+from torch import Tensor, nn
+
+from otx.algo.classification.backbones import MobileNetV3Backbone
+from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
+from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelNonLinearClsHead
+from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
+from otx.algo.classification.necks.gap import GlobalAveragePooling
+from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.core.data.entity.base import OTXBatchLossEntity
+from otx.core.data.entity.classification import (
+    MultilabelClsBatchDataEntity,
+    MultilabelClsBatchPredEntity,
+)
+from otx.core.metrics import MetricInput
+from otx.core.metrics.accuracy import MultiLabelClsMetricCallable
+from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.model.multilabel_classification import OTXMultilabelClsModel
+from otx.core.schedulers import LRSchedulerListCallable
+from otx.core.types.label import LabelInfoTypes
+
+if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+
+    from otx.core.metrics import MetricCallable
+
+
+class MobileNetV3ForMultilabelCls(OTXMultilabelClsModel):
+    """MobileNetV3 Model for multi-class classification task."""
+
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: str = "mobilenetv3_large",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MultiLabelClsMetricCallable,
+        torch_compile: bool = False,
+    ) -> None:
+
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+        )
+
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        num_classes = num_classes if num_classes is not None else self.num_classes
+        return ImageClassifier(
+            backbone=MobileNetV3Backbone(mode=self.model_name, input_size=self.data_input_params),
+            neck=GlobalAveragePooling(dim=2),
+            head=MultiLabelNonLinearClsHead(
+                num_classes=num_classes,
+                in_channels=MobileNetV3Backbone.MV3_CFG[self.model_name]["out_channels"],
+                hid_channels=MobileNetV3Backbone.MV3_CFG[self.model_name]["hid_channels"],
+                normalized=True,
+                activation=nn.PReLU(),
+            ),
+            loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
+            loss_scale=7.0,
+        )
+
+    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
+        """Load the previous OTX ckpt according to OTX2.0."""
+        return OTXv1Helper.load_cls_mobilenet_v3_ckpt(state_dict, "multilabel", add_prefix)
+
+    def _customize_inputs(self, inputs: MultilabelClsBatchDataEntity) -> dict[str, Any]:
+        if self.training:
+            mode = "loss"
+        elif self.explain_mode:
+            mode = "explain"
+        else:
+            mode = "predict"
+
+        return {
+            "images": inputs.stacked_images,
+            "labels": torch.stack(inputs.labels),
+            "imgs_info": inputs.imgs_info,
+            "mode": mode,
+        }
+
+    def _customize_outputs(
+        self,
+        outputs: Any,  # noqa: ANN401
+        inputs: MultilabelClsBatchDataEntity,
+    ) -> MultilabelClsBatchPredEntity | OTXBatchLossEntity:
+        if self.training:
+            return OTXBatchLossEntity(loss=outputs)
+
+        # To list, batch-wise
+        logits = outputs if isinstance(outputs, torch.Tensor) else outputs["logits"]
+        scores = torch.unbind(logits, 0)
+
+        return MultilabelClsBatchPredEntity(
+            batch_size=inputs.batch_size,
+            images=inputs.images,
+            imgs_info=inputs.imgs_info,
+            scores=scores,
+            labels=logits.argmax(-1, keepdim=True).unbind(0),
+        )
+
+    def forward_explain(self, inputs: MultilabelClsBatchDataEntity) -> MultilabelClsBatchPredEntity:
+        """Model forward explain function."""
+        outputs = self.model(images=inputs.stacked_images, mode="explain")
+
+        return MultilabelClsBatchPredEntity(
+            batch_size=len(outputs["preds"]),
+            images=inputs.images,
+            imgs_info=inputs.imgs_info,
+            labels=outputs["preds"],
+            scores=outputs["scores"],
+            saliency_map=outputs["saliency_map"],
+            feature_vector=outputs["feature_vector"],
+        )
+
+    def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
+        """Model forward function used for the model tracing during model exportation."""
+        if self.explain_mode:
+            return self.model(images=image, mode="explain")
+
+        return self.model(images=image, mode="tensor")
