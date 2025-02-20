@@ -99,7 +99,7 @@ class OTXSegmentationModel(OTXModel):
         self,
         outputs: Any,  # noqa: ANN401
         inputs: SegBatchDataEntity,
-    ) -> SegBatchPredEntity | OTXBatchLossEntity:
+    ) -> SegBatchPredEntity | OTXBatchLossEntity:  # type: ignore[override]
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
