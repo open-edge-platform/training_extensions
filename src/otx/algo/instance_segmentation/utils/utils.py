@@ -12,10 +12,10 @@ from torch import Tensor
 
 from otx.algo.common.utils.utils import sample_point
 from otx.algo.utils.mmengine_utils import InstanceData
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.data.torch import TorchDataBatch
 
 
-def unpack_inst_seg_entity(entity: InstanceSegBatchDataEntity) -> tuple:
+def unpack_inst_seg_entity(entity: TorchDataBatch) -> tuple:
     """Unpack gt_instances, gt_instances_ignore and img_metas based on batch_data_samples.
 
     Args:
@@ -32,11 +32,10 @@ def unpack_inst_seg_entity(entity: InstanceSegBatchDataEntity) -> tuple:
     """
     batch_gt_instances = []
     batch_img_metas = []
-    for img_info, masks, polygons, bboxes, labels in zip(
-        entity.imgs_info,
+    for img_info, masks, bboxes, labels in zip(
+        entity.imgs_infos,
         entity.masks,
-        entity.polygons,
-        entity.bboxes,
+        entity.boxes,
         entity.labels,
     ):
         metainfo = {
@@ -48,7 +47,7 @@ def unpack_inst_seg_entity(entity: InstanceSegBatchDataEntity) -> tuple:
         }
         batch_img_metas.append(metainfo)
 
-        gt_masks = masks if len(masks) > 0 else polygons
+        gt_masks = masks if masks is not None and len(masks) > 0 else None
 
         batch_gt_instances.append(
             InstanceData(

@@ -249,8 +249,8 @@ class ValidateBatchMixin:
         if masks_batch[0].dtype != torch.bool:
             msg = "Masks batch must have dtype torch.bool"
             raise ValueError(msg)
-        if masks_batch[0].ndim != 4:
-            msg = "Masks batch must have 4 dimensions"
+        if masks_batch[0].ndim != 3:
+            msg = "Masks batch must have 3 dimensions"
             raise ValueError(msg)
         return masks_batch
 

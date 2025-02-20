@@ -77,7 +77,7 @@ def mask_target_single(
         Tensor: Mask target, has shape (num_pos, w, h).
     """
     mask_size = _pair(mask_size)
-    if len(gt_masks) == 0:
+    if gt_masks is None or len(gt_masks) == 0:
         warnings.warn("No ground truth masks are provided!", stacklevel=2)
         return pos_proposals.new_zeros((0, *mask_size))
 

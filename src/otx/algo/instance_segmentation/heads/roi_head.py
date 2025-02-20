@@ -15,7 +15,7 @@ from torch import Tensor, nn
 
 from otx.algo.instance_segmentation.utils.structures.bbox import bbox2roi
 from otx.algo.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.data.torch import TorchDataBatch
 
 if TYPE_CHECKING:
     from otx.algo.utils.mmengine_utils import InstanceData
@@ -331,7 +331,7 @@ class RoIHead(nn.Module):
         self,
         x: tuple[Tensor],
         rpn_results_list: list[InstanceData],
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Forward the roi head and predict detection results on the features of the upstream network."""
@@ -346,7 +346,7 @@ class RoIHead(nn.Module):
                 "scale_factor": img_info.scale_factor,
                 "ignored_labels": img_info.ignored_labels,
             }
-            for img_info in entity.imgs_info
+            for img_info in entity.imgs_infos
         ]
 
         # If it has the mask branch, the bbox branch does not need
@@ -505,7 +505,7 @@ class RoIHead(nn.Module):
         self,
         x: tuple[Tensor],
         rpn_results_list: list[InstanceData],
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> tuple[dict, dict, Any, Any, Any]:
         """Perform forward propagation and prepare outputs for loss calculation.
 
@@ -513,17 +513,18 @@ class RoIHead(nn.Module):
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
             rpn_results_list (list[InstanceData]): List of region proposals.
-            entity (InstanceSegBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.
         """
         batch_gt_instances, batch_img_metas = unpack_inst_seg_entity(entity)
 
+        batch_size = entity.images.shape[0]
+
         # assign gts and sample proposals
-        num_imgs = entity.batch_size
         sampling_results = []
-        for i in range(num_imgs):
+        for i in range(batch_size):
             # rename rpn_results.bboxes to rpn_results.priors
             rpn_results = rpn_results_list[i]
             rpn_results.priors = rpn_results.pop("bboxes")

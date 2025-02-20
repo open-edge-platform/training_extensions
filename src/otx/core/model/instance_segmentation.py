@@ -24,7 +24,6 @@ from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.metrics import MetricInput
@@ -36,6 +35,7 @@ from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
 from otx.core.utils.tile_merge import InstanceSegTileMerge
+from otx.data.torch import TorchDataBatch, TorchPredBatch, TorchPredItem
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchPredEntity]):
+class OTXInstanceSegModel(OTXModel):
     """Base class for the Instance Segmentation models used in OTX.
 
     Args:
@@ -99,7 +99,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
 
         return detector
 
-    def _customize_inputs(self, entity: InstanceSegBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
         if isinstance(entity.images, list):
             entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)
         inputs: dict[str, Any] = {}
@@ -112,8 +112,8 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
     def _customize_outputs(
         self,
         outputs: list[InstanceData] | dict,  # TODO (sungchul): Remove `InstanceData`.
-        inputs: InstanceSegBatchDataEntity,
-    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -134,7 +134,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
         masks: list[tv_tensors.Mask] = []
 
         predictions = outputs["predictions"] if isinstance(outputs, dict) else outputs
-        for img_info, prediction in zip(inputs.imgs_info, predictions):
+        for img_info, prediction in zip(inputs.imgs_infos, predictions):
             scores.append(prediction.scores)
             bboxes.append(
                 tv_tensors.BoundingBoxes(
@@ -166,27 +166,21 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return InstanceSegBatchPredEntity(
-                batch_size=len(predictions),
+            return TorchPredBatch(
                 images=inputs.images,
-                imgs_info=inputs.imgs_info,
                 scores=scores,
-                bboxes=bboxes,
+                boxes=bboxes,
                 masks=masks,
-                polygons=[],
                 labels=labels,
-                saliency_map=list(saliency_map),
-                feature_vector=list(feature_vector),
+                saliency_maps=list(saliency_map),
+                feature_vectors=list(feature_vector),
             )
 
-        return InstanceSegBatchPredEntity(
-            batch_size=len(predictions),
+        return TorchPredBatch(
             images=inputs.images,
-            imgs_info=inputs.imgs_info,
             scores=scores,
-            bboxes=bboxes,
+            boxes=bboxes,
             masks=masks,
-            polygons=[],
             labels=labels,
         )
 
@@ -220,16 +214,16 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
                 classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
         return classification_layers
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity[InstanceSegBatchDataEntity]) -> InstanceSegBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity[TorchDataBatch]) -> TorchPredItem:
         """Unpack instance segmentation tiles.
 
         Args:
             inputs (TileBatchInstSegDataEntity): Tile batch data entity.
 
         Returns:
-            InstanceSegBatchPredEntity: Merged instance segmentation prediction.
+            TorchPredItem: Merged instance segmentation prediction.
         """
-        tile_preds: list[InstanceSegBatchPredEntity] = []
+        tile_preds: list[TorchPredItem] = []
         tile_attrs: list[list[dict[str, int | str]]] = []
         merger = InstanceSegTileMerge(
             inputs.imgs_info,
@@ -246,15 +240,16 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
             tile_attrs.append(batch_tile_attrs)
         pred_entities = merger.merge(tile_preds, tile_attrs)
 
-        pred_entity = InstanceSegBatchPredEntity(
-            batch_size=inputs.batch_size,
+        if any(pred_entity.polygons is not None for pred_entity in pred_entities):
+            raise NotImplementedError("Polygons are not supported yet.")
+
+        pred_entity = TorchPredItem(
             images=[pred_entity.image for pred_entity in pred_entities],
-            imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
+            imgs_infos=[pred_entity.img_info for pred_entity in pred_entities],
             scores=[pred_entity.score for pred_entity in pred_entities],
-            bboxes=[pred_entity.bboxes for pred_entity in pred_entities],
+            boxes=[pred_entity.bboxes for pred_entity in pred_entities],
             labels=[pred_entity.labels for pred_entity in pred_entities],
             masks=[pred_entity.masks for pred_entity in pred_entities],
-            polygons=[pred_entity.polygons for pred_entity in pred_entities],
         )
         if self.explain_mode:
             pred_entity.saliency_map = [pred_entity.saliency_map for pred_entity in pred_entities]
@@ -334,16 +329,16 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: InstanceSegBatchPredEntity,
-        inputs: InstanceSegBatchDataEntity,
+        preds: TorchPredItem,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
         This function will convert mask to RLE format and cache the ground truth for the current batch.
 
         Args:
-            preds (InstanceSegBatchPredEntity): Current batch predictions.
-            inputs (InstanceSegBatchDataEntity): Current batch ground-truth inputs.
+            preds (TorchPredItem): Current batch predictions.
+            inputs (TorchDataBatch): Current batch ground-truth inputs.
 
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
@@ -352,7 +347,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
         target_info = []
 
         for bboxes, masks, scores, labels in zip(
-            preds.bboxes,
+            preds.boxes,
             preds.masks,
             preds.scores,
             preds.labels,
@@ -366,18 +361,8 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
                 },
             )
 
-        for imgs_info, bboxes, masks, polygons, labels in zip(
-            inputs.imgs_info,
-            inputs.bboxes,
-            inputs.masks,
-            inputs.polygons,
-            inputs.labels,
-        ):
-            rles = (
-                [encode_rle(mask) for mask in masks.data]
-                if len(masks)
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)
-            )
+        for bboxes, masks, labels in zip(inputs.boxes, inputs.masks, inputs.labels):
+            rles = [encode_rle(mask) for mask in masks.data] if masks is not None and len(masks) > 0 else []
             target_info.append(
                 {
                     "boxes": bboxes.data,
@@ -387,7 +372,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
             )
         return {"preds": pred_info, "target": target_info}
 
-    def get_dummy_input(self, batch_size: int = 1) -> InstanceSegBatchDataEntity:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
         """Returns a dummy input for instance segmentation model."""
         if self.input_size is None:
             msg = f"Input size attribute is not set for {self.__class__}"
@@ -403,7 +388,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
                     ori_shape=img.shape,
                 ),
             )
-        return InstanceSegBatchDataEntity(batch_size, images, infos, bboxes=[], masks=[], labels=[], polygons=[])
+        return TorchDataBatch(batch_size, images, infos, bboxes=[], masks=[], labels=[], polygons=[])
 
 
 class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
@@ -447,7 +432,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
         self.model.explain_fn = self.get_explain_fn()
         self.model.get_results_from_head = self.get_results_from_head
 
-    def forward_explain(self, inputs: InstanceSegBatchDataEntity) -> InstanceSegBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredItem:
         """Model forward function."""
         if isinstance(inputs, OTXTileBatchDataEntity):
             return self.forward_tiles(inputs)
@@ -472,7 +457,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
     @torch.no_grad()
     def _forward_explain_inst_seg(
         self: TwoStageDetector,
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, Tensor]:
         """Forward func of the BaseDetector instance, which located in is in ExplainableOTXInstanceSegModel().model."""
@@ -501,7 +486,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
     def get_results_from_head(
         self,
         x: tuple[Tensor],
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> tuple[Tensor, Tensor, Tensor] | list[InstanceData] | list[dict[str, Tensor]]:
         """Get the results from the head of the instance segmentation model.
 
@@ -517,8 +502,8 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
         from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInst
 
         if isinstance(self, MaskRCNNTV):
-            ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]
-            img_shapes = [img_info.img_shape for img_info in entity.imgs_info]
+            ori_shapes = [img_info.ori_shape for img_info in entity.imgs_infos]
+            img_shapes = [img_info.img_shape for img_info in entity.imgs_infos]
             image_list = ImageList(entity.images, img_shapes)
             proposals, _ = self.model.rpn(image_list, x)
             detections, _ = self.model.roi_heads(
@@ -527,7 +512,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
                 image_list.image_sizes,
             )
             scale_factors = [
-                img_meta.scale_factor if img_meta.scale_factor else (1.0, 1.0) for img_meta in entity.imgs_info
+                img_meta.scale_factor if img_meta.scale_factor else (1.0, 1.0) for img_meta in entity.imgs_infos
             ]
             return self.model.postprocess(detections, ori_shapes, scale_factors)
 
@@ -582,7 +567,7 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
 
 
 class OVInstanceSegmentationModel(
-    OVModel[InstanceSegBatchDataEntity, InstanceSegBatchPredEntity],
+    OVModel[TorchDataBatch, TorchPredItem],
 ):
     """Instance segmentation model compatible for OpenVINO IR inference.
 
@@ -644,8 +629,8 @@ class OVInstanceSegmentationModel(
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: InstanceSegBatchDataEntity,
-    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredItem | OTXBatchLossEntity:
         # add label index
         bboxes = []
         scores = []
@@ -681,7 +666,7 @@ class OVInstanceSegmentationModel(
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return InstanceSegBatchPredEntity(
+            return TorchPredItem(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -694,7 +679,7 @@ class OVInstanceSegmentationModel(
                 feature_vector=predicted_f_vectors,
             )
 
-        return InstanceSegBatchPredEntity(
+        return TorchPredItem(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -707,16 +692,16 @@ class OVInstanceSegmentationModel(
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: InstanceSegBatchPredEntity,
-        inputs: InstanceSegBatchDataEntity,
+        preds: TorchPredItem,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
         This function will convert mask to RLE format and cache the ground truth for the current batch.
 
         Args:
-            preds (InstanceSegBatchPredEntity): Current batch predictions.
-            inputs (InstanceSegBatchDataEntity): Current batch ground-truth inputs.
+            preds (TorchPredItem): Current batch predictions.
+            inputs (TorchDataBatch): Current batch ground-truth inputs.
 
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
