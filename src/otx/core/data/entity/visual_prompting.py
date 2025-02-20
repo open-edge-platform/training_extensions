@@ -3,7 +3,7 @@
 
 """Module for OTX visual prompting data entities."""
 
-# type: ignore  # noqa: PGH003
+# type: ignore[override]
 
 from __future__ import annotations
 

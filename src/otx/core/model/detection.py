@@ -139,7 +139,7 @@ class OTXDetectionModel(OTXModel):
 
         return inputs
 
-    def _customize_outputs(  # type: ignore[override]
+    def _customize_outputs(
         self,
         outputs: list[InstanceData] | dict | None,
         inputs: DetBatchDataEntity,
@@ -420,7 +420,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-    def forward_explain(self, inputs: DetBatchDataEntity) -> DetBatchPredEntity:  # type: ignore[override]
+    def forward_explain(self, inputs: DetBatchDataEntity) -> DetBatchPredEntity:
         """Model forward function."""
         from otx.algo.explain.explain_algo import feature_vector_fn
 
@@ -604,7 +604,7 @@ class OVDetectionModel(OVModel):
         self,
         outputs: list[DetectionResult],
         inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:  # type: ignore[override]
+    ) -> DetBatchPredEntity | OTXBatchLossEntity:
         # add label index
         bboxes = []
         scores = []
