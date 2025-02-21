@@ -20,15 +20,11 @@ import torch
 from datumaro import Image
 
 from otx.core.config.explain import ExplainConfig
-from otx.core.data.entity.classification import (
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.types.explain import TargetExplainGroup
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.data.torch import TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
@@ -37,13 +33,7 @@ if TYPE_CHECKING:
     from otx.core.data.module import OTXDataModule
 
 ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
-OTXBatchPredEntitiesSupportXAI = (
-    MulticlassClsBatchPredEntity
-    | MultilabelClsBatchPredEntity
-    | HlabelClsBatchPredEntity
-    | DetBatchPredEntity
-    | InstanceSegBatchPredEntity
-)
+OTXBatchPredEntitiesSupportXAI = TorchPredBatch | DetBatchPredEntity | InstanceSegBatchPredEntity
 
 
 def process_saliency_maps_in_pred_entity(
@@ -57,41 +47,68 @@ def process_saliency_maps_in_pred_entity(
         predict_result_per_batch: OTXBatchPredEntitiesSupportXAI,
         label_info: LabelInfoTypes,
     ) -> OTXBatchPredEntitiesSupportXAI:
-        saliency_map: list[np.ndarray] = [
+        # Extract batch data with proper type handling
+        labels = predict_result_per_batch.labels if predict_result_per_batch.labels is not None else []
+        scores = predict_result_per_batch.scores if predict_result_per_batch.scores is not None else []
+
+        # TODO(ashwinvaidya17): Revisit this. This check is temporary.
+        if isinstance(predict_result_per_batch, TorchPredBatch):
+            # Handle TorchPredBatch case
+            if (
+                predict_result_per_batch.saliency_maps is None
+                or predict_result_per_batch.imgs_infos is None
+                or not all(predict_result_per_batch.imgs_infos)
+            ):
+                msg = "No valid saliency maps or image info found."
+                raise ValueError(msg)
+
+            saliency_maps = predict_result_per_batch.saliency_maps
+            imgs_infos = [info for info in predict_result_per_batch.imgs_infos if info is not None]
+        else:
+            # Handle other entity types
+            saliency_maps = predict_result_per_batch.saliency_map
+            imgs_infos = predict_result_per_batch.imgs_info
+
+        if not imgs_infos:  # Skip processing if no valid image info
+            msg = "No valid image info found."
+            raise ValueError(msg)
+
+        saliency_maps = [
             saliency_map.cpu().numpy() if isinstance(saliency_map, torch.Tensor) else saliency_map
-            for saliency_map in predict_result_per_batch.saliency_map
+            for saliency_map in saliency_maps
         ]
-        imgs_info = predict_result_per_batch.imgs_info
-        ori_img_shapes = [img_info.ori_shape for img_info in imgs_info]
-        paddings = [img_info.padding for img_info in imgs_info]
-        image_shape = imgs_info[0].img_shape
+        ori_img_shapes = [img_info.ori_shape for img_info in imgs_infos]
+        paddings = [img_info.padding for img_info in imgs_infos]
+        image_shape = imgs_infos[0].img_shape
         # Add additional conf threshold for saving maps with predicted classes,
         # since predictions can have less than 0.05 confidence
         conf_thr = explain_config.predicted_maps_conf_thr
 
         pred_labels = []
-        for labels, scores in zip(predict_result_per_batch.labels, predict_result_per_batch.scores):
+        for _labels, _scores in zip(labels, scores):
             if isinstance(label_info, HLabelInfo):
-                pred_labels.append(_convert_labels_from_hcls_format(labels, scores, label_info, conf_thr))
-            elif labels.shape == scores.shape:
+                pred_labels.append(_convert_labels_from_hcls_format(_labels, _scores, label_info, conf_thr))
+            elif _labels.shape == _scores.shape:
                 # Filter out predictions with scores less than explain_config.predicted_maps_conf_thr
-                pred_labels.append(labels[scores > conf_thr].tolist())
+                pred_labels.append(_labels[_scores > conf_thr].tolist())
             else:
                 # Tv_* models case with a single predicted label as a scalar tensor with size zero
-                labels_list = labels.tolist()
+                labels_list = _labels.tolist()
                 labels_list = [labels_list] if isinstance(labels_list, int) else labels_list
                 pred_labels.append(labels_list)
 
         processed_saliency_maps = process_saliency_maps(
-            saliency_map,
+            saliency_maps,
             explain_config,
             pred_labels,
             ori_img_shapes,
             image_shape,
             paddings,
         )
-
-        predict_result_per_batch.saliency_map = processed_saliency_maps
+        if isinstance(predict_result_per_batch, TorchPredBatch):
+            predict_result_per_batch.saliency_maps = processed_saliency_maps
+        else:
+            predict_result_per_batch.saliency_map = processed_saliency_maps
         return predict_result_per_batch
 
     return [_process(predict_result_per_batch, label_info) for predict_result_per_batch in predict_result]
@@ -190,14 +207,32 @@ def dump_saliency_maps(
     output_dir: Path,
     weight: float = 0.3,
 ) -> None:
-    """Sumps saliency maps (raw and with overlay)."""
+    """Dumps saliency maps (raw and with overlay)."""
     output_dir = output_dir / "saliency_map"
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # TODO(ashwinvaidya17): Revisit this. This is temporary.
     label_names = datamodule.label_info.label_names if hasattr(datamodule, "label_info") else None
     for predict_result_per_batch in predict_result:
-        saliency_map = predict_result_per_batch.saliency_map
-        imgs_info = predict_result_per_batch.imgs_info
+        if isinstance(predict_result_per_batch, TorchPredBatch):
+            if (
+                predict_result_per_batch.saliency_maps is None
+                or predict_result_per_batch.imgs_infos is None
+                or not all(predict_result_per_batch.imgs_infos)
+            ):
+                msg = "No valid saliency maps or image info found."
+                raise ValueError(msg)
+
+            saliency_map = predict_result_per_batch.saliency_maps
+            # Filter out None values and ensure type safety
+            imgs_info = [info for info in predict_result_per_batch.imgs_infos if info is not None]
+            if not imgs_info:
+                msg = "No valid image info found."
+                raise ValueError(msg)
+        else:
+            saliency_map = predict_result_per_batch.saliency_map
+            imgs_info = predict_result_per_batch.imgs_info
+
         for pred_index in range(len(saliency_map)):
             img_id = imgs_info[pred_index].img_idx
             img_data, image_save_name = _get_image_data_name(datamodule, img_id)

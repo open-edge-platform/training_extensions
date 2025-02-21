@@ -44,6 +44,7 @@ from otx.core.data.entity.tile import (
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 
@@ -317,7 +318,7 @@ class OTXTileDataset(OTXDataset):
         """Collate function from the original dataset."""
         return self._dataset.collate_fn
 
-    def _get_item_impl(self, index: int) -> OTXDataEntity | None:
+    def _get_item_impl(self, index: int) -> OTXDataEntity | TorchDataItem | None:
         """Get item implementation from the original dataset."""
         return self._dataset._get_item_impl(index)
 
