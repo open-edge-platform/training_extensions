@@ -10,10 +10,9 @@ import torch
 from omegaconf import DictConfig
 from torchvision import tv_tensors
 
-from otx.core.data.dataset.classification import MulticlassClsBatchDataEntity
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.classification import HlabelClsBatchDataEntity, MultilabelClsBatchDataEntity
 from otx.core.types.label import HLabelInfo
+from otx.data.torch import TorchDataBatch
 
 
 @pytest.fixture()
@@ -212,15 +211,14 @@ def fxt_hlabel_cifar() -> HLabelInfo:
 
 
 @pytest.fixture()
-def fxt_multiclass_cls_batch_data_entity() -> MulticlassClsBatchDataEntity:
+def fxt_multiclass_cls_batch_data_entity() -> TorchDataBatch:
     batch_size = 2
     random_tensor = torch.randn((batch_size, 3, 224, 224))
     tv_tensor = tv_tensors.Image(data=random_tensor)
     img_infos = [ImageInfo(img_idx=i, img_shape=(224, 224), ori_shape=(224, 224)) for i in range(batch_size)]
-    return MulticlassClsBatchDataEntity(
-        batch_size=2,
+    return TorchDataBatch(
         images=tv_tensor,
-        imgs_info=img_infos,
+        imgs_infos=img_infos,
         labels=[torch.tensor([0]), torch.tensor([1])],
     )
 
@@ -229,11 +227,10 @@ def fxt_multiclass_cls_batch_data_entity() -> MulticlassClsBatchDataEntity:
 def fxt_multilabel_cls_batch_data_entity(
     fxt_multiclass_cls_batch_data_entity,
     fxt_multilabel_labelinfo,
-) -> MultilabelClsBatchDataEntity:
-    return MultilabelClsBatchDataEntity(
-        batch_size=2,
+) -> TorchDataBatch:
+    return TorchDataBatch(
         images=fxt_multiclass_cls_batch_data_entity.images,
-        imgs_info=fxt_multiclass_cls_batch_data_entity.imgs_info,
+        imgs_infos=fxt_multiclass_cls_batch_data_entity.imgs_infos,
         labels=[
             torch.nn.functional.one_hot(label, num_classes=fxt_multilabel_labelinfo.num_classes).flatten()
             for label in fxt_multiclass_cls_batch_data_entity.labels
@@ -242,8 +239,8 @@ def fxt_multilabel_cls_batch_data_entity(
 
 
 @pytest.fixture()
-def fxt_hlabel_cls_batch_data_entity(fxt_multilabel_cls_batch_data_entity) -> HlabelClsBatchDataEntity:
-    return HlabelClsBatchDataEntity(**asdict(fxt_multilabel_cls_batch_data_entity))
+def fxt_hlabel_cls_batch_data_entity(fxt_multilabel_cls_batch_data_entity) -> TorchDataBatch:
+    return TorchDataBatch(**asdict(fxt_multilabel_cls_batch_data_entity))
 
 
 @pytest.fixture()

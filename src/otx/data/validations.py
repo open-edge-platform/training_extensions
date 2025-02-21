@@ -179,7 +179,7 @@ class ValidateBatchMixin:
         if all(label is None for label in label_batch):
             return []
         if not isinstance(label_batch, list) or not isinstance(label_batch[0], torch.Tensor):
-            msg = "Label batch must be a list of torch tensors"
+            msg = f"Label batch must be a list of torch tensors. Got {type(label_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if label_batch[0].dtype != torch.long:
@@ -196,7 +196,7 @@ class ValidateBatchMixin:
         if all(score is None for score in scores_batch):
             return []
         if not isinstance(scores_batch, list) or not isinstance(scores_batch[0], torch.Tensor):
-            msg = "Scores batch must be a list of torch tensors"
+            msg = f"Scores batch must be a list of torch tensors. Got {type(scores_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if scores_batch[0].dtype != torch.float32:
@@ -211,7 +211,7 @@ class ValidateBatchMixin:
     def _feature_vectors_validator(feature_vector_batch: list[torch.Tensor]) -> list[torch.Tensor]:
         """Validate the feature vector."""
         if not isinstance(feature_vector_batch, list) or not isinstance(feature_vector_batch[0], torch.Tensor):
-            msg = "Feature vector batch must be a list of torch tensors"
+            msg = f"Feature vector batch must be a list of torch tensors. Got {type(feature_vector_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if feature_vector_batch[0].dtype != torch.float32:
@@ -228,7 +228,7 @@ class ValidateBatchMixin:
         if all(saliency_map is None for saliency_map in saliency_map_batch):
             return []
         if not isinstance(saliency_map_batch, list) or not isinstance(saliency_map_batch[0], torch.Tensor):
-            msg = "Saliency map batch must be a list of torch tensors"
+            msg = f"Saliency map batch must be a list of torch tensors. Got {type(saliency_map_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if saliency_map_batch[0].dtype != torch.float32:
@@ -245,7 +245,7 @@ class ValidateBatchMixin:
         if all(mask is None for mask in masks_batch):
             return []
         if not isinstance(masks_batch, list) or not isinstance(masks_batch[0], torch.Tensor):
-            msg = "Masks batch must be a list of torch tensors"
+            msg = f"Masks batch must be a list of torch tensors. Got {type(masks_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if masks_batch[0].dtype != torch.bool:
@@ -262,7 +262,7 @@ class ValidateBatchMixin:
         if all(box is None for box in boxes_batch):
             return []
         if not isinstance(boxes_batch, list) or not isinstance(boxes_batch[0], torch.Tensor):
-            msg = "Boxes batch must be a list of torch tensors"
+            msg = f"Boxes batch must be a list of torch tensors. Got {type(boxes_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if boxes_batch[0].dtype != torch.float32:

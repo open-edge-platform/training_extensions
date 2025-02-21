@@ -19,14 +19,6 @@ from otx.algo.classification.heads import (
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
-from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.metrics.accuracy import HLabelClsMetricCallable, MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.classification import (
@@ -36,6 +28,7 @@ from otx.core.model.classification import (
 )
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -101,18 +94,17 @@ class TVModelForMulticlassCls(OTXMulticlassClsModel):
             loss=nn.CrossEntropyLoss(),
         )
 
-    def forward_explain(self, inputs: MulticlassClsBatchDataEntity) -> MulticlassClsBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
+        outputs = self.model(inputs.images, mode="explain")
 
-        return MulticlassClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
+        return TorchPredBatch(
             images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
+            imgs_infos=inputs.imgs_infos,
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
@@ -181,18 +173,17 @@ class TVModelForMultilabelCls(OTXMultilabelClsModel):
             loss_scale=7.0,
         )
 
-    def forward_explain(self, inputs: MultilabelClsBatchDataEntity) -> MultilabelClsBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
+        outputs = self.model(inputs.images, mode="explain")
 
-        return MultilabelClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
+        return TorchPredBatch(
             images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
+            imgs_infos=inputs.imgs_infos,
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
@@ -258,18 +249,17 @@ class TVModelForHLabelCls(OTXHlabelClsModel):
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )
 
-    def forward_explain(self, inputs: HlabelClsBatchDataEntity) -> HlabelClsBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
+        outputs = self.model(inputs.images, mode="explain")
 
-        return HlabelClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
+        return TorchPredBatch(
             images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
+            imgs_infos=inputs.imgs_infos,
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:

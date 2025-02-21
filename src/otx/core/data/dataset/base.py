@@ -23,12 +23,12 @@ from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo, NullLabelInfo
-from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
     from datumaro import DatasetSubset, Image
 
     from otx.core.data.mem_cache import MemCacheHandlerBase
+    from otx.data.torch import TorchDataItem
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 

@@ -104,10 +104,10 @@ class OTXMulticlassClsModel(OTXModel):
         if self.explain_mode:
             return TorchPredBatch(
                 images=inputs.images,
-                labels=outputs["labels"],
-                scores=outputs["scores"],
-                saliency_maps=outputs["saliency_map"],
-                feature_vectors=outputs["feature_vector"],
+                labels=list(outputs["labels"]),
+                scores=list(outputs["scores"]),
+                saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
 
         # To list, batch-wise
@@ -247,10 +247,10 @@ class OTXMultilabelClsModel(OTXModel):
         if self.explain_mode:
             return TorchPredBatch(
                 images=inputs.images,
-                labels=outputs["labels"],
-                scores=outputs["scores"],
-                saliency_maps=outputs["saliency_map"],
-                feature_vectors=outputs["feature_vector"],
+                labels=list(outputs["labels"]),
+                scores=list(outputs["scores"]),
+                saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
 
         # To list, batch-wise
@@ -396,8 +396,8 @@ class OTXHlabelClsModel(OTXModel):
                 images=inputs.images,
                 labels=list(labels),
                 scores=list(scores),
-                saliency_maps=outputs["saliency_map"],
-                feature_vectors=outputs["feature_vector"],
+                saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
 
         return TorchPredBatch(

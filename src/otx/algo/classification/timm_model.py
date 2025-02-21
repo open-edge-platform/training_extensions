@@ -106,14 +106,14 @@ class TimmModelForMulticlassCls(OTXMulticlassClsModel):
 
     def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=torch.vstack(inputs.images), mode="explain")
+        outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
             images=inputs.images,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_maps=outputs["saliency_map"],
-            feature_vectors=outputs["feature_vector"],
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
@@ -195,14 +195,14 @@ class TimmModelForMultilabelCls(OTXMultilabelClsModel):
 
     def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=torch.vstack(inputs.images), mode="explain")
+        outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
             images=inputs.images,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_maps=outputs["saliency_map"],
-            feature_vectors=outputs["feature_vector"],
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
@@ -284,14 +284,14 @@ class TimmModelForHLabelCls(OTXHlabelClsModel):
 
     def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=torch.vstack(inputs.images), mode="explain")
+        outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
             images=inputs.images,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_maps=outputs["saliency_map"],
-            feature_vectors=outputs["feature_vector"],
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:

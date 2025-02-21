@@ -10,8 +10,6 @@ from typing import TYPE_CHECKING
 
 import torch
 
-from otx.core.data.entity.base import ImageInfo
-
 from .validations import (
     ValidateBatchMixin,
     ValidateItemMixin,
@@ -19,6 +17,8 @@ from .validations import (
 
 if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
+
+    from otx.core.data.entity.base import ImageInfo
 
 
 @dataclass
@@ -83,3 +83,12 @@ class TorchPredBatch(ValidateBatchMixin):
     masks: list[torch.Tensor] | None = None
     boxes: list[torch.Tensor] | None = None
     imgs_infos: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+
+    @property
+    def has_xai_outputs(self) -> bool:
+        """Check if the batch has XAI outputs.
+
+        Necessary for compatibility with tests.
+        """
+        # TODO(ashwinvaidya17): the tests should directly refer to saliency maps.
+        return self.saliency_maps is not None and len(self.saliency_maps) > 0
