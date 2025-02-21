@@ -27,6 +27,20 @@ description: Configuration for Uflow
 header: Configuration for Uflow
 id: ""
 learning_parameters:
+  enable_early_stopping:
+    affects_outcome_of: TRAINING
+    default_value: false
+    description: Early exit from training when validation accuracy isn't changed or decreased for several epochs.
+    editable: false
+    header: Enable early stopping of the training
+    type: BOOLEAN
+    ui_rules:
+      action: DISABLE_EDITING
+      operator: AND
+      rules: []
+      type: UI_RULES
+    visible_in_ui: true
+    warning: null
   backbone:
     affects_outcome_of: NONE
     default_value: resnet18
