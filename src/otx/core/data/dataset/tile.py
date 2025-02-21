@@ -44,7 +44,6 @@ from otx.core.data.entity.tile import (
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
-from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 

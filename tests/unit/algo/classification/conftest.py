@@ -219,7 +219,7 @@ def fxt_multiclass_cls_batch_data_entity() -> TorchDataBatch:
     return TorchDataBatch(
         batch_size=batch_size,
         images=tv_tensor,
-        imgs_info=img_infos,
+        imgs_infos=img_infos,
         labels=[torch.tensor([0]), torch.tensor([1])],
     )
 
@@ -232,7 +232,7 @@ def fxt_multilabel_cls_batch_data_entity(
     return TorchDataBatch(
         batch_size=fxt_multiclass_cls_batch_data_entity.batch_size,
         images=fxt_multiclass_cls_batch_data_entity.images,
-        imgs_info=fxt_multiclass_cls_batch_data_entity.imgs_info,
+        imgs_infos=fxt_multiclass_cls_batch_data_entity.imgs_infos,
         labels=[
             torch.nn.functional.one_hot(label, num_classes=fxt_multilabel_labelinfo.num_classes).flatten()
             for label in fxt_multiclass_cls_batch_data_entity.labels
