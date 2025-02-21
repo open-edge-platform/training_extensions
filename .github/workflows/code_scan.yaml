@@ -1,4 +1,4 @@
-name: Code Scanning
+name: Security scan
 
 on:
   workflow_dispatch: # run on request (no need for PR)
@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   Trivy-Scan-Vuln:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       security-events: write
     steps:
@@ -43,12 +43,20 @@ jobs:
         with:
           sarif_file: "trivy-results-vuln.sarif"
 
+      - name: Run Trivy Scan (spdx)
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        with:
+          scan-type: fs
+          format: "spdx-json"
+          scan-ref: requirements.txt
+          output: trivy-results-spdx.json
+
       - name: Upload Trivy results artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: trivy-vuln-results
-          path: "${{ github.workspace }}/trivy-results-vuln.sarif"
+          path: "${{ github.workspace }}/trivy-results-*"
           retention-days: 7
 
       - name: Upload deps list
@@ -60,7 +68,7 @@ jobs:
           retention-days: 7
 
   Trivy-Scan-Misconfig:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       security-events: write
     steps:
@@ -91,7 +99,7 @@ jobs:
           retention-days: 7
 
   Bandit:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       security-events: write
     steps:
@@ -124,62 +132,10 @@ jobs:
           path: .tox/bandit-results.sarif
           retention-days: 7
 
-  CodeQL:
-    name: Analyze (${{ matrix.language }})
-    runs-on: ubuntu-22.04
-    permissions:
-      # required for all workflows
-      security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: python
-            build-mode: none
-          - language: actions # to scan workflows
-            build-mode: none
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169 # v3.28.0
-        with:
-          category: "/language:${{matrix.language}}"
-
-      - name: Generate CodeQL Report
-        uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          template: report
-          outputDir: codeql-${{ matrix.language }}
-
-      - name: Rename Report
-        shell: bash
-        continue-on-error: true
-        run: |
-          cd codeql-${{ matrix.language }}
-          mv "report.pdf" "codeql-${{ matrix.language }}.pdf"
-
-      - name: Upload Report
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
-        with:
-          name: codeql-${{ matrix.language }}-results
-          path: codeql-${{ matrix.language }}/*.pdf
-          retention-days: 7
-
   Summarize:
-    needs: [Trivy-Scan-Vuln, Trivy-Scan-Misconfig, Bandit, CodeQL]
+    needs: [Trivy-Scan-Vuln, Trivy-Scan-Misconfig, Bandit]
     if: always()
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       # Create directory first
       - name: Create results directory
