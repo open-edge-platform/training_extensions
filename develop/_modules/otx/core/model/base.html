@@ -267,7 +267,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">openvino</span>
@@ -345,7 +345,7 @@
 
 <div class="viewcode-block" id="OTXModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OTXModel</span><span class="p">(</span><span class="n">LightningModule</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXModel</span><span class="p">(</span><span class="n">LightningModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the models used in OTX.</span>
 
 <span class="sd">    Args:</span>
@@ -901,7 +901,7 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.forward_tiles">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward_tiles</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">],</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function for tile task.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
@@ -1167,7 +1167,7 @@
 
 <div class="viewcode-block" id="OTXModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchDataEntity</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchDataEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a dummy input, suitable for launching forward() on it.</span>
 
 <span class="sd">        Args:</span>
@@ -1205,7 +1205,7 @@
 
 <div class="viewcode-block" id="OVModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OVModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OVModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the OpenVINO model.</span>
 
 <span class="sd">    This is a base class representing interface for interacting with OpenVINO</span>

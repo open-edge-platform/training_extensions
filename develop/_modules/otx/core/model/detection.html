@@ -257,6 +257,8 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="sd">&quot;&quot;&quot;Class definition for detection model entity used in OTX.&quot;&quot;&quot;</span>
 
+<span class="c1"># type: ignore[override]</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">log</span>
@@ -295,7 +297,7 @@
 
 <div class="viewcode-block" id="OTXDetectionModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection.html#otx.core.model.detection.OTXDetectionModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OTXDetectionModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">DetBatchDataEntity</span><span class="p">,</span> <span class="n">DetBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXDetectionModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the detection models used in OTX.&quot;&quot;&quot;</span>
 
     <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
@@ -400,7 +402,7 @@
 
         <span class="k">return</span> <span class="n">inputs</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceData</span><span class="p">]</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">DetBatchDataEntity</span><span class="p">,</span>
@@ -497,7 +499,7 @@
 
 <div class="viewcode-block" id="OTXDetectionModel.forward_tiles">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection.html#otx.core.model.detection.OTXDetectionModel.forward_tiles">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">[</span><span class="n">DetBatchDataEntity</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DetBatchPredEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DetBatchPredEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unpack detection tiles.</span>
 
 <span class="sd">        Args:</span>
@@ -836,7 +838,7 @@
 
 <div class="viewcode-block" id="OVDetectionModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection.html#otx.core.model.detection.OVDetectionModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OVDetectionModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">DetBatchDataEntity</span><span class="p">,</span> <span class="n">DetBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVDetectionModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Object detection model compatible for OpenVINO IR inference.</span>
 
 <span class="sd">    It can consume OpenVINO IR model path or model name from Intel OMZ repository</span>

@@ -397,7 +397,7 @@
 
 <div class="viewcode-block" id="OTXVisualPromptingModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.visual_prompting.html#otx.core.model.visual_prompting.OTXVisualPromptingModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OTXVisualPromptingModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">VisualPromptingBatchDataEntity</span><span class="p">,</span> <span class="n">VisualPromptingBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXVisualPromptingModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the visual prompting models used in OTX.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -590,10 +590,7 @@
 <div class="viewcode-block" id="OVVisualPromptingModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.visual_prompting.html#otx.core.model.visual_prompting.OVVisualPromptingModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OVVisualPromptingModel</span><span class="p">(</span>
-    <span class="n">OVModel</span><span class="p">[</span>
-        <span class="n">VisualPromptingBatchDataEntity</span><span class="p">,</span>
-        <span class="n">VisualPromptingBatchPredEntity</span><span class="p">,</span>
-    <span class="p">],</span>
+    <span class="n">OVModel</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Visual prompting model compatible for OpenVINO IR inference.</span>
 

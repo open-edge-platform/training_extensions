@@ -299,7 +299,7 @@
 
 <div class="viewcode-block" id="OTXMulticlassClsModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMulticlassClsModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OTXMulticlassClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXMulticlassClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the classification models used in OTX.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -456,7 +456,7 @@
 
 <div class="viewcode-block" id="OTXMultilabelClsModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMultilabelClsModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OTXMultilabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXMultilabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-label classification models used in OTX.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -604,7 +604,7 @@
 
 <div class="viewcode-block" id="OTXHlabelClsModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXHlabelClsModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OTXHlabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">[</span><span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXHlabelClsModel</span><span class="p">(</span><span class="n">OTXModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;H-label classification models used in OTX.&quot;&quot;&quot;</span>
 
     <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span>
@@ -779,7 +779,7 @@
 <div class="viewcode-block" id="OVMulticlassClassificationModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OVMulticlassClassificationModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OVMulticlassClassificationModel</span><span class="p">(</span>
-    <span class="n">OVModel</span><span class="p">[</span><span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">],</span>
+    <span class="n">OVModel</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Classification model compatible for OpenVINO IR inference.</span>
 
@@ -856,7 +856,7 @@
 
 <div class="viewcode-block" id="OVMultilabelClassificationModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OVMultilabelClassificationModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OVMultilabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVMultilabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Multilabel classification model compatible for OpenVINO IR inference.</span>
 
 <span class="sd">    It can consume OpenVINO IR model path or model name from Intel OMZ repository</span>
@@ -933,7 +933,7 @@
 
 <div class="viewcode-block" id="OVHlabelClassificationModel">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OVHlabelClassificationModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OVHlabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">[</span><span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">]):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVHlabelClassificationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Hierarchical classification model compatible for OpenVINO IR inference.</span>
 
 <span class="sd">    It can consume OpenVINO IR model path or model name from Intel OMZ repository</span>
