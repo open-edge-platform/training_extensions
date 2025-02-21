@@ -3,6 +3,8 @@
 #
 """Module for OTX detection data entities."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -56,7 +58,7 @@ class KeypointDetPredEntity(OTXPredEntity, KeypointDetDataEntity):
 
 
 @dataclass
-class KeypointDetBatchDataEntity(OTXBatchDataEntity[KeypointDetDataEntity]):
+class KeypointDetBatchDataEntity(OTXBatchDataEntity):
     """Data entity for keypoint detection task.
 
     :param bboxes: A list of bbox annotations as top-left-bottom-right

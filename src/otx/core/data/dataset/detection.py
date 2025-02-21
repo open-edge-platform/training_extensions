@@ -19,7 +19,7 @@ from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from .base import OTXDataset
 
 
-class OTXDetectionDataset(OTXDataset[DetDataEntity]):
+class OTXDetectionDataset(OTXDataset):
     """OTXDataset class for detection task."""
 
     def _get_item_impl(self, index: int) -> DetDataEntity | None:

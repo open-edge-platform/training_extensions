@@ -26,7 +26,7 @@ from otx.core.data.entity.classification import (
 from otx.core.types.label import HLabelInfo
 
 
-class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
+class OTXMulticlassClsDataset(OTXDataset):
     """OTXDataset class for multi-class classification task."""
 
     def _get_item_impl(self, index: int) -> MulticlassClsDataEntity | None:
@@ -70,7 +70,7 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
         return partial(MulticlassClsBatchDataEntity.collate_fn, stack_images=self.stack_images)
 
 
-class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
+class OTXMultilabelClsDataset(OTXDataset):
     """OTXDataset class for multi-label classification task."""
 
     def __init__(self, **kwargs) -> None:
@@ -127,7 +127,7 @@ class OTXMultilabelClsDataset(OTXDataset[MultilabelClsDataEntity]):
         return partial(MultilabelClsBatchDataEntity.collate_fn, stack_images=self.stack_images)
 
 
-class OTXHlabelClsDataset(OTXDataset[HlabelClsDataEntity]):
+class OTXHlabelClsDataset(OTXDataset):
     """OTXDataset class for H-label classification task."""
 
     def __init__(self, **kwargs) -> None:

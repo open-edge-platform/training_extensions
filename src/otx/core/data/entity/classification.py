@@ -43,7 +43,7 @@ class MulticlassClsPredEntity(OTXPredEntity, MulticlassClsDataEntity):
 
 
 @dataclass
-class MulticlassClsBatchDataEntity(OTXBatchDataEntity[MulticlassClsDataEntity]):
+class MulticlassClsBatchDataEntity(OTXBatchDataEntity):
     """Data entity for multi-class classification task.
 
     :param labels: A list of bbox labels as integer indices
@@ -103,7 +103,7 @@ class MultilabelClsPredEntity(OTXPredEntity, MultilabelClsDataEntity):
 
 
 @dataclass
-class MultilabelClsBatchDataEntity(OTXBatchDataEntity[MultilabelClsDataEntity]):
+class MultilabelClsBatchDataEntity(OTXBatchDataEntity):
     """Data entity for multi-label classification task.
 
     :param labels: A list of labels as integer indices
@@ -164,7 +164,7 @@ class HlabelClsPredEntity(OTXPredEntity, HlabelClsDataEntity):
 
 
 @dataclass
-class HlabelClsBatchDataEntity(OTXBatchDataEntity[HlabelClsDataEntity]):
+class HlabelClsBatchDataEntity(OTXBatchDataEntity):
     """Data entity for H-label classification task.
 
     :param labels: A list of labels as integer indices

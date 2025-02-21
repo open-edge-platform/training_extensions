@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from torch import nn
 
 
-class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDetBatchPredEntity]):
+class OTXKeypointDetectionModel(OTXModel):
     """Base class for the keypoint detection models used in OTX."""
 
     def __init__(
@@ -193,7 +193,7 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
         )
 
 
-class OVKeypointDetectionModel(OVModel[KeypointDetBatchDataEntity, KeypointDetBatchPredEntity]):
+class OVKeypointDetectionModel(OVModel):
     """Keypoint detection model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository

@@ -3,6 +3,8 @@
 #
 """Class definition for detection model entity used in OTX."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 import copy
@@ -38,7 +40,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
+class OTXSegmentationModel(OTXModel):
     """Base class for the semantic segmentation models used in OTX."""
 
     mean: ClassVar[tuple[float, float, float]] = (123.675, 116.28, 103.53)
@@ -204,7 +206,7 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
 
         raise TypeError(label_info)
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity[SegBatchDataEntity]) -> SegBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> SegBatchPredEntity:
         """Unpack segmentation tiles.
 
         Args:
@@ -298,7 +300,7 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
         return SegBatchDataEntity(batch_size, images, infos, masks=[])
 
 
-class OVSegmentationModel(OVModel[SegBatchDataEntity, SegBatchPredEntity]):
+class OVSegmentationModel(OVModel):
     """Semantic segmentation model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
