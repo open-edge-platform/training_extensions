@@ -5,12 +5,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from otx.algo.common.backbones import CSPNeXt
 from otx.algo.keypoint_detection.detectors.topdown import TopdownPoseEstimator
 from otx.algo.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from otx.algo.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
+from otx.algo.utils.mmengine_utils import load_checkpoint
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.pck import PCKMeasureCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -18,6 +19,7 @@ from otx.core.model.keypoint_detection import OTXKeypointDetectionModel
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torch import nn
 
     from otx.core.exporter.base import OTXModelExporter
     from otx.core.metrics import MetricCallable
@@ -34,8 +36,8 @@ class RTMPose(OTXKeypointDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        model_name: Literal["rtmpose_tiny"],
         data_input_params: DataInputParams,
+        model_name: str = "rtmpose_tiny",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = PCKMeasureCallable,
@@ -51,7 +53,8 @@ class RTMPose(OTXKeypointDetectionModel):
             torch_compile=torch_compile,
         )
 
-    def _build_model(self, num_classes: int) -> RTMPose:
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         backbone = CSPNeXt(model_name=self.model_name)
         head = RTMCCHead(
             out_channels=num_classes,
@@ -82,10 +85,15 @@ class RTMPose(OTXKeypointDetectionModel):
             },
         )
 
-        return TopdownPoseEstimator(
+        model = TopdownPoseEstimator(
             backbone=backbone,
             head=head,
         )
+        model.init_weights()
+        if self.load_from is not None:
+            load_checkpoint(model, self.load_from, map_location="cpu")
+
+        return model
 
     @property
     def _exporter(self) -> OTXModelExporter:
