@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class EfficientNetHLabel(OTXHlabelClsModel):
+class EfficientNetHLabelCls(OTXHlabelClsModel):
     """EfficientNet Model for hierarchical label classification task."""
 
     def __init__(

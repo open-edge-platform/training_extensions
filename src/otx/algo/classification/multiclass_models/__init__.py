@@ -3,10 +3,16 @@
 #
 """multiclass classification models package."""
 
+from .efficientnet import EfficientNetMulticlassCls
+from .mobilenet_v3 import MobileNetV3MulticlassCls
+from .timm_model import TimmModelMulticlassCls
+from .torchvision_model import TVModelMulticlassCls
+from .vit import VisionTransformerMulticlassCls
+
 __all__ = [
-    "efficientnet",
-    "mobilenet_v3",
-    "timm_model",
-    "torchvision_model",
-    "vit",
+    "EfficientNetMulticlassCls",
+    "MobileNetV3MulticlassCls",
+    "TimmModelMulticlassCls",
+    "TVModelMulticlassCls",
+    "VisionTransformerMulticlassCls",
 ]

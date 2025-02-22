@@ -1,5 +1,5 @@
 model:
-  class_path: otx.algo.classification.hlabel_models.torchvision_model.TVModelForHLabelCls
+  class_path: otx.algo.classification.hlabel_models.torchvision_model.TVModelHLabelCls
   init_args:
     model_name: mobilenet_v3_small
     label_info: 1000

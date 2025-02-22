@@ -200,7 +200,7 @@ class OTXInstanceSegModel(OTXModel):
             labels=labels,
         )
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity[InstanceSegBatchDataEntity]) -> InstanceSegBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> InstanceSegBatchPredEntity:
         """Unpack instance segmentation tiles.
 
         Args:

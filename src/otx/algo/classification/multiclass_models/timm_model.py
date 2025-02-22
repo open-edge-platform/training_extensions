@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class TimmModelForMulticlassCls(OTXMulticlassClsModel):
+class TimmModelMulticlassCls(OTXMulticlassClsModel):
     """TimmModel for multi-class classification task.
 
     Args:

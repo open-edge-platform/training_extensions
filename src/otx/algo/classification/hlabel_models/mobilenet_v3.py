@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
+class MobileNetV3HLabelCls(OTXHlabelClsModel):
     """MobileNetV3 Model for hierarchical label classification task."""
 
     def __init__(

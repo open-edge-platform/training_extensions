@@ -3,10 +3,16 @@
 #
 """hlabel classification models package."""
 
+from .efficientnet import EfficientNetHLabelCls
+from .mobilenet_v3 import MobileNetV3HLabelCls
+from .timm_model import TimmModelHLabelCls
+from .torchvision_model import TVModelHLabelCls
+from .vit import VisionTransformerHLabelCls
+
 __all__ = [
-    "efficientnet",
-    "mobilenet_v3",
-    "timm_model",
-    "torchvision_model",
-    "vit",
+    "EfficientNetHLabelCls",
+    "MobileNetV3HLabelCls",
+    "TimmModelHLabelCls",
+    "TVModelHLabelCls",
+    "VisionTransformerHLabelCls",
 ]

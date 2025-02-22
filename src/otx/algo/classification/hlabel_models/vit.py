@@ -50,7 +50,7 @@ pretrained_urls = {
 }
 
 
-class VisionTransformerForHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
+class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
     """VisionTransformerForHLabelCls is a model designed for hierarchical label classification using ViT architecture.
 
     Args:

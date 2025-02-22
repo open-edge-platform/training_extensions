@@ -52,7 +52,7 @@ pretrained_urls = {
 }
 
 
-class VisionTransformerForMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelClsModel):
+class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelClsModel):
     """DeitTiny Model for multi-class classification task."""
 
     def __init__(

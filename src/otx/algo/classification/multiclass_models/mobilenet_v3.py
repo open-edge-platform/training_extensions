@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class MobileNetV3ForMulticlassCls(OTXMulticlassClsModel):
-    """MobileNetV3ForMulticlassCls is a class that represents a MobileNetV3 model for multiclass classification.
+class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
+    """MobileNetV3MulticlassCls is a class that represents a MobileNetV3 model for multiclass classification.
 
     Args:
         label_info (LabelInfoTypes): The label information.

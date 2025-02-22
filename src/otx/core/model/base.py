@@ -12,7 +12,7 @@ import json
 import logging
 import warnings
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Literal, NamedTuple, Sequence
 
 import numpy as np
 import openvino

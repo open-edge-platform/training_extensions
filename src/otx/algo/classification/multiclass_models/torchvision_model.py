@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class TVModelForMulticlassCls(OTXMulticlassClsModel):
+class TVModelMulticlassCls(OTXMulticlassClsModel):
     """Torchvision model for multiclass classification.
 
     Args:

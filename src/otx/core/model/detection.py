@@ -206,7 +206,7 @@ class OTXDetectionModel(OTXModel):
             labels=labels,
         )
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity[DetBatchDataEntity]) -> DetBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> DetBatchPredEntity:
         """Unpack detection tiles.
 
         Args:

@@ -196,7 +196,7 @@ class ForwardExplainMixInForViT:
         return self.model(images=image, mode="tensor")
 
 
-class VisionTransformerForMulticlassCls(ForwardExplainMixInForViT, OTXMulticlassClsModel):
+class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, OTXMulticlassClsModel):
     """DeitTiny Model for multi-class classification task."""
 
     model: ImageClassifier

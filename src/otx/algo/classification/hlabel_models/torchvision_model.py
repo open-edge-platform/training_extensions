@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class TVModelForHLabelCls(OTXHlabelClsModel):
+class TVModelHLabelCls(OTXHlabelClsModel):
     """TVModelForHLabelCls class represents a Torchvision model for hierarchical label classification.
 
     Args:

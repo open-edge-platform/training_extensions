@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class TimmModelForHLabelCls(OTXHlabelClsModel):
+class TimmModelHLabelCls(OTXHlabelClsModel):
     """Timm Model for hierarchical label classification task.
 
     Args:

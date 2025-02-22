@@ -33,8 +33,19 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class MobileNetV3ForMultilabelCls(OTXMultilabelClsModel):
-    """MobileNetV3 Model for multi-class classification task."""
+class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
+    """MobileNetV3 Model for multi-class classification task.
+
+    Args:
+        label_info (LabelInfoTypes): The label information.
+        data_input_params (DataInputParams): The data input parameters such as input size and normalization.
+        model_name (str, optional): The model name. Defaults to "mobilenetv3_large".
+        optimizer (OptimizerCallable, optional): The optimizer callable. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): The learning rate scheduler callable.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): The metric callable. Defaults to MultiClassClsMetricCallable.
+        torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
+    """
 
     def __init__(
         self,

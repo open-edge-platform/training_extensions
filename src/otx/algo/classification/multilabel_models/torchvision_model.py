@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class TVModelForMultilabelCls(OTXMultilabelClsModel):
+class TVModelMultilabelCls(OTXMultilabelClsModel):
     """Torchvision model for multilabel classification.
 
     Args:
@@ -47,11 +47,6 @@ class TVModelForMultilabelCls(OTXMultilabelClsModel):
         metric (MetricCallable, optional): Metric for model evaluation. Defaults to MultiLabelClsMetricCallable.
         torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
         input_size (tuple[int, int], optional): Input size of the images. Defaults to (224, 224).
-
-    Attributes:
-        backbone (TVModelType): Backbone model for feature extraction.
-        pretrained (bool): Whether to use pretrained weights.
-        input_size (tuple[int, int]): Input size of the images.
     """
 
     def __init__(

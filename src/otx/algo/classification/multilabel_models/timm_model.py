@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class TimmModelForMultilabelCls(OTXMultilabelClsModel):
+class TimmModelMultilabelCls(OTXMultilabelClsModel):
     """TimmModel for multi-label classification task.
 
     Args:
@@ -48,17 +48,6 @@ class TimmModelForMultilabelCls(OTXMultilabelClsModel):
         metric (MetricCallable, optional): The metric callable for evaluating the model.
             Defaults to MultiLabelClsMetricCallable.
         torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
-
-    Example:
-        1. API
-            >>> model = TimmModelForMultilabelCls(
-            ...     model_name="tf_efficientnetv2_s.in21k",
-            ...     label_info=<Number-of-classes>,
-            ... )
-        2. CLI
-            >>> otx train \
-            ... --model otx.algo.classification.timm_model.TimmModelForMultilabelCls \
-            ... --model.model_name tf_efficientnetv2_s.in21k
     """
 
     def __init__(

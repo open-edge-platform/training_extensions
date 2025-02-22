@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class EfficientNetForMultilabelCls(OTXMultilabelClsModel):
+class EfficientNetMultilabelCls(OTXMultilabelClsModel):
     """EfficientNet Model for multi-label classification task."""
 
     def __init__(

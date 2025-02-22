@@ -30,8 +30,22 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class EfficientNetForMulticlassCls(OTXMulticlassClsModel):
-    """EfficientNet Model for multi-class classification task."""
+class EfficientNetMulticlassCls(OTXMulticlassClsModel):
+    """EfficientNet Model for multi-class classification task.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the EfficientNet model variant.
+            Defaults to "efficientnet_b0".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer.
+            Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the evaluation metric.
+            Defaults to MultiClassClsMetricCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+    """
 
     def __init__(
         self,
