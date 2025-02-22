@@ -3,6 +3,8 @@
 #
 """Class definition for detection model entity used in OTX."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 import copy
@@ -39,18 +41,19 @@ if TYPE_CHECKING:
     from otx.core.model.base import DataInputParams
 
 
-class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
+class OTXSegmentationModel(OTXModel):
     """Semantic Segmentation model used in OTX.
 
     Args:
-    label_info (LabelInfoTypes): Information about the hierarchical labels.
-    data_input_params (DataInputParams): Parameters for data input.
-    model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
-    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
-    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
-    Defaults to DefaultSchedulerCallable.
-    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
-    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        label_info (LabelInfoTypes): Information about the hierarchical labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
 
     def __init__(
@@ -191,7 +194,7 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
 
         raise TypeError(label_info)
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity[SegBatchDataEntity]) -> SegBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> SegBatchPredEntity:
         """Unpack segmentation tiles.
 
         Args:
@@ -281,7 +284,7 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
         return SegBatchDataEntity(batch_size, images, infos, masks=[])
 
 
-class OVSegmentationModel(OVModel[SegBatchDataEntity, SegBatchPredEntity]):
+class OVSegmentationModel(OVModel):
     """Semantic segmentation model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository

@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEntity]):
+class OTXHlabelClsModel(OTXModel):
     """H-label classification models used in OTX.
 
     Args:
@@ -223,7 +223,7 @@ class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEnt
         return self.model(images=image, mode="tensor")
 
 
-class OVHlabelClassificationModel(OVModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEntity]):
+class OVHlabelClassificationModel(OVModel):
     """Hierarchical classification model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository

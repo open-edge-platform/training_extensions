@@ -8,7 +8,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field, fields
-from typing import TYPE_CHECKING, Any, Dict, Generic, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Iterator
 
 import torch
 import torchvision.transforms.v2.functional as F  # noqa: N812
@@ -23,6 +23,16 @@ from otx.core.types.task import OTXTaskType
 if TYPE_CHECKING:
     import decord
     import numpy as np
+
+# Temporary for transition
+T_OTXPredEntity = Any
+T_OTXBatchPredEntity = Any
+
+T_OTXBatchLossEntity = Any
+
+T_OTXBatchDataEntity = Any
+
+T_OTXDataEntity = Any
 
 
 def custom_wrap(wrappee: Tensor, *, like: tv_tensors.TVTensor, **kwargs) -> tv_tensors.TVTensor:
@@ -650,12 +660,6 @@ def get_size_points(point: Points) -> list[int]:
     return list(point.canvas_size)
 
 
-T_OTXDataEntity = TypeVar(
-    "T_OTXDataEntity",
-    bound="OTXDataEntity",
-)
-
-
 @register_pytree_node
 @dataclass
 class OTXDataEntity(Mapping):
@@ -733,14 +737,8 @@ class OTXPredEntity(OTXDataEntity):
     feature_vector: np.ndarray | list | None = None
 
 
-T_OTXBatchDataEntity = TypeVar(
-    "T_OTXBatchDataEntity",
-    bound="OTXBatchDataEntity",
-)
-
-
 @dataclass
-class OTXBatchDataEntity(Generic[T_OTXDataEntity]):
+class OTXBatchDataEntity:
     """Base Batch data entity for OTX.
 
     This entity is the output of PyTorch DataLoader,
@@ -883,14 +881,3 @@ class OTXBatchPredEntity(OTXBatchDataEntity):
 
 class OTXBatchLossEntity(Dict[str, Tensor]):
     """Data entity to represent model output losses."""
-
-
-T_OTXBatchPredEntity = TypeVar(
-    "T_OTXBatchPredEntity",
-    bound=OTXBatchPredEntity,
-)
-
-T_OTXBatchLossEntity = TypeVar(
-    "T_OTXBatchLossEntity",
-    bound=OTXBatchLossEntity,
-)

@@ -141,7 +141,7 @@ def _inference_step(
                     )
 
 
-class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPromptingBatchPredEntity]):
+class OTXVisualPromptingModel(OTXModel):
     """Visual prompting model used in OTX.
 
     Args:
@@ -334,10 +334,7 @@ class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPro
 
 
 class OVVisualPromptingModel(
-    OVModel[
-        VisualPromptingBatchDataEntity,
-        VisualPromptingBatchPredEntity,
-    ],
+    OVModel,
 ):
     """Visual prompting model compatible for OpenVINO IR inference.
 

@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for detection model entity used in OTX."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 import logging as log
@@ -34,7 +36,7 @@ if TYPE_CHECKING:
     from otx.algo.detection.detectors import SingleStageDetector
 
 
-class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
+class OTXDetectionModel(OTXModel):
     """Base class for the detection models used in OTX."""
 
     def test_step(self, batch: DetBatchDataEntity, batch_idx: int) -> None:
@@ -127,7 +129,7 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
 
         return inputs
 
-    def _customize_outputs(  # type: ignore[override]
+    def _customize_outputs(
         self,
         outputs: list[InstanceData] | dict | None,
         inputs: DetBatchDataEntity,
@@ -481,7 +483,7 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
         return [1] * 10
 
 
-class OVDetectionModel(OVModel[DetBatchDataEntity, DetBatchPredEntity]):
+class OVDetectionModel(OVModel):
     """Object detection model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository

@@ -104,7 +104,9 @@ class OTXDataModule(LightningDataModule):
         self.save_hyperparameters(ignore=["input_size"])
 
         dataset = DmDataset.import_from(self.data_root, format=self.data_format)
-        if self.task != "H_LABEL_CLS":
+        if self.task != OTXTaskType.H_LABEL_CLS and not (
+            self.task == OTXTaskType.KEYPOINT_DETECTION and self.data_format == "arrow"
+        ):
             dataset = pre_filtering(
                 dataset,
                 self.data_format,

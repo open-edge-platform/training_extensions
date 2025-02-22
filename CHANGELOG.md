@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
+- Don't filter empty label from kp arrow
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4229>)
+
 ### Removed
 
 - Remove HPO

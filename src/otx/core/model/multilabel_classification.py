@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class OTXMultilabelClsModel(OTXModel[MultilabelClsBatchDataEntity, MultilabelClsBatchPredEntity]):
+class OTXMultilabelClsModel(OTXModel):
     """Multilabel classification model used in OTX.
 
     Args:
@@ -159,7 +159,7 @@ class OTXMultilabelClsModel(OTXModel[MultilabelClsBatchDataEntity, MultilabelCls
         return MultilabelClsBatchDataEntity(batch_size, images, [], labels=labels)
 
 
-class OVMultilabelClassificationModel(OVModel[MultilabelClsBatchDataEntity, MultilabelClsBatchPredEntity]):
+class OVMultilabelClassificationModel(OVModel):
     """Multilabel classification model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository

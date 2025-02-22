@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for instance segmentation model entity used in OTX."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 import copy
@@ -47,7 +49,7 @@ if TYPE_CHECKING:
     from otx.core.model.base import DataInputParams
 
 
-class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchPredEntity]):
+class OTXInstanceSegModel(OTXModel):
     """Base class for the Instance Segmentation models used in OTX.
 
     Args:
@@ -513,7 +515,7 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
 
 
 class OVInstanceSegmentationModel(
-    OVModel[InstanceSegBatchDataEntity, InstanceSegBatchPredEntity],
+    OVModel,
 ):
     """Instance segmentation model compatible for OpenVINO IR inference.
 

@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity]):
+class OTXMulticlassClsModel(OTXModel):
     """Multiclass classification model used in OTX.
 
     Args:
@@ -165,7 +165,7 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
 
 
 class OVMulticlassClassificationModel(
-    OVModel[MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity],
+    OVModel,
 ):
     """Classification model compatible for OpenVINO IR inference.
 

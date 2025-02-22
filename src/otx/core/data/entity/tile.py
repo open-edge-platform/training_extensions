@@ -3,10 +3,12 @@
 #
 """Module for OTX tile data entities."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, Sequence
+from typing import TYPE_CHECKING, Sequence
 
 import torch
 from torchvision import tv_tensors
@@ -25,7 +27,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class TileDataEntity(Generic[T_OTXDataEntity]):
+class TileDataEntity:
     """Base data entity for tile task.
 
     Attributes:
@@ -68,7 +70,7 @@ TileAttrDictList = list[dict[str, int | str]]
 
 
 @dataclass
-class OTXTileBatchDataEntity(Generic[T_OTXBatchDataEntity]):
+class OTXTileBatchDataEntity:
     """Base batch data entity for tile task.
 
     Attributes:

@@ -30,7 +30,7 @@ from otx.core.utils.mask_util import polygon_to_bitmap
 from .base import OTXDataset, Transforms
 
 
-class OTXVisualPromptingDataset(OTXDataset[VisualPromptingDataEntity]):
+class OTXVisualPromptingDataset(OTXDataset):
     """OTXDataset class for visual prompting.
 
     Args:
