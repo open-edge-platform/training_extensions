@@ -5,16 +5,15 @@
 
 from __future__ import annotations
 
-import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from otx.algo.common.backbones import CSPNeXt
+from otx.algo.keypoint_detection.detectors.topdown import TopdownPoseEstimator
 from otx.algo.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from otx.algo.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
-from otx.algo.keypoint_detection.topdown import TopdownPoseEstimator
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.pck import PCKMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.keypoint_detection import OTXKeypointDetectionModel
 
 if TYPE_CHECKING:
@@ -27,61 +26,16 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-logger = logging.getLogger()
-
-
 class RTMPose(OTXKeypointDetectionModel):
-    """OTX keypoint detection model class for RTMPose."""
-
-    @property
-    def _exporter(self) -> OTXModelExporter:
-        """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Exporter should have a input_size but it is given by {self.input_size}"
-            raise ValueError(msg)
-
-        if self.explain_mode:
-            msg = "Export with explain is not supported for RTMPose model."
-            logger.warning(msg)
-
-        return OTXNativeModelExporter(
-            task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
-            resize_mode="standard",
-            pad_value=0,
-            swap_rgb=False,
-            via_onnx=True,
-            onnx_export_configuration={
-                "input_names": ["image"],
-                "dynamic_axes": {
-                    "image": {0: "batch"},
-                    "pred_x": {0: "batch"},
-                    "pred_y": {0: "batch"},
-                },
-                "autograd_inlining": False,
-            },
-            output_names=["pred_x", "pred_y"],
-        )
-
-    @property
-    def _export_parameters(self) -> TaskLevelExportParameters:
-        """Defines parameters required to export a particular model implementation."""
-        return super()._export_parameters.wrap(optimization_config={"preset": "mixed"})
-
-
-class RTMPoseTiny(RTMPose):
-    """RTMPose Tiny Model."""
+    """RTMPose Model."""
 
     load_from = "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth"
-    mean = (123.675, 116.28, 103.53)
-    std = (58.395, 57.12, 57.375)
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (256, 192),
+        model_name: Literal["rtmpose_tiny"],
+        data_input_params: DataInputParams,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = PCKMeasureCallable,
@@ -89,7 +43,8 @@ class RTMPoseTiny(RTMPose):
     ) -> None:
         super().__init__(
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -97,22 +52,19 @@ class RTMPoseTiny(RTMPose):
         )
 
     def _build_model(self, num_classes: int) -> RTMPose:
-        simcc_split_ratio = 2.0
-        sigma = (4.9, 5.66)
-
-        backbone = CSPNeXt(model_name="rtmpose_tiny")
+        backbone = CSPNeXt(model_name=self.model_name)
         head = RTMCCHead(
             out_channels=num_classes,
             in_channels=384,
-            input_size=self.input_size,
-            in_featuremap_size=(self.input_size[0] // 32, self.input_size[1] // 32),
-            simcc_split_ratio=simcc_split_ratio,
+            input_size=self.data_input_params.input_size,
+            in_featuremap_size=(self.data_input_params.input_size[0] // 32, self.data_input_params.input_size[1] // 32),
+            simcc_split_ratio=2.0,
             final_layer_kernel_size=7,
             loss=KLDiscretLoss(use_target_weight=True, beta=10.0, label_softmax=True),
             decoder_cfg={
-                "input_size": self.input_size,
-                "simcc_split_ratio": simcc_split_ratio,
-                "sigma": sigma,
+                "input_size": self.data_input_params.input_size,
+                "simcc_split_ratio": 2.0,
+                "sigma": (4.9, 5.66),
                 "normalize": False,
                 "use_dark": False,
             },
@@ -134,3 +86,34 @@ class RTMPoseTiny(RTMPose):
             backbone=backbone,
             head=head,
         )
+
+    @property
+    def _exporter(self) -> OTXModelExporter:
+        """Creates OTXModelExporter object that can export the model."""
+        if self.explain_mode:
+            msg = "Export with explain is not supported for RTMPose model."
+            raise ValueError(msg)
+
+        return OTXNativeModelExporter(
+            task_level_export_parameters=self._export_parameters,
+            data_input_params=self.data_input_params,
+            resize_mode="standard",
+            pad_value=0,
+            swap_rgb=False,
+            via_onnx=True,
+            onnx_export_configuration={
+                "input_names": ["image"],
+                "dynamic_axes": {
+                    "image": {0: "batch"},
+                    "pred_x": {0: "batch"},
+                    "pred_y": {0: "batch"},
+                },
+                "autograd_inlining": False,
+            },
+            output_names=["pred_x", "pred_y"],
+        )
+
+    @property
+    def _export_parameters(self) -> TaskLevelExportParameters:
+        """Defines parameters required to export a particular model implementation."""
+        return super()._export_parameters.wrap(optimization_config={"preset": "mixed"})

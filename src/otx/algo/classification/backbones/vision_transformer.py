@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Literal, ClassVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal
 
 import torch
 from timm.layers import (
@@ -32,29 +32,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import numpy as np
-
-
-VIT_MODELS = Literal[
-    "vit-t",
-    "vit-tiny",
-    "vit-s",
-    "vit-small",
-    "vit-b",
-    "vit-base",
-    "vit-l",
-    "vit-large",
-    "vit-h",
-    "vit-huge",
-    "dinov2-s",
-    "dinov2-small",
-    "dinov2-small-seg",
-    "dinov2-b",
-    "dinov2-base",
-    "dinov2-l",
-    "dinov2-large",
-    "dinov2-g",
-    "dinov2-giant",
-]
 
 
 class VisionTransformer(BaseModule):
@@ -207,7 +184,7 @@ class VisionTransformer(BaseModule):
 
     def __init__(  # noqa: PLR0913
         self,
-        model_name: VIT_MODELS | str = "vit-base",
+        model_name: str = "vit-base",
         img_size: int | tuple[int, int] = 224,
         patch_size: int | None = None,
         in_chans: int = 3,

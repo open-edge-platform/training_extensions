@@ -20,7 +20,7 @@ from otx.core.data.entity.detection import DetBatchDataEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
@@ -58,15 +58,11 @@ class YOLOX(OTXDetectionModel):
         - yolox_x : (640, 640)
     """
 
-    input_size_multiplier = 32
-    mean: tuple[float, float, float]
-    std: tuple[float, float, float]
-
     def __init__(
         self,
-        model_name: Literal["yolox_tiny", "yolox_s", "yolox_l", "yolox_x"],
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (640, 640),
+        data_input_params: DataInputParams,
+        model_name: Literal["yolox_tiny", "yolox_s", "yolox_l", "yolox_x"],
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -75,22 +71,15 @@ class YOLOX(OTXDetectionModel):
     ) -> None:
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
-            model_name=model_name,
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
             tile_config=tile_config,
         )
-
-        if model_name == "yolox_tiny":
-            self.mean = (123.675, 116.28, 103.53)
-            self.std = (58.395, 57.12, 57.375)
-        else:
-            self.mean = (0.0, 0.0, 0.0)
-            self.std = (1.0, 1.0, 1.0)
 
     def _build_model(self, num_classes: int) -> SingleStageDetector:
         train_cfg: dict[str, Any] = {"assigner": SimOTAAssigner(center_radius=2.5)}
@@ -134,10 +123,6 @@ class YOLOX(OTXDetectionModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         resize_mode: Literal["standard", "fit_to_window_letterbox"] = "fit_to_window_letterbox"
         if self.tile_config.enable_tiler:
             resize_mode = "standard"
@@ -145,9 +130,7 @@ class YOLOX(OTXDetectionModel):
 
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode=resize_mode,
             pad_value=114,
             swap_rgb=swap_rgb,

@@ -15,7 +15,7 @@ from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetBatchPredEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel, DataInputParams
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
@@ -27,7 +27,19 @@ if TYPE_CHECKING:
 
 
 class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDetBatchPredEntity]):
-    """Base class for the keypoint detection models used in OTX."""
+    """Base class for the keypoint detection models used in OTX.
+
+    label_info (LabelInfoTypes): Information about the labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "keypoint_detection_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to PCKMeasureCallable.
+    torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+
+    Base class for the keypoint detection models used in OTX.
+    """
 
     def __init__(
         self,
@@ -53,10 +65,10 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
     def _build_model(self, num_classes: int) -> nn.Module:
         raise NotImplementedError
 
-    def _create_model(self) -> nn.Module:
-        detector = self._build_model(num_classes=self.label_info.num_classes)
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        num_classes = num_classes if num_classes is not None else self.num_classes
+        detector = self._build_model(num_classes=num_classes)
         detector.init_weights()
-        self.classification_layers = self.get_classification_layers(prefix="model.")
         if self.load_from is not None:
             load_checkpoint(detector, self.load_from, map_location="cpu")
         return detector
@@ -130,21 +142,6 @@ class OTXKeypointDetectionModel(OTXModel[KeypointDetBatchDataEntity, KeypointDet
                 for kpt, kpt_visible in zip(inputs.keypoints, inputs.keypoints_visible)
             ],
         }
-
-    def get_classification_layers(self, prefix: str = "model.") -> dict[str, dict[str, int]]:
-        """Get final classification layer information for incremental learning case."""
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-
-        classification_layers = {}
-        for key in sample_model_dict:
-            if sample_model_dict[key].shape != incremental_model_dict[key].shape:
-                sample_model_dim = sample_model_dict[key].shape[0]
-                incremental_model_dim = incremental_model_dict[key].shape[0]
-                stride = incremental_model_dim - sample_model_dim
-                num_extra_classes = 6 * sample_model_dim - 5 * incremental_model_dim
-                classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
-        return classification_layers
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | tuple[torch.Tensor]:
         """Model forward function used for the model tracing during model exportation."""

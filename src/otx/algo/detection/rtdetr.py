@@ -24,7 +24,7 @@ from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntit
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
 
 if TYPE_CHECKING:
@@ -45,21 +45,13 @@ PRETRAINED_WEIGHTS: dict[str, str] = {
 
 
 class RTDETR(OTXDetectionModel):
-    """OTX Detection model class for RTDETR.
-
-    Default input size per model:
-        - ssd_mobilenetv2 : (640, 640)
-    """
-
-    input_size_multiplier = 32
-    mean: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    std: tuple[float, float, float] = (255.0, 255.0, 255.0)
+    """OTX Detection model class for RTDETR."""
 
     def __init__(
         self,
-        model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"],
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (640, 640),
+        data_input_params: DataInputParams,
+        model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"],
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -68,9 +60,9 @@ class RTDETR(OTXDetectionModel):
     ) -> None:
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
-            model_name=model_name,
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -82,12 +74,12 @@ class RTDETR(OTXDetectionModel):
         backbone = PResNet(model_name=self.model_name)
         encoder = HybridEncoder(
             model_name=self.model_name,
-            eval_spatial_size=self.input_size,
+            eval_spatial_size=self.data_input_params.input_size,
         )
         decoder = RTDETRTransformer(
             model_name=self.model_name,
             num_classes=num_classes,
-            eval_spatial_size=self.input_size,
+            eval_spatial_size=self.data_input_params.input_size,
         )
 
         optimizer_configuration = [
@@ -105,7 +97,7 @@ class RTDETR(OTXDetectionModel):
             decoder=decoder,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
-            input_size=self.input_size[0],
+            input_size=self.data_input_params.input_size[0],
         )
 
     def _customize_inputs(
@@ -270,15 +262,9 @@ class RTDETR(OTXDetectionModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             swap_rgb=False,
             via_onnx=False,

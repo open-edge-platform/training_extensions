@@ -142,7 +142,20 @@ def _inference_step(
 
 
 class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPromptingBatchPredEntity]):
-    """Base class for the visual prompting models used in OTX."""
+    """Visual prompting model used in OTX.
+
+    Args:
+    label_info (LabelInfoTypes): Information about the hierarchical labels.
+    Defaults to NullLabelInfo.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer.
+    Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+    """
 
     def __init__(
         self,
@@ -158,7 +171,7 @@ class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPro
         log.debug(msg)
         super().__init__(
             label_info=NullLabelInfo(),
-            input_size=data_input_params,
+            data_input_params=data_input_params,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
@@ -170,7 +183,7 @@ class OTXVisualPromptingModel(OTXModel[VisualPromptingBatchDataEntity, VisualPro
     def _build_model(self) -> nn.Module:
         raise NotImplementedError
 
-    def _create_model(self) -> nn.Module:
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
         return self._build_model()
 
     def _customize_inputs(self, inputs: VisualPromptingBatchDataEntity) -> dict[str, Any]:  # type: ignore[override]
@@ -365,7 +378,7 @@ class OVVisualPromptingModel(
             metric=metric,
         )
 
-    def _create_model(self) -> SAMVisualPrompter:
+    def _create_model(self, num_classes: int | None = None) -> SAMVisualPrompter:
         """Create a OV model with help of Model API."""
         from model_api.adapters import OpenvinoAdapter, create_core
 

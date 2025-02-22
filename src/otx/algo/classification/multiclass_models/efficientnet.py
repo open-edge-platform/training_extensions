@@ -5,28 +5,24 @@
 
 from __future__ import annotations
 
-from copy import copy, deepcopy
-from math import ceil
 from typing import TYPE_CHECKING
 
 from torch import Tensor, nn
 
 from otx.algo.classification.backbones.efficientnet import EfficientNetBackbone
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
-from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelLinearClsHead
-from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
+from otx.algo.classification.classifier import ImageClassifier
+from otx.algo.classification.heads import LinearClsHead
 from otx.algo.classification.necks.gap import GlobalAveragePooling
-from otx.algo.classification.utils import get_classification_layers
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.classification import (
     MulticlassClsBatchDataEntity,
     MulticlassClsBatchPredEntity,
 )
-from otx.core.metrics.accuracy import HLabelClsMetricCallable, MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.metrics.accuracy import MultiClassClsMetricCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multiclass_classification import OTXMulticlassClsModel
 from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

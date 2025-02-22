@@ -18,7 +18,7 @@ from otx.algo.detection.necks import FPN
 from otx.algo.detection.utils.assigners import ATSSAssigner
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.config.data import TileConfig
-from otx.core.exporter.base import OTXModelExporter
+from otx.core.exporter.base import DataInputParams, OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -51,14 +51,11 @@ class ATSS(OTXDetectionModel):
         - atss_resnext101 : (800, 992)
     """
 
-    mean: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    std: tuple[float, float, float] = (255.0, 255.0, 255.0)
-
     def __init__(
         self,
-        model_name: Literal["atss_mobilenetv2", "atss_resnext101"],
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (800, 992),
+        data_input_params: DataInputParams,
+        model_name: Literal["atss_mobilenetv2", "atss_resnext101"] = "atss_mobilenetv2",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -67,9 +64,9 @@ class ATSS(OTXDetectionModel):
     ) -> None:
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
-            model_name=model_name,
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -165,15 +162,9 @@ class ATSS(OTXDetectionModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             pad_value=0,
             swap_rgb=False,

@@ -5,37 +5,30 @@
 
 from __future__ import annotations
 
-from copy import copy
-from math import ceil
 from typing import TYPE_CHECKING
 
-import torch
-from torch import nn
-
 from otx.algo.classification.backbones.timm import TimmBackbone
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
-from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelLinearClsHead
+from otx.algo.classification.classifier import ImageClassifier
+from otx.algo.classification.heads import MultiLabelLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
     MultilabelClsBatchDataEntity,
     MultilabelClsBatchPredEntity,
 )
-from otx.core.metrics.accuracy import HLabelClsMetricCallable, MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.metrics.accuracy import MultiLabelClsMetricCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multilabel_classification import (
     OTXMultilabelClsModel,
 )
 from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torch import nn
 
     from otx.core.metrics import MetricCallable
 
@@ -78,7 +71,6 @@ class TimmModelForMultilabelCls(OTXMultilabelClsModel):
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,

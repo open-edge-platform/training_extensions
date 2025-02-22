@@ -21,7 +21,7 @@ from otx.core.config.data import TileConfig
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.export import TaskLevelExportParameters
 
@@ -43,21 +43,13 @@ PRETRAINED_WEIGHTS: dict[str, str] = {
 
 
 class RTMDet(OTXDetectionModel):
-    """OTX Detection model class for RTMDet.
-
-    Default input size per model:
-        - rtmdet_tiny : (640, 640)
-    """
-
-    input_size_multiplier = 32
-    mean: tuple[float, float, float] = (103.53, 116.28, 123.675)
-    std: tuple[float, float, float] = (57.375, 57.12, 58.395)
+    """OTX Detection model class for RTMDet."""
 
     def __init__(
         self,
-        model_name: Literal["rtmdet_tiny"],
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (640, 640),
+        data_input_params: DataInputParams,
+        model_name: Literal["rtmdet_tiny"],
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -66,9 +58,9 @@ class RTMDet(OTXDetectionModel):
     ) -> None:
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
-            model_name=model_name,
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -121,15 +113,9 @@ class RTMDet(OTXDetectionModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="fit_to_window_letterbox",
             pad_value=114,
             swap_rgb=True,

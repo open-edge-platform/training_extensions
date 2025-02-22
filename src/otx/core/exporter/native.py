@@ -19,7 +19,7 @@ from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
-    from otx.core.model.base import OTXModel, DataInputParams
+    from otx.core.model.base import DataInputParams, OTXModel
 
 
 class OTXNativeModelExporter(OTXModelExporter):
@@ -28,7 +28,7 @@ class OTXNativeModelExporter(OTXModelExporter):
     def __init__(
         self,
         task_level_export_parameters: TaskLevelExportParameters,
-        data_input_params : DataInputParams,
+        data_input_params: DataInputParams,
         resize_mode: Literal["crop", "standard", "fit_to_window", "fit_to_window_letterbox"] = "standard",
         pad_value: int = 0,
         swap_rgb: bool = False,

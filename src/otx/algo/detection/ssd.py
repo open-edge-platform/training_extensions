@@ -26,7 +26,7 @@ from otx.core.config.data import TileConfig
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
 
 if TYPE_CHECKING:
@@ -61,14 +61,11 @@ class SSD(OTXDetectionModel):
         - ssd_mobilenetv2 : (864, 864)
     """
 
-    mean: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    std: tuple[float, float, float] = (255.0, 255.0, 255.0)
-
     def __init__(
         self,
-        model_name: Literal["ssd_mobilenetv2"],
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (864, 864),
+        data_input_params: DataInputParams,
+        model_name: Literal["ssd_mobilenetv2"],
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -77,9 +74,9 @@ class SSD(OTXDetectionModel):
     ) -> None:
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
-            model_name=model_name,
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -206,7 +203,7 @@ class SSD(OTXDetectionModel):
                 if isinstance(transform, Resize):
                     target_wh = transform.scale
         if target_wh is None:
-            target_wh = list(reversed(self.input_size))  # type: ignore[assignment]
+            target_wh = list(reversed(self.data_input_params.input_size))  # type: ignore[assignment]
             msg = f"Cannot get target_wh from the dataset. Assign it with the default value: {target_wh}"
             logger.warning(msg)
         group_as = [len(width) for width in anchor_generator.widths]
@@ -263,7 +260,10 @@ class SSD(OTXDetectionModel):
         heights = [height.tolist() for height in heights]
         return widths, heights
 
-    def get_classification_layers(self, prefix: str = "model.") -> dict[str, dict[str, bool | int]]:
+    def _identify_classification_layers(  # type: ignore[override]
+        self,
+        prefix: str = "model.",
+    ) -> dict[str, dict[str, bool | int]]:
         """Return classification layer names by comparing two different number of classes models.
 
         Args:
@@ -296,10 +296,10 @@ class SSD(OTXDetectionModel):
         return classification_layers
 
     def load_state_dict_pre_hook(self, state_dict: dict[str, torch.Tensor], prefix: str, *args, **kwargs) -> None:
-        """Modify input state_dict according to class name matching before weight loading."""
+        """Modify input state_dict according to class name matching. It is used for incremental learning."""
         model2ckpt = self.map_class_names(self.model_classes, self.ckpt_classes)
 
-        for param_name, info in self.classification_layers.items():
+        for param_name, info in self._identify_classification_layers().items():
             model_param = self.state_dict()[param_name].clone()
             ckpt_param = state_dict[prefix + param_name]
             use_bg = info["use_bg"]
@@ -329,15 +329,9 @@ class SSD(OTXDetectionModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             pad_value=0,
             swap_rgb=False,

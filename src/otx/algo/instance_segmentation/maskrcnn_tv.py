@@ -36,21 +36,20 @@ class MaskRCNNTV(OTXInstanceSegModel):
     """Implementation of torchvision MaskRCNN for instance segmentation."""
 
     load_from: ClassVar[dict[str, Any]] = {"maskrcnn_resnet_50": MaskRCNN_ResNet50_FPN_V2_Weights.verify("DEFAULT")}
-    mean = (123.675, 116.28, 103.53)
-    std = (58.395, 57.12, 57.375)
 
     AVAILABLE_MODEL_VERSIONS: ClassVar[list[str]] = [
         "maskrcnn_resnet_50",
     ]
 
-    def _create_model(self) -> nn.Module:
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         """Create MaskRCNN model with TV implementation."""
         if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
             msg = f"Model version {self.model_name} is not supported."
             raise ValueError(msg)
 
         # NOTE: Add 1 to num_classes to account for background class.
-        num_classes = self.label_info.num_classes + 1
+        num_classes = num_classes + 1
         weights = self.load_from[self.model_name]
 
         # init model components, model itself and load weights
@@ -197,15 +196,9 @@ class MaskRCNNTV(OTXInstanceSegModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="fit_to_window",
             pad_value=0,
             swap_rgb=False,

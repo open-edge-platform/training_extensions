@@ -18,14 +18,12 @@ from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
-    HLabelClsMetricCallable,
     MultiClassClsMetricCallable,
-    MultiLabelClsMetricCallable,
 )
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel, DataInputParams
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -35,7 +33,18 @@ if TYPE_CHECKING:
 
 
 class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity]):
-    """Base class for the classification models used in OTX."""
+    """Multiclass classification model used in OTX.
+
+    Args:
+    label_info (LabelInfoTypes): Information about the hierarchical labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "multiclass_classification_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+    """
 
     def __init__(
         self,
@@ -146,7 +155,7 @@ class OTXMulticlassClsModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassCls
 
     def get_dummy_input(self, batch_size: int = 1) -> MulticlassClsBatchDataEntity:
         """Returns a dummy input for classification model."""
-        images = [torch.rand(3, *self.data_input_params) for _ in range(batch_size)]
+        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
         return MulticlassClsBatchDataEntity(batch_size, images, [], labels=labels)
 

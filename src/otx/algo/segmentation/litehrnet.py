@@ -31,13 +31,15 @@ class LiteHRNet(OTXSegmentationModel):
         "lite_hrnet_x",
     ]
 
-    def _create_model(self) -> nn.Module:
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        # initialize backbones
+        num_classes = num_classes if num_classes is not None else self.num_classes
         if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
             msg = f"Model version {self.model_name} is not supported."
             raise ValueError(msg)
 
         backbone = LiteHRNetBackbone(self.model_name)
-        decode_head = FCNHead(self.model_name, num_classes=self.num_classes)
+        decode_head = FCNHead(self.model_name, num_classes=num_classes)
         criterion = CrossEntropyLossWithIgnore(ignore_index=self.label_info.ignore_index)  # type: ignore[attr-defined]
         return BaseSegmentationModel(
             backbone=backbone,
@@ -67,15 +69,9 @@ class LiteHRNet(OTXSegmentationModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.scale,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             pad_value=0,
             swap_rgb=False,

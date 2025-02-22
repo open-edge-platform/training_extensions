@@ -42,24 +42,26 @@ if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import InstanceSegmentationResult
     from torch import nn
-    from otx.core.model.base import DataInputParams
+
     from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
 
 
 class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchPredEntity]):
     """Base class for the Instance Segmentation models used in OTX.
 
     Args:
-        label_info (LabelInfoTypes): label information
-        input_size (tuple[int, int]): model input size
-        model_name (str): model name/version
-        optimizer (OptimizerCallable, optional): optimizer
-        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): scheduler
-        metric (MetricCallable, optional): metric
-        torch_compile (bool, optional): torch compile
-        weights_mean_std (tuple[tuple[float, float, float], tuple[float, float, float]], optional): mean and std for weights normalization
-        tile_config (TileConfig, optional): tile configuration
-        explain_mode (bool, optional): enable explainable AI mode
+        label_info (LabelInfoTypes): Information about the labels used in the model.
+        data_input_params (DataInputParams): Parameters for the data input.
+        model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
+        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric for evaluating the model.
+            Defaults to MaskRLEMeanAPFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
     """
 
     def __init__(
@@ -94,12 +96,11 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
     def _build_model(self, num_classes: int) -> nn.Module:
         raise NotImplementedError
 
-    def _create_model(self) -> nn.Module:
-        detector = self._build_model(num_classes=self.label_info.num_classes)
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        num_classes = num_classes if num_classes is not None else self.num_classes
+        detector = self._build_model(num_classes)
         if hasattr(detector, "init_weights"):
             detector.init_weights()
-        self.classification_layers = self.get_classification_layers("model.")
-
         if isinstance(self.load_from, dict):
             load_checkpoint(detector, self.load_from[self.model_name], map_location="cpu")
         elif self.load_from is not None:
@@ -196,36 +197,6 @@ class OTXInstanceSegModel(OTXModel[InstanceSegBatchDataEntity, InstanceSegBatchP
             polygons=[],
             labels=labels,
         )
-
-    def get_classification_layers(self, prefix: str = "") -> dict[str, dict[str, int]]:
-        """Return classification layer names by comparing two different number of classes models.
-
-        Args:
-            config (DictConfig): Config for building model.
-            model_registry (Registry): Registry for building model.
-            prefix (str): Prefix of model param name.
-                Normally it is "model." since OTXModel set it's nn.Module model as self.model
-
-        Return:
-            dict[str, dict[str, int]]
-            A dictionary contain classification layer's name and information.
-            Stride means dimension of each classes, normally stride is 1, but sometimes it can be 4
-            if the layer is related bbox regression for object detection.
-            Extra classes is default class except class from data.
-            Normally it is related with background classes.
-        """
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-
-        classification_layers = {}
-        for key in sample_model_dict:
-            if sample_model_dict[key].shape != incremental_model_dict[key].shape:
-                sample_model_dim = sample_model_dict[key].shape[0]
-                incremental_model_dim = incremental_model_dict[key].shape[0]
-                stride = incremental_model_dim - sample_model_dim
-                num_extra_classes = 6 * sample_model_dim - 5 * incremental_model_dim
-                classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
-        return classification_layers
 
     def forward_tiles(self, inputs: OTXTileBatchDataEntity[InstanceSegBatchDataEntity]) -> InstanceSegBatchPredEntity:
         """Unpack instance segmentation tiles.

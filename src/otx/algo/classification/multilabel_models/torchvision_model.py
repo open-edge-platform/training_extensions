@@ -7,36 +7,29 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import torch
-from torch import nn
-
-from otx.algo.classification.backbones.torchvision import TorchvisionBackbone, TVModels
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
+from otx.algo.classification.backbones.torchvision import TorchvisionBackbone
+from otx.algo.classification.classifier import ImageClassifier
 from otx.algo.classification.heads import (
-    HierarchicalCBAMClsHead,
-    LinearClsHead,
     MultiLabelLinearClsHead,
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
     MultilabelClsBatchDataEntity,
     MultilabelClsBatchPredEntity,
 )
-from otx.core.metrics.accuracy import HLabelClsMetricCallable, MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.metrics.accuracy import MultiLabelClsMetricCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multilabel_classification import (
     OTXMultilabelClsModel,
 )
 from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torch import nn
 
     from otx.core.metrics import MetricCallable
 
@@ -65,13 +58,12 @@ class TVModelForMultilabelCls(OTXMultilabelClsModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: TVModels = "efficientnet_v2_s",
+        model_name: str = "efficientnet_v2_s",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,

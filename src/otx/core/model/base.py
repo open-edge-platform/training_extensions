@@ -12,7 +12,7 @@ import json
 import logging
 import warnings
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, Sequence, NamedTuple
+from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, NamedTuple, Sequence
 
 import numpy as np
 import openvino
@@ -52,7 +52,6 @@ from otx.core.types.precision import OTXPrecisionType
 from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
-from otx.algo.classification.utils import get_classification_layers
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -71,6 +70,8 @@ logger = logging.getLogger()
 
 
 class DataInputParams(NamedTuple):
+    """Parameters of the input data such as input size, mean, and std."""
+
     input_size: tuple[int, int]
     mean: tuple[float, float, float]
     std: tuple[float, float, float]
@@ -122,15 +123,15 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        """
-        Initialize the base model with the given parameters.
+        """Initialize the base model with the given parameters.
 
         Args:
             label_info (LabelInfoTypes): Information about the labels used in the model.
             data_input_params (DataInputParams): Parameters of the input data such as input size, mean, and std.
             model_name (str, optional): Name of the model. Defaults to "OTXModel".
             optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
-            scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler. Defaults to DefaultSchedulerCallable.
+            scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
+                Defaults to DefaultSchedulerCallable.
             metric (MetricCallable, optional): Callable for the metric. Defaults to NullMetricCallable.
             torch_compile (bool, optional): Flag to indicate if torch.compile should be used. Defaults to False.
             tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
@@ -143,7 +144,6 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         self._label_info = self._dispatch_label_info(label_info)
         self._check_preprocessing_params(data_input_params)
         self.data_input_params = data_input_params
-        self.classification_layers: dict[str, dict[str, Any]] = {}
         self.model_name = model_name
         self.model = self._create_model()
         self.optimizer_callable = ensure_callable(optimizer)
@@ -630,20 +630,18 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             # Replace checkpoint weight by mixed weights
             state_dict[prefix + param_name] = model_param
 
-    def _identify_classification_layers(self, prefix="model.") -> dict[str, int]:
+    def _identify_classification_layers(self, prefix: str = "model.") -> list[str]:
         """Simple identification of the classification layers."""
         # identify classification layers
         sample_model_dict = self._create_model(num_classes=3).state_dict()
         incremental_model_dict = self._create_model(num_classes=4).state_dict()
-        classification_layers = []
         # iterate over the model dict and compare the shapes.
         # Add the key to the list if the shapes are different
-        for key in sample_model_dict:
-            if sample_model_dict[key].shape != incremental_model_dict[key].shape:
-                classification_layers.append(prefix + key)
-
-        return classification_layers
-
+        return [
+            prefix + key
+            for key in sample_model_dict
+            if sample_model_dict[key].shape != incremental_model_dict[key].shape
+        ]
 
     @staticmethod
     def map_class_names(src_classes: list[str], dst_classes: list[str]) -> list[int]:
@@ -873,22 +871,25 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
 
         raise TypeError(label_info)
 
-    def _check_preprocessing_params(self, preprocessing_params:  DataInputParams) -> None:
+    def _check_preprocessing_params(self, preprocessing_params: DataInputParams) -> None:
         """Check the validity of the preprocessing parameters."""
-
         input_size = preprocessing_params.input_size
         mean = preprocessing_params.mean
         std = preprocessing_params.std
 
         if not (len(mean) == 3 and all(isinstance(m, float) for m in mean)):
-            raise ValueError(f"Mean should be a tuple of 3 float values, but got {mean} instead.")
+            msg = f"Mean should be a tuple of 3 float values, but got {mean} instead."
+            raise ValueError(msg)
         if not (len(std) == 3 and all(isinstance(s, float) for s in std)):
-            raise ValueError(f"Std should be a tuple of 3 float values, but got {std} instead.")
+            msg = f"Std should be a tuple of 3 float values, but got {std} instead."
+            raise ValueError(msg)
 
-        if not all(0 <= m <= 1 for m in mean):
-            raise ValueError(f"Mean values should be in the range [0, 1], but got {mean} instead.")
-        if not all(0 <= s <= 1 for s in std):
-            raise ValueError(f"Std values should be in the range [0, 1], but got {std} instead.")
+        if not all(0 <= m <= 255 for m in mean):
+            msg = f"Mean values should be in the range [0, 255], but got {mean} instead."
+            raise ValueError(msg)
+        if not all(0 <= s <= 255 for s in std):
+            msg = f"Std values should be in the range [0, 255], but got {std} instead."
+            raise ValueError(msg)
 
         if input_size is not None and (
             input_size[0] % self.input_size_multiplier != 0 or input_size[1] % self.input_size_multiplier != 0
@@ -929,8 +930,9 @@ class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
         self.num_requests = max_num_requests if max_num_requests is not None else get_default_num_async_infer_requests()
         self.use_throughput_mode = use_throughput_mode
         self.model_api_configuration = model_api_configuration if model_api_configuration is not None else {}
+        self.data_input_params = DataInputParams(input_size=(224, 224), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
         # NOTE: num_classes and label_info comes from the IR metadata
-        super().__init__(label_info=NullLabelInfo(), metric=metric)
+        super().__init__(label_info=NullLabelInfo(), metric=metric, data_input_params=self.data_input_params)
         self._label_info = self._create_label_info_from_ov_ir()
 
         tile_enabled = False
@@ -952,7 +954,7 @@ class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
             model_adapter (OpenvinoAdapter): target adapter to read the config
         """
 
-    def _create_model(self) -> Model:
+    def _create_model(self, num_classes: int | None = None) -> Model:
         """Create a OV model with help of Model API."""
         from model_api.adapters import OpenvinoAdapter, create_core
 
@@ -1146,7 +1148,7 @@ class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
         """Exporter of the OVModel for exportable code."""
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, self.model.h, self.model.w),
+            data_input_params=self.data_input_params,
         )
 
     @property

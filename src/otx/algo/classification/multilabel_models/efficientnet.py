@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from torch import Tensor, nn
-
 from otx.algo.classification.backbones.efficientnet import EfficientNetBackbone
 from otx.algo.classification.classifier import ImageClassifier
 from otx.algo.classification.heads import MultiLabelLinearClsHead
@@ -19,14 +17,15 @@ from otx.core.data.entity.classification import (
     MultilabelClsBatchDataEntity,
     MultilabelClsBatchPredEntity,
 )
-from otx.core.metrics.accuracy import  MultiLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.metrics.accuracy import MultiLabelClsMetricCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multilabel_classification import OTXMultilabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torch import Tensor, nn
 
     from otx.core.metrics import MetricCallable
 
@@ -56,7 +55,7 @@ class EfficientNetForMultilabelCls(OTXMultilabelClsModel):
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
-        backbone = EfficientNetBackbone(version=self.model_name, input_size=self.data_input_params.input_size)
+        backbone = EfficientNetBackbone(model_name=self.model_name, input_size=self.data_input_params.input_size)
         return ImageClassifier(
             backbone=backbone,
             neck=GlobalAveragePooling(dim=2),

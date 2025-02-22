@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""multiclass classification models package."""
+"""multilabel classification models package."""
 
 __all__ = [
     "efficientnet",

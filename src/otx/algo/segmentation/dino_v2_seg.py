@@ -32,17 +32,19 @@ class DinoV2Seg(OTXSegmentationModel):
         "dinov2-small-seg": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
     }
 
-    def _create_model(self) -> nn.Module:
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        # initialize backbones
+        num_classes = num_classes if num_classes is not None else self.num_classes
         if self.model_name not in self.AVAILABLE_MODELS:
             msg = f"Model version {self.model_name} is not supported."
             raise ValueError(msg)
-        backbone = VisionTransformer(arch=self.model_name, img_size=self.input_size)
+        backbone = VisionTransformer(model_name=self.model_name, img_size=self.data_input_params.input_size)
         backbone.forward = partial(  # type: ignore[method-assign]
             backbone.get_intermediate_layers,
             n=[8, 9, 10, 11],
             reshape=True,
         )
-        decode_head = FCNHead(self.model_name, num_classes=self.num_classes)
+        decode_head = FCNHead(self.model_name, num_classes=num_classes)
         criterion = CrossEntropyLossWithIgnore(ignore_index=self.label_info.ignore_index)  # type: ignore[attr-defined]
 
         backbone.init_weights()

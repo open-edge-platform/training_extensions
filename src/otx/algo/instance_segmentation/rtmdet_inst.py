@@ -38,8 +38,6 @@ class RTMDetInst(OTXInstanceSegModel):
             "rtmdet-ins_tiny_8xb32-300e_coco_20221130_151727-ec670f7e.pth"
         ),
     }
-    mean = (123.675, 116.28, 103.53)
-    std = (58.395, 57.12, 57.375)
 
     def _build_model(self, num_classes: int) -> SingleStageDetector:
         train_cfg = {
@@ -59,8 +57,8 @@ class RTMDetInst(OTXInstanceSegModel):
             "nms_pre": 300,
         }
 
-        backbone = CSPNeXt(model_name="rtmdet_inst_tiny")
-        neck = CSPNeXtPAFPN(model_name="rtmdet_inst_tiny")
+        backbone = CSPNeXt(model_name=self.model_name)
+        neck = CSPNeXtPAFPN(model_name=self.model_name)
         bbox_head = RTMDetInstSepBNHead(
             num_classes=num_classes,
             in_channels=96,
@@ -105,15 +103,9 @@ class RTMDetInst(OTXInstanceSegModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="fit_to_window_letterbox",
             pad_value=114,
             swap_rgb=False,

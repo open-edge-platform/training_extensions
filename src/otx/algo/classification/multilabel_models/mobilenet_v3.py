@@ -5,16 +5,14 @@
 
 from __future__ import annotations
 
-from copy import copy
-from math import ceil
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch import Tensor, nn
 
 from otx.algo.classification.backbones import MobileNetV3Backbone
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
-from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelNonLinearClsHead
+from otx.algo.classification.classifier import ImageClassifier
+from otx.algo.classification.heads import MultiLabelNonLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
@@ -23,9 +21,8 @@ from otx.core.data.entity.classification import (
     MultilabelClsBatchDataEntity,
     MultilabelClsBatchPredEntity,
 )
-from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import MultiLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multilabel_classification import OTXMultilabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import LabelInfoTypes
@@ -49,7 +46,6 @@ class MobileNetV3ForMultilabelCls(OTXMultilabelClsModel):
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,

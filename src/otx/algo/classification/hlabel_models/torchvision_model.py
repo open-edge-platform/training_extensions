@@ -7,31 +7,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import torch
 from torch import nn
 
-from otx.algo.classification.backbones.torchvision import TorchvisionBackbone, TVModels
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
+from otx.algo.classification.backbones.torchvision import TorchvisionBackbone
+from otx.algo.classification.classifier import HLabelClassifier
 from otx.algo.classification.heads import (
     HierarchicalCBAMClsHead,
-    LinearClsHead,
-    MultiLabelLinearClsHead,
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
-from otx.algo.classification.necks.gap import GlobalAveragePooling
-from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
-)
-from otx.core.metrics.accuracy import HLabelClsMetricCallable, MultiClassClsMetricCallable, MultiLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.metrics.accuracy import HLabelClsMetricCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.core.types.label import HLabelInfo
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -54,19 +42,16 @@ class TVModelForHLabelCls(OTXHlabelClsModel):
         input_size (tuple[int, int], optional): The input size of the images. Defaults to (224, 224).
     """
 
-    label_info: HLabelInfo
-
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: HLabelInfo,
         data_input_params: DataInputParams,
-        model_name: TVModels = "efficientnet_v2_s",
+        model_name: str = "efficientnet_v2_s",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -77,7 +62,7 @@ class TVModelForHLabelCls(OTXHlabelClsModel):
             torch_compile=torch_compile,
         )
 
-    def _create_model(self, head_config: dict | None = None) -> nn.Module:
+    def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
         head_config = head_config if head_config is not None else self.label_info.as_head_config_dict()
         backbone = TorchvisionBackbone(backbone=self.model_name)
         return HLabelClassifier(

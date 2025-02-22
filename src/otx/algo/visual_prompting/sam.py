@@ -16,7 +16,7 @@ from otx.algo.visual_prompting.encoders import SAMImageEncoder, SAMPromptEncoder
 from otx.algo.visual_prompting.losses.sam_loss import SAMCriterion
 from otx.algo.visual_prompting.visual_prompters import SegmentAnything
 from otx.core.metrics.visual_prompting import VisualPromptingMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.visual_prompting import OTXVisualPromptingModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import LabelInfoTypes, NullLabelInfo
@@ -169,9 +169,9 @@ class SAM(CommonSettingMixin, OTXVisualPromptingModel):  # type: ignore[misc]
 
     def __init__(
         self,
-        backbone_type: Literal["tiny_vit", "vit_b"],
+        data_input_params: DataInputParams,
         label_info: LabelInfoTypes = NullLabelInfo(),
-        input_size: tuple[int, int] = (1024, 1024),
+        model_name: Literal["tiny_vit", "vit_b"] = "tiny_vit",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = VisualPromptingMetricCallable,
@@ -184,14 +184,11 @@ class SAM(CommonSettingMixin, OTXVisualPromptingModel):  # type: ignore[misc]
         return_extra_metrics: bool = False,
         stability_score_offset: float = 1.0,
     ) -> None:
-        if input_size[0] != input_size[1]:
-            msg = f"SAM should use square image size, but got {input_size}"
+        if data_input_params.input_size[0] != data_input_params.input_size[1]:
+            msg = f"SAM should use square image size, but got {data_input_params.input_size}"
             raise ValueError(msg)
 
-        self.backbone_type = backbone_type
-        self.image_size = input_size[0]
-        self.image_embedding_size = input_size[0] // 16
-
+        self.image_size = data_input_params.input_size[0]
         self.use_stability_score = use_stability_score
         self.return_single_mask = return_single_mask
         self.return_extra_metrics = return_extra_metrics
@@ -199,30 +196,32 @@ class SAM(CommonSettingMixin, OTXVisualPromptingModel):  # type: ignore[misc]
 
         super().__init__(
             label_info=label_info,
-            input_size=input_size,
+            model_name=model_name,
+            data_input_params=data_input_params,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
 
-        self.load_state_dict(load_from=self.load_from[backbone_type])
+        self.load_state_dict(load_from=self.load_from[model_name])
         self.freeze_networks(freeze_image_encoder, freeze_prompt_encoder, freeze_mask_decoder)
 
     def _build_model(self) -> nn.Module:
-        image_encoder = SAMImageEncoder(backbone_type=self.backbone_type, img_size=self.image_size)
+        image_embedding_size = self.data_input_params.input_size[0] // 16
+        image_encoder = SAMImageEncoder(backbone_type=self.model_name, img_size=self.data_input_params.input_size[0])
         prompt_encoder = SAMPromptEncoder(
-            image_embedding_size=(self.image_embedding_size, self.image_embedding_size),
-            input_image_size=(self.image_size, self.image_size),
+            image_embedding_size=(image_embedding_size, image_embedding_size),
+            input_image_size=self.data_input_params.input_size,
         )
         mask_decoder = SAMMaskDecoder()
-        criterion = SAMCriterion(image_size=self.image_size)
+        criterion = SAMCriterion(image_size=self.data_input_params.input_size[0])
         return SegmentAnything(
             image_encoder=image_encoder,
             prompt_encoder=prompt_encoder,
             mask_decoder=mask_decoder,
             criterion=criterion,
-            image_size=self.image_size,
+            image_size=self.data_input_params.input_size[0],
             use_stability_score=self.use_stability_score,
             return_single_mask=self.return_single_mask,
             return_extra_metrics=self.return_extra_metrics,

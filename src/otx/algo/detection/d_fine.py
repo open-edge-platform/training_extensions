@@ -25,7 +25,7 @@ from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntit
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
 
 if TYPE_CHECKING:
@@ -50,21 +50,17 @@ PRETRAINED_WEIGHTS: dict[str, str] = {
 class DFine(OTXDetectionModel):
     """OTX Detection model class for D-Fine."""
 
-    input_size_multiplier = 32
-    mean: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    std: tuple[float, float, float] = (255.0, 255.0, 255.0)
-
     def __init__(
         self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
         model_name: Literal[
             "dfine_hgnetv2_n",
             "dfine_hgnetv2_s",
             "dfine_hgnetv2_m",
             "dfine_hgnetv2_l",
             "dfine_hgnetv2_x",
-        ],
-        label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (640, 640),
+        ] = "dfine_hgnetv2_x",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -77,7 +73,7 @@ class DFine(OTXDetectionModel):
         super().__init__(
             model_name=model_name,
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -106,17 +102,19 @@ class DFine(OTXDetectionModel):
             num_classes=num_classes,
         )
 
-        if self.model_name == "dfine_hgnetv2_n":
-            backbone_lr = 0.0004
-        elif self.model_name == "dfine_hgnetv2_s":
-            backbone_lr = 0.0001
-        elif self.model_name == "dfine_hgnetv2_m":
-            backbone_lr = 0.00002
-        elif self.model_name in ("dfine_hgnetv2_l", "dfine_hgnetv2_x"):
-            backbone_lr = 0.0000125
-        else:
+        backbone_lr_mapping = {
+            "dfine_hgnetv2_n": 0.0004,
+            "dfine_hgnetv2_s": 0.0001,
+            "dfine_hgnetv2_m": 0.00002,
+            "dfine_hgnetv2_l": 0.0000125,
+            "dfine_hgnetv2_x": 0.0000125,
+        }
+
+        try:
+            backbone_lr = backbone_lr_mapping[self.model_name]
+        except KeyError as err:
             msg = f"Unsupported model name: {self.model_name}"
-            raise ValueError(msg)
+            raise ValueError(msg) from err
 
         optimizer_configuration = [
             # no weight decay for norm layers in backbone
@@ -297,15 +295,9 @@ class DFine(OTXDetectionModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             swap_rgb=False,
             via_onnx=False,

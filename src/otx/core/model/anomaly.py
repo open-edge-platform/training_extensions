@@ -25,7 +25,7 @@ from otx.core.data.entity.anomaly import (
 )
 from otx.core.data.entity.base import ImageInfo
 from otx.core.exporter.anomaly import OTXAnomalyModelExporter
-from otx.core.model.base import OTXModel
+from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.precision import OTXPrecisionType
@@ -44,7 +44,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import STEP_OUTPUT
     from torch.optim.optimizer import Optimizer
     from torchmetrics import Metric
-    from otx.core.model.base import DataInputParams
 
 
 AnomalyModelInputs: TypeAlias = (
@@ -59,12 +58,16 @@ class OTXAnomaly(OTXModel):
     """Methods used to make OTX model compatible with the Anomalib model.
 
     Args:
-        input_size (tuple[int, int] | None):
-            Model input size in the order of height and width. Defaults to None.
+        data_input_params (DataInputParams): Data input parameters such as input size, mean, std.
+        label_info (AnomalyLabelInfo): Label information for the model.
     """
 
-    def __init__(self, data_input_params: DataInputParams) -> None:
-        super().__init__(label_info=AnomalyLabelInfo(), data_input_params=data_input_params)
+    def __init__(self) -> None:
+        super().__init__(
+            label_info=AnomalyLabelInfo(),
+            data_input_params=DataInputParams((256, 256), (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+            model_name="otx_anomaly_model",
+        )
         self.optimizer: list[OptimizerCallable] | OptimizerCallable = None
         self.scheduler: list[LRSchedulerCallable] | LRSchedulerCallable = None
         self.trainer: Trainer
@@ -117,7 +120,7 @@ class OTXAnomaly(OTXModel):
         self,
     ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
         """Get the value requested value from default transforms."""
-        mean_value, std_value = self.data_input_params.mean, self.data_input_params.std # (123.675, 116.28, 103.53), (58.395, 57.12, 57.375)
+        mean_value, std_value = self.data_input_params.mean, self.data_input_params.std
         for transform in self.configure_transforms().transforms:  # type: ignore[attr-defined]
             name = transform.__class__.__name__
             if "Normalize" in name:

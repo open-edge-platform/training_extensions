@@ -71,7 +71,7 @@ class OTXDataModule(LightningDataModule):
         unannotated_items_ratio: float = 0.0,
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
-        input_size: int | tuple[int, int] | None = None,
+        input_size: tuple[int, int] | None = None,
         adaptive_input_size: Literal["auto", "downscale"] | None = None,
         input_size_multiplier: int = 1,
     ) -> None:
@@ -124,6 +124,22 @@ class OTXDataModule(LightningDataModule):
             for subset_cfg in [train_subset, val_subset, test_subset]:
                 if subset_cfg.input_size is None:
                     subset_cfg.input_size = input_size
+        else:
+            # get input size of the model from train subset
+            input_size = train_subset.input_size
+
+        # get mean and std from Normalize transform
+        mean = (0.0, 0.0, 0.0)
+        std = (1.0, 1.0, 1.0)
+        if train_subset.transforms is not None:
+            for transform in subset_cfg.transforms:
+                if "Normalize" in transform.get("class_path", ""):
+                    mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
+                    std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
+                    break
+
+        self.input_mean = mean
+        self.input_std = std
         self.input_size = input_size
 
         if self.tile_config.enable_tiler and self.tile_config.enable_adaptive_tiling:

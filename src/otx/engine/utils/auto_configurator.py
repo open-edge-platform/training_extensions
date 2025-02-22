@@ -16,7 +16,7 @@ from jsonargparse import ArgumentParser, Namespace
 
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig, VisualPromptingConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.types import PathLike
 from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.types.task import OTXTaskType
@@ -65,7 +65,7 @@ TASK_PER_DATA_FORMAT = {
         OTXTaskType.VISUAL_PROMPTING,
     ],
     "common_semantic_segmentation_with_subset_dirs": [OTXTaskType.SEMANTIC_SEGMENTATION],
-    "mvtec": [
+    "mvtec_classification": [
         OTXTaskType.ANOMALY,
         OTXTaskType.ANOMALY_CLASSIFICATION,
         OTXTaskType.ANOMALY_DETECTION,
@@ -248,7 +248,7 @@ class AutoConfigurator:
         self,
         model_name: str | None = None,
         label_info: LabelInfoTypes | None = None,
-        input_size: tuple[int, int] | int | None = None,
+        data_input_params: DataInputParams | None = None,
     ) -> OTXModel:
         """Retrieves the OTXModel instance based on the provided model name and meta information.
 
@@ -256,9 +256,8 @@ class AutoConfigurator:
             model_name (str | None): The name of the model to retrieve. If None, the default model will be used.
             label_info (LabelInfoTypes | None): The meta information about the labels.
                 If provided, the number of classes will be updated in the model's configuration.
-            input_size (tuple[int, int] | int | None, optional):
-                Model input size in the order of height and width or a single integer for a side of a square.
-                Defaults to None.
+            data_input_params (DataInputParams | None): The data input parameters containing the input size,
+                input mean and std.
 
         Returns:
             OTXModel: The instantiated OTXModel instance.
@@ -285,9 +284,14 @@ class AutoConfigurator:
 
         model_config = deepcopy(self.config["model"])
 
-        if input_size is not None:
-            model_config["init_args"]["input_size"] = (
-                (input_size, input_size) if isinstance(input_size, int) else input_size
+        if data_input_params is not None:
+            model_config["init_args"]["data_input_params"] = data_input_params
+        elif (datamodule := self.get_datamodule()) is not None:
+            # get data_input_params info from datamodule
+            model_config["init_args"]["data_input_params"] = DataInputParams(
+                input_size=datamodule.input_size,
+                mean=datamodule.input_mean,
+                std=datamodule.input_std,
             )
 
         model_cls = get_model_cls_from_config(Namespace(model_config))

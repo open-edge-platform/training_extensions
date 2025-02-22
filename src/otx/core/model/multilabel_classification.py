@@ -4,21 +4,13 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import torch
-from torch import Tensor, nn
+from torch import Tensor
 
-from otx.algo.classification.utils import get_classification_layers
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
     MultilabelClsBatchDataEntity,
     MultilabelClsBatchPredEntity,
 )
@@ -26,14 +18,12 @@ from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
-    HLabelClsMetricCallable,
-    MultiClassClsMetricCallable,
     MultiLabelClsMetricCallable,
 )
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel, DataInputParams
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -43,7 +33,18 @@ if TYPE_CHECKING:
 
 
 class OTXMultilabelClsModel(OTXModel[MultilabelClsBatchDataEntity, MultilabelClsBatchPredEntity]):
-    """Multi-label classification models used in OTX."""
+    """Multilabel classification model used in OTX.
+
+    Args:
+    label_info (LabelInfoTypes): Information about the hierarchical labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "multilabel_classification_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+    """
 
     def __init__(
         self,
@@ -64,28 +65,6 @@ class OTXMultilabelClsModel(OTXModel[MultilabelClsBatchDataEntity, MultilabelCls
             metric=metric,
             torch_compile=torch_compile,
         )
-
-    def _create_model(self) -> nn.Module:
-        # Get classification_layers for class-incr learning
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-        self.classification_layers = get_classification_layers(
-            sample_model_dict,
-            incremental_model_dict,
-            prefix="model.",
-        )
-
-        model = self._build_model(num_classes=self.num_classes)
-        model.init_weights()
-        return model
-
-    @abstractmethod
-    def _build_model(self, num_classes: int) -> nn.Module:
-        """Building base nn.Module model.
-
-        Returns:
-            nn.Module: base nn.Module model for supervised training
-        """
 
     def _customize_inputs(self, inputs: MultilabelClsBatchDataEntity) -> dict[str, Any]:
         if self.training:

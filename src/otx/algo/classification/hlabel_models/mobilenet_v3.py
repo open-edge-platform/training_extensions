@@ -7,16 +7,15 @@ from __future__ import annotations
 
 from copy import copy
 from math import ceil
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import torch
-from torch import Tensor, nn
+from torch import nn
 
 from otx.algo.classification.backbones import MobileNetV3Backbone
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
-from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelNonLinearClsHead
+from otx.algo.classification.classifier import HLabelClassifier
+from otx.algo.classification.heads import HierarchicalCBAMClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
-from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import (
@@ -25,10 +24,10 @@ from otx.core.data.entity.classification import (
 )
 from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import HLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.core.types.label import HLabelInfo
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -41,7 +40,7 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: HLabelInfo,
         data_input_params: DataInputParams,
         model_name: str = "mobilenetv3_large",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -49,7 +48,6 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -60,13 +58,16 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
             torch_compile=torch_compile,
         )
 
-    def _create_model(self, head_config: dict | None = None) -> nn.Module:
+    def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
         head_config = head_config if head_config is not None else self.label_info.as_head_config_dict()
         if not isinstance(self.label_info, HLabelInfo):
             raise TypeError(self.label_info)
 
         copied_head_config = copy(head_config)
-        copied_head_config["step_size"] = (ceil(self.data_input_params.input_size[0] / 32), ceil(self.data_input_params.input_size[1] / 32))
+        copied_head_config["step_size"] = (
+            ceil(self.data_input_params.input_size[0] / 32),
+            ceil(self.data_input_params.input_size[1] / 32),
+        )
 
         backbone = MobileNetV3Backbone(model_name=self.model_name, input_size=self.data_input_params.input_size)
         return HLabelClassifier(

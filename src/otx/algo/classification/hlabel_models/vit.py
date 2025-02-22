@@ -5,36 +5,27 @@
 
 from __future__ import annotations
 
-import types
 import warnings
-from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Generic
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-import numpy as np
-import torch
 from torch import nn
 from torch.hub import download_url_to_file
 
-from otx.algo.classification.backbones.vision_transformer import VIT_MODELS, VisionTransformer
-from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
+from otx.algo.classification.backbones.vision_transformer import VisionTransformer
+from otx.algo.classification.classifier import HLabelClassifier
 from otx.algo.classification.heads import (
     HierarchicalCBAMClsHead,
-    MultiLabelLinearClsHead,
-    VisionTransformerClsHead,
 )
-from otx.algo.classification.multiclass_models.vit import ForwardExplainMixInForViT
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
-from otx.algo.classification.utils import get_classification_layers
-from otx.algo.explain.explain_algo import ViTReciproCAM, feature_vector_fn
+from otx.algo.classification.multiclass_models.vit import ForwardExplainMixInForViT
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.data.entity.base import T_OTXBatchDataEntity, T_OTXBatchPredEntity, DataInputParams
 from otx.core.metrics.accuracy import HLabelClsMetricCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.core.types.label import HLabelInfo
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -60,8 +51,7 @@ pretrained_urls = {
 
 
 class VisionTransformerForHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
-    """
-    VisionTransformerForHLabelCls is a model designed for hierarchical label classification tasks using Vision Transformer (ViT) architecture.
+    """VisionTransformerForHLabelCls is a model designed for hierarchical label classification using ViT architecture.
 
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
@@ -78,9 +68,9 @@ class VisionTransformerForHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: HLabelInfo,
         data_input_params: DataInputParams,
-        model_name: VIT_MODELS = "vit-tiny",
+        model_name: str = "vit-tiny",
         lora: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -112,7 +102,7 @@ class VisionTransformerForHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel
                 state_dict[new_key] = state_dict.pop(key)
         return OTXv1Helper.load_cls_effnet_b0_ckpt(state_dict, "multiclass", add_prefix)
 
-    def _create_model(self, head_config: dict | None = None) -> nn.Module:
+    def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
         head_config = head_config if head_config is not None else self.label_info.as_head_config_dict()
         if not isinstance(self.label_info, HLabelInfo):
             raise TypeError(self.label_info)
@@ -120,7 +110,11 @@ class VisionTransformerForHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel
             {"std": 0.2, "layer": "Linear", "type": "TruncNormal"},
             {"bias": 0.0, "val": 1.0, "layer": "LayerNorm", "type": "Constant"},
         ]
-        vit_backbone = VisionTransformer(model_name=self.model_name, img_size=self.data_input_params.input_size, lora=self.lora)
+        vit_backbone = VisionTransformer(
+            model_name=self.model_name,
+            img_size=self.data_input_params.input_size,
+            lora=self.lora,
+        )
         model = HLabelClassifier(
             backbone=vit_backbone,
             neck=None,
@@ -146,4 +140,7 @@ class VisionTransformerForHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel
                 download_url_to_file(pretrained_urls[self.arch], cache_file, "", progress=True)
             model.backbone.load_pretrained(checkpoint_path=cache_file)
         else:
-            warnings.warn("No pretrained weights found for the specified model. Initializing model with random weights.")
+            warnings.warn(
+                "No pretrained weights found for the specified model. Initializing model with random weights.",
+                stacklevel=1,
+            )

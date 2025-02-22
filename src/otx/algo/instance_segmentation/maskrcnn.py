@@ -8,14 +8,13 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, ClassVar
 
-from torch import nn
-from torchvision.ops import RoIAlign
 import cv2
 import torch
 from datumaro import Polygon
+from torch import nn
 from torchvision import tv_tensors
+from torchvision.ops import RoIAlign
 
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.algo.common.backbones import ResNet, build_model_including_pytorchcv
 from otx.algo.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
 from otx.algo.common.utils.assigners import MaxIoUAssigner
@@ -30,10 +29,11 @@ from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.algo.instance_segmentation.utils.roi_extractors import SingleRoIExtractor
 from otx.algo.modules.norm import build_norm_layer
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
+
 
 class MaskRCNN(OTXInstanceSegModel):
     """MaskRCNN Model."""
@@ -53,10 +53,6 @@ class MaskRCNN(OTXInstanceSegModel):
         "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco/"
         "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco_20210908_165006-90a4008c.pth",
     }
-
-    mean = (123.675, 116.28, 103.53)
-    std = (58.395, 57.12, 57.375)
-    effnet_std = (1.0, 1.0, 1.0)
 
     def _build_model(self, num_classes: int) -> TwoStageDetector:
         if self.model_name not in self.AVAILABLE_MODELS:
@@ -307,15 +303,9 @@ class MaskRCNN(OTXInstanceSegModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std if "efficientnet" not in self.model_name else self.effnet_std,
+            data_input_params=self.data_input_params,
             resize_mode="fit_to_window",
             pad_value=0,
             swap_rgb=False,

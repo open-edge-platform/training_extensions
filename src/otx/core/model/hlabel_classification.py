@@ -10,27 +10,20 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
-from torch import Tensor, nn
+from torch import Tensor
 
-from otx.algo.classification.utils import get_classification_layers
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import (
     HlabelClsBatchDataEntity,
     HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
 )
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
     HLabelClsMetricCallable,
-    MultiClassClsMetricCallable,
-    MultiLabelClsMetricCallable,
 )
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel, DataInputParams
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
@@ -38,12 +31,24 @@ from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import ClassificationResult
+    from torch import nn
 
     from otx.core.metrics import MetricCallable
 
 
 class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEntity]):
-    """H-label classification models used in OTX."""
+    """H-label classification models used in OTX.
+
+    Args:
+    label_info (HLabelInfo): Information about the hierarchical labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "hlabel_classification_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+    """
 
     label_info: HLabelInfo
 
@@ -51,6 +56,7 @@ class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEnt
         self,
         label_info: HLabelInfo,
         data_input_params: DataInputParams,
+        model_name: str = "hlabel_classification_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
@@ -59,13 +65,18 @@ class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEnt
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
 
-    def _identify_classification_layers(self, prefix="model.") -> dict[str, int]:
+    @abstractmethod
+    def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
+        """Create a PyTorch model for this class."""
+
+    def _identify_classification_layers(self, prefix: str = "model.") -> list[str]:
         """Simple identification of the classification layers. Used for incremental learning."""
         # identify classification layers
         sample_config = deepcopy(self.label_info.as_head_config_dict())
@@ -73,14 +84,13 @@ class OTXHlabelClsModel(OTXModel[HlabelClsBatchDataEntity, HlabelClsBatchPredEnt
         sample_model_dict = self._build_model(head_config=sample_config).state_dict()
         sample_config["num_classes"] = 6
         incremental_model_dict = self._build_model(head_config=sample_config).state_dict()
-        classification_layers = []
         # iterate over the model dict and compare the shapes.
         # Add the key to the list if the shapes are different
-        for key in sample_model_dict:
-            if sample_model_dict[key].shape != incremental_model_dict[key].shape:
-                classification_layers.append(prefix + key)
-
-        return classification_layers
+        return [
+            prefix + key
+            for key in sample_model_dict
+            if sample_model_dict[key].shape != incremental_model_dict[key].shape
+        ]
 
     def _customize_inputs(self, inputs: HlabelClsBatchDataEntity) -> dict[str, Any]:
         if self.training:

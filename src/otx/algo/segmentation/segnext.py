@@ -27,14 +27,15 @@ class SegNext(OTXSegmentationModel):
         "segnext_base",
     ]
 
-    def _create_model(self) -> nn.Module:
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
         # initialize backbones
+        num_classes = num_classes if num_classes is not None else self.num_classes
         if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
             msg = f"Model version {self.model_name} is not supported."
             raise ValueError(msg)
 
         backbone = MSCAN(model_name=self.model_name)
-        decode_head = LightHamHead(model_name=self.model_name, num_classes=self.num_classes)
+        decode_head = LightHamHead(model_name=self.model_name, num_classes=num_classes)
         criterion = CrossEntropyLossWithIgnore(ignore_index=self.label_info.ignore_index)  # type: ignore[attr-defined]
         return BaseSegmentationModel(
             backbone=backbone,

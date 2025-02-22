@@ -9,9 +9,10 @@ from typing import Any
 from anomalib import TaskType as AnomalibTaskType
 
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import NullLabelInfo
-from otx.core.model.base import DataInputParams
+
 
 class OTXAnomalyModelExporter(OTXNativeModelExporter):
     """Exporter for anomaly tasks."""

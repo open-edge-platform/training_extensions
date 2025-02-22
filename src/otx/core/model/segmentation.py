@@ -9,7 +9,7 @@ import copy
 import json
 import logging as log
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 import torch
 import torch.nn.functional as f
@@ -40,34 +40,30 @@ if TYPE_CHECKING:
 
 
 class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
-    """Base class for the semantic segmentation models used in OTX."""
+    """Semantic Segmentation model used in OTX.
+
+    Args:
+    label_info (LabelInfoTypes): Information about the hierarchical labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+    """
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str,
+        model_name: str = "otx_segmentation_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ):
-        """Base semantic segmentation model.
-
-        Args:
-            label_info (LabelInfoTypes): The label information for the segmentation model.
-            model_name (str): The version/name/size of the model.
-            input_size (tuple[int, int]): Model input size in the order of height and width.
-            optimizer (OptimizerCallable, optional): The optimizer to use for training.
-                Defaults to DefaultOptimizerCallable.
-            scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional):
-                The scheduler to use for learning rate adjustment. Defaults to DefaultSchedulerCallable.
-            metric (MetricCallable, optional): The metric to use for evaluation.
-                Defaults to SegmCallable.
-            torch_compile (bool, optional): Whether to compile the model using TorchScript.
-                Defaults to False.
-        """
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -146,7 +142,6 @@ class OTXSegmentationModel(OTXModel[SegBatchDataEntity, SegBatchPredEntity]):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
             data_input_params=self.data_input_params,

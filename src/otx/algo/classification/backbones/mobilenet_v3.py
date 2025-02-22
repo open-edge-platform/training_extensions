@@ -9,7 +9,7 @@ Original papers:
 from __future__ import annotations
 
 import math
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar
 
 import torch
 from torch import nn

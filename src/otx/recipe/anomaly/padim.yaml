@@ -6,6 +6,10 @@ model:
     pre_trained: true
     n_features: null
     task: ANOMALY
+    data_input_params:
+      input_size: [256, 256]
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
 
 engine:
   task: ANOMALY
