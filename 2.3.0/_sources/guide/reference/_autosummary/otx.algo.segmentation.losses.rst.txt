@@ -1,0 +1,29 @@
+otx.algo.segmentation.losses
+============================
+
+.. automodule:: otx.algo.segmentation.losses
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CrossEntropyLossWithIgnore
+   
+   
+
+   
+   
+   
+
+
+

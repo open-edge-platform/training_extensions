@@ -1,0 +1,30 @@
+otx.core.model.anomaly
+======================
+
+.. automodule:: otx.core.model.anomaly
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AnomalyMixin
+      OTXAnomaly
+   
+   
+
+   
+   
+   
+
+
+

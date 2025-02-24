@@ -1,0 +1,42 @@
+otx.algo
+========
+
+.. automodule:: otx.algo
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   otx.algo.accelerators
+   otx.algo.callbacks
+   otx.algo.strategies
+   otx.algo.action_classification
+   otx.algo.anomaly
+   otx.algo.classification
+   otx.algo.detection
+   otx.algo.modules
+   otx.algo.samplers
+   otx.algo.segmentation
+   otx.algo.utils
+   otx.algo.visual_prompting
+

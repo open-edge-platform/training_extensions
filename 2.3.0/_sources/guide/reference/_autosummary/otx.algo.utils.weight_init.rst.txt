@@ -1,0 +1,51 @@
+otx.algo.utils.weight\_init
+===========================
+
+.. automodule:: otx.algo.utils.weight_init
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      bias_init_with_prob
+      constant_init
+      initialize
+      kaiming_init
+      normal_init
+      trunc_normal_
+      trunc_normal_init
+      uniform_init
+      update_init_info
+      xavier_init
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseInit
+      ConstantInit
+      KaimingInit
+      NormalInit
+      PretrainedInit
+      TruncNormalInit
+      UniformInit
+      XavierInit
+   
+   
+
+   
+   
+   
+
+
+

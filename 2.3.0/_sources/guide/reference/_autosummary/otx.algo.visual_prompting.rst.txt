@@ -1,0 +1,30 @@
+otx.algo.visual\_prompting
+==========================
+
+.. automodule:: otx.algo.visual_prompting
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SAM
+      ZeroShotSAM
+   
+   
+
+   
+   
+   
+
+
+

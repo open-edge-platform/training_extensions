@@ -1,0 +1,30 @@
+otx.algo.segmentation.backbones
+===============================
+
+.. automodule:: otx.algo.segmentation.backbones
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      LiteHRNetBackbone
+      MSCAN
+   
+   
+
+   
+   
+   
+
+
+

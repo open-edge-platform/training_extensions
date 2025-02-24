@@ -1,0 +1,37 @@
+otx.algo.classification.heads
+=============================
+
+.. automodule:: otx.algo.classification.heads
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      LinearClsHead
+      MultiLabelLinearClsHead
+      MultiLabelNonLinearClsHead
+      HierarchicalLinearClsHead
+      HierarchicalNonLinearClsHead
+      HierarchicalCBAMClsHead
+      VisionTransformerClsHead
+      SemiSLLinearClsHead
+      SemiSLVisionTransformerClsHead
+   
+   
+
+   
+   
+   
+
+
+

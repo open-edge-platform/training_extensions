@@ -1,0 +1,29 @@
+otx.algo.callbacks.ema\_mean\_teacher
+=====================================
+
+.. automodule:: otx.algo.callbacks.ema_mean_teacher
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      EMAMeanTeacher
+   
+   
+
+   
+   
+   
+
+
+

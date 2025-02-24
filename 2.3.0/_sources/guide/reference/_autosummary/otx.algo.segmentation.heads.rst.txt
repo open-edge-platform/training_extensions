@@ -1,0 +1,30 @@
+otx.algo.segmentation.heads
+===========================
+
+.. automodule:: otx.algo.segmentation.heads
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      FCNHead
+      LightHamHead
+   
+   
+
+   
+   
+   
+
+
+
