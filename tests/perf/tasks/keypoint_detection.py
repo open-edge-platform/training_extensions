@@ -9,7 +9,7 @@ from typing import ClassVar
 
 import pytest
 
-from .benchmark import Benchmark
+from ..benchmark import Benchmark
 from .conftest import PerfTestBase
 
 
@@ -17,25 +17,25 @@ class TestPerfKeypointDetection(PerfTestBase):
     """Benchmark visual prompting."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.Model(task="keypoint_detection", name="rtmpose_tiny", category="speed"),
+        Benchmark.ModelInfo(task="keypoint_detection", name="rtmpose_tiny", category="speed"),
     ]
 
     DATASET_TEST_CASES: ClassVar = [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="coco_person_keypoint_small",
             path=Path("keypoint_detection/coco_keypoint/small"),
             group="small",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="coco_person_keypoint_medium",
             path=Path("keypoint_detection/coco_keypoint/medium"),
             group="medium",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="coco_person_keypoint_large",
             path=Path("keypoint_detection/coco_keypoint/large"),
             group="large",
@@ -74,8 +74,8 @@ class TestPerfKeypointDetection(PerfTestBase):
     )
     def test_perf(
         self,
-        fxt_model: Benchmark.Model,
-        fxt_dataset: Benchmark.Dataset,
+        fxt_model: Benchmark.ModelInfo,
+        fxt_dataset: Benchmark.DatasetInfo,
         fxt_benchmark: Benchmark,
     ):
         self._test_perf(
@@ -90,25 +90,25 @@ class TestPerfKeypointDetectionSingleObj(PerfTestBase):
     """Benchmark visual prompting."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.Model(task="keypoint_detection", name="rtmpose_tiny_single_obj", category="speed"),
+        Benchmark.ModelInfo(task="keypoint_detection", name="rtmpose_tiny_single_obj", category="speed"),
     ]
 
     DATASET_TEST_CASES: ClassVar = [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="coco_person_keypoint_single_obj_small",
             path=Path("keypoint_detection/coco_keypoint_single_obj/small"),
             group="small",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="coco_person_keypoint_single_obj_medium",
             path=Path("keypoint_detection/coco_keypoint_single_obj/medium"),
             group="medium",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="coco_person_keypoint_single_obj_large",
             path=Path("keypoint_detection/coco_keypoint_single_obj/large"),
             group="large",
@@ -147,8 +147,8 @@ class TestPerfKeypointDetectionSingleObj(PerfTestBase):
     )
     def test_perf(
         self,
-        fxt_model: Benchmark.Model,
-        fxt_dataset: Benchmark.Dataset,
+        fxt_model: Benchmark.ModelInfo,
+        fxt_dataset: Benchmark.DatasetInfo,
         fxt_benchmark: Benchmark,
     ):
         self._test_perf(

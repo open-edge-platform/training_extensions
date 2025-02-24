@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from .benchmark import Benchmark
+from ..benchmark import Benchmark
 from .conftest import PerfTestBase
 
 log = logging.getLogger(__name__)
@@ -29,18 +29,18 @@ class TestPerfSingleLabelClassification(PerfTestBase):
     """Benchmark single-label classification."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.Model(task="classification/multi_class_cls", name="efficientnet_b0", category="speed"),
-        Benchmark.Model(task="classification/multi_class_cls", name="efficientnet_v2", category="balance"),
-        Benchmark.Model(task="classification/multi_class_cls", name="mobilenet_v3_large", category="accuracy"),
-        Benchmark.Model(task="classification/multi_class_cls", name="deit_tiny", category="other"),
-        Benchmark.Model(task="classification/multi_class_cls", name="dino_v2", category="other"),
-        Benchmark.Model(task="classification/multi_class_cls", name="tv_efficientnet_b3", category="other"),
-        Benchmark.Model(task="classification/multi_class_cls", name="tv_efficientnet_v2_l", category="other"),
-        Benchmark.Model(task="classification/multi_class_cls", name="tv_mobilenet_v3_small", category="other"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="efficientnet_b0", category="speed"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="efficientnet_v2", category="balance"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="mobilenet_v3_large", category="accuracy"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="deit_tiny", category="other"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="dino_v2", category="other"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="tv_efficientnet_b3", category="other"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="tv_efficientnet_v2_l", category="other"),
+        Benchmark.ModelInfo(task="classification/multi_class_cls", name="tv_mobilenet_v3_small", category="other"),
     ]
 
     DATASET_TEST_CASES = [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name=f"multiclass_CUB_small_{idx}",
             path=Path("multiclass_classification/multiclass_CUB_small") / f"{idx}",
             group="small",
@@ -49,14 +49,14 @@ class TestPerfSingleLabelClassification(PerfTestBase):
         )
         for idx in (1, 2, 3)
     ] + [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="multiclass_CUB_medium",
             path=Path("multiclass_classification/multiclass_CUB_medium"),
             group="medium",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="multiclass_food20_large",
             path=Path("multiclass_classification/multiclass_food20_large"),
             group="large",
@@ -95,8 +95,8 @@ class TestPerfSingleLabelClassification(PerfTestBase):
     )
     def test_perf(
         self,
-        fxt_model: Benchmark.Model,
-        fxt_dataset: Benchmark.Dataset,
+        fxt_model: Benchmark.ModelInfo,
+        fxt_dataset: Benchmark.DatasetInfo,
         fxt_benchmark: Benchmark,
         fxt_accelerator: str,
     ):
@@ -112,14 +112,14 @@ class TestPerfMultiLabelClassification(PerfTestBase):
     """Benchmark multi-label classification."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.Model(task="classification/multi_label_cls", name="efficientnet_b0", category="speed"),
-        Benchmark.Model(task="classification/multi_label_cls", name="efficientnet_v2", category="balance"),
-        Benchmark.Model(task="classification/multi_label_cls", name="mobilenet_v3_large", category="accuracy"),
-        Benchmark.Model(task="classification/multi_label_cls", name="deit_tiny", category="other"),
+        Benchmark.ModelInfo(task="classification/multi_label_cls", name="efficientnet_b0", category="speed"),
+        Benchmark.ModelInfo(task="classification/multi_label_cls", name="efficientnet_v2", category="balance"),
+        Benchmark.ModelInfo(task="classification/multi_label_cls", name="mobilenet_v3_large", category="accuracy"),
+        Benchmark.ModelInfo(task="classification/multi_label_cls", name="deit_tiny", category="other"),
     ]
 
     DATASET_TEST_CASES = [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name=f"multilabel_CUB_small_{idx}",
             path=Path("multilabel_classification/multilabel_CUB_small") / f"{idx}",
             group="small",
@@ -128,14 +128,14 @@ class TestPerfMultiLabelClassification(PerfTestBase):
         )
         for idx in (1, 2, 3)
     ] + [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="multilabel_CUB_medium",
             path=Path("multilabel_classification/multilabel_CUB_medium"),
             group="medium",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="multilabel_food20_large",
             path=Path("multilabel_classification/multilabel_food20_large"),
             group="large",
@@ -174,8 +174,8 @@ class TestPerfMultiLabelClassification(PerfTestBase):
     )
     def test_perf(
         self,
-        fxt_model: Benchmark.Model,
-        fxt_dataset: Benchmark.Dataset,
+        fxt_model: Benchmark.ModelInfo,
+        fxt_dataset: Benchmark.DatasetInfo,
         fxt_benchmark: Benchmark,
         fxt_accelerator: str,
     ):
@@ -191,14 +191,14 @@ class TestPerfHierarchicalLabelClassification(PerfTestBase):
     """Benchmark hierarchical-label classification."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.Model(task="classification/h_label_cls", name="efficientnet_b0", category="speed"),
-        Benchmark.Model(task="classification/h_label_cls", name="efficientnet_v2", category="balance"),
-        Benchmark.Model(task="classification/h_label_cls", name="mobilenet_v3_large", category="accuracy"),
-        Benchmark.Model(task="classification/h_label_cls", name="deit_tiny", category="other"),
+        Benchmark.ModelInfo(task="classification/h_label_cls", name="efficientnet_b0", category="speed"),
+        Benchmark.ModelInfo(task="classification/h_label_cls", name="efficientnet_v2", category="balance"),
+        Benchmark.ModelInfo(task="classification/h_label_cls", name="mobilenet_v3_large", category="accuracy"),
+        Benchmark.ModelInfo(task="classification/h_label_cls", name="deit_tiny", category="other"),
     ]
 
     DATASET_TEST_CASES = [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name=f"hlabel_CUB_small_{idx}",
             path=Path("hlabel_classification/hlabel_CUB_small") / f"{idx}",
             group="small",
@@ -207,14 +207,14 @@ class TestPerfHierarchicalLabelClassification(PerfTestBase):
         )
         for idx in (1, 2, 3)
     ] + [
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="hlabel_CUB_medium",
             path=Path("hlabel_classification/hlabel_CUB_medium"),
             group="medium",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
+        Benchmark.DatasetInfo(
             name="cifar100_label_group_datum_format_large",
             path=Path("hlabel_classification/cifar100_label_group_datum_format_large"),
             group="large",
@@ -253,8 +253,8 @@ class TestPerfHierarchicalLabelClassification(PerfTestBase):
     )
     def test_perf(
         self,
-        fxt_model: Benchmark.Model,
-        fxt_dataset: Benchmark.Dataset,
+        fxt_model: Benchmark.ModelInfo,
+        fxt_dataset: Benchmark.DatasetInfo,
         fxt_benchmark: Benchmark,
         fxt_accelerator: str,
     ):

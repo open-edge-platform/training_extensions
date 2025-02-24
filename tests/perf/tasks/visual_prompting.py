@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX semantic segmentation perfomance benchmark tests."""
+"""OTX visual prompting perfomance benchmark tests."""
 
 from __future__ import annotations
 
@@ -9,43 +9,38 @@ from pathlib import Path
 
 import pytest
 
-from .benchmark import Benchmark
+from ..benchmark import Benchmark
 from .conftest import PerfTestBase
 
 
-class TestPerfSemanticSegmentation(PerfTestBase):
-    """Benchmark semantic segmentation."""
+class TestPerfVisualPrompting(PerfTestBase):
+    """Benchmark visual prompting."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.Model(task="semantic_segmentation", name="litehrnet_18", category="balance"),
-        Benchmark.Model(task="semantic_segmentation", name="litehrnet_s", category="speed"),
-        Benchmark.Model(task="semantic_segmentation", name="litehrnet_x", category="accuracy"),
-        Benchmark.Model(task="semantic_segmentation", name="segnext_b", category="other"),
-        Benchmark.Model(task="semantic_segmentation", name="segnext_s", category="other"),
-        Benchmark.Model(task="semantic_segmentation", name="segnext_t", category="other"),
-        Benchmark.Model(task="semantic_segmentation", name="dino_v2", category="other"),
+        Benchmark.ModelInfo(task="visual_prompting", name="sam_tiny_vit", category="speed"),
+        Benchmark.ModelInfo(task="visual_prompting", name="sam_vit_b", category="accuracy"),
     ]
 
     DATASET_TEST_CASES = [
-        Benchmark.Dataset(
-            name=f"kvasir_small_{idx}",
-            path=Path("semantic_seg/kvasir_small") / f"{idx}",
+        Benchmark.DatasetInfo(
+            name=f"wgisd_small_{idx}",
+            path=Path("visual_prompting/wgisd_small") / f"{idx}",
             group="small",
             num_repeat=5,
             extra_overrides={},
         )
         for idx in (1, 2, 3)
     ] + [
-        Benchmark.Dataset(
-            name="cityscapes_185_70_medium",
-            path=Path("semantic_seg/cityscapes_185_70_medium"),
+        Benchmark.DatasetInfo(
+            name="coco_car_person_medium",
+            path=Path("visual_prompting/coco_car_person_medium"),
             group="medium",
             num_repeat=5,
             extra_overrides={},
         ),
-        Benchmark.Dataset(
-            name="voc_2012_cut_large",
-            path=Path("semantic_seg/voc_2012_cut_large"),
+        Benchmark.DatasetInfo(
+            name="vitens_coliform",
+            path=Path("visual_prompting/Vitens-Coliform-coco"),
             group="large",
             num_repeat=5,
             extra_overrides={},
@@ -55,10 +50,10 @@ class TestPerfSemanticSegmentation(PerfTestBase):
     BENCHMARK_CRITERIA = [  # noqa: RUF012
         Benchmark.Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
         Benchmark.Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="val/Dice", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test/Dice", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="export/Dice", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="optimize/Dice", summary="max", compare=">", margin=0.1),
+        Benchmark.Criterion(name="val/dice", summary="max", compare=">", margin=0.1),
+        Benchmark.Criterion(name="test/dice", summary="max", compare=">", margin=0.1),
+        Benchmark.Criterion(name="export/dice", summary="max", compare=">", margin=0.1),
+        Benchmark.Criterion(name="optimize/dice", summary="max", compare=">", margin=0.1),
         Benchmark.Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
         Benchmark.Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
         Benchmark.Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
@@ -82,10 +77,9 @@ class TestPerfSemanticSegmentation(PerfTestBase):
     )
     def test_perf(
         self,
-        fxt_model: Benchmark.Model,
-        fxt_dataset: Benchmark.Dataset,
+        fxt_model: Benchmark.ModelInfo,
+        fxt_dataset: Benchmark.DatasetInfo,
         fxt_benchmark: Benchmark,
-        fxt_accelerator: str,
     ):
         self._test_perf(
             model=fxt_model,
