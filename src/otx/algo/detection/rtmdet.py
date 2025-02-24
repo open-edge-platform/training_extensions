@@ -45,6 +45,8 @@ PRETRAINED_WEIGHTS: dict[str, str] = {
 class RTMDet(OTXDetectionModel):
     """OTX Detection model class for RTMDet."""
 
+    input_size_multiplier = 32
+
     def __init__(
         self,
         label_info: LabelInfoTypes,

@@ -25,7 +25,7 @@ from otx.core.data.entity.anomaly import (
 )
 from otx.core.data.entity.base import ImageInfo
 from otx.core.exporter.anomaly import OTXAnomalyModelExporter
-from otx.core.model.base import DataInputParams, OTXModel
+from otx.core.model.base import OTXModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.precision import OTXPrecisionType
@@ -65,7 +65,7 @@ class OTXAnomaly(OTXModel):
     def __init__(self) -> None:
         super().__init__(
             label_info=AnomalyLabelInfo(),
-            data_input_params=DataInputParams((256, 256), (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+            data_input_params=self.data_input_params,
             model_name="otx_anomaly_model",
         )
         self.optimizer: list[OptimizerCallable] | OptimizerCallable = None

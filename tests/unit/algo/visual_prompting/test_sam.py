@@ -14,6 +14,7 @@ from otx.algo.visual_prompting.decoders.sam_mask_decoder import SAMMaskDecoder
 from otx.algo.visual_prompting.encoders.sam_prompt_encoder import SAMPromptEncoder
 from otx.algo.visual_prompting.losses.sam_loss import SAMCriterion
 from otx.algo.visual_prompting.sam import SAM, CommonSettingMixin
+from otx.core.model.base import DataInputParams
 
 
 class TestCommonSettingMixin:
@@ -141,15 +142,20 @@ class TestCommonSettingMixin:
 class TestSAM:
     @pytest.fixture()
     def sam(self) -> SAM:
-        return SAM(backbone_type="tiny_vit")
+        return SAM(
+            model_name="tiny_vit",
+            data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
     def test_initialization(self, mocker) -> None:
         mock_freeze_networks = mocker.patch.object(CommonSettingMixin, "freeze_networks")
         mock_load_state_dict = mocker.patch.object(CommonSettingMixin, "load_state_dict")
 
-        sam = SAM(backbone_type="tiny_vit")
-
-        assert sam.backbone_type == "tiny_vit"
+        sam = SAM(
+            model_name="tiny_vit",
+            data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
+        assert sam.model_name == "tiny_vit"
         assert sam.image_size == 1024
         assert sam.image_embedding_size == 64
         assert sam.use_stability_score is False

@@ -193,6 +193,7 @@ class SAM(CommonSettingMixin, OTXVisualPromptingModel):  # type: ignore[misc]
         self.return_single_mask = return_single_mask
         self.return_extra_metrics = return_extra_metrics
         self.stability_score_offset = stability_score_offset
+        self.image_embedding_size = data_input_params.input_size[0] // self.input_size_multiplier
 
         super().__init__(
             label_info=label_info,
@@ -208,10 +209,9 @@ class SAM(CommonSettingMixin, OTXVisualPromptingModel):  # type: ignore[misc]
         self.freeze_networks(freeze_image_encoder, freeze_prompt_encoder, freeze_mask_decoder)
 
     def _build_model(self) -> nn.Module:
-        image_embedding_size = self.data_input_params.input_size[0] // 16
         image_encoder = SAMImageEncoder(backbone_type=self.model_name, img_size=self.data_input_params.input_size[0])
         prompt_encoder = SAMPromptEncoder(
-            image_embedding_size=(image_embedding_size, image_embedding_size),
+            image_embedding_size=(self.image_embedding_size, self.image_embedding_size),
             input_image_size=self.data_input_params.input_size,
         )
         mask_decoder = SAMMaskDecoder()

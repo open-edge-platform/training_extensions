@@ -62,7 +62,7 @@ class OTXNativeModelExporter(OTXModelExporter):
 
         In this implementation the export is done only via standard OV/ONNX tools.
         """
-        input_size = (1, 3, *self.data_input_params.input_size)
+        input_size = self.data_input_params.as_ncwh()
         dummy_tensor = torch.rand(input_size).to(next(model.parameters()).device)
 
         if self.via_onnx:
@@ -115,8 +115,7 @@ class OTXNativeModelExporter(OTXModelExporter):
         Returns:
             Path: The path to the saved ONNX model.
         """
-        input_size = (1, 3, *self.data_input_params.input_size)
-        dummy_tensor = torch.rand(input_size).to(next(model.parameters()).device)
+        dummy_tensor = torch.rand(self.data_input_params.as_ncwh()).to(next(model.parameters()).device)
         save_path = str(output_dir / (base_model_name + ".onnx"))
 
         torch.onnx.export(model, dummy_tensor, save_path, **self.onnx_export_configuration)

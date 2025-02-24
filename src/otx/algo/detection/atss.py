@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from otx.algo.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, GIoULoss
 from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder
@@ -18,10 +18,10 @@ from otx.algo.detection.necks import FPN
 from otx.algo.detection.utils.assigners import ATSSAssigner
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.config.data import TileConfig
-from otx.core.exporter.base import DataInputParams, OTXModelExporter
+from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
 
 if TYPE_CHECKING:
@@ -55,13 +55,17 @@ class ATSS(OTXDetectionModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: Literal["atss_mobilenetv2", "atss_resnext101"] = "atss_mobilenetv2",
+        model_name: str = "atss_mobilenetv2",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
+        if model_name not in PRETRAINED_WEIGHTS:
+            msg = f"Unsupported model name: {model_name}"
+            raise ValueError(msg)
+
         self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
             label_info=label_info,

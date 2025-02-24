@@ -2,9 +2,11 @@ model:
   class_path: otx.algo.keypoint_detection.rtmpose.RTMPose
   init_args:
     label_info: 17
-    input_size:
-      - 512
-      - 512
+    model_name: rtmpose_tiny
+    data_input_params:
+      input_size: [512, 512]
+      mean: [123.675, 116.28, 103.53]
+      std: [58.395, 57.12, 57.375]
 
     optimizer:
       class_path: torch.optim.AdamW

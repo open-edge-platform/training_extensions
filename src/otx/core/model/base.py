@@ -76,6 +76,14 @@ class DataInputParams(NamedTuple):
     mean: tuple[float, float, float]
     std: tuple[float, float, float]
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return self._asdict()
+
+    def as_ncwh(self, batch_size: int = 1) -> tuple[int, int, int, int]:
+        """Convert input_size to NCWH format."""
+        return (batch_size, 3, *self.input_size)
+
 
 def _default_optimizer_callable(params: params_t) -> Optimizer:
     return SGD(params=params, lr=0.01)
@@ -934,9 +942,10 @@ class OVModel(OTXModel):
         self.num_requests = max_num_requests if max_num_requests is not None else get_default_num_async_infer_requests()
         self.use_throughput_mode = use_throughput_mode
         self.model_api_configuration = model_api_configuration if model_api_configuration is not None else {}
+        # data_input_params placeholder. No need for OVModel
         self.data_input_params = DataInputParams(input_size=(224, 224), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
         # NOTE: num_classes and label_info comes from the IR metadata
-        super().__init__(label_info=NullLabelInfo(), metric=metric, data_input_params=self.data_input_params)
+        super().__init__(label_info=NullLabelInfo(), metric=metric, data_input_params=self.data_input_params, model_name=model_name)
         self._label_info = self._create_label_info_from_ov_ir()
 
         tile_enabled = False

@@ -20,6 +20,7 @@ from omegaconf import OmegaConf
 from torchvision import tv_tensors
 
 from otx.algo.detection.atss import ATSS
+from otx.core.model.base import DataInputParams
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.segmentation.litehrnet import LiteHRNet
 from otx.core.config.data import (
@@ -318,6 +319,7 @@ class TestOTXTiling:
             if task is OTXTaskType.DETECTION:
                 tile_datamodule = OTXDataModule(
                     task=OTXTaskType.DETECTION,
+                    input_size=(1024, 1024),
                     **data_config,
                 )
                 tile_datamodule.prepare_data()
@@ -329,6 +331,7 @@ class TestOTXTiling:
             elif task is OTXTaskType.INSTANCE_SEGMENTATION:
                 tile_datamodule = OTXDataModule(
                     task=OTXTaskType.INSTANCE_SEGMENTATION,
+                    input_size=(1024, 1024),
                     **data_config,
                 )
                 tile_datamodule.prepare_data()
@@ -340,6 +343,7 @@ class TestOTXTiling:
             elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
                 tile_datamodule = OTXDataModule(
                     task=OTXTaskType.SEMANTIC_SEGMENTATION,
+                    input_size=(1024, 1024),
                     **data_config,
                 )
                 tile_datamodule.prepare_data()
@@ -362,6 +366,7 @@ class TestOTXTiling:
             )
             tile_datamodule = OTXDataModule(
                 task=task,
+                input_size=(1024, 1024),
                 **data_config,
             )
             tile_datamodule.prepare_data()
@@ -391,6 +396,7 @@ class TestOTXTiling:
             data_config["tile_config"] = TileConfig(enable_tiler=True)
             tile_datamodule = OTXDataModule(
                 task=task,
+                input_size=(1024, 1024),
                 **data_config,
             )
             tile_datamodule.prepare_data()
@@ -411,6 +417,7 @@ class TestOTXTiling:
             data_config["tile_config"] = TileConfig(enable_tiler=True)
             tile_datamodule = OTXDataModule(
                 task=task,
+                input_size=(1024, 1024),
                 **data_config,
             )
             tile_datamodule.prepare_data()
@@ -430,6 +437,7 @@ class TestOTXTiling:
         model = ATSS(
             model_name="atss_mobilenetv2",
             label_info=3,
+            data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )  # updated from OTXDetectionModel to avoid NotImplementedError in _build_model
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
@@ -437,6 +445,7 @@ class TestOTXTiling:
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.DETECTION,
+            input_size=(1024, 1024),
             **data_config,
         )
 
@@ -453,6 +462,7 @@ class TestOTXTiling:
         model = ATSS(
             model_name="atss_mobilenetv2",
             label_info=3,
+            data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )  # updated from OTXDetectionModel to avoid NotImplementedError in _build_model
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True, enable_adaptive_tiling=False)
@@ -460,6 +470,7 @@ class TestOTXTiling:
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.DETECTION,
+            input_size=(1024, 1024),
             **data_config,
         )
 
@@ -475,13 +486,14 @@ class TestOTXTiling:
     @pytest.mark.intense()
     def test_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
-        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", input_size=(256, 256))
+        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
         data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.INSTANCE_SEGMENTATION,
+            input_size=(1024, 1024),
             **data_config,
         )
 
@@ -495,13 +507,14 @@ class TestOTXTiling:
     @pytest.mark.intense()
     def test_explain_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
-        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", input_size=(256, 256))
+        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True, enable_adaptive_tiling=False)
         data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.INSTANCE_SEGMENTATION,
+            input_size=(1024, 1024),
             **data_config,
         )
 
@@ -517,13 +530,14 @@ class TestOTXTiling:
     @pytest.mark.intense()
     def test_seg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.SEMANTIC_SEGMENTATION]
-        model = LiteHRNet(label_info=3, model_name="lite_hrnet_18")
+        model = LiteHRNet(label_info=3, model_name="lite_hrnet_18", data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
         data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.SEMANTIC_SEGMENTATION,
+            input_size=(1024, 1024),
             **data_config,
         )
 

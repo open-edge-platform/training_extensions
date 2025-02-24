@@ -16,6 +16,7 @@ from otx.algo.anomaly.stfpm import Stfpm
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
+from otx.core.model.base import DataInputParams
 
 
 class TestAnomalyOpenVINO:
@@ -27,9 +28,9 @@ class TestAnomalyOpenVINO:
     )
     def otx_model(self, request):
         if request.param == "padim":
-            model = Padim()
+            model = Padim(DataInputParams((1, 1), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         elif request.param == "stfpm":
-            model = Stfpm()
+            model = Stfpm(DataInputParams((1, 1), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         else:
             raise ValueError
 

@@ -2,6 +2,7 @@ model:
   class_path: otx.algo.keypoint_detection.rtmpose.RTMPose
   init_args:
     label_info: 17
+    model_name: rtmpose_tiny
 
     optimizer:
       class_path: torch.optim.AdamW

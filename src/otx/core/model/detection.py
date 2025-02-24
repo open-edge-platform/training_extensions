@@ -17,18 +17,23 @@ from model_api.tilers import DetectionTiler
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 
+from otx.algo.explain.explain_algo import feature_vector_fn
 from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
+from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import OTXModel, OVModel
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
+from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
+from otx.core.types.label import LabelInfoTypes
 from otx.core.utils.tile_merge import DetectionTileMerge
 
 if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
     from torch import nn
@@ -37,7 +42,45 @@ if TYPE_CHECKING:
 
 
 class OTXDetectionModel(OTXModel):
-    """Base class for the detection models used in OTX."""
+    """Base class for the detection models used in OTX.
+
+    Args:
+    label_info (LabelInfoTypes): Information about the labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "otx_detection_model".
+    optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Metric callable. Defaults to MeanAveragePrecisionFMeasureCallable.
+    torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+    tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    explain_mode (bool, optional): Whether to enable explain mode. Defaults to False.
+    """
+
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: str = "otx_detection_model",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ) -> None:
+        super().__init__(
+            label_info=label_info,
+            model_name=model_name,
+            data_input_params=data_input_params,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
+
+        self.model.feature_vector_fn = feature_vector_fn
+        self.model.explain_fn = self.get_explain_fn()
 
     def test_step(self, batch: DetBatchDataEntity, batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.

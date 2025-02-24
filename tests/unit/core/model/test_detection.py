@@ -19,6 +19,7 @@ from otx.algo.detection.atss import ATSS
 from otx.algo.explain.explain_algo import feature_vector_fn
 from otx.core.metrics.fmeasure import FMeasureCallable
 from otx.core.types.export import TaskLevelExportParameters
+from otx.core.model.base import DataInputParams
 
 if TYPE_CHECKING:
     from omegaconf.dictconfig import DictConfig
@@ -56,7 +57,7 @@ class TestOTXDetectionModel:
 
     @pytest.fixture()
     def otx_model(self) -> ATSS:
-        return ATSS(model_name="atss_mobilenetv2", label_info=1)
+        return ATSS(model_name="atss_mobilenetv2", label_info=1, data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
 
     def test_configure_metric_with_ckpt(
         self,
@@ -67,6 +68,7 @@ class TestOTXDetectionModel:
         model = ATSS(
             model_name="atss_mobilenetv2",
             label_info=2,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,

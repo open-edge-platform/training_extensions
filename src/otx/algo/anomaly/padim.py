@@ -51,11 +51,10 @@ class Padim(AnomalyMixin, AnomalibPadim, OTXAnomaly):
         ] = OTXTaskType.ANOMALY_CLASSIFICATION,
     ) -> None:
         self.task = OTXTaskType(task)
+        self.data_input_params = data_input_params
         super().__init__(
             backbone=backbone,
             layers=layers,
             pre_trained=pre_trained,
             n_features=n_features,
         )
-        self.data_input_params = data_input_params
-        self.label_info = label_info

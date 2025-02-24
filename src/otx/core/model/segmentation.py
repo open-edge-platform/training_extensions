@@ -271,7 +271,7 @@ class OTXSegmentationModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> SegBatchDataEntity:
         """Returns a dummy input for semantic segmentation model."""
-        images = torch.rand(batch_size, 3, *self.data_input_params.input_size)
+        images = torch.rand(self.data_input_params.as_ncwh(batch_size))
         infos = []
         for i, img in enumerate(images):
             infos.append(

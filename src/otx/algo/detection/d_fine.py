@@ -49,6 +49,7 @@ PRETRAINED_WEIGHTS: dict[str, str] = {
 
 class DFine(OTXDetectionModel):
     """OTX Detection model class for D-Fine."""
+    input_size_multiplier = 32
 
     def __init__(
         self,

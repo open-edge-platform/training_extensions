@@ -231,7 +231,7 @@ class AutoConfigurator:
         _ = data_config.pop("__path__", {})  # Remove __path__ key that for CLI
         _ = data_config.pop("config", {})  # Remove config key that for CLI
 
-        if data_config.get("adaptive_input_size") is not None:
+        if data_config.get("input_size") == "auto":
             model_cls = get_model_cls_from_config(Namespace(self.config["model"]))
             data_config["input_size_multiplier"] = model_cls.input_size_multiplier
 

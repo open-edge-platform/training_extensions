@@ -57,6 +57,7 @@ class YOLOX(OTXDetectionModel):
         - yolox_l : (640, 640)
         - yolox_x : (640, 640)
     """
+    input_size_multiplier = 32
 
     def __init__(
         self,

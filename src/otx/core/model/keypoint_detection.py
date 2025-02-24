@@ -104,7 +104,7 @@ class OTXKeypointDetectionModel(OTXModel):
     def configure_metric(self) -> None:
         """Configure the metric."""
         super().configure_metric()
-        self._metric.input_size = self.data_input_params.input_size
+        self._metric.input_size = tuple(self.data_input_params.input_size)
 
     def _convert_pred_entity_to_compute_metric(
         self,
@@ -141,7 +141,7 @@ class OTXKeypointDetectionModel(OTXModel):
         Returns:
             KeypointDetBatchDataEntity: An entity containing randomly generated inference data.
         """
-        images = torch.rand(batch_size, 3, *self.data_input_params.input_size)
+        images = torch.rand(self.data_input_params.as_ncwh(batch_size))
         infos = []
         for i, img in enumerate(images):
             infos.append(

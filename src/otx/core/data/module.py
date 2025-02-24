@@ -12,6 +12,7 @@ from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
+from torchvision.transforms.v2 import Normalize
 
 from otx.core.config.data import TileConfig, VisualPromptingConfig
 from otx.core.data.dataset.tile import OTXTileDatasetFactory
@@ -40,12 +41,9 @@ class OTXDataModule(LightningDataModule):
     """LightningDataModule extension for OTX pipeline.
 
     Args:
-        input_size (tuple[int, int]):
-            Final image or video shape of data after data transformation. It'll be applied to all subset configs
-        adaptive_input_size (Literal["auto", "downscale"] | None, optional):
-            The adaptive input size mode. If it's set, appropriate input size is found by analyzing dataset.
-            "auto" can find both bigger and smaller input size than current input size and "downscale" uses only
-            smaller size than default setting. Defaults to None.
+        input_size (tuple[int, int] | str):
+            Final image or video shape of data after data transformation. It'll be applied to all subset configs.
+            It can be set to "auto" value to fine an appropriate input size by analyzing dataset.
         input_size_multiplier (int, optional):
             adaptive_input_size will finds multiple of input_size_multiplier value if it's set. It's usefull when
             a model requries multiple of specific value as input_size. Defaults to 1.
@@ -59,7 +57,7 @@ class OTXDataModule(LightningDataModule):
         train_subset: SubsetConfig,
         val_subset: SubsetConfig,
         test_subset: SubsetConfig,
-        input_size: tuple[int, int],
+        input_size: tuple[int, int] | str,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
         vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
         mem_cache_size: str = "1GB",
@@ -71,7 +69,6 @@ class OTXDataModule(LightningDataModule):
         unannotated_items_ratio: float = 0.0,
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
-        adaptive_input_size: Literal["auto", "downscale"] | None = None,
         input_size_multiplier: int = 1,
     ) -> None:
         """Constructor."""
@@ -113,12 +110,10 @@ class OTXDataModule(LightningDataModule):
                 ignore_index=self.ignore_index if self.task == "SEMANTIC_SEGMENTATION" else None,
             )
 
-        if adaptive_input_size is not None:
+        if input_size == "auto":
             input_size = adapt_input_size_to_dataset(
                 dataset,
                 self.task,
-                input_size,
-                adaptive_input_size == "downscale",
                 input_size_multiplier,
             )
 
@@ -130,10 +125,17 @@ class OTXDataModule(LightningDataModule):
         mean = (0.0, 0.0, 0.0)
         std = (1.0, 1.0, 1.0)
         if train_subset.transforms is not None:
-            for transform in subset_cfg.transforms:
-                if "Normalize" in transform.get("class_path", ""):
+            for transform in train_subset.transforms:
+                if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
+                    # CLI case with jsonargparse
                     mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
                     std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
+                    break
+
+                if isinstance(transform, Normalize):
+                    # torchvision.transforms case
+                    mean = transform.mean
+                    std = transform.std
                     break
 
         self.input_mean = mean

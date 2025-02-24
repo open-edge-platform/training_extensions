@@ -76,9 +76,7 @@ class OTXInstanceSegModel(OTXModel):
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        explain_mode: bool = False,
     ) -> None:
-        self.explain_mode = explain_mode
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -90,10 +88,9 @@ class OTXInstanceSegModel(OTXModel):
             tile_config=tile_config,
         )
 
-        if self.explain_mode:
-            self.model.feature_vector_fn = feature_vector_fn
-            self.model.explain_fn = self.get_explain_fn()
-            self.model.get_results_from_head = self.get_results_from_head
+        self.model.feature_vector_fn = feature_vector_fn
+        self.model.explain_fn = self.get_explain_fn()
+        self.model.get_results_from_head = self.get_results_from_head
 
     def _build_model(self, num_classes: int) -> nn.Module:
         raise NotImplementedError

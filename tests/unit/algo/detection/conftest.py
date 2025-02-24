@@ -15,6 +15,7 @@ def fxt_data_module():
         task=OTXTaskType.DETECTION,
         data_format="coco_instances",
         data_root="tests/assets/car_tree_bug",
+        input_size=(320, 320),
         train_subset=SubsetConfig(
             batch_size=2,
             subset_name="train",

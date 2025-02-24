@@ -126,18 +126,15 @@ def test_compute_robuste_dataset_statistics(mock_dataset):
 def test_adapt_input_size_to_dataset(mocker):
     mock_stat = mocker.patch.object(target_file, "compute_robust_dataset_statistics")
 
-    with pytest.raises(ValueError, match="base_input_size should be set"):
-        input_size = adapt_input_size_to_dataset(dataset=MagicMock())
-
     mock_stat.return_value = {"image": {}, "annotation": {}}
     mock_dataset = MagicMock()
     mock_dataset.subsets.return_value = {}
-    input_size = adapt_input_size_to_dataset(dataset=mock_dataset, base_input_size=512)
-    assert input_size is None
+    with pytest.raises(ValueError, match="Dataset does not have 'train' subset. Cannot compute dataset statistics."):
+        input_size = adapt_input_size_to_dataset(dataset=mock_dataset)
 
     mock_stat.return_value = {"image": {}, "annotation": {}}
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), base_input_size=512)
-    assert input_size == (512, 512)
+    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
+    assert input_size == (0, 0)
 
     mock_stat.return_value = {
         "image": {
@@ -146,7 +143,7 @@ def test_adapt_input_size_to_dataset(mocker):
         },
         "annotation": {},
     }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), base_input_size=512)
+    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
     assert input_size == (150, 200)
 
     mock_stat.return_value = {
@@ -156,7 +153,7 @@ def test_adapt_input_size_to_dataset(mocker):
         },
         "annotation": {},
     }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), base_input_size=512, input_size_multiplier=32)
+    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), input_size_multiplier=32)
     assert input_size == (160, 224)
 
     mock_stat.return_value = {
@@ -166,7 +163,7 @@ def test_adapt_input_size_to_dataset(mocker):
         },
         "annotation": {"size_of_shape": {"robust_min": 64}},
     }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), base_input_size=512)
+    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
     assert input_size == (256, 274)
 
     mock_stat.return_value = {
@@ -176,8 +173,8 @@ def test_adapt_input_size_to_dataset(mocker):
         },
         "annotation": {"size_of_shape": {"robust_min": 64}},
     }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), base_input_size=512)
-    assert input_size == (512, 512)
+    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
+    assert input_size == (512, 600)
 
     mock_stat.return_value = {
         "image": {
@@ -186,5 +183,5 @@ def test_adapt_input_size_to_dataset(mocker):
         },
         "annotation": {"size_of_shape": {"robust_min": 64}},
     }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), downscale_only=False, base_input_size=512)
+    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
     assert input_size == (1022, 1022)
