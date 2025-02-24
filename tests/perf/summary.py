@@ -8,11 +8,12 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import io
+import logging
 import os
 import sys
 from pathlib import Path
 from zipfile import ZipFile
-import logging
+
 import pandas as pd
 
 from otx.core.types.task import OTXTaskType
@@ -122,7 +123,7 @@ def aggregate(raw_data: pd.DataFrame, metrics: list[str]) -> list[pd.DataFrame]:
 
     metrics = raw_data.select_dtypes(include=["number"]).columns.to_list()
     grouped_data = raw_data.groupby(
-        ["otx_version", "task", "model", "data", "test_branch", "test_commit", "data_group"]
+        ["otx_version", "task", "model", "data", "test_branch", "test_commit", "data_group"],
     )
     aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 
@@ -184,6 +185,7 @@ def create_raw_dataset_xlsx(
         output_root (Path): _description_
     """
     from tests.perf import CRITERIA_COLLECTIONS
+
     col_names = []
     col_names.extend(METADATA_ENTRIES)
     col_names.extend([criterion.name for criterion in CRITERIA_COLLECTIONS[task]])
@@ -216,7 +218,7 @@ def summarize_task(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path)
     with pd.ExcelWriter(aggregate_xlsx_path) as writer:
         for dataset_df in dataset_dfs:
             dataset_df.to_excel(writer, sheet_name=dataset_df["data"].iloc[0], index=False)
-    logger.info(f"    Saved {task.value} summary to {str(aggregate_xlsx_path)}")
+    logger.info(f"    Saved {task.value} summary to {aggregate_xlsx_path!s}")
 
 
 if __name__ == "__main__":

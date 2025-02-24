@@ -8,19 +8,16 @@ import logging
 import os
 import platform
 import subprocess
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from pathlib import Path
 
+import pandas as pd
 from cpuinfo import get_cpu_info
 from jsonargparse import ArgumentParser, Namespace
 
-import pandas as pd
-
 from otx.core.types.task import OTXTaskType
-
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +33,7 @@ class ModelInfo:
 
     def to_dict(self):
         return {"task": self.task, "name": self.name, "category": self.category}
+
 
 @dataclass
 class DatasetInfo:
@@ -105,12 +103,15 @@ class Criterion:
             )
             assert result_entry[self.name] > target_entry[self.name] * (1.0 - self.margin)
 
+
 def parse_task(value: str) -> OTXTaskType:
     try:
         # Normalize input to uppercase before converting to enum.
         return OTXTaskType(value.upper())
     except ValueError:
-        raise ValueError(f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in OTXTaskType])}")
+        raise ValueError(
+            f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in OTXTaskType])}"
+        )
 
 
 def get_parser() -> ArgumentParser:
@@ -135,8 +136,7 @@ def get_parser() -> ArgumentParser:
         type=int,
         default=200,
         help=(
-            "Overrides default per-model number of epoch setting. "
-            "Defaults to 0 (per-model epoch & early-stopping)."
+            "Overrides default per-model number of epoch setting. " "Defaults to 0 (per-model epoch & early-stopping)."
         ),
     )
     parser.add_argument(
@@ -265,7 +265,7 @@ def build_tags(config: Namespace, version_tags: dict[str, str]) -> dict[str, str
     elif config.device == "xpu":
         raw = subprocess.check_output(["xpu-smi", "discovery", "--dump", "1,2"]).decode().strip()
         tags["accelerator_info"] = "\n".join(
-            [ret.replace('"', "").replace(",", " : ") for ret in raw.split("\n")[1:]]
+            [ret.replace('"', "").replace(",", " : ") for ret in raw.split("\n")[1:]],
         )
     elif config.device == "cpu":
         tags["accelerator_info"] = "cpu"
@@ -305,7 +305,7 @@ def completeness_check(
             for seed in range(num_repeat):
                 # query
                 query = raw_df.query(
-                    f"task == '{model.task}' and model == '{model.name}' and data == '{data.name}' and seed == '{seed}'"
+                    f"task == '{model.task}' and model == '{model.name}' and data == '{data.name}' and seed == '{seed}'",
                 )
                 if len(query) == 0:
                     logger.error(f"Missing data for model: {model.name} data: {data.name} seed: {seed}.")

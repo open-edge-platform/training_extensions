@@ -6,24 +6,23 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+from tests.perf.summary import load, summarize_task
+from tests.perf.utils import (
+    Criterion,
+    DatasetInfo,
+    ModelInfo,
+    completeness_check,
+    current_date_str,
+    get_parser,
+    setup_output_root,
+)
 
 from otx.core.metrics.fmeasure import FMeasureCallable
 from otx.core.types.task import OTXTaskType
 
-from tests.perf.utils import (
-    get_parser,
-    setup_output_root,
-    current_date_str,
-    DatasetInfo,
-    ModelInfo,
-    Criterion,
-    completeness_check,
-)
-
-
-from tests.perf.summary import load, summarize_task
 logger = logging.getLogger(__name__)
 
 TASK_TYPE = OTXTaskType.DETECTION
@@ -106,7 +105,7 @@ if __name__ == "__main__":
     output_root = setup_output_root(
         args,
         current_date,
-        task=TASK_TYPE
+        task=TASK_TYPE,
     )
 
     for model in MODEL_TEST_CASES:
@@ -116,14 +115,22 @@ if __name__ == "__main__":
                     [
                         "python",
                         "tests/perf/benchmark.py",
-                        "--task", TASK_TYPE.value,
-                        "--model", model.name,
-                        "--dataset", dataset.name,
-                        "--data-root", str(args.data_root),
-                        "--output-root", str(output_root),
-                        "--seed", str(seed),
-                        "--num-epoch", str(args.num_epoch),
-                        "--device", args.device,
+                        "--task",
+                        TASK_TYPE.value,
+                        "--model",
+                        model.name,
+                        "--dataset",
+                        dataset.name,
+                        "--data-root",
+                        str(args.data_root),
+                        "--output-root",
+                        str(output_root),
+                        "--seed",
+                        str(seed),
+                        "--num-epoch",
+                        str(args.num_epoch),
+                        "--device",
+                        args.device,
                     ],
                     check=True,
                 )
@@ -134,13 +141,13 @@ if __name__ == "__main__":
         raw_data,
         MODEL_TEST_CASES,
         DATASET_TEST_CASES,
-        num_repeat=args.num_repeat
+        num_repeat=args.num_repeat,
     )
 
     if len(raw_data):
         output_root.mkdir(parents=True, exist_ok=True)
         raw_data.to_csv(output_root / f"{TASK_TYPE.value}-benchmark-raw-all.csv", index=False)
-        logger.info(f"Saved merged raw data to {str(output_root)}/{TASK_TYPE.value}-benchmark-raw-all.csv")
+        logger.info(f"Saved merged raw data to {output_root!s}/{TASK_TYPE.value}-benchmark-raw-all.csv")
         summarize_task(raw_data, TASK_TYPE, output_root)
     else:
         msg = (

@@ -6,30 +6,29 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+from tests.perf.summary import load, summarize_task
+from tests.perf.utils import (
+    Criterion,
+    DatasetInfo,
+    ModelInfo,
+    completeness_check,
+    current_date_str,
+    get_parser,
+    setup_output_root,
+)
 
 from otx.core.metrics.fmeasure import FMeasureCallable
 from otx.core.types.task import OTXTaskType
 
-from tests.perf.utils import (
-    get_parser,
-    setup_output_root,
-    current_date_str,
-    DatasetInfo,
-    ModelInfo,
-    Criterion,
-    completeness_check,
-)
-
-
-from tests.perf.summary import load, summarize_task
 logger = logging.getLogger(__name__)
 
 TASK_TYPE = OTXTaskType.INSTANCE_SEGMENTATION
 
 
-MODEL_TEST_CASES = [  # noqa: RUF012
+MODEL_TEST_CASES = [
     ModelInfo(task=TASK_TYPE.value, name="maskrcnn_efficientnetb2b", category="speed"),
     ModelInfo(task=TASK_TYPE.value, name="maskrcnn_r50", category="accuracy"),
     ModelInfo(task=TASK_TYPE.value, name="maskrcnn_swint", category="other"),
@@ -72,7 +71,7 @@ DATASET_TEST_CASES = [
     ),
 ]
 
-BENCHMARK_CRITERIA = [  # noqa: RUF012
+BENCHMARK_CRITERIA = [
     Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
     Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
     Criterion(name="train/gpu_mem", summary="max", compare="<", margin=0.1),
@@ -109,7 +108,7 @@ if __name__ == "__main__":
     output_root = setup_output_root(
         args,
         current_date,
-        task=TASK_TYPE
+        task=TASK_TYPE,
     )
 
     for model in MODEL_TEST_CASES:
@@ -119,14 +118,22 @@ if __name__ == "__main__":
                     [
                         "python",
                         "tests/perf/benchmark.py",
-                        "--task", TASK_TYPE.value,
-                        "--model", model.name,
-                        "--dataset", dataset.name,
-                        "--data-root", str(args.data_root),
-                        "--output-root", str(output_root),
-                        "--seed", str(seed),
-                        "--num-epoch", str(args.num_epoch),
-                        "--device", args.device,
+                        "--task",
+                        TASK_TYPE.value,
+                        "--model",
+                        model.name,
+                        "--dataset",
+                        dataset.name,
+                        "--data-root",
+                        str(args.data_root),
+                        "--output-root",
+                        str(output_root),
+                        "--seed",
+                        str(seed),
+                        "--num-epoch",
+                        str(args.num_epoch),
+                        "--device",
+                        args.device,
                     ],
                     check=True,
                 )
@@ -137,7 +144,7 @@ if __name__ == "__main__":
         raw_data,
         MODEL_TEST_CASES,
         DATASET_TEST_CASES,
-        num_repeat=args.num_repeat
+        num_repeat=args.num_repeat,
     )
 
     if len(raw_data):
