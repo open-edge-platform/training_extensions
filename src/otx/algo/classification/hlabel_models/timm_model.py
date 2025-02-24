@@ -49,7 +49,7 @@ class TimmModelHLabelCls(OTXHlabelClsModel):
         self,
         label_info: HLabelInfo,
         data_input_params: DataInputParams,
-        model_name: str,
+        model_name: str = "tf_efficientnetv2_s.in21k",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,

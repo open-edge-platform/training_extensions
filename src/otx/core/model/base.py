@@ -871,8 +871,12 @@ class OTXModel(LightningModule):
 
         raise TypeError(label_info)
 
-    def _check_preprocessing_params(self, preprocessing_params: DataInputParams) -> None:
+    def _check_preprocessing_params(self, preprocessing_params: DataInputParams | None) -> None:
         """Check the validity of the preprocessing parameters."""
+        if preprocessing_params is None:
+            msg = "Data input parameters should not be None."
+            raise ValueError(msg)
+
         input_size = preprocessing_params.input_size
         mean = preprocessing_params.mean
         std = preprocessing_params.std

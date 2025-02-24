@@ -186,7 +186,7 @@ def adapt_input_size_to_dataset(
     base_input_size: int | tuple[int, int] | None = None,
     downscale_only: bool = True,
     input_size_multiplier: int | None = None,
-) -> tuple[int, int] | None:
+) -> tuple[int, int]:
     """Compute appropriate model input size w.r.t. dataset statistics.
 
     Args:
@@ -199,7 +199,7 @@ def adapt_input_size_to_dataset(
             Defaults to None.
 
     Returns:
-        tuple[int, int] | None: Recommended input size based on dataset statistics.
+        tuple[int, int]: Recommended input size based on dataset statistics.
     """
     if downscale_only and base_input_size is None:
         msg = "If downscale_only is set to True, base_input_size should be set but got None."
@@ -209,7 +209,8 @@ def adapt_input_size_to_dataset(
         base_input_size = (base_input_size, base_input_size)
 
     if (train_dataset := dataset.subsets().get("train")) is None:
-        return None
+        msg = "Dataset does not have 'train' subset. Cannot compute dataset statistics."
+        raise ValueError(msg)
 
     logger.info("Adapting model input size based on dataset stat")
     stat = compute_robust_dataset_statistics(train_dataset, task)
@@ -222,7 +223,7 @@ def adapt_input_size_to_dataset(
     logger.info(f"-> Current base input size: {base_input_size}")
 
     if max_image_size[0] <= 0 or max_image_size[1] <= 0:
-        return base_input_size
+        return base_input_size  # type: ignore[return-value]
 
     image_size = max_image_size
     logger.info(f"-> Based on typical large image size: {image_size}")

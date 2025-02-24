@@ -5,12 +5,10 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from typing import TYPE_CHECKING, Any
 
 import torch
 
-from otx.algo.utils.mmengine_utils import load_checkpoint
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetBatchPredEntity
 from otx.core.metrics import MetricCallable, MetricInput
@@ -23,7 +21,6 @@ from otx.core.types.label import LabelInfoTypes
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import DetectedKeypoints
-    from torch import nn
 
 
 class OTXKeypointDetectionModel(OTXModel):
@@ -60,18 +57,6 @@ class OTXKeypointDetectionModel(OTXModel):
             metric=metric,
             torch_compile=torch_compile,
         )
-
-    @abstractmethod
-    def _build_model(self, num_classes: int) -> nn.Module:
-        raise NotImplementedError
-
-    def _create_model(self, num_classes: int | None = None) -> nn.Module:
-        num_classes = num_classes if num_classes is not None else self.num_classes
-        detector = self._build_model(num_classes=num_classes)
-        detector.init_weights()
-        if self.load_from is not None:
-            load_checkpoint(detector, self.load_from, map_location="cpu")
-        return detector
 
     def _customize_inputs(self, entity: KeypointDetBatchDataEntity) -> dict[str, Any]:
         """Convert KeypointDetBatchDataEntity into Topdown model's input."""

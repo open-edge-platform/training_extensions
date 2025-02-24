@@ -429,6 +429,7 @@ class AutoConfigurator:
             train_subset=datamodule.train_subset,
             val_subset=datamodule.val_subset,
             test_subset=datamodule.test_subset,
+            input_size=datamodule.input_size,
             tile_config=datamodule.tile_config,
             vpm_config=datamodule.vpm_config,
             image_color_channel=datamodule.image_color_channel,

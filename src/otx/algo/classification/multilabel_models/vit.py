@@ -110,14 +110,14 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
 
         model.init_weights()
         if self.model_name in pretrained_urls:
-            print(f"init weight - {pretrained_urls[self.arch]}")
-            parts = urlparse(pretrained_urls[self.arch])
+            print(f"init weight - {pretrained_urls[self.model_name]}")
+            parts = urlparse(pretrained_urls[self.model_name])
             filename = Path(parts.path).name
 
             cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
             cache_file = cache_dir / filename
             if not Path.exists(cache_file):
-                download_url_to_file(pretrained_urls[self.arch], cache_file, "", progress=True)
+                download_url_to_file(pretrained_urls[self.model_name], cache_file, "", progress=True)
             model.backbone.load_pretrained(checkpoint_path=cache_file)
         else:
             warnings.warn(

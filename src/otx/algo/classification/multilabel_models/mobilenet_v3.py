@@ -70,7 +70,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
         return ImageClassifier(
-            backbone=MobileNetV3Backbone(mode=self.model_name, input_size=self.data_input_params),
+            backbone=MobileNetV3Backbone(mode=self.model_name, input_size=self.data_input_params.input_size),
             neck=GlobalAveragePooling(dim=2),
             head=MultiLabelNonLinearClsHead(
                 num_classes=num_classes,

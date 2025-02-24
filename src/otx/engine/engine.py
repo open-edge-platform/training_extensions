@@ -144,7 +144,6 @@ class Engine:
         if self._datamodule is not None:
             get_model_args["label_info"] = self._datamodule.label_info
             input_size = self._datamodule.input_size
-            input_size = (input_size, input_size) if isinstance(input_size, int) else input_size
             get_model_args["data_input_params"] = DataInputParams(
                 input_size=input_size,
                 mean=self._datamodule.input_mean,

@@ -5,24 +5,24 @@ import pytest
 import torch
 
 from otx.algo.classification.classifier import ImageClassifier
-from otx.algo.classification.timm_model import (
-    TimmModelForHLabelCls,
-    TimmModelForMulticlassCls,
-    TimmModelForMultilabelCls,
-)
+from otx.algo.classification.hlabel_models.timm_model import TimmModelHLabelCls
+from otx.algo.classification.multiclass_models.timm_model import TimmModelMulticlassCls
+from otx.algo.classification.multilabel_models.timm_model import TimmModelMultilabelCls
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import (
     HlabelClsBatchPredEntity,
     MulticlassClsBatchPredEntity,
     MultilabelClsBatchPredEntity,
 )
+from otx.core.model.base import DataInputParams
 
 
 @pytest.fixture()
 def fxt_multi_class_cls_model():
-    return TimmModelForMulticlassCls(
+    return TimmModelMulticlassCls(
         label_info=10,
         model_name="tf_efficientnetv2_s.in21k",
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     )
 
 
@@ -58,9 +58,10 @@ class TestTimmModelForMulticlassCls:
 
 @pytest.fixture()
 def fxt_multi_label_cls_model():
-    return TimmModelForMultilabelCls(
+    return TimmModelMultilabelCls(
         label_info=10,
         model_name="tf_efficientnetv2_s.in21k",
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     )
 
 
@@ -96,9 +97,10 @@ class TestTimmModelForMultilabelCls:
 
 @pytest.fixture()
 def fxt_h_label_cls_model(fxt_hlabel_cifar):
-    return TimmModelForHLabelCls(
+    return TimmModelHLabelCls(
         label_info=fxt_hlabel_cifar,
         model_name="tf_efficientnetv2_s.in21k",
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     )
 
 

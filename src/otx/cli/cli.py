@@ -344,14 +344,15 @@ class OTXCLI:
             self.datamodule = self.get_config_value(self.config_init, "data")
 
             # pass OTXDataModule input size, mean and std to the model
-            model_config.init_args["data_input_params"] = Namespace(
-                class_path="otx.core.model.base.DataInputParams",
-                init_args=Namespace(
-                    input_size=(self.datamodule.input_size, self.datamodule.input_size),
-                    mean=self.datamodule.input_mean,
-                    std=self.datamodule.input_std,
-                ),
-            )
+            if "data_input_params" not in model_config.init_args:
+                model_config.init_args["data_input_params"] = Namespace(
+                    class_path="otx.core.model.base.DataInputParams",
+                    init_args=Namespace(
+                        input_size=self.datamodule.input_size,
+                        mean=self.datamodule.input_mean,
+                        std=self.datamodule.input_std,
+                    ),
+                )
 
             # Instantiate the model and needed components
             self.model = self.instantiate_model(model_config=model_config)

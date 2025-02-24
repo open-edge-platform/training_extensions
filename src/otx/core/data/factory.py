@@ -35,31 +35,6 @@ class TransformLibFactory:
 
             return TorchVisionTransformLib.generate(config)
 
-        if config.transform_lib_type == TransformLibType.MMCV:
-            from .transform_libs.mmcv import MMCVTransformLib
-
-            return MMCVTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMPRETRAIN:
-            from .transform_libs.mmpretrain import MMPretrainTransformLib
-
-            return MMPretrainTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMDET:
-            from .transform_libs.mmdet import MMDetTransformLib
-
-            return MMDetTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMSEG:
-            from .transform_libs.mmseg import MMSegTransformLib
-
-            return MMSegTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMACTION:
-            from .transform_libs.mmaction import MMActionTransformLib
-
-            return MMActionTransformLib.generate(config)
-
         raise NotImplementedError(config.transform_lib_type)
 
 

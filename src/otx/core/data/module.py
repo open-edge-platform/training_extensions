@@ -40,9 +40,8 @@ class OTXDataModule(LightningDataModule):
     """LightningDataModule extension for OTX pipeline.
 
     Args:
-        input_size (int | tuple[int, int] | None, optional):
+        input_size (tuple[int, int]):
             Final image or video shape of data after data transformation. It'll be applied to all subset configs
-            If it's not None. Defaults to None.
         adaptive_input_size (Literal["auto", "downscale"] | None, optional):
             The adaptive input size mode. If it's set, appropriate input size is found by analyzing dataset.
             "auto" can find both bigger and smaller input size than current input size and "downscale" uses only
@@ -60,6 +59,7 @@ class OTXDataModule(LightningDataModule):
         train_subset: SubsetConfig,
         val_subset: SubsetConfig,
         test_subset: SubsetConfig,
+        input_size: tuple[int, int],
         tile_config: TileConfig = TileConfig(enable_tiler=False),
         vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
         mem_cache_size: str = "1GB",
@@ -71,7 +71,6 @@ class OTXDataModule(LightningDataModule):
         unannotated_items_ratio: float = 0.0,
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
-        input_size: tuple[int, int] | None = None,
         adaptive_input_size: Literal["auto", "downscale"] | None = None,
         input_size_multiplier: int = 1,
     ) -> None:
@@ -122,13 +121,10 @@ class OTXDataModule(LightningDataModule):
                 adaptive_input_size == "downscale",
                 input_size_multiplier,
             )
-        if input_size is not None:
-            for subset_cfg in [train_subset, val_subset, test_subset]:
-                if subset_cfg.input_size is None:
-                    subset_cfg.input_size = input_size
-        else:
-            # get input size of the model from train subset
-            input_size = train_subset.input_size
+
+        for subset_cfg in [train_subset, val_subset, test_subset]:
+            if subset_cfg.input_size is None:
+                subset_cfg.input_size = input_size
 
         # get mean and std from Normalize transform
         mean = (0.0, 0.0, 0.0)
