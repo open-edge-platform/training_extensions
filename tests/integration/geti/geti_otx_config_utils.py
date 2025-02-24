@@ -1,31 +1,28 @@
-# 
+#
 
 from __future__ import annotations
 
-import os
 import json
+import os
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING
+
+import metadata_keys
+from omegaconf import OmegaConf
+from sc_sdk.entities.model_template import parse_model_template
 
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT, ConfigConverter
-from omegaconf import OmegaConf, DictConfig
-from pathlib import Path
-
-from sc_sdk.entities.model_template import _parse_model_template_from_omegaconf, parse_model_template
-
-import metadata_keys
-
-
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    
+
 
 BASE_MODEL_FILENAME = "model_fp32_xai.pth"
 
@@ -274,7 +271,7 @@ def load_hyper_parameters(model_template_path: dict) -> dict:
     model_template_dir = os.path.dirname(model_template_path)
     base_hyper_parameter_path = os.path.join(
         model_template_dir,
-        model_template["hyper_parameters"]["base_path"]
+        model_template["hyper_parameters"]["base_path"],
     )
 
     config_dict = OmegaConf.load(base_hyper_parameter_path)
@@ -284,7 +281,6 @@ def load_hyper_parameters(model_template_path: dict) -> dict:
         data,
     )
     return data
-
 
 
 if __name__ == "__main__":
@@ -320,7 +316,6 @@ if __name__ == "__main__":
         optimization_type=None,
         sub_task_type=None,
     )
-
 
     # otx_config = OTXConfig(
     #     job_type=JobType.TRAIN,
