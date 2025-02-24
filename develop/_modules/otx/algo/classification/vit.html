@@ -274,7 +274,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.backbones.vision_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="n">VIT_ARCH_TYPE</span><span class="p">,</span> <span class="n">VisionTransformer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.classifier</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelClassifier</span><span class="p">,</span> <span class="n">ImageClassifier</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.heads</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">HierarchicalCBAMClsHead</span><span class="p">,</span>
+    <span class="n">HierarchicalLinearClsHead</span><span class="p">,</span>
     <span class="n">MultiLabelLinearClsHead</span><span class="p">,</span>
     <span class="n">VisionTransformerClsHead</span><span class="p">,</span>
 <span class="p">)</span>
@@ -739,11 +739,7 @@
         <span class="k">return</span> <span class="n">HLabelClassifier</span><span class="p">(</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">vit_backbone</span><span class="p">,</span>
             <span class="n">neck</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">head</span><span class="o">=</span><span class="n">HierarchicalCBAMClsHead</span><span class="p">(</span>
-                <span class="n">in_channels</span><span class="o">=</span><span class="n">vit_backbone</span><span class="o">.</span><span class="n">embed_dim</span><span class="p">,</span>
-                <span class="n">step_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">head_config</span><span class="p">,</span>
-            <span class="p">),</span>
+            <span class="n">head</span><span class="o">=</span><span class="n">HierarchicalLinearClsHead</span><span class="p">(</span><span class="o">**</span><span class="n">head_config</span><span class="p">,</span> <span class="n">in_channels</span><span class="o">=</span><span class="n">vit_backbone</span><span class="o">.</span><span class="n">embed_dim</span><span class="p">),</span>
             <span class="n">multiclass_loss</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(),</span>
             <span class="n">multilabel_loss</span><span class="o">=</span><span class="n">AsymmetricAngularLossWithIgnore</span><span class="p">(</span><span class="n">gamma_pos</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">gamma_neg</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">),</span>
             <span class="n">init_cfg</span><span class="o">=</span><span class="n">init_cfg</span><span class="p">,</span>
