@@ -256,7 +256,8 @@ class Benchmark:
 
         ckpt_path = sub_work_dir / "train" / "best_checkpoint.ckpt"
         if not ckpt_path.exists():
-            raise FileNotFoundError(f"Checkpoint file not found: {ckpt_path}")
+            msg = f"Checkpoint file not found: {ckpt_path}"
+            raise FileNotFoundError(msg)
 
         kwargs.pop("checkpoint", None)  # Remove checkpoint
         engine.export(
@@ -296,8 +297,8 @@ class Benchmark:
 
         # OTX does not create metrics.cvs during optimization,
         # So we are manually write optimize/e2e_time to csv.
-        df = pd.DataFrame({"optimize/e2e_time": [total_time]})
-        df.to_csv(sub_work_dir / f"{SubCommand.OPTIMIZE.value}/metrics.csv", index=False)
+        data_frame = pd.DataFrame({"optimize/e2e_time": [total_time]})
+        data_frame.to_csv(sub_work_dir / f"{SubCommand.OPTIMIZE.value}/metrics.csv", index=False)
         # =================
 
     def _initialize_engine(

@@ -9,10 +9,11 @@ import os
 import platform
 import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from cpuinfo import get_cpu_info
 from jsonargparse import ArgumentParser, Namespace
@@ -105,13 +106,23 @@ class Criterion:
 
 
 def parse_task(value: str) -> OTXTaskType:
+    """Parse task type from string.
+
+    Args:
+        value (str): Task type string.
+
+    Raises:
+        ValueError: If value is not a valid task type.
+
+    Returns:
+        OTXTaskType: Task type enum.
+    """
     try:
         # Normalize input to uppercase before converting to enum.
         return OTXTaskType(value.upper())
     except ValueError:
-        raise ValueError(
-            f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in OTXTaskType])}"
-        )
+        msg = f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in OTXTaskType])}"
+        raise ValueError(msg)
 
 
 def get_parser() -> ArgumentParser:
@@ -136,7 +147,7 @@ def get_parser() -> ArgumentParser:
         type=int,
         default=200,
         help=(
-            "Overrides default per-model number of epoch setting. " "Defaults to 0 (per-model epoch & early-stopping)."
+            "Overrides default per-model number of epoch setting. Defaults to 200 (per-model epoch & early-stopping)."
         ),
     )
     parser.add_argument(
@@ -213,15 +224,14 @@ def get_parser() -> ArgumentParser:
 
 
 def current_date_str() -> str:
-    tz = timezone(offset=timedelta(hours=9), name="Seoul")
-    return datetime.now(tz=tz).strftime("%Y%m%d-%H%M%S")
+    return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
 def setup_output_root(config: Namespace, current_date: str, task: OTXTaskType) -> Path:
     output_root = config.output_root
     if output_root is None:
         # Use a temporary directory if output_root not provided
-        output_root = Path(os.path.join(os.path.abspath("."), "otx-benchmark-temp"))
+        output_root = Path().resolve() / "otx-benchmark-temp"
         output_root.mkdir(parents=True, exist_ok=True)
     output_root = Path(output_root) / current_date / task.value
     logger.info(f"output_root = {output_root}")
@@ -231,15 +241,15 @@ def setup_output_root(config: Namespace, current_date: str, task: OTXTaskType) -
 
 def get_version_tags(current_date: str) -> dict[str, str]:
     try:
-        version_str = subprocess.check_output(["otx", "--version"]).decode("ascii").strip()[4:]
+        version_str = subprocess.check_output(["otx", "--version"]).decode("ascii").strip()[4:]  # noqa: S603, S607
     except Exception:
         version_str = "unknown"
     try:
-        branch_str = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("ascii").strip()
+        branch_str = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("ascii").strip()  # noqa: S603, S607
     except Exception:
         branch_str = os.environ.get("GH_CTX_REF_NAME", "unknown")
     try:
-        commit_str = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()
+        commit_str = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()  # noqa: S603, S607
     except Exception:
         commit_str = os.environ.get("GH_CTX_SHA", "unknown")
     version_tags = {
@@ -261,9 +271,9 @@ def build_tags(config: Namespace, version_tags: dict[str, str]) -> dict[str, str
         "cpu_info": get_cpu_info()["brand_raw"],
     }
     if config.device == "gpu":
-        tags["accelerator_info"] = subprocess.check_output(["nvidia-smi", "-L"]).decode().strip()
+        tags["accelerator_info"] = subprocess.check_output(["nvidia-smi", "-L"]).decode().strip()  # noqa: S603, S607
     elif config.device == "xpu":
-        raw = subprocess.check_output(["xpu-smi", "discovery", "--dump", "1,2"]).decode().strip()
+        raw = subprocess.check_output(["xpu-smi", "discovery", "--dump", "1,2"]).decode().strip()  # noqa: S603, S607
         tags["accelerator_info"] = "\n".join(
             [ret.replace('"', "").replace(",", " : ") for ret in raw.split("\n")[1:]],
         )

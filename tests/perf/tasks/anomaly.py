@@ -125,7 +125,7 @@ if __name__ == "__main__":
     if len(raw_data):
         output_root.mkdir(parents=True, exist_ok=True)
         raw_data.to_csv(output_root / f"{TASK_TYPE.value}-benchmark-raw-all.csv", index=False)
-        logger.info("Saved merged raw data to", str(f"{TASK_TYPE.value}-benchmark-raw-all.csv"))
+        logger.info(f"Saved merged raw data to {output_root!s}/{TASK_TYPE.value}-benchmark-raw-all.csv")
         summarize_task(raw_data, TASK_TYPE, output_root)
     else:
         logger.info("No data loaded. Please check if the benchmark tests have been run successfully.")
