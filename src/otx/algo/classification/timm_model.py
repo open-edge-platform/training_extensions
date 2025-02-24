@@ -14,7 +14,7 @@ from torch import nn
 
 from otx.algo.classification.backbones.timm import TimmBackbone
 from otx.algo.classification.classifier import HLabelClassifier, ImageClassifier
-from otx.algo.classification.heads import HierarchicalCBAMClsHead, LinearClsHead, MultiLabelLinearClsHead
+from otx.algo.classification.heads import HierarchicalLinearClsHead, LinearClsHead, MultiLabelLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
@@ -283,11 +283,8 @@ class TimmModelForHLabelCls(OTXHlabelClsModel):
         copied_head_config["step_size"] = (ceil(self.input_size[0] / 32), ceil(self.input_size[1] / 32))
         return HLabelClassifier(
             backbone=backbone,
-            neck=nn.Identity(),
-            head=HierarchicalCBAMClsHead(
-                in_channels=backbone.num_features,
-                **copied_head_config,
-            ),
+            neck=GlobalAveragePooling(dim=2),
+            head=HierarchicalLinearClsHead(**copied_head_config, in_channels=backbone.num_features),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )
