@@ -41,7 +41,8 @@ if __name__ == "__main__":
                 subprocess.run(
                     [  # noqa: S603, S607
                         "python",
-                        "-m tests.perf_v2.benchmark",
+                        "-m",
+                        "tests.perf_v2.benchmark",
                         "--task",
                         task_type.value,
                         "--model",
