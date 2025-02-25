@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 from tests.perf_v2.utils import (
@@ -16,8 +15,6 @@ from tests.perf_v2.utils import (
 
 from otx.core.metrics.fmeasure import FMeasureCallable
 from otx.core.types.task import OTXTaskType
-
-logger = logging.getLogger(__name__)
 
 TASK_TYPE = OTXTaskType.INSTANCE_SEGMENTATION
 
