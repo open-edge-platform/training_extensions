@@ -1,5 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+import numpy as np
 import pytest
 import torch
 
@@ -31,7 +33,7 @@ def test_process_all(postprocess) -> None:
 
     with pytest.raises(ValueError, match="Shape mismatch."):
         processed_saliency_maps = process_saliency_maps(
-            SALIENCY_MAPS_IMAGE,
+            [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS_IMAGE],
             explain_config,
             PRED_LABELS,
             ORI_IMG_SHAPES,
@@ -40,7 +42,7 @@ def test_process_all(postprocess) -> None:
         )
 
     processed_saliency_maps = process_saliency_maps(
-        SALIENCY_MAPS,
+        [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS],
         explain_config,
         PRED_LABELS,
         ORI_IMG_SHAPES,
@@ -67,7 +69,7 @@ def test_process_predictions(postprocess) -> None:
 
     with pytest.raises(ValueError, match="Shape mismatch."):
         processed_saliency_maps = process_saliency_maps(
-            SALIENCY_MAPS_IMAGE,
+            [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS_IMAGE],
             explain_config,
             PRED_LABELS,
             ORI_IMG_SHAPES,
@@ -76,7 +78,7 @@ def test_process_predictions(postprocess) -> None:
         )
 
     processed_saliency_maps = process_saliency_maps(
-        SALIENCY_MAPS,
+        [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS],
         explain_config,
         PRED_LABELS,
         ORI_IMG_SHAPES,
@@ -107,7 +109,7 @@ def test_process_image(postprocess) -> None:
 
     with pytest.raises(ValueError, match="Shape mismatch."):
         processed_saliency_maps = process_saliency_maps(
-            SALIENCY_MAPS,
+            [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS],
             explain_config,
             PRED_LABELS,
             ORI_IMG_SHAPES,
@@ -116,7 +118,7 @@ def test_process_image(postprocess) -> None:
         )
 
     processed_saliency_maps = process_saliency_maps(
-        SALIENCY_MAPS_IMAGE,
+        [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS_IMAGE],
         explain_config,
         PRED_LABELS,
         ORI_IMG_SHAPES,

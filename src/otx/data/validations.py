@@ -160,7 +160,7 @@ class ValidateBatchMixin:
     def _images_validator(image_batch: torch.Tensor) -> torch.Tensor:
         """Validate the image batch."""
         if not isinstance(image_batch, torch.Tensor):
-            msg = "Image batch must be a torch tensor"
+            msg = f"Image batch must be a torch tensor. Got {type(image_batch)}"
             raise TypeError(msg)
         if image_batch.dtype != torch.float32:
             msg = "Image batch must have dtype float32"
