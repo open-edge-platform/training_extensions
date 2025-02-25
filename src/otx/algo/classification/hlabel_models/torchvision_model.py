@@ -12,7 +12,7 @@ from torch import nn
 from otx.algo.classification.backbones.torchvision import TorchvisionBackbone
 from otx.algo.classification.classifier import HLabelClassifier
 from otx.algo.classification.heads import (
-    HierarchicalCBAMClsHead,
+    HierarchicalLinearClsHead,
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.core.metrics.accuracy import HLabelClsMetricCallable
@@ -20,6 +20,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo
+from otx.algo.classification.necks.gap import GlobalAveragePooling
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -67,11 +68,8 @@ class TVModelHLabelCls(OTXHlabelClsModel):
         backbone = TorchvisionBackbone(backbone=self.model_name)
         return HLabelClassifier(
             backbone=backbone,
-            neck=nn.Identity(),
-            head=HierarchicalCBAMClsHead(
-                in_channels=backbone.in_features,
-                **head_config,
-            ),
+            neck=GlobalAveragePooling(dim=2),
+            head=HierarchicalLinearClsHead(**head_config, in_channels=backbone.in_features),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )

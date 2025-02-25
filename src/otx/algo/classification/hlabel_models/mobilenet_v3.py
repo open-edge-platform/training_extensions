@@ -14,7 +14,8 @@ from torch import nn
 
 from otx.algo.classification.backbones import MobileNetV3Backbone
 from otx.algo.classification.classifier import HLabelClassifier
-from otx.algo.classification.heads import HierarchicalCBAMClsHead
+from otx.algo.classification.heads import HierarchicalLinearClsHead
+from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.base import OTXBatchLossEntity
@@ -70,13 +71,12 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
         )
 
         backbone = MobileNetV3Backbone(model_name=self.model_name, input_size=self.data_input_params.input_size)
+        in_channels = MobileNetV3Backbone.MV3_CFG[self.model_name]["out_channels"]
+
         return HLabelClassifier(
             backbone=backbone,
-            neck=nn.Identity(),
-            head=HierarchicalCBAMClsHead(
-                in_channels=MobileNetV3Backbone.MV3_CFG[self.model_name]["out_channels"],
-                **copied_head_config,
-            ),
+            neck=GlobalAveragePooling(dim=2),
+            head=HierarchicalLinearClsHead(**copied_head_config, in_channels=in_channels),
             multiclass_loss=nn.CrossEntropyLoss(),
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )
