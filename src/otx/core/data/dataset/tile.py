@@ -349,7 +349,7 @@ class OTXTileDataset(OTXDataset):
         image: np.ndarray,
         item: DatasetItem,
         parent_idx: int,
-    ) -> tuple[list[OTXDataEntity], list[dict]]:
+    ) -> tuple[list[OTXDataEntity | TorchDataItem], list[dict]]:
         """Retrieves tiles from the given image and dataset item.
 
         Args:
@@ -381,7 +381,7 @@ class OTXTileDataset(OTXDataset):
                     with_full_img=True,
                 )
 
-        tile_entities: list[OTXDataEntity] = []
+        tile_entities: list[OTXDataEntity | TorchDataItem] = []
         tile_attrs: list[dict] = []
         for tile in tile_ds:
             tile_entity = self._convert_entity(image, tile, parent_idx)

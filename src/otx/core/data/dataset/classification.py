@@ -5,19 +5,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from datumaro import Image, Label
 from datumaro.components.annotation import AnnotationType
 from torch.nn import functional
-from torchvision.transforms.v2 import Compose
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.base import OTXDataset
 from otx.core.data.entity.base import ImageInfo
 from otx.core.types.label import HLabelInfo
 from otx.data.torch import TorchDataItem
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class OTXMulticlassClsDataset(OTXDataset):
@@ -46,19 +48,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             msg = f"Multi-class Classification can't use the multi-label, currently len(labels) = {len(label_anns)}"
             raise ValueError(msg)
 
-        # apply transforms before converting to TorchDataItem
-        # TODO(ashwinvaidya17): Refactor this in next round
-        # temporary
-        if isinstance(self.transforms, (Compose, Callable)):  # type: ignore[operator, arg-type]
-            image = self.transforms(image)  # type: ignore[operator]
-        elif isinstance(self.transforms, list):
-            for transform in self.transforms:
-                image = transform(image)
-        else:
-            msg = f"self.transforms should be a Compose or list, got {type(self.transforms)}"
-            raise TypeError(msg)
-
-        return TorchDataItem(
+        entity = TorchDataItem(
             image=image,
             label=torch.as_tensor(label_anns, dtype=torch.long),
             imgs_info=ImageInfo(
@@ -68,6 +58,7 @@ class OTXMulticlassClsDataset(OTXDataset):
                 image_color_channel=self.image_color_channel,
             ),
         )
+        return self._apply_transforms(entity)
 
     @property
     def collate_fn(self) -> Callable:
@@ -88,17 +79,6 @@ class OTXMultilabelClsDataset(OTXDataset):
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
         img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
-        # TODO(ashwinvaidya17): temporary
-        if isinstance(self.transforms, (Compose, Callable)):  # type: ignore[operator, arg-type]
-            image = self.transforms(img_data)  # type: ignore[operator]
-        elif isinstance(self.transforms, list):
-            result = img_data
-            for transform in self.transforms:
-                result = transform(result)
-            image = result
-        else:
-            msg = f"self.transforms should be a Compose or list, got {type(self.transforms)}"
-            raise TypeError(msg)
 
         label_ids = set()
         for ann in item.annotations:
@@ -116,17 +96,18 @@ class OTXMultilabelClsDataset(OTXDataset):
                 label_ids.add(label.label)
         labels = torch.as_tensor(list(label_ids))
 
-        return TorchDataItem(
-            image=image,
+        entity = TorchDataItem(
+            image=img_data,
             label=self._convert_to_onehot(labels, ignored_labels),
             imgs_info=ImageInfo(
                 img_idx=index,
-                img_shape=image.shape[1:],
+                img_shape=img_shape,
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
                 ignored_labels=ignored_labels,
             ),
         )
+        return self._apply_transforms(entity)
 
     def _convert_to_onehot(self, labels: torch.tensor, ignored_labels: list[int]) -> torch.tensor:
         """Convert label to one-hot vector format."""
@@ -231,18 +212,6 @@ class OTXHlabelClsDataset(OTXDataset):
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
         img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
 
-        # TODO(ashwinvaidya17): temporary
-        if isinstance(self.transforms, (Compose, Callable)):  # type: ignore[operator, arg-type]
-            image = self.transforms(img_data)  # type: ignore[operator]
-        elif isinstance(self.transforms, list):
-            result = img_data
-            for transform in self.transforms:
-                result = transform(result)
-            image = result
-        else:
-            msg = f"self.transforms should be a Compose or list, got {type(self.transforms)}"
-            raise TypeError(msg)
-
         label_ids = set()
         for ann in item.annotations:
             # in h-cls scenario multilabel information stored in 'multi_label_ids' attribute
@@ -260,17 +229,18 @@ class OTXHlabelClsDataset(OTXDataset):
 
         hlabel_labels = self._convert_label_to_hlabel_format([Label(label=idx) for idx in label_ids], ignored_labels)
 
-        return TorchDataItem(
-            image=image,
+        entity = TorchDataItem(
+            image=img_data,
             label=torch.as_tensor(hlabel_labels),
             imgs_info=ImageInfo(
                 img_idx=index,
-                img_shape=image.shape[1:],
+                img_shape=img_shape,
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
                 ignored_labels=ignored_labels,
             ),
         )
+        return self._apply_transforms(entity)
 
     def _convert_label_to_hlabel_format(self, label_anns: list[Label], ignored_labels: list[int]) -> list[int]:
         """Convert format of the label to the h-label.

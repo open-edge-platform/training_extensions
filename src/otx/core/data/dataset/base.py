@@ -23,12 +23,12 @@ from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo, NullLabelInfo
+from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
     from datumaro import DatasetSubset, Image
 
     from otx.core.data.mem_cache import MemCacheHandlerBase
-    from otx.data.torch import TorchDataItem
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
@@ -110,9 +110,9 @@ class OTXDataset(Dataset):
     def _sample_another_idx(self) -> int:
         return np.random.default_rng().integers(0, len(self))
 
-    def _apply_transforms(self, entity: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    def _apply_transforms(self, entity: T_OTXDataEntity | TorchDataItem) -> T_OTXDataEntity | TorchDataItem | None:
         if isinstance(self.transforms, Compose):
-            if self.to_tv_image:
+            if not isinstance(entity, TorchDataItem) and self.to_tv_image:
                 entity = entity.to_tv_image()
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):
@@ -122,7 +122,7 @@ class OTXDataset(Dataset):
 
         raise TypeError(self.transforms)
 
-    def _iterable_transforms(self, item: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    def _iterable_transforms(self, item: T_OTXDataEntity | TorchDataItem) -> T_OTXDataEntity | TorchDataItem | None:
         if not isinstance(self.transforms, list):
             raise TypeError(item)
 

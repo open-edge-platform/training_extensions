@@ -110,7 +110,7 @@ class OTXInstanceSegDataset(OTXDataset):
             polygons=gt_polygons,
         )
 
-        return self._apply_transforms(entity)
+        return self._apply_transforms(entity)  # type: ignore[return-value]
 
     @property
     def collate_fn(self) -> Callable:
