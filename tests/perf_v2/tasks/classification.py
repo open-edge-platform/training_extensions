@@ -55,7 +55,7 @@ MULTI_CLASS_DATASET_TEST_CASES = [
     ),
 ]
 
-# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+# TODO (someone): Compare with DETECTION CRITERIA and fill in the missing values
 MULTI_CLASS_BENCHMARK_CRITERIA = [
     Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
     Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
@@ -104,7 +104,7 @@ MULTI_LABEL_DATASET_TEST_CASES = [
     ),
 ]
 
-# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+# TODO (someone): Compare with DETECTION CRITERIA and fill in the missing values
 MULTI_LABEL_BENCHMARK_CRITERIA = [
     Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
     Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
@@ -155,7 +155,7 @@ H_LABEL_CLS_DATASET_TEST_CASES = [
     ),
 ]
 
-# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+# TODO (someone): Compare with DETECTION CRITERIA and fill in the missing values
 H_LABEL_CLS_BENCHMARK_CRITERIA = [
     Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
     Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),

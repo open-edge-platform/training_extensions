@@ -4,12 +4,11 @@
 
 from __future__ import annotations
 
-from tests.perf_v2 import MODEL_COLLECTIONS, DATASET_COLLECTIONS
-
-
 import logging
 import subprocess
 
+from otx.core.types.task import OTXTaskType
+from tests.perf_v2 import DATASET_COLLECTIONS, MODEL_COLLECTIONS
 from tests.perf_v2.summary import load, summarize_task
 from tests.perf_v2.utils import (
     completeness_check,
@@ -17,9 +16,6 @@ from tests.perf_v2.utils import (
     get_parser,
     setup_output_root,
 )
-
-from otx.core.types.task import OTXTaskType
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +39,9 @@ if __name__ == "__main__":
         for dataset in datasets:
             for seed in range(args.num_repeat):
                 subprocess.run(
-                    [
+                    [  # noqa: S603, S607
                         "python",
-                        "tests/perf/benchmark.py",
+                        "tests/perf_v2/benchmark.py",
                         "--task",
                         task_type.value,
                         "--model",

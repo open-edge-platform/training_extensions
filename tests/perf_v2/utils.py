@@ -111,126 +111,30 @@ def parse_task(value: str) -> OTXTaskType:
         # Normalize input to uppercase before converting to enum.
         return OTXTaskType(value.upper())
     except ValueError:
-        msg = f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in OTXTaskType])}"
-        raise ValueError(msg)
-
-
-def get_parser() -> ArgumentParser:
-    """Get argument parser for OTX benchmarking.
-
-    Returns:
-        ArgumentParser: JSON Argument parser.
-    """
-
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--task",
-        type=parse_task,
-        choices=list(OTXTaskType),
-        help="Task type to benchmark.",
-    )
-
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=0,
-        help="Random seed for reproducibility.",
-    )
-
-    parser.add_argument(
-        "--num-repeat",
-        type=int,
-        default=5,
-        help="Number of repeated runs per model. Defaults to 5.",
-    )
-
-    parser.add_argument(
-        "--num-epoch",
-        type=int,
-        default=200,
-        help=(
-            "Overrides default per-model number of epoch setting. Defaults to 200 (per-model epoch & early-stopping)."
-        ),
-    )
-    parser.add_argument(
-        "--eval-upto",
-        type=str,
-        default="optimize",
-        choices=["train", "export", "optimize"],
-        help="Choose train|export|optimize. Defaults to train.",
-    )
-    parser.add_argument(
-        "--data-root",
-        type=str,
-        default="data",
-        help="Dataset root directory.",
-    )
-    parser.add_argument(
-        "--output-root",
-        type=str,
-        default=None,
-        help="Output root directory. Defaults to a temporary directory.",
-    )
-    parser.add_argument(
-        "--summary-file",
-        type=str,
-        default=None,
-        help="Path to output summary file. Defaults to {output_root}/benchmark-summary.csv",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        default=False,
-        help="Print OTX commands without execution.",
-    )
-    parser.add_argument(
-        "--deterministic",
-        type=str,
-        choices=["true", "false", "warn"],
-        default=None,
-        help="Turn on deterministic training (true/false/warn).",
-    )
-    parser.add_argument(
-        "--user-name",
-        type=str,
-        default="anonymous",
-        help='Sign-off the user name who launched the regression tests this time, e.g., --user-name "John Doe".',
-    )
-    parser.add_argument(
-        "--resume-from",
-        type=str,
-        default=None,
-        help=(
-            "Previous performance test directory which contains execution results. "
-            "If training was already done in a previous performance test, training is skipped and previous results are used."
-        ),
-    )
-    parser.add_argument(
-        "--test-only",
-        type=str,
-        choices=["all", "train", "export", "optimize"],
-        default=None,
-        help=(
-            "Execute test only when resume argument is given. "
-            "If necessary files are not found in resume directory, necessary operations can be executed. "
-            "Choose all|train|export|optimize."
-        ),
-    )
-    parser.add_argument(
-        "--device",
-        type=str,
-        default="gpu",
-        help="Which device to use.",
-    )
-    return parser
+        print(f"'{value}' is not a valid task type. Valid options are: {', '.join([t.value for t in OTXTaskType])}")
+        raise
 
 
 def current_date_str() -> str:
+    """Get current date string.
+
+    Returns:
+        str: Current date string.
+    """
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
 def setup_output_root(config: Namespace, current_date: str, task: OTXTaskType) -> Path:
+    """Setup output root directory.
+
+    Args:
+        config (Namespace): Benchmark configuration.
+        current_date (str): Current date string.
+        task (OTXTaskType): Task type.
+
+    Returns:
+        Path: Output root directory.
+    """
     output_root = config.output_root
     if output_root is None:
         # Use a temporary directory if output_root not provided
@@ -337,3 +241,114 @@ def completeness_check(
                     missing_experiments.append((model.name, data.name, seed))
 
     return missing_experiments
+
+
+def get_parser() -> ArgumentParser:
+    """Get argument parser for OTX benchmarking.
+
+    Returns:
+        ArgumentParser: JSON Argument parser.
+    """
+
+    parser = ArgumentParser()
+
+    parser.add_argument(
+        "--task",
+        type=parse_task,
+        choices=["all", *list(OTXTaskType)],
+        help="Task type to benchmark.",
+    )
+
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Random seed for reproducibility.",
+    )
+
+    parser.add_argument(
+        "--num-repeat",
+        type=int,
+        default=5,
+        help="Number of repeated runs per model. Defaults to 5.",
+    )
+
+    parser.add_argument(
+        "--num-epoch",
+        type=int,
+        default=200,
+        help=(
+            "Overrides default per-model number of epoch setting. Defaults to 200 (per-model epoch & early-stopping)."
+        ),
+    )
+    parser.add_argument(
+        "--eval-upto",
+        type=str,
+        default="optimize",
+        choices=["train", "export", "optimize"],
+        help="Choose train|export|optimize. Defaults to train.",
+    )
+    parser.add_argument(
+        "--data-root",
+        type=str,
+        default="data",
+        help="Dataset root directory.",
+    )
+    parser.add_argument(
+        "--output-root",
+        type=str,
+        default=None,
+        help="Output root directory. Defaults to a temporary directory.",
+    )
+    parser.add_argument(
+        "--summary-file",
+        type=str,
+        default=None,
+        help="Path to output summary file. Defaults to {output_root}/benchmark-summary.csv",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Print OTX commands without execution.",
+    )
+    parser.add_argument(
+        "--deterministic",
+        type=str,
+        choices=["true", "false", "warn"],
+        default=None,
+        help="Turn on deterministic training (true/false/warn).",
+    )
+    parser.add_argument(
+        "--user-name",
+        type=str,
+        default="anonymous",
+        help='Sign-off the user name who launched the regression tests this time, e.g., --user-name "John Doe".',
+    )
+    parser.add_argument(
+        "--resume-from",
+        type=str,
+        default=None,
+        help=(
+            "Previous performance test directory which contains execution results. "
+            "If training was already done in a previous performance test, training is skipped and previous results are used."
+        ),
+    )
+    parser.add_argument(
+        "--test-only",
+        type=str,
+        choices=["all", "train", "export", "optimize"],
+        default=None,
+        help=(
+            "Execute test only when resume argument is given. "
+            "If necessary files are not found in resume directory, necessary operations can be executed. "
+            "Choose all|train|export|optimize."
+        ),
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="gpu",
+        help="Which device to use.",
+    )
+    return parser

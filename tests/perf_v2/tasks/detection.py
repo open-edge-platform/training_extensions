@@ -21,25 +21,12 @@ TASK_TYPE = OTXTaskType.DETECTION
 MODEL_TEST_CASES = [
     ModelInfo(task=TASK_TYPE.value, name="atss_mobilenetv2", category="default"),
     ModelInfo(task=TASK_TYPE.value, name="yolox_s", category="speed"),
-    # ModelInfo(task="detection", name="yolox_l", category="balance"),
-    # ModelInfo(task="detection", name="dfine_x", category="accuracy"),
-    # ModelInfo(task="detection", name="ssd_mobilenetv2", category="other"),
-    # ModelInfo(task="detection", name="atss_resnext101", category="other"),
-    # ModelInfo(task="detection", name="yolox_tiny", category="other"),
-    # ModelInfo(task="detection", name="yolox_x", category="other"),
-    # ModelInfo(task="detection", name="rtmdet_tiny", category="other"),
-    # ModelInfo(task="detection", name="rtdetr_18", category="other"),
-    # ModelInfo(task="detection", name="rtdetr_50", category="other"),
-    # ModelInfo(task="detection", name="rtdetr_101", category="other"),
-    # ModelInfo(task="detection", name="yolov9_s", category="other"),
-    # ModelInfo(task="detection", name="yolov9_m", category="other"),
-    # ModelInfo(task="detection", name="yolov9_c", category="other"),
 ]
 
 DATASET_TEST_CASES = [
     DatasetInfo(
-        name="wgisd_small_1",
-        path=Path("detection/wgisd_small/1"),
+        name="pothole_small_1",
+        path=Path("detection/pothole_small/1"),
         group="small",
         extra_overrides={
             "test": {
@@ -48,8 +35,8 @@ DATASET_TEST_CASES = [
         },
     ),
     DatasetInfo(
-        name="wgisd_small_2",
-        path=Path("detection/wgisd_small/2"),
+        name="pothole_small_2",
+        path=Path("detection/pothole_small/2"),
         group="small",
         extra_overrides={
             "test": {

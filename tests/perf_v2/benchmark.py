@@ -380,84 +380,32 @@ class Benchmark:
             **self.tags,
         }
 
-        # try:
-        sub_work_dir = work_dir / str(seed)
-        tags["seed"] = str(seed)
+        exceptions = []
+        try:
+            sub_work_dir = work_dir / str(seed)
+            tags["seed"] = str(seed)
 
-        # Check if operation was already done in previous run
-        # If so, copy the previous operation directory
-        copied_ops_dir = self._prepare_resume(tags, sub_work_dir)
+            # Check if operation was already done in previous run
+            # If so, copy the previous operation directory
+            copied_ops_dir = self._prepare_resume(tags, sub_work_dir)
 
-        # Run training if not in resume operation
-        if "train" not in copied_ops_dir:
-            e2e_train_time = self.train(
-                model_info=model_info,
-                dataset_info=dataset_info,
-                sub_work_dir=sub_work_dir,
-                seed=seed,
-            )
-
-            self._log_metrics(
-                work_dir=sub_work_dir / SubCommand.TRAIN.value,
-                tags=tags,
-                criteria=criteria,
-                extra_metrics={
-                    "train/e2e_time": e2e_train_time,
-                },
-            )
-
-        self.test(
-            model_info=model_info,
-            dataset_info=dataset_info,
-            sub_work_dir=sub_work_dir,
-            tags=tags,
-            criteria=criteria,
-            checkpoint=sub_work_dir / "train" / "best_checkpoint.ckpt",
-            what2test=RunTestType.TORCH,
-        )
-
-        # Export & test
-        if self.eval_upto in ["export", "optimize"]:
-            if "export" not in copied_ops_dir:
-                self.export(
+            # Run training if not in resume operation
+            if "train" not in copied_ops_dir:
+                e2e_train_time = self.train(
                     model_info=model_info,
                     dataset_info=dataset_info,
                     sub_work_dir=sub_work_dir,
+                    seed=seed,
                 )
 
-            exported_model_path = sub_work_dir / "export" / "exported_model.xml"
-            if not exported_model_path.exists():
-                exported_model_path = sub_work_dir / ".latest" / "export" / "exported_model_decoder.xml"
-
-            # Test OpenVINO exported model
-            self.test(
-                model_info=model_info,
-                dataset_info=dataset_info,
-                sub_work_dir=sub_work_dir,
-                tags=tags,
-                criteria=criteria,
-                checkpoint=exported_model_path,
-                what2test=RunTestType.EXPORT,
-            )
-
-        # Optimize & test
-        if self.eval_upto == "optimize":
-            if "optimize" not in copied_ops_dir:
-                self.optimize(
-                    model_info=model_info,
-                    dataset_info=dataset_info,
-                    sub_work_dir=sub_work_dir,
-                    exported_model_path=exported_model_path,
-                )
                 self._log_metrics(
-                    work_dir=sub_work_dir / SubCommand.OPTIMIZE.value,
+                    work_dir=sub_work_dir / SubCommand.TRAIN.value,
                     tags=tags,
                     criteria=criteria,
+                    extra_metrics={
+                        "train/e2e_time": e2e_train_time,
+                    },
                 )
-
-            optimized_model_path = sub_work_dir / "optimize" / "optimized_model.xml"
-            if not optimized_model_path.exists():
-                optimized_model_path = sub_work_dir / "optimize" / "optimized_model_decoder.xml"
 
             self.test(
                 model_info=model_info,
@@ -465,18 +413,71 @@ class Benchmark:
                 sub_work_dir=sub_work_dir,
                 tags=tags,
                 criteria=criteria,
-                checkpoint=optimized_model_path,
-                what2test=RunTestType.OPTIMIZE,
+                checkpoint=sub_work_dir / "train" / "best_checkpoint.ckpt",
+                what2test=RunTestType.TORCH,
             )
 
-        # Force memory clean up
-        gc.collect()
-        # except Exception as e:
-        #     exceptions.append((seed, str(e)))
+            # Export & test
+            if self.eval_upto in ["export", "optimize"]:
+                if "export" not in copied_ops_dir:
+                    self.export(
+                        model_info=model_info,
+                        dataset_info=dataset_info,
+                        sub_work_dir=sub_work_dir,
+                    )
 
-        # if exceptions:
-        #     # Raise the custom exception with all collected errors
-        #     raise AggregateError(exceptions)
+                exported_model_path = sub_work_dir / "export" / "exported_model.xml"
+                if not exported_model_path.exists():
+                    exported_model_path = sub_work_dir / ".latest" / "export" / "exported_model_decoder.xml"
+
+                # Test OpenVINO exported model
+                self.test(
+                    model_info=model_info,
+                    dataset_info=dataset_info,
+                    sub_work_dir=sub_work_dir,
+                    tags=tags,
+                    criteria=criteria,
+                    checkpoint=exported_model_path,
+                    what2test=RunTestType.EXPORT,
+                )
+
+            # Optimize & test
+            if self.eval_upto == "optimize":
+                if "optimize" not in copied_ops_dir:
+                    self.optimize(
+                        model_info=model_info,
+                        dataset_info=dataset_info,
+                        sub_work_dir=sub_work_dir,
+                        exported_model_path=exported_model_path,
+                    )
+                    self._log_metrics(
+                        work_dir=sub_work_dir / SubCommand.OPTIMIZE.value,
+                        tags=tags,
+                        criteria=criteria,
+                    )
+
+                optimized_model_path = sub_work_dir / "optimize" / "optimized_model.xml"
+                if not optimized_model_path.exists():
+                    optimized_model_path = sub_work_dir / "optimize" / "optimized_model_decoder.xml"
+
+                self.test(
+                    model_info=model_info,
+                    dataset_info=dataset_info,
+                    sub_work_dir=sub_work_dir,
+                    tags=tags,
+                    criteria=criteria,
+                    checkpoint=optimized_model_path,
+                    what2test=RunTestType.OPTIMIZE,
+                )
+
+            # Force memory clean up
+            gc.collect()
+        except Exception as e:
+            exceptions.append((seed, str(e)))
+
+        if exceptions:
+            # Raise the custom exception with all collected errors
+            raise AggregateError(exceptions)
 
         result = load_result(work_dir)
         if result is None:

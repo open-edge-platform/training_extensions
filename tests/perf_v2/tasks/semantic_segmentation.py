@@ -50,7 +50,7 @@ DATASET_TEST_CASES = [
     ),
 ]
 
-# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+# TODO (someone): Compare with DETECTION CRITERIA and fill in the missing values
 BENCHMARK_CRITERIA = [
     Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
     Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
