@@ -1,4 +1,4 @@
-name: Performance Benchmark
+name: Performance Benchmark V2
 
 on:
   workflow_dispatch: # run on request (no need for PR)
@@ -17,10 +17,12 @@ on:
           - VISUAL_PROMPTING
       num-repeat:
         description: Overrides default per-data-group number of repeat setting
-        default: 0
+        type: number
+        default: 5
       num-epoch:
         description: Overrides default per-model number of epoch setting
-        default: 0
+        type: number
+        default: 200
       eval-upto:
         type: choice
         description: The last operation to evaluate. 'optimize' means all.
@@ -38,11 +40,11 @@ on:
       num-repeat:
         type: number
         description: Overrides default per-data-group number of repeat setting
-        default: 0
+        default: 5
       num-epoch:
         type: number
         description: Overrides default per-model number of epoch setting
-        default: 0
+        default: 200
       eval-upto:
         type: string
         description: The last operation to evaluate. 'optimize' means all. [train, export, optimize]
@@ -85,13 +87,13 @@ jobs:
           GH_CTX_REF_NAME: ${{ github.ref_name }}
           GH_CTX_SHA: ${{ github.sha }}
         run: >
-          tox -vv -e perf-benchmark-v2 -- tests/perf_v2/run.py
+          tox -vv -e perf-benchmark-v2 -- -m tests.perf_v2.run
           --task ${{ matrix.task }}
           --data-root ${{ inputs.data-root }}
           --num-repeat ${{ inputs.num-repeat }}
           --num-epoch ${{ inputs.num-epoch }}
           --eval-upto ${{ inputs.eval-upto }}
-          --output-root .tox/perf-benchmark-v2
+          --output-root .tox/benchmark_artifacts
           --device gpu
           --user-name ${{ github.triggering_actor }}
       - name: Upload test results
