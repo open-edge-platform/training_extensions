@@ -1,266 +1,173 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX classification perfomance benchmark tests."""
+"""OTX classification performance benchmark tests."""
 
 from __future__ import annotations
 
 import logging
 from pathlib import Path
 
-import pytest
+from tests.perf.utils import (
+    Criterion,
+    DatasetInfo,
+    ModelInfo,
+)
 
-from ..benchmark import Benchmark
-from .conftest import PerfTestBase
+from otx.core.types.task import OTXTaskType
 
-log = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope="session")
-def fxt_deterministic(request: pytest.FixtureRequest) -> bool:
-    """Override the deterministic setting for classification tasks."""
-    deterministic = request.config.getoption("--deterministic")
-    deterministic = True if deterministic is None else deterministic == "true"
-    log.info(f"{deterministic=}")
-    return deterministic
+logger = logging.getLogger(__name__)
 
 
-class TestPerfSingleLabelClassification(PerfTestBase):
-    """Benchmark single-label classification."""
+# ============= Multi-class classification =============
 
-    MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="efficientnet_b0", category="speed"),
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="efficientnet_v2", category="balance"),
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="mobilenet_v3_large", category="accuracy"),
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="deit_tiny", category="other"),
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="dino_v2", category="other"),
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="tv_efficientnet_b3", category="other"),
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="tv_efficientnet_v2_l", category="other"),
-        Benchmark.ModelInfo(task="classification/multi_class_cls", name="tv_mobilenet_v3_small", category="other"),
-    ]
+MULTI_CLASS_MODEL_TEST_CASES = [
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="efficientnet_b0", category="speed"),
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="efficientnet_v2", category="balance"),
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="mobilenet_v3_large", category="accuracy"),
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="deit_tiny", category="other"),
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="dino_v2", category="other"),
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="tv_efficientnet_b3", category="other"),
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="tv_efficientnet_v2_l", category="other"),
+    ModelInfo(task=OTXTaskType.MULTI_CLASS_CLS.value, name="tv_mobilenet_v3_small", category="other"),
+]
 
-    DATASET_TEST_CASES = [
-        Benchmark.DatasetInfo(
-            name=f"multiclass_CUB_small_{idx}",
-            path=Path("multiclass_classification/multiclass_CUB_small") / f"{idx}",
-            group="small",
-            num_repeat=5,
-            extra_overrides={},
-        )
-        for idx in (1, 2, 3)
-    ] + [
-        Benchmark.DatasetInfo(
-            name="multiclass_CUB_medium",
-            path=Path("multiclass_classification/multiclass_CUB_medium"),
-            group="medium",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-        Benchmark.DatasetInfo(
-            name="multiclass_food20_large",
-            path=Path("multiclass_classification/multiclass_food20_large"),
-            group="large",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-    ]
-
-    BENCHMARK_CRITERIA = [  # noqa: RUF012
-        Benchmark.Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
-    ]
-
-    @pytest.mark.parametrize(
-        "fxt_model",
-        MODEL_TEST_CASES,
-        ids=lambda model: model.name,
-        indirect=True,
+MULTI_CLASS_DATASET_TEST_CASES = [
+    DatasetInfo(
+        name=f"multiclass_CUB_small_{idx}",
+        path=Path("multiclass_classification/multiclass_CUB_small") / f"{idx}",
+        group="small",
+        extra_overrides={},
     )
-    @pytest.mark.parametrize(
-        "fxt_dataset",
-        DATASET_TEST_CASES,
-        ids=lambda dataset: dataset.name,
-        indirect=True,
+    for idx in (1, 2, 3)
+] + [
+    DatasetInfo(
+        name="multiclass_CUB_medium",
+        path=Path("multiclass_classification/multiclass_CUB_medium"),
+        group="medium",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="multiclass_food20_large",
+        path=Path("multiclass_classification/multiclass_food20_large"),
+        group="large",
+        extra_overrides={},
+    ),
+]
+
+# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+MULTI_CLASS_BENCHMARK_CRITERIA = [
+    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
+    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
+    Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
+]
+
+
+# ============= Multi-label classification =============
+MULTI_LABEL_MODEL_TEST_CASES = [
+    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
+    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
+    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
+    ModelInfo(task=OTXTaskType.MULTI_LABEL_CLS.value, name="deit_tiny", category="other"),
+]
+
+MULTI_LABEL_DATASET_TEST_CASES = [
+    DatasetInfo(
+        name=f"multilabel_CUB_small_{idx}",
+        path=Path("multilabel_classification/multilabel_CUB_small") / f"{idx}",
+        group="small",
+        extra_overrides={},
     )
-    def test_perf(
-        self,
-        fxt_model: Benchmark.ModelInfo,
-        fxt_dataset: Benchmark.DatasetInfo,
-        fxt_benchmark: Benchmark,
-        fxt_accelerator: str,
-    ):
-        self._test_perf(
-            model=fxt_model,
-            dataset=fxt_dataset,
-            benchmark=fxt_benchmark,
-            criteria=self.BENCHMARK_CRITERIA,
-        )
+    for idx in (1, 2, 3)
+] + [
+    DatasetInfo(
+        name="multilabel_CUB_medium",
+        path=Path("multilabel_classification/multilabel_CUB_medium"),
+        group="medium",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="multilabel_food20_large",
+        path=Path("multilabel_classification/multilabel_food20_large"),
+        group="large",
+        extra_overrides={},
+    ),
+]
+
+# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+MULTI_LABEL_BENCHMARK_CRITERIA = [
+    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
+    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
+    Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
+]
 
 
-class TestPerfMultiLabelClassification(PerfTestBase):
-    """Benchmark multi-label classification."""
+# ============= Hierarchical-label classification =============
 
-    MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.ModelInfo(task="classification/multi_label_cls", name="efficientnet_b0", category="speed"),
-        Benchmark.ModelInfo(task="classification/multi_label_cls", name="efficientnet_v2", category="balance"),
-        Benchmark.ModelInfo(task="classification/multi_label_cls", name="mobilenet_v3_large", category="accuracy"),
-        Benchmark.ModelInfo(task="classification/multi_label_cls", name="deit_tiny", category="other"),
-    ]
 
-    DATASET_TEST_CASES = [
-        Benchmark.DatasetInfo(
-            name=f"multilabel_CUB_small_{idx}",
-            path=Path("multilabel_classification/multilabel_CUB_small") / f"{idx}",
-            group="small",
-            num_repeat=5,
-            extra_overrides={},
-        )
-        for idx in (1, 2, 3)
-    ] + [
-        Benchmark.DatasetInfo(
-            name="multilabel_CUB_medium",
-            path=Path("multilabel_classification/multilabel_CUB_medium"),
-            group="medium",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-        Benchmark.DatasetInfo(
-            name="multilabel_food20_large",
-            path=Path("multilabel_classification/multilabel_food20_large"),
-            group="large",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-    ]
+H_LABEL_CLS_MODEL_TEST_CASES = [
+    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="efficientnet_b0", category="speed"),
+    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="efficientnet_v2", category="balance"),
+    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="mobilenet_v3_large", category="accuracy"),
+    ModelInfo(task=OTXTaskType.H_LABEL_CLS.value, name="deit_tiny", category="other"),
+]
 
-    BENCHMARK_CRITERIA = [  # noqa: RUF012
-        Benchmark.Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
-    ]
-
-    @pytest.mark.parametrize(
-        "fxt_model",
-        MODEL_TEST_CASES,
-        ids=lambda model: model.name,
-        indirect=True,
+H_LABEL_CLS_DATASET_TEST_CASES = [
+    DatasetInfo(
+        name=f"hlabel_CUB_small_{idx}",
+        path=Path("hlabel_classification/hlabel_CUB_small") / f"{idx}",
+        group="small",
+        extra_overrides={},
     )
-    @pytest.mark.parametrize(
-        "fxt_dataset",
-        DATASET_TEST_CASES,
-        ids=lambda dataset: dataset.name,
-        indirect=True,
-    )
-    def test_perf(
-        self,
-        fxt_model: Benchmark.ModelInfo,
-        fxt_dataset: Benchmark.DatasetInfo,
-        fxt_benchmark: Benchmark,
-        fxt_accelerator: str,
-    ):
-        self._test_perf(
-            model=fxt_model,
-            dataset=fxt_dataset,
-            benchmark=fxt_benchmark,
-            criteria=self.BENCHMARK_CRITERIA,
-        )
+    for idx in (1, 2, 3)
+] + [
+    DatasetInfo(
+        name="hlabel_CUB_medium",
+        path=Path("hlabel_classification/hlabel_CUB_medium"),
+        group="medium",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="cifar100_label_group_datum_format_large",
+        path=Path("hlabel_classification/cifar100_label_group_datum_format_large"),
+        group="large",
+        extra_overrides={},
+    ),
+]
 
-
-class TestPerfHierarchicalLabelClassification(PerfTestBase):
-    """Benchmark hierarchical-label classification."""
-
-    MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.ModelInfo(task="classification/h_label_cls", name="efficientnet_b0", category="speed"),
-        Benchmark.ModelInfo(task="classification/h_label_cls", name="efficientnet_v2", category="balance"),
-        Benchmark.ModelInfo(task="classification/h_label_cls", name="mobilenet_v3_large", category="accuracy"),
-        Benchmark.ModelInfo(task="classification/h_label_cls", name="deit_tiny", category="other"),
-    ]
-
-    DATASET_TEST_CASES = [
-        Benchmark.DatasetInfo(
-            name=f"hlabel_CUB_small_{idx}",
-            path=Path("hlabel_classification/hlabel_CUB_small") / f"{idx}",
-            group="small",
-            num_repeat=5,
-            extra_overrides={},
-        )
-        for idx in (1, 2, 3)
-    ] + [
-        Benchmark.DatasetInfo(
-            name="hlabel_CUB_medium",
-            path=Path("hlabel_classification/hlabel_CUB_medium"),
-            group="medium",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-        Benchmark.DatasetInfo(
-            name="cifar100_label_group_datum_format_large",
-            path=Path("hlabel_classification/cifar100_label_group_datum_format_large"),
-            group="large",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-    ]
-
-    BENCHMARK_CRITERIA = [  # noqa: RUF012
-        Benchmark.Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
-    ]
-
-    @pytest.mark.parametrize(
-        "fxt_model",
-        MODEL_TEST_CASES,
-        ids=lambda model: model.name,
-        indirect=True,
-    )
-    @pytest.mark.parametrize(
-        "fxt_dataset",
-        DATASET_TEST_CASES,
-        ids=lambda dataset: dataset.name,
-        indirect=True,
-    )
-    def test_perf(
-        self,
-        fxt_model: Benchmark.ModelInfo,
-        fxt_dataset: Benchmark.DatasetInfo,
-        fxt_benchmark: Benchmark,
-        fxt_accelerator: str,
-    ):
-        self._test_perf(
-            model=fxt_model,
-            dataset=fxt_dataset,
-            benchmark=fxt_benchmark,
-            criteria=self.BENCHMARK_CRITERIA,
-        )
+# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+H_LABEL_CLS_BENCHMARK_CRITERIA = [
+    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
+    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
+    Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
+]

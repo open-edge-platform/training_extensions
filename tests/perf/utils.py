@@ -1,6 +1,7 @@
-#!/usr/bin/env python
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Various utilities for OTX performance benchmarking."""
 
 from __future__ import annotations
 
@@ -32,9 +33,6 @@ class ModelInfo:
     name: str
     category: str
 
-    def to_dict(self):
-        return {"task": self.task, "name": self.name, "category": self.category}
-
 
 @dataclass
 class DatasetInfo:
@@ -44,14 +42,6 @@ class DatasetInfo:
     path: Path
     group: str
     extra_overrides: dict | None = None
-
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "path": str(self.path),
-            "group": self.group,
-            "extra_overrides": self.extra_overrides,
-        }
 
 
 class RunTestType(Enum):
@@ -126,6 +116,12 @@ def parse_task(value: str) -> OTXTaskType:
 
 
 def get_parser() -> ArgumentParser:
+    """Get argument parser for OTX benchmarking.
+
+    Returns:
+        ArgumentParser: JSON Argument parser.
+    """
+
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -140,6 +136,13 @@ def get_parser() -> ArgumentParser:
         type=int,
         default=0,
         help="Random seed for reproducibility.",
+    )
+
+    parser.add_argument(
+        "--num-repeat",
+        type=int,
+        default=5,
+        help="Number of repeated runs per model. Defaults to 5.",
     )
 
     parser.add_argument(
@@ -309,6 +312,18 @@ def completeness_check(
     dataset_list: list[DatasetInfo],
     num_repeat: int,
 ) -> list[tuple[str, str, int]]:
+    """Check if all experiments are completed.
+
+    Args:
+        raw_df (pd.DataFrame): Raw benchmark results.
+        model_list (list[ModelInfo]): List of models.
+        dataset_list (list[DatasetInfo]): List of datasets.
+        num_repeat (int): Number of repeated runs per model.
+
+    Returns:
+        list[tuple[str, str, int]]: List of missing experiments.
+    """
+
     missing_experiments = []
     for model in model_list:
         for data in dataset_list:

@@ -1,95 +1,68 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""OTX semantic segmentation perfomance benchmark tests."""
+"""OTX semantic segmentation performance benchmark."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
+from tests.perf.utils import (
+    Criterion,
+    DatasetInfo,
+    ModelInfo,
+)
 
-from ..benchmark import Benchmark
-from .conftest import PerfTestBase
+from otx.core.types.task import OTXTaskType
 
+TASK_TYPE = OTXTaskType.SEMANTIC_SEGMENTATION
 
-class TestPerfSemanticSegmentation(PerfTestBase):
-    """Benchmark semantic segmentation."""
+MODEL_TEST_CASES = [
+    ModelInfo(task=TASK_TYPE.value, name="litehrnet_18", category="balance"),
+    ModelInfo(task=TASK_TYPE.value, name="litehrnet_s", category="speed"),
+    ModelInfo(task=TASK_TYPE.value, name="litehrnet_x", category="accuracy"),
+    ModelInfo(task=TASK_TYPE.value, name="segnext_b", category="other"),
+    ModelInfo(task=TASK_TYPE.value, name="segnext_s", category="other"),
+    ModelInfo(task=TASK_TYPE.value, name="segnext_t", category="other"),
+    ModelInfo(task=TASK_TYPE.value, name="dino_v2", category="other"),
+]
 
-    MODEL_TEST_CASES = [  # noqa: RUF012
-        Benchmark.ModelInfo(task="semantic_segmentation", name="litehrnet_18", category="balance"),
-        Benchmark.ModelInfo(task="semantic_segmentation", name="litehrnet_s", category="speed"),
-        Benchmark.ModelInfo(task="semantic_segmentation", name="litehrnet_x", category="accuracy"),
-        Benchmark.ModelInfo(task="semantic_segmentation", name="segnext_b", category="other"),
-        Benchmark.ModelInfo(task="semantic_segmentation", name="segnext_s", category="other"),
-        Benchmark.ModelInfo(task="semantic_segmentation", name="segnext_t", category="other"),
-        Benchmark.ModelInfo(task="semantic_segmentation", name="dino_v2", category="other"),
-    ]
-
-    DATASET_TEST_CASES = [
-        Benchmark.DatasetInfo(
-            name=f"kvasir_small_{idx}",
-            path=Path("semantic_seg/kvasir_small") / f"{idx}",
-            group="small",
-            num_repeat=5,
-            extra_overrides={},
-        )
-        for idx in (1, 2, 3)
-    ] + [
-        Benchmark.DatasetInfo(
-            name="cityscapes_185_70_medium",
-            path=Path("semantic_seg/cityscapes_185_70_medium"),
-            group="medium",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-        Benchmark.DatasetInfo(
-            name="voc_2012_cut_large",
-            path=Path("semantic_seg/voc_2012_cut_large"),
-            group="large",
-            num_repeat=5,
-            extra_overrides={},
-        ),
-    ]
-
-    BENCHMARK_CRITERIA = [  # noqa: RUF012
-        Benchmark.Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-        Benchmark.Criterion(name="val/Dice", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test/Dice", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="export/Dice", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="optimize/Dice", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-        Benchmark.Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-        Benchmark.Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
-    ]
-
-    @pytest.mark.parametrize(
-        "fxt_model",
-        MODEL_TEST_CASES,
-        ids=lambda model: model.name,
-        indirect=True,
+DATASET_TEST_CASES = [
+    DatasetInfo(
+        name=f"kvasir_small_{idx}",
+        path=Path("semantic_seg/kvasir_small") / f"{idx}",
+        group="small",
+        extra_overrides={},
     )
-    @pytest.mark.parametrize(
-        "fxt_dataset",
-        DATASET_TEST_CASES,
-        ids=lambda dataset: dataset.name,
-        indirect=True,
-    )
-    def test_perf(
-        self,
-        fxt_model: Benchmark.ModelInfo,
-        fxt_dataset: Benchmark.DatasetInfo,
-        fxt_benchmark: Benchmark,
-        fxt_accelerator: str,
-    ):
-        self._test_perf(
-            model=fxt_model,
-            dataset=fxt_dataset,
-            benchmark=fxt_benchmark,
-            criteria=self.BENCHMARK_CRITERIA,
-        )
+    for idx in (1, 2, 3)
+] + [
+    DatasetInfo(
+        name="cityscapes_185_70_medium",
+        path=Path("semantic_seg/cityscapes_185_70_medium"),
+        group="medium",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="voc_2012_cut_large",
+        path=Path("semantic_seg/voc_2012_cut_large"),
+        group="large",
+        extra_overrides={},
+    ),
+]
+
+# TODO: Compare with DETECTION CRITERIA and fill in the missing values
+BENCHMARK_CRITERIA = [
+    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
+    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
+    Criterion(name="val/Dice", summary="max", compare=">", margin=0.1),
+    Criterion(name="test/Dice", summary="max", compare=">", margin=0.1),
+    Criterion(name="export/Dice", summary="max", compare=">", margin=0.1),
+    Criterion(name="optimize/Dice", summary="max", compare=">", margin=0.1),
+    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
+]

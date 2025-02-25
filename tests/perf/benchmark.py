@@ -17,7 +17,7 @@ from jsonargparse import ArgumentParser, Namespace
 
 from otx.core.types.task import OTXTaskType
 from otx.engine import Engine
-from tests.perf import CRITERIA_COLLECTIONS, DATASET_TEST_CASES_COLLECTIONS, MODEL_TEST_CASES_COLLECTIONS, summary
+from tests.perf import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf.utils import (
     Criterion,
     DatasetInfo,
@@ -35,12 +35,12 @@ logger = logging.getLogger(__name__)
 
 
 def task_benchmark_dataset(task: OTXTaskType) -> dict[str, DatasetInfo]:
-    test_cases = DATASET_TEST_CASES_COLLECTIONS[task]
+    test_cases = DATASET_COLLECTIONS[task]
     return {test_case.name: test_case for test_case in test_cases}
 
 
 def task_benchmark_models(task: OTXTaskType) -> dict[str, ModelInfo]:
-    model_info_list = MODEL_TEST_CASES_COLLECTIONS[task]
+    model_info_list = MODEL_COLLECTIONS[task]
     return {model.name: model for model in model_info_list}
 
 
