@@ -4,6 +4,6 @@
 """Base models classes implementations for detection task."""
 
 from .detection_transformer import DETR
-from .single_stage_detector import SingleStageDetector, YOLOSingleStageDetector
+from .single_stage_detector import SingleStageDetector
 
-__all__ = ["DETR", "SingleStageDetector", "YOLOSingleStageDetector"]
+__all__ = ["DETR", "SingleStageDetector"]

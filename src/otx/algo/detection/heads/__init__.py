@@ -7,7 +7,6 @@ from .dfine_decoder import DFINETransformer
 from .rtdetr_decoder import RTDETRTransformer
 from .rtmdet_head import RTMDetSepBNHead
 from .ssd_head import SSDHead
-from .yolo_head import YOLOHead
 from .yolox_head import YOLOXHead
 
 __all__ = [
@@ -16,6 +15,5 @@ __all__ = [
     "RTDETRTransformer",
     "RTMDetSepBNHead",
     "SSDHead",
-    "YOLOHead",
     "YOLOXHead",
 ]
