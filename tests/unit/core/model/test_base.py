@@ -6,7 +6,7 @@ import pytest
 import torch
 from lightning import Trainer
 from lightning.pytorch.utilities.types import LRSchedulerConfig
-from model_api.models.utils import ClassificationResult
+from model_api.models.result import ClassificationResult
 from pytest_mock import MockerFixture
 
 from otx.core.data.entity.base import OTXBatchDataEntity

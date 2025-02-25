@@ -14,7 +14,7 @@ import torch
 from datumaro import Dataset as DmDataset
 from datumaro import Polygon
 from model_api.models import Model
-from model_api.models.utils import ImageResultWithSoftPrediction
+from model_api.models.result import ImageResultWithSoftPrediction
 from model_api.tilers import SemanticSegmentationTiler
 from omegaconf import OmegaConf
 from torchvision import tv_tensors
