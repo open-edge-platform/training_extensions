@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tests.perf.utils import (
+from tests.perf_v2.utils import (
     Criterion,
     DatasetInfo,
     ModelInfo,

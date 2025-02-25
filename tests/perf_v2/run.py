@@ -4,13 +4,14 @@
 
 from __future__ import annotations
 
-from tests.perf import MODEL_COLLECTIONS, DATASET_COLLECTIONS
+from tests.perf_v2 import MODEL_COLLECTIONS, DATASET_COLLECTIONS
+
 
 import logging
 import subprocess
 
-from tests.perf.summary import load, summarize_task
-from tests.perf.utils import (
+from tests.perf_v2.summary import load, summarize_task
+from tests.perf_v2.utils import (
     completeness_check,
     current_date_str,
     get_parser,

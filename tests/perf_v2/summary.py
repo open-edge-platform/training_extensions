@@ -184,7 +184,7 @@ def create_raw_dataset_xlsx(
         task (str): _description_
         output_root (Path): _description_
     """
-    from tests.perf import CRITERIA_COLLECTIONS
+    from tests.perf_v2 import CRITERIA_COLLECTIONS
 
     col_names = []
     col_names.extend(METADATA_ENTRIES)

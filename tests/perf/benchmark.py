@@ -8,40 +8,18 @@ from __future__ import annotations
 import gc
 import logging
 import shutil
+import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from time import time
 from typing import Any, Literal
 
+import numpy as np
 import pandas as pd
-from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.types.task import OTXTaskType
-from otx.engine import Engine
-from tests.perf import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
-from tests.perf.utils import (
-    Criterion,
-    DatasetInfo,
-    ModelInfo,
-    RunTestType,
-    SubCommand,
-    build_tags,
-    current_date_str,
-    get_parser,
-    get_version_tags,
-    load_result,
-)
+from .history import summary
 
-logger = logging.getLogger(__name__)
-
-
-def task_benchmark_dataset(task: OTXTaskType) -> dict[str, DatasetInfo]:
-    test_cases = DATASET_COLLECTIONS[task]
-    return {test_case.name: test_case for test_case in test_cases}
-
-
-def task_benchmark_models(task: OTXTaskType) -> dict[str, ModelInfo]:
-    model_info_list = MODEL_COLLECTIONS[task]
-    return {model.name: model for model in model_info_list}
+log = logging.getLogger(__name__)
 
 
 class AggregateError(Exception):
@@ -62,6 +40,8 @@ class Benchmark:
         output_root (str): Output root dirctory for logs and results. Defaults to './otx-benchmark'.
         num_epoch (int): Overrides the per-model default number of epoch settings.
             Defaults to 0, which means no overriding.
+        num_repeat (int): Number for trials with different random seed, which would be set
+            as range(0, num_repeat). Defaults to 1.
         eval_upto (str): The last serial operation to evaluate. Choose one of ('train', 'export', 'optimize').
             Operations include the preceeding ones.
             e.x) Eval up to 'optimize': train -> eval -> export -> eval -> optimize -> eval
@@ -79,11 +59,64 @@ class Benchmark:
             necessary operations can be executed. Defaults to None.
     """
 
+    @dataclass
+    class Model:
+        """Benchmark model."""
+
+        task: str
+        name: str
+        category: str
+
+    @dataclass
+    class Dataset:
+        """Benchmark dataset."""
+
+        name: str
+        path: Path
+        group: str
+        num_repeat: int = 1
+        extra_overrides: dict | None = None
+        unlabeled_data_path: Path | None = None
+
+    @dataclass
+    class Criterion:
+        """Benchmark criterion."""
+
+        name: str
+        summary: str
+        compare: str
+        margin: float
+
+        def __call__(self, result_entry: pd.Series, target_entry: pd.Series) -> None:
+            """Check result against given target."""
+            if self.name not in result_entry or result_entry[self.name] is None or np.isnan(result_entry[self.name]):
+                print(f"[Check] {self.name} not in result")
+                return
+            if self.name not in target_entry or target_entry[self.name] is None or np.isnan(target_entry[self.name]):
+                print(f"[Check] {self.name} not in target")
+                return
+            if self.compare == "==":
+                print(
+                    f"[Check] abs({self.name}:{result_entry[self.name]} - {self.name}:{target_entry[self.name]}) < {self.name}:{target_entry[self.name]} * {self.margin}",
+                )
+                assert abs(result_entry[self.name] - target_entry[self.name]) < target_entry[self.name] * self.margin
+            elif self.compare == "<":
+                print(
+                    f"[Check] {self.name}:{result_entry[self.name]} < {self.name}:{target_entry[self.name]} * (1.0 + {self.margin})",
+                )
+                assert result_entry[self.name] < target_entry[self.name] * (1.0 + self.margin)
+            elif self.compare == ">":
+                print(
+                    f"[Check] {self.name}:{result_entry[self.name]} > {self.name}:{target_entry[self.name]} * (1.0 - {self.margin})",
+                )
+                assert result_entry[self.name] > target_entry[self.name] * (1.0 - self.margin)
+
     def __init__(
         self,
         data_root: Path = Path("data"),
         output_root: Path = Path("otx-benchmark"),
         num_epoch: int = 0,
+        num_repeat: int = 1,
         eval_upto: str = "train",
         tags: dict[str, str] | None = None,
         dry_run: bool = False,
@@ -96,6 +129,7 @@ class Benchmark:
         self.data_root = data_root
         self.output_root = output_root
         self.num_epoch = num_epoch
+        self.num_repeat = num_repeat
         self.eval_upto = eval_upto
         self.tags = tags or {}
         self.dry_run = dry_run
@@ -110,375 +144,164 @@ class Benchmark:
             raise ValueError(msg)
         self.test_only = test_only
 
-    def train(
-        self,
-        model_info: ModelInfo,
-        dataset_info: DatasetInfo,
-        sub_work_dir: Path,
-        seed: int,
-    ) -> float:
-        """Train model with given dataset and return the total time.
-
-        Args:
-            model_info (ModelInfo):
-            dataset_info (DatasetInfo):
-            sub_work_dir (Path):
-            seed (int):
-
-        Returns:
-            float: Total time for training
-        """
-
-        engine, kwargs = self._initialize_engine(
-            model_info=model_info,
-            dataset_info=dataset_info,
-            work_dir=sub_work_dir / SubCommand.TRAIN.value,
-            subcommand=SubCommand.TRAIN,
-        )
-
-        extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("train", {}).items():
-            extra_kwargs[key] = value
-        extra_kwargs["seed"] = seed
-        extra_kwargs["deterministic"] = self.deterministic
-        if self.num_epoch > 0:
-            extra_kwargs["max_epochs"] = self.num_epoch
-        kwargs.update(extra_kwargs)
-
-        # ======Train======
-        start_time = time()
-        engine.train(**kwargs)
-        total_time = time() - start_time
-        # =================
-
-        self._rename_raw_data(
-            work_dir=Path(engine.work_dir),
-            replaces={"train_": "train/", "{pre}": "train/"},
-        )
-        del engine
-        return total_time
-
-    def test(
-        self,
-        model_info: ModelInfo,
-        dataset_info: DatasetInfo,
-        sub_work_dir: Path | str,
-        tags: dict[str, str],
-        criteria: list[Criterion],
-        checkpoint: Path | str | None = None,
-        what2test: RunTestType = RunTestType.TORCH,
-    ) -> None:
-        """Test model with given dataset on the given checkpoint.
-
-        There are 3 type of tests: torch, export, optimize. Each test has different checkpoint and output directory.
-        * Test Directory For PyTorch: {sub_work_dir}/test/torch
-        * Test Directory For OV Export: {sub_work_dir}/test/export
-        * Test Directory For POT Optimize: {sub_work_dir}/test/optimize
-
-        Args:
-            model_info (ModelInfo): Information of the model to test
-            dataset_info (DatasetInfo): Information of the dataset to test
-            sub_work_dir (Path | str): Sub work directory
-            tags (dict[str, str]): Information useful for excel/csv output
-            criteria (list[Criterion]): Criteria to check results
-            checkpoint (Path | str | None, optional): Checkpoint path. Defaults to None.
-            what2test (RunTestType, optional): indicates which model to test. Defaults to RunTestType.TORCH.
-        """
-        test_type = what2test.value
-        if self.test_only not in ["all", test_type, None]:
-            return
-
-        engine, kwargs = self._initialize_engine(
-            model_info=model_info,
-            dataset_info=dataset_info,
-            work_dir=sub_work_dir / SubCommand.TEST.value / test_type,
-            subcommand=SubCommand.TEST,
-        )
-
-        replace_map = {
-            RunTestType.TORCH: {"test_": "test/", "{pre}": "test/"},
-            RunTestType.EXPORT: {"test": test_type, "{pre}": f"{test_type}/"},
-            RunTestType.OPTIMIZE: {"test": test_type, "{pre}": f"{test_type}/"},
-        }
-
-        extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("test", {}).items():
-            extra_kwargs[key] = value
-        kwargs.update(extra_kwargs)
-        kwargs.pop("checkpoint", None)  # Remove checkpoint
-
-        # ======Test=======
-        start_time = time()
-        engine.test(
-            checkpoint=checkpoint,
-            **kwargs,
-        )
-        total_time = time() - start_time
-
-        # NOTE: This is a very rough estimation of latency.
-        # It is calculated by dividing the total time by the number of samples.
-        latency = total_time / len(engine.datamodule.subsets["test"])
-        extra_metrics = {
-            f"test({test_type})/e2e_time": total_time,
-            f"test({test_type})/latency": latency,
-        }
-        # =================
-
-        self._rename_raw_data(
-            work_dir=Path(engine.work_dir),
-            replaces=replace_map[what2test],
-        )
-        self._log_metrics(
-            work_dir=Path(engine.work_dir),
-            tags=tags,
-            criteria=criteria,
-            extra_metrics=extra_metrics,
-        )
-        del engine
-
-    def export(
-        self,
-        model_info: ModelInfo,
-        dataset_info: DatasetInfo,
-        sub_work_dir: Path,
-    ) -> None:
-        engine, kwargs = self._initialize_engine(
-            model_info=model_info,
-            dataset_info=dataset_info,
-            work_dir=sub_work_dir / SubCommand.EXPORT.value,
-            subcommand=SubCommand.EXPORT,
-        )
-
-        extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("export", {}).items():
-            extra_kwargs[key] = value
-        kwargs.update(extra_kwargs)
-
-        ckpt_path = sub_work_dir / "train" / "best_checkpoint.ckpt"
-        if not ckpt_path.exists():
-            msg = f"Checkpoint file not found: {ckpt_path}"
-            raise FileNotFoundError(msg)
-
-        kwargs.pop("checkpoint", None)  # Remove checkpoint
-        engine.export(
-            checkpoint=ckpt_path,
-            **kwargs,
-        )
-
-    def optimize(
-        self,
-        model_info: ModelInfo,
-        dataset_info: DatasetInfo,
-        sub_work_dir: Path,
-        exported_model_path: Path,
-    ):
-        engine, kwargs = self._initialize_engine(
-            model_info=model_info,
-            dataset_info=dataset_info,
-            work_dir=sub_work_dir / SubCommand.OPTIMIZE.value,
-            subcommand=SubCommand.OPTIMIZE,
-        )
-
-        extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("optimize", {}).items():
-            extra_kwargs[key] = value
-
-        kwargs.update(extra_kwargs)
-        kwargs.pop("checkpoint", None)  # Remove checkpoint
-
-        # ======Optimize=======
-        start_time = time()
-
-        engine.optimize(
-            checkpoint=exported_model_path,
-            **kwargs,
-        )
-        total_time = time() - start_time
-
-        # OTX does not create metrics.cvs during optimization,
-        # So we are manually write optimize/e2e_time to csv.
-        data_frame = pd.DataFrame({"optimize/e2e_time": [total_time]})
-        data_frame.to_csv(sub_work_dir / f"{SubCommand.OPTIMIZE.value}/metrics.csv", index=False)
-        # =================
-
-    def _initialize_engine(
-        self,
-        model_info: ModelInfo,
-        dataset_info: DatasetInfo,
-        work_dir: Path,
-        subcommand: SubCommand,
-    ) -> tuple[Engine, dict[str, Any]]:
-        """Initialise engine with given model and dataset settings.
-
-        Args:
-            model_info (ModelInfo): Target model settings
-            dataset_info (DatasetInfo): Target dataset settings
-            sub_work_dir (Path): Sub work directory
-
-        Returns:
-            Engine: Initialised engine
-        """
-
-        engine = Engine(
-            model=model_info.name,
-            data_root=self.data_root / dataset_info.path,
-            work_dir=work_dir,
-            device=self.accelerator,
-        )
-
-        config = engine._auto_configurator.config
-
-        # Instantiate Train Arguments
-        engine_parser = ArgumentParser()
-        arguments = engine_parser.add_method_arguments(
-            Engine,
-            subcommand.value,
-            skip={"accelerator", "devices"},
-            fail_untyped=False,
-        )
-        # Update callbacks & logger dir as engine.work_dir
-        for callback in config["callbacks"]:
-            if "init_args" in callback and "dirpath" in callback["init_args"]:
-                callback["init_args"]["dirpath"] = engine.work_dir
-        for logger in config["logger"]:
-            if "save_dir" in logger["init_args"]:
-                logger["init_args"]["save_dir"] = engine.work_dir
-            if "log_dir" in logger["init_args"]:
-                logger["init_args"]["log_dir"] = engine.work_dir
-        instantiated_kwargs = engine_parser.instantiate_classes(Namespace(**config))
-
-        kwargs = {k: v for k, v in instantiated_kwargs.items() if k in arguments}
-        return engine, kwargs
-
     def run(
         self,
-        model_info: ModelInfo,
-        dataset_info: DatasetInfo,
-        seed: int,
+        model: Model,
+        dataset: Dataset,
         criteria: list[Criterion],
     ) -> pd.DataFrame | None:
         """Run configured benchmark with given dataset and model and return the result.
 
         Args:
-            model_info (ModelInfo): Model to benchmark cotaining task, name, and category
-            dataset_info (DatasetInfo): Dataset to benchmark containing name, path, group, and num_repeat
-            criteria (list[Criterion]): Criteria to check results
+            model (Model): Target model settings
+            dataset (Dataset): Target dataset settings
+            criteria (list[Criterion]): Target criteria settings
 
         Retruns:
             pd.DataFrame | None: Table with benchmark metrics
         """
 
-        run_name = f"{model_info.name}/{dataset_info.name}"
-        logger.info(f"{run_name = }")
+        run_name = f"{model.task}/{model.name}/{dataset.name}"
+        log.info(f"{run_name = }")
         work_dir = self.output_root / run_name
+        data_root = self.data_root / dataset.path
 
         tags = {
-            "task": model_info.task,
-            "data_group": dataset_info.group,
-            "model": model_info.name,
-            "data": dataset_info.name,
+            "task": model.task,
+            "data_group": dataset.group,
+            "model": model.name,
+            "data": dataset.name,
             **self.tags,
         }
 
-        # try:
-        sub_work_dir = work_dir / str(seed)
-        tags["seed"] = str(seed)
+        num_repeat = dataset.num_repeat
+        if self.num_repeat > 0:
+            num_repeat = self.num_repeat  # Override by global setting
 
-        # Check if operation was already done in previous run
-        # If so, copy the previous operation directory
-        copied_ops_dir = self._prepare_resume(tags, sub_work_dir)
+        exceptions = []
+        for seed in range(num_repeat):
+            try:
+                sub_work_dir = work_dir / str(seed)
+                tags["seed"] = str(seed)
 
-        # Run training if not in resume operation
-        if "train" not in copied_ops_dir:
-            e2e_train_time = self.train(
-                model_info=model_info,
-                dataset_info=dataset_info,
-                sub_work_dir=sub_work_dir,
-                seed=seed,
-            )
+                # Train & test
+                copied_ops_dir = self._prepare_resume(tags, sub_work_dir)
+                command = [
+                    "otx",
+                    "train",
+                    "--config",
+                    f"src/otx/recipe/{model.task}/{model.name}.yaml",
+                    "--data_root",
+                    str(data_root),
+                    "--work_dir",
+                    str(sub_work_dir),
+                    "--engine.device",
+                    self.accelerator,
+                ]
 
-            self._log_metrics(
-                work_dir=sub_work_dir / SubCommand.TRAIN.value,
-                tags=tags,
-                criteria=criteria,
-                extra_metrics={
-                    "train/e2e_time": e2e_train_time,
-                },
-            )
+                # Add unlabeled data path if exists
+                if dataset.unlabeled_data_path is not None:
+                    command.extend(
+                        ["--data.unlabeled_subset.data_root", str(self.data_root / dataset.unlabeled_data_path)],
+                    )
 
-        self.test(
-            model_info=model_info,
-            dataset_info=dataset_info,
-            sub_work_dir=sub_work_dir,
-            tags=tags,
-            criteria=criteria,
-            checkpoint=sub_work_dir / "train" / "best_checkpoint.ckpt",
-            what2test=RunTestType.TORCH,
-        )
-
-        # Export & test
-        if self.eval_upto in ["export", "optimize"]:
-            if "export" not in copied_ops_dir:
-                self.export(
-                    model_info=model_info,
-                    dataset_info=dataset_info,
-                    sub_work_dir=sub_work_dir,
-                )
-
-            exported_model_path = sub_work_dir / "export" / "exported_model.xml"
-            if not exported_model_path.exists():
-                exported_model_path = sub_work_dir / ".latest" / "export" / "exported_model_decoder.xml"
-
-            # Test OpenVINO exported model
-            self.test(
-                model_info=model_info,
-                dataset_info=dataset_info,
-                sub_work_dir=sub_work_dir,
-                tags=tags,
-                criteria=criteria,
-                checkpoint=exported_model_path,
-                what2test=RunTestType.EXPORT,
-            )
-
-        # Optimize & test
-        if self.eval_upto == "optimize":
-            if "optimize" not in copied_ops_dir:
-                self.optimize(
-                    model_info=model_info,
-                    dataset_info=dataset_info,
-                    sub_work_dir=sub_work_dir,
-                    exported_model_path=exported_model_path,
-                )
+                for key, value in dataset.extra_overrides.get("train", {}).items():
+                    command.append(f"--{key}")
+                    command.append(str(value))
+                command.extend(["--seed", str(seed)])
+                # TODO(someone): Disable deterministic for instance segmentation as it causes OOM.
+                # https://github.com/pytorch/vision/issues/8168#issuecomment-1890599205
+                command.extend(["--deterministic", str(self.deterministic)])
+                if self.num_epoch > 0:
+                    command.extend(["--max_epochs", str(self.num_epoch)])
+                extra_metrics = {}
+                if "train" in copied_ops_dir:
+                    command.append("--print_config")
+                    with (sub_work_dir / ".latest" / "train" / "configs.yaml").open("w") as f:
+                        self._run_command(command, stdout=f)  # replace previuos configs.yaml to new one
+                else:
+                    start_time = time()
+                    self._run_command(command)
+                    extra_metrics["train/e2e_time"] = time() - start_time
+                    self._rename_raw_data(
+                        work_dir=sub_work_dir / ".latest" / "train",
+                        replaces={"train_": "train/", "{pre}": "train/"},
+                    )
                 self._log_metrics(
-                    work_dir=sub_work_dir / SubCommand.OPTIMIZE.value,
+                    work_dir=sub_work_dir / ".latest" / "train",
                     tags=tags,
                     criteria=criteria,
+                    extra_metrics=extra_metrics,
                 )
 
-            optimized_model_path = sub_work_dir / "optimize" / "optimized_model.xml"
-            if not optimized_model_path.exists():
-                optimized_model_path = sub_work_dir / "optimize" / "optimized_model_decoder.xml"
+                self._run_test(sub_work_dir, dataset, tags, criteria, what2test="train")
 
-            self.test(
-                model_info=model_info,
-                dataset_info=dataset_info,
-                sub_work_dir=sub_work_dir,
-                tags=tags,
-                criteria=criteria,
-                checkpoint=optimized_model_path,
-                what2test=RunTestType.OPTIMIZE,
-            )
+                # Export & test
+                if self.eval_upto in ["export", "optimize"]:
+                    if "export" not in copied_ops_dir:
+                        command = [
+                            "otx",
+                            "export",
+                            "--work_dir",
+                            str(sub_work_dir),
+                        ]
+                        for key, value in dataset.extra_overrides.get("export", {}).items():
+                            command.append(f"--{key}")
+                            command.append(str(value))
+                        self._run_command(command)
 
-        # Force memory clean up
-        gc.collect()
-        # except Exception as e:
-        #     exceptions.append((seed, str(e)))
+                    exported_model_path = sub_work_dir / ".latest" / "export" / "exported_model.xml"
+                    if not exported_model_path.exists():
+                        exported_model_path = sub_work_dir / ".latest" / "export" / "exported_model_decoder.xml"
 
-        # if exceptions:
-        #     # Raise the custom exception with all collected errors
-        #     raise AggregateError(exceptions)
+                    self._run_test(
+                        sub_work_dir,
+                        dataset,
+                        tags,
+                        criteria,
+                        checkpoint=exported_model_path,
+                        what2test="export",
+                    )
 
-        result = load_result(work_dir)
+                # Optimize & test
+                if self.eval_upto == "optimize":
+                    if "optimize" not in copied_ops_dir:
+                        command = [
+                            "otx",
+                            "optimize",
+                            "--checkpoint",
+                            str(exported_model_path),
+                            "--work_dir",
+                            str(sub_work_dir),
+                        ]
+                        for key, value in dataset.extra_overrides.get("optimize", {}).items():
+                            command.append(f"--{key}")
+                            command.append(str(value))
+                        self._run_command(command)
+
+                    optimized_model_path = sub_work_dir / ".latest" / "optimize" / "optimized_model.xml"
+                    if not optimized_model_path.exists():
+                        optimized_model_path = sub_work_dir / ".latest" / "optimize" / "optimized_model_decoder.xml"
+
+                    self._run_test(
+                        sub_work_dir,
+                        dataset,
+                        tags,
+                        criteria,
+                        checkpoint=optimized_model_path,
+                        what2test="optimize",
+                    )
+
+                # Force memory clean up
+                gc.collect()
+            except Exception as e:  # noqa: PERF203
+                exceptions.append((seed, str(e)))
+
+        if exceptions:
+            # Raise the custom exception with all collected errors
+            raise AggregateError(exceptions)
+
+        result = self.load_result(work_dir)
         if result is None:
             return None
         result = summary.average(result, keys=["task", "model", "data_group", "data"])  # Average out seeds
@@ -488,7 +311,7 @@ class Benchmark:
         copied_ops_dir = []
         if self.resume_from is None:
             return copied_ops_dir
-        prev_work_dir = self._find_resume_directory(tags)
+        prev_work_dir = self._find_corresponding_dir(tags)
         if prev_work_dir is None:
             return copied_ops_dir
 
@@ -523,14 +346,14 @@ class Benchmark:
                 break
 
         if copy_until != otx_cmd:
-            logger.warning(
+            log.warning(
                 f"There is no {otx_cmd} directory for {work_dir} in resume directory. "
                 f"{work_dir} starts from {otx_cmd}.",
             )
 
         return copied_ops_dir
 
-    def _find_resume_directory(self, tags: dict[str, str]) -> Path | None:
+    def _find_corresponding_dir(self, tags: dict[str, str]) -> Path | None:
         if self.resume_from is None:
             return None
         for csv_file in self.resume_from.rglob("benchmark.raw.csv"):
@@ -544,6 +367,64 @@ class Benchmark:
                 return csv_file.parent.parent
         return None
 
+    def _run_test(
+        self,
+        work_dir: Path | str,
+        dataset: Dataset,
+        tags: dict[str, str],
+        criteria: list[Criterion],
+        checkpoint: Path | str | None = None,
+        what2test: Literal["train", "export", "optimize"] = "train",
+    ) -> None:
+        """Run otx test and update result csv file to align it's indices to the current task."""
+        if self.test_only not in ["all", what2test, None]:
+            return
+
+        replace_map = {
+            "train": {"test_": "test/", "{pre}": "test/"},
+            "export": {"test": what2test, "{pre}": f"{what2test}/"},
+            "optimize": {"test": what2test, "{pre}": f"{what2test}/"},
+        }
+
+        command = [
+            "otx",
+            "test",
+            "--work_dir",
+            str(work_dir),
+        ]
+        if checkpoint is not None:
+            command.extend(["--checkpoint", str(checkpoint)])
+        for key, value in dataset.extra_overrides.get("test", {}).items():
+            command.append(f"--{key}")
+            command.append(str(value))
+
+        start_time = time()
+        self._run_command(command)
+        extra_metrics = {f"test({what2test})/e2e_time": time() - start_time}
+
+        self._rename_raw_data(
+            work_dir=work_dir / ".latest" / "test",
+            replaces=replace_map[what2test],
+        )
+        self._log_metrics(
+            work_dir=work_dir / ".latest" / "test",
+            tags=tags,
+            criteria=criteria,
+            extra_metrics=extra_metrics,
+        )
+
+    def _run_command(self, command: list[str], **kwargs) -> None:
+        """Run command using 'subprocess.run'.
+
+        Args:
+            command (list[str]): command to execute.
+            kwags: arguments to 'subprocess.run'.
+        """
+        print(" ".join(command))
+        kwargs["check"] = True
+        if not self.dry_run:
+            subprocess.run(command, **kwargs)  # noqa: S603, PLW1510
+
     def _log_metrics(
         self,
         work_dir: Path,
@@ -551,15 +432,6 @@ class Benchmark:
         criteria: list[Criterion],
         extra_metrics: dict[str, Any] | None = None,
     ) -> None:
-        """Log metrics and tags to csv file.
-
-        Args:
-            work_dir (Path): work directory
-            tags (dict[str, str]): OTX metadata (ie. task, model, data_group, data, seed, etc)
-            criteria (list[Criterion]): task criteria
-            extra_metrics (dict[str, Any] | None, optional): extra metrics to be logged. Defaults to None.
-        """
-
         if not work_dir.exists():
             return
 
@@ -598,12 +470,7 @@ class Benchmark:
         metrics.to_csv(work_dir / "benchmark.raw.csv", index=False)
 
     def _rename_raw_data(self, work_dir: Path, replaces: dict[str, str]) -> None:
-        """Rename columns in the metrics.csv files based on the provided replacements.
-
-        Args:
-            work_dir (Path): work directory
-            replaces (dict[str, str]): Replacement map
-        """
+        replaces = {**self.NAME_MAPPING, **replaces}
 
         def _rename_col(col_name: str) -> str:
             for src_str, dst_str in replaces.items():
@@ -623,6 +490,26 @@ class Benchmark:
             data = data.rename(columns=_rename_col)  # Column names
             data = data.replace(replaces)  # Values
             data.to_csv(csv_file, index=False)
+
+    @staticmethod
+    def load_result(result_path: Path) -> pd.DataFrame | None:
+        """Load benchmark results recursively and merge as pd.DataFrame.
+
+        Args:
+            result_path (Path): Result directory or speicific file.
+
+        Retruns:
+            pd.DataFrame: Table with benchmark metrics & options
+        """
+        if not result_path.exists():
+            return None
+        # Load csv data
+        csv_files = result_path.glob("**/benchmark.raw.csv") if result_path.is_dir() else [result_path]
+        results = [pd.read_csv(csv_file) for csv_file in csv_files]
+        if len(results) == 0:
+            return None
+
+        return pd.concat(results, ignore_index=True)
 
     def check(self, result: pd.DataFrame, criteria: list[Criterion]):
         """Check result w.r.t. reference data.
@@ -654,53 +541,4 @@ class Benchmark:
             for criterion in criteria:
                 criterion(result_entry, target_entry)
 
-
-if __name__ == "__main__":
-    parser = get_parser()
-    parser.add_argument(
-        "--model",
-        type=str,
-        help="Choose a model from the predefined list.",
-    )
-    parser.add_argument(
-        "--dataset",
-        type=str,
-        help="Choose a dataset from the predefined list.",
-    )
-    args = parser.parse_args()
-
-    current_date = current_date_str()
-    version_tags = get_version_tags(current_date)
-    tags = build_tags(args, version_tags)
-
-    model_info = task_benchmark_models(args.task)[args.model]
-    dataset_info = task_benchmark_dataset(args.task)[args.dataset]
-    criteria = CRITERIA_COLLECTIONS[args.task]
-
-    # Here, you can instantiate your Benchmark with the parameters from config.
-    benchmark = Benchmark(
-        data_root=Path(args.data_root),
-        output_root=Path(args.output_root),
-        num_epoch=args.num_epoch,
-        eval_upto=args.eval_upto,
-        tags=tags,
-        dry_run=args.dry_run,
-        deterministic=(
-            False if args.deterministic is None else {"true": True, "false": False, "warn": "warn"}[args.deterministic]
-        ),
-        accelerator=args.device,
-        reference_results=None,  # or load your benchmark reference data if available
-        resume_from=Path(args.resume_from) if args.resume_from else None,
-        test_only=args.test_only,
-    )
-
-    result = benchmark.run(
-        model_info=model_info,
-        dataset_info=dataset_info,
-        seed=args.seed,
-        criteria=criteria,
-    )
-    benchmark.check(
-        result=result,
-        criteria=criteria,
-    )
+    NAME_MAPPING: dict[str, str] = {}  # noqa: RUF012
