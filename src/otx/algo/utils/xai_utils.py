@@ -11,13 +11,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import cv2
 import numpy as np
 import torch
-from datumaro import Image
 
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.entity.detection import DetBatchPredEntity
@@ -27,7 +25,6 @@ from otx.core.types.label import HLabelInfo, LabelInfoTypes
 from otx.data.torch import TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.utilities.types import EVAL_DATALOADERS
     from torch import LongTensor, Tensor
 
     from otx.core.data.module import OTXDataModule
@@ -57,7 +54,7 @@ def process_saliency_maps_in_pred_entity(
             if (
                 predict_result_per_batch.saliency_maps is None
                 or predict_result_per_batch.imgs_infos is None
-                or not all(predict_result_per_batch.imgs_infos)
+                or not all(info is not None for info in predict_result_per_batch.imgs_infos)
             ):
                 msg = "No valid saliency maps or image info found."
                 raise ValueError(msg)
@@ -198,77 +195,6 @@ def postprocess(saliency_map: np.ndarray, output_size: tuple[int, int] | None) -
         h, w = output_size
         saliency_map = cv2.resize(saliency_map, (w, h))
     return cv2.applyColorMap(saliency_map, cv2.COLORMAP_JET)
-
-
-def dump_saliency_maps(
-    predict_result: list[OTXBatchPredEntitiesSupportXAI],
-    explain_config: ExplainConfig,
-    datamodule: EVAL_DATALOADERS | OTXDataModule,
-    output_dir: Path,
-    weight: float = 0.3,
-) -> None:
-    """Dumps saliency maps (raw and with overlay)."""
-    output_dir = output_dir / "saliency_map"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    # TODO(ashwinvaidya17): Revisit this. This is temporary.
-    label_names = datamodule.label_info.label_names if hasattr(datamodule, "label_info") else None
-    for predict_result_per_batch in predict_result:
-        if isinstance(predict_result_per_batch, TorchPredBatch):
-            if (
-                predict_result_per_batch.saliency_maps is None
-                or predict_result_per_batch.imgs_infos is None
-                or not all(predict_result_per_batch.imgs_infos)
-            ):
-                msg = "No valid saliency maps or image info found."
-                raise ValueError(msg)
-
-            saliency_map = predict_result_per_batch.saliency_maps
-            # Filter out None values and ensure type safety
-            imgs_info = [info for info in predict_result_per_batch.imgs_infos if info is not None]
-            if not imgs_info:
-                msg = "No valid image info found."
-                raise ValueError(msg)
-        else:
-            saliency_map = predict_result_per_batch.saliency_map
-            imgs_info = predict_result_per_batch.imgs_info
-
-        for pred_index in range(len(saliency_map)):
-            img_id = imgs_info[pred_index].img_idx
-            img_data, image_save_name = _get_image_data_name(datamodule, img_id)
-
-            for class_id, s_map in saliency_map[pred_index].items():
-                label_name = label_names[class_id] if label_names and class_id in label_names else str(class_id)
-                label_name = label_name.replace(" ", "_")
-
-                file_name_map = Path(image_save_name + "_class_" + label_name + "_saliency_map.png")
-                save_path_map = output_dir / file_name_map
-                cv2.imwrite(str(save_path_map), s_map)
-
-                if explain_config.postprocess:
-                    file_name_overlay = Path(image_save_name + "_class_" + label_name + "_overlay.png")
-                    save_path_overlay = output_dir / file_name_overlay
-                    overlay = _get_overlay(img_data, s_map, weight)
-                    cv2.imwrite(str(save_path_overlay), overlay)
-
-
-def _get_image_data_name(
-    datamodule: EVAL_DATALOADERS | OTXDataModule,
-    img_id: int,
-    subset_name: str = "test",
-) -> tuple[np.array, str]:
-    subset = datamodule.subsets[subset_name]
-    item = subset.dm_subset[img_id]
-    img = item.media_as(Image)
-    img_data, _, _ = subset._get_img_data_and_shape(img)  # noqa: SLF001
-    image_save_name = "".join([char if char.isalnum() else "_" for char in item.id])
-    return img_data, image_save_name
-
-
-def _get_overlay(img: np.ndarray, s_map: np.ndarray, weight: float = 0.3) -> np.ndarray:
-    overlay = img * weight + s_map * (1 - weight)
-    overlay[overlay > 255] = 255
-    return overlay.astype(np.uint8)
 
 
 def _crop_padded_map(

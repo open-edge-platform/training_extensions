@@ -24,6 +24,7 @@ from otx.core.data.transform_libs.torchvision import (
     TorchVisionTransformLib,
 )
 from otx.core.types.image import ImageColorChannel
+from otx.data.torch import TorchDataItem
 
 
 class TestPerturbBoundingBoxes:
@@ -308,7 +309,10 @@ class TestTorchVisionTransformLib:
         dataset.num_classes = 1
 
         item = dataset[0]
-        assert item.img_info.img_shape == item.image.shape[1:]
+        if isinstance(item, TorchDataItem):
+            assert item.imgs_info.img_shape == item.image.shape[1:]
+        else:
+            assert item.img_info.img_shape == item.image.shape[1:]
 
         if fxt_image_color_channel == ImageColorChannel.RGB:
             r_pixel = 255.0 * (0.229 * item.image[0, 0, 0] + 0.485)

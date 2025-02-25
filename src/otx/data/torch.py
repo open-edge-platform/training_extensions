@@ -29,7 +29,7 @@ class TorchDataItem(ValidateItemMixin):
     label: torch.Tensor | None = None
     mask: Mask | None = None
     boxes: BoundingBoxes | None = None
-    imgs_info: ImageInfo | None = None
+    imgs_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
     def collate_fn(items: list[TorchDataItem]) -> TorchDataBatch:
