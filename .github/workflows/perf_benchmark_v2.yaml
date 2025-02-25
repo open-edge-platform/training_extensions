@@ -34,7 +34,11 @@ on:
       data-root:
         type: string
         description: Root directory containing validation data in CI server.
-        default: "/home/ciadmin/data/v2/"
+        default: "/home/validation/data/v2/"
+      output-root:
+        type: string
+        description: Root directory to store benchmark results in CI server.
+        default: "/home/validation/data/v2/benchmark_results"
   workflow_call:
     inputs:
       num-repeat:
@@ -52,7 +56,11 @@ on:
       data-root:
         type: string
         description: Root directory containing validation data in CI server.
-        default: "/home/ciadmin/data/v2/"
+        default: "/home/validation/data/v2/"
+      output-root:
+        type: string
+        description: Root directory to store benchmark results in CI server.
+        default: "/home/validation/data/v2/benchmark_results"
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -93,12 +101,13 @@ jobs:
           export NUM_EPOCH="${{ inputs.num-epoch }}"
           export EVAL_UPTO="${{ inputs.eval-upto }}"
           export GITHUB_ACTOR="${{ github.triggering_actor }}"
+          export OUTPUT_ROOT="${{ inputs.output-root }}"
           export DEVICE="gpu"
           tox -vv -e perf-benchmark-v2
       - name: Upload test results
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: perf-benchmark-${{ matrix.task }}
-          path: .tox/*.xlsx
+          path: ${{ inputs.output-root }} / ** / *.xlsx
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
