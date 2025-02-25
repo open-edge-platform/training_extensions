@@ -438,7 +438,8 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                     mask = is_center_of_bboxes_in_patch(boxes, patch)
                     if not mask.any():
                         continue
-                    if (bboxes := getattr(inputs, "bboxes", None)) is not None:
+                    bboxes = inputs.boxes if isinstance(inputs, TorchDataItem) else getattr(inputs, "bboxes", None)
+                    if bboxes is not None:
                         mask = is_center_of_bboxes_in_patch(bboxes, patch)
                         bboxes = bboxes[mask]
                         bboxes = translate_bboxes(bboxes, (-patch[0], -patch[1]))
@@ -449,6 +450,10 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                             format="XYXY",
                             canvas_size=(patch[3] - patch[1], patch[2] - patch[0]),
                         )
+                        if isinstance(inputs, TorchDataItem):
+                            inputs.boxes = bboxes
+                        else:
+                            inputs.bboxes = bboxes  # type: ignore[union-attr]
 
                         # labels
                         if (labels := getattr(inputs, "labels", None)) is not None:
@@ -457,7 +462,10 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 # adjust the img no matter whether the gt is empty before crop
                 img = img[patch[1] : patch[3], patch[0] : patch[2]]
                 inputs.image = img
-                inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])
+                if isinstance(inputs, TorchDataItem):
+                    inputs.imgs_info = _crop_image_info(inputs.imgs_info, *img.shape[:2])
+                else:
+                    inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])  # type: ignore[union-attr]
                 return self.convert(inputs)
 
     def __repr__(self) -> str:
@@ -541,7 +549,11 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     def _resize_img(self, inputs: DataItemType) -> tuple[DataItemType, tuple[float, float] | None]:
         """Resize images with inputs.img_info.img_shape."""
-        scale_factor: tuple[float, float] | None = getattr(inputs.img_info, "scale_factor", None)  # (H, W)
+        scale_factor: tuple[float, float] | None = getattr(
+            inputs.imgs_info if isinstance(inputs, TorchDataItem) else inputs.img_info,  # type: ignore[union-attr]
+            "scale_factor",
+            None,
+        )  # (H, W)
         if (img := getattr(inputs, "image", None)) is not None:
             img = to_np_image(img)
             img_shape = get_image_shape(img)
@@ -574,14 +586,15 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             if isinstance(inputs, TorchDataItem):
                 inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
             else:
-                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
 
             scale_factor = (scale[0] / img_shape[0], scale[1] / img_shape[1])
         return inputs, scale_factor
 
     def _resize_bboxes(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize bounding boxes with scale_factor only for `Resize`."""
-        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
+        bboxes = inputs.boxes if isinstance(inputs, TorchDataItem) else getattr(inputs, "bboxes", None)
+        if bboxes is not None:
             bboxes = rescale_bboxes(bboxes, scale_factor)
             if self.clip_object_border:
                 bboxes = clip_bboxes(bboxes, inputs.img_info.img_shape)  # type: ignore[union-attr]
@@ -872,7 +885,10 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 ],
             )
             img = self._crop_img(img, bboxes=bboxes)
-            inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])
+            if isinstance(inputs, TorchDataItem):
+                inputs.imgs_info = _crop_image_info(inputs.imgs_info, *img.shape[:2])
+            else:
+                inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])  # type: ignore[union-attr]
             img = cv2.resize(
                 img,
                 tuple(self.scale[::-1]),
@@ -880,9 +896,13 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 interpolation=CV2_INTERP_CODES[self.interpolation],
             )
             inputs.image = img
-            inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+            if isinstance(inputs, TorchDataItem):
+                inputs.imgs_info = _resize_image_info(inputs.imgs_info, img.shape[:2])
+            else:
+                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
 
-            if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None:
+            masks = inputs.masks if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
+            if self.transform_mask and masks is not None:
                 masks = to_np_image(masks)
                 masks = self._crop_img(masks, bboxes=bboxes)
                 masks = cv2.resize(
@@ -1135,7 +1155,10 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="XYXY", canvas_size=img_shape)  # type: ignore[union-attr]
 
             # flip masks
-            if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
+            if isinstance(inputs, TorchDataItem):
+                if inputs.mask is not None:
+                    inputs.mask = flip_image(inputs.mask, direction=cur_dir)
+            elif (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
                 masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
                 inputs.masks = np.stack([flip_image(mask, direction=cur_dir) for mask in masks])  # type: ignore[union-attr]
 
@@ -1392,7 +1415,10 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
         inputs.image = img
-        inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+        if isinstance(inputs, TorchDataItem):
+            inputs.imgs_info = _resize_image_info(inputs.imgs_info, img.shape[:2])
+        else:
+            inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
 
         bboxes = getattr(inputs, "bboxes", [])
         num_bboxes = len(bboxes) if bboxes is not None else 0
