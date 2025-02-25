@@ -1,0 +1,105 @@
+name: Performance Benchmark V2
+
+on:
+  workflow_dispatch: # run on request (no need for PR)
+    inputs:
+      task:
+        description: Task to benchmark
+        type: choice
+        default: DETECTION
+        options:
+          - DETECTION
+          - MULTI_CLASS_CLS
+          - MULTI_LABEL_CLS
+          - H_LABEL_CLS
+          - INSTANCE_SEGMENTATION
+          - SEMANTIC_SEGMENTATION
+          - VISUAL_PROMPTING
+      num-repeat:
+        description: Overrides default per-data-group number of repeat setting
+        type: number
+        default: 5
+      num-epoch:
+        description: Overrides default per-model number of epoch setting
+        type: number
+        default: 200
+      eval-upto:
+        type: choice
+        description: The last operation to evaluate. 'optimize' means all.
+        options:
+          - train
+          - export
+          - optimize
+        default: optimize
+      data-root:
+        type: string
+        description: Root directory containing validation data in CI server.
+        default: "/home/ciadmin/data/v2/"
+  workflow_call:
+    inputs:
+      num-repeat:
+        type: number
+        description: Overrides default per-data-group number of repeat setting
+        default: 5
+      num-epoch:
+        type: number
+        description: Overrides default per-model number of epoch setting
+        default: 200
+      eval-upto:
+        type: string
+        description: The last operation to evaluate. 'optimize' means all. [train, export, optimize]
+        default: optimize
+      data-root:
+        type: string
+        description: Root directory containing validation data in CI server.
+        default: "/home/ciadmin/data/v2/"
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  Perf-Benchmark-Run:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: DETECTION
+
+    name: Perf-Benchmark-${{ matrix.task }}
+    runs-on: [self-hosted, linux, x64, dmount-v2]
+    timeout-minutes: 8640
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.10"
+      - name: Install tox
+        run: |
+          python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
+          pip-compile --generate-hashes --output-file=/tmp/requirements.txt --extra=ci_tox pyproject.toml
+          python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
+          rm /tmp/requirements.txt
+      - name: Run Performance Test
+        env:
+          BENCHMARK_RESULTS_CLEAR: ${{ vars.BENCHMARK_RESULTS_CLEAR }}
+          GH_CTX_REF_NAME: ${{ github.ref_name }}
+          GH_CTX_SHA: ${{ github.sha }}
+        run: >
+          tox -vv -e perf-benchmark-v2 -- -m tests.perf_v2.run
+          --task ${{ matrix.task }}
+          --data-root ${{ inputs.data-root }}
+          --num-repeat ${{ inputs.num-repeat }}
+          --num-epoch ${{ inputs.num-epoch }}
+          --eval-upto ${{ inputs.eval-upto }}
+          --output-root .tox/benchmark_artifacts
+          --device gpu
+          --user-name ${{ github.triggering_actor }}
+      - name: Upload test results
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: perf-benchmark-${{ matrix.task }}
+          path: .tox/*.xlsx
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
