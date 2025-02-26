@@ -51,16 +51,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - task: ANOMALY
           - task: DETECTION
-          # - task: MULTI_CLASS_CLS
-          # - task: MULTI_LABEL_CLS
-          # - task: H_LABEL_CLS
+          - task: MULTI_CLASS_CLS
+          - task: MULTI_LABEL_CLS
+          - task: H_LABEL_CLS
           # - task: INSTANCE_SEGMENTATION
           # - task: SEMANTIC_SEGMENTATION
           # - task: VISUAL_PROMPTING
 
     name: Perf-Benchmark-${{ matrix.task }}
-    runs-on: [otxci02]
+    runs-on: [self-hosted, linux, x64, dmount-v2]
     timeout-minutes: 8640
     steps:
       - name: Checkout repository
