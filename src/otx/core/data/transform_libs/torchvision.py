@@ -657,7 +657,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     def _resize_masks(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize masks with scale_factor only for `Resize`."""
-        masks = inputs.masks if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
+        masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
         if masks is not None and len(masks) > 0:
             # bit mask
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
