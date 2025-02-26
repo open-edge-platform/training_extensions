@@ -44,7 +44,8 @@ class TestDeitTiny:
 
         fxt_model.explain_mode = explain_mode
         preds = fxt_model.predict_step(fxt_input, batch_idx=0)
-        assert len(preds.labels) == len(preds.scores)
+        assert len(preds.labels) == fxt_input.batch_size
+        assert len(preds.scores) == fxt_input.batch_size
         assert preds.has_xai_outputs == explain_mode
 
         mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_cls_effnet_b0_ckpt")

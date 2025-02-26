@@ -109,6 +109,7 @@ class TimmModelForMulticlassCls(OTXMulticlassClsModel):
         outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
@@ -198,6 +199,7 @@ class TimmModelForMultilabelCls(OTXMultilabelClsModel):
         outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
@@ -287,6 +289,7 @@ class TimmModelForHLabelCls(OTXHlabelClsModel):
         outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),

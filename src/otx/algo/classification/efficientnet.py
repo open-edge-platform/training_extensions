@@ -80,6 +80,7 @@ class EfficientNetForMulticlassCls(OTXMulticlassClsModel):
         outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
@@ -145,6 +146,7 @@ class EfficientNetForMultilabelCls(OTXMultilabelClsModel):
         outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
@@ -232,6 +234,7 @@ class EfficientNetForHLabelCls(OTXHlabelClsModel):
         outputs = self.model(images=inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),

@@ -95,6 +95,7 @@ class MobileNetV3ForMulticlassCls(OTXMulticlassClsModel):
         outputs = self.model(inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
@@ -182,6 +183,7 @@ class MobileNetV3ForMultilabelCls(OTXMultilabelClsModel):
         scores = torch.unbind(logits, 0)
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             scores=list(scores),
@@ -193,6 +195,7 @@ class MobileNetV3ForMultilabelCls(OTXMultilabelClsModel):
         outputs = self.model(inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
@@ -287,6 +290,7 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
             labels = outputs.argmax(-1, keepdim=True)
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             scores=list(scores),
@@ -318,6 +322,7 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
         outputs = self.model(inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),

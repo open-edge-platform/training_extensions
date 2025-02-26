@@ -47,6 +47,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
             Batched TorchDataItems with stacked tensors
         """
         return TorchDataBatch(
+            batch_size=len(items),
             images=torch.stack([item.image for item in items]),
             labels=[item.label for item in items],
             boxes=[item.boxes for item in items],
@@ -69,6 +70,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
 class TorchDataBatch(ValidateBatchMixin):
     """Torch data item batch implementation."""
 
+    batch_size: int  # TODO(ashwinvaidya17): Remove this
     images: torch.Tensor
     labels: list[torch.Tensor] | None
     masks: list[Mask] | None = None
@@ -91,6 +93,7 @@ class TorchPredItem(ValidateItemMixin):
 class TorchPredBatch(ValidateBatchMixin):
     """Torch prediction data item batch implementation."""
 
+    batch_size: int  # TODO(ashwinvaidya17): Remove this
     images: torch.Tensor
     labels: list[torch.Tensor] | None
     scores: list[torch.Tensor] | None = None

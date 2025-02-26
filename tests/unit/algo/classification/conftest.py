@@ -217,6 +217,7 @@ def fxt_multiclass_cls_batch_data_entity() -> TorchDataBatch:
     tv_tensor = tv_tensors.Image(data=random_tensor)
     img_infos = [ImageInfo(img_idx=i, img_shape=(224, 224), ori_shape=(224, 224)) for i in range(batch_size)]
     return TorchDataBatch(
+        batch_size=batch_size,
         images=tv_tensor,
         imgs_infos=img_infos,
         labels=[torch.tensor([0]), torch.tensor([1])],
@@ -229,6 +230,7 @@ def fxt_multilabel_cls_batch_data_entity(
     fxt_multilabel_labelinfo,
 ) -> TorchDataBatch:
     return TorchDataBatch(
+        batch_size=fxt_multiclass_cls_batch_data_entity.batch_size,
         images=fxt_multiclass_cls_batch_data_entity.images,
         imgs_infos=fxt_multiclass_cls_batch_data_entity.imgs_infos,
         labels=[

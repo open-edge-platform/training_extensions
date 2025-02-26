@@ -99,6 +99,7 @@ class TVModelForMulticlassCls(OTXMulticlassClsModel):
         outputs = self.model(inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
@@ -178,6 +179,7 @@ class TVModelForMultilabelCls(OTXMultilabelClsModel):
         outputs = self.model(inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
@@ -254,6 +256,7 @@ class TVModelForHLabelCls(OTXHlabelClsModel):
         outputs = self.model(inputs.images, mode="explain")
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),

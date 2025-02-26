@@ -103,6 +103,7 @@ class OTXMulticlassClsModel(OTXModel):
 
         if self.explain_mode:
             return TorchPredBatch(
+                batch_size=inputs.batch_size,
                 images=inputs.images,
                 labels=list(outputs["labels"]),
                 scores=list(outputs["scores"]),
@@ -116,6 +117,7 @@ class OTXMulticlassClsModel(OTXModel):
         preds = logits.argmax(-1, keepdim=True).unbind(0)
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=list(preds),
             scores=list(scores),
@@ -167,7 +169,7 @@ class OTXMulticlassClsModel(OTXModel):
         """Returns a dummy input for classification model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataBatch(images=images, labels=labels)
+        return TorchDataBatch(batch_size=batch_size, images=images, labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
@@ -246,6 +248,7 @@ class OTXMultilabelClsModel(OTXModel):
 
         if self.explain_mode:
             return TorchPredBatch(
+                batch_size=inputs.batch_size,
                 images=inputs.images,
                 labels=list(outputs["labels"]),
                 scores=list(outputs["scores"]),
@@ -258,6 +261,7 @@ class OTXMultilabelClsModel(OTXModel):
         scores = torch.unbind(logits, 0)
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=list(logits.argmax(-1, keepdim=True).unbind(0)),
             scores=list(scores),
@@ -309,7 +313,7 @@ class OTXMultilabelClsModel(OTXModel):
         """Returns a dummy input for classification OV model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataBatch(images=images, labels=labels)
+        return TorchDataBatch(batch_size=batch_size, images=images, labels=labels)
 
 
 class OTXHlabelClsModel(OTXModel):
@@ -393,6 +397,7 @@ class OTXHlabelClsModel(OTXModel):
 
         if self.explain_mode:
             return TorchPredBatch(
+                batch_size=inputs.batch_size,
                 images=inputs.images,
                 labels=list(labels),
                 scores=list(scores),
@@ -401,6 +406,7 @@ class OTXHlabelClsModel(OTXModel):
             )
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=list(labels),
             scores=list(scores),
@@ -465,7 +471,7 @@ class OTXHlabelClsModel(OTXModel):
         """Returns a dummy input for classification OV model."""
         images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataBatch(images=images, labels=labels)
+        return TorchDataBatch(batch_size=batch_size, images=images, labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
@@ -517,6 +523,7 @@ class OVMulticlassClassificationModel(
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return TorchPredBatch(
+                batch_size=inputs.batch_size,
                 images=inputs.images,
                 labels=pred_labels,
                 scores=pred_scores,
@@ -525,6 +532,7 @@ class OVMulticlassClassificationModel(
             )
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=pred_labels,
             scores=pred_scores,
@@ -589,6 +597,7 @@ class OVMultilabelClassificationModel(OVModel):
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return TorchPredBatch(
+                batch_size=inputs.batch_size,
                 images=inputs.images,
                 labels=[],
                 scores=pred_scores,
@@ -597,6 +606,7 @@ class OVMultilabelClassificationModel(OVModel):
             )
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=[],
             scores=pred_scores,
@@ -683,6 +693,7 @@ class OVHlabelClassificationModel(OVModel):
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return TorchPredBatch(
+                batch_size=inputs.batch_size,
                 images=inputs.images,
                 labels=all_pred_labels,
                 scores=all_pred_scores,
@@ -691,6 +702,7 @@ class OVHlabelClassificationModel(OVModel):
             )
 
         return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             labels=all_pred_labels,
             scores=all_pred_scores,
