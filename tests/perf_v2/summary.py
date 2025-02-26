@@ -218,7 +218,7 @@ def summarize_task(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path)
     with pd.ExcelWriter(aggregate_xlsx_path) as writer:
         for dataset_df in dataset_dfs:
             dataset_df.to_excel(writer, sheet_name=dataset_df["data"].iloc[0], index=False)
-    logger.info(f"    Saved {task.value} summary to {aggregate_xlsx_path!s}")
+    logger.info(f"    Saved {task.value} summary to {aggregate_xlsx_path.resolve()!s}")
 
 
 def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path):
@@ -245,7 +245,7 @@ def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_ro
     # Save the high-level summary data to an Excel file
     task_high_level_summary_xlsx_path = output_root / f"{task.value}-high-level-summary.xlsx"
     aggregated.to_excel(task_high_level_summary_xlsx_path, index=False)
-    logger.info(f"    Saved {task.value} high-level summary to {task_high_level_summary_xlsx_path!s}")
+    logger.info(f"    Saved {task.value} high-level summary to {task_high_level_summary_xlsx_path.resolve()!s}")
 
 
 if __name__ == "__main__":
