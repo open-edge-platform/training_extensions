@@ -88,7 +88,3 @@ if __name__ == "__main__":
             "Please check if the benchmark tests have been run successfully."
         )
         raise ValueError(msg)
-
-    # list all xlsx files under summary_file_root
-    for xlsx_file in summary_file_root.rglob("*.xlsx"):
-        logger.info(f"Saved summary to {xlsx_file.resolve()}")
