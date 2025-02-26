@@ -256,7 +256,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--task",
         type=parse_task,
-        choices=["all", *list(OTXTaskType)],
+        choices=list(OTXTaskType),
         help="Task type to benchmark.",
     )
 
