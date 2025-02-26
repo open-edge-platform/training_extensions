@@ -33,7 +33,7 @@ class ValidateItemMixin:
                 msg = f"Validation for field {field.name} is not implemented"
                 raise NotImplementedError(msg)
             if field.name in validators and (value := getattr(self, field.name)) is not None:
-                validators[field.name](value)
+                validators[field.name](value)  #
 
     @staticmethod
     def _image_validator(image: torch.Tensor) -> torch.Tensor:
@@ -147,6 +147,7 @@ class ValidateBatchMixin:
             "masks": self._masks_validator,
             "boxes": self._boxes_validator,
             "imgs_infos": self._imgs_infos_validator,
+            "batch_size": self._batch_size_validator,
         }
         # TODO(ashwinvaidya17): Revisit this
         for field in fields(self):  # type: ignore[arg-type]
@@ -154,7 +155,8 @@ class ValidateBatchMixin:
                 msg = f"Validation for field {field.name} is not implemented"
                 raise NotImplementedError(msg)
             if field.name in validators and (value := getattr(self, field.name)) is not None:
-                validators[field.name](value)
+                # TODO(ashwinvaidya17): ignore is needed only for batch_size. Revisit
+                validators[field.name](value)  # type: ignore[operator]
 
     @staticmethod
     def _images_validator(image_batch: torch.Tensor) -> torch.Tensor:
@@ -285,3 +287,15 @@ class ValidateBatchMixin:
             msg = "Image info batch must be a list of otx.data.entity.ImageInfo"
             raise TypeError(msg)
         return imgs_infos_batch
+
+    @staticmethod
+    def _batch_size_validator(batch_size: int) -> int:
+        """Validate the batch size.
+
+        Note:
+            This is temporary and batch size should not be part of the batch entity.
+        """
+        if not isinstance(batch_size, int):
+            msg = "Batch size must be an integer"
+            raise TypeError(msg)
+        return batch_size
