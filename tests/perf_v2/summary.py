@@ -199,7 +199,7 @@ def create_raw_dataset_xlsx(
                 raw_data_model_df = raw_data_model_df.reindex(columns=col_names)
                 raw_data_model_df = raw_data_model_df.dropna(axis=1)
                 raw_data_model_df.to_excel(writer, sheet_name=model, index=False)
-        print(f"    Saved {task.value} raw data to", str(output_root / f"{task.value}-raw-{dataset}.xlsx"))
+        logger.info(f"    Saved {task.value} raw data to {output_root / f'{task.value}-raw-{dataset}.xlsx'!s}")
 
 
 def summarize_task(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path):
@@ -213,12 +213,39 @@ def summarize_task(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path)
     # Save the detailed summary data to an Excel file, including the index
     task_str = task.replace("/", "_")
 
-    # Create a summary Excel file for each task: aggregated-<task>.xlsx
-    aggregate_xlsx_path = output_root / f"aggregated-{task_str}.xlsx"
+    # Create a summary Excel file for each task: <task>-aggregated.xlsx
+    aggregate_xlsx_path = output_root / f"{task_str}-aggregated.xlsx"
     with pd.ExcelWriter(aggregate_xlsx_path) as writer:
         for dataset_df in dataset_dfs:
             dataset_df.to_excel(writer, sheet_name=dataset_df["data"].iloc[0], index=False)
     logger.info(f"    Saved {task.value} summary to {aggregate_xlsx_path!s}")
+
+
+def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path):
+    """Summarize high-level task performance."""
+
+    raw_task_data = raw_data.query(f"task == '{task.value}'")
+    if raw_task_data is None or len(raw_task_data) == 0:
+        msg = f"No data found for task {task.value}"
+        raise ValueError(msg)
+
+    for col in METADATA_ENTRIES:
+        raw_task_data.loc[:, col] = raw_task_data[col].astype(str)  # Prevent strings like '2.0.0' being loaded as float
+
+    metrics = raw_task_data.select_dtypes(include=["number"]).columns.to_list()
+    grouped_data = raw_task_data.groupby(["otx_version", "task"])
+    aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
+
+    # Flatten the MultiIndex columns, excluding 'otx_version', 'task', 'model', 'data_group'
+    cols_to_exclude = {"otx_version", "task", "model", "data"}
+    aggregated.columns = [
+        ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.to_numpy()
+    ]
+
+    # Save the high-level summary data to an Excel file
+    task_high_level_summary_xlsx_path = output_root / f"{task.value}-high-level-summary.xlsx"
+    aggregated.to_excel(task_high_level_summary_xlsx_path, index=False)
+    logger.info(f"    Saved {task.value} high-level summary to {task_high_level_summary_xlsx_path!s}")
 
 
 if __name__ == "__main__":
@@ -232,16 +259,17 @@ if __name__ == "__main__":
     input_root = Path(args.input_root)
     output_root = Path(args.output_root)
 
-    print(f"Loading {args.pattern} in {input_root}...")
+    logger.info(f"Loading {args.pattern} in {input_root}...")
     raw_data = load(input_root, pattern=args.pattern)
     if len(raw_data) == 0:
-        print("No data loaded")
+        logger.error("No data loaded")
         sys.exit(-1)
     output_root.mkdir(parents=True, exist_ok=True)
     raw_data.to_csv(output_root / "perf-benchmark-raw-all.csv", index=False)
-    print("Saved merged raw data to", str(output_root / "perf-benchmark-raw-all.csv"))
+    logger.info(f"Saved merged raw data to {output_root / 'perf-benchmark-raw-all.csv'}")
 
     # Get task-level performance benchmark
     tasks = sorted(raw_data["task"].unique())
     for task in tasks:
         summarize_task(raw_data, OTXTaskType[task], output_root)
+        task_high_level_summary(raw_data, OTXTaskType[task], output_root)

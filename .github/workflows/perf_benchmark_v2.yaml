@@ -60,7 +60,7 @@ on:
       output-root:
         type: string
         description: Root directory to store benchmark results in CI server.
-        default: "/home/validation/data/v2/benchmark_results"
+        default: "/home/validation/benchmark_results"
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -104,10 +104,20 @@ jobs:
           export OUTPUT_ROOT="${{ inputs.output-root }}"
           export DEVICE="gpu"
           tox -vv -e perf-benchmark-v2
+      - name: Prepare Artifact (Exclude Files)
+        run: |
+          rm -rf filtered-artifacts
+          mkdir -p filtered-artifacts
+          find ${{ inputs.output-root }} -type f \
+            ! -name '*.pth' \
+            ! -name '*.ckpt' \
+            ! -name '*.xml' \
+            ! -name '*.bin' \
+            -exec cp --parents {} filtered-artifacts/ \;
+
       - name: Upload test results
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
-          name: perf-benchmark-${{ matrix.task }}
-          path: ${{ inputs.output-root }} / ** / *.xlsx
-        # Use always() to always run this step to publish test results when there are test failures
+          name: benchmark-results-${{ matrix.task }}
+          path: filtered-artifacts/
         if: ${{ always() }}

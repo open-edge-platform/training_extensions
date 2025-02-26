@@ -9,7 +9,7 @@ import subprocess
 
 from otx.core.types.task import OTXTaskType
 from tests.perf_v2 import DATASET_COLLECTIONS, MODEL_COLLECTIONS
-from tests.perf_v2.summary import load, summarize_task
+from tests.perf_v2.summary import load, summarize_task, task_high_level_summary
 from tests.perf_v2.utils import (
     completeness_check,
     current_date_str,
@@ -59,6 +59,8 @@ if __name__ == "__main__":
                         str(args.num_epoch),
                         "--device",
                         args.device,
+                        "--user-name",
+                        args.user_name,
                     ],
                     check=True,
                 )
@@ -77,6 +79,7 @@ if __name__ == "__main__":
         raw_data.to_csv(output_root / f"{task_type.value}-benchmark-raw-all.csv", index=False)
         logger.info(f"Saved merged raw data to {output_root!s}/{task_type.value}-benchmark-raw-all.csv")
         summarize_task(raw_data, task_type, output_root)
+        task_high_level_summary(raw_data, task_type, output_root)
     else:
         msg = (
             f"{task_type.value} has no benchmark data loaded. "
