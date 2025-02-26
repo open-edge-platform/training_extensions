@@ -79,7 +79,7 @@ if __name__ == "__main__":
         summary_file_root = Path(args.summary_file_root) if args.summary_file_root else output_root
         summary_file_root.mkdir(parents=True, exist_ok=True)
         raw_data.to_csv(summary_file_root / f"{task_type.value}-benchmark-raw-all.csv", index=False)
-        logger.info(f"Saved merged raw data to {summary_file_root!s}/{task_type.value}-benchmark-raw-all.csv")
+        logger.info(f"Saved merged raw data to {summary_file_root.resolve()!s}/{task_type.value}-benchmark-raw-all.csv")
         summarize_task(raw_data, task_type, summary_file_root)
         task_high_level_summary(raw_data, task_type, summary_file_root)
     else:
