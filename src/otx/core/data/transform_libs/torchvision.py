@@ -946,7 +946,7 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
             else:
                 inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
 
-            masks = inputs.masks if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
+            masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
             if self.transform_mask and masks is not None:
                 masks = to_np_image(masks)
                 masks = self._crop_img(masks, bboxes=bboxes)
