@@ -21,9 +21,6 @@ training_targets:
   - CPU
 
 # Computational Complexity
-gigaflops: 0.0
-size: 0.0
+gigaflops: 19.6
+size: 62.88
 
-# Model spec
-model_category: ACCURACY
-is_default_for_task: true
