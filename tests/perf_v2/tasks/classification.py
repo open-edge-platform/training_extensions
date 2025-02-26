@@ -15,6 +15,28 @@ from tests.perf_v2.utils import (
 
 from otx.core.types.task import OTXTaskType
 
+CLASSIFICATION_BENCHMARK_CRITERIA = [
+    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
+    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
+    Criterion(name="train/gpu_mem", summary="max", compare="<", margin=0.1),
+    Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
+    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize/e2e_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(torch)/latency", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(export)/latency", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(optimize)/latency", summary="mean", compare="<", margin=0.1),
+    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
+]
+
+
 # ============= Multi-class classification =============
 
 MULTI_CLASS_MODEL_TEST_CASES = [
@@ -51,23 +73,6 @@ MULTI_CLASS_DATASET_TEST_CASES = [
     ),
 ]
 
-# TODO (someone): Compare with DETECTION CRITERIA and fill in the missing values
-MULTI_CLASS_BENCHMARK_CRITERIA = [
-    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
-    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-    Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
-]
-
 
 # ============= Multi-label classification =============
 MULTI_LABEL_MODEL_TEST_CASES = [
@@ -98,23 +103,6 @@ MULTI_LABEL_DATASET_TEST_CASES = [
         group="large",
         extra_overrides={},
     ),
-]
-
-# TODO (someone): Compare with DETECTION CRITERIA and fill in the missing values
-MULTI_LABEL_BENCHMARK_CRITERIA = [
-    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
-    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-    Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
 ]
 
 
@@ -149,21 +137,4 @@ H_LABEL_CLS_DATASET_TEST_CASES = [
         group="large",
         extra_overrides={},
     ),
-]
-
-# TODO (someone): Compare with DETECTION CRITERIA and fill in the missing values
-H_LABEL_CLS_BENCHMARK_CRITERIA = [
-    Criterion(name="train/epoch", summary="max", compare="<", margin=0.1),
-    Criterion(name="train/e2e_time", summary="max", compare="<", margin=0.1),
-    Criterion(name="val/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="test/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="export/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="optimize/accuracy", summary="max", compare=">", margin=0.1),
-    Criterion(name="train/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
 ]
