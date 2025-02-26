@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
+from pathlib import Path
 
 from otx.core.types.task import OTXTaskType
 from tests.perf_v2 import DATASET_COLLECTIONS, MODEL_COLLECTIONS
@@ -75,11 +76,12 @@ if __name__ == "__main__":
     )
 
     if len(raw_data):
-        output_root.mkdir(parents=True, exist_ok=True)
-        raw_data.to_csv(output_root / f"{task_type.value}-benchmark-raw-all.csv", index=False)
-        logger.info(f"Saved merged raw data to {output_root!s}/{task_type.value}-benchmark-raw-all.csv")
-        summarize_task(raw_data, task_type, output_root)
-        task_high_level_summary(raw_data, task_type, output_root)
+        summary_file_root = Path(args.summary_file_root) if args.summary_file_root else output_root
+        summary_file_root.mkdir(parents=True, exist_ok=True)
+        raw_data.to_csv(summary_file_root / f"{task_type.value}-benchmark-raw-all.csv", index=False)
+        logger.info(f"Saved merged raw data to {summary_file_root!s}/{task_type.value}-benchmark-raw-all.csv")
+        summarize_task(raw_data, task_type, summary_file_root)
+        task_high_level_summary(raw_data, task_type, summary_file_root)
     else:
         msg = (
             f"{task_type.value} has no benchmark data loaded. "

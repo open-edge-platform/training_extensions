@@ -9,6 +9,7 @@ import logging
 import os
 import platform
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
@@ -138,8 +139,8 @@ def setup_output_root(config: Namespace, current_date: str, task: OTXTaskType) -
     output_root = config.output_root
     if output_root is None:
         # Use a temporary directory if output_root not provided
-        output_root = Path().resolve() / "otx-benchmark-temp"
-        output_root.mkdir(parents=True, exist_ok=True)
+        temp_dir = tempfile.TemporaryDirectory()
+        output_root = Path(temp_dir.name)
     output_root = Path(output_root) / current_date / task.value
     logger.info(f"output_root = {output_root}")
     output_root.mkdir(parents=True, exist_ok=True)
@@ -301,10 +302,10 @@ def get_parser() -> ArgumentParser:
         help="Output root directory. Defaults to a temporary directory.",
     )
     parser.add_argument(
-        "--summary-file",
+        "--summary-file-root",
         type=str,
         default=None,
-        help="Path to output summary file. Defaults to {output_root}/benchmark-summary.csv",
+        help="Summary file root directory. Defaults to output-root.",
     )
     parser.add_argument(
         "--dry-run",

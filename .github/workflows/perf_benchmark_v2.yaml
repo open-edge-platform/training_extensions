@@ -3,26 +3,14 @@ name: Performance Benchmark V2
 on:
   workflow_dispatch: # run on request (no need for PR)
     inputs:
-      task:
-        description: Task to benchmark
-        type: choice
-        default: DETECTION
-        options:
-          - DETECTION
-          - MULTI_CLASS_CLS
-          - MULTI_LABEL_CLS
-          - H_LABEL_CLS
-          - INSTANCE_SEGMENTATION
-          - SEMANTIC_SEGMENTATION
-          - VISUAL_PROMPTING
       num-repeat:
         description: Overrides default per-data-group number of repeat setting
         type: number
         default: 5
       num-epoch:
-        description: Overrides default per-model number of epoch setting
+        description: Overrides default per-model number of epoch setting. If 0, use default from template.
         type: number
-        default: 200
+        default: 0
       eval-upto:
         type: choice
         description: The last operation to evaluate. 'optimize' means all.
@@ -35,10 +23,6 @@ on:
         type: string
         description: Root directory containing validation data in CI server.
         default: "/home/validation/data/v2/"
-      output-root:
-        type: string
-        description: Root directory to store benchmark results in CI server.
-        default: "/home/validation/data/v2/benchmark_results"
   workflow_call:
     inputs:
       num-repeat:
@@ -47,8 +31,8 @@ on:
         default: 5
       num-epoch:
         type: number
-        description: Overrides default per-model number of epoch setting
-        default: 200
+        description: Overrides default per-model number of epoch setting. If 0, use default from template.
+        default: 0
       eval-upto:
         type: string
         description: The last operation to evaluate. 'optimize' means all. [train, export, optimize]
@@ -57,10 +41,6 @@ on:
         type: string
         description: Root directory containing validation data in CI server.
         default: "/home/validation/data/v2/"
-      output-root:
-        type: string
-        description: Root directory to store benchmark results in CI server.
-        default: "/home/validation/benchmark_results"
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -72,6 +52,12 @@ jobs:
       matrix:
         include:
           - task: DETECTION
+          # - task: MULTI_CLASS_CLS
+          # - task: MULTI_LABEL_CLS
+          # - task: H_LABEL_CLS
+          # - task: INSTANCE_SEGMENTATION
+          # - task: SEMANTIC_SEGMENTATION
+          # - task: VISUAL_PROMPTING
 
     name: Perf-Benchmark-${{ matrix.task }}
     runs-on: [otxci02]
@@ -95,29 +81,20 @@ jobs:
           GH_CTX_REF_NAME: ${{ github.ref_name }}
           GH_CTX_SHA: ${{ github.sha }}
         run: |
+          rm -rf .tox
           export TASK="${{ matrix.task }}"
           export DATA_ROOT="${{ inputs.data-root }}"
           export NUM_REPEAT="${{ inputs.num-repeat }}"
           export NUM_EPOCH="${{ inputs.num-epoch }}"
           export EVAL_UPTO="${{ inputs.eval-upto }}"
           export GITHUB_ACTOR="${{ github.triggering_actor }}"
-          export OUTPUT_ROOT="${{ inputs.output-root }}"
           export DEVICE="gpu"
+          export SUMMARY_FILE_ROOT=".tox"
           tox -vv -e perf-benchmark-v2
-      - name: Prepare Artifact (Exclude Files)
-        run: |
-          rm -rf filtered-artifacts
-          mkdir -p filtered-artifacts
-          find ${{ inputs.output-root }} -type f \
-            ! -name '*.pth' \
-            ! -name '*.ckpt' \
-            ! -name '*.xml' \
-            ! -name '*.bin' \
-            -exec cp --parents {} filtered-artifacts/ \;
 
       - name: Upload test results
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: benchmark-results-${{ matrix.task }}
-          path: filtered-artifacts/
+          path: .tox/*.xlsx
         if: ${{ always() }}
