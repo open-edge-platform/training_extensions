@@ -402,7 +402,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
     def _random_mode(self) -> int | float:
         return random.choice(self.sample_mode)
 
-    def fowward(self, *_inputs: DataItemType) -> DataItemType | None:
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
         """Forward for MinIoURandomCrop."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
@@ -475,7 +475,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                             inputs.bboxes = bboxes  # type: ignore[union-attr]
 
                         # labels
-                        labels = inputs.labels if isinstance(inputs, TorchDataItem) else getattr(inputs, "labels", None)
+                        labels = inputs.label if isinstance(inputs, TorchDataItem) else getattr(inputs, "labels", None)
                         if labels is not None:
                             if isinstance(inputs, TorchDataItem):
                                 inputs.label = labels[mask]
@@ -1477,8 +1477,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
 
         bboxes = inputs.boxes if isinstance(inputs, TorchDataItem) else getattr(inputs, "bboxes", [])
-        bboxes = [bboxes] if not isinstance(bboxes, list) else bboxes
-        num_bboxes = len(bboxes)
+        num_bboxes = len(bboxes) if bboxes is not None else 0
         if num_bboxes:
             bboxes = project_bboxes(bboxes, warp_matrix)
             if self.bbox_clip_border:

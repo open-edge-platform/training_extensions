@@ -5,6 +5,7 @@ import pytest
 import torch
 
 from otx.core.config.data import SubsetConfig
+from otx.core.data.entity.base import ImageInfo
 from otx.core.types.transformer_libs import TransformLibType
 from otx.data.torch import TorchDataItem
 
@@ -25,14 +26,29 @@ class TestPackInputs:
         [
             TorchDataItem(
                 image=torch.randn([3, 10, 10]),
+                imgs_info=ImageInfo(
+                    img_idx=0,
+                    img_shape=(10, 10),
+                    ori_shape=(10, 10),
+                ),
                 label=torch.LongTensor([0]),
             ),
             TorchDataItem(
                 image=torch.randn([3, 10, 10]),
+                imgs_info=ImageInfo(
+                    img_idx=0,
+                    img_shape=(10, 10),
+                    ori_shape=(10, 10),
+                ),
                 label=torch.LongTensor([0, 1]),
             ),
             TorchDataItem(
                 image=torch.randn([3, 10, 10]),
+                imgs_info=ImageInfo(
+                    img_idx=0,
+                    img_shape=(10, 10),
+                    ori_shape=(10, 10),
+                ),
                 label=torch.as_tensor([0]),
             ),
         ],

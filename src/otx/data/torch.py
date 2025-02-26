@@ -5,10 +5,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, fields
+from typing import TYPE_CHECKING, Any
 
 import torch
+
+from otx.core.data.entity.utils import register_pytree_node
 
 from .validations import (
     ValidateBatchMixin,
@@ -21,8 +24,11 @@ if TYPE_CHECKING:
     from otx.core.data.entity.base import ImageInfo
 
 
+# NOTE: register_pytree_node and Mapping are required for torchvision.transforms.v2 to work with OTXDataEntity
+# TODO(ashwinvaidya17): Remove this once custom transforms are removed
+@register_pytree_node
 @dataclass
-class TorchDataItem(ValidateItemMixin):
+class TorchDataItem(ValidateItemMixin, Mapping):
     """Torch data item implementation."""
 
     image: torch.Tensor
@@ -47,6 +53,16 @@ class TorchDataItem(ValidateItemMixin):
             masks=[item.mask for item in items],
             imgs_infos=[item.imgs_info for item in items],
         )
+
+    def __iter__(self) -> Iterator[str]:
+        for field_ in fields(self):
+            yield field_.name
+
+    def __getitem__(self, key: str) -> Any:  # noqa: ANN401
+        return getattr(self, key)
+
+    def __len__(self) -> int:
+        return len(fields(self))
 
 
 @dataclass
