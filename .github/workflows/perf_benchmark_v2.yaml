@@ -97,4 +97,3 @@ jobs:
         with:
           name: benchmark-results-${{ matrix.task }}
           path: ${{ github.workspace }}/.tox/*.xlsx
-        if: ${{ always() }}
