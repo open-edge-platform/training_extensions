@@ -41,7 +41,6 @@ TASK_METRIC_MAP = {
 
 
 METADATA_ENTRIES = [
-    "seed",
     "date",
     "task",
     "model",
@@ -118,12 +117,23 @@ def aggregate(raw_data: pd.DataFrame, metrics: list[str]) -> list[pd.DataFrame]:
     if raw_data is None or len(raw_data) == 0:
         return [pd.DataFrame()]
 
+    # Drop `seed` column if it is raw_data as we don't need to average it
+    if "seed" in raw_data.columns:
+        raw_data = raw_data.drop(columns=["seed"])
+
     for col in METADATA_ENTRIES:
         raw_data.loc[:, col] = raw_data[col].astype(str)  # Prevent strings like '2.0.0' being loaded as float
 
-    metrics = raw_data.select_dtypes(include=["number"]).columns.to_list()
     grouped_data = raw_data.groupby(
-        ["otx_version", "task", "model", "data", "test_branch", "test_commit", "data_group"],
+        [
+            "otx_version",
+            "task",
+            "model",
+            "data",
+            "test_branch",
+            "test_commit",
+            "data_group",
+        ],
     )
     aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 
@@ -132,6 +142,23 @@ def aggregate(raw_data: pd.DataFrame, metrics: list[str]) -> list[pd.DataFrame]:
     aggregated.columns = [
         ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.to_numpy()
     ]
+
+    # Get metrics (int/float) columns
+    number_cols = aggregated.select_dtypes(include=["number"]).columns.to_list()
+
+    # Get metadata (str type) columns
+    meta_cols = aggregated.select_dtypes(include=["object"]).columns.to_list()
+    if "model" in meta_cols:
+        meta_cols.remove("model")
+
+    rearrange_cols = [
+        "model",
+        *number_cols,
+        *meta_cols,
+    ]
+
+    # Rearrange columns
+    aggregated = aggregated.reindex(columns=rearrange_cols)
 
     # Individualize each sheet by dataset
     dataset_dfs = []
@@ -186,9 +213,9 @@ def create_raw_dataset_xlsx(
     """
     from tests.perf_v2 import CRITERIA_COLLECTIONS
 
-    col_names = []
-    col_names.extend(METADATA_ENTRIES)
+    col_names = ["seed"]
     col_names.extend([criterion.name for criterion in CRITERIA_COLLECTIONS[task]])
+    col_names.extend(METADATA_ENTRIES)
 
     raw_data_task = raw_data.query(f"task == '{task.value}'")
     for dataset in raw_data_task["data"].unique():
@@ -229,6 +256,10 @@ def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_ro
         msg = f"No data found for task {task.value}"
         raise ValueError(msg)
 
+    # Drop `seed` column if it is raw_data as we don't need to average it
+    if "seed" in raw_task_data.columns:
+        raw_task_data = raw_task_data.drop(columns=["seed"])
+
     for col in METADATA_ENTRIES:
         raw_task_data.loc[:, col] = raw_task_data[col].astype(str)  # Prevent strings like '2.0.0' being loaded as float
 
@@ -241,6 +272,12 @@ def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_ro
     aggregated.columns = [
         ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.to_numpy()
     ]
+
+    # Get metrics (int/float) columns
+    columns = aggregated.select_dtypes(include=["number"]).columns
+    # Round all numeric columns to 4 decimal places
+    for col in columns:
+        aggregated[col] = aggregated[col].round(4)
 
     # Save the high-level summary data to an Excel file
     task_high_level_summary_xlsx_path = output_root / f"{task.value}-high-level-summary.xlsx"
