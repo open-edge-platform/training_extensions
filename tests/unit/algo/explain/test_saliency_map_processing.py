@@ -138,6 +138,7 @@ def test_process_image(postprocess) -> None:
 
 def _get_pred_result_multiclass(pred_labels, pred_scores) -> TorchPredBatch:
     return TorchPredBatch(
+        batch_size=BATCH_SIZE,
         images=None,
         imgs_infos=IMGS_INFO,
         scores=pred_scores,
@@ -149,6 +150,7 @@ def _get_pred_result_multiclass(pred_labels, pred_scores) -> TorchPredBatch:
 
 def _get_pred_result_multilabel(pred_labels, pred_scores) -> TorchPredBatch:
     return TorchPredBatch(
+        batch_size=BATCH_SIZE,
         images=None,
         imgs_infos=IMGS_INFO,
         scores=pred_scores,
@@ -160,6 +162,7 @@ def _get_pred_result_multilabel(pred_labels, pred_scores) -> TorchPredBatch:
 
 def _get_pred_result_hcls(pred_labels, pred_scores) -> TorchPredBatch:
     return TorchPredBatch(
+        batch_size=BATCH_SIZE,
         images=None,
         imgs_infos=IMGS_INFO,
         scores=pred_scores,
