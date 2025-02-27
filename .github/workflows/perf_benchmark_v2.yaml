@@ -61,7 +61,7 @@ jobs:
           # - task: VISUAL_PROMPTING
 
     name: Perf-Benchmark-${{ matrix.task }}
-    runs-on: [self-hosted, linux, x64, dmount-v2]
+    runs-on: [self-hosted, Linux, X64, dev, dmount]
     timeout-minutes: 8640
     steps:
       - name: Checkout repository
