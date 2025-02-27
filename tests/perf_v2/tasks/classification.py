@@ -67,7 +67,7 @@ MULTI_CLASS_DATASET_TEST_CASES = [
     ),
     DatasetInfo(
         name="multiclass_food20_large",
-        path=Path("multiclass_classification/multiclass_food20_large"),
+        path=Path("multiclass_classification/multilabel_food101_large"),
         group="large",
         extra_overrides={},
     ),
@@ -99,7 +99,7 @@ MULTI_LABEL_DATASET_TEST_CASES = [
     ),
     DatasetInfo(
         name="multilabel_food20_large",
-        path=Path("multilabel_classification/multilabel_food20_large"),
+        path=Path("multilabel_classification/multilabel_food101_large"),
         group="large",
         extra_overrides={},
     ),
@@ -129,12 +129,6 @@ H_LABEL_CLS_DATASET_TEST_CASES = [
         name="hlabel_CUB_medium",
         path=Path("hlabel_classification/hlabel_CUB_medium"),
         group="medium",
-        extra_overrides={},
-    ),
-    DatasetInfo(
-        name="cifar100_label_group_datum_format_large",
-        path=Path("hlabel_classification/cifar100_label_group_datum_format_large"),
-        group="large",
         extra_overrides={},
     ),
 ]
