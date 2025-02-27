@@ -66,8 +66,8 @@ MULTI_CLASS_DATASET_TEST_CASES = [
         extra_overrides={},
     ),
     DatasetInfo(
-        name="multiclass_food20_large",
-        path=Path("multiclass_classification/multilabel_food101_large"),
+        name="multiclass_food101_large",
+        path=Path("multiclass_classification/multiclass_food101_large"),
         group="large",
         extra_overrides={},
     ),
