@@ -74,8 +74,6 @@ from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
     from otx.core.config.data import SubsetConfig
-    from otx.core.data.entity.base import T_OTXDataEntity
-    # TODO (sungchul): refactor types
 
 
 # mypy: disable-error-code="attr-defined"
@@ -1585,7 +1583,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.pad_val = pad_val
         self.prob = prob
 
-        self.results_cache: list[OTXDataEntity] = []
+        self.results_cache: list[DataItemType] = []  # type: ignore[valid-type]
         self.random_pop = random_pop
         assert max_cached_images >= 4, f"The length of cache must >= 4, but got {max_cached_images}."  # noqa: S101
         self.max_cached_images = max_cached_images
@@ -1605,7 +1603,8 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         """
         return [random.randint(0, len(cache) - 1) for _ in range(3)]
 
-    def forward(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
         """Forward for CachedMosaic."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
@@ -1730,18 +1729,27 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         inputs.image = mosaic_img
         inputs.img_info = _resized_crop_image_info(
-            inputs.img_info,
+            inputs.imgs_info if isinstance(inputs, TorchDataItem) else inputs.img_info,  # type: ignore[union-attr]
             mosaic_img.shape[:2],
         )  # TODO (sungchul): need to add proper function
-        inputs.bboxes = tv_tensors.BoundingBoxes(mosaic_bboxes, format="XYXY", canvas_size=mosaic_img.shape[:2])
-        inputs.labels = mosaic_bboxes_labels
+        bboxes = tv_tensors.BoundingBoxes(mosaic_bboxes, format="XYXY", canvas_size=mosaic_img.shape[:2])
+        if isinstance(inputs, TorchDataItem):
+            inputs.boxes = bboxes
+            inputs.label = mosaic_bboxes_labels
+        else:
+            inputs.bboxes = bboxes  # type: ignore[union-attr]
+            inputs.labels = mosaic_bboxes_labels  # type: ignore[union-attr]
         if with_mask:
             if len(mosaic_masks) > 0:
-                inputs.masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
-            if len(mosaic_polygons) > 0:
+                masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
+                if isinstance(inputs, TorchDataItem):
+                    inputs.mask = masks
+                else:
+                    inputs.masks = masks  # type: ignore[union-attr]
+            if len(mosaic_polygons) > 0 and not isinstance(inputs, TorchDataItem):
                 inputs.polygons = [
                     polygon for ind, polygon in zip(inside_inds, itertools.chain(*mosaic_polygons)) if ind
-                ]
+                ]  # type: ignore[union-attr]
         return self.convert(inputs)
 
     def _mosaic_combine(
@@ -1915,7 +1923,8 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
                 break
         return index
 
-    def forward(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:  # noqa: C901
         """MixUp transform function."""
         # cache and pop images
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
@@ -1942,7 +1951,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
             return self.convert(inputs)
 
         retrieve_img: np.ndarray = to_np_image(retrieve_results.image)
-        with_mask = bool(hasattr(inputs, "masks") or hasattr(inputs, "polygons"))
+        with_mask = bool(hasattr(inputs, "masks") or hasattr(inputs, "mask") or hasattr(inputs, "polygons"))
 
         jit_factor = random.uniform(*self.ratio_range)
         is_flip = random.uniform(0, 1) > self.flip_ratio
@@ -1992,7 +2001,9 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         padded_cropped_img = padded_img[y_offset : y_offset + target_h, x_offset : x_offset + target_w]
 
         # 6. adjust bbox
-        retrieve_gt_bboxes = retrieve_results.bboxes
+        retrieve_gt_bboxes = (
+            retrieve_results.boxes if isinstance(retrieve_results, TorchDataItem) else retrieve_results.bboxes
+        )
         retrieve_gt_bboxes = rescale_bboxes(retrieve_gt_bboxes, (scale_ratio, scale_ratio))
 
         if self.bbox_clip_border:
@@ -2012,26 +2023,44 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         ori_img = ori_img.astype(np.float32)
         mixup_img = 0.5 * ori_img + 0.5 * padded_cropped_img.astype(np.float32)
 
-        retrieve_gt_bboxes_labels = retrieve_results.labels
+        retrieve_gt_bboxes_labels = (
+            retrieve_results.label if isinstance(retrieve_results, TorchDataItem) else retrieve_results.labels
+        )
 
-        mixup_gt_bboxes = torch.cat((inputs.bboxes, cp_retrieve_gt_bboxes), dim=0)
-        mixup_gt_bboxes_labels = torch.cat((inputs.labels, retrieve_gt_bboxes_labels), dim=0)
+        if isinstance(inputs, TorchDataItem):
+            mixup_gt_bboxes = torch.cat((inputs.boxes, cp_retrieve_gt_bboxes), dim=0)
+            mixup_gt_bboxes_labels = torch.cat((inputs.label, retrieve_gt_bboxes_labels), dim=0)
+            inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))
+        else:
+            mixup_gt_bboxes = torch.cat((inputs.bboxes, cp_retrieve_gt_bboxes), dim=0)  # type: ignore[union-attr]
+            mixup_gt_bboxes_labels = torch.cat((inputs.labels, retrieve_gt_bboxes_labels), dim=0)  # type: ignore[union-attr]
+            # remove outside bbox
+            inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))
 
-        # remove outside bbox
-        inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))
         mixup_gt_bboxes = mixup_gt_bboxes[inside_inds]
         mixup_gt_bboxes_labels = mixup_gt_bboxes_labels[inside_inds]
 
         inputs.image = mixup_img.astype(np.uint8)
-        inputs.img_info = _resized_crop_image_info(
+        img_info = _resized_crop_image_info(
             inputs.img_info,
             mixup_img.shape[:2],
         )  # TODO (sungchul): need to add proper function
-        inputs.bboxes = tv_tensors.BoundingBoxes(mixup_gt_bboxes, format="XYXY", canvas_size=mixup_img.shape[:2])
-        inputs.labels = mixup_gt_bboxes_labels
+        bboxes = tv_tensors.BoundingBoxes(mixup_gt_bboxes, format="XYXY", canvas_size=mixup_img.shape[:2])
+        if isinstance(inputs, TorchDataItem):
+            inputs.imgs_info = img_info
+            inputs.boxes = bboxes
+            inputs.label = mixup_gt_bboxes_labels
+        else:
+            inputs.img_info = img_info  # type: ignore[union-attr]
+            inputs.bboxes = bboxes  # type: ignore[union-attr]
+            inputs.labels = mixup_gt_bboxes_labels  # type: ignore[union-attr]
         if with_mask:
             inside_inds = inside_inds.numpy()
-            if (masks := getattr(retrieve_results, "masks", None)) is not None and len(masks) > 0:
+            if isinstance(inputs, TorchDataItem):
+                masks = retrieve_results.mask
+            else:
+                masks = getattr(retrieve_results, "masks", None)
+            if masks is not None and len(masks) > 0:
                 masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
 
                 # 6. adjust bbox
@@ -2057,7 +2086,10 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs_masks = inputs.masks.numpy() if not isinstance(inputs.masks, np.ndarray) else inputs.masks
                 mixup_gt_masks = np.concatenate([inputs_masks, retrieve_gt_masks])
 
-                inputs.masks = mixup_gt_masks[inside_inds]
+                if isinstance(inputs, TorchDataItem):
+                    inputs.mask = mixup_gt_masks[inside_inds]
+                else:
+                    inputs.masks = mixup_gt_masks[inside_inds]  # type: ignore[union-attr]
 
             if (polygons := getattr(retrieve_results, "polygons", None)) is not None and len(polygons) > 0:
                 # 6. adjust bbox
@@ -2083,7 +2115,8 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
                 # 8. mix up
                 mixup_gt_polygons = list(itertools.chain(*[inputs.polygons, retrieve_gt_polygons]))
 
-                inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
+                if not isinstance(inputs, TorchDataItem):
+                    inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
 
         return self.convert(inputs)
 
@@ -2142,7 +2175,7 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
         # prevent overflow
         return hsv_gains.astype(np.int16)
 
-    def forward(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
         """Forward for random hsv transform."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
@@ -2250,7 +2283,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.transform_mask = transform_mask
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
-    def _pad_img(self, inputs: T_OTXDataEntity) -> T_OTXDataEntity:
+    def _pad_img(self, inputs: DataItemType) -> DataItemType:
         """Pad images according to ``self.size``."""
         img: np.ndarray = to_np_image(inputs.image)
         pad_val = self.pad_val.get("img", 0)
@@ -2287,18 +2320,24 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
         )
 
         inputs.image = padded_img
-        inputs.img_info = _pad_image_info(inputs.img_info, padding)
+        if isinstance(inputs, TorchDataItem):
+            inputs.imgs_info = _pad_image_info(inputs.imgs_info, padding)
+        else:
+            inputs.img_info = _pad_image_info(inputs.img_info, padding)  # type: ignore[union-attr]
         return inputs
 
-    def _pad_points(self, inputs: T_OTXDataEntity) -> T_OTXDataEntity:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def _pad_points(self, inputs: DataItemType) -> DataItemType:
         """Pad points according to inputs.image_info.padding."""
         if (points := getattr(inputs, "points", None)) is not None:
             inputs.points = pad_points(points, points.canvas_size, inputs.img_info.padding)
         return inputs
 
-    def _pad_masks(self, inputs: T_OTXDataEntity) -> T_OTXDataEntity:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def _pad_masks(self, inputs: DataItemType) -> DataItemType:
         """Pad masks according to inputs.image_info.padding."""
-        if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
+        masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
+        if masks is not None and len(masks) > 0:
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
 
             pad_val = self.pad_val.get("mask", 0)
@@ -2319,11 +2358,14 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
                 ],
             )
 
-            inputs.masks = padded_masks
+            if isinstance(inputs, TorchDataItem):
+                inputs.mask = padded_masks
+            else:
+                inputs.masks = padded_masks
 
         return inputs
 
-    def forward(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
         """Forward function to pad images."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
@@ -2429,7 +2471,7 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         return scale
 
-    def forward(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
         """Transform function to resize images, bounding boxes, semantic segmentation map."""
         self.resize.scale = self._random_scale()
         outputs = self.resize(*_inputs)
@@ -2532,18 +2574,19 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         return (crop_x1, crop_y1, crop_x2, crop_y2), offset_h, offset_w
 
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
     def _crop_data(
         self,
-        inputs: T_OTXDataEntity,
+        inputs: DataItemType,
         crop_size: tuple[int, int],
         allow_negative_crop: bool,
-    ) -> T_OTXDataEntity | None:
+    ) -> DataItemType | None:
         """Function to randomly crop images, bounding boxes, masks, semantic segmentation maps."""
         assert crop_size[0] > 0  # noqa: S101
         assert crop_size[1] > 0  # noqa: S101
 
         img: np.ndarray = to_np_image(inputs.image)
-        orig_shape = inputs.img_info.img_shape
+        orig_shape = inputs.imgs_info.img_shape if isinstance(inputs, TorchDataItem) else inputs.img_info.img_shape  # type: ignore[union-attr]
         crop_bbox, offset_h, offset_w = self._generate_crop_bbox(orig_shape, crop_size)
 
         # for semantic segmentation
@@ -2564,11 +2607,15 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         cropped_img_shape = img.shape[:2]
 
         inputs.image = img
-        inputs.img_info = _crop_image_info(inputs.img_info, *cropped_img_shape)
+        if isinstance(inputs, TorchDataItem):
+            inputs.imgs_info = _crop_image_info(inputs.imgs_info, *cropped_img_shape)
+        else:
+            inputs.img_info = _crop_image_info(inputs.img_info, *cropped_img_shape)
 
         valid_inds: np.ndarray = np.array([1])  # for semantic segmentation
         # crop bboxes accordingly and clip to the image boundary
-        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
+        bboxes = inputs.boxes if isinstance(inputs, TorchDataItem) else getattr(inputs, "bboxes", None)
+        if bboxes is not None:
             bboxes = translate_bboxes(bboxes, [-offset_w, -offset_h])
             if self.bbox_clip_border:
                 bboxes = clip_bboxes(bboxes, cropped_img_shape)
@@ -2579,23 +2626,40 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
             if not valid_inds.any() and not allow_negative_crop:
                 return None
 
-            inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_inds], format="XYXY", canvas_size=cropped_img_shape)
+            bboxes = tv_tensors.BoundingBoxes(bboxes[valid_inds], format="XYXY", canvas_size=cropped_img_shape)
+            if isinstance(inputs, TorchDataItem):
+                inputs.boxes = bboxes
+            else:
+                inputs.bboxes = bboxes
 
-            if (labels := getattr(inputs, "labels", None)) is not None:
-                inputs.labels = labels[valid_inds]
+            labels = inputs.label if isinstance(inputs, TorchDataItem) else getattr(inputs, "labels", None)
+            if labels is not None:
+                if isinstance(inputs, TorchDataItem):
+                    inputs.label = labels[valid_inds]
+                else:
+                    inputs.labels = labels[valid_inds]  # type: ignore[union-attr]
 
-        if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
+        masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
+        if masks is not None and len(masks) > 0:
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
-            inputs.masks = crop_masks(
+            cropped_masks = crop_masks(
                 masks[valid_inds.nonzero()[0]],
                 np.asarray([crop_x1, crop_y1, crop_x2, crop_y2]),
             )
+            if isinstance(inputs, TorchDataItem):
+                inputs.mask = cropped_masks
+            else:
+                inputs.masks = cropped_masks  # type: ignore[union-attr]
 
             if self.recompute_bbox:
-                inputs.bboxes = tv_tensors.wrap(
+                bboxes = tv_tensors.wrap(
                     torch.as_tensor(get_bboxes_from_masks(inputs.masks)),
-                    like=inputs.bboxes,
+                    like=inputs.boxes if isinstance(inputs, TorchDataItem) else inputs.bboxes,
                 )
+                if isinstance(inputs, TorchDataItem):
+                    inputs.boxes = bboxes
+                else:
+                    inputs.bboxes = bboxes
 
         if (polygons := getattr(inputs, "polygons", None)) is not None and len(polygons) > 0:
             inputs.polygons = crop_polygons(
@@ -2606,7 +2670,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             if self.recompute_bbox:
                 inputs.bboxes = tv_tensors.wrap(
-                    torch.as_tensor(get_bboxes_from_polygons(inputs.polygons, *cropped_img_shape)),
+                    torch.as_tensor(get_bboxes_from_polygons(inputs.polygons, *cropped_img_shape)),  # type: ignore[union-attr]
                     like=inputs.bboxes,
                 )
 
@@ -2658,12 +2722,17 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         crop_h, crop_w = crop_size + np.random.rand(2) * (1 - crop_size)
         return int(h * crop_h + 0.5), int(w * crop_w + 0.5)
 
-    def forward(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
         """Transform function to randomly crop images, bounding boxes, masks, and polygons."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
 
-        crop_size = self._get_crop_size(inputs.img_info.img_shape)
+        if isinstance(inputs, TorchDataItem):
+            crop_size = self._get_crop_size(inputs.imgs_info.img_shape)
+        else:
+            crop_size = self._get_crop_size(inputs.img_info.img_shape)
+
         outputs = self._crop_data(inputs, crop_size, self.allow_negative_crop)
         return self.convert(outputs)
 
@@ -2720,13 +2789,20 @@ class FilterAnnotations(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.keep_empty = keep_empty
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
-    def forward(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
         """Transform function to filter annotations."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
 
-        assert hasattr(inputs, "bboxes")  # noqa: S101
-        bboxes = inputs.bboxes
+        if isinstance(inputs, TorchDataItem):
+            bboxes = inputs.boxes
+            if bboxes is None:
+                msg = "boxes is None"
+                raise ValueError(msg)
+        else:
+            assert hasattr(inputs, "bboxes")  # noqa: S101
+            bboxes = inputs.bboxes
         if bboxes.shape[0] == 0:
             return self.convert(inputs)
 
@@ -2736,8 +2812,15 @@ class FilterAnnotations(tvt_v2.Transform, NumpytoTVTensorMixin):
             heights = bboxes[..., 3] - bboxes[..., 1]
             tests.append(((widths > self.min_gt_bbox_wh[0]) & (heights > self.min_gt_bbox_wh[1])).numpy())
         if self.by_mask:
-            assert hasattr(inputs, "masks")  # noqa: S101
-            areas = inputs.masks.sum((1, 2))
+            if isinstance(inputs, TorchDataItem):
+                masks = inputs.mask
+            else:
+                assert hasattr(inputs, "masks")  # noqa: S101
+                masks = inputs.masks
+            if masks is None:
+                msg = "masks is None"
+                raise ValueError(msg)
+            areas = masks.sum((1, 2))
             tests.append(areas >= self.min_gt_mask_area)
         if self.by_polygon:
             areas = []
@@ -2760,8 +2843,8 @@ class FilterAnnotations(tvt_v2.Transform, NumpytoTVTensorMixin):
         for key in keys:
             if hasattr(inputs, key):
                 if key == "polygons" and len(polygons := inputs.polygons) > 0:
-                    polygons = inputs.polygons
-                    inputs.polygons = [polygons[i] for i in np.where(keep)[0]]
+                    polygons = inputs.polygons  # type: ignore[union-attr]
+                    inputs.polygons = [polygons[i] for i in np.where(keep)[0]]  # type: ignore[union-attr]
                 else:
                     if len(attr := getattr(inputs, key)) == 0:
                         continue
@@ -2789,7 +2872,7 @@ class Compose(tvt_v2.Compose):
     MMCV transforms can produce None, so it is required to skip the result.
     """
 
-    def forward(self, *inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    def forward(self, *inputs: DataItemType) -> DataItemType | None:
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
         for transform in self.transforms:
@@ -2816,17 +2899,22 @@ class FormatShape(tvt_v2.Transform):
             msg = f"The input format {self.input_format} is invalid."
             raise ValueError(msg)
 
-    def __call__(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
         """Perform the SampleFrames loading."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
+
+        if isinstance(inputs, TorchDataItem):
+            # TODO(ashwinvaidya17): Add support for TorchDataItem
+            return inputs
 
         if not isinstance(inputs.image, np.ndarray):
             inputs.image = np.array(inputs.image)
 
         # [M x H x W x C]
         # M = 1 * N_crops * N_clips * T
-        if self.collapse and inputs.video_info.num_clips != 1:
+        if self.collapse and inputs.video_info.num_clips != 1:  # type: ignore[union-attr]
             msg = "num_clips should be 1."
             raise ValueError(msg)
 
@@ -2854,7 +2942,7 @@ class FormatShape(tvt_v2.Transform):
             inputs.image = imgs
             inputs.img_info.img_shape = imgs.shape
         elif self.input_format == "NPTCHW":
-            num_proposals = inputs.proposals.shape[0]  # WJ
+            num_proposals = inputs.proposals.shape[0]  # WJ  # type: ignore[union-attr]
             num_clips = inputs.video_info.num_clips
             clip_len = inputs.video_info.clip_len
             imgs = inputs.image
@@ -2895,10 +2983,15 @@ class DecordInit(tvt_v2.Transform):
         file_obj = io.BytesIO(file_byte)
         return decord.VideoReader(file_obj, num_threads=self.num_threads)
 
-    def __call__(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
         """Perform the Decord initialization."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
+
+        if isinstance(inputs, TorchDataItem):
+            # TODO(ashwinvaidya17): Add support for TorchDataItem
+            return inputs
 
         container = self._get_video_reader(inputs.video.path)
         inputs.video_info.video_reader = container
@@ -3081,10 +3174,15 @@ class SampleFrames(tvt_v2.Transform):
 
         return ori_clip_len
 
-    def __call__(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
         """Perform the SampleFrames loading."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
+
+        if isinstance(inputs, TorchDataItem):
+            # TODO(ashwinvaidya17): Add support for TorchDataItem
+            return inputs
 
         total_frames = inputs.video_info.num_frames
         # if can't get fps, same value of `fps` and `target_fps`
@@ -3161,10 +3259,15 @@ class DecordDecode(tvt_v2.Transform):
                 imgs.append(frame.asnumpy())
         return imgs
 
-    def __call__(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
         """Transform function to resize images, bounding boxes, and masks."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
+
+        if isinstance(inputs, TorchDataItem):
+            # TODO(ashwinvaidya17): Add support for TorchDataItem
+            return inputs
 
         container = inputs.video_info.video_reader
 
@@ -3420,7 +3523,8 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         warped_image = cv2.warpAffine(numpy_image, warp_mat, warp_size, flags=cv2.INTER_LINEAR)
         return torch.from_numpy(warped_image).to(dtype=torch.float32).permute(2, 0, 1)
 
-    def __call__(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
+    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
+    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
         """Transform function to affine image through warp matrix."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
@@ -3453,12 +3557,13 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
                 scale_factor = (warp_size[0] / img_shape[0], warp_size[1] / img_shape[1])
                 inputs.keypoints = rescale_keypoints(inputs.keypoints, scale_factor)
 
-        if inputs.keypoints is None:
-            inputs.keypoints = np.zeros([])
-            inputs.keypoints_visible = np.ones((1, 1, 1))
-        else:
-            # update keypoints_visible after affine transforms
-            inputs.keypoints_visible = inputs.keypoints_visible * (inputs.keypoints > 0).all(axis=1)
+        if not isinstance(inputs, TorchDataItem):
+            if inputs.keypoints is None:
+                inputs.keypoints = np.zeros([])
+                inputs.keypoints_visible = np.ones((1, 1, 1))
+            else:
+                # update keypoints_visible after affine transforms
+                inputs.keypoints_visible = inputs.keypoints_visible * (inputs.keypoints > 0).all(axis=1)
 
         return self.convert(inputs)
 

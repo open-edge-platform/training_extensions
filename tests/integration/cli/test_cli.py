@@ -315,8 +315,6 @@ def test_otx_explain_e2e(
         fxt_accelerator,
         "--seed",
         "0",
-        "--dump",
-        "True",
         "--checkpoint",
         str(ckpt_file),
         *fxt_cli_override_command_per_task[task],

@@ -201,8 +201,8 @@ class ValidateBatchMixin:
             msg = f"Scores batch must be a list of torch tensors. Got {type(scores_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
-        if scores_batch[0].dtype != torch.float32:
-            msg = "Scores batch must have dtype torch.float32"
+        if not scores_batch[0].dtype.is_floating_point:
+            msg = "Scores batch must have a floating point dtype (float16, float32, or float64)"
             raise ValueError(msg)
         if scores_batch[0].ndim > 1:
             msg = "Scores batch must have 1 or 2 dimensions"
