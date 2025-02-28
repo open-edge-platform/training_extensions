@@ -178,8 +178,8 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.ANOMALY_CLASSIFICATION,
         "model_name": "stfpm",
     },
-    "ote_anomaly_classification_uflow": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
+    "ote_anomaly_uflow": {
+        "task": OTXTaskType.ANOMALY,
         "model_name": "uflow",
     },
     # ANOMALY_DETECTION
