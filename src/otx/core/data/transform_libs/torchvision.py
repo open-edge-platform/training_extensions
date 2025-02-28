@@ -1483,7 +1483,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             # remove outside bbox
             valid_index = is_inside_bboxes(bboxes, (height, width))
             _bboxes = tv_tensors.BoundingBoxes(bboxes[valid_index], format="XYXY", canvas_size=(height, width))
-            _label = inputs.labels[valid_index] if isinstance(inputs, TorchDataItem) else inputs.labels  # type: ignore[union-attr]
+            _label = inputs.label[valid_index] if isinstance(inputs, TorchDataItem) else inputs.labels[valid_index]  # type: ignore[union-attr, index]
             if isinstance(inputs, TorchDataItem):
                 inputs.boxes = _bboxes
                 inputs.label = _label
