@@ -12,6 +12,7 @@ from otx.core.config.data import SamplerConfig, SubsetConfig
 from otx.core.data.factory import OTXDatasetFactory
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.task import OTXTaskType
+from otx.data.torch import TorchDataItem
 from otx.engine.utils.auto_configurator import AutoConfigurator
 
 
@@ -68,9 +69,9 @@ def _test_augmentation(
         # Check if all aug combinations are size-compatible
         data = dataset[0]
         if not img_shape:
-            img_shape = data.img_info.img_shape
+            img_shape = data.imgs_info.img_shape if isinstance(data, TorchDataItem) else data.img_info.img_shape
         else:
-            assert img_shape == data.img_info.img_shape
+            assert img_shape == data.imgs_info.img_shape if isinstance(data, TorchDataItem) else data.img_info.img_shape
 
 
 CLS_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "_cls" in recipe and "tv_" not in recipe]

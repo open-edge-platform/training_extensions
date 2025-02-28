@@ -6,8 +6,10 @@ from pathlib import Path
 import numpy as np
 import openvino.runtime as ov
 import pytest
+import torch
 
 from otx.core.data.entity.base import OTXBatchPredEntity
+from otx.data.torch import TorchPredBatch
 from otx.engine import Engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
@@ -68,11 +70,11 @@ def test_forward_explain(
     )
 
     predict_result = engine.predict()
-    assert isinstance(predict_result[0], OTXBatchPredEntity)
+    assert isinstance(predict_result[0], (OTXBatchPredEntity, TorchPredBatch))
     assert not predict_result[0].has_xai_outputs
 
     predict_result_explain = engine.predict(explain=True)
-    assert isinstance(predict_result_explain[0], OTXBatchPredEntity)
+    assert isinstance(predict_result_explain[0], (OTXBatchPredEntity, TorchPredBatch))
     assert predict_result_explain[0].has_xai_outputs
 
     batch_size = len(predict_result[0].scores)
@@ -135,10 +137,15 @@ def test_predict_with_explain(
 
     # Predict with explain torch & process maps
     predict_result_explain_torch = engine.predict(explain=True)
-    assert isinstance(predict_result_explain_torch[0], OTXBatchPredEntity)
+    assert isinstance(predict_result_explain_torch[0], (OTXBatchPredEntity, TorchPredBatch))
     assert predict_result_explain_torch[0].has_xai_outputs
-    assert predict_result_explain_torch[0].saliency_map is not None
-    assert isinstance(predict_result_explain_torch[0].saliency_map[0], dict)
+    saliency_map = (
+        predict_result_explain_torch[0].saliency_maps
+        if isinstance(predict_result_explain_torch[0], TorchPredBatch)
+        else predict_result_explain_torch[0].saliency_map
+    )
+    assert saliency_map is not None
+    assert isinstance(saliency_map[0], dict)
 
     # Export with explain
     ckpt_path = tmp_path / "checkpoint.ckpt"
@@ -164,12 +171,23 @@ def test_predict_with_explain(
 
     # Predict OV model with xai & process maps
     predict_result_explain_ov = engine.predict(checkpoint=exported_model_path, explain=True)
-    assert isinstance(predict_result_explain_ov[0], OTXBatchPredEntity)
+    assert isinstance(predict_result_explain_ov[0], (OTXBatchPredEntity, TorchPredBatch))
     assert predict_result_explain_ov[0].has_xai_outputs
-    assert predict_result_explain_ov[0].saliency_map is not None
-    assert isinstance(predict_result_explain_ov[0].saliency_map[0], dict)
-    assert predict_result_explain_ov[0].feature_vector is not None
-    assert isinstance(predict_result_explain_ov[0].feature_vector[0], np.ndarray)
+    saliency_map = (
+        predict_result_explain_ov[0].saliency_maps
+        if isinstance(predict_result_explain_ov[0], TorchPredBatch)
+        else predict_result_explain_ov[0].saliency_map
+    )
+    assert saliency_map is not None
+    assert isinstance(saliency_map[0], dict)
+    feature_vector = (
+        predict_result_explain_ov[0].feature_vectors
+        if isinstance(predict_result_explain_ov[0], TorchPredBatch)
+        else predict_result_explain_ov[0].feature_vector
+    )
+    assert feature_vector is not None
+    # TODO(ashwinvaidya17): Keep only numpy
+    assert isinstance(feature_vector[0], (np.ndarray, torch.Tensor))
 
     if task == "instance_segmentation":
         # For instance segmentation batch_size for Torch task 1, for OV 2.
@@ -179,8 +197,16 @@ def test_predict_with_explain(
         # TODO(gzalessk): remove this if statement when the issue is resolved
         return
 
-    maps_torch = predict_result_explain_torch[0].saliency_map
-    maps_ov = predict_result_explain_ov[0].saliency_map
+    maps_torch = (
+        predict_result_explain_torch[0].saliency_maps
+        if isinstance(predict_result_explain_torch[0], TorchPredBatch)
+        else predict_result_explain_torch[0].saliency_map
+    )
+    maps_ov = (
+        predict_result_explain_ov[0].saliency_maps
+        if isinstance(predict_result_explain_ov[0], TorchPredBatch)
+        else predict_result_explain_ov[0].saliency_map
+    )
 
     assert len(maps_torch) == len(maps_ov)
 

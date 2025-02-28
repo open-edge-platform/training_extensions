@@ -50,17 +50,11 @@ def process_saliency_maps_in_pred_entity(
 
         # TODO(ashwinvaidya17): Revisit this. This check is temporary.
         if isinstance(predict_result_per_batch, TorchPredBatch):
-            # Handle TorchPredBatch case
-            if (
-                predict_result_per_batch.saliency_maps is None
-                or predict_result_per_batch.imgs_infos is None
-                or not all(info is not None for info in predict_result_per_batch.imgs_infos)
-            ):
-                msg = "No valid saliency maps or image info found."
-                raise ValueError(msg)
-
             saliency_maps = predict_result_per_batch.saliency_maps
-            imgs_infos = [info for info in predict_result_per_batch.imgs_infos if info is not None]
+            if predict_result_per_batch.imgs_infos is None:
+                imgs_infos = []
+            else:
+                imgs_infos = [info for info in predict_result_per_batch.imgs_infos if info is not None]
         else:
             # Handle other entity types
             saliency_maps = predict_result_per_batch.saliency_map
@@ -72,7 +66,7 @@ def process_saliency_maps_in_pred_entity(
 
         saliency_maps = [
             saliency_map.cpu().numpy() if isinstance(saliency_map, torch.Tensor) else saliency_map
-            for saliency_map in saliency_maps
+            for saliency_map in saliency_maps  # type: ignore[union-attr]
         ]
         ori_img_shapes = [img_info.ori_shape for img_info in imgs_infos]
         paddings = [img_info.padding for img_info in imgs_infos]

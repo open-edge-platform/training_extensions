@@ -105,6 +105,7 @@ class OTXMulticlassClsModel(OTXModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
+                imgs_infos=inputs.imgs_infos,
                 labels=list(outputs["labels"]),
                 scores=list(outputs["scores"]),
                 saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
@@ -119,6 +120,7 @@ class OTXMulticlassClsModel(OTXModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=list(preds),
             scores=list(scores),
         )
@@ -250,6 +252,7 @@ class OTXMultilabelClsModel(OTXModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
+                imgs_infos=inputs.imgs_infos,
                 labels=list(outputs["labels"]),
                 scores=list(outputs["scores"]),
                 saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
@@ -263,6 +266,7 @@ class OTXMultilabelClsModel(OTXModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=list(logits.argmax(-1, keepdim=True).unbind(0)),
             scores=list(scores),
         )
@@ -399,6 +403,7 @@ class OTXHlabelClsModel(OTXModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
+                imgs_infos=inputs.imgs_infos,
                 labels=list(labels),
                 scores=list(scores),
                 saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
@@ -408,6 +413,7 @@ class OTXHlabelClsModel(OTXModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=list(labels),
             scores=list(scores),
         )
@@ -525,6 +531,7 @@ class OVMulticlassClassificationModel(
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
+                imgs_infos=inputs.imgs_infos,
                 labels=pred_labels,
                 scores=pred_scores,
                 saliency_maps=predicted_s_maps,
@@ -534,6 +541,7 @@ class OVMulticlassClassificationModel(
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=pred_labels,
             scores=pred_scores,
         )
@@ -599,6 +607,7 @@ class OVMultilabelClassificationModel(OVModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
+                imgs_infos=inputs.imgs_infos,
                 labels=[],
                 scores=pred_scores,
                 saliency_maps=predicted_s_maps,
@@ -608,6 +617,7 @@ class OVMultilabelClassificationModel(OVModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=[],
             scores=pred_scores,
         )
@@ -695,6 +705,7 @@ class OVHlabelClassificationModel(OVModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
+                imgs_infos=inputs.imgs_infos,
                 labels=all_pred_labels,
                 scores=all_pred_scores,
                 saliency_maps=predicted_s_maps,
@@ -704,6 +715,7 @@ class OVHlabelClassificationModel(OVModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=all_pred_labels,
             scores=all_pred_scores,
         )

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import fields
 
+import numpy as np
 import torch
 from torchvision.tv_tensors import BoundingBoxes, Mask
 
@@ -82,13 +83,19 @@ class ValidateItemMixin:
         return scores
 
     @staticmethod
-    def _feature_vector_validator(feature_vector: torch.Tensor) -> torch.Tensor:
-        """Validate the feature vector."""
-        if not isinstance(feature_vector, torch.Tensor):
-            msg = "Feature vector must be a torch tensor"
+    def _feature_vector_validator(feature_vector: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+        """Validate the feature vector.
+
+        Numpy is mixed for this round as it is used in OV Classification.
+        """
+        if not isinstance(feature_vector, (torch.Tensor, np.ndarray)):
+            msg = "Feature vector must be a torch tensor or numpy array"
             raise TypeError(msg)
-        if feature_vector.dtype != torch.float32:
+        if isinstance(feature_vector, torch.Tensor) and feature_vector.dtype != torch.float32:
             msg = "Feature vector must have dtype torch.float32"
+            raise ValueError(msg)
+        if isinstance(feature_vector, np.ndarray) and feature_vector.dtype != np.float32:
+            msg = "Feature vector must have dtype np.float32"
             raise ValueError(msg)
         if feature_vector.ndim != 2:
             msg = "Feature vector must have 2 dimensions"
@@ -101,8 +108,9 @@ class ValidateItemMixin:
         if not isinstance(saliency_map, torch.Tensor):
             msg = "Saliency map must be a torch tensor"
             raise TypeError(msg)
-        if saliency_map.dtype != torch.float32:
-            msg = "Saliency map must have dtype torch.float32"
+        # TODO(ashwinvaidya17): use only one dtype. Kept for OV Classification compatibility
+        if not (saliency_map.dtype.is_floating_point or saliency_map.dtype == torch.uint8):
+            msg = "Saliency map must have dtype torch.float32 or torch.uint8"
             raise ValueError(msg)
         if saliency_map.ndim != 3:
             msg = "Saliency map must have 3 dimensions"
@@ -210,31 +218,55 @@ class ValidateBatchMixin:
         return scores_batch
 
     @staticmethod
-    def _feature_vectors_validator(feature_vector_batch: list[torch.Tensor]) -> list[torch.Tensor]:
-        """Validate the feature vector."""
-        if not isinstance(feature_vector_batch, list) or not isinstance(feature_vector_batch[0], torch.Tensor):
-            msg = f"Feature vector batch must be a list of torch tensors. Got {type(feature_vector_batch)}"
+    def _feature_vectors_validator(
+        feature_vector_batch: list[torch.Tensor | np.ndarray],
+    ) -> list[torch.Tensor | np.ndarray]:
+        """Validate the feature vector.
+
+        Numpy is mixed for this round as it is used in OV Classification.
+        """
+        if not isinstance(feature_vector_batch, list) or not isinstance(
+            feature_vector_batch[0],
+            (torch.Tensor, np.ndarray),
+        ):
+            msg = (
+                "Feature vector batch must be a list of torch tensors or numpy arrays."
+                f" Got {type(feature_vector_batch)}"
+            )
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
-        if feature_vector_batch[0].dtype != torch.float32:
-            msg = "Feature vector must have dtype torch.float32"
+        # TODO(ashwinvaidya17): use only one dtype. Kept for OV Classification compatibility
+        if isinstance(feature_vector_batch[0], torch.Tensor) and not feature_vector_batch[0].dtype.is_floating_point:
+            msg = f"Feature vector must have a floating point dtype. Got {feature_vector_batch[0].dtype}"
             raise ValueError(msg)
-        if feature_vector_batch[0].ndim != 2:
+        if isinstance(feature_vector_batch[0], np.ndarray) and feature_vector_batch[0].dtype.kind != "f":
+            msg = f"Feature vector must have a floating point dtype. Got {feature_vector_batch[0].dtype}"
+            raise ValueError(msg)
+        if isinstance(feature_vector_batch[0], torch.Tensor) and feature_vector_batch[0].ndim != 2:
             msg = "Feature vector must have 2 dimensions"
             raise ValueError(msg)
         return feature_vector_batch
 
     @staticmethod
-    def _saliency_maps_validator(saliency_map_batch: list[torch.Tensor | None]) -> list[torch.Tensor]:
-        """Validate the saliency map batch."""
+    def _saliency_maps_validator(
+        saliency_map_batch: list[torch.Tensor | np.ndarray | None],
+    ) -> list[torch.Tensor | np.ndarray]:
+        """Validate the saliency map batch.
+
+        Numpy is mixed for this round as it is used in OV Classification.
+        """
         if all(saliency_map is None for saliency_map in saliency_map_batch):
             return []
-        if not isinstance(saliency_map_batch, list) or not isinstance(saliency_map_batch[0], torch.Tensor):
+        # TODO(ashwinvaidya17): use only one dtype. Kept for OV Classification compatibility
+        if not isinstance(saliency_map_batch, list) or not isinstance(
+            saliency_map_batch[0],
+            (torch.Tensor, np.ndarray),
+        ):
             msg = f"Saliency map batch must be a list of torch tensors. Got {type(saliency_map_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
-        if saliency_map_batch[0].dtype != torch.float32:
-            msg = "Saliency map batch must have dtype torch.float32"
+        if isinstance(saliency_map_batch[0], torch.Tensor) and not saliency_map_batch[0].dtype.is_floating_point:
+            msg = f"Saliency map must have a floating point dtype. Got {saliency_map_batch[0].dtype}"
             raise ValueError(msg)
         if saliency_map_batch[0].ndim != 3:
             msg = "Saliency map must have 3 dimensions"

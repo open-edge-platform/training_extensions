@@ -111,6 +111,7 @@ class TimmModelForMulticlassCls(OTXMulticlassClsModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
             saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
@@ -201,6 +202,7 @@ class TimmModelForMultilabelCls(OTXMultilabelClsModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
             saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
@@ -291,6 +293,7 @@ class TimmModelForHLabelCls(OTXHlabelClsModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
+            imgs_infos=inputs.imgs_infos,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
             saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
