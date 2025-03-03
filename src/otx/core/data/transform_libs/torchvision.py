@@ -438,8 +438,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                     mask = is_center_of_bboxes_in_patch(boxes, patch)
                     if not mask.any():
                         continue
-                    bboxes = inputs.boxes if isinstance(inputs, TorchDataItem) else getattr(inputs, "bboxes", None)
-                    if bboxes is not None:
+                    if (bboxes := getattr(inputs, "bboxes", None)) is not None:
                         mask = is_center_of_bboxes_in_patch(bboxes, patch)
                         bboxes = bboxes[mask]
                         bboxes = translate_bboxes(bboxes, (-patch[0], -patch[1]))
@@ -450,10 +449,6 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                             format="XYXY",
                             canvas_size=(patch[3] - patch[1], patch[2] - patch[0]),
                         )
-                        if isinstance(inputs, TorchDataItem):
-                            inputs.boxes = bboxes
-                        else:
-                            inputs.bboxes = bboxes  # type: ignore[union-attr]
 
                         # labels
                         if (labels := getattr(inputs, "labels", None)) is not None:
@@ -462,10 +457,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 # adjust the img no matter whether the gt is empty before crop
                 img = img[patch[1] : patch[3], patch[0] : patch[2]]
                 inputs.image = img
-                if isinstance(inputs, TorchDataItem):
-                    inputs.imgs_info = _crop_image_info(inputs.imgs_info, *img.shape[:2])
-                else:
-                    inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])  # type: ignore[union-attr]
+                inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])
                 return self.convert(inputs)
 
     def __repr__(self) -> str:
@@ -549,11 +541,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     def _resize_img(self, inputs: DataItemType) -> tuple[DataItemType, tuple[float, float] | None]:
         """Resize images with inputs.img_info.img_shape."""
-        scale_factor: tuple[float, float] | None = getattr(
-            inputs.imgs_info if isinstance(inputs, TorchDataItem) else inputs.img_info,  # type: ignore[union-attr]
-            "scale_factor",
-            None,
-        )  # (H, W)
+        scale_factor: tuple[float, float] | None = getattr(inputs.img_info, "scale_factor", None)  # (H, W)
         if (img := getattr(inputs, "image", None)) is not None:
             img = to_np_image(img)
             img_shape = get_image_shape(img)
@@ -586,15 +574,14 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             if isinstance(inputs, TorchDataItem):
                 inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
             else:
-                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
+                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
             scale_factor = (scale[0] / img_shape[0], scale[1] / img_shape[1])
         return inputs, scale_factor
 
     def _resize_bboxes(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize bounding boxes with scale_factor only for `Resize`."""
-        bboxes = inputs.boxes if isinstance(inputs, TorchDataItem) else getattr(inputs, "bboxes", None)
-        if bboxes is not None:
+        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
             bboxes = rescale_bboxes(bboxes, scale_factor)
             if self.clip_object_border:
                 bboxes = clip_bboxes(bboxes, inputs.img_info.img_shape)  # type: ignore[union-attr]
@@ -885,10 +872,7 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 ],
             )
             img = self._crop_img(img, bboxes=bboxes)
-            if isinstance(inputs, TorchDataItem):
-                inputs.imgs_info = _crop_image_info(inputs.imgs_info, *img.shape[:2])
-            else:
-                inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])  # type: ignore[union-attr]
+            inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])
             img = cv2.resize(
                 img,
                 tuple(self.scale[::-1]),
@@ -896,13 +880,9 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 interpolation=CV2_INTERP_CODES[self.interpolation],
             )
             inputs.image = img
-            if isinstance(inputs, TorchDataItem):
-                inputs.imgs_info = _resize_image_info(inputs.imgs_info, img.shape[:2])
-            else:
-                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
+            inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
-            masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
-            if self.transform_mask and masks is not None:
+            if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None:
                 masks = to_np_image(masks)
                 masks = self._crop_img(masks, bboxes=bboxes)
                 masks = cv2.resize(
@@ -1155,10 +1135,7 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="XYXY", canvas_size=img_shape)  # type: ignore[union-attr]
 
             # flip masks
-            if isinstance(inputs, TorchDataItem):
-                if inputs.mask is not None:
-                    inputs.mask = flip_image(inputs.mask, direction=cur_dir)
-            elif (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
+            if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
                 masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
                 inputs.masks = np.stack([flip_image(mask, direction=cur_dir) for mask in masks])  # type: ignore[union-attr]
 
@@ -1415,10 +1392,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
         inputs.image = img
-        if isinstance(inputs, TorchDataItem):
-            inputs.imgs_info = _resize_image_info(inputs.imgs_info, img.shape[:2])
-        else:
-            inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])  # type: ignore[union-attr]
+        inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
         bboxes = getattr(inputs, "bboxes", [])
         num_bboxes = len(bboxes) if bboxes is not None else 0
@@ -1669,24 +1643,15 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         inputs.image = mosaic_img
         inputs.img_info = _resized_crop_image_info(
-            inputs.imgs_info if isinstance(inputs, TorchDataItem) else inputs.img_info,  # type: ignore[union-attr]
+            inputs.img_info,
             mosaic_img.shape[:2],
         )  # TODO (sungchul): need to add proper function
-        bboxes = tv_tensors.BoundingBoxes(mosaic_bboxes, format="XYXY", canvas_size=mosaic_img.shape[:2])
-        if isinstance(inputs, TorchDataItem):
-            inputs.boxes = bboxes
-            inputs.label = mosaic_bboxes_labels
-        else:
-            inputs.bboxes = bboxes  # type: ignore[union-attr]
-            inputs.labels = mosaic_bboxes_labels  # type: ignore[union-attr]
+        inputs.bboxes = tv_tensors.BoundingBoxes(mosaic_bboxes, format="XYXY", canvas_size=mosaic_img.shape[:2])
+        inputs.labels = mosaic_bboxes_labels
         if with_mask:
             if len(mosaic_masks) > 0:
-                masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
-                if isinstance(inputs, TorchDataItem):
-                    inputs.mask = masks
-                else:
-                    inputs.masks = masks  # type: ignore[union-attr]
-            if len(mosaic_polygons) > 0 and not isinstance(inputs, TorchDataItem):
+                inputs.masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
+            if len(mosaic_polygons) > 0:
                 inputs.polygons = [
                     polygon for ind, polygon in zip(inside_inds, itertools.chain(*mosaic_polygons)) if ind
                 ]  # type: ignore[union-attr]
@@ -1891,7 +1856,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
             return self.convert(inputs)
 
         retrieve_img: np.ndarray = to_np_image(retrieve_results.image)
-        with_mask = bool(hasattr(inputs, "masks") or hasattr(inputs, "mask") or hasattr(inputs, "polygons"))
+        with_mask = bool(hasattr(inputs, "masks") or hasattr(inputs, "polygons"))
 
         jit_factor = random.uniform(*self.ratio_range)
         is_flip = random.uniform(0, 1) > self.flip_ratio
@@ -1941,9 +1906,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         padded_cropped_img = padded_img[y_offset : y_offset + target_h, x_offset : x_offset + target_w]
 
         # 6. adjust bbox
-        retrieve_gt_bboxes = (
-            retrieve_results.boxes if isinstance(retrieve_results, TorchDataItem) else retrieve_results.bboxes
-        )
+        retrieve_gt_bboxes = retrieve_results.bboxes
         retrieve_gt_bboxes = rescale_bboxes(retrieve_gt_bboxes, (scale_ratio, scale_ratio))
 
         if self.bbox_clip_border:
@@ -1963,44 +1926,26 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         ori_img = ori_img.astype(np.float32)
         mixup_img = 0.5 * ori_img + 0.5 * padded_cropped_img.astype(np.float32)
 
-        retrieve_gt_bboxes_labels = (
-            retrieve_results.label if isinstance(retrieve_results, TorchDataItem) else retrieve_results.labels
-        )
+        retrieve_gt_bboxes_labels = retrieve_results.labels
 
-        if isinstance(inputs, TorchDataItem):
-            mixup_gt_bboxes = torch.cat((inputs.boxes, cp_retrieve_gt_bboxes), dim=0)
-            mixup_gt_bboxes_labels = torch.cat((inputs.label, retrieve_gt_bboxes_labels), dim=0)
-            inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))
-        else:
-            mixup_gt_bboxes = torch.cat((inputs.bboxes, cp_retrieve_gt_bboxes), dim=0)  # type: ignore[union-attr]
-            mixup_gt_bboxes_labels = torch.cat((inputs.labels, retrieve_gt_bboxes_labels), dim=0)  # type: ignore[union-attr]
-            # remove outside bbox
-            inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))
+        mixup_gt_bboxes = torch.cat((inputs.bboxes, cp_retrieve_gt_bboxes), dim=0)
+        mixup_gt_bboxes_labels = torch.cat((inputs.labels, retrieve_gt_bboxes_labels), dim=0)
 
+        # remove outside bbox
+        inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))
         mixup_gt_bboxes = mixup_gt_bboxes[inside_inds]
         mixup_gt_bboxes_labels = mixup_gt_bboxes_labels[inside_inds]
 
         inputs.image = mixup_img.astype(np.uint8)
-        img_info = _resized_crop_image_info(
+        inputs.img_info = _resized_crop_image_info(
             inputs.img_info,
             mixup_img.shape[:2],
         )  # TODO (sungchul): need to add proper function
-        bboxes = tv_tensors.BoundingBoxes(mixup_gt_bboxes, format="XYXY", canvas_size=mixup_img.shape[:2])
-        if isinstance(inputs, TorchDataItem):
-            inputs.imgs_info = img_info
-            inputs.boxes = bboxes
-            inputs.label = mixup_gt_bboxes_labels
-        else:
-            inputs.img_info = img_info  # type: ignore[union-attr]
-            inputs.bboxes = bboxes  # type: ignore[union-attr]
-            inputs.labels = mixup_gt_bboxes_labels  # type: ignore[union-attr]
+        inputs.bboxes = tv_tensors.BoundingBoxes(mixup_gt_bboxes, format="XYXY", canvas_size=mixup_img.shape[:2])
+        inputs.labels = mixup_gt_bboxes_labels
         if with_mask:
             inside_inds = inside_inds.numpy()
-            if isinstance(inputs, TorchDataItem):
-                masks = retrieve_results.mask
-            else:
-                masks = getattr(retrieve_results, "masks", None)
-            if masks is not None and len(masks) > 0:
+            if (masks := getattr(retrieve_results, "masks", None)) is not None and len(masks) > 0:
                 masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
 
                 # 6. adjust bbox
@@ -2026,10 +1971,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs_masks = inputs.masks.numpy() if not isinstance(inputs.masks, np.ndarray) else inputs.masks
                 mixup_gt_masks = np.concatenate([inputs_masks, retrieve_gt_masks])
 
-                if isinstance(inputs, TorchDataItem):
-                    inputs.mask = mixup_gt_masks[inside_inds]
-                else:
-                    inputs.masks = mixup_gt_masks[inside_inds]  # type: ignore[union-attr]
+                inputs.masks = mixup_gt_masks[inside_inds]
 
             if (polygons := getattr(retrieve_results, "polygons", None)) is not None and len(polygons) > 0:
                 # 6. adjust bbox
@@ -2055,8 +1997,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
                 # 8. mix up
                 mixup_gt_polygons = list(itertools.chain(*[inputs.polygons, retrieve_gt_polygons]))
 
-                if not isinstance(inputs, TorchDataItem):
-                    inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
+                inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
 
         return self.convert(inputs)
 
@@ -2260,10 +2201,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
         )
 
         inputs.image = padded_img
-        if isinstance(inputs, TorchDataItem):
-            inputs.imgs_info = _pad_image_info(inputs.imgs_info, padding)
-        else:
-            inputs.img_info = _pad_image_info(inputs.img_info, padding)  # type: ignore[union-attr]
+        inputs.img_info = _pad_image_info(inputs.img_info, padding)
         return inputs
 
     @typing.no_type_check  # TODO(ashwinvaidya17): temporary
@@ -2276,8 +2214,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
     @typing.no_type_check  # TODO(ashwinvaidya17): temporary
     def _pad_masks(self, inputs: DataItemType) -> DataItemType:
         """Pad masks according to inputs.image_info.padding."""
-        masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
-        if masks is not None and len(masks) > 0:
+        if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
 
             pad_val = self.pad_val.get("mask", 0)
@@ -2298,10 +2235,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
                 ],
             )
 
-            if isinstance(inputs, TorchDataItem):
-                inputs.mask = padded_masks
-            else:
-                inputs.masks = padded_masks
+            inputs.masks = padded_masks
 
         return inputs
 
@@ -2526,7 +2460,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         assert crop_size[1] > 0  # noqa: S101
 
         img: np.ndarray = to_np_image(inputs.image)
-        orig_shape = inputs.imgs_info.img_shape if isinstance(inputs, TorchDataItem) else inputs.img_info.img_shape  # type: ignore[union-attr]
+        orig_shape = inputs.img_info.img_shape
         crop_bbox, offset_h, offset_w = self._generate_crop_bbox(orig_shape, crop_size)
 
         # for semantic segmentation
@@ -2554,8 +2488,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         valid_inds: np.ndarray = np.array([1])  # for semantic segmentation
         # crop bboxes accordingly and clip to the image boundary
-        bboxes = inputs.boxes if isinstance(inputs, TorchDataItem) else getattr(inputs, "bboxes", None)
-        if bboxes is not None:
+        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
             bboxes = translate_bboxes(bboxes, [-offset_w, -offset_h])
             if self.bbox_clip_border:
                 bboxes = clip_bboxes(bboxes, cropped_img_shape)
@@ -2566,40 +2499,23 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
             if not valid_inds.any() and not allow_negative_crop:
                 return None
 
-            bboxes = tv_tensors.BoundingBoxes(bboxes[valid_inds], format="XYXY", canvas_size=cropped_img_shape)
-            if isinstance(inputs, TorchDataItem):
-                inputs.boxes = bboxes
-            else:
-                inputs.bboxes = bboxes
+            inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_inds], format="XYXY", canvas_size=cropped_img_shape)
 
-            labels = inputs.label if isinstance(inputs, TorchDataItem) else getattr(inputs, "labels", None)
-            if labels is not None:
-                if isinstance(inputs, TorchDataItem):
-                    inputs.label = labels[valid_inds]
-                else:
-                    inputs.labels = labels[valid_inds]  # type: ignore[union-attr]
+            if (labels := getattr(inputs, "labels", None)) is not None:
+                inputs.labels = labels[valid_inds]
 
-        masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
-        if masks is not None and len(masks) > 0:
+        if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
-            cropped_masks = crop_masks(
+            inputs.masks = crop_masks(
                 masks[valid_inds.nonzero()[0]],
                 np.asarray([crop_x1, crop_y1, crop_x2, crop_y2]),
             )
-            if isinstance(inputs, TorchDataItem):
-                inputs.mask = cropped_masks
-            else:
-                inputs.masks = cropped_masks  # type: ignore[union-attr]
 
             if self.recompute_bbox:
-                bboxes = tv_tensors.wrap(
+                inputs.bboxes = tv_tensors.wrap(
                     torch.as_tensor(get_bboxes_from_masks(inputs.masks)),
-                    like=inputs.boxes if isinstance(inputs, TorchDataItem) else inputs.bboxes,
+                    like=inputs.bboxes,
                 )
-                if isinstance(inputs, TorchDataItem):
-                    inputs.boxes = bboxes
-                else:
-                    inputs.bboxes = bboxes
 
         if (polygons := getattr(inputs, "polygons", None)) is not None and len(polygons) > 0:
             inputs.polygons = crop_polygons(
@@ -2732,14 +2648,8 @@ class FilterAnnotations(tvt_v2.Transform, NumpytoTVTensorMixin):
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
 
-        if isinstance(inputs, TorchDataItem):
-            bboxes = inputs.boxes
-            if bboxes is None:
-                msg = "boxes is None"
-                raise ValueError(msg)
-        else:
-            assert hasattr(inputs, "bboxes")  # noqa: S101
-            bboxes = inputs.bboxes
+        assert hasattr(inputs, "bboxes")  # noqa: S101
+        bboxes = inputs.bboxes
         if bboxes.shape[0] == 0:
             return self.convert(inputs)
 
@@ -2749,15 +2659,8 @@ class FilterAnnotations(tvt_v2.Transform, NumpytoTVTensorMixin):
             heights = bboxes[..., 3] - bboxes[..., 1]
             tests.append(((widths > self.min_gt_bbox_wh[0]) & (heights > self.min_gt_bbox_wh[1])).numpy())
         if self.by_mask:
-            if isinstance(inputs, TorchDataItem):
-                masks = inputs.mask
-            else:
-                assert hasattr(inputs, "masks")  # noqa: S101
-                masks = inputs.masks
-            if masks is None:
-                msg = "masks is None"
-                raise ValueError(msg)
-            areas = masks.sum((1, 2))
+            assert hasattr(inputs, "masks")  # noqa: S101
+            areas = inputs.masks.sum((1, 2))
             tests.append(areas >= self.min_gt_mask_area)
         if self.by_polygon:
             areas = []
@@ -2841,10 +2744,6 @@ class FormatShape(tvt_v2.Transform):
         """Perform the SampleFrames loading."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
-
-        if isinstance(inputs, TorchDataItem):
-            # TODO(ashwinvaidya17): Add support for TorchDataItem
-            return inputs
 
         if not isinstance(inputs.image, np.ndarray):
             inputs.image = np.array(inputs.image)
@@ -3116,10 +3015,6 @@ class SampleFrames(tvt_v2.Transform):
         """Perform the SampleFrames loading."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
-
-        if isinstance(inputs, TorchDataItem):
-            # TODO(ashwinvaidya17): Add support for TorchDataItem
-            return inputs
 
         total_frames = inputs.video_info.num_frames
         # if can't get fps, same value of `fps` and `target_fps`

@@ -140,11 +140,11 @@ def _get_pred_result_multiclass(pred_labels, pred_scores) -> TorchPredBatch:
     return TorchPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
-        imgs_infos=IMGS_INFO,
+        imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
-        saliency_maps=SALIENCY_MAPS,
-        feature_vectors=None,
+        saliency_map=SALIENCY_MAPS,
+        feature_vector=None,
     )
 
 
@@ -152,11 +152,11 @@ def _get_pred_result_multilabel(pred_labels, pred_scores) -> TorchPredBatch:
     return TorchPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
-        imgs_infos=IMGS_INFO,
+        imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
-        saliency_maps=SALIENCY_MAPS,
-        feature_vectors=None,
+        saliency_map=SALIENCY_MAPS,
+        feature_vector=None,
     )
 
 
@@ -164,11 +164,11 @@ def _get_pred_result_hcls(pred_labels, pred_scores) -> TorchPredBatch:
     return TorchPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
-        imgs_infos=IMGS_INFO,
+        imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
-        saliency_maps=SALIENCY_MAPS,
-        feature_vectors=None,
+        saliency_map=SALIENCY_MAPS,
+        feature_vector=None,
     )
 
 
@@ -187,9 +187,9 @@ def test_process_saliency_maps_in_pred_entity_multiclass(fxt_multiclass_labelinf
     )
 
     for i in range(len(predict_result)):
-        assert isinstance(predict_result[i].saliency_maps, list)
-        assert isinstance(predict_result[i].saliency_maps[0], dict)
-        processed_saliency_maps = predict_result[i].saliency_maps
+        assert isinstance(predict_result[i].saliency_map, list)
+        assert isinstance(predict_result[i].saliency_map[0], dict)
+        processed_saliency_maps = predict_result[i].saliency_map
         assert all(len(s_map_dict) == 1 for s_map_dict in processed_saliency_maps)
 
 
@@ -208,9 +208,9 @@ def test_process_saliency_maps_in_pred_entity_multilabel(fxt_multilabel_labelinf
     )
 
     for i in range(len(predict_result)):
-        assert isinstance(predict_result[i].saliency_maps, list)
-        assert isinstance(predict_result[i].saliency_maps[0], dict)
-        processed_saliency_maps = predict_result[i].saliency_maps
+        assert isinstance(predict_result[i].saliency_map, list)
+        assert isinstance(predict_result[i].saliency_map[0], dict)
+        processed_saliency_maps = predict_result[i].saliency_map
         assert all(len(s_map_dict) == len(PRED_LABELS[i]) for (i, s_map_dict) in enumerate(processed_saliency_maps))
 
 
@@ -229,8 +229,8 @@ def test_process_saliency_maps_in_pred_entity_hcls(fxt_hlabel_multilabel_info) -
     )
 
     for i in range(len(predict_result)):
-        assert isinstance(predict_result[i].saliency_maps, list)
-        assert isinstance(predict_result[i].saliency_maps[0], dict)
+        assert isinstance(predict_result[i].saliency_map, list)
+        assert isinstance(predict_result[i].saliency_map[0], dict)
 
 
 def test_process_crop_padded_map() -> None:

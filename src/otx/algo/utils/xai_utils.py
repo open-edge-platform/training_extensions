@@ -74,7 +74,7 @@ def process_saliency_maps_in_pred_entity(
                 pred_labels.append(labels_list)
 
         processed_saliency_maps = process_saliency_maps(
-            saliency_maps,
+            saliency_map,
             explain_config,
             pred_labels,
             ori_img_shapes,

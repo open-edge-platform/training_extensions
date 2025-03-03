@@ -166,7 +166,7 @@ class MobileNetV3ForMultilabelCls(OTXMultilabelClsModel):
         return {
             "images": inputs.images,
             "labels": torch.stack(inputs.labels),
-            "imgs_info": inputs.imgs_infos,
+            "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
 
@@ -269,7 +269,7 @@ class MobileNetV3ForHLabelCls(OTXHlabelClsModel):
         return {
             "images": inputs.images,
             "labels": torch.stack(inputs.labels),
-            "imgs_info": inputs.imgs_infos,
+            "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
 
