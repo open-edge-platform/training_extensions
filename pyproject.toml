@@ -114,12 +114,12 @@ ci_publish = [
 
 ci_benchmark = [
     "pandas<2.3",       # To avoid conflict with nncf==2.9.0
-    "matplotlib==3.10.0",
+    "matplotlib==3.10.1",
     "nbconvert==7.16.6",
     "ipython==8.32.0",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
-    "mlflow==2.20.2",
+    "mlflow==2.20.3",
     "py-cpuinfo==9.0.0",
 ]
 
