@@ -21,7 +21,6 @@ otx.algo.detection.losses
       DetrCriterion
       RTMDetCriterion
       SSDCriterion
-      YOLOv9Criterion
       YOLOXCriterion
       DFINECriterion
    

@@ -262,8 +262,6 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/semi_supervised_learning.html">Use Semi-Supervised Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/huggingface_model.html">Training with Hugging Face pretrained vision models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
@@ -363,10 +361,8 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.cli.install.html">otx.cli.install</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.installation.html">otx.cli.utils.installation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
 </ul>
@@ -411,7 +407,6 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.html">otx.core.utils</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-25"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.build.html">otx.core.utils.build</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.cache.html">otx.core.utils.cache</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.config.html">otx.core.utils.config</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.imports.html">otx.core.utils.imports</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.instantiators.html">otx.core.utils.instantiators</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.mask_util.html">otx.core.utils.mask_util</a></li>
@@ -508,58 +503,27 @@ git<span class="w"> </span>clone<span class="w"> </span>https://github.com/openv
 python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.otx
 <span class="nb">source</span><span class="w"> </span>.otx/bin/activate
 
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>base<span class="o">]</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>2. Install PyTorch &amp; Requirements for training
-according to your system environment.</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-2">
-Minimum requirements</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;.[base]&#39;</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Models from mmlab are not available for this environment. If you want to use mmlab models, you must install them with Full Requirements.
-Also, some tasks may not be supported by minimum requirements.</p>
-</div>
-</div>
-<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-3">
-Full Requirements</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>otx<span class="w"> </span>install<span class="w"> </span>-v<span class="w"> </span>--option<span class="w"> </span>full
-</pre></div>
-</div>
-</div>
-</div>
-<p>[Optional] Refer to the <a class="reference external" href="https://pytorch.org/get-started/previous-versions/">torch official installation guide</a></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Currently, only torch==2.2 was fully validated. (older versions are not supported due to security issues).</p>
-</div>
-<p>3. Once the package is installed in the virtual environment, you can use full
+<p>2. Once the package is installed in the virtual environment, you can use full
 OpenVINO™ Training Extensions command line functionality.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>otx<span class="w"> </span>--help
+</pre></div>
+</div>
 </section>
 <section id="install-openvino-training-extensions-for-users-xpu-devices">
 <h2>Install OpenVINO™ Training Extensions for users (XPU devices)<a class="headerlink" href="#install-openvino-training-extensions-for-users-xpu-devices" title="Link to this heading">#</a></h2>
 <p>1. Install OpenVINO™ Training Extensions
 from source to use XPU functionality.</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-4">
-Minimum requirements</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the training_extensions repository with the following command:</span>
 git<span class="w"> </span>clone<span class="w"> </span>https://github.com/openvinotoolkit/training_extensions.git
 <span class="nb">cd</span><span class="w"> </span>training_extensions
 
 pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;.[base]&#39;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/test/xpu
 </pre></div>
-</div>
-</div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -608,7 +572,7 @@ otx<span class="w">                                           </span><span class
 <h2>Run tests<a class="headerlink" href="#run-tests" title="Link to this heading">#</a></h2>
 <p>To run some tests, need to have development environment on your host. The development requirements file (requirements/dev.txt)
 would be used to setup them.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>otx<span class="w"> </span>install<span class="w"> </span>--option<span class="w"> </span>dev
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;.[dev]&#39;</span>
 $<span class="w"> </span>pytest<span class="w"> </span>tests/
 </pre></div>
 </div>

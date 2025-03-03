@@ -262,8 +262,6 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/semi_supervised_learning.html">Use Semi-Supervised Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/huggingface_model.html">Training with Hugging Face pretrained vision models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
@@ -363,10 +361,8 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.cli.install.html">otx.cli.install</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.installation.html">otx.cli.utils.installation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
 </ul>
@@ -411,7 +407,6 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.core.utils.html">otx.core.utils</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-25"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.build.html">otx.core.utils.build</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.cache.html">otx.core.utils.cache</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.utils.config.html">otx.core.utils.config</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.imports.html">otx.core.utils.imports</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.instantiators.html">otx.core.utils.instantiators</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.mask_util.html">otx.core.utils.mask_util</a></li>
@@ -490,13 +485,10 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.losses.SSDCriterion" title="otx.algo.detection.losses.SSDCriterion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SSDCriterion</span></code></a>(num_classes[, bbox_coder, ...])</p></td>
 <td><p>SSDCriterion is a loss criterion for Single Shot MultiBox Detector (SSD).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.losses.YOLOv9Criterion" title="otx.algo.detection.losses.YOLOv9Criterion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">YOLOv9Criterion</span></code></a>(num_classes, vec2box[, ...])</p></td>
-<td><p>YOLOv9 criterion module.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.losses.YOLOXCriterion" title="otx.algo.detection.losses.YOLOXCriterion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">YOLOXCriterion</span></code></a>(num_classes[, loss_cls, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.losses.YOLOXCriterion" title="otx.algo.detection.losses.YOLOXCriterion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">YOLOXCriterion</span></code></a>(num_classes[, loss_cls, ...])</p></td>
 <td><p>YOLOX criterion module.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.detection.losses.DFINECriterion" title="otx.algo.detection.losses.DFINECriterion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFINECriterion</span></code></a>(weight_dict[, alpha, gamma, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.algo.detection.losses.DFINECriterion" title="otx.algo.detection.losses.DFINECriterion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFINECriterion</span></code></a>(weight_dict[, alpha, gamma, ...])</p></td>
 <td><p>D-Fine criterion with FGL and DDF losses.</p></td>
 </tr>
 </tbody>
@@ -984,63 +976,6 @@ has components below:</p>
 
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="otx.algo.detection.losses.YOLOv9Criterion">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.detection.losses.</span></span><span class="sig-name descname"><span class="pre">YOLOv9Criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vec2box</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vec2Box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_dfl</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_iou</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfl_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">7.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/detection/losses/yolov9_loss.html#YOLOv9Criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.detection.losses.YOLOv9Criterion" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>YOLOv9 criterion module.</p>
-<p>This module calculates the loss for YOLOv9 object detection model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The number of classes.</p></li>
-<li><p><strong>vec2box</strong> (<em>Vec2Box</em>) – The Vec2Box object.</p></li>
-<li><p><strong>loss_cls</strong> (<em>nn.Module</em><em> | </em><em>None</em>) – The classification loss module. Defaults to None.</p></li>
-<li><p><strong>loss_dfl</strong> (<em>nn.Module</em><em> | </em><em>None</em>) – The DFLoss loss module. Defaults to None.</p></li>
-<li><p><strong>loss_iou</strong> (<em>nn.Module</em><em> | </em><em>None</em>) – The IoULoss loss module. Defaults to None.</p></li>
-<li><p><strong>reg_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Maximum number of anchor regions. Defaults to 16.</p></li>
-<li><p><strong>cls_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The classification loss rate. Defaults to 1.5.</p></li>
-<li><p><strong>dfl_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The DFLoss loss rate. Defaults to 7.5.</p></li>
-<li><p><strong>iou_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The IoU loss rate. Defaults to 0.5.</p></li>
-<li><p><strong>aux_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – The auxiliary loss rate. Defaults to 0.25.</p></li>
-</ul>
-</dd>
-</dl>
-<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.detection.losses.YOLOv9Criterion.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_preds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aux_preds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/algo/detection/losses/yolov9_loss.html#YOLOv9Criterion.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.detection.losses.YOLOv9Criterion.forward" title="Link to this definition">#</a></dt>
-<dd><p>Forward pass of the YOLOv9 criterion module.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>main_preds</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><em>Tensor</em><em>, </em><em>Tensor</em><em>, </em><em>Tensor</em><em>]</em>) – The main predictions.</p></li>
-<li><p><strong>targets</strong> (<em>Tensor</em>) – The learning target of the prediction.</p></li>
-<li><p><strong>aux_preds</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><em>Tensor</em><em>, </em><em>Tensor</em><em>, </em><em>Tensor</em><em>]</em><em>, </em><em>optional</em>) – The auxiliary predictions. Defaults to None.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The loss dictionary.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, Tensor]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.detection.losses.YOLOv9Criterion.separate_anchor">
-<span class="sig-name descname"><span class="pre">separate_anchor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/algo/detection/losses/yolov9_loss.html#YOLOv9Criterion.separate_anchor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.detection.losses.YOLOv9Criterion.separate_anchor" title="Link to this definition">#</a></dt>
-<dd><p>Separate anchor and bounding box.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>anchors</strong> (<em>Tensor</em>) – The anchor tensor.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 
 
@@ -1276,35 +1211,6 @@ has components below:</p>
      <code class="docutils literal notranslate">
       <span class="pre">
        YOLOXCriterion.forward()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.algo.detection.losses.YOLOv9Criterion">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     YOLOv9Criterion
-    </span>
-   </code>
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.detection.losses.YOLOv9Criterion.forward">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       YOLOv9Criterion.forward()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.detection.losses.YOLOv9Criterion.separate_anchor">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       YOLOv9Criterion.separate_anchor()
       </span>
      </code>
     </a>

@@ -34,7 +34,6 @@ otx.cli.utils
    :recursive:
 
    otx.cli.utils.help_formatter
-   otx.cli.utils.installation
    otx.cli.utils.jsonargparse
    otx.cli.utils.workspace
 

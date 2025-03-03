@@ -262,8 +262,6 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/semi_supervised_learning.html">Use Semi-Supervised Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/huggingface_model.html">Training with Hugging Face pretrained vision models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
@@ -363,10 +361,8 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.cli.install.html">otx.cli.install</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.installation.html">otx.cli.utils.installation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
 </ul>
@@ -411,7 +407,6 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.html">otx.core.utils</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-25"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.build.html">otx.core.utils.build</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.cache.html">otx.core.utils.cache</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.config.html">otx.core.utils.config</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.imports.html">otx.core.utils.imports</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.instantiators.html">otx.core.utils.instantiators</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.core.utils.mask_util.html">otx.core.utils.mask_util</a></li>
@@ -495,7 +490,7 @@ Please refer <a class="reference external" href="https://jsonargparse.readthedoc
 <p><code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">--help</span></code> show available sub-commands.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>--help
 ╭─<span class="w"> </span>Arguments<span class="w"> </span>─────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│<span class="w"> </span>Usage:<span class="w"> </span>otx<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">{</span>install,find,train,test,predict,export,optimize,explain<span class="o">}</span><span class="w"> </span>...<span class="w">                              </span>│
+│<span class="w"> </span>Usage:<span class="w"> </span>otx<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">{</span>find,train,test,predict,export,optimize,explain<span class="o">}</span><span class="w"> </span>...<span class="w">                              </span>│
 │<span class="w">                                                                                                                 </span>│
 │<span class="w">                                                                                                                 </span>│
 │<span class="w"> </span>OpenVINO<span class="w"> </span>Training-Extension<span class="w"> </span><span class="nb">command</span><span class="w"> </span>line<span class="w"> </span>tool<span class="w">                                                                   </span>│
@@ -510,7 +505,6 @@ Please refer <a class="reference external" href="https://jsonargparse.readthedoc
 │<span class="w">                                                                                                                 </span>│
 │<span class="w">                                                                                                                 </span>│
 │<span class="w">   </span>Available<span class="w"> </span>subcommands:<span class="w">                                                                                        </span>│
-│<span class="w">     </span>install<span class="w">             </span>Install<span class="w"> </span>OTX<span class="w"> </span>requirements.<span class="w">                                                               </span>│
 │<span class="w">     </span>find<span class="w">                </span>This<span class="w"> </span>shows<span class="w"> </span>the<span class="w"> </span>model<span class="w"> </span>provided<span class="w"> </span>by<span class="w"> </span>OTX.<span class="w">                                                   </span>│
 │<span class="w">     </span>train<span class="w">               </span>Trains<span class="w"> </span>the<span class="w"> </span>model<span class="w"> </span>using<span class="w"> </span>the<span class="w"> </span>provided<span class="w"> </span>LightningModule<span class="w"> </span>and<span class="w"> </span>OTXDataModule.<span class="w">                  </span>│
 │<span class="w">     </span><span class="nb">test</span><span class="w">                </span>Run<span class="w"> </span>the<span class="w"> </span>testing<span class="w"> </span>phase<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>engine.<span class="w">                                                    </span>│
@@ -522,10 +516,6 @@ Please refer <a class="reference external" href="https://jsonargparse.readthedoc
 │<span class="w">                                                                                                                 </span>│
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 </pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>After installing the package, if torch is not installed properly, this will only show the <code class="docutils literal notranslate"><span class="pre">install</span></code> subcommand. You can refer to this <a class="reference internal" href="installation.html"><span class="doc">installation section</span></a>.</p>
 </div>
 <p>The subcommand can get help output in the following way.
 For basic subcommand help, the Verbosity Level is 0. In this case, the CLI provides a Quick-Guide in markdown.</p>

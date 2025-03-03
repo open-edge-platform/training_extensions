@@ -29,7 +29,6 @@ otx.core.utils
 
    otx.core.utils.build
    otx.core.utils.cache
-   otx.core.utils.config
    otx.core.utils.imports
    otx.core.utils.instantiators
    otx.core.utils.mask_util

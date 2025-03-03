@@ -570,10 +570,6 @@
         <span class="k">return</span> <span class="n">parser_kwargs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_extension_subcommands_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_subcommands</span><span class="p">:</span> <span class="n">_ActionSubCommands</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.cli.install</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_install_parser</span>
-
-        <span class="n">add_install_parser</span><span class="p">(</span><span class="n">parser_subcommands</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">_ENGINE_AVAILABLE</span><span class="p">:</span>
             <span class="c1"># `otx find` arguments</span>
             <span class="n">find_parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">formatter_class</span><span class="o">=</span><span class="n">CustomHelpFormatter</span><span class="p">)</span>
@@ -824,11 +820,7 @@
 <span class="sd">            ValueError: If the subcommand is not recognized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[blue]</span><span class="si">{</span><span class="n">OTX_LOGO</span><span class="si">}</span><span class="s2">[/blue] ver.</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span> <span class="o">==</span> <span class="s2">&quot;install&quot;</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">otx.cli.install</span><span class="w"> </span><span class="kn">import</span> <span class="n">otx_install</span>
-
-            <span class="n">otx_install</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;install&quot;</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span> <span class="o">==</span> <span class="s2">&quot;find&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span> <span class="o">==</span> <span class="s2">&quot;find&quot;</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
 
             <span class="n">list_models</span><span class="p">(</span><span class="n">print_table</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="p">])</span>

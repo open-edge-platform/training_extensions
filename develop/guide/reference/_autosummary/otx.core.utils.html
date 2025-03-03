@@ -262,8 +262,6 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/semi_supervised_learning.html">Use Semi-Supervised Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/huggingface_model.html">Training with Hugging Face pretrained vision models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
@@ -363,10 +361,8 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.cli.install.html">otx.cli.install</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.installation.html">otx.cli.utils.installation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
 </ul>
@@ -411,7 +407,6 @@
 <li class="toctree-l4 current active has-children"><a class="current reference internal" href="#">otx.core.utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-25"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.build.html">otx.core.utils.build</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.cache.html">otx.core.utils.cache</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.utils.config.html">otx.core.utils.config</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.imports.html">otx.core.utils.imports</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.instantiators.html">otx.core.utils.instantiators</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.utils.mask_util.html">otx.core.utils.mask_util</a></li>
@@ -484,28 +479,25 @@
 <tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.cache.html#module-otx.core.utils.cache" title="otx.core.utils.cache"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.cache</span></code></a></p></td>
 <td><p>Cache Class for Trainer kwargs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.config.html#module-otx.core.utils.config" title="otx.core.utils.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.config</span></code></a></p></td>
-<td><p>Utility functions for config files.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.imports.html#module-otx.core.utils.imports" title="otx.core.utils.imports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.imports</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.imports.html#module-otx.core.utils.imports" title="otx.core.utils.imports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.imports</span></code></a></p></td>
 <td><p>Module for utility functions in OTX.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.instantiators.html#module-otx.core.utils.instantiators" title="otx.core.utils.instantiators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.instantiators</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.instantiators.html#module-otx.core.utils.instantiators" title="otx.core.utils.instantiators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.instantiators</span></code></a></p></td>
 <td><p>Instantiator functions for OTX engine components.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.mask_util.html#module-otx.core.utils.mask_util" title="otx.core.utils.mask_util"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.mask_util</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.mask_util.html#module-otx.core.utils.mask_util" title="otx.core.utils.mask_util"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.mask_util</span></code></a></p></td>
 <td><p>Utility functions for mask operations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.miscellaneous.html#module-otx.core.utils.miscellaneous" title="otx.core.utils.miscellaneous"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.miscellaneous</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.miscellaneous.html#module-otx.core.utils.miscellaneous" title="otx.core.utils.miscellaneous"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.miscellaneous</span></code></a></p></td>
 <td><p>A collection of miscellaneous utility functions.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.pylogger.html#module-otx.core.utils.pylogger" title="otx.core.utils.pylogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.pylogger</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.pylogger.html#module-otx.core.utils.pylogger" title="otx.core.utils.pylogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.pylogger</span></code></a></p></td>
 <td><p>Pylogger for OTX logger.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.tile_merge.html#module-otx.core.utils.tile_merge" title="otx.core.utils.tile_merge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.tile_merge</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.tile_merge.html#module-otx.core.utils.tile_merge" title="otx.core.utils.tile_merge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.tile_merge</span></code></a></p></td>
 <td><p>OTX tile merge module.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.core.utils.utils.html#module-otx.core.utils.utils" title="otx.core.utils.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.utils</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.utils.utils.html#module-otx.core.utils.utils" title="otx.core.utils.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.utils.utils</span></code></a></p></td>
 <td><p>Utility functions.</p></td>
 </tr>
 </tbody>

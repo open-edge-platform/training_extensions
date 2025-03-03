@@ -18,7 +18,6 @@ otx.algo.detection.backbones
    .. autosummary::
    
       CSPDarknet
-      GELAN
       PResNet
    
    
