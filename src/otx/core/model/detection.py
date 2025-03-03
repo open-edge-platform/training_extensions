@@ -630,8 +630,8 @@ class OVDetectionModel(OVModel):
                     device=self.device,
                 ),
             )
-            scores.append(torch.tensor(output.scores, device=self.device))
-            labels.append(torch.tensor(output.labels - label_shift, device=self.device))
+            scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
+            labels.append(torch.tensor(output.labels.reshape(-1) - label_shift, device=self.device))
 
         if outputs and outputs[0].saliency_map.size > 1:
             # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)

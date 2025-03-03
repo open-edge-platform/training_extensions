@@ -664,9 +664,9 @@ class OVInstanceSegmentationModel(
             )
             # NOTE: OTX 1.5 filter predictions with result_based_confidence_threshold,
             # but OTX 2.0 doesn't have it in configuration.
-            scores.append(torch.tensor(output.scores, device=self.device))
+            scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
             masks.append(torch.tensor(output.masks, device=self.device))
-            labels.append(torch.tensor(output.labels - 1, device=self.device))
+            labels.append(torch.tensor(output.labels.reshape(-1) - 1, device=self.device))
 
         if outputs and outputs[0].saliency_map:
             predicted_s_maps = []
