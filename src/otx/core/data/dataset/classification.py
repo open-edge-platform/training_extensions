@@ -51,7 +51,7 @@ class OTXMulticlassClsDataset(OTXDataset):
         entity = TorchDataItem(
             image=image,
             label=torch.as_tensor(label_anns, dtype=torch.long),
-            imgs_info=ImageInfo(
+            img_info=ImageInfo(
                 img_idx=index,
                 img_shape=image.shape[1:],
                 ori_shape=img_shape,
@@ -99,7 +99,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         entity = TorchDataItem(
             image=img_data,
             label=self._convert_to_onehot(labels, ignored_labels),
-            imgs_info=ImageInfo(
+            img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
                 ori_shape=img_shape,
@@ -232,7 +232,7 @@ class OTXHlabelClsDataset(OTXDataset):
         entity = TorchDataItem(
             image=img_data,
             label=torch.as_tensor(hlabel_labels),
-            imgs_info=ImageInfo(
+            img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
                 ori_shape=img_shape,

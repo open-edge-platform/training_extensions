@@ -158,13 +158,13 @@ def fxt_multi_class_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, To
     batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=fake_images,
-        imgs_infos=[fake_image_info],
+        imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
     batch_pred_data_entity = TorchPredBatch(
         batch_size=1,
         images=fake_images,
-        imgs_infos=[fake_image_info],
+        imgs_info=[fake_image_info],
         labels=[fake_labels],
         scores=[fake_score],
     )
@@ -184,13 +184,13 @@ def fxt_multi_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, To
     batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=fake_images,
-        imgs_infos=[fake_image_info],
+        imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
     batch_pred_data_entity = TorchPredBatch(
         batch_size=1,
         images=fake_images,
-        imgs_infos=[fake_image_info],
+        imgs_info=[fake_image_info],
         labels=[fake_labels],
         scores=[fake_score],
     )
@@ -210,13 +210,13 @@ def fxt_h_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchP
     batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=fake_images,
-        imgs_infos=[fake_image_info],
+        imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
     batch_pred_data_entity = TorchPredBatch(
         batch_size=1,
         images=fake_images,
-        imgs_infos=[fake_image_info],
+        imgs_info=[fake_image_info],
         labels=[fake_labels],
         scores=[fake_score],
     )

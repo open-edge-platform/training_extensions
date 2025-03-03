@@ -101,6 +101,6 @@ class TestOTXTVModel:
         assert isinstance(outputs, TorchPredBatch)
         assert outputs.has_xai_outputs == explain_mode
         if explain_mode:
-            assert outputs.feature_vectors[0].ndim == 2
-            assert outputs.saliency_maps[0].ndim == 3
-            assert outputs.saliency_maps[0].shape[-2:] != torch.Size([1, 1])
+            assert outputs.feature_vector[0].ndim == 2
+            assert outputs.saliency_map[0].ndim == 3
+            assert outputs.saliency_map[0].shape[-2:] != torch.Size([1, 1])

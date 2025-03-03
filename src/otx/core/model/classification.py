@@ -105,11 +105,11 @@ class OTXMulticlassClsModel(OTXModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
-                imgs_infos=inputs.imgs_infos,
+                imgs_info=inputs.imgs_info,
                 labels=list(outputs["labels"]),
                 scores=list(outputs["scores"]),
-                saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-                feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
 
         # To list, batch-wise
@@ -120,7 +120,7 @@ class OTXMulticlassClsModel(OTXModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=list(preds),
             scores=list(scores),
         )
@@ -252,11 +252,11 @@ class OTXMultilabelClsModel(OTXModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
-                imgs_infos=inputs.imgs_infos,
+                imgs_info=inputs.imgs_info,
                 labels=list(outputs["labels"]),
                 scores=list(outputs["scores"]),
-                saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-                feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
 
         # To list, batch-wise
@@ -266,7 +266,7 @@ class OTXMultilabelClsModel(OTXModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=list(logits.argmax(-1, keepdim=True).unbind(0)),
             scores=list(scores),
         )
@@ -403,17 +403,17 @@ class OTXHlabelClsModel(OTXModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
-                imgs_infos=inputs.imgs_infos,
+                imgs_info=inputs.imgs_info,
                 labels=list(labels),
                 scores=list(scores),
-                saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-                feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
 
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=list(labels),
             scores=list(scores),
         )
@@ -531,17 +531,17 @@ class OVMulticlassClassificationModel(
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
-                imgs_infos=inputs.imgs_infos,
+                imgs_info=inputs.imgs_info,
                 labels=pred_labels,
                 scores=pred_scores,
-                saliency_maps=predicted_s_maps,
-                feature_vectors=predicted_f_vectors,
+                saliency_map=predicted_s_maps,
+                feature_vector=predicted_f_vectors,
             )
 
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=pred_labels,
             scores=pred_scores,
         )
@@ -607,17 +607,17 @@ class OVMultilabelClassificationModel(OVModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
-                imgs_infos=inputs.imgs_infos,
+                imgs_info=inputs.imgs_info,
                 labels=[],
                 scores=pred_scores,
-                saliency_maps=predicted_s_maps,
-                feature_vectors=predicted_f_vectors,
+                saliency_map=predicted_s_maps,
+                feature_vector=predicted_f_vectors,
             )
 
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=[],
             scores=pred_scores,
         )
@@ -705,17 +705,17 @@ class OVHlabelClassificationModel(OVModel):
             return TorchPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
-                imgs_infos=inputs.imgs_infos,
+                imgs_info=inputs.imgs_info,
                 labels=all_pred_labels,
                 scores=all_pred_scores,
-                saliency_maps=predicted_s_maps,
-                feature_vectors=predicted_f_vectors,
+                saliency_map=predicted_s_maps,
+                feature_vector=predicted_f_vectors,
             )
 
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=all_pred_labels,
             scores=all_pred_scores,
         )

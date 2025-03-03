@@ -12,7 +12,6 @@ from model_api.tilers import Tiler
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchPredBatch
 from otx.engine import Engine
 from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
 from tests.test_helpers import CommonSemanticSegmentationExporter
@@ -105,10 +104,7 @@ def test_engine_from_config(
 
     # Predict Torch model with explain
     predictions = engine.predict(explain=True)
-    saliency_map = (
-        predictions[0].saliency_maps if isinstance(predictions[0], TorchPredBatch) else predictions[0].saliency_map
-    )
-    assert len(saliency_map) > 0
+    assert len(predictions[0].saliency_map) > 0
 
     # Export IR model with explain
     exported_model_with_explain = engine.export(explain=True)
@@ -117,20 +113,14 @@ def test_engine_from_config(
     # Infer IR Model with explain: predict
     predictions = engine.predict(explain=True, checkpoint=exported_model_with_explain, accelerator="cpu")
     assert len(predictions) > 0
-    sal_maps_from_prediction = (
-        predictions[0].saliency_maps if isinstance(predictions[0], TorchPredBatch) else predictions[0].saliency_map
-    )
+    sal_maps_from_prediction = predictions[0].saliency_map
     assert len(sal_maps_from_prediction) > 0
 
     # Infer IR Model with explain: explain
     explain_results = engine.explain(checkpoint=exported_model_with_explain, accelerator="cpu")
-    saliency_map = (
-        explain_results[0].saliency_maps
-        if isinstance(explain_results[0], TorchPredBatch)
-        else explain_results[0].saliency_map
-    )
-    assert len(saliency_map) > 0
-    assert (sal_maps_from_prediction[0][0] == saliency_map[0][0]).all()
+    assert len(explain_results[0].saliency_map) > 0
+    sal_maps_from_explain = explain_results[0].saliency_map
+    assert (sal_maps_from_prediction[0][0] == sal_maps_from_explain[0][0]).all()
 
 
 @pytest.mark.parametrize("recipe", pytest.TILE_RECIPE_LIST)

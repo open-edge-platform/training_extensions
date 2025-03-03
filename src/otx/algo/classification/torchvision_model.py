@@ -101,11 +101,11 @@ class TVModelForMulticlassCls(OTXMulticlassClsModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
-            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+            saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
@@ -181,11 +181,11 @@ class TVModelForMultilabelCls(OTXMultilabelClsModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
-            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+            saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
@@ -258,11 +258,11 @@ class TVModelForHLabelCls(OTXHlabelClsModel):
         return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
-            imgs_infos=inputs.imgs_infos,
+            imgs_info=inputs.imgs_info,
             labels=list(outputs["preds"]),
             scores=list(outputs["scores"]),
-            saliency_maps=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-            feature_vectors=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+            saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:

@@ -33,9 +33,9 @@ class TorchDataItem(ValidateItemMixin, Mapping):
 
     image: torch.Tensor
     label: torch.Tensor | None = None
-    mask: Mask | None = None
-    boxes: BoundingBoxes | None = None
-    imgs_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
+    masks: Mask | None = None
+    bboxes: BoundingBoxes | None = None
+    img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
     def collate_fn(items: list[TorchDataItem]) -> TorchDataBatch:
@@ -50,9 +50,9 @@ class TorchDataItem(ValidateItemMixin, Mapping):
             batch_size=len(items),
             images=torch.stack([item.image for item in items]),
             labels=[item.label for item in items],
-            boxes=[item.boxes for item in items],
-            masks=[item.mask for item in items],
-            imgs_infos=[item.imgs_info for item in items],
+            bboxes=[item.bboxes for item in items],
+            masks=[item.masks for item in items],
+            imgs_info=[item.img_info for item in items],
         )
 
     def __iter__(self) -> Iterator[str]:
@@ -74,8 +74,8 @@ class TorchDataBatch(ValidateBatchMixin):
     images: torch.Tensor
     labels: list[torch.Tensor] | None
     masks: list[Mask] | None = None
-    boxes: list[BoundingBoxes] | None = None
-    imgs_infos: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+    bboxes: list[BoundingBoxes] | None = None
+    imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
 
 @dataclass
@@ -97,11 +97,11 @@ class TorchPredBatch(ValidateBatchMixin):
     images: torch.Tensor
     labels: list[torch.Tensor] | None
     scores: list[torch.Tensor] | None = None
-    feature_vectors: list[torch.Tensor] | None = None
-    saliency_maps: list[torch.Tensor] | None = None
+    feature_vector: list[torch.Tensor] | None = None
+    saliency_map: list[torch.Tensor] | None = None
     masks: list[torch.Tensor] | None = None
-    boxes: list[torch.Tensor] | None = None
-    imgs_infos: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+    bboxes: list[torch.Tensor] | None = None
+    imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
     @property
     def has_xai_outputs(self) -> bool:
@@ -109,5 +109,5 @@ class TorchPredBatch(ValidateBatchMixin):
 
         Necessary for compatibility with tests.
         """
-        # TODO(ashwinvaidya17): the tests should directly refer to saliency maps.
-        return self.saliency_maps is not None and len(self.saliency_maps) > 0
+        # TODO(ashwinvaidya17): the tests should directly refer to saliency map.
+        return self.saliency_map is not None and len(self.saliency_map) > 0

@@ -24,9 +24,9 @@ class ValidateItemMixin:
             "scores": self._scores_validator,
             "feature_vector": self._feature_vector_validator,
             "saliency_map": self._saliency_map_validator,
-            "mask": self._mask_validator,
-            "boxes": self._boxes_validator,
-            "imgs_info": self._imgs_info_validator,
+            "masks": self._mask_validator,
+            "bboxes": self._boxes_validator,
+            "img_info": self._img_info_validator,
         }
         # TODO(ashwinvaidya17): Revisit this
         for field in fields(self):  # type: ignore[arg-type]
@@ -134,12 +134,12 @@ class ValidateItemMixin:
         return boxes
 
     @staticmethod
-    def _imgs_info_validator(imgs_info: ImageInfo) -> ImageInfo:
+    def _img_info_validator(img_info: ImageInfo) -> ImageInfo:
         """Validate the image info."""
-        if not isinstance(imgs_info, ImageInfo):
+        if not isinstance(img_info, ImageInfo):
             msg = "Image info must be a otx.data.entity.ImageInfo"
             raise TypeError(msg)
-        return imgs_info
+        return img_info
 
 
 class ValidateBatchMixin:
@@ -150,11 +150,11 @@ class ValidateBatchMixin:
             "images": self._images_validator,
             "labels": self._labels_validator,
             "scores": self._scores_validator,
-            "feature_vectors": self._feature_vectors_validator,
-            "saliency_maps": self._saliency_maps_validator,
+            "feature_vector": self._feature_vectors_validator,
+            "saliency_map": self._saliency_maps_validator,
             "masks": self._masks_validator,
-            "boxes": self._boxes_validator,
-            "imgs_infos": self._imgs_infos_validator,
+            "bboxes": self._boxes_validator,
+            "imgs_info": self._imgs_info_validator,
             "batch_size": self._batch_size_validator,
         }
         # TODO(ashwinvaidya17): Revisit this
@@ -311,14 +311,14 @@ class ValidateBatchMixin:
         return boxes_batch
 
     @staticmethod
-    def _imgs_infos_validator(imgs_infos_batch: list[ImageInfo | None]) -> list[ImageInfo | None]:
+    def _imgs_info_validator(imgs_info_batch: list[ImageInfo | None]) -> list[ImageInfo | None]:
         """Validate the image info batch."""
-        if all(img_info is None for img_info in imgs_infos_batch):
+        if all(img_info is None for img_info in imgs_info_batch):
             return []
-        if not isinstance(imgs_infos_batch, list) or not isinstance(imgs_infos_batch[0], ImageInfo):
+        if not isinstance(imgs_info_batch, list) or not isinstance(imgs_info_batch[0], ImageInfo):
             msg = "Image info batch must be a list of otx.data.entity.ImageInfo"
             raise TypeError(msg)
-        return imgs_infos_batch
+        return imgs_info_batch
 
     @staticmethod
     def _batch_size_validator(batch_size: int) -> int:

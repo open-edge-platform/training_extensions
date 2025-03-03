@@ -26,7 +26,7 @@ class TestPackInputs:
         [
             TorchDataItem(
                 image=torch.randn([3, 10, 10]),
-                imgs_info=ImageInfo(
+                img_info=ImageInfo(
                     img_idx=0,
                     img_shape=(10, 10),
                     ori_shape=(10, 10),
@@ -35,7 +35,7 @@ class TestPackInputs:
             ),
             TorchDataItem(
                 image=torch.randn([3, 10, 10]),
-                imgs_info=ImageInfo(
+                img_info=ImageInfo(
                     img_idx=0,
                     img_shape=(10, 10),
                     ori_shape=(10, 10),
@@ -44,7 +44,7 @@ class TestPackInputs:
             ),
             TorchDataItem(
                 image=torch.randn([3, 10, 10]),
-                imgs_info=ImageInfo(
+                img_info=ImageInfo(
                     img_idx=0,
                     img_shape=(10, 10),
                     ori_shape=(10, 10),

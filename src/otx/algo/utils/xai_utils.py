@@ -48,58 +48,40 @@ def process_saliency_maps_in_pred_entity(
         labels = predict_result_per_batch.labels if predict_result_per_batch.labels is not None else []
         scores = predict_result_per_batch.scores if predict_result_per_batch.scores is not None else []
 
-        # TODO(ashwinvaidya17): Revisit this. This check is temporary.
-        if isinstance(predict_result_per_batch, TorchPredBatch):
-            saliency_maps = predict_result_per_batch.saliency_maps
-            if predict_result_per_batch.imgs_infos is None:
-                imgs_infos = []
-            else:
-                imgs_infos = [info for info in predict_result_per_batch.imgs_infos if info is not None]
-        else:
-            # Handle other entity types
-            saliency_maps = predict_result_per_batch.saliency_map
-            imgs_infos = predict_result_per_batch.imgs_info
-
-        if not imgs_infos:  # Skip processing if no valid image info
-            msg = "No valid image info found."
-            raise ValueError(msg)
-
-        saliency_maps = [
+        saliency_map: list[np.ndarray] = [
             saliency_map.cpu().numpy() if isinstance(saliency_map, torch.Tensor) else saliency_map
-            for saliency_map in saliency_maps  # type: ignore[union-attr]
+            for saliency_map in predict_result_per_batch.saliency_map  # type: ignore[union-attr]
         ]
-        ori_img_shapes = [img_info.ori_shape for img_info in imgs_infos]
-        paddings = [img_info.padding for img_info in imgs_infos]
-        image_shape = imgs_infos[0].img_shape
+        imgs_info = predict_result_per_batch.imgs_info
+        ori_img_shapes = [img_info.ori_shape for img_info in imgs_info]  # type: ignore[union-attr]
+        paddings = [img_info.padding for img_info in imgs_info]  # type: ignore[union-attr]
+        image_shape = imgs_info[0].img_shape  # type: ignore[union-attr, index]
         # Add additional conf threshold for saving maps with predicted classes,
         # since predictions can have less than 0.05 confidence
         conf_thr = explain_config.predicted_maps_conf_thr
 
         pred_labels = []
-        for _labels, _scores in zip(labels, scores):
+        for labels, scores in zip(predict_result_per_batch.labels, predict_result_per_batch.scores):  # type: ignore[union-attr, arg-type]
             if isinstance(label_info, HLabelInfo):
-                pred_labels.append(_convert_labels_from_hcls_format(_labels, _scores, label_info, conf_thr))
-            elif _labels.shape == _scores.shape:
+                pred_labels.append(_convert_labels_from_hcls_format(labels, scores, label_info, conf_thr))
+            elif labels.shape == scores.shape:  # type: ignore[union-attr, attr-defined]
                 # Filter out predictions with scores less than explain_config.predicted_maps_conf_thr
-                pred_labels.append(_labels[_scores > conf_thr].tolist())
+                pred_labels.append(labels[scores > conf_thr].tolist())  # type: ignore[operator]
             else:
                 # Tv_* models case with a single predicted label as a scalar tensor with size zero
-                labels_list = _labels.tolist()
+                labels_list = labels.tolist()  # type: ignore[attr-defined]
                 labels_list = [labels_list] if isinstance(labels_list, int) else labels_list
                 pred_labels.append(labels_list)
 
         processed_saliency_maps = process_saliency_maps(
-            saliency_maps,
+            saliency_map,
             explain_config,
             pred_labels,
             ori_img_shapes,
             image_shape,
             paddings,
         )
-        if isinstance(predict_result_per_batch, TorchPredBatch):
-            predict_result_per_batch.saliency_maps = processed_saliency_maps
-        else:
-            predict_result_per_batch.saliency_map = processed_saliency_maps
+        predict_result_per_batch.saliency_map = processed_saliency_maps
         return predict_result_per_batch
 
     return [_process(predict_result_per_batch, label_info) for predict_result_per_batch in predict_result]
