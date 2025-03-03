@@ -160,7 +160,7 @@ def render_guide(subcommand: str | None = None) -> list:
     Returns:
         list: A list of contents to be displayed in the guide.
     """
-    if subcommand is None or subcommand in ("install"):
+    if subcommand is None:
         return []
     from otx.engine import Engine
 
