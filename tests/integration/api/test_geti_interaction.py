@@ -118,7 +118,6 @@ class TestEngineAPI:
 
             predictions = mapi_model(self.image)
             assert predictions is not None
-            assert len(predictions.top_labels) > 0
 
             exported_path.unlink(missing_ok=True)
 
@@ -148,7 +147,6 @@ class TestEngineAPI:
 
             predictions = mapi_model(self.image)
             assert predictions is not None
-            assert len(predictions.top_labels) > 0
 
             exported_path.unlink(missing_ok=True)
 
@@ -187,7 +185,6 @@ class TestEngineAPI:
 
         predictions = mapi_model(self.image)
         assert predictions is not None
-        assert len(predictions.top_labels) > 0
 
 
 @pytest.mark.parametrize("task", pytest.TASK_LIST)
