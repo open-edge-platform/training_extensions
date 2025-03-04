@@ -301,10 +301,6 @@ class OTXCLI:
         return parser_kwargs
 
     def _set_extension_subcommands_parser(self, parser_subcommands: _ActionSubCommands) -> None:
-        from otx.cli.install import add_install_parser
-
-        add_install_parser(parser_subcommands)
-
         if _ENGINE_AVAILABLE:
             # `otx find` arguments
             find_parser = ArgumentParser(formatter_class=CustomHelpFormatter)
@@ -526,11 +522,7 @@ class OTXCLI:
             ValueError: If the subcommand is not recognized.
         """
         self.console.print(f"[blue]{OTX_LOGO}[/blue] ver.{__version__}", justify="center")
-        if self.subcommand == "install":
-            from otx.cli.install import otx_install
-
-            otx_install(**self.config["install"])
-        elif self.subcommand == "find":
+        if self.subcommand == "find":
             from otx.engine.utils.api import list_models
 
             list_models(print_table=True, **self.config[self.subcommand])

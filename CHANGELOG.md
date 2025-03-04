@@ -25,6 +25,10 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4208>)
 - Remove Zero Shot Visual Prompting
   (<https://github.com/openvinotoolkit/training_extensions/pull/4209>)
+- Remove Semi-SL algorithm, unlabeled dataset, MMCV transforms
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4227>)
+- Remove MaskDino, YOLOV9, HuggingFace wrappers, OTX install, mmcv tools
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4247>)
 
 ## \[2.3.0\]
 
