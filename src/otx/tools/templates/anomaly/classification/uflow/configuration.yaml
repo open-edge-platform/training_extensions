@@ -39,7 +39,7 @@ learning_parameters:
       operator: AND
       rules: []
       type: UI_RULES
-    visible_in_ui: true
+    visible_in_ui: false
     warning: null
   backbone:
     affects_outcome_of: NONE
