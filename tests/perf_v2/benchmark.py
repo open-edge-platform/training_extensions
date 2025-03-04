@@ -219,8 +219,8 @@ class Benchmark:
         # It is calculated by dividing the total time by the number of samples.
         latency = total_time / len(engine.datamodule.subsets["test"])
         extra_metrics = {
-            f"test({test_type})/e2e_time": total_time,
-            f"test({test_type})/latency": latency,
+            f"{test_type}:test/e2e_time": total_time,
+            f"{test_type}:test/latency": latency,
         }
         # =================
 

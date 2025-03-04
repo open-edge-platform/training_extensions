@@ -58,7 +58,7 @@ BENCHMARK_CRITERIA = [
     Criterion(name="test/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="torch:test/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="export:test/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="optimize:test/e2e_time", summary="max", compare=">", margin=0.1),
 ]

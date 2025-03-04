@@ -28,12 +28,12 @@ CLASSIFICATION_BENCHMARK_CRITERIA = [
     Criterion(name="export/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize/e2e_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(torch)/latency", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(export)/latency", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(optimize)/latency", summary="mean", compare="<", margin=0.1),
-    Criterion(name="test(train)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(export)/e2e_time", summary="max", compare=">", margin=0.1),
-    Criterion(name="test(optimize)/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="torch:test/latency", summary="mean", compare="<", margin=0.1),
+    Criterion(name="export:test/latency", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize:test/latency", summary="mean", compare="<", margin=0.1),
+    Criterion(name="train:test/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="export:test/e2e_time", summary="max", compare=">", margin=0.1),
+    Criterion(name="optimize:test/e2e_time", summary="max", compare=">", margin=0.1),
 ]
 
 

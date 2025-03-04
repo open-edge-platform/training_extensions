@@ -182,9 +182,9 @@ def summarize_table(history: pd.DataFrame, task: OTXTaskType) -> list[pd.DataFra
         f"export/{score_metric}",
         f"optimize/{score_metric}",
         f"test/{score_metric}",
-        "test(torch)/latency",
-        "test(export)/latency",
-        "test(optimize)/latency",
+        "torch:test/latency",
+        "export:test/latency",
+        "optimize:test/latency",
         "optimize/e2e_time",
     ]
 
