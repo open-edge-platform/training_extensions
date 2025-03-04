@@ -945,7 +945,12 @@ class OVModel(OTXModel):
         # data_input_params placeholder. No need for OVModel
         self.data_input_params = DataInputParams(input_size=(224, 224), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
         # NOTE: num_classes and label_info comes from the IR metadata
-        super().__init__(label_info=NullLabelInfo(), metric=metric, data_input_params=self.data_input_params, model_name=model_name)
+        super().__init__(
+            label_info=NullLabelInfo(),
+            metric=metric,
+            data_input_params=self.data_input_params,
+            model_name=model_name,
+        )
         self._label_info = self._create_label_info_from_ov_ir()
 
         tile_enabled = False

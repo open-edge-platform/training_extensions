@@ -15,13 +15,13 @@ from otx.algo.classification.backbones.timm import TimmBackbone
 from otx.algo.classification.classifier import HLabelClassifier
 from otx.algo.classification.heads import HierarchicalLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
+from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.metrics.accuracy import HLabelClsMetricCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo
-from otx.algo.classification.necks.gap import GlobalAveragePooling
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

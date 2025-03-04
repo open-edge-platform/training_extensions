@@ -15,12 +15,12 @@ from otx.algo.classification.heads import (
     HierarchicalLinearClsHead,
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
+from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.core.metrics.accuracy import HLabelClsMetricCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo
-from otx.algo.classification.necks.gap import GlobalAveragePooling
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

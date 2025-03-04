@@ -11,19 +11,15 @@ Reference :
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import torch
-from einops import rearrange
 from torch import Tensor, nn
 from torch.autograd import Function
 from torchvision.ops import box_convert
 
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.core.data.entity.detection import DetBatchDataEntity
-
-if TYPE_CHECKING:
-    from otx.algo.detection.detectors.single_stage_detector import SingleStageDetector
 
 
 def images_to_levels(target: list[Tensor], num_levels: list[int]) -> list[Tensor]:
@@ -247,80 +243,6 @@ def generate_anchors(image_size: tuple[int, int], strides: list[int]) -> tuple[T
     all_anchors = torch.cat(anchors, dim=0)
     all_scalers = torch.cat(scaler, dim=0)
     return all_anchors, all_scalers
-
-
-class Vec2Box:
-    """Convert the vector to bounding box.
-
-    Args:
-        detector (SingleStageDetector): The single stage detector instance.
-        image_size (tuple[int, int]): The image size.
-        strides (list[int] | None): The strides for each predicted layer. Defaults to None.
-        device (str): The device to use. Defaults to "cpu".
-    """
-
-    def __init__(
-        self,
-        detector: SingleStageDetector,
-        image_size: tuple[int, int],
-        strides: list[int] | None,
-        device: str = "cpu",
-    ) -> None:
-        self.device = device
-        self.strides = strides if strides else self.create_auto_anchor(detector, image_size)
-        self.update(image_size, device)
-
-    def create_auto_anchor(self, detector: SingleStageDetector, image_size: tuple[int, int]) -> list[int]:
-        """Create the auto anchor for the given detector.
-
-        Args:
-            detector (SingleStageDetector): The single stage detector instance.
-            image_size (tuple[int, int]): The image size.
-
-        Returns:
-            list[int]: The strides for each predicted layer.
-        """
-        dummy_input = torch.zeros(1, 3, *image_size).to(self.device)
-        dummy_main_preds, _ = detector(dummy_input)
-        strides = []
-        for predict_head in dummy_main_preds:
-            _, _, *anchor_num = predict_head[2].shape
-            strides.append(image_size[1] // anchor_num[1])
-        return strides
-
-    def update(self, image_size: tuple[int, int], device: str | torch.device) -> None:
-        """Update the anchor grid and scaler.
-
-        Args:
-            image_size (tuple[int, int]): The image size.
-            device (str | torch.device): The device to use.
-        """
-        anchor_grid, scaler = generate_anchors(image_size, self.strides)
-        self.anchor_grid, self.scaler = anchor_grid.to(device), scaler.to(device)
-
-    def __call__(self, predicts: tuple[Tensor, Tensor, Tensor]) -> tuple[Tensor, Tensor, Tensor]:
-        """Convert the vector to bounding box.
-
-        Args:
-            predicts (tuple[Tensor, Tensor, Tensor]): The list of prediction results.
-
-        Returns:
-            tuple[Tensor, Tensor, Tensor]: The converted results.
-        """
-        preds_cls, preds_anc, preds_box = [], [], []
-        for layer_output in predicts:
-            pred_cls, pred_anc, pred_box = layer_output
-            preds_cls.append(rearrange(pred_cls, "B C h w -> B (h w) C"))
-            preds_anc.append(rearrange(pred_anc, "B A R h w -> B (h w) R A"))
-            preds_box.append(rearrange(pred_box, "B X h w -> B (h w) X"))
-        preds_cls = torch.concat(preds_cls, dim=1)
-        preds_anc = torch.concat(preds_anc, dim=1)
-        preds_box = torch.concat(preds_box, dim=1)
-
-        pred_lt_rb = preds_box * self.scaler.view(1, -1, 1)
-        lt, rb = pred_lt_rb.chunk(2, dim=-1)
-        preds_box = torch.cat([self.anchor_grid - lt, self.anchor_grid + rb], dim=-1)
-        return preds_cls, preds_anc, preds_box
 
 
 def set_info_into_instance(layer_dict: dict[str, Any]) -> nn.Module:

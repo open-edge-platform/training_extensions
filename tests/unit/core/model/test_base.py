@@ -10,7 +10,7 @@ from model_api.models.utils import ClassificationResult
 from pytest_mock import MockerFixture
 
 from otx.core.data.entity.base import OTXBatchDataEntity
-from otx.core.model.base import OTXModel, OVModel, DataInputParams
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler
 
 
@@ -37,7 +37,10 @@ class TestOTXModel:
             "forward",
             return_value=None,
         ):
-            current_model = OTXModel(label_info=3, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            current_model = OTXModel(
+                label_info=3,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
             current_model.trainer = mock_trainer
 
         batch = {"input": torch.randn(2, 3)}
@@ -49,14 +52,24 @@ class TestOTXModel:
 
     def test_smart_weight_loading(self, mocker) -> None:
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(2)):
-            prev_model = OTXModel(label_info=2, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            prev_model = OTXModel(
+                label_info=2,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
             prev_model.label_info = ["car", "truck"]
             prev_state_dict = prev_model.state_dict()
 
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(3)):
-            current_model = OTXModel(label_info=3, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            current_model = OTXModel(
+                label_info=3,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
             current_model.label_info = ["car", "bus", "truck"]
-            mocker.patch.object(current_model, "_identify_classification_layers", return_value=["model.head.weight", "model.head.bias"])
+            mocker.patch.object(
+                current_model,
+                "_identify_classification_layers",
+                return_value=["model.head.weight", "model.head.bias"],
+            )
             current_model.load_state_dict_incrementally(
                 {"state_dict": prev_state_dict, "label_info": prev_model.label_info},
             )
@@ -80,7 +93,10 @@ class TestOTXModel:
         mock_main_scheduler = mocker.create_autospec(spec=torch.optim.lr_scheduler.LRScheduler)
 
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(3)):
-            current_model = OTXModel(label_info=3, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            current_model = OTXModel(
+                label_info=3,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
 
         mock_trainer = mocker.create_autospec(spec=Trainer)
         mock_trainer.lr_scheduler_configs = [

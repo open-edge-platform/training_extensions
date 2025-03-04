@@ -11,7 +11,7 @@ import torch
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
 from otx.core.metrics.dice import SegmCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, DataInputParams
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.segmentation import OTXSegmentationModel
 from otx.core.types.label import SegLabelInfo
 
@@ -19,7 +19,15 @@ from otx.core.types.label import SegLabelInfo
 class TestOTXSegmentationModel:
     @pytest.fixture()
     def model(self, label_info, optimizer, scheduler, metric, torch_compile):
-        return OTXSegmentationModel(label_info, DataInputParams((224,224), (0.,0.,0.), (1.,1.,1.)), "segm_model", optimizer, scheduler, metric, torch_compile)
+        return OTXSegmentationModel(
+            label_info,
+            DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            "segm_model",
+            optimizer,
+            scheduler,
+            metric,
+            torch_compile,
+        )
 
     @pytest.fixture()
     def batch_data_entity(self):

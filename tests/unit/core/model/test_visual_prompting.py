@@ -13,11 +13,11 @@ import pytest
 from model_api.models import SAMVisualPrompter
 from torchvision import tv_tensors
 
-from otx.core.model.base import DataInputParams
 from otx.core.data.entity.visual_prompting import (
     VisualPromptingBatchPredEntity,
 )
 from otx.core.exporter.visual_prompting import OTXVisualPromptingModelExporter
+from otx.core.model.base import DataInputParams
 from otx.core.model.visual_prompting import (
     OTXVisualPromptingModel,
     OVVisualPromptingModel,
@@ -29,7 +29,10 @@ from otx.core.types.export import TaskLevelExportParameters
 @pytest.fixture()
 def otx_visual_prompting_model(mocker) -> OTXVisualPromptingModel:
     mocker.patch.object(OTXVisualPromptingModel, "_create_model")
-    model = OTXVisualPromptingModel(label_info=1, data_input_params=DataInputParams((1024, 1024), (123.675, 116.28, 103.53), (58.395, 57.12, 57.375)))
+    model = OTXVisualPromptingModel(
+        label_info=1,
+        data_input_params=DataInputParams((1024, 1024), (123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
+    )
     model.model.image_size = 1024
     return model
 

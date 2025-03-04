@@ -16,7 +16,7 @@ from jsonargparse import ArgumentParser, Namespace
 
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel, DataInputParams
+from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types import PathLike
 from otx.core.types.task import OTXTaskType
 from otx.engine import Engine

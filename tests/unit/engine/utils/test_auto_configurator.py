@@ -8,7 +8,7 @@ import pytest
 import torch
 
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel, DataInputParams
+from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types.label import LabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
@@ -136,7 +136,10 @@ class TestAutoConfigurator:
             if fxt_task != OTXTaskType.SEMANTIC_SEGMENTATION
             else SegLabelInfo(label_names=label_names, label_groups=[label_names], label_ids=label_names)
         )
-        model = auto_configurator.get_model(label_info=label_info, data_input_params=DataInputParams((256, 256), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        model = auto_configurator.get_model(
+            label_info=label_info,
+            data_input_params=DataInputParams((256, 256), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         assert isinstance(model, OTXModel)
 
         model_cls = model.__class__
@@ -150,7 +153,10 @@ class TestAutoConfigurator:
         label_names = ["class1", "class2", "class3"]
         label_info = LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=label_names)
 
-        model = auto_configurator.get_model(label_info=label_info, data_input_params=DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        model = auto_configurator.get_model(
+            label_info=label_info,
+            data_input_params=DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
         assert model.data_input_params.input_size == (300, 300)
 

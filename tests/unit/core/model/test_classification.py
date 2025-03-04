@@ -12,10 +12,10 @@ from lightning.pytorch.cli import ReduceLROnPlateau
 from torch import nn
 from torch.optim import Optimizer
 
+from otx.core.model.base import DataInputParams
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.model.multiclass_classification import OTXMulticlassClsModel
 from otx.core.model.multilabel_classification import OTXMultilabelClsModel
-from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 
 
@@ -207,7 +207,10 @@ class TestOTXHlabelClsModel:
         assert "target" in metric_input
 
     def test_set_label_info(self, fxt_hlabel_multilabel_info):
-        model = OTXHlabelClsModel(label_info=fxt_hlabel_multilabel_info, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        model = OTXHlabelClsModel(
+            label_info=fxt_hlabel_multilabel_info,
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         assert model.label_info.num_multilabel_classes == fxt_hlabel_multilabel_info.num_multilabel_classes
 
         fxt_hlabel_multilabel_info.num_multilabel_classes = 0

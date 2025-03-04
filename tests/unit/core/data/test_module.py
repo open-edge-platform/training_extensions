@@ -120,7 +120,7 @@ class TestModule:
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
             test_subset=fxt_config.test_subset,
-            input_size=(240, 240)
+            input_size=(240, 240),
         )
 
         assert module.train_dataloader().batch_size == 4

@@ -15,8 +15,8 @@ from torch import nn
 from otx.algo.classification.backbones import MobileNetV3Backbone
 from otx.algo.classification.classifier import HLabelClassifier
 from otx.algo.classification.heads import HierarchicalLinearClsHead
-from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
+from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import (

@@ -9,7 +9,7 @@ from pytest_mock import MockerFixture
 
 from otx.algo.classification.multiclass_models import EfficientNetMulticlassCls
 from otx.algo.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
-from otx.core.model.base import OTXModel, OVModel, DataInputParams
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import NullLabelInfo
 from otx.core.types.precision import OTXPrecisionType
@@ -204,7 +204,11 @@ class TestEngine:
         checkpoint = "path/to/checkpoint.ckpt"
         fxt_engine.checkpoint = checkpoint
         fxt_engine.export()
-        mock_load_from_checkpoint.assert_called_once_with(checkpoint_path=checkpoint, map_location="cpu", model_name='mobilenet_v3_small')
+        mock_load_from_checkpoint.assert_called_once_with(
+            checkpoint_path=checkpoint,
+            map_location="cpu",
+            model_name="mobilenet_v3_small",
+        )
         mock_export.assert_called_once_with(
             output_dir=Path(fxt_engine.work_dir),
             base_name="exported_model",

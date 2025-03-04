@@ -20,7 +20,6 @@ from omegaconf import OmegaConf
 from torchvision import tv_tensors
 
 from otx.algo.detection.atss import ATSS
-from otx.core.model.base import DataInputParams
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.segmentation.litehrnet import LiteHRNet
 from otx.core.config.data import (
@@ -34,6 +33,7 @@ from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntit
 from otx.core.data.entity.segmentation import SegBatchDataEntity
 from otx.core.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
 from otx.core.data.module import OTXDataModule
+from otx.core.model.base import DataInputParams
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
@@ -486,7 +486,11 @@ class TestOTXTiling:
     @pytest.mark.intense()
     def test_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
-        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        model = MaskRCNN(
+            label_info=3,
+            model_name="maskrcnn_efficientnet_b2b",
+            data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
         data_config["mem_cache_size"] = "0"
@@ -507,7 +511,11 @@ class TestOTXTiling:
     @pytest.mark.intense()
     def test_explain_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
-        model = MaskRCNN(label_info=3, model_name="maskrcnn_efficientnet_b2b", data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        model = MaskRCNN(
+            label_info=3,
+            model_name="maskrcnn_efficientnet_b2b",
+            data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True, enable_adaptive_tiling=False)
         data_config["mem_cache_size"] = "0"
@@ -530,7 +538,11 @@ class TestOTXTiling:
     @pytest.mark.intense()
     def test_seg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.SEMANTIC_SEGMENTATION]
-        model = LiteHRNet(label_info=3, model_name="lite_hrnet_18", data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+        model = LiteHRNet(
+            label_info=3,
+            model_name="lite_hrnet_18",
+            data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
         data_config["mem_cache_size"] = "0"

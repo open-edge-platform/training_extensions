@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
@@ -49,7 +49,7 @@ class OTXDataModule(LightningDataModule):
             a model requries multiple of specific value as input_size. Defaults to 1.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         task: OTXTaskType,
         data_format: str,
@@ -109,17 +109,19 @@ class OTXDataModule(LightningDataModule):
                 self.unannotated_items_ratio,
                 ignore_index=self.ignore_index if self.task == "SEMANTIC_SEGMENTATION" else None,
             )
-
-        if input_size == "auto":
+        if isinstance(input_size, str) and input_size == "auto":
             input_size = adapt_input_size_to_dataset(
                 dataset,
                 self.task,
                 input_size_multiplier,
             )
+        elif not isinstance(input_size, tuple):
+            msg = f"input_size should be tuple of ints or 'auto', but got {input_size}"
+            raise ValueError(msg)
 
         for subset_cfg in [train_subset, val_subset, test_subset]:
             if subset_cfg.input_size is None:
-                subset_cfg.input_size = input_size
+                subset_cfg.input_size = input_size  # type: ignore[assignment]
 
         # get mean and std from Normalize transform
         mean = (0.0, 0.0, 0.0)
