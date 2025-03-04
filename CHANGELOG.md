@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 ### Enhancements
 
+- Bump inference dependencies
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4243>)
+
 ### Bug fixes
 
 - Don't filter empty label from kp arrow
