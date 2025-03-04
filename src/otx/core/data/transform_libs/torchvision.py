@@ -566,6 +566,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
                 img = cv2.resize(img, scale[::-1], interpolation=CV2_INTERP_CODES[self.interpolation])
 
             if isinstance(inputs, TorchDataItem):
+                # convert to tensor and permute to (C, H, W)
                 inputs.image = torch.tensor(img, dtype=torch.float32).permute(2, 0, 1)
             else:
                 inputs.image = img

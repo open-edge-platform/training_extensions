@@ -154,7 +154,7 @@ def fxt_multi_class_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, To
     fake_labels = LongTensor([0])
     fake_score = torch.Tensor([0.6])
     # define data entity
-    single_data_entity = TorchDataItem(image=fake_images[0], imgs_info=fake_image_info, label=fake_labels)
+    single_data_entity = TorchDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
     batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=fake_images,
@@ -180,7 +180,7 @@ def fxt_multi_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, To
     fake_labels = LongTensor([0])
     fake_score = torch.Tensor([0.6])
     # define data entity
-    single_data_entity = TorchDataItem(image=fake_images[0], imgs_info=fake_image_info, label=fake_labels)
+    single_data_entity = TorchDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
     batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=fake_images,
@@ -206,7 +206,7 @@ def fxt_h_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchP
     fake_labels = LongTensor([0])
     fake_score = torch.Tensor([0.6])
     # define data entity
-    single_data_entity = TorchDataItem(image=fake_images[0], imgs_info=fake_image_info, label=fake_labels)
+    single_data_entity = TorchDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
     batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=fake_images,
