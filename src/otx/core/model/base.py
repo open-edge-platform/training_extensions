@@ -949,13 +949,25 @@ class OVModel(OTXModel):
 
     def _forward(self, inputs: T_OTXBatchDataEntity) -> T_OTXBatchPredEntity:
         """Model forward function."""
+        # import cv2
+        # import copy
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
+        # image = self.model.preprocess(numpy_inputs[1])
+        # cv2.imwrite("/home/kprokofi/training_extensions/test.png", image[0]["image"][0])
+        # breakpoint()
         if self.async_inference:
             outputs = self.model.infer_batch(numpy_inputs)
         else:
             outputs = [self.model(im) for im in numpy_inputs]
 
         customized_outputs = self._customize_outputs(outputs, inputs)
+        # id = 0
+        # points = np.array(customized_outputs.keypoints[id]).astype(np.int8)
+        # image = np.ascontiguousarray(numpy_inputs[id], dtype=np.uint8)
+        # for point in points:
+        #     cv2.circle(image, tuple(point.astype(int)), 5, (0, 255, 0), -1)
+        # cv2.imwrite(f"/home/kprokofi/training_extensions/kp_det_debug_arrow/image_{id}.png", image)
+        # breakpoint()
 
         if isinstance(customized_outputs, OTXBatchLossEntity):
             raise TypeError(customized_outputs)

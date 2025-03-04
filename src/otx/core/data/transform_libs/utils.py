@@ -203,6 +203,27 @@ def rescale_polygons(polygons: list[Polygon], scale_factor: float | tuple[float,
     return polygons
 
 
+def rescale_keypoints(keypoints: np.ndarray, scale_factor: float | tuple[float, float]) -> np.ndarray:
+    """Rescale keypoints as large as possible while keeping the aspect ratio.
+
+    Args:
+        keypoints (np.ndarray): Keypoints to be rescaled.
+        scale_factor (float | tuple[float, float]): Scale factor to be applied to keypoints with (height, width)
+            or single float value.
+
+    Returns:
+        (np.ndarray): The rescaled keypoints.
+    """
+    if isinstance(scale_factor, float):
+        w_scale = h_scale = scale_factor
+    else:
+        h_scale, w_scale = scale_factor
+
+    keypoints[:, 0] *= w_scale
+    keypoints[:, 1] *= h_scale
+    return keypoints
+
+
 def translate_bboxes(boxes: Tensor, distances: Sequence[float]) -> Tensor:
     """Translate boxes in-place.
 
@@ -403,6 +424,29 @@ def flip_bboxes(boxes: Tensor, img_shape: tuple[int, int], direction: str = "hor
         flipped[..., 1] = img_shape[0] - boxes[..., 3]
         flipped[..., 2] = img_shape[1] - boxes[..., 0]
         flipped[..., 3] = img_shape[0] - boxes[..., 1]
+    return flipped
+
+def flip_keypoints(keypoints: np.ndarray, img_shape: tuple[int, int], direction: str = "horizontal") -> np.ndarray:
+    """Flip keypoints horizontally or vertically.
+
+    Args:
+        keypoints (np.ndarray): Keypoints to be flipped.
+        img_shape (tuple[int, int]): A tuple of image height and width.
+        direction (str): Flip direction, options are "horizontal",
+            "vertical" and "diagonal". Defaults to "horizontal".
+
+    Returns:
+        (np.ndarray): Flipped keypoints.
+    """
+    assert direction in ["horizontal", "vertical", "diagonal"]  # noqa: S101
+    flipped = keypoints.copy()
+    if direction == "horizontal":
+        flipped[:, 0] = img_shape[1] - keypoints[:, 0]
+    elif direction == "vertical":
+        flipped[:, 1] = img_shape[0] - keypoints[:, 1]
+    else:
+        flipped[:, 0] = img_shape[1] - keypoints[:, 0]
+        flipped[:, 1] = img_shape[0] - keypoints[:, 1]
     return flipped
 
 
