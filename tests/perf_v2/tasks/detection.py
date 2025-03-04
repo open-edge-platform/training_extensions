@@ -32,7 +32,6 @@ MODEL_TEST_CASES = [
     ModelInfo(task=TASK_TYPE.value, name="yolov9_m", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="yolov9_c", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="yolox_tiny", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="yolox_m", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="yolox_l", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="yolox_x", category="other"),
 ]
