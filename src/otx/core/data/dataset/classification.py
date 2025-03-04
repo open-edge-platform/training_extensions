@@ -53,7 +53,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             label=torch.as_tensor(label_anns, dtype=torch.long),
             img_info=ImageInfo(
                 img_idx=index,
-                img_shape=image.shape[1:],
+                img_shape=img_shape,
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
             ),

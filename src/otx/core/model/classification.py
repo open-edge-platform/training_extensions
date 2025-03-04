@@ -90,6 +90,7 @@ class OTXMulticlassClsModel(OTXModel):
         return {
             "images": inputs.images,
             "labels": torch.tensor(inputs.labels, device=self.device),
+            "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
 
@@ -237,6 +238,7 @@ class OTXMultilabelClsModel(OTXModel):
         return {
             "images": inputs.images,
             "labels": torch.vstack(inputs.labels),
+            "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
 
@@ -380,6 +382,7 @@ class OTXHlabelClsModel(OTXModel):
         return {
             "images": inputs.images,
             "labels": torch.vstack(inputs.labels),
+            "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
 
