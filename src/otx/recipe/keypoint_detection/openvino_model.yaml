@@ -44,10 +44,7 @@ overrides:
       batch_size: 64
       num_workers: 2
       transforms:
-        - class_path: torchvision.transforms.v2.ToImage
-        # - class_path: otx.core.data.transform_libs.torchvision.Resize
-        #   init_args:
-        #     scale: $(input_size)
-        #     transform_keypoints: true
-        #     is_numpy_to_tvtensor: true
-        #     keep_ratio: true
+        - class_path: otx.core.data.transform_libs.torchvision.GetBBoxCenterScale
+        - class_path: otx.core.data.transform_libs.torchvision.TopdownAffine
+          init_args:
+            input_size: $(input_size)

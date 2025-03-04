@@ -152,51 +152,6 @@ class TestResize:
         assert torch.all(results.bboxes.data == fxt_det_data_entity[0].bboxes.data)
 
     @pytest.mark.parametrize(
-        ("keep_ratio", "expected_shape", "expected_scale_factor"),
-        [
-            (True, (96, 96), (1.5, 1.5)),
-            (False, (128, 96), (2.0, 1.5)),
-        ],
-    )
-    @pytest.mark.parametrize("is_array", [True, False])
-    def test_forward_only_image_with_list_of_images(
-        self,
-        resize: Resize,
-        fxt_det_data_entity: tuple[tuple, DetDataEntity, DetBatchDataEntity],
-        keep_ratio: bool,
-        is_array: bool,
-        expected_shape: tuple,
-        expected_scale_factor: tuple,
-    ) -> None:
-        """Test forward only image."""
-        resize.keep_ratio = keep_ratio
-        resize.transform_bbox = False
-        resize.transform_mask = False
-        entity = deepcopy(fxt_det_data_entity[0])
-        if is_array:
-            entity.image = entity.image.transpose(1, 2, 0)
-        else:
-            entity.image = torch.as_tensor(entity.image)
-
-        entity.image = [entity.image, entity.image]
-
-        results = resize(entity)
-
-        assert results.img_info.ori_shape == (64, 64)
-        if keep_ratio:
-            assert results.image[0].shape[:2] == expected_shape
-            assert results.image[1].shape[:2] == expected_shape
-            assert results.img_info.img_shape == expected_shape
-            assert results.img_info.scale_factor == expected_scale_factor
-        else:
-            assert results.image[0].shape[:2] == expected_shape
-            assert results.image[1].shape[:2] == expected_shape
-            assert results.img_info.img_shape == expected_shape
-            assert results.img_info.scale_factor == expected_scale_factor
-
-        assert torch.all(results.bboxes.data == fxt_det_data_entity[0].bboxes.data)
-
-    @pytest.mark.parametrize(
         ("keep_ratio", "expected_shape"),
         [
             (True, (96, 96)),

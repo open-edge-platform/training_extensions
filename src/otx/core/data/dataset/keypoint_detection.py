@@ -22,7 +22,6 @@ from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo
 
 from .base import OTXDataset
-import cv2
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
@@ -55,16 +54,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         )
 
         self.dm_subset = self._get_single_bbox_dataset(dm_subset)
-        # items = [item for item in dm_subset]
-        # for id, item in enumerate(items):
-        #     img = item.media.data
-        #     for ann in item.annotations:
-        #         if isinstance(ann, Points):
-        #             points = np.array(ann.points).reshape(-1, 2)
-        #             for point in points:
-        #                 cv2.circle(img, tuple(point.astype(int)), 5, (0, 255, 0), -1)
-        #     cv2.imwrite(f"kp_det_debug_arrow/image_{id}.png", img)
-        # breakpoint()
+
         # arrow doesn't follow common coco convention, no need to fetch kp-specific labels
         if self.dm_subset.categories() and data_format != "arrow":
             kp_labels = self.dm_subset.categories()[AnnotationType.points][0].labels

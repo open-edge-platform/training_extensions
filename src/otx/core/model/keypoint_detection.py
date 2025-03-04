@@ -7,11 +7,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any
-from torchvision.transforms.v2 import Normalize
 
 import torch
-import numpy as np
-import cv2
 
 from otx.algo.utils.mmengine_utils import load_checkpoint
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
@@ -150,19 +147,6 @@ class OTXKeypointDetectionModel(OTXModel):
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | tuple[torch.Tensor]:
         """Model forward function used for the model tracing during model exportation."""
-        # reshape bbox to fixed aspect ratio
-        # image = image.numpy()[0].transpose(1, 2, 0)
-        # img_shape = image.shape[:2]
-        # h, w = self.input_size
-        # warp_size = (int(w), int(h))
-        # center = np.array(self.input_size) / 2.0
-        # scale = self.pre_processing_export._fix_aspect_ratio(np.array(img_shape), aspect_ratio=w / h)
-        # rot = 0.0
-
-        # warp_mat = self.pre_processing_export._get_warp_matrix(center, scale, rot, output_size=(w, h))
-        # image = self.pre_processing_export._get_warp_image(image.astype(np.uint8), warp_mat, warp_size)
-        # image = torch.from_numpy(image).to(dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
-        # image = self.normalize(image)
         return self.model.forward(inputs=image, mode="tensor")
 
     def get_dummy_input(self, batch_size: int = 1) -> KeypointDetBatchDataEntity:

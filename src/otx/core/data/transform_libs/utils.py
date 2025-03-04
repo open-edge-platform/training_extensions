@@ -426,29 +426,6 @@ def flip_bboxes(boxes: Tensor, img_shape: tuple[int, int], direction: str = "hor
         flipped[..., 3] = img_shape[0] - boxes[..., 1]
     return flipped
 
-def flip_keypoints(keypoints: np.ndarray, img_shape: tuple[int, int], direction: str = "horizontal") -> np.ndarray:
-    """Flip keypoints horizontally or vertically.
-
-    Args:
-        keypoints (np.ndarray): Keypoints to be flipped.
-        img_shape (tuple[int, int]): A tuple of image height and width.
-        direction (str): Flip direction, options are "horizontal",
-            "vertical" and "diagonal". Defaults to "horizontal".
-
-    Returns:
-        (np.ndarray): Flipped keypoints.
-    """
-    assert direction in ["horizontal", "vertical", "diagonal"]  # noqa: S101
-    flipped = keypoints.copy()
-    if direction == "horizontal":
-        flipped[:, 0] = img_shape[1] - keypoints[:, 0]
-    elif direction == "vertical":
-        flipped[:, 1] = img_shape[0] - keypoints[:, 1]
-    else:
-        flipped[:, 0] = img_shape[1] - keypoints[:, 0]
-        flipped[:, 1] = img_shape[0] - keypoints[:, 1]
-    return flipped
-
 
 def overlap_bboxes(
     bboxes1: Tensor,
