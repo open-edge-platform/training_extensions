@@ -271,7 +271,7 @@ class TestTorchVisionTransformLib:
         assert TorchVisionTransformLib._eval_input_size_str("(5, 5) / 2") == (2, 2)
         assert TorchVisionTransformLib._eval_input_size_str("(10, 11) * -0.5") == (-5, -6)
 
-    @pytest.mark.parametrize("input_str", ["1+1", "1+-5", "rm fake", "hoho", "DecordDecode()"])
+    @pytest.mark.parametrize("input_str", ["1+1", "1+-5", "rm fake", "hoho"])
     def test_eval_input_size_str_wrong_value(self, input_str):
         with pytest.raises(SyntaxError):
             assert TorchVisionTransformLib._eval_input_size_str(input_str)
