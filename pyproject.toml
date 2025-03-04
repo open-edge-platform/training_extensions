@@ -80,7 +80,7 @@ base = [
     "pytorchcv==0.0.67",
     "timm==1.0.3",
     "openvino==2025.0",
-    "openvino-model-api==0.3.0",
+    "openvino-model-api==0.3.0.1",
     "onnx==1.17.0",
     "onnxconverter-common==1.14.0",
     "nncf==2.15.0",
