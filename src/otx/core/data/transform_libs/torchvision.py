@@ -2480,8 +2480,11 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         img = img[crop_y1:crop_y2, crop_x1:crop_x2, ...]
         cropped_img_shape = img.shape[:2]
 
-        inputs.image = img
-        orig_shape = inputs.img_info.img_shape
+        if isinstance(inputs, TorchDataItem):
+            inputs.image = torch.tensor(img, dtype=torch.float32).permute(2, 0, 1)
+        else:
+            inputs.image = img
+        inputs.img_info = _crop_image_info(inputs.img_info, *cropped_img_shape)
 
         valid_inds: np.ndarray = np.array([1])  # for semantic segmentation
         # crop bboxes accordingly and clip to the image boundary
