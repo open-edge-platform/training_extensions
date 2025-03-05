@@ -153,7 +153,7 @@ class Benchmark:
 
         self._rename_raw_data(
             work_dir=Path(engine.work_dir),
-            replaces={"train_": "train/", "{pre}": "train/"},
+            replaces={"train_": "train/", "{pre}": "training:"},
         )
         del engine
         return total_time
@@ -196,9 +196,9 @@ class Benchmark:
         )
 
         replace_map = {
-            RunTestType.TORCH: {"test_": "test/", "{pre}": "test/"},
-            RunTestType.EXPORT: {"test": test_type, "{pre}": f"{test_type}/"},
-            RunTestType.OPTIMIZE: {"test": test_type, "{pre}": f"{test_type}/"},
+            RunTestType.TORCH: {"test_": "test/", "{pre}": f"{test_type}:"},
+            RunTestType.EXPORT: {"test_": "test/", "{pre}": f"{test_type}:"},
+            RunTestType.OPTIMIZE: {"test_": "test/", "{pre}": f"{test_type}:"},
         }
 
         extra_kwargs = {}
@@ -219,8 +219,8 @@ class Benchmark:
         # It is calculated by dividing the total time by the number of samples.
         latency = total_time / len(engine.datamodule.subsets["test"])
         extra_metrics = {
-            f"test({test_type})/e2e_time": total_time,
-            f"test({test_type})/latency": latency,
+            f"{test_type}:test/e2e_time": total_time,
+            f"{test_type}:test/latency": latency,
         }
         # =================
 
@@ -296,8 +296,8 @@ class Benchmark:
         total_time = time() - start_time
 
         # OTX does not create metrics.cvs during optimization,
-        # So we are manually write optimize/e2e_time to csv.
-        data_frame = pd.DataFrame({"optimize/e2e_time": [total_time]})
+        # So we are manually write optimize:e2e_time to csv.
+        data_frame = pd.DataFrame({"optimize:e2e_time": [total_time]})
         data_frame.to_csv(sub_work_dir / f"{SubCommand.OPTIMIZE.value}/metrics.csv", index=False)
         # =================
 
@@ -403,7 +403,7 @@ class Benchmark:
                     tags=tags,
                     criteria=criteria,
                     extra_metrics={
-                        "train/e2e_time": e2e_train_time,
+                        "training:e2e_time": e2e_train_time,
                     },
                 )
 
