@@ -175,17 +175,17 @@ def summarize_table(history: pd.DataFrame, task: OTXTaskType) -> list[pd.DataFra
 
     # Metrics to summarize in aggregated table
     metrics = [
-        "train/e2e_time",
-        "train/epoch",
-        "train/iter_time",
-        "train/gpu_mem",
-        f"export/{score_metric}",
-        f"optimize/{score_metric}",
-        f"test/{score_metric}",
-        "test(torch)/latency",
-        "test(export)/latency",
-        "test(optimize)/latency",
-        "optimize/e2e_time",
+        "training:e2e_time",
+        "training:epoch",
+        "training:train/iter_time",
+        "training:gpu_mem",
+        f"torch:test/{score_metric}",
+        f"export:test/{score_metric}",
+        f"optimize:test/{score_metric}",
+        "torch:test/latency",
+        "export:test/latency",
+        "optimize:test/latency",
+        "optimize:test/e2e_time",
     ]
 
     raw_task_data = history.query(f"task == '{task.value}'")
