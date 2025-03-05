@@ -114,6 +114,7 @@ class RTMPoseTiny(RTMPose):
                 "sigma": sigma,
                 "normalize": False,
                 "use_dark": False,
+                "decode_scores": True,
             },
             gau_cfg={
                 "num_token": num_classes,
