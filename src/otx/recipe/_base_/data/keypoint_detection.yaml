@@ -11,6 +11,7 @@ input_size:
 train_subset:
   subset_name: train
   batch_size: 32
+  num_workers: 2
   transforms:
     - class_path: otx.core.data.transform_libs.torchvision.TopdownAffine
       init_args:
@@ -27,6 +28,7 @@ train_subset:
 val_subset:
   subset_name: val
   batch_size: 32
+  num_workers: 2
   transforms:
     - class_path: otx.core.data.transform_libs.torchvision.Resize
       init_args:
@@ -48,6 +50,7 @@ val_subset:
 test_subset:
   subset_name: test
   batch_size: 32
+  num_workers: 2
   transforms:
     - class_path: otx.core.data.transform_libs.torchvision.Resize
       init_args:
