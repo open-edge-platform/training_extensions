@@ -249,7 +249,7 @@ def summarize_task(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path)
 
 
 def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_root: Path):
-    """Summarize high-level task performance."""
+    """Summarize high-level task performance over all datasets, with one row per model."""
 
     raw_task_data = raw_data.query(f"task == '{task.value}'")
     if raw_task_data is None or len(raw_task_data) == 0:
@@ -264,18 +264,36 @@ def task_high_level_summary(raw_data: pd.DataFrame, task: OTXTaskType, output_ro
         raw_task_data.loc[:, col] = raw_task_data[col].astype(str)  # Prevent strings like '2.0.0' being loaded as float
 
     metrics = raw_task_data.select_dtypes(include=["number"]).columns.to_list()
-    grouped_data = raw_task_data.groupby(["otx_version", "task"])
+
+    # Group by model instead of just otx_version and task
+    grouped_data = raw_task_data.groupby(["otx_version", "task", "model"])
     aggregated = grouped_data.agg({metric: ["mean", "std"] for metric in metrics}).reset_index()
 
-    # Flatten the MultiIndex columns, excluding 'otx_version', 'task', 'model', 'data_group'
+    # Flatten the MultiIndex columns
     cols_to_exclude = {"otx_version", "task", "model", "data"}
     aggregated.columns = [
         ("_".join(col) if col[0] not in cols_to_exclude else col[0]) for col in aggregated.columns.to_numpy()
     ]
 
-    # Get metrics (int/float) columns
-    columns = aggregated.select_dtypes(include=["number"]).columns
+    number_cols = aggregated.select_dtypes(include=["number"]).columns.to_list()
+    meta_cols = aggregated.select_dtypes(include=["object"]).columns.to_list()
+    for col in meta_cols:
+        if col in ["model", "task", "otx_version"]:
+            meta_cols.remove(col)
+
+    # Rearrange columns to match the order in aggregate function
+    aggregated = aggregated.reindex(
+        columns=[
+            "otx_version",
+            "task",
+            "model",
+            *number_cols,
+            *meta_cols,
+        ],
+    )
+
     # Round all numeric columns to 4 decimal places
+    columns = aggregated.select_dtypes(include=["number"]).columns
     for col in columns:
         aggregated[col] = aggregated[col].round(4)
 
