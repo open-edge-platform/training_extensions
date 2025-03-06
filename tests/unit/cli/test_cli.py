@@ -153,7 +153,7 @@ class TestOTXCLI:
         cli = OTXCLI()
         cli.instantiate_classes()
 
-        assert mock_data_module.call_args.args[-1] == 1
+        assert mock_data_module.call_args.args[-1] == 12345
 
     def test_raise_error_correctly(self, fxt_train_command, mocker) -> None:
         mock_engine = mocker.patch("otx.cli.OTXCLI.instantiate_engine")

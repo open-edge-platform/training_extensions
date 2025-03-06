@@ -30,11 +30,11 @@ class TestAnomalyOpenVINO:
     )
     def otx_model(self, request):
         if request.param == "padim":
-            model = Padim(DataInputParams((1, 1), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            model = Padim(DataInputParams((448, 448), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         elif request.param == "stfpm":
-            model = Stfpm(DataInputParams((1, 1), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            model = Stfpm(DataInputParams((448, 448), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         elif request.param == "uflow":
-            model = Uflow(DataInputParams((1, 1), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
+            model = Uflow(DataInputParams((448, 448), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
             model.setup()
         else:
             raise ValueError
