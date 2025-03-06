@@ -54,6 +54,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4142>)
 - Add DETR XAI Explain Mode
   (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
+- Add UFlow anomaly detection algorithm
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4251>)
 
 ### Enhancements
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
@@ -13,6 +13,7 @@ from anomalib.metrics.threshold import ManualThreshold
 from otx.algo.anomaly.openvino_model import AnomalyOpenVINO
 from otx.algo.anomaly.padim import Padim
 from otx.algo.anomaly.stfpm import Stfpm
+from otx.algo.anomaly.uflow import Uflow
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
@@ -23,6 +24,7 @@ class TestAnomalyOpenVINO:
         params=[
             # "padim", Cannot export padim in this way. We will face an error.
             "stfpm",
+            "uflow",
         ],
     )
     def otx_model(self, request):
@@ -30,6 +32,9 @@ class TestAnomalyOpenVINO:
             model = Padim()
         elif request.param == "stfpm":
             model = Stfpm()
+        elif request.param == "uflow":
+            model = Uflow()
+            model.setup()
         else:
             raise ValueError
 

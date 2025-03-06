@@ -1,10 +1,10 @@
 # Description.
-model_template_id: ote_anomaly_classification_stfpm
-name: STFPM
+model_template_id: ote_anomaly_uflow
+name: U-FLOW
 task_type: ANOMALY_CLASSIFICATION
 task_family: VISION
 instantiation: "CLASS"
-summary: Use this model when the position of the objects in the image frame might differ between images.
+summary: This model generally achieves high accuracy across a wide range of tasks, but it is slower than other models.
 application: ~
 
 # Algo backend.
@@ -21,5 +21,9 @@ training_targets:
   - CPU
 
 # Computational Complexity
-gigaflops: 5.6
-size: 21.1
+gigaflops: 19.6
+size: 62.88
+
+# Model spec
+model_category: ACCURACY
+is_default_for_task: false

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Converter for v1 config."""
@@ -168,6 +168,10 @@ TEMPLATE_ID_DICT = {
     "ote_anomaly_stfpm": {
         "task": OTXTaskType.ANOMALY,
         "model_name": "stfpm",
+    },
+    "ote_anomaly_uflow": {
+        "task": OTXTaskType.ANOMALY,
+        "model_name": "uflow",
     },
     # ANOMALY CLASSIFICATION
     "ote_anomaly_classification_padim": {
@@ -413,7 +417,7 @@ class ConfigConverter:
             config (dict): The configuration dictionary.
         """
         config.pop("config")  # Remove config key that for CLI
-        config["data"].pop("__path__")  # Remove __path__ key that for CLI overriding
+        config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
 
     @staticmethod
     def instantiate(
