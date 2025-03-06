@@ -14,7 +14,6 @@ from torchvision import tv_tensors
 from torchvision.transforms import v2
 
 from otx.core.config.data import SubsetConfig
-from otx.core.data.dataset.action_classification import OTXActionClsDataset
 from otx.core.data.dataset.classification import HLabelInfo
 from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.core.data.entity.base import Points
@@ -172,9 +171,9 @@ class TestTorchVisionTransformLib:
         assert isinstance(transform, v2.Compose)
 
         dataset_cls, data_entity_cls, kwargs = fxt_dataset_and_data_entity_cls
-        if dataset_cls in [OTXInstanceSegDataset, OTXActionClsDataset]:
+        if dataset_cls == OTXInstanceSegDataset:
             pytest.skip(
-                "Instance segmentation, and Action classification task are not suitible for torchvision transform",
+                "Instance segmentation task are not suitible for torchvision transform",
             )
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
         dataset = dataset_cls(
@@ -294,9 +293,9 @@ class TestTorchVisionTransformLib:
         assert isinstance(transform, v2.Compose)
 
         dataset_cls, data_entity_cls, kwargs = fxt_dataset_and_data_entity_cls
-        if dataset_cls in [OTXInstanceSegDataset, OTXActionClsDataset]:
+        if dataset_cls == OTXInstanceSegDataset:
             pytest.skip(
-                "Instance segmentation, and Action classification task are not suitible for torchvision transform",
+                "Instance segmentation task are not suitible for torchvision transform",
             )
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
         dataset = dataset_cls(

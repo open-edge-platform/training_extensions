@@ -41,8 +41,6 @@ Supported dataset formats for each task:
 - classification: `Imagenet <https://www.image-net.org/>`_, `COCO <https://cocodataset.org/#format-data>`_ (multi-label), :ref:`custom hierarchical <hierarchical_dataset>`
 - object detection: `COCO <https://cocodataset.org/#format-data>`_, `Pascal-VOC <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_, `YOLO <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/yolo.html>`_
 - semantic segmentation: `Common Semantic Segmentation <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/common_semantic_segmentation.html>`_, `Pascal-VOC <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_, `Cityscapes <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/cityscapes.html>`_, `ADE20k <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/ade20k2020.html>`_
-- action classification: `CVAT <https://opencv.github.io/cvat/docs/manual/advanced/xml_format/>`_
-- action detection: `CVAT <https://opencv.github.io/cvat/docs/manual/advanced/xml_format/>`_
 - anomaly classification: `MVTec <https://www.mvtec.com/company/research/datasets/mvtec-ad>`_
 - anomaly detection: `MVTec <https://www.mvtec.com/company/research/datasets/mvtec-ad>`_
 - anomaly segmentation: `MVTec <https://www.mvtec.com/company/research/datasets/mvtec-ad>`_
@@ -66,7 +64,7 @@ If we have a dataset format occluded with other tasks, for example ``COCO`` form
         .. code-block:: bash
 
             (otx) ...$ otx train --data_root <path_to_data_root>
-                                 --task {MULTI_CLASS_CLS, MULTI_LABEL_CLS, H_LABEL_CLS, DETECTION, INSTANCE_SEGMENTATION, SEMANTIC_SEGMENTATION, ACTION_CLASSIFICATION, ACTION_DETECTION, ACTION_SEGMENTATION, ANOMALY_CLASSIFICATION, ANOMALY_DETECTION, ANOMALY_SEGMENTATION, VISUAL_PROMPTING}
+                                 --task {MULTI_CLASS_CLS, MULTI_LABEL_CLS, H_LABEL_CLS, DETECTION, INSTANCE_SEGMENTATION, SEMANTIC_SEGMENTATION,  ANOMALY_CLASSIFICATION, ANOMALY_DETECTION, ANOMALY_SEGMENTATION, VISUAL_PROMPTING}
                                  ...
 
 Auto-adapt batch size

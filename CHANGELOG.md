@@ -6,6 +6,34 @@ All notable changes to this project will be documented in this file.
 
 ### New features
 
+### Enhancements
+
+### Bug fixes
+
+- Don't filter empty label from kp arrow
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4229>)
+
+### Removed
+
+- Remove HPO
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
+- Remove Action Classification
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4202>)
+- Remove Diffusion task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4206>)
+- Remove 3D Object Detection task
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4208>)
+- Remove Zero Shot Visual Prompting
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4209>)
+- Remove Semi-SL algorithm, unlabeled dataset, MMCV transforms
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4227>)
+- Remove MaskDino, YOLOV9, HuggingFace wrappers, OTX install, mmcv tools
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4247>)
+
+## \[2.3.0\]
+
+### New features
+
 - Turn on/off classification augmentations
   (<https://github.com/openvinotoolkit/training_extensions/pull/4039>)
 - Turn on/off detection and instance segmentation augmentations
@@ -43,8 +71,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4073>)
 - Upgrade OpenVINO to 2024.5 and NNCF to 2.14.0
   (<https://github.com/openvinotoolkit/training_extensions/pull/4123>)
-- Improve FMetric computation
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4130>)
 - Upgrade OV, MAPI, and NNCF dependencies
   (<https://github.com/openvinotoolkit/training_extensions/pull/3967>)
 - Instance Segmentation Model refactoring
@@ -55,6 +81,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/3985>)
 - Bump OV to 2024.6, update empty label handling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4162>)
+- Bump MAPI to 0.2.5.1
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4211>)
 
 ### Bug fixes
 
@@ -70,11 +98,14 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4173>)
 - Fix arrow support for semantic segmentation task
   (<https://github.com/openvinotoolkit/training_extensions/pull/4172>)
-
-### Removed
-
-- Remove HPO
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4196>)
+- Revert FMetric computation
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4212>)
+- Fix backward compatibility issues in model checkpoint loading
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4199>)
+- Fix label info on loading checkpoint
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4200>)
+- Revert h-cls head to linear one
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4221>)
 
 ## \[2.2.2\]
 

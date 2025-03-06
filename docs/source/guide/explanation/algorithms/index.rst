@@ -26,6 +26,4 @@ Contents
    object_detection/index
    segmentation/index
    anomaly/index
-   action/index
    visual_prompting/index
-   diffusion/index

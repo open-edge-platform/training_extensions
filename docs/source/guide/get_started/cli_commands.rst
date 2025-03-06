@@ -27,7 +27,7 @@ Help
 
     (otx) ...$ otx --help
     ╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    │ Usage: otx [-h] [-v] {install,find,train,test,predict,export,optimize,explain} ...                              │
+    │ Usage: otx [-h] [-v] {find,train,test,predict,export,optimize,explain} ...                              │
     │                                                                                                                 │
     │                                                                                                                 │
     │ OpenVINO Training-Extension command line tool                                                                   │
@@ -42,7 +42,6 @@ Help
     │                                                                                                                 │
     │                                                                                                                 │
     │   Available subcommands:                                                                                        │
-    │     install             Install OTX requirements.                                                               │
     │     find                This shows the model provided by OTX.                                                   │
     │     train               Trains the model using the provided LightningModule and OTXDataModule.                  │
     │     test                Run the testing phase of the engine.                                                    │
@@ -53,11 +52,6 @@ Help
     |     benchmark           Executes model micro benchmarking on random data.                                       |
     │                                                                                                                 │
     ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-.. note::
-
-    After installing the package, if torch is not installed properly, this will only show the ``install`` subcommand. You can refer to this :doc:`installation section <installation>`.
-
 
 The subcommand can get help output in the following way.
 For basic subcommand help, the Verbosity Level is 0. In this case, the CLI provides a Quick-Guide in markdown.
@@ -214,13 +208,13 @@ Find
     (otx) ...$ otx find --help
     ╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
     │ Usage: otx [options] find [-h]                                                                                                                                                            │
-    │                           [--task {ACTION_CLASSIFICATION,ACTION_DETECTION,ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,DETEC │
+    │                           [--task {ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,DETEC                                        │
     │                           [--pattern PATTERN]                                                                                                                                             │
     │                                                                                                                                                                                           │
     │                                                                                                                                                                                           │
     │ Options:                                                                                                                                                                                  │
     │   -h, --help            Show this help message and exit.                                                                                                                                  │
-    │   --task {ACTION_CLASSIFICATION,ACTION_DETECTION,ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,DETECTION,ROTATED_DETECTION,DE │
+    │   --task {ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,DETECTION,ROTATED_DETECTION,DE                                        │
     │                         Value for filtering by task. Default is None, which shows all recipes. (type: None, default: None)                                                                │
     │   --pattern PATTERN     This allows you to filter the model name of the recipe. For example, if you want to find all models that contain the word 'efficient', you can use '--pattern     │
     │                         efficient' (type: None, default: None)                                                                                                                            │

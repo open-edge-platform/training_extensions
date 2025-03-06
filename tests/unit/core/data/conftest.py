@@ -15,10 +15,6 @@ from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 from datumaro.components.media import Image
 
-from otx.core.data.dataset.action_classification import (
-    ActionClsDataEntity,
-    OTXActionClsDataset,
-)
 from otx.core.data.dataset.anomaly import (
     AnomalyClassificationDataItem,
     AnomalyDataset,
@@ -162,7 +158,6 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         (OTXDetectionDataset, DetDataEntity, {}),
         (OTXInstanceSegDataset, InstanceSegDataEntity, {"include_polygons": True}),
         (OTXSegmentationDataset, SegDataEntity, {}),
-        (OTXActionClsDataset, ActionClsDataEntity, {}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
         (AnomalyDataset, AnomalyDetectionDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),
@@ -175,7 +170,6 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         "detection",
         "instance_seg",
         "semantic_seg",
-        "action_cls",
         "anomaly",
         "anomaly_cls",
         "anomaly_det",

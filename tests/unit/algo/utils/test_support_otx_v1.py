@@ -210,21 +210,3 @@ class TestOTXv1Helper:
 
         converted_state_dict = OTXv1Helper.load_seg_lite_hrnet_ckpt(src_state_dict, add_prefix="model.model.")
         self._check_ckpt_pairs(converted_state_dict, dst_state_dict)
-
-    def test_load_action_ckpt(self, fxt_random_tensor: torch.Tensor) -> None:
-        src_state_dict = {
-            "model": {
-                "state_dict": {
-                    "model.weights": fxt_random_tensor,
-                    "head.weights": fxt_random_tensor,
-                },
-            },
-        }
-
-        dst_state_dict = {
-            "model.model.model.weights": fxt_random_tensor,
-            "model.model.head.weights": fxt_random_tensor,
-        }
-
-        converted_state_dict = OTXv1Helper.load_iseg_ckpt(src_state_dict, add_prefix="model.model.")
-        self._check_ckpt_pairs(converted_state_dict, dst_state_dict)

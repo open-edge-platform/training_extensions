@@ -12,7 +12,7 @@ import json
 import logging
 import warnings
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import numpy as np
 import openvino
@@ -49,7 +49,6 @@ from otx.core.schedulers import (
 from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
 from otx.core.types.label import LabelInfo, LabelInfoTypes, NullLabelInfo
 from otx.core.types.precision import OTXPrecisionType
-from otx.core.types.task import OTXTrainType
 from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
@@ -89,7 +88,7 @@ DefaultOptimizerCallable = _default_optimizer_callable
 DefaultSchedulerCallable = _default_scheduler_callable
 
 
-class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
+class OTXModel(LightningModule):
     """Base class for the models used in OTX.
 
     Args:
@@ -114,12 +113,10 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         metric: MetricCallable = NullMetricCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        train_type: Literal[OTXTrainType.SUPERVISED, OTXTrainType.SEMI_SUPERVISED] = OTXTrainType.SUPERVISED,
     ) -> None:
         super().__init__()
 
         self._label_info = self._dispatch_label_info(label_info)
-        self.train_type = train_type
         self._check_input_size(input_size)
         self.input_size = input_size
         self.classification_layers: dict[str, dict[str, Any]] = {}
@@ -389,6 +386,13 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
         super().on_load_checkpoint(checkpoint)
 
         if ckpt_label_info := checkpoint.get("label_info"):
+            if isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                ckpt_label_info = LabelInfo(
+                    label_groups=ckpt_label_info.label_groups,
+                    label_names=ckpt_label_info.label_names,
+                    label_ids=ckpt_label_info.label_names,
+                )
             self._label_info = ckpt_label_info
 
         if ckpt_tile_config := checkpoint.get("tile_config"):
@@ -569,7 +573,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
 
     def forward_tiles(
         self,
-        inputs: OTXTileBatchDataEntity[T_OTXBatchDataEntity],
+        inputs: OTXTileBatchDataEntity,
     ) -> T_OTXBatchPredEntity | OTXBatchLossEntity:
         """Model forward function for tile task."""
         raise NotImplementedError
@@ -811,7 +815,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
 
         self._tile_config = tile_config
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXBatchDataEntity[Any]:
+    def get_dummy_input(self, batch_size: int = 1) -> OTXBatchDataEntity:
         """Generates a dummy input, suitable for launching forward() on it.
 
         Args:
@@ -845,7 +849,7 @@ class OTXModel(LightningModule, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEnti
             raise ValueError(msg)
 
 
-class OVModel(OTXModel, Generic[T_OTXBatchDataEntity, T_OTXBatchPredEntity]):
+class OVModel(OTXModel):
     """Base class for the OpenVINO model.
 
     This is a base class representing interface for interacting with OpenVINO

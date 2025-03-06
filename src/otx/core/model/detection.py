@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for detection model entity used in OTX."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 import logging as log
@@ -38,7 +40,7 @@ if TYPE_CHECKING:
     from otx.algo.detection.detectors import SingleStageDetector
 
 
-class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
+class OTXDetectionModel(OTXModel):
     """Base class for the detection models used in OTX."""
 
     input_size: tuple[int, int]
@@ -137,7 +139,7 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
 
         return inputs
 
-    def _customize_outputs(  # type: ignore[override]
+    def _customize_outputs(
         self,
         outputs: list[InstanceData] | dict | None,
         inputs: DetBatchDataEntity,
@@ -229,7 +231,7 @@ class OTXDetectionModel(OTXModel[DetBatchDataEntity, DetBatchPredEntity]):
                 classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
         return classification_layers
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity[DetBatchDataEntity]) -> DetBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> DetBatchPredEntity:
         """Unpack detection tiles.
 
         Args:
@@ -540,7 +542,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         return [1] * 10
 
 
-class OVDetectionModel(OVModel[DetBatchDataEntity, DetBatchPredEntity]):
+class OVDetectionModel(OVModel):
     """Object detection model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository

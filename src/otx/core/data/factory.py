@@ -67,7 +67,7 @@ class OTXDatasetFactory:
     """Factory class for OTXDataset."""
 
     @classmethod
-    def create(  # noqa: PLR0911
+    def create(
         cls: type[OTXDatasetFactory],
         task: OTXTaskType,
         dm_subset: DmDataset,
@@ -134,11 +134,6 @@ class OTXDatasetFactory:
 
             return OTXSegmentationDataset(ignore_index=ignore_index, **common_kwargs)
 
-        if task == OTXTaskType.ACTION_CLASSIFICATION:
-            from .dataset.action_classification import OTXActionClsDataset
-
-            return OTXActionClsDataset(**common_kwargs)
-
         if task == OTXTaskType.VISUAL_PROMPTING:
             from .dataset.visual_prompting import OTXVisualPromptingDataset
 
@@ -146,26 +141,9 @@ class OTXDatasetFactory:
             use_point = getattr(vpm_config, "use_point", False)
             return OTXVisualPromptingDataset(use_bbox=use_bbox, use_point=use_point, **common_kwargs)
 
-        if task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:
-            from .dataset.visual_prompting import OTXZeroShotVisualPromptingDataset
-
-            use_bbox = getattr(vpm_config, "use_bbox", False)
-            use_point = getattr(vpm_config, "use_point", False)
-            return OTXZeroShotVisualPromptingDataset(use_bbox=use_bbox, use_point=use_point, **common_kwargs)
-
         if task == OTXTaskType.KEYPOINT_DETECTION:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset
 
             return OTXKeypointDetectionDataset(**common_kwargs)
-
-        if task == OTXTaskType.DIFFUSION:
-            from .dataset.diffusion import OTXDiffusionDataset
-
-            return OTXDiffusionDataset(**common_kwargs)
-
-        if task == OTXTaskType.OBJECT_DETECTION_3D:
-            from .dataset.object_detection_3d import OTX3DObjectDetectionDataset
-
-            return OTX3DObjectDetectionDataset(**common_kwargs)
 
         raise NotImplementedError(task)

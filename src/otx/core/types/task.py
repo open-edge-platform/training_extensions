@@ -11,9 +11,6 @@ from enum import Enum
 class OTXTaskType(str, Enum):
     """OTX task type definition."""
 
-    # Action Recognition
-    ACTION_CLASSIFICATION = "ACTION_CLASSIFICATION"
-
     # Anomaly Detection
     ANOMALY = "ANOMALY"
     # TODO(ashwinvaidya17): Remove rest after greenlight from backend.
@@ -29,9 +26,7 @@ class OTXTaskType(str, Enum):
     # Detection
     DETECTION = "DETECTION"
     ROTATED_DETECTION = "ROTATED_DETECTION"
-    DETECTION_SEMI_SL = "DETECTION_SEMI_SL"
     KEYPOINT_DETECTION = "KEYPOINT_DETECTION"
-    OBJECT_DETECTION_3D = "OBJECT_DETECTION_3D"
 
     # Segmentation
     INSTANCE_SEGMENTATION = "INSTANCE_SEGMENTATION"
@@ -39,14 +34,3 @@ class OTXTaskType(str, Enum):
 
     # Visual Promting Tasks.
     VISUAL_PROMPTING = "VISUAL_PROMPTING"
-    ZERO_SHOT_VISUAL_PROMPTING = "ZERO_SHOT_VISUAL_PROMPTING"
-
-    # Diffusion
-    DIFFUSION = "DIFFUSION"
-
-
-class OTXTrainType(str, Enum):
-    """OTX train type definition."""
-
-    SUPERVISED = "SUPERVISED"
-    SEMI_SUPERVISED = "SEMI_SUPERVISED"

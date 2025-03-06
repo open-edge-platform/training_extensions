@@ -48,7 +48,7 @@ class DetPredEntity(OTXPredEntity, DetDataEntity):
 
 
 @dataclass
-class DetBatchDataEntity(OTXBatchDataEntity[DetDataEntity]):
+class DetBatchDataEntity(OTXBatchDataEntity):
     """Data entity for detection task.
 
     :param bboxes: A list of bbox annotations as top-left-bottom-right

@@ -39,14 +39,7 @@ Training to deployment tutorials
       :text-align: center
 
       Learn how to train an anomaly detection model
-
-   .. grid-item-card:: Action Classification
-      :link: action_classification
-      :link-type: doc
-      :text-align: center
-
-      Learn how to train an action classification model
-
+   
    .. grid-item-card:: Visual Prompting
       :link: visual_prompting
       :link-type: doc
@@ -63,5 +56,4 @@ Training to deployment tutorials
    instance_segmentation
    semantic_segmentation
    anomaly_detection
-   action_classification
    visual_prompting

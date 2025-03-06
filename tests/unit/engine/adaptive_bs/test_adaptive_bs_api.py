@@ -10,7 +10,6 @@ from unittest.mock import MagicMock
 import pytest
 from lightning.pytorch.loggers.logger import DummyLogger
 
-from otx.core.types.task import OTXTaskType
 from otx.engine.adaptive_bs import adaptive_bs_api as target_file
 from otx.engine.adaptive_bs.adaptive_bs_api import BatchSizeFinder, _adjust_train_args, _train_model, adapt_batch_size
 
@@ -184,17 +183,6 @@ def test_adapt_batch_size_no_accelerator(
 ):
     mock_is_cuda_available.return_value = False
     with pytest.raises(RuntimeError, match="Adaptive batch size supports CUDA or XPU."):
-        adapt_batch_size(mock_engine, **train_args)
-
-
-def test_adapt_batch_size_zvp_task(
-    mock_is_cuda_available,
-    mock_is_xpu_available,
-    mock_engine,
-    train_args,
-):
-    mock_engine.task = OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING
-    with pytest.raises(RuntimeError, match="Zero shot visual prompting task doesn't support adaptive batch size."):
         adapt_batch_size(mock_engine, **train_args)
 
 

@@ -112,8 +112,3 @@ class OTXv1Helper:
             val = state_dict.pop(key)
             state_dict[add_prefix + key] = val
         return state_dict
-
-    @staticmethod
-    def load_action_ckpt(state_dict: dict, add_prefix: str = "") -> dict:
-        """Load the OTX1.x action cls/det model checkpoints."""
-        return OTXv1Helper.load_common_ckpt(state_dict, add_prefix)

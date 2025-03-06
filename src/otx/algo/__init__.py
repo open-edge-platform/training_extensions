@@ -10,16 +10,13 @@ from . import (
 
 __all__ = [
     "accelerators",
-    "action_classification",
     "anomaly",
     "callbacks",
     "classification",
     "common",
     "detection",
-    "diffusion",
     "keypoint_detection",
     "modules",
-    "object_detection_3d",
     "plugins",
     "samplers",
     "segmentation",
