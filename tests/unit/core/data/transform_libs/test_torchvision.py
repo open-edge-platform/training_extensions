@@ -26,7 +26,6 @@ from otx.core.data.transform_libs.torchvision import (
     Compose,
     DecodeVideo,
     FilterAnnotations,
-    GetBBoxCenterScale,
     MinIoURandomCrop,
     Pad,
     PhotoMetricDistortion,
@@ -844,12 +843,11 @@ class TestTopdownAffine:
     def test_forward(self, keypoint_det_entity) -> None:
         transform = Compose(
             [
-                GetBBoxCenterScale(),
                 TopdownAffine(input_size=(5, 5)),
             ],
         )
         results = transform(deepcopy(keypoint_det_entity))
 
-        assert np.array_equal(results.bbox_info.center, np.array([3.5, 3.5]))
-        assert np.array_equal(results.bbox_info.scale, np.array([8.75, 8.75]))
+        assert np.array_equal(results.bbox_info.center, np.array([5, 5]))
+        assert np.array_equal(results.bbox_info.scale, np.array([10, 10]))
         assert results.keypoints.shape == (4, 2)
