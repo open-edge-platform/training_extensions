@@ -212,7 +212,6 @@ class TestModule:
         cfg.tile_config.enable_tiler = False
         cfg.auto_num_workers = False
         cfg.device = "auto"
-        cfg.input_size = (240, 240)
         return cfg
 
     def test_hparams_initial_is_loggable(
@@ -226,7 +225,7 @@ class TestModule:
         # Dataset will have "train", "val", and "test" subsets
         mock_dm_subsets = {name: MagicMock() for name in ["train", "val", "test"]}
         mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
-        module = OTXDataModule(**fxt_real_tv_cls_config)
+        module = OTXDataModule(**fxt_real_tv_cls_config, input_size=(240, 240))
         logger = CSVLogger(tmpdir)
         logger.log_hyperparams(module.hparams_initial)
         logger.save()
