@@ -21,6 +21,7 @@ from otx.core.data.utils.utils import (
     compute_robust_dataset_statistics,
     compute_robust_scale_statistics,
     compute_robust_statistics,
+    rescale_keypoints,
 )
 
 
@@ -188,3 +189,31 @@ def test_adapt_input_size_to_dataset(mocker):
     }
     input_size = adapt_input_size_to_dataset(dataset=MagicMock(), downscale_only=False, base_input_size=512)
     assert input_size == (1022, 1022)
+
+
+def test_rescale_keypoints():
+    keypoints = np.array([[10, 20], [30, 40], [50, 60]])
+
+    # Test with a single float scale factor
+    scale_factor = 2.0
+    rescaled_keypoints = rescale_keypoints(keypoints, scale_factor)
+    expected_keypoints = np.array([[20, 40], [60, 80], [100, 120]])
+    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
+
+    # Test with a tuple scale factor
+    scale_factor = (2.0, 0.5)
+    rescaled_keypoints = rescale_keypoints(keypoints, scale_factor)
+    expected_keypoints = np.array([[20, 10], [60, 20], [100, 30]])
+    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
+
+    # Test with a different tuple scale factor
+    scale_factor = (0.5, 2.0)
+    rescaled_keypoints = rescale_keypoints(keypoints, scale_factor)
+    expected_keypoints = np.array([[5, 40], [15, 80], [25, 120]])
+    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
+
+    # Test with a single float scale factor of 1.0 (no scaling)
+    scale_factor = 1.0
+    rescaled_keypoints = rescale_keypoints(keypoints, scale_factor)
+    expected_keypoints = keypoints
+    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
