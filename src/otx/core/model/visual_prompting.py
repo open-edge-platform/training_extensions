@@ -5,27 +5,22 @@
 from __future__ import annotations
 
 import logging as log
-import pickle  # nosec: B403   used pickle dump and load only to share inference results
 from abc import abstractmethod
-from collections import defaultdict
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import torch
-from datumaro import Polygon as dmPolygon
 from model_api.models import Model
 from model_api.models.visual_prompting import (
     Prompt,
-    SAMLearnableVisualPrompter,
     SAMVisualPrompter,
-    VisualPromptingFeatures,
 )
 from torch import Tensor, nn
 from torchvision import tv_tensors
 
-from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity, Points
+from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.visual_prompting import (
     VisualPromptingBatchDataEntity,
     VisualPromptingBatchPredEntity,
@@ -42,7 +37,7 @@ from otx.core.utils.mask_util import polygon_to_bitmap
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from model_api.models.utils import PredictedMask, VisualPromptingResult
+    from model_api.models.utils import VisualPromptingResult
     from torchmetrics import MetricCollection
 
     from otx.core.data.module import OTXDataModule

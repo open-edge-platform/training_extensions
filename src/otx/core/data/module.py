@@ -57,7 +57,6 @@ class OTXDataModule(LightningDataModule):
         train_subset: SubsetConfig,
         val_subset: SubsetConfig,
         test_subset: SubsetConfig,
-        input_size: tuple[int, int] | str,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
         vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
         mem_cache_size: str = "1GB",
@@ -69,6 +68,7 @@ class OTXDataModule(LightningDataModule):
         unannotated_items_ratio: float = 0.0,
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
+        input_size: tuple[int, int] | str = "auto",
         input_size_multiplier: int = 1,
     ) -> None:
         """Constructor."""
