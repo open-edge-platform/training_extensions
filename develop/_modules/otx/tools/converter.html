@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.tools.converter</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2024-2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="sd">&quot;&quot;&quot;Converter for v1 config.&quot;&quot;&quot;</span>
@@ -423,6 +423,10 @@
     <span class="s2">&quot;ote_anomaly_stfpm&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY</span><span class="p">,</span>
         <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="s2">&quot;stfpm&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;ote_anomaly_uflow&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY</span><span class="p">,</span>
+        <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="s2">&quot;uflow&quot;</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># ANOMALY CLASSIFICATION</span>
     <span class="s2">&quot;ote_anomaly_classification_padim&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -673,7 +677,7 @@
 <span class="sd">            config (dict): The configuration dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">)</span>  <span class="c1"># Remove config key that for CLI</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;__path__&quot;</span><span class="p">)</span>  <span class="c1"># Remove __path__ key that for CLI overriding</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;__path__&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Remove __path__ key that for CLI overriding</span>
 
 <div class="viewcode-block" id="ConfigConverter.instantiate">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter.instantiate">[docs]</a>
