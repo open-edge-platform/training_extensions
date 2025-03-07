@@ -1405,14 +1405,25 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;OpenVINO model can be exported only as exportable code with demo package.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">output_dir</span><span class="p">,</span>
-            <span class="n">base_name</span><span class="p">,</span>
-            <span class="n">export_format</span><span class="p">,</span>
-            <span class="n">precision</span><span class="p">,</span>
-            <span class="n">to_exportable_code</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="c1"># Temporarily unwrap Tiler model if applicable</span>
+        <span class="n">original_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">original_model</span><span class="p">,</span> <span class="n">Tiler</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">original_model</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exported_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">output_dir</span><span class="p">,</span>
+                <span class="n">base_name</span><span class="p">,</span>
+                <span class="n">export_format</span><span class="p">,</span>
+                <span class="n">precision</span><span class="p">,</span>
+                <span class="n">to_exportable_code</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Restore the original model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">original_model</span>
+
+        <span class="k">return</span> <span class="n">exported_path</span></div>
 
 
 <div class="viewcode-block" id="OVModel.transform_fn">
