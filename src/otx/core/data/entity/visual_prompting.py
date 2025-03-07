@@ -3,6 +3,8 @@
 
 """Module for OTX visual prompting data entities."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -52,7 +54,7 @@ class VisualPromptingPredEntity(OTXPredEntity, VisualPromptingDataEntity):
 
 
 @dataclass
-class VisualPromptingBatchDataEntity(OTXBatchDataEntity[VisualPromptingDataEntity]):
+class VisualPromptingBatchDataEntity(OTXBatchDataEntity):
     """Data entity for visual prompting task.
 
     Attributes:

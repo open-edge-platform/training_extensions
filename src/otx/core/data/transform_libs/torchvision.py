@@ -60,9 +60,9 @@ from otx.core.data.transform_libs.utils import (
     overlap_bboxes,
     project_bboxes,
     rescale_bboxes,
+    rescale_keypoints,
     rescale_masks,
     rescale_polygons,
-    rescale_size,
     scale_size,
     to_np_image,
     translate_bboxes,
@@ -485,7 +485,8 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         interpolation (str): Interpolation method. Defaults to 'bilinear'.
         interpolation_mask (str): Interpolation method for mask. Defaults to 'nearest'.
         transform_bbox (bool): Whether to transform bounding boxes. Defaults to False.
-        transform_point (bool): Whether to transform bounding points. Defaults to False.
+        transform_bbox_points (bool): Whether to transform bounding points. Defaults to False.
+        transform_keypoints (bool): Whether to transform keypoints. Defaults to False.
         transform_mask (bool): Whether to transform masks. Defaults to False.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
     """
@@ -499,7 +500,8 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         interpolation: str = "bilinear",
         interpolation_mask: str = "nearest",
         transform_bbox: bool = False,
-        transform_point: bool = False,
+        transform_bbox_points: bool = False,
+        transform_keypoints: bool = False,
         transform_mask: bool = False,
         is_numpy_to_tvtensor: bool = False,
     ) -> None:
@@ -515,7 +517,8 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             self.scale = tuple(scale)  # type: ignore[assignment]
 
         self.transform_bbox = transform_bbox
-        self.transform_point = transform_point
+        self.transform_bbox_points = transform_bbox_points
+        self.transform_keypoints = transform_keypoints
         self.transform_mask = transform_mask
         self.interpolation = interpolation
         self.interpolation_mask = interpolation_mask
@@ -545,21 +548,22 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             )  # (H, W)
 
             if self.keep_ratio:
-                scale = rescale_size(img_shape, scale)  # type: ignore[assignment]
+                h, w = img.shape[:2]
+                new_scale = min(scale[0] / h, scale[1] / w)
+                img = cv2.resize(
+                    img,
+                    None,
+                    fx=new_scale,
+                    fy=new_scale,
+                    interpolation=CV2_INTERP_CODES[self.interpolation],
+                )
+                scale = img.shape[:2]
 
-            # for considering video case
-            # flipping `scale` is required because cv2.resize uses (W, H)
-            if isinstance(img, list):
-                img = [cv2.resize(im, scale[::-1], interpolation=CV2_INTERP_CODES[self.interpolation]) for im in img]
             else:
                 img = cv2.resize(img, scale[::-1], interpolation=CV2_INTERP_CODES[self.interpolation])
 
             inputs.image = img
-
-            if isinstance(img, list):
-                inputs.img_info = _resize_image_info(inputs.img_info, img[0].shape[:2])
-            else:
-                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+            inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
             scale_factor = (scale[0] / img_shape[0], scale[1] / img_shape[1])
         return inputs, scale_factor
@@ -573,10 +577,16 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="XYXY", canvas_size=inputs.img_info.img_shape)
         return inputs
 
-    def _resize_points(self, inputs: T_OTXDataEntity, scale_factor: tuple[float, float]) -> T_OTXDataEntity:
-        """Resize points with scale_factor only for `Resize`."""
+    def _resize_bbox_points(self, inputs: T_OTXDataEntity, scale_factor: tuple[float, float]) -> T_OTXDataEntity:
+        """Resize bbox points with scale_factor only for `Resize`."""
         if (points := getattr(inputs, "points", None)) is not None:
             inputs.points = resize_points(points, points.canvas_size, inputs.img_info.img_shape)
+        return inputs
+
+    def _resize_keypoints(self, inputs: T_OTXDataEntity, scale_factor: tuple[float, float]) -> T_OTXDataEntity:
+        """Resize keypoints with scale_factor only for `Resize`."""
+        if (keypoints := getattr(inputs, "keypoints", None)) is not None:
+            inputs.keypoints = rescale_keypoints(keypoints, scale_factor)
         return inputs
 
     def _resize_masks(self, inputs: T_OTXDataEntity, scale_factor: tuple[float, float]) -> T_OTXDataEntity:
@@ -601,8 +611,11 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         if self.transform_bbox:
             inputs = self._resize_bboxes(inputs, scale_factor)  # type: ignore[arg-type, assignment]
 
-        if self.transform_point:
-            inputs = self._resize_points(inputs, scale_factor)  # type: ignore[arg-type, assignment]
+        if self.transform_bbox_points:
+            inputs = self._resize_bbox_points(inputs, scale_factor)  # type: ignore[arg-type, assignment]
+
+        if self.transform_keypoints:
+            inputs = self._resize_keypoints(inputs, scale_factor)  # type: ignore[arg-type, assignment]
 
         if self.transform_mask:
             inputs = self._resize_masks(inputs, scale_factor)  # type: ignore[arg-type, assignment]
@@ -618,7 +631,8 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         repr_str += f"interpolation={self.interpolation}, "
         repr_str += f"interpolation_mask={self.interpolation_mask}, "
         repr_str += f"transform_bbox={self.transform_bbox}, "
-        repr_str += f"transform_point={self.transform_point}, "
+        repr_str += f"transform_bbox_points={self.transform_bbox_points}, "
+        repr_str += f"transform_keypoint={self.transform_keypoints}, "
         repr_str += f"transform_mask={self.transform_mask}, "
         repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
         return repr_str
@@ -3100,97 +3114,80 @@ class Normalize3D(tvt_v2.Normalize):
         return inputs
 
 
-class GetBBoxCenterScale(tvt_v2.Transform):
-    """Convert bboxes from [x, y, w, h] to center and scale.
-
-    The center is the coordinates of the bbox center, and the scale is the
-    bbox width and height normalized by a scale factor.
-    Required Keys:
-        - bbox
-    Modified Keys:
-        - bbox_center
-        - bbox_scale
-    Args:
-        padding (float): The bbox padding scale that will be multilied to
-            `bbox_scale`. Defaults to 1.25
-    """
-
-    def __init__(self, padding: float = 1.25) -> None:
-        super().__init__()
-
-        self.padding = padding
-
-    def __call__(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
-        """Transform function to add bbox_infos from bboxes for keypoint detection task."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        bbox = inputs.bboxes[0].numpy()
-        inputs.bbox_info.center = (bbox[2:] + bbox[:2]) * 0.5
-        inputs.bbox_info.scale = (bbox[2:] - bbox[:2]) * self.padding
-
-        return inputs
-
-    def __repr__(self) -> str:
-        """Print the basic information of the transform.
-
-        Returns:
-            str: Formatted string.
-        """
-        return self.__class__.__name__ + f"(padding={self.padding})"
-
-
-class RandomBBoxTransform(tvt_v2.Transform):
-    r"""Rnadomly shift, resize and rotate the bounding boxes.
+class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
+    """Get the bbox image as the model input by affine transform.
 
     Required Keys:
 
+        - img
         - bbox_center
         - bbox_scale
+        - bbox_rotation (optional)
+        - keypoints (optional)
 
     Modified Keys:
 
-        - bbox_center
+        - img
         - bbox_scale
 
     Added Keys:
-        - bbox_rotation
+
+        - input_size
+        - transformed_keypoints
 
     Args:
-        shift_factor (float): Randomly shift the bbox in range
-            :math:`[-dx, dx]` and :math:`[-dy, dy]` in X and Y directions,
-            where :math:`dx(y) = x(y)_scale \cdot shift_factor` in pixels.
-            Defaults to 0.16
-        shift_prob (float): Probability of applying random shift. Defaults to
-            0.3
-        scale_factor (Tuple[float, float]): Randomly resize the bbox in range
-            :math:`[scale_factor[0], scale_factor[1]]`. Defaults to (0.5, 1.5)
-        scale_prob (float): Probability of applying random resizing. Defaults
-            to 1.0
-        rotate_factor (float): Randomly rotate the bbox in
-            :math:`[-rotate_factor, rotate_factor]` in degrees. Defaults
-            to 80.0
-        rotate_prob (float): Probability of applying random rotation. Defaults
-            to 0.6
+        input_size (tuple[int, int]): The size of the model input.
+        affine_transforms_prob (float): The probability of applying affine
+            transforms. Defaults to 0.5.
+        is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
+        shift_factor (float): The factor of shift. Defaults to 0.16.
+        shift_prob (float): The probability of shift. Defaults to 0.3.
+        scale_factor (tuple[float, float]): The factor of scale. Defaults to (0.5, 1.5).
+        scale_prob (float): The probability of scale. Defaults to 1.0.
+        rotate_factor (float): The factor of rotate. Defaults to 80.0.
+        rotate_prob (float): The probability of rotate. Defaults to 0.5.
+        interpolation (str): The interpolation method. Defaults to "bilinear".
     """
 
     def __init__(
         self,
+        input_size: tuple[int, int],
+        affine_transforms_prob: float = 1.0,
+        is_numpy_to_tvtensor: bool = False,
         shift_factor: float = 0.16,
         shift_prob: float = 0.3,
         scale_factor: tuple[float, float] = (0.5, 1.5),
         scale_prob: float = 1.0,
         rotate_factor: float = 80.0,
-        rotate_prob: float = 0.6,
+        rotate_prob: float = 0.5,
+        interpolation: str = "bilinear",
     ) -> None:
         super().__init__()
 
+        self.input_size = input_size
+        self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
+        self.affine_transforms_prob = affine_transforms_prob
         self.shift_factor = shift_factor
         self.shift_prob = shift_prob
         self.scale_factor = scale_factor
         self.scale_prob = scale_prob
         self.rotate_factor = rotate_factor
         self.rotate_prob = rotate_prob
+        self.interpolation = interpolation
+
+    @staticmethod
+    def _fix_aspect_ratio(bbox_scale: np.ndarray, aspect_ratio: float) -> np.ndarray:
+        """Reshape the bbox to a fixed aspect ratio.
+
+        Args:
+            bbox_scale (np.ndarray): The bbox scales (w, h) in shape (n, 2)
+            aspect_ratio (float): The ratio of ``w/h``
+
+        Returns:
+            np.darray: The reshaped bbox scales in (n, 2)
+        """
+        w, h = np.hsplit(bbox_scale, [1])
+        return np.where(w > h * aspect_ratio, np.hstack([w, w / aspect_ratio]), np.hstack([h * aspect_ratio, h]))
 
     @staticmethod
     def _truncnorm(low: float = -1.0, high: float = 1.0, size: int = 4) -> torch.Tensor:
@@ -3231,82 +3228,6 @@ class RandomBBoxTransform(tvt_v2.Transform):
         rotate = np.where(np.random.rand() < self.rotate_prob, rotate, 0.0)
 
         return offset, scale, rotate
-
-    def __call__(self, *_inputs: T_OTXDataEntity) -> T_OTXDataEntity | None:
-        """Transform function to adjust bbox_infos randomly."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        offset, scale, rotate = self._get_transform_params()
-
-        bbox_scale = inputs.bbox_info.scale
-        inputs.bbox_info.center = inputs.bbox_info.center + offset * bbox_scale
-        inputs.bbox_info.scale = inputs.bbox_info.scale * scale
-        inputs.bbox_info.rotation = rotate
-
-        return inputs
-
-    def __repr__(self) -> str:
-        """Print the basic information of the transform.
-
-        Returns:
-            str: Formatted string.
-        """
-        repr_str = self.__class__.__name__
-        repr_str += f"(shift_prob={self.shift_prob}, "
-        repr_str += f"shift_factor={self.shift_factor}, "
-        repr_str += f"scale_prob={self.scale_prob}, "
-        repr_str += f"scale_factor={self.scale_factor}, "
-        repr_str += f"rotate_prob={self.rotate_prob}, "
-        repr_str += f"rotate_factor={self.rotate_factor})"
-        return repr_str
-
-
-class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
-    """Get the bbox image as the model input by affine transform.
-
-    Required Keys:
-
-        - img
-        - bbox_center
-        - bbox_scale
-        - bbox_rotation (optional)
-        - keypoints (optional)
-
-    Modified Keys:
-
-        - img
-        - bbox_scale
-
-    Added Keys:
-
-        - input_size
-        - transformed_keypoints
-
-    Args:
-        input_size (Tuple[int, int]): The input image size of the model in
-            [w, h]. The bbox region will be cropped and resize to `input_size`
-    """
-
-    def __init__(self, input_size: tuple[int, int], is_numpy_to_tvtensor: bool = False) -> None:
-        super().__init__()
-
-        self.input_size = input_size
-        self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
-
-    @staticmethod
-    def _fix_aspect_ratio(bbox_scale: np.ndarray, aspect_ratio: float) -> np.ndarray:
-        """Reshape the bbox to a fixed aspect ratio.
-
-        Args:
-            bbox_scale (np.ndarray): The bbox scales (w, h) in shape (n, 2)
-            aspect_ratio (float): The ratio of ``w/h``
-
-        Returns:
-            np.darray: The reshaped bbox scales in (n, 2)
-        """
-        w, h = np.hsplit(bbox_scale, [1])
-        return np.where(w > h * aspect_ratio, np.hstack([w, w / aspect_ratio]), np.hstack([h * aspect_ratio, h]))
 
     @staticmethod
     def _get_warp_matrix(
@@ -3406,25 +3327,38 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         h, w = self.input_size
         warp_size = (int(w), int(h))
+        apply_transforms = np.random.rand()
 
-        # reshape bbox to fixed aspect ratio
-        center = inputs.bbox_info.center
-        scale = self._fix_aspect_ratio(inputs.bbox_info.scale, aspect_ratio=w / h)
-        rot = inputs.bbox_info.rotation
+        if apply_transforms <= self.affine_transforms_prob:
+            offset, scale, rotate = self._get_transform_params()
+            center = inputs.bbox_info.center + offset * inputs.bbox_info.scale
+            scale = self._fix_aspect_ratio(inputs.bbox_info.scale * scale, aspect_ratio=w / h)
+            rot = rotate
 
-        warp_mat = self._get_warp_matrix(center, scale, rot, output_size=(w, h))
-
-        if isinstance(inputs.image, list):
-            inputs.image = [self._get_warp_image(img, warp_mat, warp_size) for img in inputs.image]
-        else:
+            warp_mat = self._get_warp_matrix(center, scale, rot, output_size=(w, h))
             inputs.image = self._get_warp_image(inputs.image, warp_mat, warp_size)
+            if inputs.keypoints is not None:
+                keypoints = np.expand_dims(inputs.keypoints, axis=0)
+                inputs.keypoints = cv2.transform(keypoints, warp_mat)[0]
 
-        if inputs.keypoints is not None:
-            keypoints = np.expand_dims(inputs.keypoints, axis=0)
-            inputs.keypoints = cv2.transform(keypoints, warp_mat)[0]
         else:
+            img_shape = inputs.img_info.ori_shape
+            resized_numpy_image = cv2.resize(
+                to_np_image(inputs.image),
+                warp_size,
+                interpolation=CV2_INTERP_CODES[self.interpolation],
+            )
+            inputs.image = torch.from_numpy(resized_numpy_image).to(dtype=torch.float32).permute(2, 0, 1)
+            if inputs.keypoints is not None:
+                scale_factor = (warp_size[0] / img_shape[0], warp_size[1] / img_shape[1])
+                inputs.keypoints = rescale_keypoints(inputs.keypoints, scale_factor)
+
+        if inputs.keypoints is None:
             inputs.keypoints = np.zeros([])
             inputs.keypoints_visible = np.ones((1, 1, 1))
+        else:
+            # update keypoints_visible after affine transforms
+            inputs.keypoints_visible = inputs.keypoints_visible * (inputs.keypoints > 0).all(axis=1)
 
         return self.convert(inputs)
 

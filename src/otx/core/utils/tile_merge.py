@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections import defaultdict
-from typing import Generic
 
 import cv2
 import numpy as np
@@ -23,7 +22,7 @@ from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntit
 from otx.core.data.entity.segmentation import SegBatchPredEntity, SegPredEntity
 
 
-class TileMerge(Generic[T_OTXDataEntity, T_OTXBatchPredEntity]):
+class TileMerge:
     """Base class for tile merge.
 
     Args:

@@ -11,7 +11,7 @@ permissions: read-all
 
 jobs:
   Daily-Integration-Tests:
-    runs-on: otx-ci-3090-03-all
+    runs-on: [daily]
     strategy:
       fail-fast: false
       matrix:
@@ -42,5 +42,5 @@ jobs:
           pip-compile --generate-hashes --output-file=/tmp/requirements.txt --extra=ci_tox pyproject.toml
           python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
           rm /tmp/requirements.txt
-      - name: Run Integration Test
+      - name: Run Daily Integration Test
         run: tox -vv -e daily-integration-test-${{ matrix.task }}

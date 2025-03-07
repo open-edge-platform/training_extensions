@@ -23,7 +23,7 @@ from otx.core.utils.mask_util import polygon_to_bitmap
 from .base import OTXDataset, Transforms
 
 
-class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
+class OTXInstanceSegDataset(OTXDataset):
     """OTXDataset class for instance segmentation.
 
     Args:

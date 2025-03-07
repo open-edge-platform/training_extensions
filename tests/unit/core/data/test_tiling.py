@@ -50,7 +50,7 @@ class TestOTXTiling:
         return {
             OTXTaskType.DETECTION: parent_root / "car_tree_bug",
             OTXTaskType.INSTANCE_SEGMENTATION: parent_root / "car_tree_bug",
-            OTXTaskType.SEMANTIC_SEGMENTATION: parent_root / "common_semantic_segmentation_dataset" / "supervised",
+            OTXTaskType.SEMANTIC_SEGMENTATION: parent_root / "common_semantic_segmentation_dataset",
         }
 
     @pytest.fixture()

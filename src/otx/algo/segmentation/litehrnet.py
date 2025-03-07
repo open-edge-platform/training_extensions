@@ -31,7 +31,7 @@ class LiteHRNet(OTXSegmentationModel):
         "lite_hrnet_x",
     ]
 
-    def _build_model(self) -> nn.Module:
+    def _create_model(self) -> nn.Module:
         if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
             msg = f"Model version {self.model_name} is not supported."
             raise ValueError(msg)

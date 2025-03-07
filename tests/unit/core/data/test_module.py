@@ -14,7 +14,6 @@ from omegaconf import DictConfig, OmegaConf
 from otx.core.config.data import (
     SubsetConfig,
     TileConfig,
-    UnlabeledDataConfig,
 )
 from otx.core.data import module as target_file
 from otx.core.data.module import (
@@ -53,8 +52,6 @@ class TestModule:
         test_subset.batch_size = 1
         test_subset.input_size = None
         test_subset.subset_name = "test_1"
-        unlabeled_subset = MagicMock(spec=UnlabeledDataConfig)
-        unlabeled_subset.data_root = None
         tile_config = MagicMock(spec=TileConfig)
         tile_config.enable_tiler = False
 
@@ -65,7 +62,6 @@ class TestModule:
         mock.train_subset = train_subset
         mock.val_subset = val_subset
         mock.test_subset = test_subset
-        mock.unlabeled_subset = unlabeled_subset
         mock.tile_config = tile_config
 
         return mock
@@ -206,8 +202,6 @@ class TestModule:
         cfg.val_subset.num_workers = 0
         cfg.test_subset.subset_name = "test"
         cfg.test_subset.num_workers = 0
-        cfg.unlabeled_subset = {}
-        cfg.unlabeled_subset.data_root = None
         cfg.mem_cache_size = "1GB"
         cfg.tile_config = {}
         cfg.tile_config.enable_tiler = False
