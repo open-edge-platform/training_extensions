@@ -470,6 +470,17 @@
   <section id="module-otx.core.utils.tile_merge">
 <span id="otx-core-utils-tile-merge"></span><h1>otx.core.utils.tile_merge<a class="headerlink" href="#module-otx.core.utils.tile_merge" title="Link to this heading">#</a></h1>
 <p>OTX tile merge module.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">int_max_check_condition</span></code>(tile_masks)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.core.utils.tile_merge.keep_chunkify" title="otx.core.utils.tile_merge.keep_chunkify"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_chunkify</span></code></a>(tensor[, max_element])</p></td>
+<td><p>Splits tensor into chunks and processes each chunk separately.</p></td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
@@ -605,6 +616,23 @@
 <dd><p>Non-maximum suppression and post-process.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otx.core.utils.tile_merge.keep_chunkify">
+<span class="sig-prename descclassname"><span class="pre">otx.core.utils.tile_merge.</span></span><span class="sig-name descname"><span class="pre">keep_chunkify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2147483647</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../../_modules/otx/core/utils/tile_merge.html#keep_chunkify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.utils.tile_merge.keep_chunkify" title="Link to this definition">#</a></dt>
+<dd><p>Splits tensor into chunks and processes each chunk separately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<em>torch.Tensor</em>) – Input tensor of shape (B, H, W).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean mask of shape (B,) indicating nonzero sum.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -744,6 +772,15 @@
     </a>
    </li>
   </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.core.utils.tile_merge.keep_chunkify">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     keep_chunkify()
+    </span>
+   </code>
+  </a>
  </li>
 </ul>
 

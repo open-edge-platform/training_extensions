@@ -9,6 +9,13 @@ otx.core.utils.tile\_merge
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      int_max_check_condition
+      keep_chunkify
+   
    
 
    
