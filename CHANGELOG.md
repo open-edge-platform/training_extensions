@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
+- Fix exportable code for tiling
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4234>)
 - Don't filter empty label from kp arrow
   (<https://github.com/openvinotoolkit/training_extensions/pull/4229>)
 

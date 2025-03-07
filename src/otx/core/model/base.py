@@ -1038,14 +1038,25 @@ class OVModel(OTXModel):
             msg = "OpenVINO model can be exported only as exportable code with demo package."
             raise RuntimeError(msg)
 
-        return self._exporter.export(
-            self.model,
-            output_dir,
-            base_name,
-            export_format,
-            precision,
-            to_exportable_code,
-        )
+        # Temporarily unwrap Tiler model if applicable
+        original_model = self.model
+        if isinstance(original_model, Tiler):
+            self.model = original_model.model
+
+        try:
+            exported_path = self._exporter.export(
+                self.model,
+                output_dir,
+                base_name,
+                export_format,
+                precision,
+                to_exportable_code,
+            )
+        finally:
+            # Restore the original model
+            self.model = original_model
+
+        return exported_path
 
     def transform_fn(self, data_batch: T_OTXBatchDataEntity) -> np.array:
         """Data transform function for PTQ."""
