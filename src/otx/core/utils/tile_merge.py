@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections import defaultdict
-from typing import Callable, Generic
+from typing import Callable
 
 import cv2
 import numpy as np
