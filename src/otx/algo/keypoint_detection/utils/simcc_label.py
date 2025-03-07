@@ -67,7 +67,7 @@ class SimCCLabel:
         label_smooth_weight: float = 0.0,
         normalize: bool = True,
         use_dark: bool = False,
-        decode_visibility: bool = False,
+        decode_scores: bool = True,
         decode_beta: float = 150.0,
     ) -> None:
         self.input_size = input_size
@@ -76,7 +76,7 @@ class SimCCLabel:
         self.label_smooth_weight = label_smooth_weight
         self.normalize = normalize
         self.use_dark = use_dark
-        self.decode_visibility = decode_visibility
+        self.decode_scores = decode_scores
         self.decode_beta = decode_beta
 
         if isinstance(sigma, (float, int)):
@@ -170,13 +170,13 @@ class SimCCLabel:
 
         keypoints /= self.simcc_split_ratio
 
-        if self.decode_visibility:
+        if self.decode_scores:
             _, visibility = get_simcc_maximum(
                 simcc_x * self.decode_beta * self.sigma[0],
                 simcc_y * self.decode_beta * self.sigma[1],
                 apply_softmax=True,
             )
-            return keypoints, (scores, visibility)
+            return keypoints, visibility
         return keypoints, scores
 
     def _map_coordinates(

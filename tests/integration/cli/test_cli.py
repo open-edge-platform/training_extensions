@@ -73,7 +73,7 @@ def test_otx_e2e(
     - 'otx test' with the exported to ONNX/IR model
 
     Args:
-        recipe (str): The recipe to use for training. (eg. 'classification/otx_mobilenet_v3_large.yaml')
+        recipe (str): The recipe to use for training. (eg. 'classification/multiclass_cls/otx_mobilenet_v3_large.yaml')
         tmp_path (Path): The temporary path for storing the training outputs.
 
     Returns:

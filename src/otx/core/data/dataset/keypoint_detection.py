@@ -108,7 +108,12 @@ class OTXKeypointDetectionDataset(OTXDataset):
             if len(keypoint_anns) > 0
             else np.zeros((0, len(self.label_info.label_names) * 2), dtype=np.float32)
         ).reshape(-1, 2)
-        keypoints_visible = np.minimum(1, keypoints)[..., 0]
+
+        keypoints_visible = (
+            (np.array([ann.visibility for ann in keypoint_anns]) > 1).reshape(-1).astype(np.int8)
+            if len(keypoint_anns) > 0 and hasattr(keypoint_anns[0], "visibility")
+            else np.minimum(1, keypoints)[..., 0]
+        )
 
         bbox_center = np.array(img_shape) / 2.0
         bbox_scale = np.array(img_shape)

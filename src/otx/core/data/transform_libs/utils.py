@@ -203,6 +203,27 @@ def rescale_polygons(polygons: list[Polygon], scale_factor: float | tuple[float,
     return polygons
 
 
+def rescale_keypoints(keypoints: np.ndarray, scale_factor: float | tuple[float, float]) -> np.ndarray:
+    """Rescale keypoints as large as possible while keeping the aspect ratio.
+
+    Args:
+        keypoints (np.ndarray): Keypoints to be rescaled.
+        scale_factor (float | tuple[float, float]): Scale factor to be applied to keypoints with (height, width)
+            or single float value.
+
+    Returns:
+        (np.ndarray): The rescaled keypoints.
+    """
+    if isinstance(scale_factor, float):
+        w_scale = h_scale = scale_factor
+    else:
+        h_scale, w_scale = scale_factor
+
+    keypoints[:, 0] *= w_scale
+    keypoints[:, 1] *= h_scale
+    return keypoints
+
+
 def translate_bboxes(boxes: Tensor, distances: Sequence[float]) -> Tensor:
     """Translate boxes in-place.
 

@@ -43,13 +43,12 @@ class RTMPose(OTXKeypointDetectionModel):
         if self.explain_mode:
             msg = "Export with explain is not supported for RTMPose model."
             logger.warning(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
             input_size=(1, 3, *self.input_size),
             mean=self.mean,
             std=self.std,
-            resize_mode="standard",
+            resize_mode="fit_to_window",
             pad_value=0,
             swap_rgb=False,
             via_onnx=True,
@@ -115,6 +114,7 @@ class RTMPoseTiny(RTMPose):
                 "sigma": sigma,
                 "normalize": False,
                 "use_dark": False,
+                "decode_scores": True,
             },
             gau_cfg={
                 "num_token": num_classes,
