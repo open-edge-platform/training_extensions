@@ -62,7 +62,6 @@ def test_otx_export_infer(
     tmp_path: Path,
     fxt_local_seed: int,
     fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
     fxt_accelerator: str,
     fxt_open_subprocess: bool,
 ) -> None:
@@ -110,7 +109,6 @@ def test_otx_export_infer(
         "2",
         "--seed",
         f"{fxt_local_seed}",
-        *fxt_cli_override_command_per_task[task],
     ]
 
     # TODO(someone): Disable deterministic for instance segmentation as it causes OOM.
@@ -154,7 +152,6 @@ def test_otx_export_infer(
             str(tmp_path_test / work_dir),
             "--engine.device",
             device,
-            *fxt_cli_override_command_per_task[task],
             "--checkpoint",
             checkpoint_path,
         ]
@@ -199,7 +196,6 @@ def test_otx_export_infer(
             fxt_target_dataset_per_task[task],
             "--work_dir",
             str(tmp_path_test / "outputs"),
-            *fxt_cli_override_command_per_task[task],
             "--checkpoint",
             str(ckpt_files[-1]),
             "--export_format",
@@ -255,7 +251,6 @@ def test_otx_export_infer(
                 str(tmp_path_test / "outputs"),
                 "--engine.device",
                 "cpu",
-                *fxt_cli_override_command_per_task[task],
                 "--checkpoint",
                 exported_model_path,
             ]

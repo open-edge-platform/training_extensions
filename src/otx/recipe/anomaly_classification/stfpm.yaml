@@ -4,10 +4,6 @@ model:
     layers: ["layer1", "layer2", "layer3"]
     backbone: "resnet18"
     task: ANOMALY_CLASSIFICATION
-    data_input_params:
-      input_size: [256, 256]
-      mean: [0.485, 0.456, 0.406]
-      std: [0.229, 0.224, 0.225]
 
 engine:
   task: ANOMALY_CLASSIFICATION

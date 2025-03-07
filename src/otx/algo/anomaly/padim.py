@@ -50,8 +50,9 @@ class Padim(AnomalyMixin, AnomalibPadim, OTXAnomaly):
             OTXTaskType.ANOMALY_SEGMENTATION,
         ] = OTXTaskType.ANOMALY_CLASSIFICATION,
     ) -> None:
-        self.task = OTXTaskType(task)
         self.data_input_params = data_input_params
+        self.input_size = data_input_params.input_size
+        self.task = OTXTaskType(task)
         super().__init__(
             backbone=backbone,
             layers=layers,

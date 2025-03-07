@@ -21,6 +21,7 @@ from otx.cli.utils import absolute_path
 from otx.cli.utils.help_formatter import CustomHelpFormatter
 from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from otx.cli.utils.workspace import Workspace
+from otx.core.model.base import DataInputParams
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.imports import get_otx_root_path
 
@@ -345,15 +346,11 @@ class OTXCLI:
             self.datamodule = self.get_config_value(self.config_init, "data")
 
             # pass OTXDataModule input size, mean and std to the model
-            if "data_input_params" not in model_config.init_args:
-                model_config.init_args["data_input_params"] = Namespace(
-                    class_path="otx.core.model.base.DataInputParams",
-                    init_args=Namespace(
-                        input_size=self.datamodule.input_size,
-                        mean=self.datamodule.input_mean,
-                        std=self.datamodule.input_std,
-                    ),
-                )
+            model_config.init_args["data_input_params"] = DataInputParams(
+                input_size=self.datamodule.input_size,
+                mean=self.datamodule.input_mean,
+                std=self.datamodule.input_std,
+            )
 
             # Instantiate the model and needed components
             self.model = self.instantiate_model(model_config=model_config)
