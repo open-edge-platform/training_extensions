@@ -113,8 +113,13 @@ class BsSearchAlgo:
 
         if available_bs == 0:
             if oom:
-                msg = "Current device can't train model even with 2."
-                raise RuntimeError(msg)
+                logger.warning(
+                    "The auto batch size algorithm attempted to use a batch size of 2 but still "
+                    "encountered a CUDA OOM error. OTX will proceed with training at batch size 2; "
+                    "however, you will likely encounter a CUDA OOM error once training starts. "
+                    "If the issue persists, please report it accordingly.",
+                )
+                return 2
             logger.warning(
                 "Even with a batch size of 2, most of the memory is used, "
                 "which could cause the training to fail midway.",

@@ -187,7 +187,7 @@ learning_parameters:
   auto_adapt_batch_size:
     affects_outcome_of: TRAINING
     default_value: None
-    description: Safe => Prevent GPU out of memory. Full => Find a batch size using most of GPU memory.
+    description: Safe - Prevent GPU from running out of memory. Full - Find a batch size using most of GPU memory.
     editable: true
     enum_name: BatchSizeAdaptType
     header: Decrease batch size if current batch size isn't fit to CUDA memory.

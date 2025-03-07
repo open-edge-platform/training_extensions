@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Converter for v1 config."""
@@ -169,6 +169,10 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.ANOMALY,
         "model_name": "stfpm",
     },
+    "ote_anomaly_uflow": {
+        "task": OTXTaskType.ANOMALY,
+        "model_name": "uflow",
+    },
     # ANOMALY CLASSIFICATION
     "ote_anomaly_classification_padim": {
         "task": OTXTaskType.ANOMALY_CLASSIFICATION,
@@ -199,7 +203,7 @@ TEMPLATE_ID_DICT = {
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
         "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny_single_obj",
+        "model_name": "rtmpose_tiny",
     },
 }
 
@@ -413,7 +417,7 @@ class ConfigConverter:
             config (dict): The configuration dictionary.
         """
         config.pop("config")  # Remove config key that for CLI
-        config["data"].pop("__path__")  # Remove __path__ key that for CLI overriding
+        config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
 
     @staticmethod
     def instantiate(
