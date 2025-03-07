@@ -81,7 +81,7 @@ base = [
     "timm==1.0.3",
     "openvino==2024.6",
     "openvino-dev==2024.6",
-    "openvino-model-api==0.2.5.1",
+    "openvino-model-api==0.2.5.2",
     "onnx==1.17.0",
     "onnxconverter-common==1.14.0",
     "nncf==2.14.1",

@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 ### Enhancements
 
+- Bump ModelAPI to 0.2.5.2
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4275>)
+
 ### Bug fixes
 
 
