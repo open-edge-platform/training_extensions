@@ -56,7 +56,7 @@ def keep_chunkify(tensor: torch.Tensor, max_element: int = MAX_ELEMENTS) -> torc
     return torch.cat(keep_indices, dim=0)
 
 
-class TileMerge(Generic[T_OTXDataEntity, T_OTXBatchPredEntity]):
+class TileMerge:
     """Base class for tile merge.
 
     Args:

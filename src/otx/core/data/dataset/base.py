@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Generic, Iterator, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
 
 import cv2
 import numpy as np
@@ -57,7 +57,7 @@ def image_decode_context() -> Iterator[None]:
     IMAGE_COLOR_CHANNEL.set(ori_image_color_scale)
 
 
-class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
+class OTXDataset(Dataset):
     """Base OTXDataset.
 
     Defines basic logic for OTX datasets.

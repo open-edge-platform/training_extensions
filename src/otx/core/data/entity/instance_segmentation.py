@@ -3,6 +3,8 @@
 #
 """Module for OTX instance segmentation data entities."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -49,7 +51,7 @@ class InstanceSegPredEntity(OTXPredEntity, InstanceSegDataEntity):
 
 
 @dataclass
-class InstanceSegBatchDataEntity(OTXBatchDataEntity[InstanceSegDataEntity]):
+class InstanceSegBatchDataEntity(OTXBatchDataEntity):
     """Batch entity for InstanceSegDataEntity.
 
     Attributes:

@@ -26,7 +26,6 @@ class OTXTaskType(str, Enum):
     # Detection
     DETECTION = "DETECTION"
     ROTATED_DETECTION = "ROTATED_DETECTION"
-    DETECTION_SEMI_SL = "DETECTION_SEMI_SL"
     KEYPOINT_DETECTION = "KEYPOINT_DETECTION"
 
     # Segmentation
@@ -35,10 +34,3 @@ class OTXTaskType(str, Enum):
 
     # Visual Promting Tasks.
     VISUAL_PROMPTING = "VISUAL_PROMPTING"
-
-
-class OTXTrainType(str, Enum):
-    """OTX train type definition."""
-
-    SUPERVISED = "SUPERVISED"
-    SEMI_SUPERVISED = "SEMI_SUPERVISED"

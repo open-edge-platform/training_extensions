@@ -12,8 +12,3 @@ class TransformLibType(str, Enum):
     """Transform library types used in OTX."""
 
     TORCHVISION = "TORCHVISION"
-    MMCV = "MMCV"
-    MMPRETRAIN = "MMPRETRAIN"
-    MMDET = "MMDET"
-    MMSEG = "MMSEG"
-    MMACTION = "MMACTION"

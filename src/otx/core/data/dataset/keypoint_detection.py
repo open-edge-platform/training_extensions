@@ -19,14 +19,14 @@ from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, 
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
-from otx.core.types.label import LabelInfo, NullLabelInfo
+from otx.core.types.label import LabelInfo
 
 from .base import OTXDataset
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
 
-class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
+class OTXKeypointDetectionDataset(OTXDataset):
     """OTXDataset class for keypoint detection task."""
 
     def __init__(
@@ -55,15 +55,14 @@ class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
 
         self.dm_subset = self._get_single_bbox_dataset(dm_subset)
 
-        if self.dm_subset.categories():
+        # arrow doesn't follow common coco convention, no need to fetch kp-specific labels
+        if self.dm_subset.categories() and data_format != "arrow":
             kp_labels = self.dm_subset.categories()[AnnotationType.points][0].labels
             self.label_info = LabelInfo(
                 label_names=kp_labels,
                 label_groups=[],
                 label_ids=[str(i) for i in range(len(kp_labels))],
             )
-        else:
-            self.label_info = NullLabelInfo()
 
     def _get_single_bbox_dataset(self, dm_subset: DatasetSubset) -> Dataset:
         """Method for splitting dataset items into multiple items for each bbox/keypoint."""
@@ -109,7 +108,12 @@ class OTXKeypointDetectionDataset(OTXDataset[KeypointDetDataEntity]):
             if len(keypoint_anns) > 0
             else np.zeros((0, len(self.label_info.label_names) * 2), dtype=np.float32)
         ).reshape(-1, 2)
-        keypoints_visible = np.minimum(1, keypoints)[..., 0]
+
+        keypoints_visible = (
+            (np.array([ann.visibility for ann in keypoint_anns]) > 1).reshape(-1).astype(np.int8)
+            if len(keypoint_anns) > 0 and hasattr(keypoint_anns[0], "visibility")
+            else np.minimum(1, keypoints)[..., 0]
+        )
 
         bbox_center = np.array(img_shape) / 2.0
         bbox_scale = np.array(img_shape)

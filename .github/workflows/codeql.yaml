@@ -9,14 +9,20 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL"
+name: "CodeQL scan"
 
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    branches:
+      - "develop"
+      - "releases/*"
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
+    branches:
+      - "develop"
+      - "releases/*"
 
 jobs:
   analyze:
@@ -26,7 +32,7 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
       # required for all workflows
