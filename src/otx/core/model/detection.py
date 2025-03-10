@@ -622,21 +622,16 @@ class OVDetectionModel(OVModel):
             log.warning(f"label_shift: {label_shift}")
 
         for i, output in enumerate(outputs):
-            output_objects = output.objects
-            if len(output_objects):
-                bbox = [[output.xmin, output.ymin, output.xmax, output.ymax] for output in output_objects]
-            else:
-                bbox = torch.empty(size=(0, 0))
             bboxes.append(
                 tv_tensors.BoundingBoxes(
-                    bbox,
+                    data=output.bboxes,
                     format="XYXY",
                     canvas_size=inputs.imgs_info[i].img_shape,
                     device=self.device,
                 ),
             )
-            scores.append(torch.tensor([output.score for output in output_objects], device=self.device))
-            labels.append(torch.tensor([output.id - label_shift for output in output_objects], device=self.device))
+            scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
+            labels.append(torch.tensor(output.labels.reshape(-1) - label_shift, device=self.device))
 
         if outputs and outputs[0].saliency_map.size > 1:
             # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)

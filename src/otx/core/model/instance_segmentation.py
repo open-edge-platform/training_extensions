@@ -654,14 +654,9 @@ class OVInstanceSegmentationModel(
         labels = []
         masks = []
         for output in outputs:
-            output_objects = output.segmentedObjects
-            if len(output_objects):
-                bbox = [[output.xmin, output.ymin, output.xmax, output.ymax] for output in output_objects]
-            else:
-                bbox = torch.empty(size=(0, 0))
             bboxes.append(
                 tv_tensors.BoundingBoxes(
-                    bbox,
+                    data=output.bboxes,
                     format="XYXY",
                     canvas_size=inputs.imgs_info[-1].img_shape,
                     device=self.device,
@@ -669,11 +664,9 @@ class OVInstanceSegmentationModel(
             )
             # NOTE: OTX 1.5 filter predictions with result_based_confidence_threshold,
             # but OTX 2.0 doesn't have it in configuration.
-            _masks = [output.mask for output in output_objects]
-            _masks = np.stack(_masks) if len(_masks) else []
-            scores.append(torch.tensor([output.score for output in output_objects], device=self.device))
-            masks.append(torch.tensor(_masks, device=self.device))
-            labels.append(torch.tensor([output.id - 1 for output in output_objects], device=self.device))
+            scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
+            masks.append(torch.tensor(output.masks, device=self.device))
+            labels.append(torch.tensor(output.labels.reshape(-1) - 1, device=self.device))
 
         if outputs and outputs[0].saliency_map:
             predicted_s_maps = []

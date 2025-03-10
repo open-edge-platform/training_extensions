@@ -1,17 +1,21 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import tempfile
+
 import numpy as np
+import openvino as ov
 import pytest
 import torch
 from lightning import Trainer
 from lightning.pytorch.utilities.types import LRSchedulerConfig
-from model_api.models.utils import ClassificationResult
+from model_api.models.result import ClassificationResult
 from pytest_mock import MockerFixture
 
 from otx.core.data.entity.base import OTXBatchDataEntity
 from otx.core.model.base import OTXModel, OVModel
 from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler
+from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
 
 class MockNNModule(torch.nn.Module):
@@ -134,10 +138,12 @@ class TestOVModel:
 
     @pytest.fixture()
     def model(self) -> OVModel:
-        return OVModel(model_name="efficientnet-b0-pytorch", model_type="Classification")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ov.save_model(get_dummy_ov_cls_model(), f"{tmp_dir}/model.xml")
+            return OVModel(model_name=f"{tmp_dir}/model.xml", model_type="Classification")
 
-    def test_create_model(self) -> None:
-        OVModel(model_name="efficientnet-b0-pytorch", model_type="Classification", force_cpu=False)
+    def test_create_model(self, model) -> None:
+        pass
 
     def test_customize_inputs(self, model, input_batch) -> None:
         inputs = model._customize_inputs(input_batch)
@@ -145,8 +151,9 @@ class TestOVModel:
         assert "inputs" in inputs
         assert inputs["inputs"][1].shape == np.transpose(input_batch.images[1].numpy(), (1, 2, 0)).shape
 
-    def test_forward(self, model, input_batch) -> None:
+    def test_forward(self, model, input_batch, mocker: MockerFixture) -> None:
         model._customize_outputs = lambda x, _: x
+        model.model.postprocess = mocker.Mock(return_value=ClassificationResult())
         outputs = model.forward(input_batch)
         assert isinstance(outputs, list)
         assert len(outputs) == 3

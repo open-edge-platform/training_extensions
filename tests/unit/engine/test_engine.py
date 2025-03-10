@@ -1,9 +1,11 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import openvino as ov
 import pytest
 from pytest_mock import MockerFixture
 
@@ -14,6 +16,7 @@ from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import NullLabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.engine import Engine
+from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
 
 @pytest.fixture()
@@ -251,9 +254,14 @@ class TestEngine:
         # check exportable code with IR OpenVINO model
         mock_export = mocker.patch("otx.engine.engine.OVModel.export")
         fxt_engine.checkpoint = "path/to/checkpoint.xml"
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ov.save_model(get_dummy_ov_cls_model(), f"{tmp_dir}/model.xml")
+            otx_ov_model = OVModel(model_name=f"{tmp_dir}/model.xml", model_type="Classification")
+
         mock_get_ov_model = mocker.patch(
             "otx.engine.engine.AutoConfigurator.get_ov_model",
-            return_value=OVModel(model_name="efficientnet-b0-pytorch", model_type="classification"),
+            return_value=otx_ov_model,
         )
         fxt_engine.export(checkpoint="path/to/checkpoint.xml", export_demo_package=True)
         mock_get_ov_model.assert_called_once()

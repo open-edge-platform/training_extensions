@@ -273,21 +273,24 @@ class ObjectDetectionVisualizer(BaseVisualizer):
         Returns:
             Output image with annotations.
         """
-        for detection in predictions.objects:
-            class_id = int(detection.id)
-            color = self.color_palette[class_id]
-            det_label = self.color_palette[class_id] if self.labels and len(self.labels) >= class_id else f"#{class_id}"
-            xmin, ymin, xmax, ymax = detection.xmin, detection.ymin, detection.xmax, detection.ymax
-            cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 2)
-            cv2.putText(
-                frame,
-                f"{det_label} {detection.score:.1%}",
-                (xmin, ymin - 7),
-                cv2.FONT_HERSHEY_COMPLEX,
-                0.6,
-                color,
-                1,
-            )
+        if len(predictions.bboxes.shape):
+            for i, box in enumerate(predictions.bboxes):
+                class_id = int(predictions.labels[i])
+                color = self.color_palette[class_id]
+                det_label = (
+                    self.color_palette[class_id] if self.labels and len(self.labels) >= class_id else f"#{class_id}"
+                )
+                xmin, ymin, xmax, ymax = box
+                cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 2)
+                cv2.putText(
+                    frame,
+                    f"{det_label} {predictions.scores[i]:.1%}",
+                    (xmin, ymin - 7),
+                    cv2.FONT_HERSHEY_COMPLEX,
+                    0.6,
+                    color,
+                    1,
+                )
 
         return frame
 
@@ -339,16 +342,10 @@ class InstanceSegmentationVisualizer(BaseVisualizer):
             np.ndarray - The input frame with the instance segmentation results drawn on it.
         """
         result = frame.copy()
-        output_objects = predictions.segmentedObjects
-        bboxes = [[output.xmin, output.ymin, output.xmax, output.ymax] for output in output_objects]
-        scores = [output.score for output in output_objects]
-        masks = [output.mask for output in output_objects]
-        label_names = [output.str_label for output in output_objects]
+        result = self._overlay_masks(result, predictions.masks)
+        return self._overlay_labels(result, predictions.bboxes, predictions.label_names, predictions.scores)
 
-        result = self._overlay_masks(result, masks)
-        return self._overlay_labels(result, bboxes, label_names, scores)
-
-    def _overlay_masks(self, image: np.ndarray, masks: list[np.ndarray]) -> np.ndarray:
+    def _overlay_masks(self, image: np.ndarray, masks: np.ndarray) -> np.ndarray:
         segments_image = image.copy()
         aggregated_mask = np.zeros(image.shape[:2], dtype=np.uint8)
         aggregated_colored_mask = np.zeros(image.shape, dtype=np.uint8)
@@ -381,9 +378,9 @@ class InstanceSegmentationVisualizer(BaseVisualizer):
     def _overlay_labels(
         self,
         image: np.ndarray,
-        boxes: list[np.ndarray],
+        boxes: np.ndarray,
         classes: list[str],
-        scores: list[float],
+        scores: np.ndarray,
     ) -> np.ndarray:
         template = "{}: {:.2f}" if self.show_scores else "{}"
 
