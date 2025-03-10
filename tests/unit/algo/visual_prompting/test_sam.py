@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from unittest import mock
-
 import pytest
 import torch
 from torch import nn
