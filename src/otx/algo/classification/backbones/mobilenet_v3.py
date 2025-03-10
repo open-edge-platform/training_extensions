@@ -15,7 +15,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from otx.algo.utils.mmengine_utils import load_checkpoint_to_model, load_from_http
+from otx.algo.utils.utils import load_checkpoint_to_model, load_from_http
 
 pretrained_root = "https://github.com/d-li14/mobilenetv3.pytorch/blob/master/pretrained/"
 pretrained_urls = {

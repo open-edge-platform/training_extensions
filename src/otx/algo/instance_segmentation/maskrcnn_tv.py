@@ -7,10 +7,10 @@
 
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
-from torch import Tensor, nn
+from torch import Tensor
 from torchvision import tv_tensors
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, _default_anchorgen
 from torchvision.models.detection.mask_rcnn import (
@@ -26,33 +26,74 @@ from otx.algo.instance_segmentation.segmentors.maskrcnn_tv import (
     MaskRCNNHeads,
     RPNHead,
 )
+from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
+
+if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+
+    from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
+    from otx.core.schedulers import LRSchedulerListCallable
+    from otx.core.types.label import LabelInfoTypes
 
 
 class MaskRCNNTV(OTXInstanceSegModel):
-    """Implementation of torchvision MaskRCNN for instance segmentation."""
+    """Implementation of torchvision MaskRCNN for instance segmentation.
 
-    load_from: ClassVar[dict[str, Any]] = {"maskrcnn_resnet_50": MaskRCNN_ResNet50_FPN_V2_Weights.verify("DEFAULT")}
+    Args:
+        label_info (LabelInfoTypes): Information about the labels used in the model.
+        data_input_params (DataInputParams): Parameters for the data input.
+        model_name (str, optional): Name of the model. Defaults to "maskrcnn_resnet_50".
+        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric for evaluating the model.
+            Defaults to MaskRLEMeanAPFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
+    """
 
-    AVAILABLE_MODEL_VERSIONS: ClassVar[list[str]] = [
-        "maskrcnn_resnet_50",
-    ]
+    pretrained_weights: ClassVar[dict[str, Any]] = {
+        "maskrcnn_resnet_50": MaskRCNN_ResNet50_FPN_V2_Weights.verify("DEFAULT"),
+    }
 
-    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: Literal["maskrcnn_resnet_50"] = "maskrcnn_resnet_50",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ) -> None:
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
+
+    def _create_model(self, num_classes: int | None = None) -> MaskRCNN:
         num_classes = num_classes if num_classes is not None else self.num_classes
-        """Create MaskRCNN model with TV implementation."""
-        if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
-            msg = f"Model version {self.model_name} is not supported."
-            raise ValueError(msg)
 
         # NOTE: Add 1 to num_classes to account for background class.
         num_classes = num_classes + 1
-        weights = self.load_from[self.model_name]
+        weights = self.pretrained_weights[self.model_name]
 
         # init model components, model itself and load weights
         rpn_anchor_generator = _default_anchorgen()

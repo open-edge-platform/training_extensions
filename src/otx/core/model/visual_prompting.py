@@ -174,13 +174,6 @@ class OTXVisualPromptingModel(OTXModel):
             torch_compile=torch_compile,
         )
 
-    @abstractmethod
-    def _build_model(self) -> nn.Module:
-        raise NotImplementedError
-
-    def _create_model(self, num_classes: int | None = None) -> nn.Module:
-        return self._build_model()
-
     def _customize_inputs(self, inputs: VisualPromptingBatchDataEntity) -> dict[str, Any]:  # type: ignore[override]
         """Customize the inputs for the model."""
         images = tv_tensors.wrap(torch.stack(inputs.images, dim=0).to(dtype=torch.float32), like=inputs.images[0])

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from torch import Tensor, nn
@@ -19,6 +19,7 @@ from otx.algo.detection.detectors import DETR
 from otx.algo.detection.heads.dfine_decoder import DFINETransformer
 from otx.algo.detection.losses.dfine_loss import DFINECriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
+from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -36,20 +37,33 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-PRETRAINED_ROOT: str = "https://github.com/Peterande/storage/releases/download/dfinev1.0/"
-
-PRETRAINED_WEIGHTS: dict[str, str] = {
-    "dfine_hgnetv2_n": PRETRAINED_ROOT + "dfine_n_coco.pth",
-    "dfine_hgnetv2_s": PRETRAINED_ROOT + "dfine_s_coco.pth",
-    "dfine_hgnetv2_m": PRETRAINED_ROOT + "dfine_m_coco.pth",
-    "dfine_hgnetv2_l": PRETRAINED_ROOT + "dfine_l_coco.pth",
-    "dfine_hgnetv2_x": PRETRAINED_ROOT + "dfine_x_coco.pth",
-}
-
-
 class DFine(OTXDetectionModel):
-    """OTX Detection model class for D-Fine."""
+    """OTX Detection model class for DFine.
 
+    Attributes:
+        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+        input_size_multiplier (int): Multiplier for the input size.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (literal, optional): Name of the model to use. Defaults to "dfine_hgnetv2_x".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.
+        multi_scale (bool, optional): Whether to use multi-scale training. Defaults to False.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    """
+
+    pretrained_weights: ClassVar[dict[str, str]] = {
+        "dfine_hgnetv2_n": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_n_coco.pth",
+        "dfine_hgnetv2_s": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_s_coco.pth",
+        "dfine_hgnetv2_m": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_m_coco.pth",
+        "dfine_hgnetv2_l": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_l_coco.pth",
+        "dfine_hgnetv2_x": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_x_coco.pth",
+    }
     input_size_multiplier = 32
 
     def __init__(
@@ -70,7 +84,6 @@ class DFine(OTXDetectionModel):
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         self.multi_scale = multi_scale
         super().__init__(
             model_name=model_name,
@@ -83,7 +96,8 @@ class DFine(OTXDetectionModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> DETR:
+    def _create_model(self, num_classes: int | None = None) -> DETR:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
         decoder = DFINETransformer(
@@ -127,7 +141,7 @@ class DFine(OTXDetectionModel):
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
         ]
 
-        return DETR(
+        model = DETR(
             multi_scale=None if self.multi_scale else [],
             backbone=backbone,
             encoder=encoder,
@@ -136,6 +150,10 @@ class DFine(OTXDetectionModel):
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
         )
+        model.init_weights()
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     def _customize_inputs(
         self,

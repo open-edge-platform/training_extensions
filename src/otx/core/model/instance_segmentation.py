@@ -23,7 +23,7 @@ from torchvision.models.detection.image_list import ImageList
 from otx.algo.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
 from otx.algo.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
 from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
-from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
+from otx.algo.utils.utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
@@ -91,9 +91,6 @@ class OTXInstanceSegModel(OTXModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
         self.model.get_results_from_head = self.get_results_from_head
-
-    def _build_model(self, num_classes: int) -> nn.Module:
-        raise NotImplementedError
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes

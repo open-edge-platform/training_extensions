@@ -18,7 +18,7 @@ from torch import Tensor, nn
 from torch.autograd import Function
 from torchvision.ops import box_convert
 
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.detection import DetBatchDataEntity
 
 

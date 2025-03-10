@@ -23,7 +23,7 @@ from torch import Tensor, nn
 from otx.algo.modules.base_module import BaseModule, ModuleList
 from otx.algo.modules.norm import build_norm_layer
 from otx.algo.modules.transformer import FFN, PatchEmbed, PatchMerging
-from otx.algo.utils.mmengine_utils import load_from_http
+from otx.algo.utils.utils import load_from_http
 from otx.algo.utils.weight_init import constant_init, trunc_normal_, trunc_normal_init
 
 # ruff: noqa: PLR0913

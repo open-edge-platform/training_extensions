@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from torch import nn
 
@@ -21,25 +21,73 @@ from otx.algo.detection.necks import CSPNeXtPAFPN
 from otx.algo.instance_segmentation.heads import RTMDetInstSepBNHead
 from otx.algo.instance_segmentation.losses import DiceLoss, RTMDetInstCriterion
 from otx.algo.modules.norm import build_norm_layer
+from otx.algo.utils.utils import load_checkpoint
+from otx.core.config.data import TileConfig
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
 
 if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import Tensor
+
+    from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
+    from otx.core.schedulers import LRSchedulerListCallable
+    from otx.core.types.label import LabelInfoTypes
 
 
 class RTMDetInst(OTXInstanceSegModel):
-    """Implementation of RTMDet for instance segmentation."""
+    """Implementation of RTMDetInst for instance segmentation.
 
-    load_from: ClassVar[dict[str, str]] = {
+    Args:
+        label_info (LabelInfoTypes): Information about the labels used in the model.
+        data_input_params (DataInputParams): Parameters for the data input.
+        model_name (str, optional): Name of the model. Defaults to "rtmdet_inst_tiny".
+        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric for evaluating the model.
+            Defaults to MaskRLEMeanAPFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
+    """
+
+    pretrained_weights: ClassVar[dict[str, str]] = {
         "rtmdet_inst_tiny": (
             "https://download.openmmlab.com/mmdetection/v3.0/rtmdet/rtmdet-ins_tiny_8xb32-300e_coco/"
             "rtmdet-ins_tiny_8xb32-300e_coco_20221130_151727-ec670f7e.pth"
         ),
     }
 
-    def _build_model(self, num_classes: int) -> SingleStageDetector:
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: Literal["rtmdet_inst_tiny"] = "rtmdet_inst_tiny",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ) -> None:
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
+
+    def _create_model(self, num_classes: int | None = None) -> RTMDetInst:
+        num_classes = num_classes if num_classes is not None else self.num_classes
+
         train_cfg = {
             "assigner": DynamicSoftLabelAssigner(topk=13),
             "sampler": PseudoSampler(),
@@ -91,7 +139,7 @@ class RTMDetInst(OTXInstanceSegModel):
             ),
         )
 
-        return SingleStageDetector(
+        model = SingleStageDetector(
             backbone=backbone,
             neck=neck,
             bbox_head=bbox_head,
@@ -99,6 +147,11 @@ class RTMDetInst(OTXInstanceSegModel):
             train_cfg=train_cfg,
             test_cfg=test_cfg,
         )
+
+        model.init_weights()
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     @property
     def _exporter(self) -> OTXModelExporter:

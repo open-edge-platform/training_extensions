@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from otx.algo.common.losses import CrossEntropyLoss, IoULoss, L1Loss
 from otx.algo.detection.backbones import CSPDarknet
@@ -15,6 +15,7 @@ from otx.algo.detection.losses import YOLOXCriterion
 from otx.algo.detection.necks import YOLOXPAFPN
 from otx.algo.detection.utils.assigners import SimOTAAssigner
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.detection import DetBatchDataEntity
 from otx.core.exporter.base import OTXModelExporter
@@ -35,28 +36,34 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-PRETRAINED_ROOT: dict[str, str] = {
-    "openvino": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/",
-    "mmdet": "https://download.openmmlab.com/mmdetection/v2.0/yolox/",
-}
-
-PRETRAINED_WEIGHTS: dict[str, str] = {
-    "yolox_tiny": PRETRAINED_ROOT["openvino"] + "yolox_tiny_8x8.pth",
-    "yolox_s": PRETRAINED_ROOT["mmdet"] + "yolox_s_8x8_300e_coco/yolox_s_8x8_300e_coco_20211121_095711-4592a793.pth",
-    "yolox_l": PRETRAINED_ROOT["mmdet"] + "yolox_l_8x8_300e_coco/yolox_l_8x8_300e_coco_20211126_140236-d3bd2b23.pth",
-    "yolox_x": PRETRAINED_ROOT["mmdet"] + "yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth",
-}
-
-
 class YOLOX(OTXDetectionModel):
     """OTX Detection model class for YOLOX.
 
-    Default input size per model:
-        - yolox_tiny : (416, 416)
-        - yolox_s : (640, 640)
-        - yolox_l : (640, 640)
-        - yolox_x : (640, 640)
+    Attributes:
+        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model to use. Defaults to "yolox_s".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
+
+    pretrained_weights: ClassVar[dict[str, str]] = {
+        "yolox_tiny": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
+        "object_detection/v2/yolox_tiny_8x8.pth",
+        "yolox_s": "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_s_8x8_300e_coco/"
+        "yolox_s_8x8_300e_coco_20211121_095711-4592a793.pth",
+        "yolox_l": "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_l_8x8_300e_coco/"
+        "yolox_l_8x8_300e_coco_20211126_140236-d3bd2b23.pth",
+        "yolox_x": "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/"
+        "yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth",
+    }
 
     input_size_multiplier = 32
 
@@ -64,14 +71,13 @@ class YOLOX(OTXDetectionModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: Literal["yolox_tiny", "yolox_s", "yolox_l", "yolox_x"],
+        model_name: Literal["yolox_tiny", "yolox_s", "yolox_l", "yolox_x"] = "yolox_s",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -83,7 +89,8 @@ class YOLOX(OTXDetectionModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> SingleStageDetector:
+    def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         train_cfg: dict[str, Any] = {"assigner": SimOTAAssigner(center_radius=2.5)}
         test_cfg = {
             "nms": {"type": "nms", "iou_threshold": 0.65},
@@ -95,8 +102,8 @@ class YOLOX(OTXDetectionModel):
         bbox_head = YOLOXHead(
             model_name=self.model_name,
             num_classes=num_classes,
-            train_cfg=train_cfg,  # TODO (sungchul, kirill): remove
-            test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
+            train_cfg=train_cfg,  # TODO (kirill): remove
+            test_cfg=test_cfg,  # TODO (kirill): remove
         )
         criterion = YOLOXCriterion(
             num_classes=num_classes,
@@ -105,14 +112,18 @@ class YOLOX(OTXDetectionModel):
             loss_obj=CrossEntropyLoss(use_sigmoid=True, reduction="sum", loss_weight=1.0),
             loss_l1=L1Loss(reduction="sum", loss_weight=1.0),
         )
-        return SingleStageDetector(
+        model = SingleStageDetector(
             backbone=backbone,
             neck=neck,
             bbox_head=bbox_head,
             criterion=criterion,
-            train_cfg=train_cfg,  # TODO (sungchul, kirill): remove
-            test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
+            train_cfg=train_cfg,  # TODO (kirill): remove
+            test_cfg=test_cfg,  # TODO (kirill): remove
         )
+        model.init_weights()
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     def _customize_inputs(
         self,

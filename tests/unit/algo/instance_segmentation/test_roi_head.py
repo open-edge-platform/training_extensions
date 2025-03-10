@@ -14,7 +14,7 @@ from otx.algo.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Lo
 from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder
 from otx.algo.instance_segmentation.losses import ROICriterion
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 from otx.core.model.base import DataInputParams

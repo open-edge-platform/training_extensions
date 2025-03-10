@@ -10,7 +10,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/d
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
 from datumaro.components.annotation import Bbox
@@ -22,6 +22,7 @@ from otx.algo.detection.heads import SSDHead
 from otx.algo.detection.losses import SSDCriterion
 from otx.algo.detection.utils.prior_generators import SSDAnchorGeneratorClustered
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
@@ -43,36 +44,40 @@ if TYPE_CHECKING:
 logger = logging.getLogger()
 
 
-AVAILABLE_MODEL_VERSIONS: list[str] = ["ssd_mobilenetv2"]
-
-PRETRAINED_ROOT: (
-    str
-) = "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/"
-
-PRETRAINED_WEIGHTS: dict[str, str] = {
-    "ssd_mobilenetv2": PRETRAINED_ROOT + "mobilenet_v2-2s_ssd-992x736.pth",
-}
-
-
 class SSD(OTXDetectionModel):
     """OTX Detection model class for SSD.
 
-    Default input size per model:
-        - ssd_mobilenetv2 : (864, 864)
+    Attributes:
+        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model to use. Defaults to "ssd_mobilenetv2".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
+
+    pretrained_weights: ClassVar[dict[str, str]] = {
+        "ssd_mobilenetv2": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
+        "object_detection/v2/mobilenet_v2-2s_ssd-992x736.pth",
+    }
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: Literal["ssd_mobilenetv2"],
+        model_name: Literal["ssd_mobilenetv2"] = "ssd_mobilenetv2",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -84,7 +89,8 @@ class SSD(OTXDetectionModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> SingleStageDetector:
+    def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         train_cfg = {
             "assigner": MaxIoUAssigner(
                 min_pos_iou=0.0,
@@ -139,13 +145,17 @@ class SSD(OTXDetectionModel):
                 target_stds=(0.1, 0.1, 0.2, 0.2),
             ),
         )
-        return SingleStageDetector(
+        model = SingleStageDetector(
             backbone=backbone,
             bbox_head=bbox_head,
             criterion=criterion,
             train_cfg=train_cfg,  # TODO (sungchul, kirill): remove
             test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
         )
+        model.init_weights()
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     def _build_backbone(self, model_name: str) -> nn.Module:
         if "mobilenetv2" in model_name:
@@ -278,8 +288,8 @@ class SSD(OTXDetectionModel):
             `num_anchors` means number of anchors of layer. SSD have classification per each anchor,
             so we have to update every anchors.
         """
-        sample_model_dict = self._build_model(num_classes=3).state_dict()
-        incremental_model_dict = self._build_model(num_classes=4).state_dict()
+        sample_model_dict = self._create_model(num_classes=3).state_dict()
+        incremental_model_dict = self._create_model(num_classes=4).state_dict()
 
         classification_layers = {}
         for key in sample_model_dict:

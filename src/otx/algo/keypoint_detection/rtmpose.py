@@ -5,13 +5,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.algo.common.backbones import CSPNeXt
 from otx.algo.keypoint_detection.detectors.topdown import TopdownPoseEstimator
 from otx.algo.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from otx.algo.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
-from otx.algo.utils.mmengine_utils import load_checkpoint
+from otx.algo.utils.utils import load_checkpoint
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.pck import PCKMeasureCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -31,13 +31,15 @@ if TYPE_CHECKING:
 class RTMPose(OTXKeypointDetectionModel):
     """RTMPose Model."""
 
-    load_from = "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth"
+    pretrained_weights: ClassVar[dict[str, str]] = {
+        "rtmpose_tiny": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth",
+    }
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str = "rtmpose_tiny",
+        model_name: Literal["rtmpose_tiny"] = "rtmpose_tiny",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = PCKMeasureCallable,
@@ -90,8 +92,7 @@ class RTMPose(OTXKeypointDetectionModel):
             head=head,
         )
         model.init_weights()
-        if self.load_from is not None:
-            load_checkpoint(model, self.load_from, map_location="cpu")
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 

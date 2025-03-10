@@ -22,7 +22,7 @@ from otx.algo.instance_segmentation.utils.structures.bbox import empty_box_as, g
 from otx.algo.instance_segmentation.utils.utils import unpack_inst_seg_entity
 from otx.algo.modules import build_activation_layer
 from otx.algo.modules.conv_module import Conv2dModule
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.base import OTXBatchDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 

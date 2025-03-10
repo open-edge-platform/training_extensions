@@ -27,29 +27,105 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class CommonSettingMixin:
-    """Mixin class for common settings in SAM.
+class SAM(OTXVisualPromptingModel):  # type: ignore[misc]
+    """OTX visual prompting model class for Segment Anything Model (SAM).
 
     Attributes:
-        model (nn.Module): The model used in SAM.
-        load_from (ClassVar[dict[str, str]]): A dictionary containing the URLs to load checkpoints from.
+        pretrained_weights (dict[str, str]): Dictionary containing URLs for pretrained weights.
+        input_size_multiplier (int): Multiplier for input size.
+
+    Args:
+        data_input_params (DataInputParams): Parameters for data input.
+        label_info (LabelInfoTypes, optional): Information about labels. Defaults to NullLabelInfo().
+        model_name (Literal["tiny_vit", "vit_b"], optional): Name of the model to use. Defaults to "tiny_vit".
+        optimizer (OptimizerCallable, optional): Callable for optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for metric. Defaults to VisualPromptingMetricCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        freeze_image_encoder (bool, optional): Whether to freeze the image encoder. Defaults to True.
+        freeze_prompt_encoder (bool, optional): Whether to freeze the prompt encoder. Defaults to True.
+        freeze_mask_decoder (bool, optional): Whether to freeze the mask decoder. Defaults to False.
+        use_stability_score (bool, optional): Whether to use stability score. Defaults to False.
+        return_single_mask (bool, optional): Whether to return a single mask. Defaults to True.
+        return_extra_metrics (bool, optional): Whether to return extra metrics. Defaults to False.
+        stability_score_offset (float, optional): Offset for stability score. Defaults to 1.0.
 
     """
 
-    model: nn.Module
-    load_from: ClassVar[dict[str, str]] = {
+    pretrained_weights: ClassVar[dict[str, str]] = {
         "tiny_vit": "https://github.com/ChaoningZhang/MobileSAM/raw/master/weights/mobile_sam.pt",
         "vit_b": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
-        "vit_l": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
-        "vit_h": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
     }
 
-    def load_state_dict(
+    input_size_multiplier = 16
+
+    def __init__(
         self,
-        state_dict: dict[str, Any] | None = None,
+        data_input_params: DataInputParams,
+        label_info: LabelInfoTypes = NullLabelInfo(),
+        model_name: Literal["tiny_vit", "vit_b"] = "tiny_vit",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = VisualPromptingMetricCallable,
+        torch_compile: bool = False,
+        freeze_image_encoder: bool = True,
+        freeze_prompt_encoder: bool = True,
+        freeze_mask_decoder: bool = False,
+        use_stability_score: bool = False,
+        return_single_mask: bool = True,
+        return_extra_metrics: bool = False,
+        stability_score_offset: float = 1.0,
+    ) -> None:
+        if data_input_params.input_size[0] != data_input_params.input_size[1]:
+            msg = f"SAM should use square image size, but got {data_input_params.input_size}"
+            raise ValueError(msg)
+
+        self.image_size = data_input_params.input_size[0]
+        self.use_stability_score = use_stability_score
+        self.return_single_mask = return_single_mask
+        self.return_extra_metrics = return_extra_metrics
+        self.stability_score_offset = stability_score_offset
+        self.image_embedding_size = data_input_params.input_size[0] // self.input_size_multiplier
+
+        super().__init__(
+            label_info=label_info,
+            model_name=model_name,
+            data_input_params=data_input_params,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+        )
+
+        self.load_state_dict(checkpoint=self.pretrained_weights[model_name])
+        self.freeze_networks(freeze_image_encoder, freeze_prompt_encoder, freeze_mask_decoder)
+
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        image_encoder = SAMImageEncoder(backbone_type=self.model_name, img_size=self.data_input_params.input_size[0])
+        prompt_encoder = SAMPromptEncoder(
+            image_embedding_size=(self.image_embedding_size, self.image_embedding_size),
+            input_image_size=self.data_input_params.input_size,
+        )
+        mask_decoder = SAMMaskDecoder()
+        criterion = SAMCriterion(image_size=self.data_input_params.input_size[0])
+        return SegmentAnything(
+            image_encoder=image_encoder,
+            prompt_encoder=prompt_encoder,
+            mask_decoder=mask_decoder,
+            criterion=criterion,
+            image_size=self.data_input_params.input_size[0],
+            use_stability_score=self.use_stability_score,
+            return_single_mask=self.return_single_mask,
+            return_extra_metrics=self.return_extra_metrics,
+            stability_score_offset=self.stability_score_offset,
+        )
+
+    def load_state_dict(  # type: ignore[override]
+        self,
+        checkpoint: str | None = None,
         strict: bool = True,
         assign: bool = False,
-        load_from: str | None = None,
     ) -> None:
         """Load checkpoint for SAM.
 
@@ -74,28 +150,27 @@ class CommonSettingMixin:
             and a 'model.' prefix is added to all remaining keys.
         """
         try:
-            if load_from is not None:
-                _state_dict: dict[str, Any] = torch.hub.load_state_dict_from_url(str(load_from))
-                for key in [
-                    "image_encoder.norm_head.weight",
-                    "image_encoder.norm_head.bias",
-                    "image_encoder.head.weight",
-                    "image_encoder.head.bias",
-                ]:
-                    if key in _state_dict:
-                        _state_dict.pop(key)
+            _state_dict: dict[str, Any] = torch.hub.load_state_dict_from_url(str(checkpoint))
+            for key in [
+                "image_encoder.norm_head.weight",
+                "image_encoder.norm_head.bias",
+                "image_encoder.head.weight",
+                "image_encoder.head.bias",
+            ]:
+                if key in _state_dict:
+                    _state_dict.pop(key)
 
-                # add prefix 'model.' to all keys
-                for key in list(_state_dict.keys()):
-                    _state_dict["model." + key] = _state_dict.pop(key)
+            # add prefix 'model.' to all keys
+            for key in list(_state_dict.keys()):
+                _state_dict["model." + key] = _state_dict.pop(key)
 
-                state_dict = _state_dict
+            state_dict = _state_dict
             super().load_state_dict(state_dict, strict, assign)  # type: ignore[misc]
 
         except (ValueError, RuntimeError) as e:
             log.info(
-                f"{e}: {load_from} is not desirable format for torch.hub.load_state_dict_from_url. "
-                f"To manually load {load_from}, try to set it to trainer.checkpoint.",
+                f"{e}: {checkpoint} is not desirable format for torch.hub.load_state_dict_from_url. "
+                f"To manually load {checkpoint}, try to set it to trainer.checkpoint.",
             )
 
     def freeze_networks(
@@ -159,71 +234,4 @@ class CommonSettingMixin:
             mask_input=mask_input,
             has_mask_input=has_mask_input,
             ori_shape=ori_shape,
-        )
-
-
-class SAM(CommonSettingMixin, OTXVisualPromptingModel):  # type: ignore[misc]
-    """OTX visual prompting model class for Segment Anything Model (SAM)."""
-
-    input_size_multiplier = 16
-
-    def __init__(
-        self,
-        data_input_params: DataInputParams,
-        label_info: LabelInfoTypes = NullLabelInfo(),
-        model_name: Literal["tiny_vit", "vit_b"] = "tiny_vit",
-        optimizer: OptimizerCallable = DefaultOptimizerCallable,
-        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
-        metric: MetricCallable = VisualPromptingMetricCallable,
-        torch_compile: bool = False,
-        freeze_image_encoder: bool = True,
-        freeze_prompt_encoder: bool = True,
-        freeze_mask_decoder: bool = False,
-        use_stability_score: bool = False,
-        return_single_mask: bool = True,
-        return_extra_metrics: bool = False,
-        stability_score_offset: float = 1.0,
-    ) -> None:
-        if data_input_params.input_size[0] != data_input_params.input_size[1]:
-            msg = f"SAM should use square image size, but got {data_input_params.input_size}"
-            raise ValueError(msg)
-
-        self.image_size = data_input_params.input_size[0]
-        self.use_stability_score = use_stability_score
-        self.return_single_mask = return_single_mask
-        self.return_extra_metrics = return_extra_metrics
-        self.stability_score_offset = stability_score_offset
-        self.image_embedding_size = data_input_params.input_size[0] // self.input_size_multiplier
-
-        super().__init__(
-            label_info=label_info,
-            model_name=model_name,
-            data_input_params=data_input_params,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            metric=metric,
-            torch_compile=torch_compile,
-        )
-
-        self.load_state_dict(load_from=self.load_from[model_name])
-        self.freeze_networks(freeze_image_encoder, freeze_prompt_encoder, freeze_mask_decoder)
-
-    def _build_model(self) -> nn.Module:
-        image_encoder = SAMImageEncoder(backbone_type=self.model_name, img_size=self.data_input_params.input_size[0])
-        prompt_encoder = SAMPromptEncoder(
-            image_embedding_size=(self.image_embedding_size, self.image_embedding_size),
-            input_image_size=self.data_input_params.input_size,
-        )
-        mask_decoder = SAMMaskDecoder()
-        criterion = SAMCriterion(image_size=self.data_input_params.input_size[0])
-        return SegmentAnything(
-            image_encoder=image_encoder,
-            prompt_encoder=prompt_encoder,
-            mask_decoder=mask_decoder,
-            criterion=criterion,
-            image_size=self.data_input_params.input_size[0],
-            use_stability_score=self.use_stability_score,
-            return_single_mask=self.return_single_mask,
-            return_extra_metrics=self.return_extra_metrics,
-            stability_score_offset=self.stability_score_offset,
         )

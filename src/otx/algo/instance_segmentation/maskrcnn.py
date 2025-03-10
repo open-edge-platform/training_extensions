@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import cv2
 import torch
@@ -29,22 +29,42 @@ from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.algo.instance_segmentation.utils.roi_extractors import SingleRoIExtractor
 from otx.algo.modules.norm import build_norm_layer
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.algo.utils.utils import load_checkpoint
+from otx.core.config.data import TileConfig
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
+
+if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+
+    from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
+    from otx.core.schedulers import LRSchedulerListCallable
+    from otx.core.types.label import LabelInfoTypes
 
 
 class MaskRCNN(OTXInstanceSegModel):
-    """MaskRCNN Model."""
+    """Implementation of MaskRCNN for instance segmentation.
 
-    AVAILABLE_MODELS: ClassVar[list[str]] = [
-        "maskrcnn_resnet_50",
-        "maskrcnn_efficientnet_b2b",
-        "maskrcnn_swin_tiny",
-    ]
+    Args:
+        label_info (LabelInfoTypes): Information about the labels used in the model.
+        data_input_params (DataInputParams): Parameters for the data input.
+        model_name (str, optional): Name of the model. Defaults to "maskrcnn_resnet_50".
+        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric for evaluating the model.
+            Defaults to MaskRLEMeanAPFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
+    """
 
-    load_from: ClassVar[dict[str, Any]] = {
+    pretrained_weights: ClassVar[dict[str, Any]] = {
         "maskrcnn_resnet_50": "https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_mstrain-poly_3x_coco/"
         "mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth",
         "maskrcnn_efficientnet_b2b": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
@@ -54,12 +74,36 @@ class MaskRCNN(OTXInstanceSegModel):
         "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco_20210908_165006-90a4008c.pth",
     }
 
-    def _build_model(self, num_classes: int) -> TwoStageDetector:
-        if self.model_name not in self.AVAILABLE_MODELS:
-            msg = f"Model version {self.model_name} is not supported."
-            raise ValueError(msg)
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: Literal[
+            "maskrcnn_resnet_50",
+            "maskrcnn_efficientnet_b2b",
+            "maskrcnn_swin_tiny",
+        ] = "maskrcnn_resnet_50",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ) -> None:
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
 
-        # TODO(Sungchul, Kirill): depricate train_cfg/test_cfg
+    def _create_model(self, num_classes: int | None = None) -> MaskRCNN:
+        num_classes = num_classes if num_classes is not None else self.num_classes
+
+        # TODO(Kirill): depricate train_cfg/test_cfg
         train_cfg = {
             "rpn": {
                 "allowed_border": -1,
@@ -252,7 +296,7 @@ class MaskRCNN(OTXInstanceSegModel):
             class_agnostic=False,
         )
 
-        return TwoStageDetector(
+        model = TwoStageDetector(
             backbone=backbone,
             neck=neck,
             rpn_head=rpn_head,
@@ -260,6 +304,9 @@ class MaskRCNN(OTXInstanceSegModel):
             roi_criterion=roi_criterion,
             rpn_criterion=rpn_criterion,
         )
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     def _build_backbone(self) -> nn.Module:
         """Builds the backbone for the model."""

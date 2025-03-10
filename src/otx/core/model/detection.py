@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging as log
 import types
-from abc import abstractmethod
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 
@@ -18,7 +17,7 @@ from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 
 from otx.algo.explain.explain_algo import feature_vector_fn
-from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
+from otx.algo.utils.utils import InstanceData
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -36,7 +35,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
-    from torch import nn
 
     from otx.algo.detection.detectors import SingleStageDetector
 
@@ -138,19 +136,6 @@ class OTXDetectionModel(OTXModel):
         outputs.bboxes = bboxes
         outputs.labels = labels
         return outputs
-
-    @abstractmethod
-    def _build_model(self, num_classes: int) -> nn.Module:
-        raise NotImplementedError
-
-    def _create_model(self, num_classes: int | None = None) -> nn.Module:
-        num_classes = num_classes if num_classes is not None else self.num_classes
-        detector = self._build_model(num_classes=num_classes)
-        if hasattr(detector, "init_weights"):
-            detector.init_weights()
-        if self.load_from is not None:
-            load_checkpoint(detector, self.load_from, map_location="cpu")
-        return detector
 
     def _customize_inputs(
         self,

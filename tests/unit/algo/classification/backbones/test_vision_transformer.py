@@ -9,7 +9,7 @@ import pytest
 import torch
 
 from otx.algo.classification.backbones import VisionTransformer
-from otx.algo.utils.mmengine_utils import load_checkpoint_to_model
+from otx.algo.utils.utils import load_checkpoint_to_model
 
 
 class TestVisionTransformer:

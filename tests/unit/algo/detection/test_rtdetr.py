@@ -18,7 +18,7 @@ from otx.core.types import LabelInfo
 class TestRTDETR:
     def test_customize_outputs(self, mocker):
         label_info = LabelInfo(["a", "b", "c"], ["0", "1", "2"], [["a", "b", "c"]])
-        mocker.patch("otx.algo.detection.rtdetr.RTDETR._build_model", return_value=mocker.MagicMock())
+        mocker.patch("otx.algo.detection.rtdetr.RTDETR._create_model", return_value=mocker.MagicMock())
         model = RTDETR(
             model_name="rtdetr_18",
             label_info=label_info,

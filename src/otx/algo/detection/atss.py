@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.algo.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, GIoULoss
 from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder
@@ -17,6 +17,7 @@ from otx.algo.detection.losses import ATSSCriterion
 from otx.algo.detection.necks import FPN
 from otx.algo.detection.utils.assigners import ATSSAssigner
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
@@ -33,40 +34,49 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-PRETRAINED_ROOT: (
-    str
-) = "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/"
-
-PRETRAINED_WEIGHTS: dict[str, str] = {
-    "atss_mobilenetv2": PRETRAINED_ROOT + "mobilenet_v2-atss.pth",
-    "atss_resnext101": PRETRAINED_ROOT + "resnext101_atss_070623.pth",
-}
-
-
 class ATSS(OTXDetectionModel):
     """OTX Detection model class for ATSS.
 
-    Default input size per model:
-        - atss_mobilenetv2 : (800, 992)
-        - atss_resnext101 : (800, 992)
+    Attributes:
+        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (Literal, optional): Name of the model to use. Defaults to "atss_mobilenetv2".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
+
+    pretrained_weights: ClassVar[dict[str, str]] = {
+        "atss_mobilenetv2": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
+        "models/object_detection/v2/mobilenet_v2-atss.pth",
+        "atss_resnext101": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
+        "object_detection/v2/resnext101_atss_070623.pth",
+    }
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str = "atss_mobilenetv2",
+        model_name: Literal[
+            "atss_mobilenetv2",
+            "atss_resnext101",
+        ] = "atss_mobilenetv2",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        if model_name not in PRETRAINED_WEIGHTS:
-            msg = f"Unsupported model name: {model_name}"
+        if model_name not in self.pretrained_weights:
+            msg = f"Unsupported model: {model_name}. Supported models: {list(self.pretrained_weights.keys())}"
             raise ValueError(msg)
 
-        self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -78,7 +88,8 @@ class ATSS(OTXDetectionModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> SingleStageDetector:
+    def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         # initialize backbones
         train_cfg = {
             "assigner": ATSSAssigner(topk=9),
@@ -109,8 +120,8 @@ class ATSS(OTXDetectionModel):
                 target_means=(0.0, 0.0, 0.0, 0.0),
                 target_stds=(0.1, 0.1, 0.2, 0.2),
             ),
-            train_cfg=train_cfg,  # TODO (sungchul, kirill): remove
-            test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
+            train_cfg=train_cfg,  # TODO (Kirill): remove
+            test_cfg=test_cfg,  # TODO (Kirill): remove
         )
         criterion = ATSSCriterion(
             num_classes=num_classes,
@@ -127,14 +138,18 @@ class ATSS(OTXDetectionModel):
             loss_bbox=GIoULoss(loss_weight=2.0),
             loss_centerness=CrossEntropyLoss(use_sigmoid=True, loss_weight=1.0),
         )
-        return SingleStageDetector(
+        model = SingleStageDetector(
             backbone=backbone,
             neck=neck,
             bbox_head=bbox_head,
             criterion=criterion,
-            train_cfg=train_cfg,  # TODO (sungchul, kirill): remove
-            test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
+            train_cfg=train_cfg,  # TODO (Kirill): remove
+            test_cfg=test_cfg,  # TODO (Kirill): remove
         )
+        model.init_weights()
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     def _build_backbone(self, model_name: str) -> nn.Module:
         if "mobilenetv2" in model_name:

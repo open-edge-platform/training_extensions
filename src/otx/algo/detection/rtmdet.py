@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.algo.common.backbones import CSPNeXt
 from otx.algo.common.losses import GIoULoss, QualityFocalLoss
@@ -17,6 +17,7 @@ from otx.algo.detection.detectors import SingleStageDetector
 from otx.algo.detection.heads import RTMDetSepBNHead
 from otx.algo.detection.losses import RTMDetCriterion
 from otx.algo.detection.necks import CSPNeXtPAFPN
+from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
@@ -33,17 +34,28 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-PRETRAINED_ROOT: (
-    str
-) = "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/"
-
-PRETRAINED_WEIGHTS: dict[str, str] = {
-    "rtmdet_tiny": PRETRAINED_ROOT + "rtmdet_tiny.pth",
-}
-
-
 class RTMDet(OTXDetectionModel):
-    """OTX Detection model class for RTMDet."""
+    """OTX Detection model class for RTMDet.
+
+    Attributes:
+        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+        input_size_multiplier (int): Multiplier for the input size.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model to use. Defaults to "rtmdet_tiny".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    """
+
+    pretrained_weights: ClassVar[dict[str, str]] = {
+        "rtmdet_tiny": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/rtmdet_tiny.pth",
+    }
 
     input_size_multiplier = 32
 
@@ -51,14 +63,13 @@ class RTMDet(OTXDetectionModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: Literal["rtmdet_tiny"],
+        model_name: Literal["rtmdet_tiny"] = "rtmdet_tiny",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -70,7 +81,8 @@ class RTMDet(OTXDetectionModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> SingleStageDetector:
+    def _create_model(self, num_classes: int | None = None) -> SingleStageDetector:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         train_cfg = {
             "assigner": DynamicSoftLabelAssigner(topk=13),
             "sampler": PseudoSampler(),
@@ -95,22 +107,26 @@ class RTMDet(OTXDetectionModel):
             num_classes=num_classes,
             anchor_generator=MlvlPointGenerator(offset=0, strides=[8, 16, 32]),
             bbox_coder=DistancePointBBoxCoder(),
-            train_cfg=train_cfg,  # TODO (sungchul, kirill): remove
-            test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
+            train_cfg=train_cfg,  # TODO ( kirill): remove
+            test_cfg=test_cfg,  # TODO ( kirill): remove
         )
         criterion = RTMDetCriterion(
             num_classes=num_classes,
             loss_cls=QualityFocalLoss(use_sigmoid=True, beta=2.0, loss_weight=1.0),
             loss_bbox=GIoULoss(loss_weight=2.0),
         )
-        return SingleStageDetector(
+        model = SingleStageDetector(
             backbone=backbone,
             neck=neck,
             bbox_head=bbox_head,
             criterion=criterion,
-            train_cfg=train_cfg,  # TODO (sungchul, kirill): remove
-            test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
+            train_cfg=train_cfg,  # TODO ( kirill): remove
+            test_cfg=test_cfg,  # TODO ( kirill): remove
         )
+        model.init_weights()
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     @property
     def _exporter(self) -> OTXModelExporter:

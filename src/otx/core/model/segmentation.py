@@ -51,7 +51,7 @@ class OTXSegmentationModel(OTXModel):
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
         Defaults to DefaultSchedulerCallable.
-        metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to SegmCallable.
         torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
