@@ -8,11 +8,12 @@ All notable changes to this project will be documented in this file.
 
 ### Enhancements
 
+- Bump inference dependencies
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4243>)
 - Bump ModelAPI to 0.2.5.2
   (<https://github.com/openvinotoolkit/training_extensions/pull/4275>)
 
 ### Bug fixes
-
 
 - Fix auto batch size with tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4233>)
