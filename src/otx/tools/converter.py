@@ -203,7 +203,7 @@ TEMPLATE_ID_DICT = {
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
         "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny_single_obj",
+        "model_name": "rtmpose_tiny",
     },
 }
 

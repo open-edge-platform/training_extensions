@@ -106,7 +106,7 @@ class RTMPose(OTXKeypointDetectionModel):
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
             data_input_params=self.data_input_params,
-            resize_mode="standard",
+            resize_mode="fit_to_window",
             pad_value=0,
             swap_rgb=False,
             via_onnx=True,
