@@ -97,17 +97,11 @@ class TestSAM:
         mock_module_load_state_dict.assert_called_with(expected_state_dict, True, False)
 
     def test_load_state_dict_failure(self, mocker) -> None:
-        mock_load_state_dict_from_url = mocker.patch(
-            "torch.hub.load_state_dict_from_url",
-            side_effect=ValueError("Invalid URL"),
-        )
-        mock_log_info = mocker.patch("logging.info")
-
         sam = SAM(data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
-        sam.load_state_dict(checkpoint="invalid_url")
 
-        mock_load_state_dict_from_url.assert_called_with("invalid_url")
-        mock_log_info.assert_called()
+        with pytest.raises(ValueError) as exc_info:
+            sam.load_state_dict(checkpoint="invalid_url")
+        assert exc_info.value.args[0] =="Invalid checkpoint type or format: <class 'str'>: invalid_url"
 
     @pytest.mark.parametrize("freeze_image_encoder", [True, False])
     @pytest.mark.parametrize("freeze_prompt_encoder", [True, False])
