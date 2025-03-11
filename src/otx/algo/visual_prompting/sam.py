@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging as log
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
@@ -27,7 +26,7 @@ if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
 
 
-class SAM(OTXVisualPromptingModel):  # type: ignore[misc]
+class SAM(OTXVisualPromptingModel):
     """OTX visual prompting model class for Segment Anything Model (SAM).
 
     Attributes:
@@ -149,7 +148,7 @@ class SAM(OTXVisualPromptingModel):  # type: ignore[misc]
             If loading from a URL, some keys are removed from the loaded state dictionary
             and a 'model.' prefix is added to all remaining keys.
         """
-        try:
+        if isinstance(checkpoint, str) and checkpoint.startswith("http"):
             _state_dict: dict[str, Any] = torch.hub.load_state_dict_from_url(str(checkpoint))
             for key in [
                 "image_encoder.norm_head.weight",
@@ -165,13 +164,13 @@ class SAM(OTXVisualPromptingModel):  # type: ignore[misc]
                 _state_dict["model." + key] = _state_dict.pop(key)
 
             state_dict = _state_dict
-            super().load_state_dict(state_dict, strict, assign)  # type: ignore[misc]
+        elif isinstance(checkpoint, dict):
+            state_dict = checkpoint
+        else:
+            msg = f"Invalid checkpoint type or format: {type(checkpoint)}: {checkpoint}"
+            raise ValueError(msg)
 
-        except (ValueError, RuntimeError) as e:
-            log.info(
-                f"{e}: {checkpoint} is not desirable format for torch.hub.load_state_dict_from_url. "
-                f"To manually load {checkpoint}, try to set it to trainer.checkpoint.",
-            )
+        super().load_state_dict(state_dict, strict, assign)  # type: ignore[misc]
 
     def freeze_networks(
         self,
