@@ -74,9 +74,9 @@ TASK_PER_DATA_FORMAT = {
 }
 
 OVMODEL_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: "otx.core.model.classification.OVMulticlassClassificationModel",
-    OTXTaskType.MULTI_LABEL_CLS: "otx.core.model.classification.OVMultilabelClassificationModel",
-    OTXTaskType.H_LABEL_CLS: "otx.core.model.classification.OVHlabelClassificationModel",
+    OTXTaskType.MULTI_CLASS_CLS: "otx.core.model.multiclass_classification.OVMulticlassClassificationModel",
+    OTXTaskType.MULTI_LABEL_CLS: "otx.core.model.multilabel_classification.OVMultilabelClassificationModel",
+    OTXTaskType.H_LABEL_CLS: "otx.core.model.hlabel_classification.OVHlabelClassificationModel",
     OTXTaskType.DETECTION: "otx.core.model.detection.OVDetectionModel",
     OTXTaskType.ROTATED_DETECTION: "otx.core.model.rotated_detection.OVRotatedDetectionModel",
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.core.model.instance_segmentation.OVInstanceSegmentationModel",

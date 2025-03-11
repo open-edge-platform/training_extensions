@@ -195,7 +195,7 @@ class OVMultilabelClassificationModel(OVModel):
         inputs: MultilabelClsBatchDataEntity,
     ) -> MultilabelClsBatchPredEntity:
         pred_scores = [
-            torch.tensor([top_label[2] for top_label in out.top_labels], device=self.device) for out in outputs
+            torch.tensor([top_label.confidence for top_label in out.top_labels], device=self.device) for out in outputs
         ]
 
         if outputs and outputs[0].saliency_map.size != 0:
