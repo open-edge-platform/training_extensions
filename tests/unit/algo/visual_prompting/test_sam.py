@@ -99,9 +99,8 @@ class TestSAM:
     def test_load_state_dict_failure(self, mocker) -> None:
         sam = SAM(data_input_params=DataInputParams((1024, 1024), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValueError, match="Invalid checkpoint type or format: <class 'str'>: invalid_url"):
             sam.load_state_dict(checkpoint="invalid_url")
-        assert exc_info.value.args[0] =="Invalid checkpoint type or format: <class 'str'>: invalid_url"
 
     @pytest.mark.parametrize("freeze_image_encoder", [True, False])
     @pytest.mark.parametrize("freeze_prompt_encoder", [True, False])
