@@ -117,11 +117,6 @@ class OTXMultilabelClsDataset(OTXDataset):
                 onehot[ignore_label] = -1
         return onehot
 
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect MultilabelClsDataEntity into MultilabelClsBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn
-
 
 class OTXHlabelClsDataset(OTXDataset):
     """OTXDataset class for H-label classification task."""
@@ -292,8 +287,3 @@ class OTXHlabelClsDataset(OTXDataset):
                 class_indices[num_multiclass_heads + in_group_idx] = -1
 
         return class_indices
-
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect HlabelClsDataEntity into HlabelClsBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn
