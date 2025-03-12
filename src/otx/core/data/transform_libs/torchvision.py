@@ -572,7 +572,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs.image = img
 
             if isinstance(inputs, TorchDataItem):
-                inputs.imgs_info = _resize_image_info(inputs.imgs_info, img.shape[:2])
+                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
             else:
                 inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
