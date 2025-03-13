@@ -1,0 +1,30 @@
+otx.algo.detection.backbones
+============================
+
+.. automodule:: otx.algo.detection.backbones
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CSPDarknet
+      PResNet
+   
+   
+
+   
+   
+   
+
+
+

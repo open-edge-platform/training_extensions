@@ -1,0 +1,39 @@
+otx.core.utils.tile\_merge
+==========================
+
+.. automodule:: otx.core.utils.tile_merge
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      int_max_check_condition
+      keep_chunkify
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DetectionTileMerge
+      InstanceSegTileMerge
+      SegmentationTileMerge
+      TileMerge
+   
+   
+
+   
+   
+   
+
+
+

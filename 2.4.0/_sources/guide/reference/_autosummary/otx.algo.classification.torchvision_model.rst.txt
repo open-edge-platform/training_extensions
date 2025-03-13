@@ -1,0 +1,31 @@
+otx.algo.classification.torchvision\_model
+==========================================
+
+.. automodule:: otx.algo.classification.torchvision_model
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      TVModelForHLabelCls
+      TVModelForMulticlassCls
+      TVModelForMultilabelCls
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>otx.algo.detection.heads.rtmdet_head &#8212; OpenVINO™ Training Extensions 2.4.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../../_static/styles/bootstrap.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+
+  
+  <link href="../../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/css/custom.css?v=6232a102" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
+
+    <script src="../../../../../_static/documentation_options.js?v=31bb8259"></script>
+    <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/algo/detection/heads/rtmdet_head';</script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fa-solid fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../../_static/logos/otx-logo.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../../_static/logos/otx-logo.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+    </div>
+
+    <div id="navbar-end">
+      
+        <div class="navbar-end-item navbar-persistent--container">
+          
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+        </div>
+      
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openvinotoolkit/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  
+    <div class="navbar-persistent--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+    </div>
+  
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openvinotoolkit/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+  
+  <div id="rtd-footer-container"></div>
+
+      </div>
+      <main id="main-content" class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for otx.algo.detection.heads.rtmdet_head</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+<span class="c1"># Copyright (c) OpenMMLab. All rights reserved.</span>
+<span class="sd">&quot;&quot;&quot;Implementation modified from mmdet.models.dense_heads.rtmdet_head.py.</span>
+
+<span class="sd">Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/dense_heads/rtmdet_head.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">nn</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.coders</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseBBoxCoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.nms</span><span class="w"> </span><span class="kn">import</span> <span class="n">multiclass_nms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.prior_generators</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasePriorGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.common.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">distance2bbox</span><span class="p">,</span> <span class="n">inverse_sigmoid</span><span class="p">,</span> <span class="n">multi_apply</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.heads.atss_head</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSSHeadModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.utils.prior_generators.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">anchor_inside_flags</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">images_to_levels</span><span class="p">,</span>
+    <span class="n">sigmoid_geometric_mean</span><span class="p">,</span>
+    <span class="n">unmap</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_activation_layer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.conv_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">Conv2dModule</span><span class="p">,</span> <span class="n">DepthwiseSeparableConvModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span><span class="p">,</span> <span class="n">is_norm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.scale</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scale</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.mmengine_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.weight_init</span><span class="w"> </span><span class="kn">import</span> <span class="n">bias_init_with_prob</span><span class="p">,</span> <span class="n">constant_init</span><span class="p">,</span> <span class="n">normal_init</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RTMDetHead</span><span class="p">(</span><span class="n">ATSSHeadModule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detection Head of RTMDet.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_classes (int): Number of categories excluding the background category.</span>
+<span class="sd">        in_channels (int): Number of channels in the input feature map.</span>
+<span class="sd">        with_objectness (bool): Whether to add an objectness branch.</span>
+<span class="sd">            Defaults to True.</span>
+<span class="sd">        activation (Callable[..., nn.Module]): Activation layer module.</span>
+<span class="sd">            Defaults to ``nn.ReLU``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">with_objectness</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span> <span class="o">=</span> <span class="n">with_objectness</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_cfg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assigner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_cfg</span><span class="p">[</span><span class="s2">&quot;assigner&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize layers of the head.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacked_convs</span><span class="p">):</span>
+            <span class="n">chn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Conv2dModule</span><span class="p">(</span>
+                    <span class="n">chn</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+                    <span class="mi">3</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">normalization</span><span class="o">=</span><span class="n">build_norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalization</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">),</span>
+                    <span class="n">activation</span><span class="o">=</span><span class="n">build_activation_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Conv2dModule</span><span class="p">(</span>
+                    <span class="n">chn</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+                    <span class="mi">3</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">normalization</span><span class="o">=</span><span class="n">build_norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalization</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">),</span>
+                    <span class="n">activation</span><span class="o">=</span><span class="n">build_activation_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="n">pred_pad_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtm_cls</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_base_priors</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_out_channels</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">pred_pad_size</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_base_priors</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">pred_pad_size</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rtm_obj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">pred_pad_size</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span><span class="n">Scale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">strides</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize weights of the head.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">normal_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_norm</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">constant_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">bias_cls</span> <span class="o">=</span> <span class="n">bias_init_with_prob</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">normal_init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rtm_cls</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_cls</span><span class="p">)</span>
+        <span class="n">normal_init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span><span class="p">:</span>
+            <span class="n">normal_init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rtm_obj</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_cls</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward features from the upstream network.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feats (tuple[Tensor]): Features from the upstream network, each is</span>
+<span class="sd">                a 4D-tensor.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: Usually a tuple of classification scores and bbox prediction</span>
+<span class="sd">            - cls_scores (list[Tensor]): Classification scores for all scale</span>
+<span class="sd">              levels, each is a 4D-tensor, the channels number is</span>
+<span class="sd">              num_base_priors * num_classes.</span>
+<span class="sd">            - bbox_preds (list[Tensor]): Box energies / deltas for all scale</span>
+<span class="sd">              levels, each is a 4D-tensor, the channels number is</span>
+<span class="sd">              num_base_priors * 4.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cls_scores</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bbox_preds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">stride</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">strides</span><span class="p">):</span>
+            <span class="n">cls_feat</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">reg_feat</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="k">for</span> <span class="n">cls_layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span><span class="p">:</span>
+                <span class="n">cls_feat</span> <span class="o">=</span> <span class="n">cls_layer</span><span class="p">(</span><span class="n">cls_feat</span><span class="p">)</span>
+            <span class="n">cls_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_cls</span><span class="p">(</span><span class="n">cls_feat</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">reg_layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span><span class="p">:</span>
+                <span class="n">reg_feat</span> <span class="o">=</span> <span class="n">reg_layer</span><span class="p">(</span><span class="n">reg_feat</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span><span class="p">:</span>
+                <span class="n">objectness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_obj</span><span class="p">(</span><span class="n">reg_feat</span><span class="p">)</span>
+                <span class="n">cls_score</span> <span class="o">=</span> <span class="n">inverse_sigmoid</span><span class="p">(</span><span class="n">sigmoid_geometric_mean</span><span class="p">(</span><span class="n">cls_score</span><span class="p">,</span> <span class="n">objectness</span><span class="p">))</span>
+
+            <span class="n">reg_dist</span> <span class="o">=</span> <span class="n">scale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span><span class="p">(</span><span class="n">reg_feat</span><span class="p">)</span><span class="o">.</span><span class="n">exp</span><span class="p">())</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">cls_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cls_score</span><span class="p">)</span>
+            <span class="n">bbox_preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reg_dist</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cls_scores</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bbox_preds</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare_loss_inputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">DetBatchDataEntity</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform forward propagation of the detection head and prepare for loss calculation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (tuple[Tensor]): Features from the upstream network, each is</span>
+<span class="sd">                a 4D-tensor.</span>
+<span class="sd">            entity (DetBatchDataEntity): Entity from OTX dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dictionary of components for loss calculation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">cls_scores</span><span class="p">,</span> <span class="n">bbox_preds</span><span class="p">),</span> <span class="n">batch_gt_instances</span><span class="p">,</span> <span class="n">batch_img_metas</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ATSSHeadModule</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare_loss_inputs</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">entity</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">num_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_img_metas</span><span class="p">)</span>
+        <span class="n">featmap_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">featmap</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="k">for</span> <span class="n">featmap</span> <span class="ow">in</span> <span class="n">cls_scores</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">featmap_sizes</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">num_levels</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The number of featmap_sizes (=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">featmap_sizes</span><span class="p">)</span><span class="si">}</span><span class="s2">) and the number of levels of prior_generator &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">num_levels</span><span class="si">}</span><span class="s2">) should be same.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">device</span> <span class="o">=</span> <span class="n">cls_scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">anchor_list</span><span class="p">,</span> <span class="n">valid_flag_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_anchors</span><span class="p">(</span><span class="n">featmap_sizes</span><span class="p">,</span> <span class="n">batch_img_metas</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">flatten_cls_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">cls_score</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_imgs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_out_channels</span><span class="p">)</span> <span class="k">for</span> <span class="n">cls_score</span> <span class="ow">in</span> <span class="n">cls_scores</span><span class="p">],</span>
+            <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">decoded_bboxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">bbox_pred</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">anchor_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox_preds</span><span class="p">):</span>
+            <span class="n">anchor</span> <span class="o">=</span> <span class="n">anchor</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># noqa: PLW2901</span>
+            <span class="n">bbox_pred</span> <span class="o">=</span> <span class="n">bbox_pred</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_imgs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># noqa: PLW2901</span>
+            <span class="n">bbox_pred</span> <span class="o">=</span> <span class="n">distance2bbox</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="n">bbox_pred</span><span class="p">)</span>  <span class="c1"># noqa: PLW2901</span>
+            <span class="n">decoded_bboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bbox_pred</span><span class="p">)</span>
+
+        <span class="n">flatten_bboxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">decoded_bboxes</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="p">(</span>
+            <span class="n">anchor_list</span><span class="p">,</span>
+            <span class="n">labels_list</span><span class="p">,</span>
+            <span class="n">label_weights_list</span><span class="p">,</span>
+            <span class="n">bbox_targets_list</span><span class="p">,</span>
+            <span class="n">assign_metrics_list</span><span class="p">,</span>
+            <span class="n">sampling_results_list</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_targets</span><span class="p">(</span>  <span class="c1"># type: ignore[misc]</span>
+            <span class="n">flatten_cls_scores</span><span class="p">,</span>
+            <span class="n">flatten_bboxes</span><span class="p">,</span>
+            <span class="n">anchor_list</span><span class="p">,</span>
+            <span class="n">valid_flag_list</span><span class="p">,</span>
+            <span class="n">batch_gt_instances</span><span class="p">,</span>
+            <span class="n">batch_img_metas</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;cls_score&quot;</span><span class="p">:</span> <span class="n">cls_scores</span><span class="p">,</span>
+            <span class="s2">&quot;bbox_pred&quot;</span><span class="p">:</span> <span class="n">decoded_bboxes</span><span class="p">,</span>
+            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels_list</span><span class="p">,</span>
+            <span class="s2">&quot;label_weights&quot;</span><span class="p">:</span> <span class="n">label_weights_list</span><span class="p">,</span>
+            <span class="s2">&quot;bbox_targets&quot;</span><span class="p">:</span> <span class="n">bbox_targets_list</span><span class="p">,</span>
+            <span class="s2">&quot;assign_metrics&quot;</span><span class="p">:</span> <span class="n">assign_metrics_list</span><span class="p">,</span>
+            <span class="s2">&quot;stride&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">strides</span><span class="p">,</span>
+            <span class="s2">&quot;sampling_results_list&quot;</span><span class="p">:</span> <span class="n">sampling_results_list</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_by_feat</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cls_scores</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">bbox_preds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">batch_img_metas</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rescale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_nms</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform network output for a batch into bbox predictions.</span>
+
+<span class="sd">        Reference : https://github.com/open-mmlab/mmdeploy/blob/v1.3.1/mmdeploy/codebase/mmdet/models/dense_heads/rtmdet_head.py#L18-L108</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cls_scores (list[Tensor]): Classification scores for all</span>
+<span class="sd">                scale levels, each is a 4D-tensor, has shape</span>
+<span class="sd">                (batch_size, num_priors * num_classes, H, W).</span>
+<span class="sd">            bbox_preds (list[Tensor]): Box energies / deltas for all</span>
+<span class="sd">                scale levels, each is a 4D-tensor, has shape</span>
+<span class="sd">                (batch_size, num_priors * 4, H, W).</span>
+<span class="sd">            batch_img_metas (list[dict], Optional): Batch image meta info.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            cfg (dict, optional): Test / postprocessing</span>
+<span class="sd">                configuration, if None, test_cfg would be used.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            rescale (bool): If True, return boxes in original image space.</span>
+<span class="sd">                Defaults to False.</span>
+<span class="sd">            with_nms (bool): If True, do nms before return boxes.</span>
+<span class="sd">                Defaults to True.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[Tensor, Tensor]: The first item is an (N, num_box, 5) tensor,</span>
+<span class="sd">                where 5 represent (tl_x, tl_y, br_x, br_y, score), N is batch</span>
+<span class="sd">                size and the score between 0 and 1. The shape of the second</span>
+<span class="sd">                tensor in the tuple is (N, num_box), and each element</span>
+<span class="sd">                represents the class label of the corresponding box.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">cls_scores</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox_preds</span><span class="p">)</span>  <span class="c1"># noqa: S101</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">cls_scores</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_cfg</span> <span class="k">if</span> <span class="n">cfg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">cfg</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">bbox_preds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">featmap_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">cls_score</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="k">for</span> <span class="n">cls_score</span> <span class="ow">in</span> <span class="n">cls_scores</span><span class="p">]</span>
+        <span class="n">mlvl_priors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">grid_priors</span><span class="p">(</span><span class="n">featmap_sizes</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="n">flatten_cls_scores</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">cls_score</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_out_channels</span><span class="p">)</span> <span class="k">for</span> <span class="n">cls_score</span> <span class="ow">in</span> <span class="n">cls_scores</span>
+        <span class="p">]</span>
+        <span class="n">flatten_bbox_preds</span> <span class="o">=</span> <span class="p">[</span><span class="n">bbox_pred</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">bbox_pred</span> <span class="ow">in</span> <span class="n">bbox_preds</span><span class="p">]</span>
+        <span class="n">flatten_cls_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">flatten_cls_scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">()</span>
+        <span class="n">flatten_bbox_preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">flatten_bbox_preds</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">priors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">mlvl_priors</span><span class="p">)</span>
+        <span class="n">tl_x</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">flatten_bbox_preds</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># type: ignore[call-overload]</span>
+        <span class="n">tl_y</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">flatten_bbox_preds</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># type: ignore[call-overload]</span>
+        <span class="n">br_x</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">flatten_bbox_preds</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># type: ignore[call-overload]</span>
+        <span class="n">br_y</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">flatten_bbox_preds</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>  <span class="c1"># type: ignore[call-overload]</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">tl_x</span><span class="p">,</span> <span class="n">tl_y</span><span class="p">,</span> <span class="n">br_x</span><span class="p">,</span> <span class="n">br_y</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">flatten_cls_scores</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">with_nms</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bboxes</span><span class="p">,</span> <span class="n">scores</span>
+
+        <span class="k">return</span> <span class="n">multiclass_nms</span><span class="p">(</span>
+            <span class="n">bboxes</span><span class="p">,</span>
+            <span class="n">scores</span><span class="p">,</span>
+            <span class="n">max_output_boxes_per_class</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">iou_threshold</span><span class="o">=</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;nms&quot;</span><span class="p">][</span><span class="s2">&quot;iou_threshold&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
+            <span class="n">score_threshold</span><span class="o">=</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;score_thr&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
+            <span class="n">pre_top_k</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+            <span class="n">keep_top_k</span><span class="o">=</span><span class="n">cfg</span><span class="p">[</span><span class="s2">&quot;max_per_img&quot;</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_targets</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cls_scores</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">bbox_preds</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">anchor_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
+        <span class="n">valid_flag_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
+        <span class="n">batch_gt_instances</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceData</span><span class="p">],</span>
+        <span class="n">batch_img_metas</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+        <span class="n">batch_gt_instances_ignore</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceData</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">unmap_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute regression and classification targets for anchors in multiple images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cls_scores (Tensor): Classification predictions of images,</span>
+<span class="sd">                a 3D-Tensor with shape [num_imgs, num_priors, num_classes].</span>
+<span class="sd">            bbox_preds (Tensor): Decoded bboxes predictions of one image,</span>
+<span class="sd">                a 3D-Tensor with shape [num_imgs, num_priors, 4] in [tl_x,</span>
+<span class="sd">                tl_y, br_x, br_y] format.</span>
+<span class="sd">            anchor_list (list[list[Tensor]]): Multi level anchors of each</span>
+<span class="sd">                image. The outer list indicates images, and the inner list</span>
+<span class="sd">                corresponds to feature levels of the image. Each element of</span>
+<span class="sd">                the inner list is a tensor of shape (num_anchors, 4).</span>
+<span class="sd">            valid_flag_list (list[list[Tensor]]): Multi level valid flags of</span>
+<span class="sd">                each image. The outer list indicates images, and the inner list</span>
+<span class="sd">                corresponds to feature levels of the image. Each element of</span>
+<span class="sd">                the inner list is a tensor of shape (num_anchors, )</span>
+<span class="sd">            batch_gt_instances (list[InstanceData]): Batch of</span>
+<span class="sd">                gt_instance.  It usually includes ``bboxes`` and ``labels``</span>
+<span class="sd">                attributes.</span>
+<span class="sd">            batch_img_metas (list[dict]): Meta information of each image, e.g.,</span>
+<span class="sd">                image size, scaling factor, etc.</span>
+<span class="sd">            batch_gt_instances_ignore (list[InstanceData], Optional):</span>
+<span class="sd">                Batch of gt_instances_ignore. It includes ``bboxes`` attribute</span>
+<span class="sd">                data that is ignored during training and testing.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            unmap_outputs (bool): Whether to map outputs back to the original</span>
+<span class="sd">                set of anchors. Defaults to True.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: a tuple containing learning targets.</span>
+
+<span class="sd">            - anchors_list (list[list[Tensor]]): Anchors of each level.</span>
+<span class="sd">            - labels_list (list[Tensor]): Labels of each level.</span>
+<span class="sd">            - label_weights_list (list[Tensor]): Label weights of each</span>
+<span class="sd">              level.</span>
+<span class="sd">            - bbox_targets_list (list[Tensor]): BBox targets of each level.</span>
+<span class="sd">            - assign_metrics_list (list[Tensor]): alignment metrics of each</span>
+<span class="sd">              level.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_img_metas</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchor_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_flag_list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_imgs</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The number of anchor_list (=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">anchor_list</span><span class="p">)</span><span class="si">}</span><span class="s2">), the number of valid_flag_list &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_flag_list</span><span class="p">)</span><span class="si">}</span><span class="s2">), and num_imgs (=</span><span class="si">{</span><span class="n">num_imgs</span><span class="si">}</span><span class="s2">) should be same.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># anchor number of multi levels</span>
+        <span class="n">num_level_anchors</span> <span class="o">=</span> <span class="p">[</span><span class="n">anchors</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">anchors</span> <span class="ow">in</span> <span class="n">anchor_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="c1"># concat all level anchors and flags to a single tensor</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_imgs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchor_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_flag_list</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The number of anchor_list[i] (=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">anchor_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="si">}</span><span class="s2">) and the number of valid_flag_list[i] &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_flag_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="si">}</span><span class="s2">) should be same.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">anchor_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">anchor_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">valid_flag_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">valid_flag_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1"># compute targets for each image</span>
+        <span class="k">if</span> <span class="n">batch_gt_instances_ignore</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">batch_gt_instances_ignore</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_imgs</span>
+        <span class="c1"># anchor_list: list(b * [-1, 4])</span>
+        <span class="p">(</span>
+            <span class="n">all_anchors</span><span class="p">,</span>
+            <span class="n">all_labels</span><span class="p">,</span>
+            <span class="n">all_label_weights</span><span class="p">,</span>
+            <span class="n">all_bbox_targets</span><span class="p">,</span>
+            <span class="n">all_assign_metrics</span><span class="p">,</span>
+            <span class="n">sampling_results_list</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">multi_apply</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_targets_single</span><span class="p">,</span>
+            <span class="n">cls_scores</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+            <span class="n">bbox_preds</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+            <span class="n">anchor_list</span><span class="p">,</span>
+            <span class="n">valid_flag_list</span><span class="p">,</span>
+            <span class="n">batch_gt_instances</span><span class="p">,</span>
+            <span class="n">batch_img_metas</span><span class="p">,</span>
+            <span class="n">batch_gt_instances_ignore</span><span class="p">,</span>
+            <span class="n">unmap_outputs</span><span class="o">=</span><span class="n">unmap_outputs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># no valid anchors</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">all_labels</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># split targets to a list w.r.t. multiple levels</span>
+        <span class="n">anchors_list</span> <span class="o">=</span> <span class="n">images_to_levels</span><span class="p">(</span><span class="n">all_anchors</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">)</span>
+        <span class="n">labels_list</span> <span class="o">=</span> <span class="n">images_to_levels</span><span class="p">(</span><span class="n">all_labels</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">)</span>
+        <span class="n">label_weights_list</span> <span class="o">=</span> <span class="n">images_to_levels</span><span class="p">(</span><span class="n">all_label_weights</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">)</span>
+        <span class="n">bbox_targets_list</span> <span class="o">=</span> <span class="n">images_to_levels</span><span class="p">(</span><span class="n">all_bbox_targets</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">)</span>
+        <span class="n">assign_metrics_list</span> <span class="o">=</span> <span class="n">images_to_levels</span><span class="p">(</span><span class="n">all_assign_metrics</span><span class="p">,</span> <span class="n">num_level_anchors</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">anchors_list</span><span class="p">,</span>
+            <span class="n">labels_list</span><span class="p">,</span>
+            <span class="n">label_weights_list</span><span class="p">,</span>
+            <span class="n">bbox_targets_list</span><span class="p">,</span>
+            <span class="n">assign_metrics_list</span><span class="p">,</span>
+            <span class="n">sampling_results_list</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_targets_single</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cls_scores</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">bbox_preds</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">flat_anchors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">valid_flags</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">gt_instances</span><span class="p">:</span> <span class="n">InstanceData</span><span class="p">,</span>
+        <span class="n">img_meta</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">gt_instances_ignore</span><span class="p">:</span> <span class="n">InstanceData</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">unmap_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute regression, classification targets for anchors in a single image.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cls_scores (list[Tensor]): Box scores for each image.</span>
+<span class="sd">            bbox_preds (list[Tensor]): Box energies / deltas for each image.</span>
+<span class="sd">            flat_anchors (Tensor): Multi-level anchors of the image, which are</span>
+<span class="sd">                concatenated into a single tensor of shape (num_anchors ,4)</span>
+<span class="sd">            valid_flags (Tensor): Multi level valid flags of the image,</span>
+<span class="sd">                which are concatenated into a single tensor of</span>
+<span class="sd">                    shape (num_anchors,).</span>
+<span class="sd">            gt_instances (InstanceData): Ground truth of instance</span>
+<span class="sd">                annotations. It usually includes ``bboxes`` and ``labels``</span>
+<span class="sd">                attributes.</span>
+<span class="sd">            img_meta (dict): Meta information for current image.</span>
+<span class="sd">            gt_instances_ignore (InstanceData, optional): Instances</span>
+<span class="sd">                to be ignored during training. It includes ``bboxes`` attribute</span>
+<span class="sd">                data that is ignored during training and testing.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            unmap_outputs (bool): Whether to map outputs back to the original</span>
+<span class="sd">                set of anchors. Defaults to True.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: N is the number of total anchors in the image.</span>
+
+<span class="sd">            - anchors (Tensor): All anchors in the image with shape (N, 4).</span>
+<span class="sd">            - labels (Tensor): Labels of all anchors in the image with shape</span>
+<span class="sd">              (N,).</span>
+<span class="sd">            - label_weights (Tensor): Label weights of all anchor in the</span>
+<span class="sd">              image with shape (N,).</span>
+<span class="sd">            - bbox_targets (Tensor): BBox targets of all anchors in the</span>
+<span class="sd">              image with shape (N, 4).</span>
+<span class="sd">            - norm_alignment_metrics (Tensor): Normalized alignment metrics</span>
+<span class="sd">              of all priors in the image with shape (N,).</span>
+<span class="sd">            - sampling_result (SamplingResult): Sampling result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inside_flags</span> <span class="o">=</span> <span class="n">anchor_inside_flags</span><span class="p">(</span>
+            <span class="n">flat_anchors</span><span class="p">,</span>
+            <span class="n">valid_flags</span><span class="p">,</span>
+            <span class="n">img_meta</span><span class="p">[</span><span class="s2">&quot;img_shape&quot;</span><span class="p">][:</span><span class="mi">2</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_cfg</span><span class="p">[</span><span class="s2">&quot;allowed_border&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inside_flags</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="mi">7</span>
+        <span class="c1"># assign gt and sample anchors</span>
+        <span class="n">anchors</span> <span class="o">=</span> <span class="n">flat_anchors</span><span class="p">[</span><span class="n">inside_flags</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">pred_instances</span> <span class="o">=</span> <span class="n">InstanceData</span><span class="p">(</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">cls_scores</span><span class="p">[</span><span class="n">inside_flags</span><span class="p">,</span> <span class="p">:],</span>
+            <span class="n">bboxes</span><span class="o">=</span><span class="n">bbox_preds</span><span class="p">[</span><span class="n">inside_flags</span><span class="p">,</span> <span class="p">:],</span>
+            <span class="n">priors</span><span class="o">=</span><span class="n">anchors</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">assign_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assigner</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">pred_instances</span><span class="p">,</span> <span class="n">gt_instances</span><span class="p">,</span> <span class="n">gt_instances_ignore</span><span class="p">)</span>
+
+        <span class="n">sampling_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">assign_result</span><span class="p">,</span> <span class="n">pred_instances</span><span class="p">,</span> <span class="n">gt_instances</span><span class="p">)</span>
+
+        <span class="n">num_valid_anchors</span> <span class="o">=</span> <span class="n">anchors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">bbox_targets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">anchors</span><span class="o">.</span><span class="n">new_full</span><span class="p">((</span><span class="n">num_valid_anchors</span><span class="p">,),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+        <span class="n">label_weights</span> <span class="o">=</span> <span class="n">anchors</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">num_valid_anchors</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="n">assign_metrics</span> <span class="o">=</span> <span class="n">anchors</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">num_valid_anchors</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+
+        <span class="n">pos_inds</span> <span class="o">=</span> <span class="n">sampling_result</span><span class="o">.</span><span class="n">pos_inds</span>
+        <span class="n">neg_inds</span> <span class="o">=</span> <span class="n">sampling_result</span><span class="o">.</span><span class="n">neg_inds</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_inds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># point-based</span>
+            <span class="n">pos_bbox_targets</span> <span class="o">=</span> <span class="n">sampling_result</span><span class="o">.</span><span class="n">pos_gt_bboxes</span>
+            <span class="n">bbox_targets</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">pos_bbox_targets</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">bbox_targets</span><span class="p">)</span>
+
+            <span class="n">labels</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampling_result</span><span class="o">.</span><span class="n">pos_gt_labels</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_cfg</span><span class="p">[</span><span class="s2">&quot;pos_weight&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">label_weights</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">label_weights</span><span class="p">[</span><span class="n">pos_inds</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_cfg</span><span class="p">[</span><span class="s2">&quot;pos_weight&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_inds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">label_weights</span><span class="p">[</span><span class="n">neg_inds</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="n">class_assigned_gt_inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">sampling_result</span><span class="o">.</span><span class="n">pos_assigned_gt_inds</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gt_inds</span> <span class="ow">in</span> <span class="n">class_assigned_gt_inds</span><span class="p">:</span>
+            <span class="n">gt_class_inds</span> <span class="o">=</span> <span class="n">pos_inds</span><span class="p">[</span><span class="n">sampling_result</span><span class="o">.</span><span class="n">pos_assigned_gt_inds</span> <span class="o">==</span> <span class="n">gt_inds</span><span class="p">]</span>
+            <span class="n">assign_metrics</span><span class="p">[</span><span class="n">gt_class_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">assign_result</span><span class="o">.</span><span class="n">max_overlaps</span><span class="p">[</span><span class="n">gt_class_inds</span><span class="p">]</span>
+
+        <span class="c1"># map up to original set of anchors</span>
+        <span class="k">if</span> <span class="n">unmap_outputs</span><span class="p">:</span>
+            <span class="n">num_total_anchors</span> <span class="o">=</span> <span class="n">flat_anchors</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">anchors</span> <span class="o">=</span> <span class="n">unmap</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">num_total_anchors</span><span class="p">,</span> <span class="n">inside_flags</span><span class="p">)</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">unmap</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">num_total_anchors</span><span class="p">,</span> <span class="n">inside_flags</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
+            <span class="n">label_weights</span> <span class="o">=</span> <span class="n">unmap</span><span class="p">(</span><span class="n">label_weights</span><span class="p">,</span> <span class="n">num_total_anchors</span><span class="p">,</span> <span class="n">inside_flags</span><span class="p">)</span>
+            <span class="n">bbox_targets</span> <span class="o">=</span> <span class="n">unmap</span><span class="p">(</span><span class="n">bbox_targets</span><span class="p">,</span> <span class="n">num_total_anchors</span><span class="p">,</span> <span class="n">inside_flags</span><span class="p">)</span>
+            <span class="n">assign_metrics</span> <span class="o">=</span> <span class="n">unmap</span><span class="p">(</span><span class="n">assign_metrics</span><span class="p">,</span> <span class="n">num_total_anchors</span><span class="p">,</span> <span class="n">inside_flags</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">label_weights</span><span class="p">,</span> <span class="n">bbox_targets</span><span class="p">,</span> <span class="n">assign_metrics</span><span class="p">,</span> <span class="n">sampling_result</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_anchors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">featmap_sizes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+        <span class="n">batch_img_metas</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get anchors according to feature map sizes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            featmap_sizes (list[tuple]): Multi-level feature map sizes.</span>
+<span class="sd">            batch_img_metas (list[dict]): Image meta info.</span>
+<span class="sd">            device (torch.device or str): Device for returned tensors.</span>
+<span class="sd">                Defaults to cuda.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple:</span>
+
+<span class="sd">            - anchor_list (list[list[Tensor]]): Anchors of each image.</span>
+<span class="sd">            - valid_flag_list (list[list[Tensor]]): Valid flags of each</span>
+<span class="sd">              image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_imgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch_img_metas</span><span class="p">)</span>
+
+        <span class="c1"># since feature map sizes of all images are the same, we only compute</span>
+        <span class="c1"># anchors for one time</span>
+        <span class="n">multi_level_anchors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">grid_priors</span><span class="p">(</span><span class="n">featmap_sizes</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">with_stride</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">anchor_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">multi_level_anchors</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_imgs</span><span class="p">)]</span>
+
+        <span class="c1"># for each image, we compute valid flags of multi level anchors</span>
+        <span class="n">valid_flag_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">img_meta</span> <span class="ow">in</span> <span class="n">batch_img_metas</span><span class="p">:</span>
+            <span class="n">multi_level_flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">valid_flags</span><span class="p">(</span><span class="n">featmap_sizes</span><span class="p">,</span> <span class="n">img_meta</span><span class="p">[</span><span class="s2">&quot;img_shape&quot;</span><span class="p">],</span> <span class="n">device</span><span class="p">)</span>
+            <span class="n">valid_flag_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">multi_level_flags</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">anchor_list</span><span class="p">,</span> <span class="n">valid_flag_list</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RTMDetSepBNHeadModule</span><span class="p">(</span><span class="n">RTMDetHead</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;RTMDetHead with separated BN layers and shared conv layers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_classes (int): Number of categories excluding the background category.</span>
+<span class="sd">        in_channels (int): Number of channels in the input feature map.</span>
+<span class="sd">        share_conv (bool): Whether to share conv layers between stages.</span>
+<span class="sd">            Defaults to True.</span>
+<span class="sd">        use_depthwise (bool): Whether to use depthwise separable convolution in head.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        normalization (Callable[..., nn.Module]): Normalization layer module.</span>
+<span class="sd">            Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.</span>
+<span class="sd">        activation (Callable[..., nn.Module]): Activation layer module.</span>
+<span class="sd">            Defaults to ``nn.SiLU``.</span>
+<span class="sd">        pred_kernel_size (int): Kernel size of prediction layer. Defaults to 1.</span>
+<span class="sd">        exp_on_reg (bool): Whether using exponential of regression features or not. Defaults to False.</span>
+<span class="sd">        use_sigmoid_cls (bool): Whether to use a sigmoid activation function</span>
+<span class="sd">            for classification prediction. Defaults to True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">share_conv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">use_depthwise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">normalization</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.001</span><span class="p">),</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">,</span>
+        <span class="n">pred_kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">exp_on_reg</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_sigmoid_cls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">share_conv</span> <span class="o">=</span> <span class="n">share_conv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_on_reg</span> <span class="o">=</span> <span class="n">exp_on_reg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_depthwise</span> <span class="o">=</span> <span class="n">use_depthwise</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">num_classes</span><span class="p">,</span>
+            <span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">normalization</span><span class="o">=</span><span class="n">normalization</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+            <span class="n">pred_kernel_size</span><span class="o">=</span><span class="n">pred_kernel_size</span><span class="p">,</span>
+            <span class="n">use_sigmoid_cls</span><span class="o">=</span><span class="n">use_sigmoid_cls</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize layers of the head.&quot;&quot;&quot;</span>
+        <span class="n">conv</span> <span class="o">=</span> <span class="n">DepthwiseSeparableConvModule</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_depthwise</span> <span class="k">else</span> <span class="n">Conv2dModule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtm_cls</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rtm_obj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">strides</span><span class="p">)):</span>
+            <span class="n">cls_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+            <span class="n">reg_convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacked_convs</span><span class="p">):</span>
+                <span class="n">chn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span>
+                <span class="n">cls_convs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">conv</span><span class="p">(</span>
+                        <span class="n">chn</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+                        <span class="mi">3</span><span class="p">,</span>
+                        <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">normalization</span><span class="o">=</span><span class="n">build_norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalization</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">),</span>
+                        <span class="n">activation</span><span class="o">=</span><span class="n">build_activation_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">),</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">reg_convs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">conv</span><span class="p">(</span>
+                        <span class="n">chn</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+                        <span class="mi">3</span><span class="p">,</span>
+                        <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">normalization</span><span class="o">=</span><span class="n">build_norm_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalization</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">),</span>
+                        <span class="n">activation</span><span class="o">=</span><span class="n">build_activation_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">),</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cls_convs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reg_convs</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">rtm_cls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">num_base_priors</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_out_channels</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">num_base_priors</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rtm_obj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_channels</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_kernel_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">share_conv</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">strides</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stacked_convs</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">conv</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">conv</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize weights of the head.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">normal_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_norm</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">constant_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">bias_cls</span> <span class="o">=</span> <span class="n">bias_init_with_prob</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rtm_cls</span><span class="p">,</span> <span class="n">rtm_reg</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rtm_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span><span class="p">):</span>
+            <span class="n">normal_init</span><span class="p">(</span><span class="n">rtm_cls</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_cls</span><span class="p">)</span>
+            <span class="n">normal_init</span><span class="p">(</span><span class="n">rtm_reg</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">rtm_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_obj</span><span class="p">:</span>
+                <span class="n">normal_init</span><span class="p">(</span><span class="n">rtm_obj</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_cls</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward features from the upstream network.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feats (tuple[Tensor]): Features from the upstream network, each is a 4D-tensor.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: Usually a tuple of classification scores and bbox prediction</span>
+
+<span class="sd">            - cls_scores (tuple[Tensor]): Classification scores for all scale</span>
+<span class="sd">              levels, each is a 4D-tensor, the channels number is</span>
+<span class="sd">              num_anchors * num_classes.</span>
+<span class="sd">            - bbox_preds (tuple[Tensor]): Box energies / deltas for all scale</span>
+<span class="sd">              levels, each is a 4D-tensor, the channels number is</span>
+<span class="sd">              num_anchors * 4.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cls_scores</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bbox_preds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_generator</span><span class="o">.</span><span class="n">strides</span><span class="p">)):</span>
+            <span class="n">cls_feat</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">reg_feat</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="k">for</span> <span class="n">cls_layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_convs</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                <span class="n">cls_feat</span> <span class="o">=</span> <span class="n">cls_layer</span><span class="p">(</span><span class="n">cls_feat</span><span class="p">)</span>
+            <span class="n">cls_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_cls</span><span class="p">[</span><span class="n">idx</span><span class="p">](</span><span class="n">cls_feat</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">reg_layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_convs</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                <span class="n">reg_feat</span> <span class="o">=</span> <span class="n">reg_layer</span><span class="p">(</span><span class="n">reg_feat</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_objectness</span><span class="p">:</span>
+                <span class="n">objectness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_obj</span><span class="p">[</span><span class="n">idx</span><span class="p">](</span><span class="n">reg_feat</span><span class="p">)</span>
+                <span class="n">cls_score</span> <span class="o">=</span> <span class="n">inverse_sigmoid</span><span class="p">(</span><span class="n">sigmoid_geometric_mean</span><span class="p">(</span><span class="n">cls_score</span><span class="p">,</span> <span class="n">objectness</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_on_reg</span><span class="p">:</span>
+                <span class="n">reg_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span><span class="p">[</span><span class="n">idx</span><span class="p">](</span><span class="n">reg_feat</span><span class="p">)</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reg_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtm_reg</span><span class="p">[</span><span class="n">idx</span><span class="p">](</span><span class="n">reg_feat</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">cls_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cls_score</span><span class="p">)</span>
+            <span class="n">bbox_preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reg_dist</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cls_scores</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bbox_preds</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RTMDetSepBNHead">
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.detection.heads.html#otx.algo.detection.heads.RTMDetSepBNHead">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RTMDetSepBNHead</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;RTMDetSepBNHead factory for detection.&quot;&quot;&quot;</span>
+
+    <span class="n">RTMDETSEPBNHEAD_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;rtmdet_tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;in_channels&quot;</span><span class="p">:</span> <span class="mi">96</span><span class="p">,</span>
+            <span class="s2">&quot;stacked_convs&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;feat_channels&quot;</span><span class="p">:</span> <span class="mi">96</span><span class="p">,</span>
+            <span class="s2">&quot;with_objectness&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;normalization&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">,</span>
+            <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="n">partial</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">SiLU</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="s2">&quot;use_sigmoid_cls&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">anchor_generator</span><span class="p">:</span> <span class="n">BasePriorGenerator</span><span class="p">,</span>
+        <span class="n">bbox_coder</span><span class="p">:</span> <span class="n">BaseBBoxCoder</span><span class="p">,</span>
+        <span class="n">train_cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">test_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTMDetSepBNHeadModule</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor for RTMDetSepBNHead.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">RTMDETSEPBNHEAD_CFG</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;model type &#39;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&#39; is not supported&quot;</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">RTMDetSepBNHeadModule</span><span class="p">(</span>
+            <span class="o">**</span><span class="bp">cls</span><span class="o">.</span><span class="n">RTMDETSEPBNHEAD_CFG</span><span class="p">[</span><span class="n">model_name</span><span class="p">],</span>
+            <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+            <span class="n">anchor_generator</span><span class="o">=</span><span class="n">anchor_generator</span><span class="p">,</span>
+            <span class="n">bbox_coder</span><span class="o">=</span><span class="n">bbox_coder</span><span class="p">,</span>
+            <span class="n">train_cfg</span><span class="o">=</span><span class="n">train_cfg</span><span class="p">,</span>  <span class="c1"># TODO (sungchul, kirill): remove</span>
+            <span class="n">test_cfg</span><span class="o">=</span><span class="n">test_cfg</span><span class="p">,</span>  <span class="c1"># TODO (sungchul, kirill): remove</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div id="searchbox"></div>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94"></script>
+<script src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2024, OpenVINO™ Training Extensions Contributors.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">
+        PyData Sphinx Theme
+    </a>
+    0.12.0.
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

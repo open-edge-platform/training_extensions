@@ -1,0 +1,31 @@
+otx.algo.classification.timm\_model
+===================================
+
+.. automodule:: otx.algo.classification.timm_model
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      TimmModelForHLabelCls
+      TimmModelForMulticlassCls
+      TimmModelForMultilabelCls
+   
+   
+
+   
+   
+   
+
+
+

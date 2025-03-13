@@ -1,0 +1,38 @@
+otx.algo.classification
+=======================
+
+.. automodule:: otx.algo.classification
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   otx.algo.classification.backbones
+   otx.algo.classification.heads
+   otx.algo.classification.losses
+   otx.algo.classification.efficientnet
+   otx.algo.classification.mobilenet_v3
+   otx.algo.classification.timm_model
+   otx.algo.classification.torchvision_model
+   otx.algo.classification.vit
+
