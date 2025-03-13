@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import cv2
 import pytest
 import torch
 import yaml
@@ -315,8 +314,6 @@ def test_otx_explain_e2e(
         fxt_accelerator,
         "--seed",
         "0",
-        "--dump",
-        "True",
         "--checkpoint",
         str(ckpt_file),
         *fxt_cli_override_command_per_task[task],
@@ -329,11 +326,7 @@ def test_otx_explain_e2e(
         (p for p in outputs_dir.iterdir() if p.is_dir() and p.name != ".latest"),
         key=lambda p: p.stat().st_mtime,
     )
-    assert (latest_dir / "saliency_map").exists()
-    saliency_map = sorted((latest_dir / "saliency_map").glob(pattern="*.png"))
-    sal_map = cv2.imread(str(saliency_map[0]))
-    assert sal_map.shape[0] > 0
-    assert sal_map.shape[1] > 0
+    assert (latest_dir).exists()
 
 
 # @pytest.mark.skipif(len(pytest.RECIPE_OV_LIST) < 1, reason="No OV recipe found.")

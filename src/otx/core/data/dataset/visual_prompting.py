@@ -157,7 +157,7 @@ class OTXVisualPromptingDataset(OTXDataset):
             raise RuntimeError(msg)
 
         # insert masks to transformed_entity
-        return transformed_entity.wrap(masks=masks)
+        return transformed_entity.wrap(masks=masks)  # type: ignore[union-attr]
 
     @property
     def collate_fn(self) -> Callable:

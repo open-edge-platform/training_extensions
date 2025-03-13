@@ -3,6 +3,8 @@
 #
 """Class definition for keypoint detection model entity used in OTX."""
 
+# type: ignore[override]
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -108,7 +110,7 @@ class OTXKeypointDetectionModel(OTXModel):
         super().configure_metric()
         self._metric.input_size = self.input_size
 
-    def _convert_pred_entity_to_compute_metric(
+    def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
         preds: KeypointDetBatchPredEntity,
         inputs: KeypointDetBatchDataEntity,
@@ -249,7 +251,7 @@ class OVKeypointDetectionModel(OVModel):
         super().configure_metric()
         self._metric.input_size = (self.model.h, self.model.w)
 
-    def _convert_pred_entity_to_compute_metric(
+    def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
         preds: KeypointDetBatchPredEntity,
         inputs: KeypointDetBatchDataEntity,

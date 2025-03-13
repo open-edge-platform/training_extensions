@@ -54,7 +54,7 @@ class OTXDetectionDataset(OTXDataset):
             labels=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
         )
 
-        return self._apply_transforms(entity)
+        return self._apply_transforms(entity)  # type: ignore[return-value]
 
     @property
     def collate_fn(self) -> Callable:

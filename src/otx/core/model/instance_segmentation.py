@@ -336,8 +336,8 @@ class OTXInstanceSegModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: InstanceSegBatchPredEntity,
-        inputs: InstanceSegBatchDataEntity,
+        preds: InstanceSegBatchPredEntity,  # type: ignore[override]
+        inputs: InstanceSegBatchDataEntity,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
@@ -702,8 +702,8 @@ class OVInstanceSegmentationModel(
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: InstanceSegBatchPredEntity,
-        inputs: InstanceSegBatchDataEntity,
+        preds: InstanceSegBatchPredEntity,  # type: ignore[override]
+        inputs: InstanceSegBatchDataEntity,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
