@@ -18,13 +18,10 @@ from torchvision.transforms.v2 import functional as F  # noqa: N812
 from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
-from otx.core.data.entity.keypoint_detection import KeypointDetDataEntity
 from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
     Compose,
-    DecodeVideo,
-    FilterAnnotations,
     MinIoURandomCrop,
     Pad,
     PhotoMetricDistortion,
@@ -796,8 +793,8 @@ class TestFilterAnnotations:
 
 class TestTopdownAffine:
     @pytest.fixture()
-    def keypoint_det_entity(self) -> KeypointDetDataEntity:
-        return KeypointDetDataEntity(
+    def keypoint_det_entity(self) -> TorchDataItem:
+        return TorchDataItem(
             image=np.random.randint(0, 255, size=(10, 10, 3), dtype=np.uint8),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(

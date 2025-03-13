@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4243>)
 - Bump ModelAPI to 0.2.5.2
   (<https://github.com/openvinotoolkit/training_extensions/pull/4275>)
+<<<<<<< HEAD
 - Refactor OTX Models: Introduce DataInputParams. Align all models with the same interface.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4241>)
 
@@ -26,6 +27,11 @@ All notable changes to this project will be documented in this file.
 
 - Fix KP Detection performance
   (<https://github.com/openvinotoolkit/training_extensions/pull/4270>)
+=======
+
+### Bug fixes
+
+>>>>>>> 852c1f922 (continue changing entities)
 - Fix auto batch size with tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4233>)
 - Fix exportable code for tiling
@@ -74,6 +80,13 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
 - Add D-Fine Detection Algorithm
   (<https://github.com/openvinotoolkit/training_extensions/pull/4142>)
+<<<<<<< HEAD
+=======
+- Add DETR XAI Explain Mode
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
+- Add UFlow anomaly detection algorithm
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4251>)
+>>>>>>> 852c1f922 (continue changing entities)
 
 ### Enhancements
 

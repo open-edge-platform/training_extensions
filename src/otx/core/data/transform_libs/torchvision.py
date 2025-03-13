@@ -589,7 +589,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         return inputs
 
     def _resize_bbox_points(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
-        """Resize points with scale_factor only for `Resize`."""
+        """Resize bbox points with scale_factor only for `Resize`."""
         if (points := getattr(inputs, "points", None)) is not None:
             inputs.points = resize_points(points, points.canvas_size, inputs.img_info.img_shape)  # type: ignore[union-attr]
         return inputs
@@ -597,7 +597,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
     def _resize_keypoints(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize keypoints with scale_factor only for `Resize`."""
         if (keypoints := getattr(inputs, "keypoints", None)) is not None:
-            inputs.keypoints = rescale_keypoints(keypoints, scale_factor)  # type: ignore[union-attr]
+            inputs.keypoints[:, :2] = rescale_keypoints(keypoints[:, :2], scale_factor)
         return inputs
 
     def _resize_masks(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
@@ -2839,7 +2839,7 @@ class DecordInit(tvt_v2.Transform):
         return f"{self.__class__.__name__}(num_threads={self.num_threads})"
 
 
-class SampleFrames(tvt_v2.Transform):
+class TopdownAffine(tvt_v2.Transform):
     """Sample frames from the video.
 
     Required Keys:
@@ -2874,314 +2874,6 @@ class SampleFrames(tvt_v2.Transform):
             rates to the unified target FPS before sampling frames. If
             ``None``, the frame rate will not be adjusted. Defaults to
             ``None``.
-    """
-
-    def __init__(
-        self,
-        clip_len: int,
-        frame_interval: int = 1,
-        num_clips: int = 1,
-        temporal_jitter: bool = False,
-        twice_sample: bool = False,
-        out_of_bound_opt: str = "loop",
-        test_mode: bool = False,
-        keep_tail_frames: bool = False,
-        target_fps: int | None = None,
-        **kwargs,
-    ) -> None:
-        self.clip_len = clip_len
-        self.frame_interval = frame_interval
-        self.num_clips = num_clips
-        self.temporal_jitter = temporal_jitter
-        self.twice_sample = twice_sample
-        self.out_of_bound_opt = out_of_bound_opt
-        self.test_mode = test_mode
-        self.keep_tail_frames = keep_tail_frames
-        self.target_fps = target_fps
-        if self.out_of_bound_opt not in ["loop", "repeat_last"]:
-            msg = f"out_of_bound_opt should be 'loop' or 'repeat_last', but found {self.out_of_bound_opt}."
-            raise ValueError(msg)
-
-    def _get_train_clips(self, num_frames: int, ori_clip_len: float) -> np.array:
-        """Get clip offsets in train mode.
-
-        It will calculate the average interval for selected frames,
-        and randomly shift them within offsets between [0, avg_interval].
-        If the total number of frames is smaller than clips num or origin
-        frames length, it will return all zero indices.
-
-        Args:
-            num_frames (int): Total number of frame in the video.
-            ori_clip_len (float): length of original sample clip.
-
-        Returns:
-            np.ndarray: Sampled frame indices in train mode.
-        """
-        if self.keep_tail_frames:
-            avg_interval = (num_frames - ori_clip_len + 1) / float(self.num_clips)
-            if num_frames > ori_clip_len - 1:
-                base_offsets = np.arange(self.num_clips) * avg_interval
-                clip_offsets = (base_offsets + np.random.uniform(0, avg_interval, self.num_clips)).astype(np.int32)
-            else:
-                clip_offsets = np.zeros((self.num_clips,), dtype=np.int32)
-        else:
-            avg_interval = (num_frames - ori_clip_len + 1) // self.num_clips
-
-            if avg_interval > 0:
-                base_offsets = np.arange(self.num_clips) * avg_interval
-                clip_offsets = base_offsets + np.random.randint(avg_interval, size=self.num_clips)
-            elif num_frames > max(self.num_clips, ori_clip_len):
-                clip_offsets = np.sort(np.random.randint(num_frames - ori_clip_len + 1, size=self.num_clips))
-            elif avg_interval == 0:
-                ratio = (num_frames - ori_clip_len + 1.0) / self.num_clips
-                clip_offsets = np.around(np.arange(self.num_clips) * ratio)
-            else:
-                clip_offsets = np.zeros((self.num_clips,), dtype=np.int32)
-
-        return clip_offsets
-
-    def _get_test_clips(self, num_frames: int, ori_clip_len: float) -> np.array:
-        """Get clip offsets in test mode.
-
-        If the total number of frames is
-        not enough, it will return all zero indices.
-
-        Args:
-            num_frames (int): Total number of frame in the video.
-            ori_clip_len (float): length of original sample clip.
-
-        Returns:
-            np.ndarray: Sampled frame indices in test mode.
-        """
-        if self.clip_len == 1:  # 2D recognizer
-            # assert self.frame_interval == 1
-            avg_interval = num_frames / float(self.num_clips)
-            base_offsets = np.arange(self.num_clips) * avg_interval
-            clip_offsets = base_offsets + avg_interval / 2.0
-            if self.twice_sample:
-                clip_offsets = np.concatenate([clip_offsets, base_offsets])
-        else:  # 3D recognizer
-            max_offset = max(num_frames - ori_clip_len, 0)
-            num_clips = self.num_clips * 2 if self.twice_sample else self.num_clips
-            if num_clips > 1:
-                num_segments = self.num_clips - 1
-                # align test sample strategy with `PySlowFast` repo
-                if self.target_fps is not None:
-                    offset_between = np.floor(max_offset / float(num_segments))
-                    clip_offsets = np.arange(num_clips) * offset_between
-                else:
-                    offset_between = max_offset / float(num_segments)
-                    clip_offsets = np.arange(num_clips) * offset_between
-                    clip_offsets = np.round(clip_offsets)
-            else:
-                clip_offsets = np.array([max_offset // 2])
-        return clip_offsets
-
-    def _sample_clips(self, num_frames: int, ori_clip_len: float) -> np.array:
-        """Choose clip offsets for the video in a given mode.
-
-        Args:
-            num_frames (int): Total number of frame in the video.
-
-        Returns:
-            np.ndarray: Sampled frame indices.
-        """
-        if self.test_mode:
-            clip_offsets = self._get_test_clips(num_frames, ori_clip_len)
-        else:
-            clip_offsets = self._get_train_clips(num_frames, ori_clip_len)
-
-        return clip_offsets
-
-    def _get_ori_clip_len(self, fps_scale_ratio: float) -> float:
-        """Calculate length of clip segment for different strategy.
-
-        Args:
-            fps_scale_ratio (float): Scale ratio to adjust fps.
-        """
-        if self.target_fps is not None:
-            # align test sample strategy with `PySlowFast` repo
-            ori_clip_len = self.clip_len * self.frame_interval
-            ori_clip_len = np.maximum(1, ori_clip_len * fps_scale_ratio)
-        elif self.test_mode:
-            ori_clip_len = (self.clip_len - 1) * self.frame_interval + 1
-        else:
-            ori_clip_len = self.clip_len * self.frame_interval
-
-        return ori_clip_len
-
-    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
-    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
-        """Perform the SampleFrames loading."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        total_frames = inputs.video_info.num_frames
-        # if can't get fps, same value of `fps` and `target_fps`
-        # will perform nothing
-        fps = inputs.video_info.avg_fps
-        fps_scale_ratio = 1.0 if self.target_fps is None or not fps else fps / self.target_fps
-        ori_clip_len = self._get_ori_clip_len(fps_scale_ratio)
-        clip_offsets = self._sample_clips(total_frames, ori_clip_len)
-
-        if self.target_fps:
-            frame_inds = clip_offsets[:, None] + np.linspace(0, ori_clip_len - 1, self.clip_len).astype(np.int32)
-        else:
-            frame_inds = clip_offsets[:, None] + np.arange(self.clip_len)[None, :] * self.frame_interval
-            frame_inds = np.concatenate(frame_inds)
-
-        if self.temporal_jitter:
-            perframe_offsets = np.random.randint(self.frame_interval, size=len(frame_inds))
-            frame_inds += perframe_offsets
-
-        frame_inds = frame_inds.reshape((-1, self.clip_len))
-        if self.out_of_bound_opt == "loop":
-            frame_inds = np.mod(frame_inds, total_frames)
-        elif self.out_of_bound_opt == "repeat_last":
-            safe_inds = frame_inds < total_frames
-            unsafe_inds = 1 - safe_inds
-            last_ind = np.max(safe_inds * frame_inds, axis=1)
-            new_inds = safe_inds * frame_inds + (unsafe_inds.T * last_ind).T
-            frame_inds = new_inds
-        else:
-            msg = f"out_of_bound_opt should be 'loop' or 'repeat_last', but found {self.out_of_bound_opt}."
-            raise ValueError(msg)
-
-        start_index = inputs.video_info.start_index
-        frame_inds = np.concatenate(frame_inds) + start_index
-        inputs.video_info.frame_inds = frame_inds.astype(np.int32)
-        inputs.video_info.clip_len = self.clip_len
-        inputs.video_info.frame_interval = self.frame_interval
-        inputs.video_info.num_clips = self.num_clips
-        return inputs
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"clip_len={self.clip_len}, "
-            f"frame_interval={self.frame_interval}, "
-            f"num_clips={self.num_clips}, "
-            f"temporal_jitter={self.temporal_jitter}, "
-            f"twice_sample={self.twice_sample}, "
-            f"out_of_bound_opt={self.out_of_bound_opt}, "
-            f"test_mode={self.test_mode})"
-        )
-
-
-class DecordDecode(tvt_v2.Transform):
-    """Using decord to decode the video."""
-
-    def __init__(self, mode: str = "accurate") -> None:
-        self.mode = mode
-        if self.mode not in ["accurate", "efficient"]:
-            msg = f"Decord mode should be 'accurate' or 'efficient', but found {self.mode}."
-            raise ValueError(msg)
-
-    def _decord_load_frames(self, container: object, frame_inds: np.ndarray) -> list[np.ndarray]:
-        if self.mode == "accurate":
-            imgs = container.get_batch(frame_inds).asnumpy()
-            imgs = list(imgs)
-        elif self.mode == "efficient":
-            # This mode is faster, however it always returns I-FRAME
-            container.seek(0)
-            imgs = []
-            for idx in frame_inds:
-                container.seek(idx)
-                frame = container.next()
-                imgs.append(frame.asnumpy())
-        return imgs
-
-    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
-    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
-        """Transform function to resize images, bounding boxes, and masks."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        if isinstance(inputs, TorchDataItem):
-            # TODO(ashwinvaidya17): Add support for TorchDataItem
-            return inputs
-
-        container = inputs.video_info.video_reader
-
-        if inputs.video_info.frame_inds.ndim != 1:
-            inputs.video_info.frame_inds = np.squeeze(inputs.video_info.frame_inds)
-
-        frame_inds = inputs.video_info.frame_inds
-        imgs = self._decord_load_frames(container, frame_inds)
-
-        inputs.video_info.video_reader = None
-        del container
-
-        inputs.image = imgs
-        inputs.img_info.ori_shape = imgs[0].shape[:2]
-        inputs.img_info.img_shape = imgs[0].shape[:2]
-
-        # we resize the gt_bboxes and proposals to their real scale
-        if bboxes := getattr(inputs, "bboxes", None):
-            h, w = inputs.img_info.img_shape
-            scale_factor = np.array([w, h, w, h])
-            gt_bboxes = (bboxes * scale_factor).astype(np.float32)
-            inputs.bboxes = gt_bboxes
-            if proposals := getattr(inputs, "proposals", None):
-                proposals = (proposals * scale_factor).astype(np.float32)
-                inputs.proposals = proposals
-
-        return inputs
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(mode={self.mode})"
-
-
-class Normalize3D(tvt_v2.Normalize):
-    """Using normalize the 3D video data."""
-
-    def __init__(self, mean: list[float], std: list[float], inplace: bool = False) -> None:
-        self.mean = torch.Tensor(mean).view(1, 3, 1, 1, 1)
-        self.std = torch.Tensor(std).view(1, 3, 1, 1, 1)
-        self.inplace = inplace
-
-    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
-        """Transform function to resize images, bounding boxes, and masks."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        inputs.image = F.normalize(inputs.image, self.mean, self.std, self.inplace)
-        return inputs
-
-
-class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
-    """Get the bbox image as the model input by affine transform.
-
-    Required Keys:
-
-        - img
-        - bbox_center
-        - bbox_scale
-        - bbox_rotation (optional)
-        - keypoints (optional)
-
-    Modified Keys:
-
-        - img
-        - bbox_scale
-
-    Added Keys:
-
-        - input_size
-        - transformed_keypoints
-
-    Args:
-        input_size (tuple[int, int]): The size of the model input.
-        affine_transforms_prob (float): The probability of applying affine
-            transforms. Defaults to 0.5.
-        is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
-        shift_factor (float): The factor of shift. Defaults to 0.16.
-        shift_prob (float): The probability of shift. Defaults to 0.3.
-        scale_factor (tuple[float, float]): The factor of scale. Defaults to (0.5, 1.5).
-        scale_prob (float): The probability of scale. Defaults to 1.0.
-        rotate_factor (float): The factor of rotate. Defaults to 80.0.
-        rotate_prob (float): The probability of rotate. Defaults to 0.5.
-        interpolation (str): The interpolation method. Defaults to "bilinear".
     """
 
     def __init__(
@@ -3364,21 +3056,25 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         h, w = self.input_size
         warp_size = (int(w), int(h))
         apply_transforms = np.random.rand()
+        ori_img_shape = inputs.img_info.ori_shape
 
         if apply_transforms <= self.affine_transforms_prob:
+
+            bbox_center = np.array(ori_img_shape) / 2.0
+            bbox_scale = np.array(ori_img_shape)
+
             offset, scale, rotate = self._get_transform_params()
-            center = inputs.bbox_info.center + offset * inputs.bbox_info.scale
-            scale = self._fix_aspect_ratio(inputs.bbox_info.scale * scale, aspect_ratio=w / h)
+            center = bbox_center + offset * bbox_scale
+            scale = self._fix_aspect_ratio(bbox_scale * scale, aspect_ratio=w / h)
             rot = rotate
 
             warp_mat = self._get_warp_matrix(center, scale, rot, output_size=(w, h))
             inputs.image = self._get_warp_image(inputs.image, warp_mat, warp_size)
             if inputs.keypoints is not None:
-                keypoints = np.expand_dims(inputs.keypoints, axis=0)
-                inputs.keypoints = cv2.transform(keypoints, warp_mat)[0]
+                keypoints = np.expand_dims(inputs.keypoints[:, :2], axis=0)
+                inputs.keypoints[:, :2] = cv2.transform(keypoints, warp_mat)[0]
 
         else:
-            img_shape = inputs.img_info.ori_shape
             resized_numpy_image = cv2.resize(
                 to_np_image(inputs.image),
                 warp_size,
@@ -3386,16 +3082,14 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             )
             inputs.image = torch.from_numpy(resized_numpy_image).to(dtype=torch.float32).permute(2, 0, 1)
             if inputs.keypoints is not None:
-                scale_factor = (warp_size[0] / img_shape[0], warp_size[1] / img_shape[1])
-                inputs.keypoints = rescale_keypoints(inputs.keypoints, scale_factor)
+                scale_factor = (warp_size[0] / ori_img_shape[0], warp_size[1] / ori_img_shape[1])
+                inputs.keypoints[:, :2] = rescale_keypoints(inputs.keypoints[:, :2], scale_factor)
 
-        if not isinstance(inputs, TorchDataItem):
-            if inputs.keypoints is None:
-                inputs.keypoints = np.zeros([])
-                inputs.keypoints_visible = np.ones((1, 1, 1))
-            else:
-                # update keypoints_visible after affine transforms
-                inputs.keypoints_visible = inputs.keypoints_visible * (inputs.keypoints > 0).all(axis=1)
+        if inputs.keypoints is None:
+            inputs.keypoints = np.zeros([])
+        else:
+            # update keypoints_visible after affine transforms
+            inputs.keypoints[:, 2] = inputs.keypoints[:, 2] * (inputs.keypoints[:, :2] > 0).all(axis=1)
 
         return self.convert(inputs)
 

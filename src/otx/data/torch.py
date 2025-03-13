@@ -29,12 +29,34 @@ if TYPE_CHECKING:
 @register_pytree_node
 @dataclass
 class TorchDataItem(ValidateItemMixin, Mapping):
-    """Torch data item implementation."""
+    """Torch data item implementation.
+
+    Attributes:
+        image (torch.Tensor): The image tensor.
+        label (torch.Tensor | None): The label tensor, optional.
+        masks (Mask | None): The masks, optional.
+        bboxes (BoundingBoxes | None): The bounding boxes, optional.
+        img_info (ImageInfo | None): Additional image information, optional.
+
+    Methods:
+        collate_fn(items: list[TorchDataItem]) -> TorchDataBatch:
+            Collate TorchDataItems into a batch.
+
+        __iter__() -> Iterator[str]:
+            Iterate over the field names of the data item.
+
+        __getitem__(key: str) -> Any:
+            Get the value of the specified field.
+
+        __len__() -> int:
+            Get the number of fields in the data item.
+    """
 
     image: torch.Tensor
     label: torch.Tensor | None = None
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
+    keypoints: torch.Tensor | None = None
     img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
