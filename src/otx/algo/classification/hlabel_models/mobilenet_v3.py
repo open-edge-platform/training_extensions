@@ -117,8 +117,8 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            scores=scores,
-            labels=labels,
+            scores=list(scores),
+            labels=list(labels),
         )
 
     def _convert_pred_entity_to_compute_metric(

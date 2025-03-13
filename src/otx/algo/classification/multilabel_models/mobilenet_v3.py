@@ -115,8 +115,8 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            scores=scores,
-            labels=logits.argmax(-1, keepdim=True).unbind(0),
+            scores=list(scores),
+            labels=list(logits.argmax(-1, keepdim=True).unbind(0)),
         )
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:

@@ -73,7 +73,7 @@ class OTXMultilabelClsModel(OTXModel):
 
         return {
             "images": inputs.images,
-            "labels": torch.stack(inputs.labels),
+            "labels": torch.vstack(inputs.labels),
             "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
@@ -105,8 +105,8 @@ class OTXMultilabelClsModel(OTXModel):
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            scores=scores,
-            labels=logits.argmax(-1, keepdim=True).unbind(0),
+            labels=list(logits.argmax(-1, keepdim=True).unbind(0)),
+            scores=list(scores),
         )
 
     @property
@@ -141,8 +141,8 @@ class OTXMultilabelClsModel(OTXModel):
         inputs: TorchDataBatch,
     ) -> MetricInput:
         return {
-            "preds": torch.stack(preds.scores),
-            "target": torch.stack(inputs.labels),
+            "preds": preds.scores,
+            "target": inputs.labels,
         }
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
@@ -151,7 +151,7 @@ class OTXMultilabelClsModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
         """Returns a dummy input for classification model."""
-        images = torch.stack([torch.rand(3, *self.input_size) for _ in range(batch_size)])
+        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
         return TorchDataBatch(batch_size=batch_size, images=images, labels=labels)
 

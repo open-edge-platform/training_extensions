@@ -73,7 +73,7 @@ class OTXMulticlassClsModel(OTXModel):
 
         return {
             "images": inputs.images,
-            "labels": torch.cat(inputs.labels, dim=0),
+            "labels": torch.tensor(inputs.labels, device=self.device),
             "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
@@ -106,8 +106,8 @@ class OTXMulticlassClsModel(OTXModel):
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            scores=scores,
-            labels=preds,
+            labels=list(preds),
+            scores=list(scores),
         )
 
     @property
@@ -140,8 +140,8 @@ class OTXMulticlassClsModel(OTXModel):
         preds: TorchPredBatch,
         inputs: TorchDataBatch,
     ) -> MetricInput:
-        pred = torch.tensor(preds.labels)
-        target = torch.tensor(inputs.labels)
+        pred = torch.tensor(preds.labels, device=self.device)
+        target = torch.tensor(inputs.labels, device=self.device)
         return {
             "preds": pred,
             "target": target,
@@ -151,8 +151,8 @@ class OTXMulticlassClsModel(OTXModel):
         return
 
     def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
-        """Returns a dummy input for classification OV model."""
-        images = torch.stack([torch.rand(3, *self.input_size) for _ in range(batch_size)])
+        """Returns a dummy input for classification model."""
+        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
         return TorchDataBatch(batch_size=batch_size, images=images, labels=labels)
 

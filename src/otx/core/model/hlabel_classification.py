@@ -99,7 +99,7 @@ class OTXHlabelClsModel(OTXModel):
 
         return {
             "images": inputs.images,
-            "labels": torch.stack(inputs.labels),
+            "labels": torch.vstack(inputs.labels),
             "imgs_info": inputs.imgs_info,
             "mode": mode,
         }
@@ -125,8 +125,8 @@ class OTXHlabelClsModel(OTXModel):
                 batch_size=inputs.batch_size,
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
-                labels=list(outputs["labels"]),
-                scores=list(outputs["scores"]),
+                labels=list(labels),
+                scores=list(scores),
                 saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
                 feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
@@ -135,8 +135,8 @@ class OTXHlabelClsModel(OTXModel):
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            scores=scores,
-            labels=labels,
+            labels=list(labels),
+            scores=list(scores),
         )
 
     @property
@@ -182,7 +182,7 @@ class OTXHlabelClsModel(OTXModel):
             pred_result = _labels
         return {
             "preds": pred_result,
-            "target": torch.stack(inputs.labels),
+            "target": torch.vstack(inputs.labels),
         }
 
     @staticmethod
@@ -194,7 +194,7 @@ class OTXHlabelClsModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
         """Returns a dummy input for classification OV model."""
-        images = torch.stack([torch.rand(3, *self.input_size) for _ in range(batch_size)])
+        images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
         return TorchDataBatch(batch_size=batch_size, images=images, labels=labels)
 
