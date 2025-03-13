@@ -19,16 +19,13 @@ from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import A
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-)
 from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import HLabelClsMetricCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.hlabel_classification import OTXHlabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -85,7 +82,7 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_cls_mobilenet_v3_ckpt(state_dict, "hlabel", add_prefix)
 
-    def _customize_inputs(self, inputs: HlabelClsBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -94,7 +91,7 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
             mode = "predict"
 
         return {
-            "images": inputs.stacked_images,
+            "images": inputs.images,
             "labels": torch.stack(inputs.labels),
             "imgs_info": inputs.imgs_info,
             "mode": mode,
@@ -103,8 +100,8 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: HlabelClsBatchDataEntity,
-    ) -> HlabelClsBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -116,7 +113,7 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
             scores = outputs
             labels = outputs.argmax(-1, keepdim=True)
 
-        return HlabelClsBatchPredEntity(
+        return TorchPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -126,8 +123,8 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: HlabelClsBatchPredEntity,
-        inputs: HlabelClsBatchDataEntity,
+        preds: TorchPredBatch,
+        inputs: TorchDataBatch,
     ) -> MetricInput:
         hlabel_info: HLabelInfo = self.label_info  # type: ignore[assignment]
 

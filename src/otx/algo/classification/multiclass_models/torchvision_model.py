@@ -16,10 +16,6 @@ from otx.algo.classification.heads import (
     LinearClsHead,
 )
 from otx.algo.classification.necks.gap import GlobalAveragePooling
-from otx.core.data.entity.classification import (
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
-)
 from otx.core.metrics.accuracy import MultiClassClsMetricCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multiclass_classification import (
@@ -81,20 +77,6 @@ class TVModelMulticlassCls(OTXMulticlassClsModel):
                 in_channels=backbone.in_features,
             ),
             loss=nn.CrossEntropyLoss(),
-        )
-
-    def forward_explain(self, inputs: MulticlassClsBatchDataEntity) -> MulticlassClsBatchPredEntity:
-        """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
-
-        return MulticlassClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
-            images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:

@@ -13,10 +13,6 @@ from otx.algo.classification.heads import MultiLabelLinearClsHead
 from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.data.entity.classification import (
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.metrics.accuracy import MultiLabelClsMetricCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multilabel_classification import (
@@ -88,20 +84,6 @@ class TimmModelMultilabelCls(OTXMultilabelClsModel):
     def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_cls_effnet_v2_ckpt(state_dict, "multilabel", add_prefix)
-
-    def forward_explain(self, inputs: MultilabelClsBatchDataEntity) -> MultilabelClsBatchPredEntity:
-        """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
-
-        return MultilabelClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
-            images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
-        )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
         """Model forward function used for the model tracing during model exportation."""

@@ -299,8 +299,8 @@ class OTXDetectionModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: DetBatchPredEntity,
-        inputs: DetBatchDataEntity,
+        preds: DetBatchPredEntity,  # type: ignore[override]
+        inputs: DetBatchDataEntity,  # type: ignore[override]
     ) -> MetricInput:
         return {
             "preds": [
@@ -630,8 +630,8 @@ class OVDetectionModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: DetBatchPredEntity,
-        inputs: DetBatchDataEntity,
+        preds: DetBatchPredEntity,  # type: ignore[override]
+        inputs: DetBatchDataEntity,  # type: ignore[override]
     ) -> MetricInput:
         return {
             "preds": [

@@ -139,7 +139,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
             keypoints_visible=keypoints_visible,
         )
 
-        return self._apply_transforms(entity)
+        return self._apply_transforms(entity)  # type: ignore[return-value]
 
     @property
     def collate_fn(self) -> Callable:

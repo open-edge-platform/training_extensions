@@ -37,7 +37,7 @@ class TestImageClassifier:
             neck=neck,
             head=head,
             loss=loss,
-        ), fxt_input.stacked_images, fxt_label
+        ), fxt_input.images, fxt_label
 
     def test_forward(self, fxt_model_and_inputs):
         model, images, labels = fxt_model_and_inputs

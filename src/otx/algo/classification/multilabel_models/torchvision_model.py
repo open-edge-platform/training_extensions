@@ -14,10 +14,6 @@ from otx.algo.classification.heads import (
 )
 from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.algo.classification.necks.gap import GlobalAveragePooling
-from otx.core.data.entity.classification import (
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.metrics.accuracy import MultiLabelClsMetricCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multilabel_classification import (
@@ -82,20 +78,6 @@ class TVModelMultilabelCls(OTXMultilabelClsModel):
             ),
             loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
             loss_scale=7.0,
-        )
-
-    def forward_explain(self, inputs: MultilabelClsBatchDataEntity) -> MultilabelClsBatchPredEntity:
-        """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
-
-        return MultilabelClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
-            images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
         )
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
