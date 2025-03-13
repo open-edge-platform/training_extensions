@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
     from otx.core.data.dataset.segmentation import OTXSegmentationDataset
     from otx.core.data.entity.base import OTXDataEntity
+    from otx.data.torch import TorchDataItem
 
 # ruff: noqa: SLF001
 # NOTE: Disable private-member-access (SLF001).
@@ -317,7 +318,7 @@ class OTXTileDataset(OTXDataset):
         """Collate function from the original dataset."""
         return self._dataset.collate_fn
 
-    def _get_item_impl(self, index: int) -> OTXDataEntity | None:
+    def _get_item_impl(self, index: int) -> OTXDataEntity | TorchDataItem | None:
         """Get item implementation from the original dataset."""
         return self._dataset._get_item_impl(index)
 
@@ -348,7 +349,7 @@ class OTXTileDataset(OTXDataset):
         image: np.ndarray,
         item: DatasetItem,
         parent_idx: int,
-    ) -> tuple[list[OTXDataEntity], list[dict]]:
+    ) -> tuple[list[OTXDataEntity | TorchDataItem], list[dict]]:
         """Retrieves tiles from the given image and dataset item.
 
         Args:
@@ -380,7 +381,7 @@ class OTXTileDataset(OTXDataset):
                     with_full_img=True,
                 )
 
-        tile_entities: list[OTXDataEntity] = []
+        tile_entities: list[OTXDataEntity | TorchDataItem] = []
         tile_attrs: list[dict] = []
         for tile in tile_ds:
             tile_entity = self._convert_entity(image, tile, parent_idx)

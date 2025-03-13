@@ -11,10 +11,10 @@ from otx.algo.classification.torchvision_model import (
     TVModelForMulticlassCls,
     TVModelForMultilabelCls,
 )
-from otx.core.data.entity.base import OTXBatchLossEntity, OTXBatchPredEntity
-from otx.core.data.entity.classification import MulticlassClsBatchPredEntity
+from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.task import OTXTaskType
+from otx.data.torch import TorchPredBatch
 
 
 @pytest.fixture()
@@ -84,7 +84,7 @@ class TestOTXTVModel:
 
         tv_model.training = False
         preds = tv_model._customize_outputs(outputs, data_entity)
-        assert isinstance(preds, OTXBatchPredEntity)
+        assert isinstance(preds, TorchPredBatch)
 
     def test_export_parameters(self, fxt_tv_model):
         export_parameters = fxt_tv_model._export_parameters
@@ -98,9 +98,9 @@ class TestOTXTVModel:
         fxt_tv_model.explain_mode = explain_mode
         outputs = fxt_tv_model.predict_step(batch=fxt_multiclass_cls_batch_data_entity, batch_idx=0)
 
-        assert isinstance(outputs, MulticlassClsBatchPredEntity)
+        assert isinstance(outputs, TorchPredBatch)
         assert outputs.has_xai_outputs == explain_mode
         if explain_mode:
-            assert outputs.feature_vector.ndim == 2
-            assert outputs.saliency_map.ndim == 4
-            assert outputs.saliency_map.shape[-2:] != torch.Size([1, 1])
+            assert outputs.feature_vector[0].ndim == 2
+            assert outputs.saliency_map[0].ndim == 3
+            assert outputs.saliency_map[0].shape[-2:] != torch.Size([1, 1])

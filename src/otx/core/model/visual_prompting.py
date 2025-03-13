@@ -1,6 +1,9 @@
-# Copyright (C) 2023-2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 """Class definition for visual prompting models entity used in OTX."""
+
+# Copyright (C) 2023-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# type: ignore[override]
 
 from __future__ import annotations
 
@@ -293,8 +296,8 @@ class OTXVisualPromptingModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: VisualPromptingBatchPredEntity,
-        inputs: VisualPromptingBatchDataEntity,
+        preds: VisualPromptingBatchPredEntity,  # type: ignore[override]
+        inputs: VisualPromptingBatchDataEntity,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format required by the compute metric function."""
         return _convert_pred_entity_to_compute_metric(preds=preds, inputs=inputs)
@@ -623,7 +626,7 @@ class OVVisualPromptingModel(
         """
         _inference_step(model=self, metric=self.metric, inputs=inputs)
 
-    def _convert_pred_entity_to_compute_metric(
+    def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
         preds: VisualPromptingBatchPredEntity,
         inputs: VisualPromptingBatchDataEntity,

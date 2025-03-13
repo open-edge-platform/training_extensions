@@ -9,6 +9,7 @@ from copy import copy, deepcopy
 from math import ceil
 from typing import TYPE_CHECKING
 
+import torch
 from torch import Tensor, nn
 
 from otx.algo.classification.backbones.efficientnet import EFFICIENTNET_VERSION, EfficientNetBackbone
@@ -18,19 +19,12 @@ from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import A
 from otx.algo.classification.necks.gap import GlobalAveragePooling
 from otx.algo.classification.utils import get_classification_layers
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.data.entity.classification import (
-    HlabelClsBatchDataEntity,
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchDataEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchDataEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.metrics.accuracy import HLabelClsMetricCallable, MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel, OTXMultilabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -81,18 +75,18 @@ class EfficientNetForMulticlassCls(OTXMulticlassClsModel):
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_cls_effnet_b0_ckpt(state_dict, "multiclass", add_prefix)
 
-    def forward_explain(self, inputs: MulticlassClsBatchDataEntity) -> MulticlassClsBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
+        outputs = self.model(images=inputs.images, mode="explain")
 
-        return MulticlassClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
+        return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
@@ -147,18 +141,18 @@ class EfficientNetForMultilabelCls(OTXMultilabelClsModel):
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_cls_effnet_b0_ckpt(state_dict, "multilabel", add_prefix)
 
-    def forward_explain(self, inputs: MultilabelClsBatchDataEntity) -> MultilabelClsBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
+        outputs = self.model(images=inputs.images, mode="explain")
 
-        return MultilabelClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
+        return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
@@ -235,18 +229,18 @@ class EfficientNetForHLabelCls(OTXHlabelClsModel):
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_cls_effnet_b0_ckpt(state_dict, "hlabel", add_prefix)
 
-    def forward_explain(self, inputs: HlabelClsBatchDataEntity) -> HlabelClsBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
-        outputs = self.model(images=inputs.stacked_images, mode="explain")
+        outputs = self.model(images=inputs.images, mode="explain")
 
-        return HlabelClsBatchPredEntity(
-            batch_size=len(outputs["preds"]),
+        return TorchPredBatch(
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            labels=outputs["preds"],
-            scores=outputs["scores"],
-            saliency_map=outputs["saliency_map"],
-            feature_vector=outputs["feature_vector"],
+            labels=list(outputs["preds"]),
+            scores=list(outputs["scores"]),
+            saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:

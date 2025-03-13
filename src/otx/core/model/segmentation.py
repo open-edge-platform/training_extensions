@@ -170,8 +170,8 @@ class OTXSegmentationModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: SegBatchPredEntity,
-        inputs: SegBatchDataEntity,
+        preds: SegBatchPredEntity,  # type: ignore[override]
+        inputs: SegBatchDataEntity,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
@@ -359,8 +359,8 @@ class OVSegmentationModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: SegBatchPredEntity,
-        inputs: SegBatchDataEntity,
+        preds: SegBatchPredEntity,  # type: ignore[override]
+        inputs: SegBatchDataEntity,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 

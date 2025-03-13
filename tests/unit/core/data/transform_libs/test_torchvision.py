@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -38,9 +37,6 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
-
-if TYPE_CHECKING:
-    from otx.core.data.entity.classification import MulticlassClsBatchDataEntity, MulticlassClsDataEntity
 
 
 class MockFrame:
@@ -234,31 +230,6 @@ class TestRandomFlip:
         polygons_results = deepcopy(results.polygons)
         polygons_results = [Polygon(points=revert_hflip(polygon, width)) for polygon in polygons_results]
         assert polygons_results == fxt_inst_seg_data_entity[0].polygons
-
-    @pytest.mark.parametrize("is_array", [True, False])
-    def test_forward_with_list_of_images(
-        self,
-        random_flip: RandomFlip,
-        fxt_multi_class_cls_data_entity: tuple[
-            MulticlassClsDataEntity,
-            MulticlassClsBatchDataEntity,
-            MulticlassClsBatchDataEntity,
-        ],
-        is_array: bool,
-    ) -> None:
-        entity = deepcopy(fxt_multi_class_cls_data_entity[0])
-        if is_array:
-            entity.image = entity.image.transpose(1, 2, 0)
-        else:
-            entity.image = torch.as_tensor(entity.image)
-
-        entity.image = [entity.image, entity.image]
-
-        results = random_flip.forward(entity)
-
-        # test image
-        for img in results.image:
-            assert np.all(F.to_image(img.copy()).flip(-1).numpy() == fxt_multi_class_cls_data_entity[0].image)
 
 
 class TestPhotoMetricDistortion:

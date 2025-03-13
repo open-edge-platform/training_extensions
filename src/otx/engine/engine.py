@@ -682,7 +682,6 @@ class Engine:
         checkpoint: PathLike | None = None,
         datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
         explain_config: ExplainConfig | None = None,
-        dump: bool | None = False,
         **kwargs,
     ) -> list | None:
         r"""Run XAI using the specified model and data (test subset).
@@ -691,7 +690,6 @@ class Engine:
             checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
             datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.
             explain_config (ExplainConfig | None, optional): Config used to handle saliency maps.
-            dump (bool): Whether to dump "saliency_map" or not.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
@@ -702,7 +700,6 @@ class Engine:
             ...     datamodule=OTXDataModule(),
             ...     checkpoint=<checkpoint/path>,
             ...     explain_config=ExplainConfig(),
-            ...     dump=True,
             ... )
 
         CLI Usage:
@@ -725,7 +722,6 @@ class Engine:
                 ```
         """
         from otx.algo.utils.xai_utils import (
-            dump_saliency_maps,
             process_saliency_maps_in_pred_entity,
             set_crop_padded_map_flag,
         )
@@ -770,13 +766,6 @@ class Engine:
         explain_config = set_crop_padded_map_flag(explain_config, datamodule)
 
         predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
-        if dump:
-            dump_saliency_maps(
-                predict_result,
-                explain_config,
-                datamodule,
-                output_dir=Path(self.work_dir),
-            )
         model.explain_mode = False
         return predict_result
 

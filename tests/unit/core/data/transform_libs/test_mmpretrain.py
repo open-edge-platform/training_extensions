@@ -1,14 +1,13 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import numpy as np
 import pytest
 import torch
 
 from otx.core.config.data import SubsetConfig
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.classification import HlabelClsDataEntity, MulticlassClsDataEntity, MultilabelClsDataEntity
 from otx.core.types.transformer_libs import TransformLibType
+from otx.data.torch import TorchDataItem
 
 SKIP_MMLAB_TEST = False
 try:
@@ -25,32 +24,32 @@ class TestPackInputs:
     @pytest.mark.parametrize(
         "entity",
         [
-            MulticlassClsDataEntity(
-                image=np.ndarray([3, 10, 10]),
+            TorchDataItem(
+                image=torch.randn([3, 10, 10]),
                 img_info=ImageInfo(
                     img_idx=0,
                     img_shape=(10, 10),
                     ori_shape=(10, 10),
                 ),
-                labels=torch.LongTensor([0]),
+                label=torch.LongTensor([0]),
             ),
-            MultilabelClsDataEntity(
-                image=np.ndarray([3, 10, 10]),
+            TorchDataItem(
+                image=torch.randn([3, 10, 10]),
                 img_info=ImageInfo(
                     img_idx=0,
                     img_shape=(10, 10),
                     ori_shape=(10, 10),
                 ),
-                labels=torch.LongTensor([0, 1]),
+                label=torch.LongTensor([0, 1]),
             ),
-            HlabelClsDataEntity(
-                image=np.ndarray([3, 10, 10]),
+            TorchDataItem(
+                image=torch.randn([3, 10, 10]),
                 img_info=ImageInfo(
                     img_idx=0,
                     img_shape=(10, 10),
                     ori_shape=(10, 10),
                 ),
-                labels=torch.as_tensor([0]),
+                label=torch.as_tensor([0]),
             ),
         ],
     )

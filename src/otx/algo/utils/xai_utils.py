@@ -11,39 +11,26 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import cv2
 import numpy as np
 import torch
-from datumaro import Image
 
 from otx.core.config.explain import ExplainConfig
-from otx.core.data.entity.classification import (
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.types.explain import TargetExplainGroup
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
+from otx.data.torch import TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.utilities.types import EVAL_DATALOADERS
     from torch import LongTensor, Tensor
 
     from otx.core.data.module import OTXDataModule
 
 ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
-OTXBatchPredEntitiesSupportXAI = (
-    MulticlassClsBatchPredEntity
-    | MultilabelClsBatchPredEntity
-    | HlabelClsBatchPredEntity
-    | DetBatchPredEntity
-    | InstanceSegBatchPredEntity
-)
+OTXBatchPredEntitiesSupportXAI = TorchPredBatch | DetBatchPredEntity | InstanceSegBatchPredEntity
 
 
 def process_saliency_maps_in_pred_entity(
@@ -57,28 +44,32 @@ def process_saliency_maps_in_pred_entity(
         predict_result_per_batch: OTXBatchPredEntitiesSupportXAI,
         label_info: LabelInfoTypes,
     ) -> OTXBatchPredEntitiesSupportXAI:
+        # Extract batch data with proper type handling
+        labels = predict_result_per_batch.labels if predict_result_per_batch.labels is not None else []
+        scores = predict_result_per_batch.scores if predict_result_per_batch.scores is not None else []
+
         saliency_map: list[np.ndarray] = [
             saliency_map.cpu().numpy() if isinstance(saliency_map, torch.Tensor) else saliency_map
-            for saliency_map in predict_result_per_batch.saliency_map
+            for saliency_map in predict_result_per_batch.saliency_map  # type: ignore[union-attr]
         ]
         imgs_info = predict_result_per_batch.imgs_info
-        ori_img_shapes = [img_info.ori_shape for img_info in imgs_info]
-        paddings = [img_info.padding for img_info in imgs_info]
-        image_shape = imgs_info[0].img_shape
+        ori_img_shapes = [img_info.ori_shape for img_info in imgs_info]  # type: ignore[union-attr]
+        paddings = [img_info.padding for img_info in imgs_info]  # type: ignore[union-attr]
+        image_shape = imgs_info[0].img_shape  # type: ignore[union-attr, index]
         # Add additional conf threshold for saving maps with predicted classes,
         # since predictions can have less than 0.05 confidence
         conf_thr = explain_config.predicted_maps_conf_thr
 
         pred_labels = []
-        for labels, scores in zip(predict_result_per_batch.labels, predict_result_per_batch.scores):
+        for labels, scores in zip(predict_result_per_batch.labels, predict_result_per_batch.scores):  # type: ignore[union-attr, arg-type]
             if isinstance(label_info, HLabelInfo):
                 pred_labels.append(_convert_labels_from_hcls_format(labels, scores, label_info, conf_thr))
-            elif labels.shape == scores.shape:
+            elif labels.shape == scores.shape:  # type: ignore[union-attr, attr-defined]
                 # Filter out predictions with scores less than explain_config.predicted_maps_conf_thr
-                pred_labels.append(labels[scores > conf_thr].tolist())
+                pred_labels.append(labels[scores > conf_thr].tolist())  # type: ignore[operator]
             else:
                 # Tv_* models case with a single predicted label as a scalar tensor with size zero
-                labels_list = labels.tolist()
+                labels_list = labels.tolist()  # type: ignore[attr-defined]
                 labels_list = [labels_list] if isinstance(labels_list, int) else labels_list
                 pred_labels.append(labels_list)
 
@@ -90,7 +81,6 @@ def process_saliency_maps_in_pred_entity(
             image_shape,
             paddings,
         )
-
         predict_result_per_batch.saliency_map = processed_saliency_maps
         return predict_result_per_batch
 
@@ -181,59 +171,6 @@ def postprocess(saliency_map: np.ndarray, output_size: tuple[int, int] | None) -
         h, w = output_size
         saliency_map = cv2.resize(saliency_map, (w, h))
     return cv2.applyColorMap(saliency_map, cv2.COLORMAP_JET)
-
-
-def dump_saliency_maps(
-    predict_result: list[OTXBatchPredEntitiesSupportXAI],
-    explain_config: ExplainConfig,
-    datamodule: EVAL_DATALOADERS | OTXDataModule,
-    output_dir: Path,
-    weight: float = 0.3,
-) -> None:
-    """Sumps saliency maps (raw and with overlay)."""
-    output_dir = output_dir / "saliency_map"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    label_names = datamodule.label_info.label_names if hasattr(datamodule, "label_info") else None
-    for predict_result_per_batch in predict_result:
-        saliency_map = predict_result_per_batch.saliency_map
-        imgs_info = predict_result_per_batch.imgs_info
-        for pred_index in range(len(saliency_map)):
-            img_id = imgs_info[pred_index].img_idx
-            img_data, image_save_name = _get_image_data_name(datamodule, img_id)
-
-            for class_id, s_map in saliency_map[pred_index].items():
-                label_name = label_names[class_id] if label_names and class_id in label_names else str(class_id)
-                label_name = label_name.replace(" ", "_")
-
-                file_name_map = Path(image_save_name + "_class_" + label_name + "_saliency_map.png")
-                save_path_map = output_dir / file_name_map
-                cv2.imwrite(str(save_path_map), s_map)
-
-                if explain_config.postprocess:
-                    file_name_overlay = Path(image_save_name + "_class_" + label_name + "_overlay.png")
-                    save_path_overlay = output_dir / file_name_overlay
-                    overlay = _get_overlay(img_data, s_map, weight)
-                    cv2.imwrite(str(save_path_overlay), overlay)
-
-
-def _get_image_data_name(
-    datamodule: EVAL_DATALOADERS | OTXDataModule,
-    img_id: int,
-    subset_name: str = "test",
-) -> tuple[np.array, str]:
-    subset = datamodule.subsets[subset_name]
-    item = subset.dm_subset[img_id]
-    img = item.media_as(Image)
-    img_data, _, _ = subset._get_img_data_and_shape(img)  # noqa: SLF001
-    image_save_name = "".join([char if char.isalnum() else "_" for char in item.id])
-    return img_data, image_save_name
-
-
-def _get_overlay(img: np.ndarray, s_map: np.ndarray, weight: float = 0.3) -> np.ndarray:
-    overlay = img * weight + s_map * (1 - weight)
-    overlay[overlay > 255] = 255
-    return overlay.astype(np.uint8)
 
 
 def _crop_padded_map(

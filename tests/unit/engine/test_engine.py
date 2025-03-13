@@ -295,7 +295,6 @@ class TestEngine:
         fxt_engine.optimize(export_demo_package=True)
         mocker_export.assert_called_once()
 
-    @pytest.mark.parametrize("dump", [True, False])
     @pytest.mark.parametrize(
         "checkpoint",
         [
@@ -303,13 +302,12 @@ class TestEngine:
             "path/to/checkpoint.xml",
         ],
     )
-    def test_explain(self, fxt_engine, checkpoint, dump, mocker) -> None:
+    def test_explain(self, fxt_engine, checkpoint, mocker) -> None:
         mock_predict = mocker.patch("otx.engine.engine.Trainer.predict")
         _ = mocker.patch("otx.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
         mock_get_ov_model = mocker.patch("otx.engine.engine.AutoConfigurator.get_ov_model")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
         mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
-        mock_dump_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.dump_saliency_maps")
 
         ext = Path(checkpoint).suffix
 
@@ -324,10 +322,10 @@ class TestEngine:
 
         # Correct label_info from the checkpoint
         mock_model.label_info = fxt_engine.datamodule.label_info
-        fxt_engine.explain(checkpoint=checkpoint, dump=dump)
+        fxt_engine.explain(checkpoint=checkpoint)
         mock_predict.assert_called_once()
+
         mock_process_saliency_maps.assert_called_once()
-        assert mock_dump_saliency_maps.called == dump
 
         mock_model.label_info = NullLabelInfo()
         # Incorrect label_info from the checkpoint

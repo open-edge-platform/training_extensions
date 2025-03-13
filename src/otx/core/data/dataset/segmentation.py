@@ -227,7 +227,7 @@ class OTXSegmentationDataset(OTXDataset):
             masks=masks,
         )
         transformed_entity = self._apply_transforms(entity)
-        return transformed_entity.wrap(masks=transformed_entity.masks[0]) if transformed_entity else None
+        return transformed_entity.wrap(masks=transformed_entity.masks[0]) if transformed_entity else None  # type: ignore[union-attr, index]
 
     @property
     def collate_fn(self) -> Callable:
