@@ -3072,7 +3072,7 @@ class TopdownAffine(tvt_v2.Transform):
             inputs.image = self._get_warp_image(inputs.image, warp_mat, warp_size)
             if inputs.keypoints is not None:
                 keypoints = np.expand_dims(inputs.keypoints[:, :2], axis=0)
-                inputs.keypoints[:, :2] = cv2.transform(keypoints, warp_mat)[0]
+                inputs.keypoints[:, :2] = torch.as_tensor(cv2.transform(keypoints, warp_mat)[0])
 
         else:
             resized_numpy_image = cv2.resize(
@@ -3086,7 +3086,7 @@ class TopdownAffine(tvt_v2.Transform):
                 inputs.keypoints[:, :2] = rescale_keypoints(inputs.keypoints[:, :2], scale_factor)
 
         if inputs.keypoints is None:
-            inputs.keypoints = np.zeros([])
+            inputs.keypoints = torch.zeros([])
         else:
             # update keypoints_visible after affine transforms
             inputs.keypoints[:, 2] = inputs.keypoints[:, 2] * (inputs.keypoints[:, :2] > 0).all(axis=1)

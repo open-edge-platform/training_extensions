@@ -161,10 +161,10 @@ class RTMCCHead(BaseModule):
             dict: A dictionary of loss components.
         """
         pred_x, pred_y = self(x)
-
+        keypoints = torch.stack(entity.keypoints).cpu().numpy()
         encoded = self.codec.encode(
-            keypoints=np.stack(entity.keypoints),
-            keypoints_visible=np.stack(entity.keypoints_visible),
+            keypoints=keypoints[:, :, :2],
+            keypoints_visible=keypoints[:, :, 2],
         )
 
         device = pred_x.device

@@ -12,6 +12,7 @@ from typing import Callable, List, Union
 import numpy as np
 import torch
 from datumaro import AnnotationType, Bbox, Dataset, DatasetSubset, Image, Points
+from torchvision.transforms.v2.functional import to_dtype, to_image
 from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
@@ -117,7 +118,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         keypoints = np.hstack((keypoints, keypoints_visible.reshape(-1, 1)))
 
         entity = TorchDataItem(
-            image=img_data,
+            image=to_dtype(to_image(img_data), torch.float32),
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
@@ -130,8 +131,8 @@ class OTXKeypointDetectionDataset(OTXDataset):
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=img_shape,
             ),
-            labels=torch.as_tensor([ann.label for ann in bbox_anns]),
-            keypoints=keypoints,
+            label=torch.as_tensor([ann.label for ann in bbox_anns]),
+            keypoints=torch.as_tensor(keypoints, dtype=torch.float32),
         )
 
         return self._apply_transforms(entity)  # type: ignore[return-value]

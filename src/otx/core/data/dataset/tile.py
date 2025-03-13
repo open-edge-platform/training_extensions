@@ -33,7 +33,6 @@ from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.detection import DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
-from otx.core.data.entity.segmentation import SegDataEntity
 from otx.core.data.entity.tile import (
     TileBatchDetDataEntity,
     TileBatchInstSegDataEntity,
@@ -695,7 +694,7 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             ori_masks=masks,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> SegDataEntity:
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:
         """Convert a tile datumaro dataset item to SegDataEntity."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
@@ -705,7 +704,7 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return SegDataEntity(
+        return TorchDataItem(
             image=tile_img,
             img_info=img_info,
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),

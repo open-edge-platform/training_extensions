@@ -85,11 +85,17 @@ class OTXKeypointDetectionModel(OTXModel):
 
         keypoints = []
         scores = []
+        # default visibility threshold
+        visibility_threshold = 0.5
         for output in outputs:
             if not isinstance(output, tuple):
                 raise TypeError(output)
-            keypoints.append(torch.as_tensor(output[0], device=self.device))
-            scores.append(torch.as_tensor(output[1], device=self.device))
+            kps = torch.as_tensor(output[0], device=self.device)
+            score = torch.as_tensor(output[1], device=self.device)
+            visible_keypoints = torch.cat([kps, score.unsqueeze(1) > visibility_threshold], dim=1)
+            keypoints.append(visible_keypoints)
+            scores.append(score)
+
 
         return TorchPredBatch(
             batch_size=len(outputs),
@@ -114,15 +120,15 @@ class OTXKeypointDetectionModel(OTXModel):
         return {
             "preds": [
                 {
-                    "keypoints": kpt,
+                    "keypoints": kpt[:, :2],
                     "scores": score,
                 }
                 for kpt, score in zip(preds.keypoints, preds.scores)
             ],
             "target": [
                 {
-                    "keypoints": kpt[:2],
-                    "keypoints_visible": kpt[2],
+                    "keypoints": kpt[:, :2],
+                    "keypoints_visible": kpt[:, 2],
                 }
                 for kpt in inputs.keypoints
             ],
