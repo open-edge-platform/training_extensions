@@ -266,39 +266,26 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExplainConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
-    <span class="n">MulticlassClsBatchPredEntity</span><span class="p">,</span>
-    <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchPredEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.instance_segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegBatchPredEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">TargetExplainGroup</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchPredBatch</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">EVAL_DATALOADERS</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">LongTensor</span><span class="p">,</span> <span class="n">Tensor</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
 <span class="n">ProcessedSaliencyMaps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span>
-<span class="n">OTXBatchPredEntitiesSupportXAI</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">MulticlassClsBatchPredEntity</span>
-    <span class="o">|</span> <span class="n">MultilabelClsBatchPredEntity</span>
-    <span class="o">|</span> <span class="n">HlabelClsBatchPredEntity</span>
-    <span class="o">|</span> <span class="n">DetBatchPredEntity</span>
-    <span class="o">|</span> <span class="n">InstanceSegBatchPredEntity</span>
-<span class="p">)</span>
+<span class="n">OTXBatchPredEntitiesSupportXAI</span> <span class="o">=</span> <span class="n">TorchPredBatch</span> <span class="o">|</span> <span class="n">DetBatchPredEntity</span> <span class="o">|</span> <span class="n">InstanceSegBatchPredEntity</span>
 
 
 <div class="viewcode-block" id="process_saliency_maps_in_pred_entity">
@@ -314,28 +301,32 @@
         <span class="n">predict_result_per_batch</span><span class="p">:</span> <span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">:</span>
+        <span class="c1"># Extract batch data with proper type handling</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">labels</span> <span class="k">if</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">scores</span> <span class="k">if</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">scores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+
         <span class="n">saliency_map</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">saliency_map</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">saliency_map</span>
-            <span class="k">for</span> <span class="n">saliency_map</span> <span class="ow">in</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">saliency_map</span>
+            <span class="k">for</span> <span class="n">saliency_map</span> <span class="ow">in</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">saliency_map</span>  <span class="c1"># type: ignore[union-attr]</span>
         <span class="p">]</span>
         <span class="n">imgs_info</span> <span class="o">=</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">imgs_info</span>
-        <span class="n">ori_img_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">imgs_info</span><span class="p">]</span>
-        <span class="n">paddings</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">padding</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">imgs_info</span><span class="p">]</span>
-        <span class="n">image_shape</span> <span class="o">=</span> <span class="n">imgs_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">img_shape</span>
+        <span class="n">ori_img_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">imgs_info</span><span class="p">]</span>  <span class="c1"># type: ignore[union-attr]</span>
+        <span class="n">paddings</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">padding</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">imgs_info</span><span class="p">]</span>  <span class="c1"># type: ignore[union-attr]</span>
+        <span class="n">image_shape</span> <span class="o">=</span> <span class="n">imgs_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">img_shape</span>  <span class="c1"># type: ignore[union-attr, index]</span>
         <span class="c1"># Add additional conf threshold for saving maps with predicted classes,</span>
         <span class="c1"># since predictions can have less than 0.05 confidence</span>
         <span class="n">conf_thr</span> <span class="o">=</span> <span class="n">explain_config</span><span class="o">.</span><span class="n">predicted_maps_conf_thr</span>
 
         <span class="n">pred_labels</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">labels</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">scores</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">labels</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">scores</span><span class="p">):</span>  <span class="c1"># type: ignore[union-attr, arg-type]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label_info</span><span class="p">,</span> <span class="n">HLabelInfo</span><span class="p">):</span>
                 <span class="n">pred_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_convert_labels_from_hcls_format</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">label_info</span><span class="p">,</span> <span class="n">conf_thr</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>  <span class="c1"># type: ignore[union-attr, attr-defined]</span>
                 <span class="c1"># Filter out predictions with scores less than explain_config.predicted_maps_conf_thr</span>
-                <span class="n">pred_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="n">conf_thr</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+                <span class="n">pred_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="n">conf_thr</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>  <span class="c1"># type: ignore[operator]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Tv_* models case with a single predicted label as a scalar tensor with size zero</span>
-                <span class="n">labels_list</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="n">labels_list</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># type: ignore[attr-defined]</span>
                 <span class="n">labels_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels_list</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels_list</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">labels_list</span>
                 <span class="n">pred_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels_list</span><span class="p">)</span>
 
@@ -347,7 +338,6 @@
             <span class="n">image_shape</span><span class="p">,</span>
             <span class="n">paddings</span><span class="p">,</span>
         <span class="p">)</span>
-
         <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">saliency_map</span> <span class="o">=</span> <span class="n">processed_saliency_maps</span>
         <span class="k">return</span> <span class="n">predict_result_per_batch</span>
 
@@ -454,62 +444,6 @@
         <span class="n">saliency_map</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">applyColorMap</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_JET</span><span class="p">)</span></div>
 
-
-
-<div class="viewcode-block" id="dump_saliency_maps">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.dump_saliency_maps">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">dump_saliency_maps</span><span class="p">(</span>
-    <span class="n">predict_result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OTXBatchPredEntitiesSupportXAI</span><span class="p">],</span>
-    <span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span><span class="p">,</span>
-    <span class="n">datamodule</span><span class="p">:</span> <span class="n">EVAL_DATALOADERS</span> <span class="o">|</span> <span class="n">OTXDataModule</span><span class="p">,</span>
-    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sumps saliency maps (raw and with overlay).&quot;&quot;&quot;</span>
-    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;saliency_map&quot;</span>
-    <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">label_names</span> <span class="o">=</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">datamodule</span><span class="p">,</span> <span class="s2">&quot;label_info&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-    <span class="k">for</span> <span class="n">predict_result_per_batch</span> <span class="ow">in</span> <span class="n">predict_result</span><span class="p">:</span>
-        <span class="n">saliency_map</span> <span class="o">=</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">saliency_map</span>
-        <span class="n">imgs_info</span> <span class="o">=</span> <span class="n">predict_result_per_batch</span><span class="o">.</span><span class="n">imgs_info</span>
-        <span class="k">for</span> <span class="n">pred_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">)):</span>
-            <span class="n">img_id</span> <span class="o">=</span> <span class="n">imgs_info</span><span class="p">[</span><span class="n">pred_index</span><span class="p">]</span><span class="o">.</span><span class="n">img_idx</span>
-            <span class="n">img_data</span><span class="p">,</span> <span class="n">image_save_name</span> <span class="o">=</span> <span class="n">_get_image_data_name</span><span class="p">(</span><span class="n">datamodule</span><span class="p">,</span> <span class="n">img_id</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">class_id</span><span class="p">,</span> <span class="n">s_map</span> <span class="ow">in</span> <span class="n">saliency_map</span><span class="p">[</span><span class="n">pred_index</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">label_name</span> <span class="o">=</span> <span class="n">label_names</span><span class="p">[</span><span class="n">class_id</span><span class="p">]</span> <span class="k">if</span> <span class="n">label_names</span> <span class="ow">and</span> <span class="n">class_id</span> <span class="ow">in</span> <span class="n">label_names</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">class_id</span><span class="p">)</span>
-                <span class="n">label_name</span> <span class="o">=</span> <span class="n">label_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
-
-                <span class="n">file_name_map</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">image_save_name</span> <span class="o">+</span> <span class="s2">&quot;_class_&quot;</span> <span class="o">+</span> <span class="n">label_name</span> <span class="o">+</span> <span class="s2">&quot;_saliency_map.png&quot;</span><span class="p">)</span>
-                <span class="n">save_path_map</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">file_name_map</span>
-                <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">save_path_map</span><span class="p">),</span> <span class="n">s_map</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">explain_config</span><span class="o">.</span><span class="n">postprocess</span><span class="p">:</span>
-                    <span class="n">file_name_overlay</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">image_save_name</span> <span class="o">+</span> <span class="s2">&quot;_class_&quot;</span> <span class="o">+</span> <span class="n">label_name</span> <span class="o">+</span> <span class="s2">&quot;_overlay.png&quot;</span><span class="p">)</span>
-                    <span class="n">save_path_overlay</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">file_name_overlay</span>
-                    <span class="n">overlay</span> <span class="o">=</span> <span class="n">_get_overlay</span><span class="p">(</span><span class="n">img_data</span><span class="p">,</span> <span class="n">s_map</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
-                    <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">save_path_overlay</span><span class="p">),</span> <span class="n">overlay</span><span class="p">)</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_image_data_name</span><span class="p">(</span>
-    <span class="n">datamodule</span><span class="p">:</span> <span class="n">EVAL_DATALOADERS</span> <span class="o">|</span> <span class="n">OTXDataModule</span><span class="p">,</span>
-    <span class="n">img_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">subset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-    <span class="n">subset</span> <span class="o">=</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">subset_name</span><span class="p">]</span>
-    <span class="n">item</span> <span class="o">=</span> <span class="n">subset</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">img_id</span><span class="p">]</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">media_as</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
-    <span class="n">img_data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">subset</span><span class="o">.</span><span class="n">_get_img_data_and_shape</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
-    <span class="n">image_save_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">char</span> <span class="k">if</span> <span class="n">char</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;_&quot;</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">img_data</span><span class="p">,</span> <span class="n">image_save_name</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_overlay</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">s_map</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="n">overlay</span> <span class="o">=</span> <span class="n">img</span> <span class="o">*</span> <span class="n">weight</span> <span class="o">+</span> <span class="n">s_map</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">weight</span><span class="p">)</span>
-    <span class="n">overlay</span><span class="p">[</span><span class="n">overlay</span> <span class="o">&gt;</span> <span class="mi">255</span><span class="p">]</span> <span class="o">=</span> <span class="mi">255</span>
-    <span class="k">return</span> <span class="n">overlay</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_crop_padded_map</span><span class="p">(</span>

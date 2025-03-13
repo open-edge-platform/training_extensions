@@ -269,14 +269,6 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_classification_layers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXBatchLossEntity</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.classification</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
-    <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
-    <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
-    <span class="n">MulticlassClsBatchPredEntity</span><span class="p">,</span>
-    <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
-    <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span>
@@ -289,6 +281,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskLevelExportParameters</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">HLabelInfo</span><span class="p">,</span> <span class="n">LabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDataBatch</span><span class="p">,</span> <span class="n">TorchPredBatch</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
@@ -343,7 +336,7 @@
 <span class="sd">            nn.Module: base nn.Module model for supervised training</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
@@ -352,8 +345,8 @@
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;predict&quot;</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">stacked_images</span><span class="p">,</span>
-            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
             <span class="s2">&quot;imgs_info&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
         <span class="p">}</span>
@@ -361,20 +354,20 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MulticlassClsBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">OTXBatchLossEntity</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">],</span>
-                <span class="n">labels</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span>
-                <span class="n">saliency_map</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">],</span>
-                <span class="n">feature_vector</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">],</span>
+                <span class="n">labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]),</span>
+                <span class="n">scores</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">]),</span>
+                <span class="n">saliency_map</span><span class="o">=</span><span class="p">[</span><span class="n">saliency_map</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="k">for</span> <span class="n">saliency_map</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]],</span>
+                <span class="n">feature_vector</span><span class="o">=</span><span class="p">[</span><span class="n">feature_vector</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">feature_vector</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">]],</span>
             <span class="p">)</span>
 
         <span class="c1"># To list, batch-wise</span>
@@ -382,12 +375,12 @@
         <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">preds</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">stacked_images</span><span class="p">,</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
-            <span class="n">labels</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">preds</span><span class="p">),</span>
+            <span class="n">scores</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -419,11 +412,11 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
-        <span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">pred</span><span class="p">,</span>
             <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">target</span><span class="p">,</span>
@@ -434,11 +427,11 @@
 
 <div class="viewcode-block" id="OTXMulticlassClsModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMulticlassClsModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchDataBatch</span><span class="p">:</span>  <span class="c1"># type: ignore[override]</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for classification model.&quot;&quot;&quot;</span>
-        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)])</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span> <span class="o">*</span> <span class="n">batch_size</span>
-        <span class="k">return</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="p">[],</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">TorchDataBatch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXMulticlassClsModel.forward_for_tracing">
@@ -500,7 +493,7 @@
 <span class="sd">            nn.Module: base nn.Module model for supervised training</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
@@ -509,8 +502,8 @@
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;predict&quot;</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">stacked_images</span><span class="p">,</span>
-            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
+            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
             <span class="s2">&quot;imgs_info&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
         <span class="p">}</span>
@@ -518,32 +511,32 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultilabelClsBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">OTXBatchLossEntity</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">],</span>
-                <span class="n">labels</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span>
-                <span class="n">saliency_map</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">],</span>
-                <span class="n">feature_vector</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">],</span>
+                <span class="n">labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]),</span>
+                <span class="n">scores</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">]),</span>
+                <span class="n">saliency_map</span><span class="o">=</span><span class="p">[</span><span class="n">saliency_map</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="k">for</span> <span class="n">saliency_map</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]],</span>
+                <span class="n">feature_vector</span><span class="o">=</span><span class="p">[</span><span class="n">feature_vector</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">feature_vector</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">]],</span>
             <span class="p">)</span>
 
         <span class="c1"># To list, batch-wise</span>
         <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">]</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
-            <span class="n">labels</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+            <span class="n">scores</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -576,12 +569,12 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">),</span>
-            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
+            <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
         <span class="p">}</span>
 
 <div class="viewcode-block" id="OTXMultilabelClsModel.forward_for_tracing">
@@ -593,11 +586,11 @@
 
 <div class="viewcode-block" id="OTXMultilabelClsModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXMultilabelClsModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchDataBatch</span><span class="p">:</span>  <span class="c1"># type: ignore[override]</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for classification OV model.&quot;&quot;&quot;</span>
-        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)])</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span> <span class="o">*</span> <span class="n">batch_size</span>
-        <span class="k">return</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="p">[],</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">TorchDataBatch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
 </div>
 
 
@@ -653,7 +646,7 @@
 <span class="sd">            nn.Module: base nn.Module model for supervised training</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;loss&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
@@ -662,8 +655,8 @@
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;predict&quot;</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">stacked_images</span><span class="p">,</span>
-            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
+            <span class="s2">&quot;images&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
             <span class="s2">&quot;imgs_info&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="n">mode</span><span class="p">,</span>
         <span class="p">}</span>
@@ -671,8 +664,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="c1"># noqa: ANN401</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HlabelClsBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">OTXBatchLossEntity</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
 
@@ -685,22 +678,22 @@
             <span class="n">labels</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-                <span class="n">saliency_map</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">],</span>
-                <span class="n">feature_vector</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">],</span>
+                <span class="n">labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span>
+                <span class="n">scores</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span>
+                <span class="n">saliency_map</span><span class="o">=</span><span class="p">[</span><span class="n">saliency_map</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="k">for</span> <span class="n">saliency_map</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]],</span>
+                <span class="n">feature_vector</span><span class="o">=</span><span class="p">[</span><span class="n">feature_vector</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">feature_vector</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">]],</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
-            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span>
+            <span class="n">scores</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -733,8 +726,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
         <span class="n">hlabel_info</span><span class="p">:</span> <span class="n">HLabelInfo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span>  <span class="c1"># type: ignore[assignment]</span>
 
@@ -748,7 +741,7 @@
             <span class="n">pred_result</span> <span class="o">=</span> <span class="n">_labels</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">pred_result</span><span class="p">,</span>
-            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">),</span>
         <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
@@ -760,11 +753,11 @@
 
 <div class="viewcode-block" id="OTXHlabelClsModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.classification.html#otx.core.model.classification.OTXHlabelClsModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchDataBatch</span><span class="p">:</span>  <span class="c1"># type: ignore[override]</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for classification OV model.&quot;&quot;&quot;</span>
-        <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)])</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span> <span class="o">*</span> <span class="n">batch_size</span>
-        <span class="k">return</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="p">[],</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">TorchDataBatch</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXHlabelClsModel.forward_for_tracing">
@@ -811,8 +804,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClassificationResult</span><span class="p">],</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span><span class="p">:</span>
         <span class="n">pred_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">top_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
         <span class="n">pred_scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">top_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">confidence</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
 
@@ -822,28 +815,28 @@
 
             <span class="c1"># Squeeze dim 2D =&gt; 1D, (1, internal_dim) =&gt; (internal_dim)</span>
             <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
                 <span class="n">labels</span><span class="o">=</span><span class="n">pred_labels</span><span class="p">,</span>
+                <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
                 <span class="n">saliency_map</span><span class="o">=</span><span class="n">predicted_s_maps</span><span class="p">,</span>
                 <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="n">pred_labels</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">MulticlassClsBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MulticlassClsBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
         <span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
         <span class="n">target</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
@@ -889,8 +882,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClassificationResult</span><span class="p">],</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span><span class="p">:</span>
         <span class="n">pred_scores</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">top_label</span><span class="o">.</span><span class="n">confidence</span> <span class="k">for</span> <span class="n">top_label</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">top_labels</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span>
         <span class="p">]</span>
@@ -901,28 +894,28 @@
 
             <span class="c1"># Squeeze dim 2D =&gt; 1D, (1, internal_dim) =&gt; (internal_dim)</span>
             <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
                 <span class="n">labels</span><span class="o">=</span><span class="p">[],</span>
+                <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
                 <span class="n">saliency_map</span><span class="o">=</span><span class="n">predicted_s_maps</span><span class="p">,</span>
                 <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">pred_scores</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">MultilabelClsBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">MultilabelClsBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">),</span>
@@ -966,8 +959,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClassificationResult</span><span class="p">],</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span><span class="p">:</span>
         <span class="n">all_pred_labels</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">all_pred_scores</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
@@ -1002,28 +995,28 @@
 
             <span class="c1"># Squeeze dim 2D =&gt; 1D, (1, internal_dim) =&gt; (internal_dim)</span>
             <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">all_pred_scores</span><span class="p">,</span>
                 <span class="n">labels</span><span class="o">=</span><span class="n">all_pred_labels</span><span class="p">,</span>
+                <span class="n">scores</span><span class="o">=</span><span class="n">all_pred_scores</span><span class="p">,</span>
                 <span class="n">saliency_map</span><span class="o">=</span><span class="n">predicted_s_maps</span><span class="p">,</span>
                 <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">all_pred_scores</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="n">all_pred_labels</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">all_pred_scores</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">HlabelClsBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">HlabelClsBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
         <span class="n">cls_heads_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">hierarchical_info</span><span class="p">[</span><span class="s2">&quot;cls_heads_info&quot;</span><span class="p">]</span>
         <span class="n">num_multilabel_classes</span> <span class="o">=</span> <span class="n">cls_heads_info</span><span class="p">[</span><span class="s2">&quot;num_multilabel_classes&quot;</span><span class="p">]</span>

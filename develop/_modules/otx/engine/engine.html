@@ -956,7 +956,6 @@
         <span class="n">checkpoint</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">datamodule</span><span class="p">:</span> <span class="n">EVAL_DATALOADERS</span> <span class="o">|</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">dump</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run XAI using the specified model and data (test subset).</span>
@@ -965,7 +964,6 @@
 <span class="sd">            checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.</span>
 <span class="sd">            datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.</span>
 <span class="sd">            explain_config (ExplainConfig | None, optional): Config used to handle saliency maps.</span>
-<span class="sd">            dump (bool): Whether to dump &quot;saliency_map&quot; or not.</span>
 <span class="sd">            **kwargs: Additional keyword arguments for pl.Trainer configuration.</span>
 
 <span class="sd">        Returns:</span>
@@ -976,7 +974,6 @@
 <span class="sd">            ...     datamodule=OTXDataModule(),</span>
 <span class="sd">            ...     checkpoint=&lt;checkpoint/path&gt;,</span>
 <span class="sd">            ...     explain_config=ExplainConfig(),</span>
-<span class="sd">            ...     dump=True,</span>
 <span class="sd">            ... )</span>
 
 <span class="sd">        CLI Usage:</span>
@@ -999,7 +996,6 @@
 <span class="sd">                ```</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.xai_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-            <span class="n">dump_saliency_maps</span><span class="p">,</span>
             <span class="n">process_saliency_maps_in_pred_entity</span><span class="p">,</span>
             <span class="n">set_crop_padded_map_flag</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1044,13 +1040,6 @@
         <span class="n">explain_config</span> <span class="o">=</span> <span class="n">set_crop_padded_map_flag</span><span class="p">(</span><span class="n">explain_config</span><span class="p">,</span> <span class="n">datamodule</span><span class="p">)</span>
 
         <span class="n">predict_result</span> <span class="o">=</span> <span class="n">process_saliency_maps_in_pred_entity</span><span class="p">(</span><span class="n">predict_result</span><span class="p">,</span> <span class="n">explain_config</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">dump</span><span class="p">:</span>
-            <span class="n">dump_saliency_maps</span><span class="p">(</span>
-                <span class="n">predict_result</span><span class="p">,</span>
-                <span class="n">explain_config</span><span class="p">,</span>
-                <span class="n">datamodule</span><span class="p">,</span>
-                <span class="n">output_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">),</span>
-            <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">explain_mode</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">predict_result</span></div>
 

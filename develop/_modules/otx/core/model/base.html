@@ -307,6 +307,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.build</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_num_async_infer_requests</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.miscellaneous</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_ckpt_for_finetuning</span><span class="p">,</span> <span class="n">is_ckpt_from_otx_v1</span><span class="p">,</span> <span class="n">remove_state_dict_prefix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDataBatch</span><span class="p">,</span> <span class="n">TorchPredBatch</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -633,8 +634,8 @@
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">T_OTXBatchPredEntity</span> <span class="o">|</span> <span class="n">TorchPredBatch</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span> <span class="o">|</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert given inputs to a Python dictionary for the metric computation.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>

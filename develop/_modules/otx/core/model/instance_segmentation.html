@@ -605,8 +605,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the prediction entity to the format that the metric can compute and cache the ground truth.</span>
 
@@ -992,8 +992,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the prediction entity to the format that the metric can compute and cache the ground truth.</span>
 

@@ -425,6 +425,8 @@
         <li><a href="guide/reference/_autosummary/otx.core.config.data.html#otx.core.config.data.TileConfig.clone">(otx.core.config.data.TileConfig method)</a>
 </li>
       </ul></li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.collate_fn">collate_fn() (otx.data.TorchDataItem static method)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter">ConfigConverter (class in otx.tools.converter)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.model.anomaly.html#otx.core.model.anomaly.OTXAnomaly.configure_callbacks">configure_callbacks() (otx.core.model.anomaly.OTXAnomaly method)</a>
@@ -495,10 +497,10 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DetrCriterion">DetrCriterion (class in otx.algo.detection.losses)</a>
 </li>
-      <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.device">device (otx.engine.Engine property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.device">device (otx.engine.Engine property)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.core.config.device.html#otx.core.config.device.DeviceConfig">DeviceConfig (class in otx.core.config.device)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.detection.losses.html#otx.algo.detection.losses.DFINECriterion">DFINECriterion (class in otx.algo.detection.losses)</a>
@@ -508,8 +510,6 @@
       <li><a href="guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.EfficientNetBackbone.downsample">downsample (otx.algo.classification.backbones.EfficientNetBackbone attribute)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.config.html#otx.core.config.dtype_representer">dtype_representer() (in module otx.core.config)</a>
-</li>
-      <li><a href="guide/reference/_autosummary/otx.algo.utils.xai_utils.html#otx.algo.utils.xai_utils.dump_saliency_maps">dump_saliency_maps() (in module otx.algo.utils.xai_utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -908,6 +908,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.ForwardExplainMixInForViT.has_gap">has_gap (otx.algo.classification.vit.ForwardExplainMixInForViT property)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchPredBatch.has_xai_outputs">has_xai_outputs (otx.data.TorchPredBatch property)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.classification.vit.html#otx.algo.classification.vit.ForwardExplainMixInForViT.head_forward_fn">head_forward_fn() (otx.algo.classification.vit.ForwardExplainMixInForViT method)</a>
 </li>
@@ -1330,6 +1332,8 @@
         <li><a href="guide/reference/_autosummary/otx.core.utils.tile_merge.html#module-otx.core.utils.tile_merge">otx.core.utils.tile_merge</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.core.utils.utils.html#module-otx.core.utils.utils">otx.core.utils.utils</a>
+</li>
+        <li><a href="guide/reference/_autosummary/otx.data.html#module-otx.data">otx.data</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.engine.html#module-otx.engine">otx.engine</a>
 </li>
@@ -1771,8 +1775,6 @@
         <li><a href="guide/reference/_autosummary/otx.cli.utils.help_formatter.html#module-otx.cli.utils.help_formatter">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     otx.cli.utils.jsonargparse
 
@@ -1780,6 +1782,8 @@
         <li><a href="guide/reference/_autosummary/otx.cli.utils.jsonargparse.html#module-otx.cli.utils.jsonargparse">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     otx.cli.utils.workspace
 
@@ -2044,6 +2048,13 @@
 
       <ul>
         <li><a href="guide/reference/_autosummary/otx.core.utils.utils.html#module-otx.core.utils.utils">module</a>
+</li>
+      </ul></li>
+      <li>
+    otx.data
+
+      <ul>
+        <li><a href="guide/reference/_autosummary/otx.data.html#module-otx.data">module</a>
 </li>
       </ul></li>
       <li>
@@ -2368,8 +2379,6 @@
         <li><a href="guide/reference/_autosummary/otx.core.exporter.visual_prompting.html#otx.core.exporter.visual_prompting.OTXVisualPromptingModelExporter.to_onnx">(otx.core.exporter.visual_prompting.OTXVisualPromptingModelExporter method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.core.exporter.base.html#otx.core.exporter.base.OTXModelExporter.to_openvino">to_openvino() (otx.core.exporter.base.OTXModelExporter method)</a>
 
       <ul>
@@ -2378,11 +2387,21 @@
         <li><a href="guide/reference/_autosummary/otx.core.exporter.visual_prompting.html#otx.core.exporter.visual_prompting.OTXVisualPromptingModelExporter.to_openvino">(otx.core.exporter.visual_prompting.OTXVisualPromptingModelExporter method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.algo.utils.mmengine_utils.html#otx.algo.utils.mmengine_utils.InstanceData.to_tensor">to_tensor() (otx.algo.utils.mmengine_utils.InstanceData method)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.config.data.html#otx.core.config.data.SubsetConfig.to_tv_image">to_tv_image (otx.core.config.data.SubsetConfig attribute)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.utils.utils.html#otx.algo.utils.utils.torch_hub_load">torch_hub_load() (in module otx.algo.utils.utils)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataBatch">TorchDataBatch (class in otx.data)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem">TorchDataItem (class in otx.data)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchPredBatch">TorchPredBatch (class in otx.data)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchPredItem">TorchPredItem (class in otx.data)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.TorchvisionBackbone">TorchvisionBackbone (class in otx.algo.classification.backbones)</a>
 </li>

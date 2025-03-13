@@ -30,6 +30,7 @@
    otx.algo
    otx.cli
    otx.core
+   otx.data
    otx.engine
    otx.recipe
    otx.tools

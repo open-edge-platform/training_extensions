@@ -427,8 +427,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">SegBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">SegBatchPredEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert prediction and input entities to a format suitable for metric computation.</span>
 
@@ -631,8 +631,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">SegBatchPredEntity</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">,</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">SegBatchPredEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">SegBatchDataEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert prediction and input entities to a format suitable for metric computation.</span>
 

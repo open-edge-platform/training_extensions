@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>otx.algo.callbacks.adaptive_train_scheduling &#8212; OpenVINO™ Training Extensions 2.4.0dev documentation</title>
+    <title>otx.data &#8212; OpenVINO™ Training Extensions 2.4.0dev documentation</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/reference/_autosummary/otx.algo.callbacks.adaptive_train_scheduling';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/reference/_autosummary/otx.data';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="otx.algo.callbacks.gpu_mem_monitor" href="otx.algo.callbacks.gpu_mem_monitor.html" />
-    <link rel="prev" title="otx.algo.callbacks.adaptive_early_stopping" href="otx.algo.callbacks.adaptive_early_stopping.html" />
+    <link rel="next" title="otx.engine" href="otx.engine.html" />
+    <link rel="prev" title="otx.core.utils.utils" href="otx.core.utils.utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -311,13 +311,13 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API reference</a><input checked class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="otx.html">otx</a><input checked class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l3 current active has-children"><a class="reference internal" href="otx.algo.html">otx.algo</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="otx.algo.html">otx.algo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.algo.accelerators.html">otx.algo.accelerators</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.algo.strategies.html">otx.algo.strategies</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.algo.anomaly.html">otx.algo.anomaly</a></li>
-<li class="toctree-l4 current active has-children"><a class="reference internal" href="otx.algo.callbacks.html">otx.algo.callbacks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.callbacks.html">otx.algo.callbacks</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_early_stopping.html">otx.algo.callbacks.adaptive_early_stopping</a></li>
-<li class="toctree-l5 current active"><a class="current reference internal" href="#">otx.algo.callbacks.adaptive_train_scheduling</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.adaptive_train_scheduling.html">otx.algo.callbacks.adaptive_train_scheduling</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.gpu_mem_monitor.html">otx.algo.callbacks.gpu_mem_monitor</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.callbacks.iteration_timer.html">otx.algo.callbacks.iteration_timer</a></li>
 </ul>
@@ -418,7 +418,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="otx.data.html">otx.data</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">otx.data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.engine.html">otx.engine</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.recipe.html">otx.recipe</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-26"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -468,45 +468,73 @@
             
             <article class="bd-article" role="main">
               
-  <section id="module-otx.algo.callbacks.adaptive_train_scheduling">
-<span id="otx-algo-callbacks-adaptive-train-scheduling"></span><h1>otx.algo.callbacks.adaptive_train_scheduling<a class="headerlink" href="#module-otx.algo.callbacks.adaptive_train_scheduling" title="Link to this heading">#</a></h1>
-<p>Callback to reschedule the validation interval adaptively.</p>
+  <section id="module-otx.data">
+<span id="otx-data"></span><h1>otx.data<a class="headerlink" href="#module-otx.data" title="Link to this heading">#</a></h1>
+<p>Dataclasses and utils for data.</p>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling" title="otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveTrainScheduling</span></code></a>([max_interval, ...])</p></td>
-<td><p>Adaptive Training Scheduling Hook.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.TorchDataBatch" title="otx.data.TorchDataBatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchDataBatch</span></code></a>(batch_size, images, labels[, ...])</p></td>
+<td><p>Torch data item batch implementation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.TorchDataItem" title="otx.data.TorchDataItem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchDataItem</span></code></a>(image[, label, masks, bboxes, ...])</p></td>
+<td><p>Torch data item implementation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.TorchPredBatch" title="otx.data.TorchPredBatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchPredBatch</span></code></a>(batch_size, images, labels[, ...])</p></td>
+<td><p>Torch prediction data item batch implementation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.TorchPredItem" title="otx.data.TorchPredItem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchPredItem</span></code></a>(image, label[, scores, ...])</p></td>
+<td><p>Torch prediction data item implementation.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
-<dt class="sig sig-object py" id="otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.callbacks.adaptive_train_scheduling.</span></span><span class="sig-name descname"><span class="pre">AdaptiveTrainScheduling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_earlystop_patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_lrschedule_patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/callbacks/adaptive_train_scheduling.html#AdaptiveTrainScheduling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></p>
-<p>Adaptive Training Scheduling Hook.</p>
-<p>Depending on the size of iteration per epoch, adaptively update the validation interval and related values.</p>
+<dt class="sig sig-object py" id="otx.data.TorchDataBatch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">TorchDataBatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Mask</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bboxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">BoundingBoxes</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">ImageInfo</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/torch.html#TorchDataBatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.TorchDataBatch" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValidateBatchMixin</span></code></p>
+<p>Torch data item batch implementation.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.TorchDataItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">TorchDataItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mask</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bboxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BoundingBoxes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ImageInfo</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/torch.html#TorchDataItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.TorchDataItem" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValidateItemMixin</span></code>, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a></p>
+<p>Torch data item implementation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.TorchDataItem.collate_fn">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#otx.data.TorchDataItem" title="otx.data.torch.TorchDataItem"><span class="pre">TorchDataItem</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#otx.data.TorchDataBatch" title="otx.data.torch.TorchDataBatch"><span class="pre">TorchDataBatch</span></a></span></span><a class="reference internal" href="../../../_modules/otx/data/torch.html#TorchDataItem.collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.TorchDataItem.collate_fn" title="Link to this definition">#</a></dt>
+<dd><p>Collate TorchDataItems into a batch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>max_interval</strong> – Maximum value of validation interval.
-Defaults to 5.</p></li>
-<li><p><strong>decay</strong> – Parameter to control the interval. This value is set by manual manner.
-Defaults to -0.025.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>items</strong> – List of TorchDataItems to batch</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Batched TorchDataItems with stacked tensors</p>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling.on_train_end">
-<span class="sig-name descname"><span class="pre">on_train_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trainer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Trainer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pl_module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LightningModule</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/algo/callbacks/adaptive_train_scheduling.html#AdaptiveTrainScheduling.on_train_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling.on_train_end" title="Link to this definition">#</a></dt>
-<dd><p>Execute this function at terminating the train stage.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling.on_train_start">
-<span class="sig-name descname"><span class="pre">on_train_start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trainer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Trainer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pl_module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LightningModule</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/algo/callbacks/adaptive_train_scheduling.html#AdaptiveTrainScheduling.on_train_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling.on_train_start" title="Link to this definition">#</a></dt>
-<dd><p>Execute this function at starting the train stage.</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.TorchPredBatch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">TorchPredBatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saliency_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bboxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imgs_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">ImageInfo</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/torch.html#TorchPredBatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.TorchPredBatch" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValidateBatchMixin</span></code></p>
+<p>Torch prediction data item batch implementation.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="otx.data.TorchPredBatch.has_xai_outputs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_xai_outputs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><a class="headerlink" href="#otx.data.TorchPredBatch.has_xai_outputs" title="Link to this definition">#</a></dt>
+<dd><p>Check if the batch has XAI outputs.</p>
+<p>Necessary for compatibility with tests.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.TorchPredItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">TorchPredItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saliency_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/torch.html#TorchPredItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.TorchPredItem" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValidateItemMixin</span></code></p>
+<p>Torch prediction data item implementation.</p>
 </dd></dl>
 
 </section>
@@ -519,17 +547,17 @@ Defaults to -0.025.</p></li>
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="otx.algo.callbacks.adaptive_early_stopping.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="otx.core.utils.utils.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">otx.algo.callbacks.adaptive_early_stopping</p>
+          <p class="prev-next-title">otx.core.utils.utils</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="otx.algo.callbacks.gpu_mem_monitor.html" title="next page">
+  <a class='right-next' id="next-link" href="otx.engine.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">otx.algo.callbacks.gpu_mem_monitor</p>
+      <p class="prev-next-title">otx.engine</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -550,33 +578,62 @@ Defaults to -0.025.</p></li>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling">
+  <a class="reference internal nav-link" href="#otx.data.TorchDataBatch">
    <code class="docutils literal notranslate">
     <span class="pre">
-     AdaptiveTrainScheduling
+     TorchDataBatch
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.TorchDataItem">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     TorchDataItem
     </span>
    </code>
   </a>
   <ul class="visible nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling.on_train_end">
+    <a class="reference internal nav-link" href="#otx.data.TorchDataItem.collate_fn">
      <code class="docutils literal notranslate">
       <span class="pre">
-       AdaptiveTrainScheduling.on_train_end()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling.on_train_start">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       AdaptiveTrainScheduling.on_train_start()
+       TorchDataItem.collate_fn()
       </span>
      </code>
     </a>
    </li>
   </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.TorchPredBatch">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     TorchPredBatch
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.TorchPredBatch.has_xai_outputs">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       TorchPredBatch.has_xai_outputs
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.TorchPredItem">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     TorchPredItem
+    </span>
+   </code>
+  </a>
  </li>
 </ul>
 
@@ -592,7 +649,7 @@ Defaults to -0.025.</p></li>
   
 
 <div class="tocsection editthispage">
-    <a href="https://github.com/openvinotoolkit/training_extensions/edit/master/docs/source/guide/reference/_autosummary/otx.algo.callbacks.adaptive_train_scheduling.rst">
+    <a href="https://github.com/openvinotoolkit/training_extensions/edit/master/docs/source/guide/reference/_autosummary/otx.data.rst">
         <i class="fa-solid fa-pencil"></i> Edit this page
     </a>
 </div>
@@ -602,7 +659,7 @@ Defaults to -0.025.</p></li>
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="../../../_sources/guide/reference/_autosummary/otx.algo.callbacks.adaptive_train_scheduling.rst.txt">
+    <a href="../../../_sources/guide/reference/_autosummary/otx.data.rst.txt">
         <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
 </div>
