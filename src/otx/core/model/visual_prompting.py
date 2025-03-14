@@ -8,27 +8,22 @@
 from __future__ import annotations
 
 import logging as log
-import pickle  # nosec: B403   used pickle dump and load only to share inference results
 from abc import abstractmethod
-from collections import defaultdict
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import torch
-from datumaro import Polygon as dmPolygon
 from model_api.models import Model
 from model_api.models.visual_prompting import (
     Prompt,
-    SAMLearnableVisualPrompter,
     SAMVisualPrompter,
-    VisualPromptingFeatures,
 )
 from torch import Tensor, nn
 from torchvision import tv_tensors
 
-from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity, Points
+from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.visual_prompting import (
     VisualPromptingBatchDataEntity,
     VisualPromptingBatchPredEntity,
@@ -45,11 +40,12 @@ from otx.core.utils.mask_util import polygon_to_bitmap
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from model_api.models.utils import PredictedMask, VisualPromptingResult
+    from model_api.models.utils import VisualPromptingResult
     from torchmetrics import MetricCollection
 
     from otx.core.data.module import OTXDataModule
     from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
 
 
 # ruff: noqa: F401
@@ -144,12 +140,26 @@ def _inference_step(
 
 
 class OTXVisualPromptingModel(OTXModel):
-    """Base class for the visual prompting models used in OTX."""
+    """Visual prompting model used in OTX.
+
+    Args:
+    label_info (LabelInfoTypes): Information about the hierarchical labels.
+    Defaults to NullLabelInfo.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer.
+    Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+    """
 
     def __init__(
         self,
-        label_info: LabelInfoTypes = NullLabelInfo(),  # TODO (sungchul): update label_info for multi-label support
-        input_size: tuple[int, int] = (1024, 1024),
+        data_input_params: DataInputParams,
+        label_info: LabelInfoTypes = NullLabelInfo(),
+        model_name: str = "visual_prompting_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = VisualPromptingMetricCallable,
@@ -158,21 +168,14 @@ class OTXVisualPromptingModel(OTXModel):
         msg = f"Given label_info={label_info} has no effect."
         log.debug(msg)
         super().__init__(
-            label_info=NullLabelInfo(),  # TODO (sungchul): update label_info for multi-label support
-            input_size=input_size,
+            label_info=NullLabelInfo(),
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
-        self.input_size: tuple[int, int]
-
-    @abstractmethod
-    def _build_model(self) -> nn.Module:
-        raise NotImplementedError
-
-    def _create_model(self) -> nn.Module:
-        return self._build_model()
 
     def _customize_inputs(self, inputs: VisualPromptingBatchDataEntity) -> dict[str, Any]:  # type: ignore[override]
         """Customize the inputs for the model."""
@@ -231,9 +234,7 @@ class OTXVisualPromptingModel(OTXModel):
         """Creates OTXModelExporter object that can export the model."""
         return OTXVisualPromptingModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=(123.675, 116.28, 103.53),
-            std=(58.395, 57.12, 57.375),
+            data_input_params=self.data_input_params,
             resize_mode="fit_to_window",
             via_onnx=True,
         )
@@ -308,7 +309,7 @@ class OTXVisualPromptingModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> VisualPromptingBatchDataEntity:
         """Returns a dummy input for VPT model."""
-        images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
+        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         labels = [{"points": torch.LongTensor([0] * batch_size)}] * batch_size
         prompts = [torch.zeros((1, 2))] * batch_size
         return VisualPromptingBatchDataEntity(
@@ -365,7 +366,7 @@ class OVVisualPromptingModel(
             metric=metric,
         )
 
-    def _create_model(self) -> SAMVisualPrompter:
+    def _create_model(self, num_classes: int | None = None) -> SAMVisualPrompter:
         """Create a OV model with help of Model API."""
         from model_api.adapters import OpenvinoAdapter, create_core
 

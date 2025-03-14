@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from otx.core.exporter.visual_prompting import OTXVisualPromptingModelExporter
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import OTXExportFormatType
 
 
@@ -15,7 +16,7 @@ class TestOTXVisualPromptingModelExporter:
     def otx_visual_prompting_model_exporter(self) -> OTXVisualPromptingModelExporter:
         return OTXVisualPromptingModelExporter(
             task_level_export_parameters=MagicMock(),
-            input_size=(10, 10),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             via_onnx=True,
         )
 

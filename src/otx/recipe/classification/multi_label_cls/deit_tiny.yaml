@@ -1,8 +1,8 @@
 model:
-  class_path: otx.algo.classification.vit.VisionTransformerForMultilabelCls
+  class_path: otx.algo.classification.multilabel_models.vit.VisionTransformerMultilabelCls
   init_args:
     label_info: 1000
-    arch: "vit-tiny"
+    model_name: "vit-tiny"
 
     optimizer:
       class_path: torch.optim.AdamW

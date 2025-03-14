@@ -9,9 +9,9 @@ import openvino as ov
 import pytest
 from pytest_mock import MockerFixture
 
-from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
-from otx.algo.classification.torchvision_model import TVModelForMulticlassCls
-from otx.core.model.base import OTXModel, OVModel
+from otx.algo.classification.multiclass_models import EfficientNetMulticlassCls
+from otx.algo.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import NullLabelInfo
 from otx.core.types.precision import OTXPrecisionType
@@ -43,7 +43,7 @@ class TestEngine:
         engine = Engine(work_dir=tmp_path, data_root=data_root)
         assert engine.task == "MULTI_CLASS_CLS"
         assert engine.datamodule.task == "MULTI_CLASS_CLS"
-        assert isinstance(engine.model, EfficientNetForMulticlassCls)
+        assert isinstance(engine.model, EfficientNetMulticlassCls)
 
         assert "default_root_dir" in engine.trainer_params
         assert engine.trainer_params["default_root_dir"] == tmp_path
@@ -58,11 +58,11 @@ class TestEngine:
 
     @pytest.fixture()
     def mock_datamodule(self, mocker):
-        input_size = (1234, 1234)
-        label_info = 4321
         mock_datamodule = MagicMock()
-        mock_datamodule.label_info = label_info
-        mock_datamodule.input_size = input_size
+        mock_datamodule.label_info = 4321
+        mock_datamodule.input_size = (1234, 1234)
+        mock_datamodule.input_mean = (0.0, 0.0, 0.0)
+        mock_datamodule.input_std = (1.0, 1.0, 1.0)
 
         return mocker.patch(
             "otx.engine.utils.auto_configurator.AutoConfigurator.get_datamodule",
@@ -73,21 +73,13 @@ class TestEngine:
         data_root = "tests/assets/classification_dataset"
         engine = Engine(work_dir=tmp_path, data_root=data_root)
 
-        assert engine._model.input_size == (1234, 1234)
-        assert engine._model.label_info.num_classes == 4321
-
-    def test_model_init_datamodule_ipt_size_int(self, tmp_path, mock_datamodule):
-        mock_datamodule.input_size = 1234
-        data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root)
-
-        assert engine._model.input_size == (1234, 1234)
+        assert engine._model.data_input_params == DataInputParams((1234, 1234), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
         assert engine._model.label_info.num_classes == 4321
 
     def test_model_setter(self, fxt_engine, mocker) -> None:
-        assert isinstance(fxt_engine.model, TVModelForMulticlassCls)
+        assert isinstance(fxt_engine.model, TVModelMulticlassCls)
         fxt_engine.model = "efficientnet_b0"
-        assert isinstance(fxt_engine.model, EfficientNetForMulticlassCls)
+        assert isinstance(fxt_engine.model, EfficientNetMulticlassCls)
 
     def test_training_with_override_args(self, fxt_engine, mocker) -> None:
         mocker.patch("pathlib.Path.symlink_to")
@@ -215,7 +207,11 @@ class TestEngine:
         checkpoint = "path/to/checkpoint.ckpt"
         fxt_engine.checkpoint = checkpoint
         fxt_engine.export()
-        mock_load_from_checkpoint.assert_called_once_with(checkpoint_path=checkpoint, map_location="cpu")
+        mock_load_from_checkpoint.assert_called_once_with(
+            checkpoint_path=checkpoint,
+            map_location="cpu",
+            model_name="mobilenet_v3_small",
+        )
         mock_export.assert_called_once_with(
             output_dir=Path(fxt_engine.work_dir),
             base_name="exported_model",

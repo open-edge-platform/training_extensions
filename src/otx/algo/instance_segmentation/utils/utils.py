@@ -11,7 +11,7 @@ import torch
 from torch import Tensor
 
 from otx.algo.common.utils.utils import sample_point
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 
 

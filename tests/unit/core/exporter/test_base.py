@@ -8,6 +8,7 @@ from onnx import ModelProto
 from onnxconverter_common import float16
 
 from otx.core.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType, ZipFile
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 
 
@@ -30,9 +31,7 @@ def exporter(mocker):
     mocker.patch("otx.core.exporter.base.json")
     return MockModelExporter(
         task_level_export_parameters=MagicMock(TaskLevelExportParameters),
-        input_size=(224, 224),
-        mean=(0.485, 0.456, 0.406),
-        std=(0.229, 0.224, 0.225),
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     )
 
 

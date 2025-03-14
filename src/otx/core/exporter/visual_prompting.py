@@ -146,7 +146,6 @@ class OTXVisualPromptingModelExporter(OTXNativeModelExporter):
             Path: The path to the saved ONNX model.
         """
         save_path = str(output_dir / (base_model_name + ".onnx"))
-
         torch.onnx.export(
             model=model,
             f=save_path,
@@ -174,7 +173,7 @@ class OTXVisualPromptingModelExporter(OTXNativeModelExporter):
     ) -> dict[str, Any]:
         """Get onnx dummy inputs."""
         if base_model_name == "exported_model_image_encoder":
-            dummy_inputs = {"images": torch.randn(self.input_size, dtype=torch.float32)}
+            dummy_inputs = {"images": torch.randn(self.data_input_params.as_ncwh(), dtype=torch.float32)}
             output_names = ["image_embeddings"]
             dynamic_axes = None
         else:
@@ -185,7 +184,12 @@ class OTXVisualPromptingModelExporter(OTXNativeModelExporter):
                     *model.prompt_encoder.image_embedding_size,
                     dtype=torch.float32,
                 ),
-                "point_coords": torch.randint(low=0, high=self.input_size[0], size=(1, 2, 2), dtype=torch.float32),
+                "point_coords": torch.randint(
+                    low=0,
+                    high=self.data_input_params.as_ncwh()[0],
+                    size=(1, 2, 2),
+                    dtype=torch.float32,
+                ),
                 "point_labels": torch.randint(low=0, high=4, size=(1, 2), dtype=torch.float32),
                 "mask_input": torch.randn(
                     1,

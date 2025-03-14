@@ -6,12 +6,11 @@ import torch
 
 from otx.algo.classification.classifier import ImageClassifier
 from otx.algo.classification.heads import LinearClsHead
-from otx.algo.classification.torchvision_model import (
-    TVModelForHLabelCls,
-    TVModelForMulticlassCls,
-    TVModelForMultilabelCls,
-)
+from otx.algo.classification.hlabel_models.torchvision_model import TVModelHLabelCls
+from otx.algo.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
+from otx.algo.classification.multilabel_models.torchvision_model import TVModelMultilabelCls
 from otx.core.data.entity.base import OTXBatchLossEntity
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.task import OTXTaskType
 from otx.data.torch import TorchPredBatch
@@ -19,7 +18,11 @@ from otx.data.torch import TorchPredBatch
 
 @pytest.fixture()
 def fxt_tv_model():
-    return TVModelForMulticlassCls(backbone="mobilenet_v3_small", label_info=10)
+    return TVModelMulticlassCls(
+        model_name="mobilenet_v3_small",
+        label_info=10,
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+    )
 
 
 @pytest.fixture()
@@ -31,19 +34,22 @@ def fxt_tv_model_and_data_entity(
     fxt_hlabel_multilabel_info,
 ):
     if request.param == OTXTaskType.MULTI_CLASS_CLS:
-        return TVModelForMulticlassCls(
-            backbone="mobilenet_v3_small",
+        return TVModelMulticlassCls(
+            model_name="mobilenet_v3_small",
             label_info=10,
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         ), fxt_multiclass_cls_batch_data_entity
     if request.param == OTXTaskType.MULTI_LABEL_CLS:
-        return TVModelForMultilabelCls(
-            backbone="mobilenet_v3_small",
+        return TVModelMultilabelCls(
+            model_name="mobilenet_v3_small",
             label_info=10,
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         ), fxt_multilabel_cls_batch_data_entity
     if request.param == OTXTaskType.H_LABEL_CLS:
-        return TVModelForHLabelCls(
-            backbone="mobilenet_v3_small",
+        return TVModelHLabelCls(
+            model_name="mobilenet_v3_small",
             label_info=fxt_hlabel_multilabel_info,
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         ), fxt_hlabel_cls_batch_data_entity
     return None
 
@@ -52,9 +58,10 @@ class TestOTXTVModel:
     def test_create_model(self, fxt_tv_model):
         assert isinstance(fxt_tv_model.model, ImageClassifier)
 
-        model = TVModelForMulticlassCls(
-            backbone="mobilenet_v3_small",
+        model = TVModelMulticlassCls(
+            model_name="mobilenet_v3_small",
             label_info=10,
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         assert isinstance(model.model.head, LinearClsHead)
 

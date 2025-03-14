@@ -23,7 +23,7 @@ from lightning.pytorch.plugins.precision import MixedPrecision
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.types import PathLike
 from otx.core.types.device import DeviceType
 from otx.core.types.export import OTXExportFormatType
@@ -143,8 +143,13 @@ class Engine:
         get_model_args: dict[str, Any] = {}
         if self._datamodule is not None:
             get_model_args["label_info"] = self._datamodule.label_info
-            if (input_size := self._datamodule.input_size) is not None:
-                get_model_args["input_size"] = (input_size, input_size) if isinstance(input_size, int) else input_size
+            input_size = self._datamodule.input_size
+            get_model_args["data_input_params"] = DataInputParams(
+                input_size=input_size,
+                mean=self._datamodule.input_mean,
+                std=self._datamodule.input_std,
+            )
+
         self._model: OTXModel = (
             model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
         )

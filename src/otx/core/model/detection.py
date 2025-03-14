@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging as log
 import types
-from abc import abstractmethod
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 
@@ -17,7 +16,8 @@ from model_api.tilers import DetectionTiler
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 
-from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
+from otx.algo.explain.explain_algo import feature_vector_fn
+from otx.algo.utils.utils import InstanceData
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -25,7 +25,7 @@ from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
@@ -35,19 +35,50 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
-    from torch import nn
 
     from otx.algo.detection.detectors import SingleStageDetector
 
 
 class OTXDetectionModel(OTXModel):
-    """Base class for the detection models used in OTX."""
+    """Base class for the detection models used in OTX.
 
-    input_size: tuple[int, int]
+    Args:
+    label_info (LabelInfoTypes): Information about the labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "otx_detection_model".
+    optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
+    Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Metric callable. Defaults to MeanAveragePrecisionFMeasureCallable.
+    torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+    tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    explain_mode (bool, optional): Whether to enable explain mode. Defaults to False.
+    """
 
-    def __init__(self, model_name: str, *args, **kwargs) -> None:
-        self.model_name = model_name
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: str = "otx_detection_model",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ) -> None:
+        super().__init__(
+            label_info=label_info,
+            model_name=model_name,
+            data_input_params=data_input_params,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
+
+        self.model.feature_vector_fn = feature_vector_fn
+        self.model.explain_fn = self.get_explain_fn()
 
     def test_step(self, batch: DetBatchDataEntity, batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
@@ -105,19 +136,6 @@ class OTXDetectionModel(OTXModel):
         outputs.bboxes = bboxes
         outputs.labels = labels
         return outputs
-
-    @abstractmethod
-    def _build_model(self, num_classes: int) -> nn.Module:
-        raise NotImplementedError
-
-    def _create_model(self) -> nn.Module:
-        detector = self._build_model(num_classes=self.label_info.num_classes)
-        if hasattr(detector, "init_weights"):
-            detector.init_weights()
-        self.classification_layers = self.get_classification_layers(prefix="model.")
-        if self.load_from is not None:
-            load_checkpoint(detector, self.load_from, map_location="cpu")
-        return detector
 
     def _customize_inputs(
         self,
@@ -215,21 +233,6 @@ class OTXDetectionModel(OTXModel):
             bboxes=bboxes,
             labels=labels,
         )
-
-    def get_classification_layers(self, prefix: str = "model.") -> dict[str, dict[str, int]]:
-        """Get final classification layer information for incremental learning case."""
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-
-        classification_layers = {}
-        for key in sample_model_dict:
-            if sample_model_dict[key].shape != incremental_model_dict[key].shape:
-                sample_model_dim = sample_model_dict[key].shape[0]
-                incremental_model_dim = incremental_model_dict[key].shape[0]
-                stride = incremental_model_dim - sample_model_dim
-                num_extra_classes = 6 * sample_model_dim - 5 * incremental_model_dim
-                classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
-        return classification_layers
 
     def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> DetBatchPredEntity:
         """Unpack detection tiles.
@@ -374,11 +377,7 @@ class OTXDetectionModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> DetBatchDataEntity:
         """Returns a dummy input for detection model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
-        images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
+        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         infos = []
         for i, img in enumerate(images):
             infos.append(
@@ -389,36 +388,6 @@ class OTXDetectionModel(OTXModel):
                 ),
             )
         return DetBatchDataEntity(batch_size, images, infos, bboxes=[], labels=[])
-
-
-class ExplainableOTXDetModel(OTXDetectionModel):
-    """OTX detection model which can attach a XAI (Explainable AI) branch."""
-
-    def __init__(
-        self,
-        model_name: str,
-        label_info: LabelInfoTypes,
-        input_size: tuple[int, int],
-        optimizer: OptimizerCallable = DefaultOptimizerCallable,
-        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
-        metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
-        torch_compile: bool = False,
-        tile_config: TileConfig = TileConfig(enable_tiler=False),
-    ) -> None:
-        from otx.algo.explain.explain_algo import feature_vector_fn
-
-        super().__init__(
-            model_name=model_name,
-            label_info=label_info,
-            input_size=input_size,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            metric=metric,
-            torch_compile=torch_compile,
-            tile_config=tile_config,
-        )
-        self.model.feature_vector_fn = feature_vector_fn
-        self.model.explain_fn = self.get_explain_fn()
 
     def forward_explain(self, inputs: DetBatchDataEntity) -> DetBatchPredEntity:
         """Model forward function."""
@@ -433,12 +402,12 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         # If customize_inputs is overridden
         outputs = (
             self._forward_explain_detection(self.model, **self._customize_inputs(inputs))
-            if self._customize_inputs != ExplainableOTXDetModel._customize_inputs
+            if self._customize_inputs != OTXDetectionModel._customize_inputs
             else self._forward_explain_detection(self.model, inputs)
         )
         return (
             self._customize_outputs(outputs, inputs)
-            if self._customize_outputs != ExplainableOTXDetModel._customize_outputs
+            if self._customize_outputs != OTXDetectionModel._customize_outputs
             else outputs["predictions"]
         )
 
@@ -448,7 +417,7 @@ class ExplainableOTXDetModel(OTXDetectionModel):
         entity: DetBatchDataEntity,
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor]:
-        """Forward func of the BaseDetector instance, which located in is in ExplainableOTXDetModel().model."""
+        """Forward func of the BaseDetector instance, which located in is in OTXDetectionModel().model."""
         backbone_feat = self.extract_feat(entity.images)
         bbox_head_feat = self.bbox_head.forward(backbone_feat)
 

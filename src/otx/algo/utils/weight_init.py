@@ -549,7 +549,7 @@ class PretrainedInit:
         Args:
             module (nn.Module): The module to initialize.
         """
-        from otx.algo.utils.mmengine_utils import load_checkpoint_to_model, load_from_http, load_state_dict
+        from otx.algo.utils.utils import load_checkpoint_to_model, load_from_http, load_state_dict
 
         if self.prefix is None:
             if Path(self.checkpoint).exists():

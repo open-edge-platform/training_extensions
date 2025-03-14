@@ -183,33 +183,24 @@ _MIN_DETECTION_INPUT_SIZE = 256  # Minimum input size for object detection
 def adapt_input_size_to_dataset(
     dataset: Dataset,
     task: OTXTaskType = OTXTaskType.DETECTION,
-    base_input_size: int | tuple[int, int] | None = None,
-    downscale_only: bool = True,
     input_size_multiplier: int | None = None,
-) -> tuple[int, int] | None:
+) -> tuple[int, int]:
     """Compute appropriate model input size w.r.t. dataset statistics.
 
     Args:
         dataset (Dataset): Datumaro dataset including all subsets.
         task (OTXTaskType, optional): Task type of the model. Defaults to OTXTaskType.DETECTION.
-        base_input_size (int | tuple[int, int] | None, optional): Base input size of the model. Defaults to None.
         downscale_only (bool, optional) : Whether to allow only smaller size than default setting. Defaults to True.
         input_size_multiplier (int | None, optional):
             Multiplier for input size. If it's set, return the input size which can be divisible by the value.
             Defaults to None.
 
     Returns:
-        tuple[int, int] | None: Recommended input size based on dataset statistics.
+        tuple[int, int]: Recommended input size based on dataset statistics.
     """
-    if downscale_only and base_input_size is None:
-        msg = "If downscale_only is set to True, base_input_size should be set but got None."
-        raise ValueError(msg)
-
-    if isinstance(base_input_size, int):
-        base_input_size = (base_input_size, base_input_size)
-
     if (train_dataset := dataset.subsets().get("train")) is None:
-        return None
+        msg = "Dataset does not have 'train' subset. Cannot compute dataset statistics."
+        raise ValueError(msg)
 
     logger.info("Adapting model input size based on dataset stat")
     stat = compute_robust_dataset_statistics(train_dataset, task)
@@ -218,11 +209,6 @@ def adapt_input_size_to_dataset(
         stat["image"].get("width", {}).get("robust_max", 0),
     ]
     min_object_size = None
-
-    logger.info(f"-> Current base input size: {base_input_size}")
-
-    if max_image_size[0] <= 0 or max_image_size[1] <= 0:
-        return base_input_size
 
     image_size = max_image_size
     logger.info(f"-> Based on typical large image size: {image_size}")
@@ -248,15 +234,6 @@ def adapt_input_size_to_dataset(
         for i, val in enumerate(image_size):
             if val % input_size_multiplier != 0:
                 image_size[i] = (val // input_size_multiplier + 1) * input_size_multiplier
-
-    if downscale_only:
-
-        def area(x: list[int] | tuple[int, int]) -> int:
-            return x[0] * x[1]
-
-        if base_input_size and area(image_size) >= area(base_input_size):
-            logger.info(f"-> Downscale only: {image_size} -> {base_input_size}")
-            return base_input_size
 
     image_size = tuple(int(val) for val in image_size)  # type: ignore[assignment]
 

@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4243>)
 - Bump ModelAPI to 0.2.5.2
   (<https://github.com/openvinotoolkit/training_extensions/pull/4275>)
+- Refactor OTX Models: Introduce DataInputParams. Align all models with the same interface.
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4241>)
 
 ### Bug fixes
 

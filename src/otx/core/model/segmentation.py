@@ -11,7 +11,7 @@ import copy
 import json
 import logging as log
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 import torch
 import torch.nn.functional as f
@@ -38,51 +38,45 @@ if TYPE_CHECKING:
     from torch import Tensor
 
     from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
 
 
 class OTXSegmentationModel(OTXModel):
-    """Base class for the semantic segmentation models used in OTX."""
+    """Semantic Segmentation model used in OTX.
 
-    mean: ClassVar[tuple[float, float, float]] = (123.675, 116.28, 103.53)
-    scale: ClassVar[tuple[float, float, float]] = (58.395, 57.12, 57.375)
+    Args:
+        label_info (LabelInfoTypes): Information about the hierarchical labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to SegmCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    """
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        model_name: str,
-        input_size: tuple[int, int] = (512, 512),
+        data_input_params: DataInputParams,
+        model_name: str = "otx_segmentation_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ):
-        """Base semantic segmentation model.
-
-        Args:
-            label_info (LabelInfoTypes): The label information for the segmentation model.
-            model_name (str): The version/name/size of the model.
-            input_size (tuple[int, int]): Model input size in the order of height and width.
-            optimizer (OptimizerCallable, optional): The optimizer to use for training.
-                Defaults to DefaultOptimizerCallable.
-            scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional):
-                The scheduler to use for learning rate adjustment. Defaults to DefaultSchedulerCallable.
-            metric (MetricCallable, optional): The metric to use for evaluation.
-                Defaults to SegmCallable.
-            torch_compile (bool, optional): Whether to compile the model using TorchScript.
-                Defaults to False.
-        """
-        self.model_name = model_name
         super().__init__(
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
             tile_config=tile_config,
         )
-        self.input_size: tuple[int, int]
 
     def _customize_inputs(self, entity: SegBatchDataEntity) -> dict[str, Any]:
         if self.training:
@@ -151,15 +145,9 @@ class OTXSegmentationModel(OTXModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Image size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.scale,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             pad_value=0,
             swap_rgb=False,
@@ -283,11 +271,7 @@ class OTXSegmentationModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> SegBatchDataEntity:
         """Returns a dummy input for semantic segmentation model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
-        images = torch.rand(batch_size, 3, *self.input_size)
+        images = torch.rand(self.data_input_params.as_ncwh(batch_size))
         infos = []
         for i, img in enumerate(images):
             infos.append(

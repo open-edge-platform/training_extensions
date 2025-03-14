@@ -12,29 +12,50 @@ from otx.algo.detection.necks.yolox_pafpn import YOLOXPAFPNModule
 from otx.algo.detection.yolox import YOLOX
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.model.base import DataInputParams
 
 
 class TestYOLOX:
     def test_init(self) -> None:
-        otx_yolox_l = YOLOX(model_name="yolox_l", label_info=3)
+        otx_yolox_l = YOLOX(
+            model_name="yolox_l",
+            label_info=3,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         assert isinstance(otx_yolox_l.model.backbone, CSPDarknetModule)
         assert isinstance(otx_yolox_l.model.neck, YOLOXPAFPNModule)
         assert isinstance(otx_yolox_l.model.bbox_head, YOLOXHeadModule)
-        assert otx_yolox_l.input_size == (640, 640)
+        assert otx_yolox_l.data_input_params.input_size == (640, 640)
 
-        otx_yolox_tiny = YOLOX(model_name="yolox_tiny", label_info=3)
-        assert otx_yolox_tiny.input_size == (640, 640)
+        otx_yolox_tiny = YOLOX(
+            model_name="yolox_tiny",
+            label_info=3,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
+        assert otx_yolox_tiny.data_input_params.input_size == (640, 640)
 
-        otx_yolox_tiny = YOLOX(model_name="yolox_tiny", label_info=3, input_size=(416, 416))
-        assert otx_yolox_tiny.input_size == (416, 416)
+        otx_yolox_tiny = YOLOX(
+            model_name="yolox_tiny",
+            label_info=3,
+            data_input_params=DataInputParams((416, 416), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
+        assert otx_yolox_tiny.data_input_params.input_size == (416, 416)
 
     def test_exporter(self) -> None:
-        otx_yolox_l = YOLOX(model_name="yolox_l", label_info=3)
+        otx_yolox_l = YOLOX(
+            model_name="yolox_l",
+            label_info=3,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         otx_yolox_l_exporter = otx_yolox_l._exporter
         assert isinstance(otx_yolox_l_exporter, OTXNativeModelExporter)
         assert otx_yolox_l_exporter.swap_rgb is True
 
-        otx_yolox_tiny = YOLOX(model_name="yolox_tiny", label_info=3)
+        otx_yolox_tiny = YOLOX(
+            model_name="yolox_tiny",
+            label_info=3,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         otx_yolox_tiny_exporter = otx_yolox_tiny._exporter
         assert isinstance(otx_yolox_tiny_exporter, OTXNativeModelExporter)
         assert otx_yolox_tiny_exporter.swap_rgb is False
@@ -42,10 +63,26 @@ class TestYOLOX:
     @pytest.mark.parametrize(
         "model",
         [
-            YOLOX(model_name="yolox_tiny", label_info=3),
-            YOLOX(model_name="yolox_s", label_info=3),
-            YOLOX(model_name="yolox_l", label_info=3),
-            YOLOX(model_name="yolox_x", label_info=3),
+            YOLOX(
+                model_name="yolox_tiny",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_s",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_l",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_x",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_loss(self, model, fxt_data_module):
@@ -59,10 +96,26 @@ class TestYOLOX:
     @pytest.mark.parametrize(
         "model",
         [
-            YOLOX(model_name="yolox_tiny", label_info=3),
-            YOLOX(model_name="yolox_s", label_info=3),
-            YOLOX(model_name="yolox_l", label_info=3),
-            YOLOX(model_name="yolox_x", label_info=3),
+            YOLOX(
+                model_name="yolox_tiny",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_s",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_l",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_x",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_predict(self, model, fxt_data_module):
@@ -75,10 +128,26 @@ class TestYOLOX:
     @pytest.mark.parametrize(
         "model",
         [
-            YOLOX(model_name="yolox_tiny", label_info=3),
-            YOLOX(model_name="yolox_s", label_info=3),
-            YOLOX(model_name="yolox_l", label_info=3),
-            YOLOX(model_name="yolox_x", label_info=3),
+            YOLOX(
+                model_name="yolox_tiny",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_s",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_l",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_x",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_export(self, model):
@@ -93,10 +162,26 @@ class TestYOLOX:
     @pytest.mark.parametrize(
         "model",
         [
-            YOLOX(model_name="yolox_tiny", label_info=3),
-            YOLOX(model_name="yolox_s", label_info=3),
-            YOLOX(model_name="yolox_l", label_info=3),
-            YOLOX(model_name="yolox_x", label_info=3),
+            YOLOX(
+                model_name="yolox_tiny",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_s",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_l",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            YOLOX(
+                model_name="yolox_x",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_compiled_model(self, model):
@@ -108,6 +193,6 @@ class TestYOLOX:
         model.model = torch.compile(model.model, backend=cnt)
 
         # Prepare inputs
-        x = torch.randn(1, 3, *model.input_size)
+        x = torch.randn(1, 3, *model.data_input_params.input_size)
         model.model(x)
         assert cnt.frame_count == 1
