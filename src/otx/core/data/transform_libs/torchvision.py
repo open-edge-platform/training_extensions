@@ -597,12 +597,12 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
     def _resize_keypoints(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize keypoints with scale_factor only for `Resize`."""
         if (keypoints := getattr(inputs, "keypoints", None)) is not None:
-            inputs.keypoints[:, :2] = rescale_keypoints(keypoints[:, :2], scale_factor)
+            inputs.keypoints[:, :2] = rescale_keypoints(keypoints[:, :2], scale_factor)  # type: ignore[union-attr]
         return inputs
 
     def _resize_masks(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize masks with scale_factor only for `Resize`."""
-        masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
+        masks = getattr(inputs, "masks", None)
         if masks is not None and len(masks) > 0:
             # bit mask
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
@@ -2839,41 +2839,21 @@ class DecordInit(tvt_v2.Transform):
         return f"{self.__class__.__name__}(num_threads={self.num_threads})"
 
 
-class TopdownAffine(tvt_v2.Transform):
-    """Sample frames from the video.
-
-    Required Keys:
-
-        - total_frames
-        - start_index
-
-    Added Keys:
-
-        - frame_inds
-        - frame_interval
-        - num_clips
+class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
+    """Get the bbox image as the model input by affine transform.
 
     Args:
-        clip_len (int): Frames of each sampled output clip.
-        frame_interval (int): Temporal interval of adjacent sampled frames.
-            Defaults to 1.
-        num_clips (int): Number of clips to be sampled. Default: 1.
-        temporal_jitter (bool): Whether to apply temporal jittering.
-            Defaults to False.
-        twice_sample (bool): Whether to use twice sample when testing.
-            If set to True, it will sample frames with and without fixed shift,
-            which is commonly used for testing in TSM model. Defaults to False.
-        out_of_bound_opt (str): The way to deal with out of bounds frame
-            indexes. Available options are 'loop', 'repeat_last'.
-            Defaults to 'loop'.
-        test_mode (bool): Store True when building test or validation dataset.
-            Defaults to False.
-        keep_tail_frames (bool): Whether to keep tail frames when sampling.
-            Defaults to False.
-        target_fps (optional, int): Convert input videos with arbitrary frame
-            rates to the unified target FPS before sampling frames. If
-            ``None``, the frame rate will not be adjusted. Defaults to
-            ``None``.
+        input_size (tuple[int, int]): The size of the model input.
+        affine_transforms_prob (float): The probability of applying affine
+            transforms. Defaults to 0.5.
+        is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
+        shift_factor (float): The factor of shift. Defaults to 0.16.
+        shift_prob (float): The probability of shift. Defaults to 0.3.
+        scale_factor (tuple[float, float]): The factor of scale. Defaults to (0.5, 1.5).
+        scale_prob (float): The probability of scale. Defaults to 1.0.
+        rotate_factor (float): The factor of rotate. Defaults to 80.0.
+        rotate_prob (float): The probability of rotate. Defaults to 0.5.
+        interpolation (str): The interpolation method. Defaults to "bilinear".
     """
 
     def __init__(
@@ -3059,7 +3039,6 @@ class TopdownAffine(tvt_v2.Transform):
         ori_img_shape = inputs.img_info.ori_shape
 
         if apply_transforms <= self.affine_transforms_prob:
-
             bbox_center = np.array(ori_img_shape) / 2.0
             bbox_scale = np.array(ori_img_shape)
 

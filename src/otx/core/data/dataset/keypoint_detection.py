@@ -6,14 +6,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from functools import partial
 from typing import Callable, List, Union
 
 import numpy as np
 import torch
 from datumaro import AnnotationType, Bbox, Dataset, DatasetSubset, Image, Points
-from torchvision.transforms.v2.functional import to_dtype, to_image
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase

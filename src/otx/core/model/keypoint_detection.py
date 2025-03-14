@@ -96,7 +96,6 @@ class OTXKeypointDetectionModel(OTXModel):
             keypoints.append(visible_keypoints)
             scores.append(score)
 
-
         return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,

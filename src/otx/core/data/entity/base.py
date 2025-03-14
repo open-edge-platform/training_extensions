@@ -353,6 +353,7 @@ class VideoInfo(tv_tensors.TVTensor):
             f"frame_inds={self.frame_inds})"
         )
 
+
 @F.register_kernel(functional=F.resize, tv_tensor_cls=ImageInfo)
 def _resize_image_info(image_info: ImageInfo, size: list[int], **kwargs) -> ImageInfo:  # noqa: ARG001
     """Register ImageInfo to TorchVision v2 resize kernel."""

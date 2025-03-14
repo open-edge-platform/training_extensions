@@ -56,7 +56,6 @@ class OTXDataModule(LightningDataModule):
         Defaults to None.
         image_color_channel (ImageColorChannel, optional): Color channel configuration for images.
         Defaults to ImageColorChannel.RGB.
-        stack_images (bool, optional): Whether to stack images. Defaults to True.
         include_polygons (bool, optional): Whether to include polygons in the data. Defaults to False.
         ignore_index (int, optional): Index to ignore in segmentation tasks. Defaults to 255.
         unannotated_items_ratio (float, optional): Ratio of unannotated items to include. Defaults to 0.0.
@@ -81,7 +80,6 @@ class OTXDataModule(LightningDataModule):
         mem_cache_size: str = "1GB",
         mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
-        stack_images: bool = True,
         include_polygons: bool = False,
         ignore_index: int = 255,
         unannotated_items_ratio: float = 0.0,
@@ -107,7 +105,6 @@ class OTXDataModule(LightningDataModule):
         self.mem_cache_img_max_size = mem_cache_img_max_size
 
         self.image_color_channel = image_color_channel
-        self.stack_images = stack_images
         self.include_polygons = include_polygons
         self.ignore_index = ignore_index
         self.unannotated_items_ratio = unannotated_items_ratio
@@ -212,7 +209,6 @@ class OTXDataModule(LightningDataModule):
                 data_format=self.data_format,
                 mem_cache_img_max_size=mem_cache_img_max_size,
                 image_color_channel=image_color_channel,
-                stack_images=stack_images,
                 include_polygons=include_polygons,
                 ignore_index=ignore_index,
                 vpm_config=vpm_config,
@@ -358,7 +354,6 @@ class OTXDataModule(LightningDataModule):
                 self.mem_cache_size,
                 self.mem_cache_img_max_size,
                 self.image_color_channel,
-                self.stack_images,
                 self.include_polygons,
                 self.ignore_index,
                 self.unannotated_items_ratio,

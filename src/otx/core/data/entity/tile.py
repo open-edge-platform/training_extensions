@@ -15,6 +15,7 @@ from torchvision import tv_tensors
 
 from otx.core.data.entity.utils import stack_batch
 from otx.core.types.task import OTXTaskType
+from otx.data import TorchDataBatch, TorchDataItem
 
 from .base import ImageInfo, T_OTXBatchDataEntity, T_OTXDataEntity
 from .detection import DetBatchDataEntity, DetDataEntity

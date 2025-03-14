@@ -5,10 +5,10 @@
 
 from __future__ import annotations
 
-from functools import partial
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import cv2
+import torch
 import numpy as np
 from datumaro.components.annotation import Bbox, Ellipse, Image, Mask, Polygon, RotatedBbox
 from torchvision import tv_tensors
@@ -17,6 +17,7 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import SegLabelInfo
+from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
@@ -211,9 +212,9 @@ class OTXSegmentationDataset(OTXDataset):
         if roi_meta:
             extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
 
-        masks = tv_tensors.Mask(extracted_mask[None])
+        masks = tv_tensors.Mask(extracted_mask[None], dtype=torch.long)
         entity = TorchDataItem(
-            image=img_data,
+            image=to_dtype(to_image(img_data)),
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
@@ -223,5 +224,4 @@ class OTXSegmentationDataset(OTXDataset):
             ),
             masks=masks,
         )
-        transformed_entity = self._apply_transforms(entity)
-        return transformed_entity.wrap(masks=transformed_entity.masks[0]) if transformed_entity else None  # type: ignore[union-attr, index]
+        return self._apply_transforms(entity)

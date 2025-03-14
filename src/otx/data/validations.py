@@ -303,10 +303,6 @@ class ValidateBatchMixin:
         if not isinstance(masks_batch, list) or not isinstance(masks_batch[0], torch.Tensor):
             msg = f"Masks batch must be a list of torch tensors. Got {type(masks_batch)}"
             raise TypeError(msg)
-        # assumes homogeneous data so validation is done only for the first element
-        if masks_batch[0].dtype != torch.bool:
-            msg = "Masks batch must have dtype torch.bool"
-            raise ValueError(msg)
         if masks_batch[0].ndim != 3:
             msg = "Masks batch must have 3 dimensions"
             raise ValueError(msg)

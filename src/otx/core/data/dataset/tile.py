@@ -43,6 +43,7 @@ from otx.core.data.entity.tile import (
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 
@@ -54,7 +55,6 @@ if TYPE_CHECKING:
     from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
     from otx.core.data.dataset.segmentation import OTXSegmentationDataset
     from otx.core.data.entity.base import OTXDataEntity
-    from otx.data.torch import TorchDataItem
 
 # ruff: noqa: SLF001
 # NOTE: Disable private-member-access (SLF001).

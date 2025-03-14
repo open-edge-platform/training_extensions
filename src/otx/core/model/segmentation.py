@@ -86,7 +86,7 @@ class OTXSegmentationModel(OTXModel):
         else:
             mode = "predict"
 
-        masks = torch.stack(entity.masks).long() if mode == "loss" else None
+        masks = torch.vstack(entity.masks).long() if mode == "loss" else None
         return {"inputs": entity.images, "img_metas": entity.imgs_info, "masks": masks, "mode": mode}
 
     def _customize_outputs(
@@ -118,7 +118,7 @@ class OTXSegmentationModel(OTXModel):
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
-            masks=outputs,
+            masks=[output.unsqueeze(0) for output in outputs],
         )
 
     @property

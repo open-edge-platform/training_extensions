@@ -15,7 +15,7 @@ from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity
+from otx.core.data.entity.base import ImageInfo, OTXDataEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.transform_libs.torchvision import (
@@ -34,6 +34,7 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
+from otx.data import TorchDataItem
 
 
 class MockFrame:
@@ -48,24 +49,6 @@ class MockVideo:
 
     def close(self):
         return
-
-
-class TestDecodeVideo:
-    def test_train_case(self):
-        transform = DecodeVideo(test_mode=False)
-        video = MockVideo()
-        assert len(transform._transform(video, {})) == 8
-
-        transform = DecodeVideo(test_mode=False, out_of_bound_opt="repeat_last")
-        assert len(transform._transform(video, {})) == 8
-
-    def test_eval_case(self):
-        transform = DecodeVideo(test_mode=True)
-        video = MockVideo()
-        assert len(transform._transform(video, {})) == 8
-
-        transform = DecodeVideo(test_mode=True, out_of_bound_opt="repeat_last")
-        assert len(transform._transform(video, {})) == 8
 
 
 @pytest.fixture()
@@ -701,96 +684,6 @@ class TestRandomCrop:
         )
 
 
-class TestFilterAnnotations:
-    @pytest.fixture()
-    def iseg_entity(self) -> InstanceSegDataEntity:
-        masks = np.zeros((3, 224, 224))
-        masks[..., 10:20, 10:20] = 1
-        masks[..., 20:40, 20:40] = 1
-        masks[..., 40:80, 40:80] = 1
-        return InstanceSegDataEntity(
-            image=np.random.random((224, 224, 3)),
-            img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
-            bboxes=tv_tensors.BoundingBoxes(
-                np.array([[10, 10, 20, 20], [20, 20, 40, 40], [40, 40, 80, 80]]),
-                format="xyxy",
-                canvas_size=(224, 224),
-            ),
-            labels=torch.LongTensor([1, 2, 3]),
-            masks=tv_tensors.Mask(masks),
-            polygons=[
-                Polygon(points=[10, 10, 10, 20, 20, 20, 20, 10]),
-                Polygon(points=[20, 20, 20, 40, 40, 40, 40, 20]),
-                Polygon(points=[40, 40, 40, 80, 80, 80, 80, 40]),
-            ],
-        )
-
-    @pytest.mark.parametrize("keep_empty", [True, False])
-    def test_forward_keep_empty_by_box(self, iseg_entity, keep_empty: bool) -> None:
-        transform = FilterAnnotations(min_gt_bbox_wh=(50, 50), keep_empty=keep_empty, by_box=True)
-
-        results = transform(deepcopy(iseg_entity))
-
-        if keep_empty:
-            assert np.all(results.image == iseg_entity.image)
-            assert torch.all(results.bboxes == iseg_entity.bboxes)
-            assert torch.all(results.masks == iseg_entity.masks)
-        else:
-            assert results.bboxes.shape[0] == 0
-            assert results.masks.shape[0] == 0
-            assert len(results.polygons) == 0
-
-    @pytest.mark.parametrize("keep_empty", [True, False])
-    def test_forward_keep_empty_by_mask(self, iseg_entity, keep_empty: bool) -> None:
-        transform = FilterAnnotations(min_gt_mask_area=2500, keep_empty=keep_empty, by_box=False, by_mask=True)
-
-        results = transform(deepcopy(iseg_entity))
-
-        if keep_empty:
-            assert np.all(results.image == iseg_entity.image)
-            assert torch.all(results.bboxes == iseg_entity.bboxes)
-            assert torch.all(results.masks == iseg_entity.masks)
-        else:
-            assert results.bboxes.shape[0] == 0
-            assert results.masks.shape[0] == 0
-            assert len(results.polygons) == 0
-
-    @pytest.mark.parametrize("keep_empty", [True, False])
-    def test_forward_keep_empty_by_polygon(self, iseg_entity, keep_empty: bool) -> None:
-        transform = FilterAnnotations(min_gt_mask_area=2500, keep_empty=keep_empty, by_box=False, by_polygon=True)
-
-        results = transform(deepcopy(iseg_entity))
-
-        if keep_empty:
-            assert np.all(results.image == iseg_entity.image)
-            assert torch.all(results.bboxes == iseg_entity.bboxes)
-            assert torch.all(results.masks == iseg_entity.masks)
-        else:
-            assert results.bboxes.shape[0] == 0
-            assert results.masks.shape[0] == 0
-            assert len(results.polygons) == 0
-
-    def test_forward(self, iseg_entity) -> None:
-        # test filter annotations
-        transform = FilterAnnotations(min_gt_bbox_wh=(15, 15))
-
-        results = transform(deepcopy(iseg_entity))
-
-        assert torch.all(results.labels == torch.LongTensor([2, 3]))
-        assert torch.all(results.bboxes == torch.tensor([[20, 20, 40, 40], [40, 40, 80, 80]]))
-        assert len(results.masks) == 2
-        assert len(results.polygons) == 2
-
-    def test_repr(self):
-        transform = FilterAnnotations(
-            min_gt_bbox_wh=(1, 1),
-            keep_empty=False,
-        )
-        assert (
-            repr(transform) == "FilterAnnotations(min_gt_bbox_wh=(1, 1), keep_empty=False, is_numpy_to_tvtensor=False)"
-        )
-
-
 class TestTopdownAffine:
     @pytest.fixture()
     def keypoint_det_entity(self) -> TorchDataItem:
@@ -803,9 +696,7 @@ class TestTopdownAffine:
                 canvas_size=(10, 10),
             ),
             labels=torch.LongTensor([0]),
-            keypoints=tv_tensors.TVTensor(np.array([[0, 4], [4, 2], [2, 6], [6, 0]])),
-            keypoints_visible=tv_tensors.TVTensor(np.array([1, 1, 1, 0])),
-            bbox_info=BboxInfo(center=np.array([5, 5]), scale=np.array([10, 10]), rotation=0),
+            keypoints=tv_tensors.TVTensor(np.array([[0, 4, 1], [4, 2, 1], [2, 6, 1], [6, 0, 0]])),
         )
 
     def test_forward(self, keypoint_det_entity) -> None:
@@ -815,7 +706,4 @@ class TestTopdownAffine:
             ],
         )
         results = transform(deepcopy(keypoint_det_entity))
-
-        assert np.array_equal(results.bbox_info.center, np.array([5, 5]))
-        assert np.array_equal(results.bbox_info.scale, np.array([10, 10]))
         assert results.keypoints.shape == (4, 2)

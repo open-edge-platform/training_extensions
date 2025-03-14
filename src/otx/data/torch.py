@@ -36,20 +36,8 @@ class TorchDataItem(ValidateItemMixin, Mapping):
         label (torch.Tensor | None): The label tensor, optional.
         masks (Mask | None): The masks, optional.
         bboxes (BoundingBoxes | None): The bounding boxes, optional.
+        keypoints (torch.Tensor | None): The keypoints, optional.
         img_info (ImageInfo | None): Additional image information, optional.
-
-    Methods:
-        collate_fn(items: list[TorchDataItem]) -> TorchDataBatch:
-            Collate TorchDataItems into a batch.
-
-        __iter__() -> Iterator[str]:
-            Iterate over the field names of the data item.
-
-        __getitem__(key: str) -> Any:
-            Get the value of the specified field.
-
-        __len__() -> int:
-            Get the number of fields in the data item.
     """
 
     image: torch.Tensor
@@ -95,7 +83,7 @@ class TorchDataBatch(ValidateBatchMixin):
 
     batch_size: int  # TODO(ashwinvaidya17): Remove this
     images: torch.Tensor
-    labels: list[torch.Tensor] | None
+    labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
     keypoints: list[torch.Tensor] | None = None
@@ -114,6 +102,7 @@ class TorchPredItem(TorchDataItem):
 @dataclass
 class TorchPredBatch(TorchDataBatch):
     """Torch prediction data item batch implementation."""
+
     scores: list[torch.Tensor] | None = None
     feature_vector: list[torch.Tensor] | None = None
     saliency_map: list[torch.Tensor] | None = None
