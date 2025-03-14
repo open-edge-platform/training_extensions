@@ -6,11 +6,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from .data import TorchDataItem, TorchDataBatch
+from typing import TYPE_CHECKING
+
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.utils import stack_batch
-from torchvision.tv_tensors import BoundingBoxes, Image
-import torch
+
+from .data import TorchDataBatch, TorchDataItem
+
+if TYPE_CHECKING:
+    import torch
+    from torchvision.tv_tensors import BoundingBoxes, Image
+
 
 @dataclass
 class TorchTileDataItem:
@@ -34,9 +40,10 @@ class TorchTileDataItem:
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list] for tile_entity in batch_entities
+                [entity.img_info for entity in tile_entity.entity_list]  # type: ignore[misc]
+                for tile_entity in batch_entities
             ],
-            batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
+            batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],  # type: ignore[misc]
             imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],
             bboxes=[tile_entity.ori_bboxes for tile_entity in batch_entities],
             labels=[tile_entity.ori_labels for tile_entity in batch_entities],
@@ -54,7 +61,6 @@ class TorchTileDataBatch:
     imgs_info: list[ImageInfo]
     bboxes: list[BoundingBoxes]
     labels: list[torch.LongTensor]
-
 
     def unbind(self) -> list[tuple[dict[str, int | str], TorchDataBatch]]:
         """Unbind batch data."""
@@ -76,9 +82,9 @@ class TorchTileDataBatch:
                 TorchDataBatch(
                     batch_size=self.batch_size,
                     images=stacked_images,
-                    imgs_info=updated_img_info,
+                    imgs_info=updated_img_info,  # type: ignore[arg-type]
                     bboxes=None,
                     labels=None,
                 ),
             )
-        return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))
+        return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))  # type: ignore[arg-type]

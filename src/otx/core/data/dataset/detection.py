@@ -5,17 +5,16 @@
 
 from __future__ import annotations
 
-from functools import partial
 from typing import Callable
 
 import numpy as np
 import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
-from otx.data.torch import TorchDataItem 
-from torchvision.transforms.v2.functional import to_dtype, to_image
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 

@@ -16,7 +16,6 @@ from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
 from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity
-from otx.data.torch import TorchDataItem, TorchDataBatch
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetDataEntity
 from otx.core.data.transform_libs.torchvision import (
@@ -35,6 +34,7 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
+from otx.data.torch import TorchDataBatch, TorchDataItem
 
 
 class MockFrame:

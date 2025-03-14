@@ -231,7 +231,12 @@ def fxt_det_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     # define data entity
-    single_data_entity = TorchDataItem(image=fake_image, img_info=fake_image_info,bboxes= fake_bboxes,label= fake_labels)
+    single_data_entity = TorchDataItem(
+        image=fake_image,
+        img_info=fake_image_info,
+        bboxes=fake_bboxes,
+        label=fake_labels,
+    )
     batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=[Image(data=fake_image)],

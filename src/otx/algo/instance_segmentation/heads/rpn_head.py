@@ -23,8 +23,8 @@ from otx.algo.instance_segmentation.utils.utils import unpack_inst_seg_entity
 from otx.algo.modules import build_activation_layer
 from otx.algo.modules.conv_module import Conv2dModule
 from otx.algo.utils.mmengine_utils import InstanceData
-from otx.core.data.entity.base import OTXBatchDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.data.torch import TorchDataBatch
 
 if TYPE_CHECKING:
     from otx.algo.common.utils.assigners import MaxIoUAssigner
@@ -203,7 +203,7 @@ class RPNHeadModule(AnchorHead):
     def predict(
         self,
         x: tuple[Tensor, ...],
-        entity: OTXBatchDataEntity,
+        entity: TorchDataBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Forward-prop of the detection head and predict detection results on the features of the upstream network.
@@ -211,7 +211,7 @@ class RPNHeadModule(AnchorHead):
         Args:
             x (tuple[Tensor]): Multi-level features from the
                 upstream network, each is a 4D-tensor.
-            entity (OTXBatchDataEntity): The Data
+            entity (TorchDataBatch): The Data
                 Samples. It usually includes information such as
                 `gt_instance`, `gt_panoptic_seg` and `gt_sem_seg`.
             rescale (bool, optional): Whether to rescale the results.
@@ -223,13 +223,13 @@ class RPNHeadModule(AnchorHead):
         """
         batch_img_metas = [
             {
-                "img_id": img_info.img_idx,
-                "img_shape": img_info.img_shape,
-                "ori_shape": img_info.ori_shape,
-                "scale_factor": img_info.scale_factor,
-                "ignored_labels": img_info.ignored_labels,
+                "img_id": img_info.img_idx,  # type: ignore[union-attr]
+                "img_shape": img_info.img_shape,  # type: ignore[union-attr]
+                "ori_shape": img_info.ori_shape,  # type: ignore[union-attr]
+                "scale_factor": img_info.scale_factor,  # type: ignore[union-attr]
+                "ignored_labels": img_info.ignored_labels,  # type: ignore[union-attr]
             }
-            for img_info in entity.imgs_info
+            for img_info in entity.imgs_info  # type: ignore[union-attr]
         ]
 
         cls_scores, bbox_preds = self(x)

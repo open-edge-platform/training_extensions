@@ -19,9 +19,9 @@ from torchvision.ops import batched_nms
 from otx.algo.explain.explain_algo import InstSegExplainAlgo
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, T_OTXBatchPredEntity, T_OTXDataEntity
-from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredItem, TorchPredBatch
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity, InstanceSegPredEntity
 from otx.core.data.entity.segmentation import SegBatchPredEntity, SegPredEntity
+from otx.data.torch import TorchPredBatch, TorchPredItem
 
 # Maximum number of elements 2**31 -1
 MAX_ELEMENTS: int = np.iinfo(np.int32).max
@@ -157,14 +157,14 @@ class DetectionTileMerge(TileMerge):
             batch_size = len(tile_attrs)
             saliency_maps = tile_preds.saliency_map if explain_mode else [[] for _ in range(batch_size)]
             feature_vectors = tile_preds.feature_vector if explain_mode else [[] for _ in range(batch_size)]
-            for tile_attr, tile_img_info, tile_bboxes, tile_labels, tile_scores, tile_s_map, tile_f_vect in zip(
+            for tile_attr, tile_img_info, tile_bboxes, tile_labels, tile_scores, tile_s_map, tile_f_vect in zip(  # type: ignore[misc]
                 tile_attrs,
-                tile_preds.imgs_info,
-                tile_preds.bboxes,
-                tile_preds.labels,
-                tile_preds.scores,
-                saliency_maps,
-                feature_vectors,
+                tile_preds.imgs_info,  # type: ignore[arg-type]
+                tile_preds.bboxes,  # type: ignore[arg-type]
+                tile_preds.labels,  # type: ignore[arg-type]
+                tile_preds.scores,  # type: ignore[arg-type]
+                saliency_maps,  # type: ignore[arg-type]
+                feature_vectors,  # type: ignore[arg-type]
                 strict=True,
             ):
                 offset_x, offset_y, _, _ = tile_attr["roi"]
@@ -218,13 +218,13 @@ class DetectionTileMerge(TileMerge):
         tiles_coords = []
         img_size = img_info.ori_shape
         for tile_entity in entities:
-            num_preds = len(tile_entity.bboxes)
+            num_preds = len(tile_entity.bboxes)  # type: ignore[arg-type]
             if num_preds > 0:
-                bboxes.extend(tile_entity.bboxes)
-                labels.extend(tile_entity.label)
-                scores.extend(tile_entity.scores)
+                bboxes.extend(tile_entity.bboxes)  # type: ignore[arg-type]
+                labels.extend(tile_entity.label)  # type: ignore[arg-type]
+                scores.extend(tile_entity.scores)  # type: ignore[arg-type]
             if explain_mode:
-                tiles_coords.append(tile_entity.img_info.padding)
+                tiles_coords.append(tile_entity.img_info.padding)  # type: ignore[union-attr]
                 feature_vectors.append(tile_entity.feature_vector)
                 saliency_maps.append(tile_entity.saliency_map)
 

@@ -21,12 +21,12 @@ from otx.algo.detection.losses.dfine_loss import DFINECriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import ExplainableOTXDetModel
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -145,7 +145,7 @@ class DFine(ExplainableOTXDetModel):
     ) -> dict[str, Any]:
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
-        for bb, ll in zip(entity.bboxes, entity.labels):
+        for bb, ll in zip(entity.bboxes, entity.labels):  # type: ignore[arg-type]
             # convert to cxcywh if needed
             if len(scaled_bboxes := bb):
                 converted_bboxes = (
@@ -185,7 +185,7 @@ class DFine(ExplainableOTXDetModel):
                     raise TypeError(msg)
             return losses
 
-        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]
+        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
 
         if self.explain_mode:

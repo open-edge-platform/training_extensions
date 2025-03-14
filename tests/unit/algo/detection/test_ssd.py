@@ -10,9 +10,9 @@ from lightning import Trainer
 from torch._dynamo.testing import CompileCounter
 
 from otx.algo.detection.ssd import SSD
-from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.types.export import TaskLevelExportParameters
+from otx.data.torch import TorchPredBatch
 
 
 class TestSSD:

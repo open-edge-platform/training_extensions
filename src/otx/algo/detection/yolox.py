@@ -16,7 +16,6 @@ from otx.algo.detection.necks import YOLOXPAFPN
 from otx.algo.detection.utils.assigners import SimOTAAssigner
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.config.data import TileConfig
-from otx.data.torch import TorchDataBatch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -24,6 +23,7 @@ from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallab
 from otx.core.model.detection import ExplainableOTXDetModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
+from otx.data.torch import TorchDataBatch
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -6,4 +6,11 @@
 from .data import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
 from .tile import TorchTileDataBatch, TorchTileDataItem
 
-__all__ = ["TorchDataBatch", "TorchDataItem", "TorchPredBatch", "TorchPredItem", "TorchTileDataBatch", "TorchTileDataItem"]
+__all__ = [
+    "TorchDataBatch",
+    "TorchDataItem",
+    "TorchPredBatch",
+    "TorchPredItem",
+    "TorchTileDataBatch",
+    "TorchTileDataItem",
+]

@@ -28,6 +28,7 @@ from otx.algo.modules.norm import build_norm_layer
 from otx.algo.modules.scale import Scale
 from otx.algo.utils.mmengine_utils import InstanceData
 from otx.data.torch import TorchDataBatch
+
 EPS = 1e-12
 
 

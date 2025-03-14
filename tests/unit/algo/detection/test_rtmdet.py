@@ -10,8 +10,8 @@ from otx.algo.common.backbones.cspnext import CSPNeXtModule
 from otx.algo.detection.heads.rtmdet_head import RTMDetSepBNHeadModule
 from otx.algo.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
 from otx.algo.detection.rtmdet import RTMDet
-from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.data.torch import TorchPredBatch
 
 
 class TestRTMDet:

@@ -28,16 +28,14 @@ from otx.core.config.data import (
     VisualPromptingConfig,
 )
 from otx.core.data.dataset.tile import OTXTileTransform
-from otx.data.torch import TorchDataBatch, TorchPredItem
-
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity
-from otx.core.data.entity.tile import  TileBatchInstSegDataEntity, TileBatchSegDataEntity
-from otx.data.torch import TorchTileDataBatch, TorchTileDataItem, TorchPredBatch
+from otx.core.data.entity.tile import TileBatchInstSegDataEntity, TileBatchSegDataEntity
 from otx.core.data.module import OTXDataModule
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
+from otx.data.torch import TorchDataBatch, TorchPredBatch, TorchTileDataBatch
 from tests.test_helpers import generate_random_bboxes
 
 

@@ -13,10 +13,10 @@ from torchvision import tv_tensors
 
 from otx.core.config.data import SubsetConfig
 from otx.core.data.entity.base import ImageInfo
-from otx.data.torch import TorchDataItem, TorchDataBatch
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
 from otx.core.data.entity.visual_prompting import VisualPromptingDataEntity
 from otx.core.types.transformer_libs import TransformLibType
+from otx.data.torch import TorchDataItem
 
 SKIP_MMLAB_TEST = False
 try:

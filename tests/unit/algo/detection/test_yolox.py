@@ -10,8 +10,8 @@ from otx.algo.detection.backbones.csp_darknet import CSPDarknetModule
 from otx.algo.detection.heads.yolox_head import YOLOXHeadModule
 from otx.algo.detection.necks.yolox_pafpn import YOLOXPAFPNModule
 from otx.algo.detection.yolox import YOLOX
-from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.data.torch import TorchPredBatch
 
 
 class TestYOLOX:

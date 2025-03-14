@@ -15,7 +15,7 @@ from otx.algo.detection.heads.dfine_decoder import DFINETransformer
 from otx.algo.detection.losses.dfine_loss import DFINECriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.algo.detection.rtdetr import DETR
-from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
+from otx.data.torch import TorchPredBatch
 
 
 class TestDFine:

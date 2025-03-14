@@ -18,7 +18,6 @@ from otx.algo.common.utils.utils import dynamic_topk, filter_scores_and_topk, ga
 from otx.algo.detection.utils.utils import unpack_det_entity
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.mmengine_utils import InstanceData
-from otx.core.data.entity.base import OTXBatchDataEntity
 from otx.data.torch import TorchDataBatch
 
 
@@ -102,13 +101,13 @@ class BaseDenseHead(BaseModule):
         """
         batch_img_metas = [
             {
-                "img_id": img_info.img_idx,
-                "img_shape": img_info.img_shape,
-                "ori_shape": img_info.ori_shape,
-                "scale_factor": img_info.scale_factor,
-                "ignored_labels": img_info.ignored_labels,
+                "img_id": img_info.img_idx,  # type: ignore[union-attr]
+                "img_shape": img_info.img_shape,  # type: ignore[union-attr]
+                "ori_shape": img_info.ori_shape,  # type: ignore[union-attr]
+                "scale_factor": img_info.scale_factor,  # type: ignore[union-attr]
+                "ignored_labels": img_info.ignored_labels,  # type: ignore[union-attr]
             }
-            for img_info in entity.imgs_info
+            for img_info in entity.imgs_info  # type: ignore[union-attr]
         ]
 
         outs = self(x)

@@ -7,11 +7,11 @@ import pytest
 import torch
 from torch import nn
 from torch._dynamo.testing import CompileCounter
-from otx.core.data.entity.base import ImageInfo
+
 from otx.algo.detection.rtdetr import RTDETR
-from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.types import LabelInfo
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 
 class TestRTDETR:

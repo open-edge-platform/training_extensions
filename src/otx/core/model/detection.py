@@ -20,7 +20,6 @@ from torchvision import tv_tensors
 from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.data.torch import TorchDataBatch, TorchPredItem, TorchPredBatch
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.metrics import MetricCallable, MetricInput
@@ -30,7 +29,8 @@ from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
 from otx.core.utils.tile_merge import DetectionTileMerge
-from otx.data.torch import TorchTileDataBatch
+from otx.data.torch import TorchDataBatch, TorchPredBatch, TorchPredItem, TorchTileDataBatch
+
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.adapters import OpenvinoAdapter
@@ -79,7 +79,7 @@ class OTXDetectionModel(OTXModel):
         batch: TorchDataBatch,
         batch_idx: int,
         dataloader_idx: int = 0,
-    ) -> TorchPredItem:
+    ) -> TorchPredBatch:
         """Step function called during PyTorch Lightning Trainer's predict."""
         if self.explain_mode:
             return self._filter_outputs_by_threshold(self.forward_explain(inputs=batch))
@@ -91,11 +91,11 @@ class OTXDetectionModel(OTXModel):
 
         return outputs
 
-    def _filter_outputs_by_threshold(self, outputs: TorchPredItem) -> TorchPredItem:
+    def _filter_outputs_by_threshold(self, outputs: TorchPredBatch) -> TorchPredBatch:
         scores = []
         bboxes = []
         labels = []
-        for score, bbox, label in zip(outputs.scores, outputs.bboxes, outputs.labels):
+        for score, bbox, label in zip(outputs.scores, outputs.bboxes, outputs.labels):  # type: ignore[arg-type]
             filtered_idx = torch.where(score > self.best_confidence_threshold)
             scores.append(score[filtered_idx])
             bboxes.append(tv_tensors.wrap(bbox[filtered_idx], like=bbox))
@@ -126,9 +126,9 @@ class OTXDetectionModel(OTXModel):
         pad_value: int = 0,
     ) -> dict[str, Any]:
         if isinstance(entity.images, list):
-            entity.images, entity.imgs_info = stack_batch(
+            entity.images, entity.imgs_info = stack_batch(  # type: ignore[assignment]
                 entity.images,
-                entity.imgs_info,
+                entity.imgs_info,  # type: ignore[arg-type]
                 pad_size_divisor=pad_size_divisor,
                 pad_value=pad_value,
             )
@@ -166,7 +166,7 @@ class OTXDetectionModel(OTXModel):
         bboxes = []
         labels = []
         predictions = outputs["predictions"] if isinstance(outputs, dict) else outputs
-        for img_info, prediction in zip(inputs.imgs_info, predictions):
+        for img_info, prediction in zip(inputs.imgs_info, predictions):  # type: ignore[arg-type]
             if not isinstance(prediction, InstanceData):
                 raise TypeError(prediction)
 
@@ -175,7 +175,7 @@ class OTXDetectionModel(OTXModel):
                 tv_tensors.BoundingBoxes(
                     prediction.bboxes,  # type: ignore[attr-defined]
                     format="XYXY",
-                    canvas_size=img_info.ori_shape,
+                    canvas_size=img_info.ori_shape,  # type: ignore[union-attr]
                 ),
             )
             labels.append(prediction.labels)  # type: ignore[attr-defined]
@@ -231,7 +231,7 @@ class OTXDetectionModel(OTXModel):
                 classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
         return classification_layers
 
-    def forward_tiles(self, inputs: TorchTileDataBatch) -> TorchPredBatch:
+    def forward_tiles(self, inputs: TorchTileDataBatch) -> TorchPredBatch:  # type: ignore[override]
         """Unpack detection tiles.
 
         Args:
@@ -253,9 +253,9 @@ class OTXDetectionModel(OTXModel):
             if isinstance(output, OTXBatchLossEntity):
                 msg = "Loss output is not supported for tile merging"
                 raise TypeError(msg)
-            tile_preds.append(output)
-            tile_attrs.append(batch_tile_attrs)
-        pred_entities = merger.merge(tile_preds, tile_attrs)
+            tile_preds.append(output)  # type: ignore[arg-type]
+            tile_attrs.append(batch_tile_attrs)  # type: ignore[arg-type]
+        pred_entities = merger.merge(tile_preds, tile_attrs)  # type: ignore[arg-type]
 
         pred_entity = TorchPredBatch(
             batch_size=inputs.batch_size,
@@ -296,7 +296,7 @@ class OTXDetectionModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,  # type: ignore[override]
+        preds: TorchPredBatch,  # type: ignore[override]
         inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         return {
@@ -306,18 +306,14 @@ class OTXDetectionModel(OTXModel):
                     "scores": scores.type(torch.float32),
                     "labels": labels,
                 }
-                for bboxes, scores, labels in zip(
-                    preds.bboxes,
-                    preds.scores,
-                    preds.labels,
-                )
+                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.labels)  # type: ignore[arg-type]
             ],
             "target": [
                 {
                     "boxes": bboxes.data,
                     "labels": labels,
                 }
-                for bboxes, labels in zip(inputs.bboxes, inputs.labels)
+                for bboxes, labels in zip(inputs.bboxes, inputs.labels)  # type: ignore[arg-type]
             ],
         }
 
@@ -372,7 +368,7 @@ class OTXDetectionModel(OTXModel):
                 self._best_confidence_threshold = 0.5
         return self._best_confidence_threshold
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
         """Returns a dummy input for detection model."""
         if self.input_size is None:
             msg = f"Input size attribute is not set for {self.__class__}"
@@ -388,7 +384,7 @@ class OTXDetectionModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return TorchDataBatch(batch_size, images, infos, bboxes=[], labels=[])
+        return TorchDataBatch(batch_size=batch_size, images=images, imgs_info=infos, bboxes=[], labels=[])  # type: ignore[arg-type]
 
 
 class ExplainableOTXDetModel(OTXDetectionModel):
@@ -604,7 +600,7 @@ class OVDetectionModel(OVModel):
         self,
         outputs: list[DetectionResult],
         inputs: TorchDataBatch,
-    ) -> TorchPredItem | OTXBatchLossEntity:
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         # add label index
         bboxes = []
         scores = []
@@ -626,7 +622,7 @@ class OVDetectionModel(OVModel):
                 tv_tensors.BoundingBoxes(
                     data=output.bboxes,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[i].img_shape,
+                    canvas_size=inputs.imgs_info[i].img_shape,  # type: ignore[union-attr, index]
                     device=self.device,
                 ),
             )
@@ -639,7 +635,7 @@ class OVDetectionModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredItem(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -650,7 +646,7 @@ class OVDetectionModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredItem(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -671,18 +667,14 @@ class OVDetectionModel(OVModel):
                     "scores": scores,
                     "labels": labels,
                 }
-                for bboxes, scores, labels in zip(
-                    preds.bboxes,
-                    preds.scores,
-                    preds.labels,
-                )
+                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.label)  # type: ignore[arg-type]
             ],
             "target": [
                 {
                     "boxes": bboxes.data,
                     "labels": labels,
                 }
-                for bboxes, labels in zip(inputs.bboxes, inputs.labels)
+                for bboxes, labels in zip(inputs.bboxes, inputs.labels)  # type: ignore[arg-type]
             ],
         }
 

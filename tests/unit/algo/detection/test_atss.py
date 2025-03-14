@@ -8,9 +8,9 @@ from torch._dynamo.testing import CompileCounter
 
 from otx.algo.detection.atss import ATSS
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.data.torch import  TorchPredBatch
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.types.export import TaskLevelExportParameters
+from otx.data.torch import TorchPredBatch
 
 
 class TestATSS:

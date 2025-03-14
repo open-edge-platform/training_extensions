@@ -67,13 +67,13 @@ def unpack_det_entity(entity: TorchDataBatch) -> tuple:
     """
     batch_gt_instances = []
     batch_img_metas = []
-    for img_info, bboxes, labels in zip(entity.imgs_info, entity.bboxes, entity.labels):
+    for img_info, bboxes, labels in zip(entity.imgs_info, entity.bboxes, entity.labels):  # type: ignore[arg-type]
         metainfo = {
-            "img_id": img_info.img_idx,
-            "img_shape": img_info.img_shape,
-            "ori_shape": img_info.ori_shape,
-            "scale_factor": img_info.scale_factor,
-            "ignored_labels": img_info.ignored_labels,
+            "img_id": img_info.img_idx,  # type: ignore[union-attr]
+            "img_shape": img_info.img_shape,  # type: ignore[union-attr]
+            "ori_shape": img_info.ori_shape,  # type: ignore[union-attr]
+            "scale_factor": img_info.scale_factor,  # type: ignore[union-attr]
+            "ignored_labels": img_info.ignored_labels,  # type: ignore[union-attr]
         }
         batch_img_metas.append(metainfo)
         batch_gt_instances.append(InstanceData(bboxes=bboxes, labels=labels))

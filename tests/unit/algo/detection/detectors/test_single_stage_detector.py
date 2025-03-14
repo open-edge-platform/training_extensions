@@ -9,8 +9,8 @@ import torch
 from torch import nn
 
 from otx.algo.detection.detectors.single_stage_detector import SingleStageDetector
-from otx.data.torch import TorchDataBatch
 from otx.core.data.entity.base import ImageInfo
+from otx.data.torch import TorchDataBatch
 
 
 class TestSingleStageDetector:

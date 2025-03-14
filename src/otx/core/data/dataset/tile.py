@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 import shapely.geometry as sg
 import torch
-from otx.data.torch import TorchTileDataItem
 from datumaro import Dataset as DmDataset
 from datumaro import DatasetItem, Image
 from datumaro.components.annotation import AnnotationType, Bbox, Ellipse, ExtractedMask, Polygon
@@ -29,6 +28,7 @@ from datumaro.plugins.tiling.util import (
     x1y1x2y2_to_xywh,
 )
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
@@ -42,10 +42,9 @@ from otx.core.data.entity.tile import (
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
-from torchvision.transforms.v2.functional import to_dtype, to_image
+from otx.data.torch import TorchDataItem, TorchTileDataItem
 
 from .base import OTXDataset
-from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
     from datumaro.components.media import BboxIntCoords
@@ -55,7 +54,6 @@ if TYPE_CHECKING:
     from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
     from otx.core.data.dataset.segmentation import OTXSegmentationDataset
     from otx.core.data.entity.base import OTXDataEntity
-    from otx.data.torch import TorchDataItem
 
 # ruff: noqa: SLF001
 # NOTE: Disable private-member-access (SLF001).
@@ -472,7 +470,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
 
         return TorchTileDataItem(
             num_tiles=len(tile_entities),
-            entity_list=tile_entities,
+            entity_list=tile_entities,  # type: ignore[arg-type]
             tile_attr_list=tile_attrs,
             ori_img_info=ImageInfo(
                 img_idx=index,
@@ -487,7 +485,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
             ori_labels=labels,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:  # type: ignore[override]
         """Convert a tile datumaro dataset item to TorchDataItem."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
