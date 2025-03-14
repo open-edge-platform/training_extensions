@@ -324,13 +324,11 @@
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.classification.html">otx.algo.classification</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.backbones.html">otx.algo.classification.backbones</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.multiclass_models.html">otx.algo.classification.multiclass_models</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.multilabel_models.html">otx.algo.classification.multilabel_models</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.hlabel_models.html">otx.algo.classification.hlabel_models</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.heads.html">otx.algo.classification.heads</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.losses.html">otx.algo.classification.losses</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.efficientnet.html">otx.algo.classification.efficientnet</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.mobilenet_v3.html">otx.algo.classification.mobilenet_v3</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.timm_model.html">otx.algo.classification.timm_model</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.torchvision_model.html">otx.algo.classification.torchvision_model</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.vit.html">otx.algo.classification.vit</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.detection.html">otx.algo.detection</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -349,7 +347,6 @@
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.utils.html">otx.algo.utils</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.mmengine_utils.html">otx.algo.utils.mmengine_utils</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.support_otx_v1.html">otx.algo.utils.support_otx_v1</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.utils.html">otx.algo.utils.utils</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.weight_init.html">otx.algo.utils.weight_init</a></li>
@@ -392,11 +389,12 @@
 <li class="toctree-l4 current active has-children"><a class="current reference internal" href="#">otx.core.model</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-24"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.anomaly.html">otx.core.model.anomaly</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.base.html">otx.core.model.base</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.model.classification.html">otx.core.model.classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.detection.html">otx.core.model.detection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.hlabel_classification.html">otx.core.model.hlabel_classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.instance_segmentation.html">otx.core.model.instance_segmentation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.keypoint_detection.html">otx.core.model.keypoint_detection</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.model.rotated_detection.html">otx.core.model.rotated_detection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.multiclass_classification.html">otx.core.model.multiclass_classification</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.multilabel_classification.html">otx.core.model.multilabel_classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.segmentation.html">otx.core.model.segmentation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.visual_prompting.html">otx.core.model.visual_prompting</a></li>
 </ul>
@@ -480,11 +478,11 @@
 <tr class="row-even"><td><p><a class="reference internal" href="otx.core.model.base.html#module-otx.core.model.base" title="otx.core.model.base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.base</span></code></a></p></td>
 <td><p>Class definition for base model entity used in OTX.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.model.classification.html#module-otx.core.model.classification" title="otx.core.model.classification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.classification</span></code></a></p></td>
-<td><p>Class definition for classification model entity used in OTX.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.core.model.detection.html#module-otx.core.model.detection" title="otx.core.model.detection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.detection</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.model.detection.html#module-otx.core.model.detection" title="otx.core.model.detection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.detection</span></code></a></p></td>
 <td><p>Class definition for detection model entity used in OTX.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="otx.core.model.hlabel_classification.html#module-otx.core.model.hlabel_classification" title="otx.core.model.hlabel_classification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.hlabel_classification</span></code></a></p></td>
+<td><p>Class definition for classification model entity used in OTX.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="otx.core.model.instance_segmentation.html#module-otx.core.model.instance_segmentation" title="otx.core.model.instance_segmentation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.instance_segmentation</span></code></a></p></td>
 <td><p>Class definition for instance segmentation model entity used in OTX.</p></td>
@@ -492,13 +490,16 @@
 <tr class="row-even"><td><p><a class="reference internal" href="otx.core.model.keypoint_detection.html#module-otx.core.model.keypoint_detection" title="otx.core.model.keypoint_detection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.keypoint_detection</span></code></a></p></td>
 <td><p>Class definition for keypoint detection model entity used in OTX.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.model.rotated_detection.html#module-otx.core.model.rotated_detection" title="otx.core.model.rotated_detection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.rotated_detection</span></code></a></p></td>
-<td><p>Class definition for rotated detection model entity used in OTX.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.model.multiclass_classification.html#module-otx.core.model.multiclass_classification" title="otx.core.model.multiclass_classification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.multiclass_classification</span></code></a></p></td>
+<td><p>Class definition for classification model entity used in OTX.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.core.model.segmentation.html#module-otx.core.model.segmentation" title="otx.core.model.segmentation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.segmentation</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="otx.core.model.multilabel_classification.html#module-otx.core.model.multilabel_classification" title="otx.core.model.multilabel_classification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.multilabel_classification</span></code></a></p></td>
+<td><p>Class definition for classification model entity used in OTX.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.model.segmentation.html#module-otx.core.model.segmentation" title="otx.core.model.segmentation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.segmentation</span></code></a></p></td>
 <td><p>Class definition for detection model entity used in OTX.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.core.model.visual_prompting.html#module-otx.core.model.visual_prompting" title="otx.core.model.visual_prompting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.visual_prompting</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="otx.core.model.visual_prompting.html#module-otx.core.model.visual_prompting" title="otx.core.model.visual_prompting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.core.model.visual_prompting</span></code></a></p></td>
 <td><p>Class definition for visual prompting models entity used in OTX.</p></td>
 </tr>
 </tbody>

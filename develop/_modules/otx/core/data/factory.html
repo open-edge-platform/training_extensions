@@ -294,31 +294,6 @@
 
             <span class="k">return</span> <span class="n">TorchVisionTransformLib</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">transform_lib_type</span> <span class="o">==</span> <span class="n">TransformLibType</span><span class="o">.</span><span class="n">MMCV</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">.transform_libs.mmcv</span><span class="w"> </span><span class="kn">import</span> <span class="n">MMCVTransformLib</span>
-
-            <span class="k">return</span> <span class="n">MMCVTransformLib</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">transform_lib_type</span> <span class="o">==</span> <span class="n">TransformLibType</span><span class="o">.</span><span class="n">MMPRETRAIN</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">.transform_libs.mmpretrain</span><span class="w"> </span><span class="kn">import</span> <span class="n">MMPretrainTransformLib</span>
-
-            <span class="k">return</span> <span class="n">MMPretrainTransformLib</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">transform_lib_type</span> <span class="o">==</span> <span class="n">TransformLibType</span><span class="o">.</span><span class="n">MMDET</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">.transform_libs.mmdet</span><span class="w"> </span><span class="kn">import</span> <span class="n">MMDetTransformLib</span>
-
-            <span class="k">return</span> <span class="n">MMDetTransformLib</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">transform_lib_type</span> <span class="o">==</span> <span class="n">TransformLibType</span><span class="o">.</span><span class="n">MMSEG</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">.transform_libs.mmseg</span><span class="w"> </span><span class="kn">import</span> <span class="n">MMSegTransformLib</span>
-
-            <span class="k">return</span> <span class="n">MMSegTransformLib</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">transform_lib_type</span> <span class="o">==</span> <span class="n">TransformLibType</span><span class="o">.</span><span class="n">MMACTION</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">.transform_libs.mmaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">MMActionTransformLib</span>
-
-            <span class="k">return</span> <span class="n">MMActionTransformLib</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">transform_lib_type</span><span class="p">)</span></div>
 </div>
 

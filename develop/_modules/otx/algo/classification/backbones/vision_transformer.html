@@ -262,7 +262,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">timm.layers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -289,29 +289,6 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 
-<span class="n">VIT_ARCH_TYPE</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
-    <span class="s2">&quot;vit-t&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-s&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-small&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-b&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-base&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-l&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-large&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-h&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;vit-huge&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-s&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-small&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-small-seg&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-b&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-base&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-l&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-large&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-g&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dinov2-giant&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-
-
 <div class="viewcode-block" id="VisionTransformer">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.VisionTransformer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VisionTransformer</span><span class="p">(</span><span class="n">BaseModule</span><span class="p">):</span>
@@ -322,7 +299,7 @@
 <span class="sd">        - https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        arch: Vision Transformer architecture.</span>
+<span class="sd">        model_name: Vision Transformer architecture.</span>
 <span class="sd">        img_size: Input image size.</span>
 <span class="sd">        patch_size: Patch size.</span>
 <span class="sd">        in_chans: Number of image input channels.</span>
@@ -350,7 +327,7 @@
 <span class="sd">        lora: Enable LoRA training.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">arch_zoo</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># noqa: RUF012</span>
+    <span class="n">model_zoo</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span>
             <span class="p">[</span><span class="s2">&quot;vit-t&quot;</span><span class="p">,</span> <span class="s2">&quot;vit-tiny&quot;</span><span class="p">],</span>
             <span class="p">{</span>
@@ -464,7 +441,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">arch</span><span class="p">:</span> <span class="n">VIT_ARCH_TYPE</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vit-base&quot;</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vit-base&quot;</span><span class="p">,</span>
         <span class="n">img_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">224</span><span class="p">,</span>
         <span class="n">patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">in_chans</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
@@ -496,11 +473,11 @@
         <span class="n">lora</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arch</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">arch</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arch_zoo</span><span class="p">):</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Arch </span><span class="si">{</span><span class="n">arch</span><span class="si">}</span><span class="s2"> is not in default archs </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arch_zoo</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_zoo</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Arch </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> is not in default archs </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_zoo</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">arch_settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arch_zoo</span><span class="p">[</span><span class="n">arch</span><span class="p">]</span>
+            <span class="n">arch_settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_zoo</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">img_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">patch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">patch_size</span> <span class="ow">or</span> <span class="n">arch_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;patch_size&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>

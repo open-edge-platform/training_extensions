@@ -279,7 +279,7 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">onnx</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">openvino</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">OTXModel</span>
 
 
 <div class="viewcode-block" id="OTXModelExporter">
@@ -290,9 +290,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        task_level_export_parameters (TaskLevelExportParameters): Collection of export parameters</span>
 <span class="sd">            which can be defined at a task level.</span>
-<span class="sd">        input_size (tuple[int, ...]): Input shape.</span>
-<span class="sd">        mean (tuple[float, float, float], optional): Mean values of 3 channels. Defaults to (0.0, 0.0, 0.0).</span>
-<span class="sd">        std (tuple[float, float, float], optional): Std values of 3 channels. Defaults to (1.0, 1.0, 1.0).</span>
+<span class="sd">        data_input_params (DataInputParams): Data input parameters for model preprocessing.</span>
 <span class="sd">        resize_mode (Literal[&quot;crop&quot;, &quot;standard&quot;, &quot;fit_to_window&quot;, &quot;fit_to_window_letterbox&quot;], optional):</span>
 <span class="sd">            A resize type for model preprocess. &quot;standard&quot; resizes images without keeping ratio.</span>
 <span class="sd">            &quot;fit_to_window&quot; resizes images while keeping ratio.</span>
@@ -310,18 +308,14 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">task_level_export_parameters</span><span class="p">:</span> <span class="n">TaskLevelExportParameters</span><span class="p">,</span>
-        <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-        <span class="n">mean</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-        <span class="n">std</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
         <span class="n">resize_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="s2">&quot;fit_to_window&quot;</span><span class="p">,</span> <span class="s2">&quot;fit_to_window_letterbox&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
         <span class="n">pad_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">swap_rgb</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">output_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">input_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span> <span class="o">=</span> <span class="n">data_input_params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resize_mode</span> <span class="o">=</span> <span class="n">resize_mode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pad_value</span> <span class="o">=</span> <span class="n">pad_value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">swap_rgb</span> <span class="o">=</span> <span class="n">swap_rgb</span>
@@ -539,8 +533,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            dict[tuple[str, str] ,str]: updated metadata</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">mean_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">))</span>
-        <span class="n">std_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">))</span>
+        <span class="n">mean_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">mean</span><span class="p">))</span>
+        <span class="n">std_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">std</span><span class="p">))</span>
 
         <span class="n">extra_data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="p">(</span><span class="s2">&quot;model_info&quot;</span><span class="p">,</span> <span class="s2">&quot;mean_values&quot;</span><span class="p">):</span> <span class="n">mean_str</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>

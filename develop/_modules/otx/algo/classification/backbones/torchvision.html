@@ -258,13 +258,12 @@
 
 <span class="sd">&quot;&quot;&quot;Torchvison model&#39;s Backbone Class.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span><span class="p">,</span> <span class="n">get_model_weights</span>
 
-<span class="n">TVModelType</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+<span class="n">TVModels</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;alexnet&quot;</span><span class="p">,</span>
     <span class="s2">&quot;convnext_base&quot;</span><span class="p">,</span>
     <span class="s2">&quot;convnext_large&quot;</span><span class="p">,</span>
@@ -345,12 +344,14 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">backbone</span><span class="p">:</span> <span class="n">TVModelType</span><span class="p">,</span>
-        <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">backbone</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
+        <span class="k">if</span> <span class="n">backbone</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TVModels</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Backbone model name is not supported: </span><span class="si">{</span><span class="n">backbone</span><span class="si">}</span><span class="s2">. Available models: </span><span class="si">{</span><span class="n">TVModels</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">tv_model_cfg</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">backbone</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">pretrained</span><span class="p">:</span>
             <span class="n">tv_model_cfg</span><span class="p">[</span><span class="s2">&quot;weights&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_model_weights</span><span class="p">(</span><span class="n">backbone</span><span class="p">)</span>

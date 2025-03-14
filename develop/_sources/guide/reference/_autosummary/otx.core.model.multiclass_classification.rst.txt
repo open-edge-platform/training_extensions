@@ -1,0 +1,30 @@
+otx.core.model.multiclass\_classification
+=========================================
+
+.. automodule:: otx.core.model.multiclass_classification
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OTXMulticlassClsModel
+      OVMulticlassClassificationModel
+   
+   
+
+   
+   
+   
+
+
+

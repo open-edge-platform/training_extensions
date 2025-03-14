@@ -262,7 +262,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">ClassVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pytorchcv.models.model_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_model</span>
@@ -787,9 +787,6 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">y</span><span class="p">,)</span>
 
 
-<span class="n">EFFICIENTNET_VERSION</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;b0&quot;</span><span class="p">,</span> <span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">,</span> <span class="s2">&quot;b4&quot;</span><span class="p">,</span> <span class="s2">&quot;b5&quot;</span><span class="p">,</span> <span class="s2">&quot;b6&quot;</span><span class="p">,</span> <span class="s2">&quot;b7&quot;</span><span class="p">,</span> <span class="s2">&quot;b8&quot;</span><span class="p">]</span>
-
-
 <div class="viewcode-block" id="EfficientNetBackbone">
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.EfficientNetBackbone">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">EfficientNetBackbone</span><span class="p">:</span>
@@ -809,47 +806,47 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">EFFICIENTNET_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;b0&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b0&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b1&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b1&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">240</span><span class="p">,</span> <span class="mi">240</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b2&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b2&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">260</span><span class="p">,</span> <span class="mi">260</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b3&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b3&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">1.4</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b4&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b4&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">380</span><span class="p">,</span> <span class="mi">380</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">1.8</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">1.4</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b5&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b5&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">456</span><span class="p">,</span> <span class="mi">456</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">2.2</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">1.6</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b6&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b6&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">528</span><span class="p">,</span> <span class="mi">528</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">2.6</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">1.8</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b7&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b7&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">600</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">3.1</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;b8&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;efficientnet_b8&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">672</span><span class="p">,</span> <span class="mi">672</span><span class="p">),</span>
             <span class="s2">&quot;depth_factor&quot;</span><span class="p">:</span> <span class="mf">3.6</span><span class="p">,</span>
             <span class="s2">&quot;width_factor&quot;</span><span class="p">:</span> <span class="mf">2.2</span><span class="p">,</span>
@@ -867,7 +864,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">version</span><span class="p">:</span> <span class="n">EFFICIENTNET_VERSION</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -883,7 +880,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            EfficientNet: The created EfficientNet model instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">origin_input_size</span><span class="p">,</span> <span class="n">depth_factor</span><span class="p">,</span> <span class="n">width_factor</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EFFICIENTNET_CFG</span><span class="p">[</span><span class="n">version</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="n">origin_input_size</span><span class="p">,</span> <span class="n">depth_factor</span><span class="p">,</span> <span class="n">width_factor</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EFFICIENTNET_CFG</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
         <span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span> <span class="ow">or</span> <span class="n">origin_input_size</span>
         <span class="n">effnet_layers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">li</span> <span class="o">*</span> <span class="n">depth_factor</span><span class="p">))</span> <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">layers</span><span class="p">]</span>
         <span class="n">channels_per_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">round_channels</span><span class="p">(</span><span class="n">ci</span> <span class="o">*</span> <span class="n">width_factor</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">channels_per_layers</span><span class="p">]</span>
@@ -929,9 +926,10 @@
             <span class="n">in_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">pretrained</span><span class="p">:</span>
             <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.cache&quot;</span> <span class="o">/</span> <span class="s2">&quot;torch&quot;</span> <span class="o">/</span> <span class="s2">&quot;hub&quot;</span> <span class="o">/</span> <span class="s2">&quot;checkpoints&quot;</span>
-            <span class="n">download_model</span><span class="p">(</span><span class="n">net</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;efficientnet_</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">local_model_store_dir_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">))</span>
+            <span class="n">download_model</span><span class="p">(</span><span class="n">net</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">local_model_store_dir_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">))</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download model weight in </span><span class="si">{</span><span class="n">cache_dir</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">model</span></div>
 

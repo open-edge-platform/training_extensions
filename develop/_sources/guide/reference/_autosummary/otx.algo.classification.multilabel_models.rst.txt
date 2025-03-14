@@ -1,0 +1,33 @@
+otx.algo.classification.multilabel\_models
+==========================================
+
+.. automodule:: otx.algo.classification.multilabel_models
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      EfficientNetMultilabelCls
+      MobileNetV3MultilabelCls
+      TVModelMultilabelCls
+      TimmModelMultilabelCls
+      VisionTransformerMultilabelCls
+   
+   
+
+   
+   
+   
+
+
+

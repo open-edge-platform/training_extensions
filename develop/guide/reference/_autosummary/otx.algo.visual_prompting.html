@@ -324,13 +324,11 @@
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.classification.html">otx.algo.classification</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.backbones.html">otx.algo.classification.backbones</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.multiclass_models.html">otx.algo.classification.multiclass_models</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.multilabel_models.html">otx.algo.classification.multilabel_models</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.hlabel_models.html">otx.algo.classification.hlabel_models</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.heads.html">otx.algo.classification.heads</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.losses.html">otx.algo.classification.losses</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.efficientnet.html">otx.algo.classification.efficientnet</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.mobilenet_v3.html">otx.algo.classification.mobilenet_v3</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.timm_model.html">otx.algo.classification.timm_model</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.torchvision_model.html">otx.algo.classification.torchvision_model</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.vit.html">otx.algo.classification.vit</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.detection.html">otx.algo.detection</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -349,7 +347,6 @@
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.utils.html">otx.algo.utils</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.mmengine_utils.html">otx.algo.utils.mmengine_utils</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.support_otx_v1.html">otx.algo.utils.support_otx_v1</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.utils.html">otx.algo.utils.utils</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.weight_init.html">otx.algo.utils.weight_init</a></li>
@@ -392,11 +389,12 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.core.model.html">otx.core.model</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-24"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.anomaly.html">otx.core.model.anomaly</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.base.html">otx.core.model.base</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.model.classification.html">otx.core.model.classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.detection.html">otx.core.model.detection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.hlabel_classification.html">otx.core.model.hlabel_classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.instance_segmentation.html">otx.core.model.instance_segmentation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.keypoint_detection.html">otx.core.model.keypoint_detection</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.model.rotated_detection.html">otx.core.model.rotated_detection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.multiclass_classification.html">otx.core.model.multiclass_classification</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.multilabel_classification.html">otx.core.model.multilabel_classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.segmentation.html">otx.core.model.segmentation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.visual_prompting.html">otx.core.model.visual_prompting</a></li>
 </ul>
@@ -474,16 +472,153 @@
 <p class="rubric">Classes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.visual_prompting.SAM" title="otx.algo.visual_prompting.SAM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SAM</span></code></a>(backbone_type, ], label_info, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.algo.visual_prompting.SAM" title="otx.algo.visual_prompting.SAM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SAM</span></code></a>(data_input_params, label_info, ...)</p></td>
 <td><p>OTX visual prompting model class for Segment Anything Model (SAM).</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="otx.algo.visual_prompting.SAM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">backbone_type:</span> <span class="pre">Literal['tiny_vit',</span> <span class="pre">'vit_b'],</span> <span class="pre">label_info:</span> <span class="pre">LabelInfoTypes</span> <span class="pre">=</span> <span class="pre">NullLabelInfo(label_names=[],</span> <span class="pre">label_ids=[],</span> <span class="pre">label_groups=[[]]),</span> <span class="pre">input_size:</span> <span class="pre">tuple[int,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">(1024,</span> <span class="pre">1024),</span> <span class="pre">optimizer:</span> <span class="pre">OptimizerCallable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_default_optimizer_callable&gt;,</span> <span class="pre">scheduler:</span> <span class="pre">LRSchedulerCallable</span> <span class="pre">|</span> <span class="pre">LRSchedulerListCallable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_default_scheduler_callable&gt;,</span> <span class="pre">metric:</span> <span class="pre">MetricCallable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_visual_prompting_metric_callable&gt;,</span> <span class="pre">torch_compile:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">freeze_image_encoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">freeze_prompt_encoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">freeze_mask_decoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">use_stability_score:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">return_single_mask:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">return_extra_metrics:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">stability_score_offset:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/visual_prompting/sam.html#SAM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.visual_prompting.SAM" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CommonSettingMixin</span></code>, <a class="reference internal" href="otx.core.model.visual_prompting.html#otx.core.model.visual_prompting.OTXVisualPromptingModel" title="otx.core.model.visual_prompting.OTXVisualPromptingModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">OTXVisualPromptingModel</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.algo.visual_prompting.</span></span><span class="sig-name descname"><span class="pre">SAM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_input_params:</span> <span class="pre">DataInputParams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_info:</span> <span class="pre">LabelInfoTypes</span> <span class="pre">=</span> <span class="pre">NullLabelInfo(label_names=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_ids=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_groups=[[]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name:</span> <span class="pre">Literal['tiny_vit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'vit_b']</span> <span class="pre">=</span> <span class="pre">'tiny_vit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer:</span> <span class="pre">OptimizerCallable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_default_optimizer_callable&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduler:</span> <span class="pre">LRSchedulerCallable</span> <span class="pre">|</span> <span class="pre">LRSchedulerListCallable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_default_scheduler_callable&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric:</span> <span class="pre">MetricCallable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_visual_prompting_metric_callable&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_compile:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_image_encoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_prompt_encoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_mask_decoder:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_stability_score:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_single_mask:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_extra_metrics:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stability_score_offset:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/algo/visual_prompting/sam.html#SAM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.visual_prompting.SAM" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="otx.core.model.visual_prompting.html#otx.core.model.visual_prompting.OTXVisualPromptingModel" title="otx.core.model.visual_prompting.OTXVisualPromptingModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">OTXVisualPromptingModel</span></code></a></p>
 <p>OTX visual prompting model class for Segment Anything Model (SAM).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.algo.visual_prompting.SAM.pretrained_weights">
+<span class="sig-name descname"><span class="pre">pretrained_weights</span></span><a class="headerlink" href="#otx.algo.visual_prompting.SAM.pretrained_weights" title="Link to this definition">#</a></dt>
+<dd><p>Dictionary containing URLs for pretrained weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="otx.algo.visual_prompting.SAM.input_size_multiplier">
+<span class="sig-name descname"><span class="pre">input_size_multiplier</span></span><a class="headerlink" href="#otx.algo.visual_prompting.SAM.input_size_multiplier" title="Link to this definition">#</a></dt>
+<dd><p>Multiplier for input size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_input_params</strong> (<a class="reference internal" href="otx.core.model.base.html#otx.core.model.base.DataInputParams" title="otx.core.model.base.DataInputParams"><em>DataInputParams</em></a>) – Parameters for data input.</p></li>
+<li><p><strong>label_info</strong> (<em>LabelInfoTypes</em><em>, </em><em>optional</em>) – Information about labels. Defaults to NullLabelInfo().</p></li>
+<li><p><strong>model_name</strong> (<em>Literal</em><em>[</em><em>&quot;tiny_vit&quot;</em><em>, </em><em>&quot;vit_b&quot;</em><em>]</em><em>, </em><em>optional</em>) – Name of the model to use. Defaults to “tiny_vit”.</p></li>
+<li><p><strong>optimizer</strong> (<em>OptimizerCallable</em><em>, </em><em>optional</em>) – Callable for optimizer. Defaults to DefaultOptimizerCallable.</p></li>
+<li><p><strong>scheduler</strong> (<em>LRSchedulerCallable</em><em> | </em><em>LRSchedulerListCallable</em><em>, </em><em>optional</em>) – Callable for learning rate scheduler.
+Defaults to DefaultSchedulerCallable.</p></li>
+<li><p><strong>metric</strong> (<em>MetricCallable</em><em>, </em><em>optional</em>) – Callable for metric. Defaults to VisualPromptingMetricCallable.</p></li>
+<li><p><strong>torch_compile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use torch compile. Defaults to False.</p></li>
+<li><p><strong>freeze_image_encoder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to freeze the image encoder. Defaults to True.</p></li>
+<li><p><strong>freeze_prompt_encoder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to freeze the prompt encoder. Defaults to True.</p></li>
+<li><p><strong>freeze_mask_decoder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to freeze the mask decoder. Defaults to False.</p></li>
+<li><p><strong>use_stability_score</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use stability score. Defaults to False.</p></li>
+<li><p><strong>return_single_mask</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to return a single mask. Defaults to True.</p></li>
+<li><p><strong>return_extra_metrics</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to return extra metrics. Defaults to False.</p></li>
+<li><p><strong>stability_score_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – Offset for stability score. Defaults to 1.0.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Initialize the base model with the given parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label_info</strong> (<em>LabelInfoTypes</em>) – Information about the labels used in the model.</p></li>
+<li><p><strong>data_input_params</strong> (<a class="reference internal" href="otx.core.model.base.html#otx.core.model.base.DataInputParams" title="otx.core.model.base.DataInputParams"><em>DataInputParams</em></a>) – Parameters of the input data such as input size, mean, and std.</p></li>
+<li><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the model. Defaults to “OTXModel”.</p></li>
+<li><p><strong>optimizer</strong> (<em>OptimizerCallable</em><em>, </em><em>optional</em>) – Callable for the optimizer. Defaults to DefaultOptimizerCallable.</p></li>
+<li><p><strong>scheduler</strong> (<em>LRSchedulerCallable</em><em> | </em><em>LRSchedulerListCallable</em>) – Callable for the learning rate scheduler.
+Defaults to DefaultSchedulerCallable.</p></li>
+<li><p><strong>metric</strong> (<em>MetricCallable</em><em>, </em><em>optional</em>) – Callable for the metric. Defaults to NullMetricCallable.</p></li>
+<li><p><strong>torch_compile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Flag to indicate if torch.compile should be used. Defaults to False.</p></li>
+<li><p><strong>tile_config</strong> (<a class="reference internal" href="otx.core.config.data.html#otx.core.config.data.TileConfig" title="otx.core.config.data.TileConfig"><em>TileConfig</em></a><em>, </em><em>optional</em>) – Configuration for tiling. Defaults to TileConfig(enable_tiler=False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.algo.visual_prompting.SAM.forward_for_tracing">
+<span class="sig-name descname"><span class="pre">forward_for_tracing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_embeddings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_mask_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ori_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/algo/visual_prompting/sam.html#SAM.forward_for_tracing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.visual_prompting.SAM.forward_for_tracing" title="Link to this definition">#</a></dt>
+<dd><p>Forward method for SAM inference (export/deploy).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_embeddings</strong> (<em>Tensor</em>) – The image embedding with a batch index of length 1.
+If it is a zero tensor, the image embedding will be computed from the image.</p></li>
+<li><p><strong>point_coords</strong> (<em>Tensor</em>) – Coordinates of sparse input prompts,
+corresponding to both point inputs and box inputs.
+Boxes are encoded using two points, one for the top-left corner and one for the bottom-right corner.
+Coordinates must already be transformed to long-side 1024. Has a batch index of length 1.</p></li>
+<li><p><strong>point_labels</strong> (<em>Tensor</em>) – Labels for the sparse input prompts.
+0 is a negative input point, 1 is a positive input point,
+2 is a top-left box corner, 3 is a bottom-right box corner, and -1 is a padding point.
+If there is no box input, a single padding point with label -1 and
+coordinates (0.0, 0.0) should be concatenated.</p></li>
+<li><p><strong>mask_input</strong> (<em>Tensor</em>) – A mask input to the model with shape 1x1x256x256.
+This must be supplied even if there is no mask input. In this case, it can just be zeros.</p></li>
+<li><p><strong>has_mask_input</strong> (<em>Tensor</em>) – An indicator for the mask input.
+1 indicates a mask input, 0 indicates no mask input.
+This input has 1x1 shape due to supporting openvino input layout.</p></li>
+<li><p><strong>ori_shape</strong> (<em>Tensor</em>) – The size of the input image in (H,W) format, before any transformation.
+This input has 1x2 shape due to supporting openvino input layout.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.algo.visual_prompting.SAM.freeze_networks">
+<span class="sig-name descname"><span class="pre">freeze_networks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freeze_image_encoder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_prompt_encoder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_mask_decoder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/algo/visual_prompting/sam.html#SAM.freeze_networks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.visual_prompting.SAM.freeze_networks" title="Link to this definition">#</a></dt>
+<dd><p>Freeze networks depending on config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freeze_image_encoder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to freeze the image encoder.</p></li>
+<li><p><strong>freeze_prompt_encoder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to freeze the prompt encoder.</p></li>
+<li><p><strong>freeze_mask_decoder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to freeze the mask decoder.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.algo.visual_prompting.SAM.load_state_dict">
+<span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/algo/visual_prompting/sam.html#SAM.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.algo.visual_prompting.SAM.load_state_dict" title="Link to this definition">#</a></dt>
+<dd><p>Load checkpoint for SAM.</p>
+<p>This method loads a pre-trained state dictionary for the SAM model. It can load from
+a provided state dictionary or from a URL specified in the <cite>load_from</cite> parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state_dict</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em><em>, </em><em>optional</em>) – The state dictionary to load.
+Defaults to None.</p></li>
+<li><p><strong>strict</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to strictly enforce that the keys in state_dict
+match the keys returned by this module’s state_dict() function. Defaults to True.</p></li>
+<li><p><strong>assign</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to copy parameters instead of moving them.
+Defaults to False.</p></li>
+<li><p><strong>load_from</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em><em>, </em><em>optional</em>) – URL to load the checkpoint from. If provided,
+this will be used instead of the state_dict argument. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the checkpoint format is not desirable for torch.hub.load_state_dict_from_url.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If loading from a URL, some keys are removed from the loaded state dictionary
+and a ‘model.’ prefix is added to all remaining keys.</p>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -534,6 +669,53 @@
     </span>
    </code>
   </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.algo.visual_prompting.SAM.pretrained_weights">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SAM.pretrained_weights
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.algo.visual_prompting.SAM.input_size_multiplier">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SAM.input_size_multiplier
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.algo.visual_prompting.SAM.forward_for_tracing">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SAM.forward_for_tracing()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.algo.visual_prompting.SAM.freeze_networks">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SAM.freeze_networks()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.algo.visual_prompting.SAM.load_state_dict">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       SAM.load_state_dict()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
  </li>
 </ul>
 

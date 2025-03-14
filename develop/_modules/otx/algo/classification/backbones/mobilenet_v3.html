@@ -264,13 +264,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.mmengine_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span>
 
 <span class="n">pretrained_root</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/d-li14/mobilenetv3.pytorch/blob/master/pretrained/&quot;</span>
 <span class="n">pretrained_urls</span> <span class="o">=</span> <span class="p">{</span>
@@ -605,7 +605,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">MV3_CFG</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;small&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;mobilenetv3_small&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;layer_cfgs&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="c1"># k, t, c, SE, HS, s</span>
                 <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
@@ -623,7 +623,7 @@
             <span class="s2">&quot;out_channels&quot;</span><span class="p">:</span> <span class="mi">576</span><span class="p">,</span>
             <span class="s2">&quot;hid_channels&quot;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;large&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;mobilenetv3_large&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;layer_cfgs&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="c1"># k, t, c, SE, HS, s</span>
                 <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
@@ -649,7 +649,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;large&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;large&quot;</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mobilenetv3_large&quot;</span><span class="p">,</span>
         <span class="n">width_mult</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -657,7 +657,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new instance of the MobileNetV3 class.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            mode (Literal[&quot;small&quot;, &quot;large&quot;], optional): The mode of the MobileNetV3 model. Defaults to &quot;large&quot;.</span>
+<span class="sd">            model_name (str, optional): The mode of the MobileNetV3 model. Defaults to &quot;large&quot;.</span>
 <span class="sd">            width_mult (float, optional): Width multiplier for the MobileNetV3 model. Defaults to 1.0.</span>
 <span class="sd">            pretrained (bool, optional): Whether to load pretrained weights for the MobileNetV3 model. Defaults to True.</span>
 <span class="sd">            **kwargs: Additional keyword arguments to be passed to the MobileNetV3 constructor.</span>
@@ -665,13 +665,17 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            MobileNetV3: A new instance of the MobileNetV3 class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">MV3_CFG</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown MobileNetV3 model: </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
         <span class="n">model</span> <span class="o">=</span> <span class="n">MobileNetV3</span><span class="p">(</span>
-            <span class="n">layer_cfgs</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">MV3_CFG</span><span class="p">[</span><span class="n">mode</span><span class="p">][</span><span class="s2">&quot;layer_cfgs&quot;</span><span class="p">],</span>
+            <span class="n">layer_cfgs</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">MV3_CFG</span><span class="p">[</span><span class="n">model_name</span><span class="p">][</span><span class="s2">&quot;layer_cfgs&quot;</span><span class="p">],</span>
             <span class="n">width_mult</span><span class="o">=</span><span class="n">width_mult</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">pretrained</span><span class="p">:</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;mobilenetv3_</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">width_mult</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;mobilenetv3_</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">width_mult</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">model_name</span> <span class="k">if</span> <span class="n">width_mult</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">width_mult</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">load_from_http</span><span class="p">(</span><span class="n">pretrained_urls</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;init weight - </span><span class="si">{</span><span class="n">pretrained_urls</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">load_checkpoint_to_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">)</span>

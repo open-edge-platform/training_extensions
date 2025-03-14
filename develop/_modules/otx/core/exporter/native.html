@@ -274,7 +274,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPrecisionType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">OTXModel</span>
 
 
 <div class="viewcode-block" id="OTXNativeModelExporter">
@@ -285,9 +285,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">task_level_export_parameters</span><span class="p">:</span> <span class="n">TaskLevelExportParameters</span><span class="p">,</span>
-        <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-        <span class="n">mean</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-        <span class="n">std</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
         <span class="n">resize_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;crop&quot;</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="s2">&quot;fit_to_window&quot;</span><span class="p">,</span> <span class="s2">&quot;fit_to_window_letterbox&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
         <span class="n">pad_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">swap_rgb</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -298,9 +296,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="n">task_level_export_parameters</span><span class="p">,</span>
-            <span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span>
-            <span class="n">mean</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span>
-            <span class="n">std</span><span class="o">=</span><span class="n">std</span><span class="p">,</span>
+            <span class="n">data_input_params</span><span class="o">=</span><span class="n">data_input_params</span><span class="p">,</span>
             <span class="n">resize_mode</span><span class="o">=</span><span class="n">resize_mode</span><span class="p">,</span>
             <span class="n">pad_value</span><span class="o">=</span><span class="n">pad_value</span><span class="p">,</span>
             <span class="n">swap_rgb</span><span class="o">=</span><span class="n">swap_rgb</span><span class="p">,</span>
@@ -325,7 +321,8 @@
 
 <span class="sd">        In this implementation the export is done only via standard OV/ONNX tools.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">dummy_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">as_ncwh</span><span class="p">()</span>
+        <span class="n">dummy_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">via_onnx</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdirname</span><span class="p">:</span>
@@ -340,13 +337,13 @@
                 <span class="p">)</span>
                 <span class="n">exported_model</span> <span class="o">=</span> <span class="n">openvino</span><span class="o">.</span><span class="n">convert_model</span><span class="p">(</span>
                     <span class="n">tmp_dir</span> <span class="o">/</span> <span class="p">(</span><span class="n">base_model_name</span> <span class="o">+</span> <span class="s2">&quot;.onnx&quot;</span><span class="p">),</span>
-                    <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">),),</span>
+                    <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="n">input_size</span><span class="p">),),</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">exported_model</span> <span class="o">=</span> <span class="n">openvino</span><span class="o">.</span><span class="n">convert_model</span><span class="p">(</span>
                 <span class="n">model</span><span class="p">,</span>
                 <span class="n">example_input</span><span class="o">=</span><span class="n">dummy_tensor</span><span class="p">,</span>
-                <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">),),</span>
+                <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="n">input_size</span><span class="p">),),</span>
             <span class="p">)</span>
         <span class="n">exported_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_postprocess_openvino_model</span><span class="p">(</span><span class="n">exported_model</span><span class="p">)</span>
 
@@ -380,7 +377,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Path: The path to the saved ONNX model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">dummy_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">dummy_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">as_ncwh</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">save_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="p">(</span><span class="n">base_model_name</span> <span class="o">+</span> <span class="s2">&quot;.onnx&quot;</span><span class="p">))</span>
 
         <span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dummy_tensor</span><span class="p">,</span> <span class="n">save_path</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">onnx_export_configuration</span><span class="p">)</span>

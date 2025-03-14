@@ -324,13 +324,11 @@
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.classification.html">otx.algo.classification</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.backbones.html">otx.algo.classification.backbones</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.multiclass_models.html">otx.algo.classification.multiclass_models</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.multilabel_models.html">otx.algo.classification.multilabel_models</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.hlabel_models.html">otx.algo.classification.hlabel_models</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.heads.html">otx.algo.classification.heads</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.losses.html">otx.algo.classification.losses</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.efficientnet.html">otx.algo.classification.efficientnet</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.mobilenet_v3.html">otx.algo.classification.mobilenet_v3</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.timm_model.html">otx.algo.classification.timm_model</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.torchvision_model.html">otx.algo.classification.torchvision_model</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.classification.vit.html">otx.algo.classification.vit</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.detection.html">otx.algo.detection</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -349,7 +347,6 @@
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.algo.utils.html">otx.algo.utils</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.mmengine_utils.html">otx.algo.utils.mmengine_utils</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.support_otx_v1.html">otx.algo.utils.support_otx_v1</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.utils.html">otx.algo.utils.utils</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.algo.utils.weight_init.html">otx.algo.utils.weight_init</a></li>
@@ -392,11 +389,12 @@
 <li class="toctree-l4 current active has-children"><a class="reference internal" href="otx.core.model.html">otx.core.model</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-24"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l5 current active"><a class="current reference internal" href="#">otx.core.model.anomaly</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.base.html">otx.core.model.base</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.model.classification.html">otx.core.model.classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.detection.html">otx.core.model.detection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.hlabel_classification.html">otx.core.model.hlabel_classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.instance_segmentation.html">otx.core.model.instance_segmentation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.keypoint_detection.html">otx.core.model.keypoint_detection</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.core.model.rotated_detection.html">otx.core.model.rotated_detection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.multiclass_classification.html">otx.core.model.multiclass_classification</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.core.model.multilabel_classification.html">otx.core.model.multilabel_classification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.segmentation.html">otx.core.model.segmentation</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.core.model.visual_prompting.html">otx.core.model.visual_prompting</a></li>
 </ul>
@@ -570,7 +568,29 @@
 <p>Methods used to make OTX model compatible with the Anomalib model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>input_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Model input size in the order of height and width. Defaults to None.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_input_params</strong> (<a class="reference internal" href="otx.core.model.base.html#otx.core.model.base.DataInputParams" title="otx.core.model.base.DataInputParams"><em>DataInputParams</em></a>) – Data input parameters such as input size, mean, std.</p></li>
+<li><p><strong>label_info</strong> (<em>AnomalyLabelInfo</em>) – Label information for the model.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Initialize the base model with the given parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label_info</strong> (<em>LabelInfoTypes</em>) – Information about the labels used in the model.</p></li>
+<li><p><strong>data_input_params</strong> (<a class="reference internal" href="otx.core.model.base.html#otx.core.model.base.DataInputParams" title="otx.core.model.base.DataInputParams"><em>DataInputParams</em></a>) – Parameters of the input data such as input size, mean, and std.</p></li>
+<li><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the model. Defaults to “OTXModel”.</p></li>
+<li><p><strong>optimizer</strong> (<em>OptimizerCallable</em><em>, </em><em>optional</em>) – Callable for the optimizer. Defaults to DefaultOptimizerCallable.</p></li>
+<li><p><strong>scheduler</strong> (<em>LRSchedulerCallable</em><em> | </em><em>LRSchedulerListCallable</em>) – Callable for the learning rate scheduler.
+Defaults to DefaultSchedulerCallable.</p></li>
+<li><p><strong>metric</strong> (<em>MetricCallable</em><em>, </em><em>optional</em>) – Callable for the metric. Defaults to NullMetricCallable.</p></li>
+<li><p><strong>torch_compile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Flag to indicate if torch.compile should be used. Defaults to False.</p></li>
+<li><p><strong>tile_config</strong> (<a class="reference internal" href="otx.core.config.data.html#otx.core.config.data.TileConfig" title="otx.core.config.data.TileConfig"><em>TileConfig</em></a><em>, </em><em>optional</em>) – Configuration for tiling. Defaults to TileConfig(enable_tiler=False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py method">

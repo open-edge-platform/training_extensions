@@ -871,7 +871,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            module (nn.Module): The module to initialize.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.mmengine_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span><span class="p">,</span> <span class="n">load_state_dict</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint_to_model</span><span class="p">,</span> <span class="n">load_from_http</span><span class="p">,</span> <span class="n">load_state_dict</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>

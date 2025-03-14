@@ -17,7 +17,6 @@ otx.core.model.instance\_segmentation
 
    .. autosummary::
    
-      ExplainableOTXInstanceSegModel
       OTXInstanceSegModel
       OVInstanceSegmentationModel
    

@@ -261,12 +261,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">log</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">OmegaConf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">RandomSampler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span><span class="p">,</span> <span class="n">VisualPromptingConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
@@ -294,22 +295,37 @@
 <div class="viewcode-block" id="OTXDataModule">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.data.html#otx.core.data.OTXDataModule">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OTXDataModule</span><span class="p">(</span><span class="n">LightningDataModule</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;LightningDataModule extension for OTX pipeline.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class extends the LightningDataModule to provide data handling capabilities for the OTX pipeline.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_size (int | tuple[int, int] | None, optional):</span>
-<span class="sd">            Final image or video shape of data after data transformation. It&#39;ll be applied to all subset configs</span>
-<span class="sd">            If it&#39;s not None. Defaults to None.</span>
-<span class="sd">        adaptive_input_size (Literal[&quot;auto&quot;, &quot;downscale&quot;] | None, optional):</span>
-<span class="sd">            The adaptive input size mode. If it&#39;s set, appropriate input size is found by analyzing dataset.</span>
-<span class="sd">            &quot;auto&quot; can find both bigger and smaller input size than current input size and &quot;downscale&quot; uses only</span>
-<span class="sd">            smaller size than default setting. Defaults to None.</span>
-<span class="sd">        input_size_multiplier (int, optional):</span>
-<span class="sd">            adaptive_input_size will finds multiple of input_size_multiplier value if it&#39;s set. It&#39;s usefull when</span>
-<span class="sd">            a model requries multiple of specific value as input_size. Defaults to 1.</span>
+<span class="sd">        task (OTXTaskType): The type of task (e.g., classification, detection).</span>
+<span class="sd">        data_format (str): The format of the data (e.g., &#39;coco&#39;, &#39;voc&#39;).</span>
+<span class="sd">        data_root (str): The root directory where the data is stored.</span>
+<span class="sd">        train_subset (SubsetConfig): Configuration for the training subset.</span>
+<span class="sd">        val_subset (SubsetConfig): Configuration for the validation subset.</span>
+<span class="sd">        test_subset (SubsetConfig): Configuration for the test subset.</span>
+<span class="sd">        tile_config (TileConfig, optional): Configuration for tiling.</span>
+<span class="sd">        Defaults to TileConfig(enable_tiler=False).</span>
+<span class="sd">        vpm_config (VisualPromptingConfig, optional): Configuration for visual prompting.</span>
+<span class="sd">        Defaults to VisualPromptingConfig().</span>
+<span class="sd">        mem_cache_size (str, optional): Size of the memory cache. Defaults to &quot;1GB&quot;.</span>
+<span class="sd">        mem_cache_img_max_size (tuple[int, int] | None, optional): Maximum size of images in the memory cache.</span>
+<span class="sd">        Defaults to None.</span>
+<span class="sd">        image_color_channel (ImageColorChannel, optional): Color channel configuration for images.</span>
+<span class="sd">        Defaults to ImageColorChannel.RGB.</span>
+<span class="sd">        stack_images (bool, optional): Whether to stack images. Defaults to True.</span>
+<span class="sd">        include_polygons (bool, optional): Whether to include polygons in the data. Defaults to False.</span>
+<span class="sd">        ignore_index (int, optional): Index to ignore in segmentation tasks. Defaults to 255.</span>
+<span class="sd">        unannotated_items_ratio (float, optional): Ratio of unannotated items to include. Defaults to 0.0.</span>
+<span class="sd">        auto_num_workers (bool, optional): Whether to automatically determine the number of workers. Defaults to False.</span>
+<span class="sd">        device (DeviceType, optional): Device type to use (e.g., &#39;cpu&#39;, &#39;gpu&#39;). Defaults to DeviceType.auto.</span>
+<span class="sd">        input_size (tuple[int, int] | str, optional): Final image or video shape after transformation.</span>
+<span class="sd">        Can be &quot;auto&quot; to determine size automatically. Defaults to &quot;auto&quot;.</span>
+<span class="sd">        input_size_multiplier (int, optional): Multiplier for adaptive input size.</span>
+<span class="sd">        Useful for models requiring specific input size multiples. Defaults to 1.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="p">,</span>
         <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -328,8 +344,7 @@
         <span class="n">unannotated_items_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">auto_num_workers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">DeviceType</span> <span class="o">=</span> <span class="n">DeviceType</span><span class="o">.</span><span class="n">auto</span><span class="p">,</span>
-        <span class="n">input_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">adaptive_input_size</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="s2">&quot;downscale&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">input_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
         <span class="n">input_size_multiplier</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor.&quot;&quot;&quot;</span>
@@ -370,19 +385,39 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">unannotated_items_ratio</span><span class="p">,</span>
                 <span class="n">ignore_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;SEMANTIC_SEGMENTATION&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">adaptive_input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">input_size</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
             <span class="n">input_size</span> <span class="o">=</span> <span class="n">adapt_input_size_to_dataset</span><span class="p">(</span>
                 <span class="n">dataset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
-                <span class="n">input_size</span><span class="p">,</span>
-                <span class="n">adaptive_input_size</span> <span class="o">==</span> <span class="s2">&quot;downscale&quot;</span><span class="p">,</span>
                 <span class="n">input_size_multiplier</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">subset_cfg</span> <span class="ow">in</span> <span class="p">[</span><span class="n">train_subset</span><span class="p">,</span> <span class="n">val_subset</span><span class="p">,</span> <span class="n">test_subset</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;input_size should be tuple of ints or &#39;auto&#39;, but got </span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">subset_cfg</span> <span class="ow">in</span> <span class="p">[</span><span class="n">train_subset</span><span class="p">,</span> <span class="n">val_subset</span><span class="p">,</span> <span class="n">test_subset</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">subset_cfg</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>  <span class="c1"># type: ignore[assignment]</span>
+
+        <span class="c1"># get mean and std from Normalize transform</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">train_subset</span><span class="o">.</span><span class="n">transforms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">train_subset</span><span class="o">.</span><span class="n">transforms</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;Normalize&quot;</span> <span class="ow">in</span> <span class="n">transform</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+                    <span class="c1"># CLI case with jsonargparse</span>
+                    <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                    <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+                    <span class="k">break</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Normalize</span><span class="p">):</span>
+                    <span class="c1"># torchvision.transforms case</span>
+                    <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">mean</span>
+                    <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">std</span>
+                    <span class="k">break</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_mean</span> <span class="o">=</span> <span class="n">mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="n">std</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_tiler</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="o">.</span><span class="n">enable_adaptive_tiling</span><span class="p">:</span>
