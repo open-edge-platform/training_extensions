@@ -9,7 +9,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/tests/test_mod
 import torch
 
 from otx.algo.detection.utils.assigners import SimOTAAssigner
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 
 
 class TestSimOTAAssigner:

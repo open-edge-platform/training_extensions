@@ -9,13 +9,13 @@ Original papers:
 from __future__ import annotations
 
 import math
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar
 
 import torch
 from torch import nn
 from torch.nn import functional
 
-from otx.algo.utils.mmengine_utils import load_checkpoint_to_model, load_from_http
+from otx.algo.utils.utils import load_checkpoint_to_model, load_from_http
 
 pretrained_root = "https://github.com/d-li14/mobilenetv3.pytorch/blob/master/pretrained/"
 pretrained_urls = {
@@ -348,7 +348,7 @@ class MobileNetV3Backbone:
     """
 
     MV3_CFG: ClassVar[dict[str, Any]] = {
-        "small": {
+        "mobilenetv3_small": {
             "layer_cfgs": [
                 # k, t, c, SE, HS, s
                 [3, 1, 16, 1, 0, 2],
@@ -366,7 +366,7 @@ class MobileNetV3Backbone:
             "out_channels": 576,
             "hid_channels": 1024,
         },
-        "large": {
+        "mobilenetv3_large": {
             "layer_cfgs": [
                 # k, t, c, SE, HS, s
                 [3, 1, 16, 0, 0, 1],
@@ -392,7 +392,7 @@ class MobileNetV3Backbone:
 
     def __new__(
         cls,
-        mode: Literal["small", "large"] = "large",
+        model_name: str = "mobilenetv3_large",
         width_mult: float = 1.0,
         pretrained: bool = True,
         **kwargs,
@@ -400,7 +400,7 @@ class MobileNetV3Backbone:
         """Create a new instance of the MobileNetV3 class.
 
         Args:
-            mode (Literal["small", "large"], optional): The mode of the MobileNetV3 model. Defaults to "large".
+            model_name (str, optional): The mode of the MobileNetV3 model. Defaults to "large".
             width_mult (float, optional): Width multiplier for the MobileNetV3 model. Defaults to 1.0.
             pretrained (bool, optional): Whether to load pretrained weights for the MobileNetV3 model. Defaults to True.
             **kwargs: Additional keyword arguments to be passed to the MobileNetV3 constructor.
@@ -408,13 +408,17 @@ class MobileNetV3Backbone:
         Returns:
             MobileNetV3: A new instance of the MobileNetV3 class.
         """
+        if model_name not in cls.MV3_CFG:
+            msg = f"Unknown MobileNetV3 model: {model_name}"
+            raise ValueError(msg)
+
         model = MobileNetV3(
-            layer_cfgs=cls.MV3_CFG[mode]["layer_cfgs"],
+            layer_cfgs=cls.MV3_CFG[model_name]["layer_cfgs"],
             width_mult=width_mult,
             **kwargs,
         )
         if pretrained:
-            key = f"mobilenetv3_{mode}" if width_mult == 1.0 else f"mobilenetv3_{mode}_{int(width_mult * 100):03d}"
+            key = model_name if width_mult == 1.0 else f"{model_name}_{int(width_mult * 100):03d}"
             checkpoint = load_from_http(pretrained_urls[key])
             print(f"init weight - {pretrained_urls[key]}")
             load_checkpoint_to_model(model, checkpoint)

@@ -116,22 +116,9 @@ def fxt_target_dataset_per_task() -> dict:
         "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset",
         "visual_prompting": "tests/assets/car_tree_bug",
         "anomaly": "tests/assets/anomaly_hazelnut",
+        "anomaly_classification": "tests/assets/anomaly_hazelnut",
+        "anomaly_detection": "tests/assets/anomaly_hazelnut",
+        "anomaly_segmentation": "tests/assets/anomaly_hazelnut",
         "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
         "tiling_detection": "tests/assets/tiling_small_objects",
-    }
-
-
-@pytest.fixture(scope="module")
-def fxt_cli_override_command_per_task() -> dict:
-    return {
-        "multi_class_cls": [],
-        "multi_label_cls": [],
-        "h_label_cls": [],
-        "detection": [],
-        "rotated_detection": [],
-        "instance_segmentation": [],
-        "semantic_segmentation": [],
-        "visual_prompting": [],
-        "anomaly": [],
-        "keypoint_detection": [],
     }

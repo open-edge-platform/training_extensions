@@ -23,7 +23,7 @@ from torchvision.models.detection.image_list import ImageList
 from otx.algo.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
 from otx.algo.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
 from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
-from otx.algo.utils.mmengine_utils import InstanceData, load_checkpoint
+from otx.algo.utils.utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
@@ -46,26 +46,30 @@ if TYPE_CHECKING:
     from torch import nn
 
     from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
 
 
 class OTXInstanceSegModel(OTXModel):
     """Base class for the Instance Segmentation models used in OTX.
 
     Args:
-        label_info (LabelInfoTypes): label information
-        input_size (tuple[int, int]): model input size
-        model_name (str): model name/version
-        optimizer (OptimizerCallable, optional): optimizer
-        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): scheduler
-        metric (MetricCallable, optional): metric
-        torch_compile (bool, optional): torch compile
-        tile_config (TileConfig, optional): tile configuration
+        label_info (LabelInfoTypes): Information about the labels used in the model.
+        data_input_params (DataInputParams): Parameters for the data input.
+        model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
+        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric for evaluating the model.
+            Defaults to MaskRLEMeanAPFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
     """
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (1024, 1024),
+        data_input_params: DataInputParams,
         model_name: str = "inst_segm_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -73,27 +77,26 @@ class OTXInstanceSegModel(OTXModel):
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.model_name = model_name
         super().__init__(
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
             tile_config=tile_config,
         )
-        self.input_size: tuple[int, int]
 
-    def _build_model(self, num_classes: int) -> nn.Module:
-        raise NotImplementedError
+        self.model.feature_vector_fn = feature_vector_fn
+        self.model.explain_fn = self.get_explain_fn()
+        self.model.get_results_from_head = self.get_results_from_head
 
-    def _create_model(self) -> nn.Module:
-        detector = self._build_model(num_classes=self.label_info.num_classes)
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        num_classes = num_classes if num_classes is not None else self.num_classes
+        detector = self._build_model(num_classes)
         if hasattr(detector, "init_weights"):
             detector.init_weights()
-        self.classification_layers = self.get_classification_layers("model.")
-
         if isinstance(self.load_from, dict):
             load_checkpoint(detector, self.load_from[self.model_name], map_location="cpu")
         elif self.load_from is not None:
@@ -113,7 +116,7 @@ class OTXInstanceSegModel(OTXModel):
 
     def _customize_outputs(
         self,
-        outputs: list[InstanceData] | dict,  # TODO (sungchul): Remove `InstanceData`.
+        outputs: list[InstanceData] | dict,
         inputs: InstanceSegBatchDataEntity,
     ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
         if self.training:
@@ -126,7 +129,6 @@ class OTXInstanceSegModel(OTXModel):
                     losses[loss_name] = loss_value
                 elif isinstance(loss_value, list):
                     losses[loss_name] = sum(_loss.mean() for _loss in loss_value)
-            # pop acc from losses
             losses.pop("acc", None)
             return losses
 
@@ -192,41 +194,11 @@ class OTXInstanceSegModel(OTXModel):
             labels=labels,
         )
 
-    def get_classification_layers(self, prefix: str = "") -> dict[str, dict[str, int]]:
-        """Return classification layer names by comparing two different number of classes models.
-
-        Args:
-            config (DictConfig): Config for building model.
-            model_registry (Registry): Registry for building model.
-            prefix (str): Prefix of model param name.
-                Normally it is "model." since OTXModel set it's nn.Module model as self.model
-
-        Return:
-            dict[str, dict[str, int]]
-            A dictionary contain classification layer's name and information.
-            Stride means dimension of each classes, normally stride is 1, but sometimes it can be 4
-            if the layer is related bbox regression for object detection.
-            Extra classes is default class except class from data.
-            Normally it is related with background classes.
-        """
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-
-        classification_layers = {}
-        for key in sample_model_dict:
-            if sample_model_dict[key].shape != incremental_model_dict[key].shape:
-                sample_model_dim = sample_model_dict[key].shape[0]
-                incremental_model_dim = incremental_model_dict[key].shape[0]
-                stride = incremental_model_dim - sample_model_dim
-                num_extra_classes = 6 * sample_model_dim - 5 * incremental_model_dim
-                classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
-        return classification_layers
-
     def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> InstanceSegBatchPredEntity:
         """Unpack instance segmentation tiles.
 
         Args:
-            inputs (TileBatchInstSegDataEntity): Tile batch data entity.
+            inputs (OTXTileBatchDataEntity): Tile batch data entity.
 
         Returns:
             InstanceSegBatchPredEntity: Merged instance segmentation prediction.
@@ -391,11 +363,7 @@ class OTXInstanceSegModel(OTXModel):
 
     def get_dummy_input(self, batch_size: int = 1) -> InstanceSegBatchDataEntity:
         """Returns a dummy input for instance segmentation model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
-        images = [torch.rand(3, *self.input_size) for _ in range(batch_size)]
+        images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         infos = []
         for i, img in enumerate(images):
             infos.append(
@@ -407,48 +375,6 @@ class OTXInstanceSegModel(OTXModel):
             )
         return InstanceSegBatchDataEntity(batch_size, images, infos, bboxes=[], masks=[], labels=[], polygons=[])
 
-
-class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
-    """OTX Instance Segmentation model which can attach a XAI (Explainable AI) branch.
-
-    Args:
-        label_info (LabelInfoTypes): label information
-        input_size (tuple[int, int]): model input size
-        model_name (str): model name/version
-        optimizer (OptimizerCallable, optional): optimizer
-        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): scheduler
-        metric (MetricCallable, optional): metric
-        torch_compile (bool, optional): torch compile
-        tile_config (TileConfig, optional): tile configuration
-
-    """
-
-    def __init__(
-        self,
-        label_info: LabelInfoTypes,
-        model_name: str,
-        input_size: tuple[int, int] = (1024, 1024),
-        optimizer: OptimizerCallable = DefaultOptimizerCallable,
-        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
-        metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
-        torch_compile: bool = False,
-        tile_config: TileConfig = TileConfig(enable_tiler=False),
-    ) -> None:
-        super().__init__(
-            label_info=label_info,
-            input_size=input_size,
-            model_name=model_name,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            metric=metric,
-            torch_compile=torch_compile,
-            tile_config=tile_config,
-        )
-
-        self.model.feature_vector_fn = feature_vector_fn
-        self.model.explain_fn = self.get_explain_fn()
-        self.model.get_results_from_head = self.get_results_from_head
-
     def forward_explain(self, inputs: InstanceSegBatchDataEntity) -> InstanceSegBatchPredEntity:
         """Model forward function."""
         if isinstance(inputs, OTXTileBatchDataEntity):
@@ -457,16 +383,15 @@ class ExplainableOTXInstanceSegModel(OTXInstanceSegModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-        # If customize_inputs is overridden
         outputs = (
             self._forward_explain_inst_seg(self.model, **self._customize_inputs(inputs))
-            if self._customize_inputs != ExplainableOTXInstanceSegModel._customize_inputs
+            if self._customize_inputs != OTXInstanceSegModel._customize_inputs
             else self._forward_explain_inst_seg(self.model, inputs)
         )
 
         return (
             self._customize_outputs(outputs, inputs)
-            if self._customize_outputs != ExplainableOTXInstanceSegModel._customize_outputs
+            if self._customize_outputs != OTXInstanceSegModel._customize_outputs
             else outputs["predictions"]
         )
 

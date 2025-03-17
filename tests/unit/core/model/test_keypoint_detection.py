@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING
 import pytest
 import torch
 
-from otx.algo.keypoint_detection.rtmpose import RTMPoseTiny
+from otx.algo.keypoint_detection.rtmpose import RTMPose
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetBatchPredEntity
 from otx.core.metrics.pck import PCKMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.types.label import LabelInfo
 
 if TYPE_CHECKING:
@@ -24,7 +24,14 @@ if TYPE_CHECKING:
 class TestOTXKeypointDetectionModel:
     @pytest.fixture()
     def model(self, label_info, optimizer, scheduler, metric, torch_compile) -> OTXKeypointDetectionModel:
-        return RTMPoseTiny(label_info, (512, 512), optimizer, scheduler, metric, torch_compile)
+        return RTMPose(
+            label_info=label_info,
+            data_input_params=DataInputParams((512, 512), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+        )
 
     @pytest.fixture()
     def batch_data_entity(self, model) -> KeypointDetBatchDataEntity:
@@ -86,7 +93,7 @@ class TestOTXKeypointDetectionModel:
 
     def test_customize_inputs(self, model, batch_data_entity):
         customized_inputs = model._customize_inputs(batch_data_entity)
-        assert customized_inputs["inputs"].shape == (2, 3, model.input_size[0], model.input_size[1])
+        assert customized_inputs["inputs"].shape == (2, 3, *model.data_input_params.input_size)
         assert "mode" in customized_inputs
 
     def test_customize_outputs_training(self, model, batch_data_entity):

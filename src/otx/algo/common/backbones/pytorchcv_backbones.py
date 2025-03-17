@@ -15,7 +15,7 @@ from torch import distributed, nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
 from otx.algo.modules.norm import build_norm_layer
-from otx.algo.utils.mmengine_utils import get_dist_info
+from otx.algo.utils.utils import get_dist_info
 
 # ruff: noqa: SLF001
 

@@ -8,14 +8,19 @@ import torch
 
 from otx.algo.explain.explain_algo import feature_vector_fn
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
-from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel
+from otx.core.model.base import DataInputParams
+from otx.core.model.instance_segmentation import OTXInstanceSegModel
 from otx.core.types.export import TaskLevelExportParameters
 
 
 class TestOTXInstanceSegModel:
     @pytest.fixture()
-    def otx_model(self) -> ExplainableOTXInstanceSegModel:
-        return MaskRCNN(label_info=1, model_name="maskrcnn_efficientnet_b2b")
+    def otx_model(self) -> OTXInstanceSegModel:
+        return MaskRCNN(
+            label_info=1,
+            model_name="maskrcnn_efficientnet_b2b",
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
     def test_create_model(self, otx_model) -> None:
         mmdet_model = otx_model._create_model()

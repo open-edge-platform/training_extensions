@@ -1,8 +1,8 @@
 model:
-  class_path: otx.algo.classification.vit.VisionTransformerForMulticlassCls
+  class_path: otx.algo.classification.multiclass_models.vit.VisionTransformerMulticlassCls
   init_args:
     label_info: 1000
-    arch: "vit-tiny"
+    model_name: "vit-tiny"
     lora: false
 
     optimizer:

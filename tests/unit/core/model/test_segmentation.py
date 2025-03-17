@@ -11,7 +11,7 @@ import torch
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
 from otx.core.metrics.dice import SegmCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.segmentation import OTXSegmentationModel
 from otx.core.types.label import SegLabelInfo
 
@@ -19,7 +19,15 @@ from otx.core.types.label import SegLabelInfo
 class TestOTXSegmentationModel:
     @pytest.fixture()
     def model(self, label_info, optimizer, scheduler, metric, torch_compile):
-        return OTXSegmentationModel(label_info, "segm_model", (512, 512), optimizer, scheduler, metric, torch_compile)
+        return OTXSegmentationModel(
+            label_info,
+            DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            "segm_model",
+            optimizer,
+            scheduler,
+            metric,
+            torch_compile,
+        )
 
     @pytest.fixture()
     def batch_data_entity(self):
@@ -87,7 +95,7 @@ class TestOTXSegmentationModel:
     def test_init(self, model):
         assert model.num_classes == 3
         assert model.model_name == "segm_model"
-        assert model.input_size == (512, 512)
+        assert model.data_input_params.input_size == (224, 224)
 
     def test_customize_inputs(self, model, batch_data_entity):
         customized_inputs = model._customize_inputs(batch_data_entity)

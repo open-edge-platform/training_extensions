@@ -1,7 +1,7 @@
 model:
-  class_path: otx.algo.classification.mobilenet_v3.MobileNetV3ForMultilabelCls
+  class_path: otx.algo.classification.multilabel_models.mobilenet_v3.MobileNetV3MultilabelCls
   init_args:
-    mode: large
+    model_name: mobilenetv3_large
     label_info: 1000
 
     optimizer:

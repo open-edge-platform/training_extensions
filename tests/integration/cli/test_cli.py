@@ -21,7 +21,6 @@ from tests.utils import ExportCase2Test, run_main
 def fxt_trained_model(
     fxt_accelerator: str,
     fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
     fxt_open_subprocess: bool,
     request: pytest.FixtureRequest,
     tmp_path,
@@ -46,7 +45,6 @@ def fxt_trained_model(
         fxt_accelerator,
         "--max_epochs",
         "2",
-        *fxt_cli_override_command_per_task[task],
     ]
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
@@ -58,7 +56,6 @@ def test_otx_e2e(
     fxt_trained_model,
     fxt_accelerator: str,
     fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
     fxt_open_subprocess: bool,
     fxt_export_list: list[ExportCase2Test],
     tmp_path: Path,
@@ -111,7 +108,6 @@ def test_otx_e2e(
         str(tmp_path_test / "outputs"),
         "--engine.device",
         fxt_accelerator,
-        *fxt_cli_override_command_per_task[task],
         "--checkpoint",
         str(ckpt_file),
     ]
@@ -140,8 +136,6 @@ def test_otx_e2e(
             ExportCase2Test("OPENVINO", False, "exported_model_decoder.xml"),
         ]  # TODO (sungchul): EXPORTABLE_CODE will be supported
 
-    overrides = fxt_cli_override_command_per_task[task]
-
     tmp_path_test = tmp_path / f"otx_test_{model_name}"
     for export_case in fxt_export_list:
         command_cfg = [
@@ -153,7 +147,6 @@ def test_otx_e2e(
             fxt_target_dataset_per_task[task],
             "--work_dir",
             str(tmp_path_test / "outputs" / export_case.export_format),
-            *overrides,
             "--checkpoint",
             str(ckpt_file),
             "--export_format",
@@ -182,10 +175,6 @@ def test_otx_e2e(
     if task == "visual_prompting":
         recipe = str(Path(recipe).parents[0] / "openvino_model.yaml")
 
-    overrides = fxt_cli_override_command_per_task[task]
-    if "anomaly" in task:
-        overrides = {}  # Overrides are not needed in infer
-
     command_cfg = [
         "otx",
         "test",
@@ -197,7 +186,6 @@ def test_otx_e2e(
         str(tmp_path_test / "outputs"),
         "--engine.device",
         fxt_accelerator,
-        *overrides,
         "--checkpoint",
         exported_model_path,
     ]
@@ -238,7 +226,6 @@ def test_otx_e2e(
             fxt_target_dataset_per_task[task],
             "--work_dir",
             str(tmp_path_test / "outputs" / export_case.export_format),
-            *fxt_cli_override_command_per_task[task],
             "--checkpoint",
             str(ckpt_file),
             "--export_format",
@@ -264,7 +251,6 @@ def test_otx_explain_e2e(
     fxt_trained_model,
     fxt_accelerator: str,
     fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
     fxt_open_subprocess: bool,
     tmp_path: Path,
 ) -> None:
@@ -316,7 +302,6 @@ def test_otx_explain_e2e(
         "0",
         "--checkpoint",
         str(ckpt_file),
-        *fxt_cli_override_command_per_task[task],
     ]
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
@@ -404,7 +389,6 @@ def test_otx_adaptive_bs_e2e(
     tmp_path: Path,
     fxt_accelerator: str,
     fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
     fxt_open_subprocess: bool,
     bs_adapt_type: str,
 ) -> None:
@@ -442,7 +426,6 @@ def test_otx_adaptive_bs_e2e(
         bs_adapt_type,
         "--max_epoch",
         "1",
-        *fxt_cli_override_command_per_task[task],
     ]
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
@@ -454,7 +437,6 @@ def test_otx_configurable_input_size_e2e(
     tmp_path: Path,
     fxt_accelerator: str,
     fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
     fxt_open_subprocess: bool,
 ) -> None:
     """
@@ -488,10 +470,9 @@ def test_otx_configurable_input_size_e2e(
         "--engine.device",
         fxt_accelerator,
         "--data.input_size",
-        str(448),
+        "[448, 448]",
         "--max_epoch",
         "1",
-        *fxt_cli_override_command_per_task[task],
     ]
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
@@ -499,7 +480,7 @@ def test_otx_configurable_input_size_e2e(
     best_ckpt_files = list(tmp_path_cfg_ipt_size.rglob("best_checkpoint.ckpt"))
     assert len(best_ckpt_files) != 0
     best_ckpt = torch.load(best_ckpt_files[0])
-    assert best_ckpt["hyper_parameters"]["input_size"] == (448, 448)
+    assert best_ckpt["hyper_parameters"]["data_input_params"].input_size == (448, 448)
     for param_name in best_ckpt["datamodule_hyper_parameters"]:
         if "subset" in param_name:
-            assert best_ckpt["datamodule_hyper_parameters"][param_name].input_size == 448
+            assert best_ckpt["datamodule_hyper_parameters"][param_name].input_size == (448, 448)

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Literal
+from typing import Any, Callable, ClassVar
 
 import torch
 from pytorchcv.models.model_store import download_model
@@ -532,9 +532,6 @@ class EfficientNet(nn.Module):
         return (y,)
 
 
-EFFICIENTNET_VERSION = Literal["b0", "b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8"]
-
-
 class EfficientNetBackbone:
     """EfficientNetBackbone class represents the backbone architecture of EfficientNet models.
 
@@ -552,47 +549,47 @@ class EfficientNetBackbone:
     """
 
     EFFICIENTNET_CFG: ClassVar[dict[str, Any]] = {
-        "b0": {
+        "efficientnet_b0": {
             "input_size": (224, 224),
             "depth_factor": 1.0,
             "width_factor": 1.0,
         },
-        "b1": {
+        "efficientnet_b1": {
             "input_size": (240, 240),
             "depth_factor": 1.1,
             "width_factor": 1.0,
         },
-        "b2": {
+        "efficientnet_b2": {
             "input_size": (260, 260),
             "depth_factor": 1.2,
             "width_factor": 1.1,
         },
-        "b3": {
+        "efficientnet_b3": {
             "input_size": (300, 300),
             "depth_factor": 1.4,
             "width_factor": 1.2,
         },
-        "b4": {
+        "efficientnet_b4": {
             "input_size": (380, 380),
             "depth_factor": 1.8,
             "width_factor": 1.4,
         },
-        "b5": {
+        "efficientnet_b5": {
             "input_size": (456, 456),
             "depth_factor": 2.2,
             "width_factor": 1.6,
         },
-        "b6": {
+        "efficientnet_b6": {
             "input_size": (528, 528),
             "depth_factor": 2.6,
             "width_factor": 1.8,
         },
-        "b7": {
+        "efficientnet_b7": {
             "input_size": (600, 600),
             "depth_factor": 3.1,
             "width_factor": 2.0,
         },
-        "b8": {
+        "efficientnet_b8": {
             "input_size": (672, 672),
             "depth_factor": 3.6,
             "width_factor": 2.2,
@@ -610,7 +607,7 @@ class EfficientNetBackbone:
 
     def __new__(
         cls,
-        version: EFFICIENTNET_VERSION,
+        model_name: str,
         input_size: tuple[int, int] | None = None,
         pretrained: bool = True,
         **kwargs,
@@ -626,7 +623,7 @@ class EfficientNetBackbone:
         Returns:
             EfficientNet: The created EfficientNet model instance.
         """
-        origin_input_size, depth_factor, width_factor = cls.EFFICIENTNET_CFG[version].values()
+        origin_input_size, depth_factor, width_factor = cls.EFFICIENTNET_CFG[model_name].values()
         input_size = input_size or origin_input_size
         effnet_layers = [int(math.ceil(li * depth_factor)) for li in cls.layers]
         channels_per_layers = [round_channels(ci * width_factor) for ci in cls.channels_per_layers]
@@ -672,8 +669,9 @@ class EfficientNetBackbone:
             in_size=input_size,
             **kwargs,
         )
+
         if pretrained:
             cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
-            download_model(net=model, model_name=f"efficientnet_{version}", local_model_store_dir_path=str(cache_dir))
+            download_model(net=model, model_name=f"{model_name}", local_model_store_dir_path=str(cache_dir))
             print(f"Download model weight in {cache_dir!s}")
         return model

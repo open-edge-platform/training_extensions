@@ -1,7 +1,7 @@
 model:
-  class_path: otx.algo.classification.vit.VisionTransformerForHLabelCls
+  class_path: otx.algo.classification.hlabel_models.vit.VisionTransformerHLabelCls
   init_args:
-    arch: "vit-tiny"
+    model_name: "vit-tiny"
 
     optimizer:
       class_path: torch.optim.AdamW

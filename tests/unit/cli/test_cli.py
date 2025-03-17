@@ -123,13 +123,13 @@ class TestOTXCLI:
     @pytest.mark.parametrize("input_size", [512, 1024])
     def test_instantiate_classes_set_input_size(self, input_size, fxt_train_argv, monkeypatch, mocker) -> None:
         mocker.patch("otx.cli.OTXCLI.run")
-        fxt_train_argv.extend(["--data.input_size", str(input_size)])
+        fxt_train_argv.extend(["--data.input_size", f"{[input_size, input_size]}"])
         monkeypatch.setattr("sys.argv", fxt_train_argv)
 
         cli = OTXCLI()
         cli.instantiate_classes()
 
-        assert cli.model.input_size == (input_size, input_size)
+        assert cli.model.data_input_params.input_size == (input_size, input_size)
 
     @pytest.fixture()
     def mock_model_cls(self) -> MagicMock:
@@ -146,9 +146,9 @@ class TestOTXCLI:
     ) -> None:
         mocker.patch("otx.cli.OTXCLI.run")
         mocker.patch("otx.utils.utils.get_model_cls_from_config", return_value=mock_model_cls)
-        fxt_train_argv.extend(["--data.adaptive_input_size", "auto"])
+        fxt_train_argv.extend(["--data.input_size", "auto"])
         monkeypatch.setattr("sys.argv", fxt_train_argv)
-        mock_data_module = mocker.patch("otx.core.data.module.adapt_input_size_to_dataset", return_value=1024)
+        mock_data_module = mocker.patch("otx.core.data.module.adapt_input_size_to_dataset", return_value=(1024, 1024))
 
         cli = OTXCLI()
         cli.instantiate_classes()
