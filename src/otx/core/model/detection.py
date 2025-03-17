@@ -193,9 +193,6 @@ class OTXDetectionModel(OTXModel):
                 msg = "No saliency maps in the model output."
                 raise ValueError(msg)
 
-            saliency_map = outputs["saliency_map"].detach().cpu().numpy()
-            feature_vector = outputs["feature_vector"].detach().cpu().numpy()
-
             return TorchPredBatch(
                 batch_size=len(predictions),
                 images=inputs.images,
@@ -203,8 +200,11 @@ class OTXDetectionModel(OTXModel):
                 scores=scores,
                 bboxes=bboxes,
                 labels=labels,
-                saliency_map=saliency_map,
-                feature_vector=feature_vector,
+                saliency_map=[saliency_map.detach().to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                feature_vector=[
+                    feature_vector.detach().unsqueeze(0).to(torch.float32)
+                    for feature_vector in outputs["feature_vector"]
+                ],
             )
 
         return TorchPredBatch(
@@ -627,7 +627,7 @@ class OVDetectionModel(OVModel):
                 ),
             )
             scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
-            labels.append(torch.tensor(output.labels.reshape(-1) - label_shift, device=self.device))
+            labels.append(torch.tensor(output.labels.reshape(-1) - label_shift, device=self.device, dtype=torch.long))
 
         if outputs and outputs[0].saliency_map.size > 1:
             # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)
@@ -657,7 +657,7 @@ class OVDetectionModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredItem,  # type: ignore[override]
+        preds: TorchPredBatch,  # type: ignore[override]
         inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         return {
@@ -667,7 +667,7 @@ class OVDetectionModel(OVModel):
                     "scores": scores,
                     "labels": labels,
                 }
-                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.label)  # type: ignore[arg-type]
+                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.labels)  # type: ignore[arg-type]
             ],
             "target": [
                 {

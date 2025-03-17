@@ -1241,8 +1241,8 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         warp_matrix = self._get_random_homography_matrix(height, width)
 
         img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
-        inputs.image = img
-        inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+        inputs.image = torch.from_numpy(img).permute(2, 0, 1)
+        inputs.img_info = _resize_image_info(inputs.img_info, img.shape[1:])
 
         bboxes = getattr(inputs, "bboxes", [])
         num_bboxes = len(bboxes) if bboxes is not None else 0
@@ -1253,7 +1253,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             # remove outside bbox
             valid_index = is_inside_bboxes(bboxes, (height, width))
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_index], format="XYXY", canvas_size=(height, width))  # type: ignore[union-attr]
-            inputs.labels = inputs.labels[valid_index]  # type: ignore[union-attr]
+            inputs.label = inputs.label[valid_index]  # type: ignore[union-attr,index]
 
         return self.convert(inputs)
 
@@ -1438,7 +1438,10 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             # adjust coordinate
             gt_bboxes_i = results_patch.bboxes
-            gt_bboxes_labels_i = results_patch.labels
+            if isinstance(results_patch, TorchDataItem):  # TODO(ashwinvaidya17): temporary
+                gt_bboxes_labels_i = results_patch.label
+            else:
+                gt_bboxes_labels_i = results_patch.labels
 
             padw = x1_p - x1_c
             padh = y1_p - y1_c
@@ -1776,10 +1779,18 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         ori_img = ori_img.astype(np.float32)
         mixup_img = 0.5 * ori_img + 0.5 * padded_cropped_img.astype(np.float32)
 
-        retrieve_gt_bboxes_labels = retrieve_results.labels
+        if isinstance(inputs, TorchDataItem):  # TODO(ashwinvaidya17): temporary
+            retrieve_gt_bboxes_labels = retrieve_results.label
+        else:
+            retrieve_gt_bboxes_labels = retrieve_results.labels
 
         mixup_gt_bboxes = torch.cat((inputs.bboxes, cp_retrieve_gt_bboxes), dim=0)
-        mixup_gt_bboxes_labels = torch.cat((inputs.labels, retrieve_gt_bboxes_labels), dim=0)
+
+        _labels = (
+            inputs.label if isinstance(inputs, TorchDataItem) else inputs.labels
+        )  # TODO(ashwinvaidya17): temporary
+
+        mixup_gt_bboxes_labels = torch.cat((_labels, retrieve_gt_bboxes_labels), dim=0)
 
         # remove outside bbox
         inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))

@@ -173,9 +173,6 @@ class RTDETR(ExplainableOTXDetModel):
                 msg = "No saliency maps in the model output."
                 raise ValueError(msg)
 
-            saliency_map = outputs["saliency_map"].detach().cpu().numpy()
-            feature_vector = outputs["feature_vector"].detach().cpu().numpy()
-
             return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
@@ -183,8 +180,8 @@ class RTDETR(ExplainableOTXDetModel):
                 scores=scores,
                 bboxes=bboxes,
                 labels=labels,
-                feature_vector=feature_vector,
-                saliency_map=saliency_map,
+                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             )
 
         return TorchPredBatch(

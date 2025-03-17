@@ -225,11 +225,19 @@ class DetectionTileMerge(TileMerge):
                 scores.extend(tile_entity.scores)  # type: ignore[arg-type]
             if explain_mode:
                 tiles_coords.append(tile_entity.img_info.padding)  # type: ignore[union-attr]
-                feature_vectors.append(tile_entity.feature_vector)
-                saliency_maps.append(tile_entity.saliency_map)
+                feature_vectors.append(
+                    tile_entity.feature_vector.cpu().numpy()
+                    if isinstance(tile_entity.feature_vector, torch.Tensor)
+                    else tile_entity.feature_vector,
+                )
+                saliency_maps.append(
+                    tile_entity.saliency_map.cpu().numpy()
+                    if isinstance(tile_entity.saliency_map, torch.Tensor)
+                    else tile_entity.saliency_map,
+                )
 
         bboxes = torch.stack(bboxes) if len(bboxes) > 0 else torch.empty((0, 4), device=img_info.device)
-        labels = torch.stack(labels) if len(labels) > 0 else torch.empty((0,), device=img_info.device)
+        labels = torch.stack(labels) if len(labels) > 0 else torch.empty((0,), device=img_info.device, dtype=torch.long)
         scores = torch.stack(scores) if len(scores) > 0 else torch.empty((0,), device=img_info.device)
 
         bboxes, labels, scores, _ = self.nms_postprocess(bboxes, scores, labels)

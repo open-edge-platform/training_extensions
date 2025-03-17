@@ -31,7 +31,8 @@ if TYPE_CHECKING:
 class TorchDataItem(ValidateItemMixin, Mapping):
     """Torch data item implementation."""
 
-    image: torch.Tensor
+    # TODO(ashwinvaidya17): Image should only be a torch.Tensor. Kept for backward compatibility.
+    image: torch.Tensor | list[torch.Tensor]  # Tile sizes are different.
     label: torch.Tensor | None = None
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
@@ -46,9 +47,16 @@ class TorchDataItem(ValidateItemMixin, Mapping):
         Returns:
             Batched TorchDataItems with stacked tensors
         """
+        img_shape = items[0].image.shape  # type: ignore[union-attr]
+        if all(item.image.shape == img_shape for item in items):  # type: ignore[union-attr]
+            images = torch.stack([item.image for item in items])
+        else:
+            # TODO(ashwinvaidya17): tiles are not of the same size. Kept for backward compatibility.
+            images = [item.image for item in items]
+
         return TorchDataBatch(
             batch_size=len(items),
-            images=torch.stack([item.image for item in items]),
+            images=images,
             labels=[item.label for item in items],
             bboxes=[item.bboxes for item in items],
             masks=[item.masks for item in items],
@@ -71,7 +79,9 @@ class TorchDataBatch(ValidateBatchMixin):
     """Torch data item batch implementation."""
 
     batch_size: int  # TODO(ashwinvaidya17): Remove this
-    images: torch.Tensor
+    images: (
+        torch.Tensor | list[torch.Tensor]
+    )  # TODO(ashwinvaidya17): tiles are not of the same size. Kept for backward compatibility.
     labels: list[torch.Tensor] | None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
