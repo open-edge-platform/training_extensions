@@ -239,11 +239,11 @@ class TestRandomAffine:
         """Test forward."""
         results = random_affine(deepcopy(det_data_entity))
 
-        assert results.image.shape[:2] == (112, 224)
+        assert results.image.shape[1:] == (112, 224)
         assert results.label.shape[0] == results.bboxes.shape[0]
         assert results.label.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[1:]
 
 
 class TestCachedMosaic:

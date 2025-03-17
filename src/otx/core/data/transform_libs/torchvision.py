@@ -1242,7 +1242,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
         inputs.image = torch.from_numpy(img).permute(2, 0, 1)
-        inputs.img_info = _resize_image_info(inputs.img_info, img.shape[1:])
+        inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
         bboxes = getattr(inputs, "bboxes", [])
         num_bboxes = len(bboxes) if bboxes is not None else 0
