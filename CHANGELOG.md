@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Bug fixes
+
+- Fix otx install by moving base dependencies
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4285>)
+
 ## \[2.4.0\]
 
 ### New features
