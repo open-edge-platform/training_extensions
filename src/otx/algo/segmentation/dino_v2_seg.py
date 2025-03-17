@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 from urllib.parse import urlparse
 
 from torch.hub import download_url_to_file
@@ -16,45 +16,84 @@ from otx.algo.classification.backbones.vision_transformer import VisionTransform
 from otx.algo.segmentation.heads import FCNHead
 from otx.algo.segmentation.losses import CrossEntropyLossWithIgnore
 from otx.algo.segmentation.segmentors import BaseSegmentationModel
+from otx.core.config.data import TileConfig
+from otx.core.metrics.dice import SegmCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.segmentation import OTXSegmentationModel
 
 if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
+
+    from otx.core.metrics import MetricCallable
+    from otx.core.schedulers import LRSchedulerListCallable
+    from otx.core.types.label import LabelInfoTypes
 
 
 class DinoV2Seg(OTXSegmentationModel):
-    """DinoV2Seg Model."""
+    """DinoV2Seg for Semantic Segmentation model.
 
-    AVAILABLE_MODEL_VERSIONS: ClassVar[list[str]] = [
-        "dinov2-small-seg",
-    ]
-    PRETRAINED_WEIGHTS: ClassVar[dict[str, str]] = {
+    Args:
+        label_info (LabelInfoTypes): Information about the hierarchical labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (Literal, optional): Name of the model. Defaults to "dinov2-small-seg".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to SegmCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    """
+
+    pretrained_weights: ClassVar[dict[str, str]] = {
         "dinov2-small-seg": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
     }
 
-    def _create_model(self) -> nn.Module:
-        if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
-            msg = f"Model version {self.model_name} is not supported."
-            raise ValueError(msg)
-        backbone = VisionTransformer(arch=self.model_name, img_size=self.input_size)
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: Literal["dinov2-small-seg"] = "dinov2-small-seg",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ):
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
+
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        # initialize backbones
+        num_classes = num_classes if num_classes is not None else self.num_classes
+
+        backbone = VisionTransformer(model_name=self.model_name, img_size=self.data_input_params.input_size)
         backbone.forward = partial(  # type: ignore[method-assign]
             backbone.get_intermediate_layers,
             n=[8, 9, 10, 11],
             reshape=True,
         )
-        decode_head = FCNHead(self.model_name, num_classes=self.num_classes)
+        decode_head = FCNHead(self.model_name, num_classes=num_classes)
         criterion = CrossEntropyLossWithIgnore(ignore_index=self.label_info.ignore_index)  # type: ignore[attr-defined]
 
         backbone.init_weights()
-        if self.model_name in self.PRETRAINED_WEIGHTS:
-            print(f"init weight - {self.PRETRAINED_WEIGHTS[self.model_name]}")
-            parts = urlparse(self.PRETRAINED_WEIGHTS[self.model_name])
+        if self.model_name in self.pretrained_weights:
+            print(f"init weight - {self.pretrained_weights[self.model_name]}")
+            parts = urlparse(self.pretrained_weights[self.model_name])
             filename = Path(parts.path).name
 
             cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
             cache_file = cache_dir / filename
             if not Path.exists(cache_file):
-                download_url_to_file(self.PRETRAINED_WEIGHTS[self.model_name], cache_file, "", progress=True)
+                download_url_to_file(self.pretrained_weights[self.model_name], cache_file, "", progress=True)
             backbone.load_pretrained(checkpoint_path=cache_file)
 
         # freeze backbone

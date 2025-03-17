@@ -6,15 +6,20 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.algo.keypoint_detection.rtmpose import RTMPoseTiny
+from otx.algo.keypoint_detection.rtmpose import RTMPose
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
+from otx.core.model.base import DataInputParams
 
 
 class TestRTMPoseTiny:
     @pytest.fixture()
-    def fxt_keypoint_det_model(self) -> RTMPoseTiny:
-        return RTMPoseTiny(label_info=10)
+    def fxt_keypoint_det_model(self) -> RTMPose:
+        return RTMPose(
+            label_info=10,
+            model_name="rtmpose_tiny",
+            data_input_params=DataInputParams((192, 256), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
     def test_customize_inputs(self, fxt_keypoint_det_model, fxt_keypoint_det_batch_data_entity):
         outputs = fxt_keypoint_det_model._customize_inputs(fxt_keypoint_det_batch_data_entity)

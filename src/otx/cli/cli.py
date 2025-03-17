@@ -21,6 +21,7 @@ from otx.cli.utils import absolute_path
 from otx.cli.utils.help_formatter import CustomHelpFormatter
 from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from otx.cli.utils.workspace import Workspace
+from otx.core.model.base import DataInputParams
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.imports import get_otx_root_path
 
@@ -329,10 +330,11 @@ class OTXCLI:
         """
         if self.subcommand in self.engine_subcommands():
             # For num_classes update, Model and Metric are instantiated separately.
-            model_config = self.config[self.subcommand].pop("model")
 
-            # if adaptive_input_size will be executed and the model has input_size_multiplier, pass it to OTXDataModule
-            if self.config[self.subcommand].data.get("adaptive_input_size") is not None:
+            model_config = self.config[self.subcommand].pop("model")
+            # if input_size == "auto" will be executed adaptive input size
+            # input_size_multiplier is needed when we have constraints on the input size to the model
+            if self.config[self.subcommand].data.get("input_size") == "auto":
                 from otx.utils.utils import get_model_cls_from_config
 
                 model_cls = get_model_cls_from_config(model_config)
@@ -343,11 +345,12 @@ class OTXCLI:
             self.workspace = self.get_config_value(self.config_init, "workspace")
             self.datamodule = self.get_config_value(self.config_init, "data")
 
-            # pass OTXDataModule input size to the model
-            if (input_size := self.datamodule.input_size) is not None and "input_size" in model_config["init_args"]:
-                model_config["init_args"]["input_size"] = (
-                    (input_size, input_size) if isinstance(input_size, int) else tuple(input_size)
-                )
+            # pass OTXDataModule input size, mean and std to the model
+            model_config.init_args["data_input_params"] = DataInputParams(
+                input_size=self.datamodule.input_size,
+                mean=self.datamodule.input_mean,
+                std=self.datamodule.input_std,
+            )
 
             # Instantiate the model and needed components
             self.model = self.instantiate_model(model_config=model_config)

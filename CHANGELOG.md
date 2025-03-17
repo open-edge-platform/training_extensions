@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+## \[2.4.0\]
+
 ### New features
+
+- Add DETR XAI Explain Mode
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
+- Add UFlow anomaly detection algorithm
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4251>)
 
 ### Enhancements
 
@@ -12,15 +19,21 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4243>)
 - Bump ModelAPI to 0.2.5.2
   (<https://github.com/openvinotoolkit/training_extensions/pull/4275>)
+- Refactor OTX Models: Introduce DataInputParams. Align all models with the same interface.
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4241>)
 
 ### Bug fixes
 
+- Fix KP Detection performance
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4270>)
 - Fix auto batch size with tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4233>)
 - Fix exportable code for tiling
   (<https://github.com/openvinotoolkit/training_extensions/pull/4234>)
 - Don't filter empty label from kp arrow
   (<https://github.com/openvinotoolkit/training_extensions/pull/4229>)
+- Fix description for auto batch size
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4274>)
 
 ### Removed
 
@@ -61,10 +74,6 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4017>)
 - Add D-Fine Detection Algorithm
   (<https://github.com/openvinotoolkit/training_extensions/pull/4142>)
-- Add DETR XAI Explain Mode
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
-- Add UFlow anomaly detection algorithm
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4251>)
 
 ### Enhancements
 

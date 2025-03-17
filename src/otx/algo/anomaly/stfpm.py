@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Literal, Sequence
 from anomalib.models.image.stfpm import Stfpm as AnomalibStfpm
 
 from otx.core.model.anomaly import AnomalyMixin, OTXAnomaly
+from otx.core.model.base import DataInputParams
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
 
@@ -34,6 +35,7 @@ class Stfpm(AnomalyMixin, AnomalibStfpm, OTXAnomaly):
 
     def __init__(
         self,
+        data_input_params: DataInputParams,
         label_info: LabelInfoTypes = AnomalyLabelInfo(),
         layers: Sequence[str] = ["layer1", "layer2", "layer3"],
         backbone: str = "resnet18",
@@ -43,10 +45,10 @@ class Stfpm(AnomalyMixin, AnomalibStfpm, OTXAnomaly):
             OTXTaskType.ANOMALY_DETECTION,
             OTXTaskType.ANOMALY_SEGMENTATION,
         ] = OTXTaskType.ANOMALY_CLASSIFICATION,
-        input_size: tuple[int, int] = (256, 256),
         **kwargs,
     ) -> None:
-        self.input_size = input_size
+        self.data_input_params = data_input_params
+        self.input_size = data_input_params.input_size
         self.task = OTXTaskType(task)
         super().__init__(
             backbone=backbone,

@@ -7,17 +7,15 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from typing import TYPE_CHECKING, Any
 
 import torch
 
-from otx.algo.utils.mmengine_utils import load_checkpoint
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetBatchPredEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
@@ -25,16 +23,28 @@ from otx.core.types.label import LabelInfoTypes
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import DetectedKeypoints
-    from torch import nn
 
 
 class OTXKeypointDetectionModel(OTXModel):
-    """Base class for the keypoint detection models used in OTX."""
+    """Base class for the keypoint detection models used in OTX.
+
+    label_info (LabelInfoTypes): Information about the labels.
+    data_input_params (DataInputParams): Parameters for data input.
+    model_name (str, optional): Name of the model. Defaults to "keypoint_detection_model".
+    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+    metric (MetricCallable, optional): Callable for the metric. Defaults to PCKMeasureCallable.
+    torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+
+    Base class for the keypoint detection models used in OTX.
+    """
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int],
+        data_input_params: DataInputParams,
+        model_name: str = "keypoint_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = PCKMeasureCallable,
@@ -42,25 +52,13 @@ class OTXKeypointDetectionModel(OTXModel):
     ) -> None:
         super().__init__(
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
-        self.input_size: tuple[int, int]
-
-    @abstractmethod
-    def _build_model(self, num_classes: int) -> nn.Module:
-        raise NotImplementedError
-
-    def _create_model(self) -> nn.Module:
-        detector = self._build_model(num_classes=self.label_info.num_classes)
-        detector.init_weights()
-        self.classification_layers = self.get_classification_layers(prefix="model.")
-        if self.load_from is not None:
-            load_checkpoint(detector, self.load_from, map_location="cpu")
-        return detector
 
     def _customize_inputs(self, entity: KeypointDetBatchDataEntity) -> dict[str, Any]:
         """Convert KeypointDetBatchDataEntity into Topdown model's input."""
@@ -108,7 +106,7 @@ class OTXKeypointDetectionModel(OTXModel):
     def configure_metric(self) -> None:
         """Configure the metric."""
         super().configure_metric()
-        self._metric.input_size = self.input_size
+        self._metric.input_size = tuple(self.data_input_params.input_size)
 
     def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
@@ -132,21 +130,6 @@ class OTXKeypointDetectionModel(OTXModel):
             ],
         }
 
-    def get_classification_layers(self, prefix: str = "model.") -> dict[str, dict[str, int]]:
-        """Get final classification layer information for incremental learning case."""
-        sample_model_dict = self._build_model(num_classes=5).state_dict()
-        incremental_model_dict = self._build_model(num_classes=6).state_dict()
-
-        classification_layers = {}
-        for key in sample_model_dict:
-            if sample_model_dict[key].shape != incremental_model_dict[key].shape:
-                sample_model_dim = sample_model_dict[key].shape[0]
-                incremental_model_dim = incremental_model_dict[key].shape[0]
-                stride = incremental_model_dim - sample_model_dim
-                num_extra_classes = 6 * sample_model_dim - 5 * incremental_model_dim
-                classification_layers[prefix + key] = {"stride": stride, "num_extra_classes": num_extra_classes}
-        return classification_layers
-
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | tuple[torch.Tensor]:
         """Model forward function used for the model tracing during model exportation."""
         return self.model.forward(inputs=image, mode="tensor")
@@ -160,11 +143,7 @@ class OTXKeypointDetectionModel(OTXModel):
         Returns:
             KeypointDetBatchDataEntity: An entity containing randomly generated inference data.
         """
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
-        images = torch.rand(batch_size, 3, *self.input_size)
+        images = torch.rand(self.data_input_params.as_ncwh(batch_size))
         infos = []
         for i, img in enumerate(images):
             infos.append(

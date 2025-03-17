@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, Literal
 
 from torch.onnx import OperatorExportTypes
 
@@ -14,30 +14,65 @@ from otx.algo.segmentation.heads import FCNHead
 from otx.algo.segmentation.losses import CrossEntropyLossWithIgnore
 from otx.algo.segmentation.segmentors import BaseSegmentationModel
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.core.config.data import TileConfig
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.metrics.dice import SegmCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.segmentation import OTXSegmentationModel
 
 if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
+
+    from otx.core.metrics import MetricCallable
+    from otx.core.schedulers import LRSchedulerListCallable
+    from otx.core.types.label import LabelInfoTypes
 
 
 class LiteHRNet(OTXSegmentationModel):
-    """LiteHRNet Model."""
+    """LiteHRNet Model.
 
-    AVAILABLE_MODEL_VERSIONS: ClassVar[list[str]] = [
-        "lite_hrnet_s",
-        "lite_hrnet_18",
-        "lite_hrnet_x",
-    ]
+    Args:
+        label_info (LabelInfoTypes): Information about the hierarchical labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (Literal, optional): Name of the model. Defaults to "lite_hrnet_18".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to SegmCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    """
 
-    def _create_model(self) -> nn.Module:
-        if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
-            msg = f"Model version {self.model_name} is not supported."
-            raise ValueError(msg)
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: Literal["lite_hrnet_s", "lite_hrnet_18", "lite_hrnet_x"] = "lite_hrnet_18",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ):
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
+
+    def _create_model(self, num_classes: int | None = None) -> nn.Module:
+        # initialize backbones
+        num_classes = num_classes if num_classes is not None else self.num_classes
 
         backbone = LiteHRNetBackbone(self.model_name)
-        decode_head = FCNHead(self.model_name, num_classes=self.num_classes)
+        decode_head = FCNHead(self.model_name, num_classes=num_classes)
         criterion = CrossEntropyLossWithIgnore(ignore_index=self.label_info.ignore_index)  # type: ignore[attr-defined]
         return BaseSegmentationModel(
             backbone=backbone,
@@ -67,15 +102,9 @@ class LiteHRNet(OTXSegmentationModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.scale,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             pad_value=0,
             swap_rgb=False,

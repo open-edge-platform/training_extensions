@@ -59,14 +59,11 @@ class SubsetConfig:
     # TODO (vinnamki): Revisit data configuration objects to support a union type in structured config
     # Omegaconf does not allow to have a union type, https://github.com/omry/omegaconf/issues/144
     transforms: list[dict[str, Any]]
-
     transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
     num_workers: int = 2
     sampler: SamplerConfig = field(default_factory=lambda: SamplerConfig())
     to_tv_image: bool = True
-    input_size: (
-        Any
-    ) = None  # type is `int | tuple[int, int] | None` TODO (eunwoosh): Revisit after error above is solved
+    input_size: tuple[int, int] | None = None
 
 
 @dataclass

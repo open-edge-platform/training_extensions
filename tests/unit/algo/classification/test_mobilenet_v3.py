@@ -5,24 +5,24 @@ import pytest
 import torch
 
 from otx.algo.classification.classifier import ImageClassifier
-from otx.algo.classification.mobilenet_v3 import (
-    MobileNetV3ForHLabelCls,
-    MobileNetV3ForMulticlassCls,
-    MobileNetV3ForMultilabelCls,
-)
+from otx.algo.classification.hlabel_models.mobilenet_v3 import MobileNetV3HLabelCls
+from otx.algo.classification.multiclass_models.mobilenet_v3 import MobileNetV3MulticlassCls
+from otx.algo.classification.multilabel_models.mobilenet_v3 import MobileNetV3MultilabelCls
 from otx.core.data.entity.base import OTXBatchLossEntity
+from otx.core.model.base import DataInputParams
 from otx.data.torch import TorchPredBatch
 
 
 @pytest.fixture()
 def fxt_multi_class_cls_model():
-    return MobileNetV3ForMulticlassCls(
-        mode="large",
+    return MobileNetV3MulticlassCls(
+        model_name="mobilenetv3_large",
         label_info=10,
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     )
 
 
-class TestMobileNetV3ForMulticlassCls:
+class TestMobileNetV3MulticlassCls:
     def test_create_model(self, fxt_multi_class_cls_model):
         assert isinstance(fxt_multi_class_cls_model.model, ImageClassifier)
 
@@ -52,20 +52,25 @@ class TestMobileNetV3ForMulticlassCls:
         assert outputs.has_xai_outputs == explain_mode
 
     def test_set_input_size(self):
-        input_size = (300, 300)
-        model = MobileNetV3ForMulticlassCls(mode="large", label_info=10, input_size=input_size)
-        assert model.model.backbone.in_size == input_size[-2:]
+        data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        model = MobileNetV3MulticlassCls(
+            model_name="mobilenetv3_large",
+            label_info=10,
+            data_input_params=data_input_params,
+        )
+        assert model.model.backbone.in_size == data_input_params.input_size[-2:]
 
 
 @pytest.fixture()
 def fxt_multi_label_cls_model():
-    return MobileNetV3ForMultilabelCls(
-        mode="large",
+    return MobileNetV3MultilabelCls(
+        model_name="mobilenetv3_large",
         label_info=10,
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     )
 
 
-class TestMobileNetV3ForMultilabelCls:
+class TestMobileNetV3MultilabelCls:
     def test_create_model(self, fxt_multi_label_cls_model):
         assert isinstance(fxt_multi_label_cls_model.model, ImageClassifier)
 
@@ -95,20 +100,25 @@ class TestMobileNetV3ForMultilabelCls:
         assert outputs.has_xai_outputs == explain_mode
 
     def test_set_input_size(self):
-        input_size = (300, 300)
-        model = MobileNetV3ForMultilabelCls(mode="large", label_info=10, input_size=input_size)
-        assert model.model.backbone.in_size == input_size[-2:]
+        data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        model = MobileNetV3MultilabelCls(
+            model_name="mobilenetv3_large",
+            label_info=10,
+            data_input_params=data_input_params,
+        )
+        assert model.model.backbone.in_size == data_input_params.input_size[-2:]
 
 
 @pytest.fixture()
 def fxt_h_label_cls_model(fxt_hlabel_cifar):
-    return MobileNetV3ForHLabelCls(
-        mode="large",
+    return MobileNetV3HLabelCls(
+        model_name="mobilenetv3_large",
         label_info=fxt_hlabel_cifar,
+        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
     )
 
 
-class TestMobileNetV3ForHLabelCls:
+class TestMobileNetV3HLabelCls:
     def test_create_model(self, fxt_h_label_cls_model):
         assert isinstance(fxt_h_label_cls_model.model, ImageClassifier)
 
@@ -138,6 +148,10 @@ class TestMobileNetV3ForHLabelCls:
         assert outputs.has_xai_outputs == explain_mode
 
     def test_set_input_size(self, fxt_hlabel_data):
-        input_size = (300, 300)
-        model = MobileNetV3ForHLabelCls(mode="large", label_info=fxt_hlabel_data, input_size=input_size)
-        assert model.model.backbone.in_size == input_size[-2:]
+        data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        model = MobileNetV3HLabelCls(
+            model_name="mobilenetv3_large",
+            label_info=fxt_hlabel_data,
+            data_input_params=data_input_params,
+        )
+        assert model.model.backbone.in_size == data_input_params.input_size[-2:]

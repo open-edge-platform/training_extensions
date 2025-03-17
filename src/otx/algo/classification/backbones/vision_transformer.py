@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal
 
 import torch
 from timm.layers import (
@@ -34,29 +34,6 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-VIT_ARCH_TYPE = Literal[
-    "vit-t",
-    "vit-tiny",
-    "vit-s",
-    "vit-small",
-    "vit-b",
-    "vit-base",
-    "vit-l",
-    "vit-large",
-    "vit-h",
-    "vit-huge",
-    "dinov2-s",
-    "dinov2-small",
-    "dinov2-small-seg",
-    "dinov2-b",
-    "dinov2-base",
-    "dinov2-l",
-    "dinov2-large",
-    "dinov2-g",
-    "dinov2-giant",
-]
-
-
 class VisionTransformer(BaseModule):
     """Implementation of Vision Transformer from Timm.
 
@@ -65,7 +42,7 @@ class VisionTransformer(BaseModule):
         - https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
 
     Args:
-        arch: Vision Transformer architecture.
+        model_name: Vision Transformer architecture.
         img_size: Input image size.
         patch_size: Patch size.
         in_chans: Number of image input channels.
@@ -93,7 +70,7 @@ class VisionTransformer(BaseModule):
         lora: Enable LoRA training.
     """
 
-    arch_zoo: dict[str, dict] = {  # noqa: RUF012
+    model_zoo: ClassVar[dict[str, dict[str, Any]]] = {
         **dict.fromkeys(
             ["vit-t", "vit-tiny"],
             {
@@ -207,7 +184,7 @@ class VisionTransformer(BaseModule):
 
     def __init__(  # noqa: PLR0913
         self,
-        arch: VIT_ARCH_TYPE | str = "vit-base",
+        model_name: str = "vit-base",
         img_size: int | tuple[int, int] = 224,
         patch_size: int | None = None,
         in_chans: int = 3,
@@ -239,11 +216,11 @@ class VisionTransformer(BaseModule):
         lora: bool = False,
     ) -> None:
         super().__init__()
-        if isinstance(arch, str):
-            if arch not in set(self.arch_zoo):
-                msg = f"Arch {arch} is not in default archs {set(self.arch_zoo)}"
+        if isinstance(model_name, str):
+            if model_name not in set(self.model_zoo):
+                msg = f"Arch {model_name} is not in default archs {set(self.model_zoo)}"
                 raise ValueError(msg)
-            arch_settings: dict[str, Any] = self.arch_zoo[arch]
+            arch_settings: dict[str, Any] = self.model_zoo[model_name]
 
         self.img_size: int | tuple[int, int] = img_size
         self.patch_size: int = patch_size or arch_settings.get("patch_size", 16)

@@ -19,7 +19,7 @@ from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
-    from otx.core.model.base import OTXModel
+    from otx.core.model.base import DataInputParams, OTXModel
 
 
 class OTXNativeModelExporter(OTXModelExporter):
@@ -28,9 +28,7 @@ class OTXNativeModelExporter(OTXModelExporter):
     def __init__(
         self,
         task_level_export_parameters: TaskLevelExportParameters,
-        input_size: tuple[int, ...],
-        mean: tuple[float, float, float] = (0.0, 0.0, 0.0),
-        std: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        data_input_params: DataInputParams,
         resize_mode: Literal["crop", "standard", "fit_to_window", "fit_to_window_letterbox"] = "standard",
         pad_value: int = 0,
         swap_rgb: bool = False,
@@ -41,9 +39,7 @@ class OTXNativeModelExporter(OTXModelExporter):
     ) -> None:
         super().__init__(
             task_level_export_parameters=task_level_export_parameters,
-            input_size=input_size,
-            mean=mean,
-            std=std,
+            data_input_params=data_input_params,
             resize_mode=resize_mode,
             pad_value=pad_value,
             swap_rgb=swap_rgb,
@@ -66,7 +62,8 @@ class OTXNativeModelExporter(OTXModelExporter):
 
         In this implementation the export is done only via standard OV/ONNX tools.
         """
-        dummy_tensor = torch.rand(self.input_size).to(next(model.parameters()).device)
+        input_size = self.data_input_params.as_ncwh()
+        dummy_tensor = torch.rand(input_size).to(next(model.parameters()).device)
 
         if self.via_onnx:
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -81,13 +78,13 @@ class OTXNativeModelExporter(OTXModelExporter):
                 )
                 exported_model = openvino.convert_model(
                     tmp_dir / (base_model_name + ".onnx"),
-                    input=(openvino.runtime.PartialShape(self.input_size),),
+                    input=(openvino.runtime.PartialShape(input_size),),
                 )
         else:
             exported_model = openvino.convert_model(
                 model,
                 example_input=dummy_tensor,
-                input=(openvino.runtime.PartialShape(self.input_size),),
+                input=(openvino.runtime.PartialShape(input_size),),
             )
         exported_model = self._postprocess_openvino_model(exported_model)
 
@@ -118,7 +115,7 @@ class OTXNativeModelExporter(OTXModelExporter):
         Returns:
             Path: The path to the saved ONNX model.
         """
-        dummy_tensor = torch.rand(self.input_size).to(next(model.parameters()).device)
+        dummy_tensor = torch.rand(self.data_input_params.as_ncwh()).to(next(model.parameters()).device)
         save_path = str(output_dir / (base_model_name + ".onnx"))
 
         torch.onnx.export(model, dummy_tensor, save_path, **self.onnx_export_configuration)

@@ -15,7 +15,7 @@ from torch.nn import SyncBatchNorm
 
 from otx.algo.modules import build_norm_layer
 from otx.algo.modules.base_module import BaseModule
-from otx.algo.utils.mmengine_utils import load_checkpoint_to_model, load_from_http
+from otx.algo.utils.utils import load_checkpoint_to_model, load_from_http
 
 if TYPE_CHECKING:
     from torch import Tensor

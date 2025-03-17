@@ -26,7 +26,7 @@ from otx.algo.instance_segmentation.layers import multiclass_nms_torch
 from otx.algo.instance_segmentation.utils.structures.bbox import scale_boxes
 from otx.algo.instance_segmentation.utils.utils import empty_instances
 from otx.algo.modules.base_module import BaseModule
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 
 if TYPE_CHECKING:
     from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder

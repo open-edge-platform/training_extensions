@@ -3,9 +3,6 @@ model:
   init_args:
     model_name: maskrcnn_swin_tiny
     label_info: 80
-    input_size:
-      - 1344
-      - 1344
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -38,6 +35,7 @@ overrides:
     input_size:
       - 1344
       - 1344
+
     train_subset:
       batch_size: 4
       num_workers: 8

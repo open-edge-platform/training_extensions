@@ -1,7 +1,7 @@
 model:
-  class_path: otx.algo.classification.efficientnet.EfficientNetForHLabelCls
+  class_path: otx.algo.classification.hlabel_models.efficientnet.EfficientNetHLabelCls
   init_args:
-    version: b0
+    model_name: efficientnet_b0
 
     optimizer:
       class_path: torch.optim.SGD

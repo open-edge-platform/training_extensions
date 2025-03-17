@@ -13,7 +13,7 @@ from model_api.models.result import ClassificationResult
 from pytest_mock import MockerFixture
 
 from otx.core.data.entity.base import OTXBatchDataEntity
-from otx.core.model.base import OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler
 from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
@@ -31,7 +31,7 @@ class TestOTXModel:
     def test_init(self, monkeypatch):
         monkeypatch.setattr(OTXModel, "input_size_multiplier", 10, raising=False)
         with pytest.raises(ValueError, match="Input size should be a multiple"):
-            OTXModel(label_info=2, input_size=(1024, 1024))
+            OTXModel(label_info=2, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
 
     def test_training_step_none_loss(self, mocker: MockerFixture) -> None:
         mock_trainer = mocker.create_autospec(spec=Trainer)
@@ -41,7 +41,10 @@ class TestOTXModel:
             "forward",
             return_value=None,
         ):
-            current_model = OTXModel(label_info=3)
+            current_model = OTXModel(
+                label_info=3,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
             current_model.trainer = mock_trainer
 
         batch = {"input": torch.randn(2, 3)}
@@ -53,18 +56,24 @@ class TestOTXModel:
 
     def test_smart_weight_loading(self, mocker) -> None:
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(2)):
-            prev_model = OTXModel(label_info=2)
+            prev_model = OTXModel(
+                label_info=2,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
             prev_model.label_info = ["car", "truck"]
             prev_state_dict = prev_model.state_dict()
 
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(3)):
-            current_model = OTXModel(label_info=3)
-            current_model.classification_layers = ["model.head.weight", "model.head.bias"]
-            current_model.classification_layers = {
-                "model.head.weight": {"stride": 1, "num_extra_classes": 0},
-                "model.head.bias": {"stride": 1, "num_extra_classes": 0},
-            }
+            current_model = OTXModel(
+                label_info=3,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
             current_model.label_info = ["car", "bus", "truck"]
+            mocker.patch.object(
+                current_model,
+                "_identify_classification_layers",
+                return_value=["model.head.weight", "model.head.bias"],
+            )
             current_model.load_state_dict_incrementally(
                 {"state_dict": prev_state_dict, "label_info": prev_model.label_info},
             )
@@ -88,7 +97,10 @@ class TestOTXModel:
         mock_main_scheduler = mocker.create_autospec(spec=torch.optim.lr_scheduler.LRScheduler)
 
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(3)):
-            current_model = OTXModel(label_info=3)
+            current_model = OTXModel(
+                label_info=3,
+                data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            )
 
         mock_trainer = mocker.create_autospec(spec=Trainer)
         mock_trainer.lr_scheduler_configs = [
@@ -120,8 +132,9 @@ class TestOTXModel:
         assert mock_linear_warmup_scheduler.step.call_count == 2
 
     def test_v1_checkpoint_loading(self, mocker):
-        model = OTXModel(label_info=3)
+        model = OTXModel(label_info=3, data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)))
         mocker.patch.object(model, "load_from_otx_v1_ckpt", return_value={})
+        mocker.patch.object(model, "_identify_classification_layers", return_value=[])
         v1_ckpt = {
             "model": {"state_dict": {"backbone": torch.randn(2, 2)}},
             "labels": {"label_0": (), "label_1": (), "label_2": ()},
@@ -163,3 +176,19 @@ class TestOVModel:
         batch_size = 2
         batch = model.get_dummy_input(batch_size)
         assert batch.batch_size == batch_size
+
+
+class TestDataInputParams:
+    def test_to_dict(self):
+        params = DataInputParams(input_size=(224, 224), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+        params_dict = params.to_dict()
+        assert params_dict == {
+            "input_size": (224, 224),
+            "mean": (0.485, 0.456, 0.406),
+            "std": (0.229, 0.224, 0.225),
+        }
+
+    def test_as_ncwh(self):
+        params = DataInputParams(input_size=(224, 224), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+        ncwh = params.as_ncwh(batch_size=4)
+        assert ncwh == (4, 3, 224, 224)

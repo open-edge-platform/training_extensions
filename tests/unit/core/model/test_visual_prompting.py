@@ -17,6 +17,7 @@ from otx.core.data.entity.visual_prompting import (
     VisualPromptingBatchPredEntity,
 )
 from otx.core.exporter.visual_prompting import OTXVisualPromptingModelExporter
+from otx.core.model.base import DataInputParams
 from otx.core.model.visual_prompting import (
     OTXVisualPromptingModel,
     OVVisualPromptingModel,
@@ -28,7 +29,10 @@ from otx.core.types.export import TaskLevelExportParameters
 @pytest.fixture()
 def otx_visual_prompting_model(mocker) -> OTXVisualPromptingModel:
     mocker.patch.object(OTXVisualPromptingModel, "_create_model")
-    model = OTXVisualPromptingModel(label_info=1, input_size=(1024, 1024))
+    model = OTXVisualPromptingModel(
+        label_info=1,
+        data_input_params=DataInputParams((1024, 1024), (123.675, 116.28, 103.53), (58.395, 57.12, 57.375)),
+    )
     model.model.image_size = 1024
     return model
 
@@ -52,10 +56,10 @@ class TestOTXVisualPromptingModel:
         """Test _exporter."""
         exporter = otx_visual_prompting_model._exporter
         assert isinstance(exporter, OTXVisualPromptingModelExporter)
-        assert exporter.input_size == (1, 3, 1024, 1024)
+        assert exporter.data_input_params.input_size == (1024, 1024)
         assert exporter.resize_mode == "fit_to_window"
-        assert exporter.mean == (123.675, 116.28, 103.53)
-        assert exporter.std == (58.395, 57.12, 57.375)
+        assert exporter.data_input_params.mean == (123.675, 116.28, 103.53)
+        assert exporter.data_input_params.std == (58.395, 57.12, 57.375)
 
     def test_export_parameters(self, otx_visual_prompting_model) -> None:
         """Test _export_parameters."""

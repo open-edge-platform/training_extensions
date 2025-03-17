@@ -16,7 +16,7 @@ from jsonargparse import ArgumentParser, Namespace
 
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel
+from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types import PathLike
 from otx.core.types.task import OTXTaskType
 from otx.engine import Engine
@@ -457,7 +457,11 @@ class ConfigConverter:
         # Update num_classes & Instantiate Model
         model_config = config.pop("model")
         model_config["init_args"]["label_info"] = datamodule.label_info
-
+        model_config["init_args"]["data_input_params"] = DataInputParams(
+            input_size=datamodule.input_size,
+            mean=datamodule.input_mean,
+            std=datamodule.input_std,
+        )
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False, skip={"label_info"})
         model = model_parser.instantiate_classes(Namespace(model=model_config)).get("model")

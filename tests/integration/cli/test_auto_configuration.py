@@ -17,7 +17,6 @@ def test_otx_cli_auto_configuration(
     tmp_path: Path,
     fxt_accelerator: str,
     fxt_target_dataset_per_task: dict,
-    fxt_cli_override_command_per_task: dict,
     fxt_open_subprocess: bool,
 ) -> None:
     """Test the OTX auto configuration with CLI.
@@ -47,7 +46,6 @@ def test_otx_cli_auto_configuration(
         fxt_accelerator,
         "--max_epochs",
         "2",
-        *fxt_cli_override_command_per_task[task.lower()],
     ]
 
     run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)

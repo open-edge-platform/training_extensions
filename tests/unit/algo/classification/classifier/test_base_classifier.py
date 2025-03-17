@@ -22,7 +22,7 @@ class TestImageClassifier:
     )
     def fxt_model_and_inputs(self, request):
         head_cls, loss_cls, input_fxt_name = request.param
-        backbone = EfficientNetBackbone(version="b0")
+        backbone = EfficientNetBackbone(model_name="efficientnet_b0")
         neck = GlobalAveragePooling(dim=2)
         head = head_cls(num_classes=3, in_channels=backbone.num_features)
         loss = loss_cls()
