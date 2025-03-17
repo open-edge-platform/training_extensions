@@ -37,7 +37,6 @@ from otx.core.data.dataset.instance_segmentation import (
 )
 from otx.core.data.dataset.segmentation import (
     OTXSegmentationDataset,
-    SegDataEntity,
 )
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.task import OTXTaskType
@@ -155,7 +154,7 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         (OTXMulticlassClsDataset, TorchDataItem, {}),
         (OTXDetectionDataset, DetDataEntity, {}),
         (OTXInstanceSegDataset, InstanceSegDataEntity, {"include_polygons": True}),
-        (OTXSegmentationDataset, SegDataEntity, {}),
+        (OTXSegmentationDataset, TorchDataItem, {}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
         (AnomalyDataset, AnomalyDetectionDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),

@@ -688,14 +688,14 @@ class TestTopdownAffine:
     @pytest.fixture()
     def keypoint_det_entity(self) -> TorchDataItem:
         return TorchDataItem(
-            image=np.random.randint(0, 255, size=(10, 10, 3), dtype=np.uint8),
+            image=torch.randint(0, 255, size=(3, 10, 10), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
                 np.array([[0, 0, 7, 7]], dtype=np.float32),
                 format="xyxy",
                 canvas_size=(10, 10),
             ),
-            labels=torch.LongTensor([0]),
+            label=torch.LongTensor([0]),
             keypoints=tv_tensors.TVTensor(np.array([[0, 4, 1], [4, 2, 1], [2, 6, 1], [6, 0, 0]])),
         )
 
@@ -706,4 +706,4 @@ class TestTopdownAffine:
             ],
         )
         results = transform(deepcopy(keypoint_det_entity))
-        assert results.keypoints.shape == (4, 2)
+        assert results.keypoints.shape == (4, 3)

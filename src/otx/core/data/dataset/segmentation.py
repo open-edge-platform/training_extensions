@@ -179,7 +179,6 @@ class OTXSegmentationDataset(OTXDataset):
             to_tv_image,
             data_format=data_format,
         )
-
         if self.has_polygons:
             # insert background class at index 0 since polygons represent only objects
             self.label_info.label_names.insert(0, "otx_background_lbl")
@@ -214,7 +213,7 @@ class OTXSegmentationDataset(OTXDataset):
 
         masks = tv_tensors.Mask(extracted_mask[None], dtype=torch.long)
         entity = TorchDataItem(
-            image=to_dtype(to_image(img_data)),
+            image=to_dtype(to_image(img_data), dtype=torch.float32),
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,

@@ -5,7 +5,6 @@ input_size:
 mem_cache_size: 1GB
 mem_cache_img_max_size: null
 image_color_channel: RGB
-stack_images: true
 data_format: coco_instances
 unannotated_items_ratio: 0.0
 train_subset:

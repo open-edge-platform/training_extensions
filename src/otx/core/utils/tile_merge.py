@@ -553,12 +553,11 @@ class SegmentationTileMerge(TileMerge):
                 if tile_id not in img_ids:
                     img_ids.append(tile_id)
                 tile_img_info.padding = tile_attr["roi"]
-
                 seg_pred_entity = TorchPredItem(
-                    image=torch.empty(tile_img_info.ori_shape),
+                    image=torch.empty((3, *tile_img_info.ori_shape)),
                     img_info=tile_img_info,
-                    masks=tile_masks,
-                    scores=[],
+                    masks=tv_tensors.Mask(tile_masks),
+                    scores=torch.tensor([]),
                 )
 
                 if explain_mode:
@@ -617,8 +616,8 @@ class SegmentationTileMerge(TileMerge):
         full_logits_mask = full_logits_mask / vote_mask.unsqueeze(0)
 
         return TorchPredItem(
-            image=torch.empty(img_size),
+            image=torch.empty((3, *img_size)),
             img_info=img_info,
-            masks=full_logits_mask.argmax(0).unsqueeze(0),
-            scores=[],
+            masks=tv_tensors.Mask(full_logits_mask.argmax(0).unsqueeze(0)),
+            scores=torch.tensor([]),
         )

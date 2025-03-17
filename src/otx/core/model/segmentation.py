@@ -103,22 +103,22 @@ class OTXSegmentationModel(OTXModel):
                 losses[k] = v
             return losses
 
-        if self.explain_mode:
-            return TorchPredBatch(
-                batch_size=len(outputs["preds"]),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                scores=[],
-                masks=outputs["preds"],
-                feature_vector=outputs["feature_vector"],
-            )
+        preds = outputs["preds"] if self.explain_mode else outputs
+        feature_vector = outputs["feature_vector"] if self.explain_mode else None
+        masks = [
+            tv_tensors.Mask(mask.unsqueeze(0), device=self.device)
+            if mask.ndim == 2
+            else tv_tensors.Mask(mask, device=self.device)
+            for mask in preds
+        ]
 
         return TorchPredBatch(
-            batch_size=len(outputs),
+            batch_size=len(preds),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
-            masks=[output.unsqueeze(0) for output in outputs],
+            masks=masks,
+            feature_vector=feature_vector,
         )
 
     @property
@@ -243,7 +243,7 @@ class OTXSegmentationModel(OTXModel):
 
         pred_entity = TorchPredBatch(
             batch_size=inputs.batch_size,
-            images=[pred_entity.image for pred_entity in pred_entities],
+            images=torch.stack([pred_entity.image for pred_entity in pred_entities]),
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
             masks=[pred_entity.masks for pred_entity in pred_entities],
             scores=[],

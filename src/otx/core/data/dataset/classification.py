@@ -30,7 +30,7 @@ class OTXMulticlassClsDataset(OTXDataset):
         img = item.media_as(Image)
         roi = item.attributes.get("roi", None)
         img_data, img_shape, _ = self._get_img_data_and_shape(img, roi)
-        image = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        image = to_dtype(to_image(img_data), dtype=torch.float32)
         if roi:
             # extract labels from ROI
             labels_ids = [
@@ -78,7 +78,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        img_data = to_dtype(to_image(img_data), dtype=torch.float32)
 
         label_ids = set()
         for ann in item.annotations:
@@ -205,7 +205,7 @@ class OTXHlabelClsDataset(OTXDataset):
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        img_data = to_dtype(to_image(img_data), dtype=torch.float32)
 
         label_ids = set()
         for ann in item.annotations:

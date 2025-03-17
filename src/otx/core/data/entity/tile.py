@@ -299,7 +299,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
                 batch_size=self.batch_size,
                 images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
                 imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
-                masks=[[] for _ in range(self.batch_size)],
+                masks=[torch.empty((1, 1, 1)) for _ in range(self.batch_size)],
             )
             for i in range(0, len(tiles), self.batch_size)
         ]
@@ -312,14 +312,8 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             msg = "collate_fn() input should have > 0 entities"
             raise RuntimeError(msg)
 
-        task = batch_entities[0].task
-
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
-                if entity.task != task:
-                    msg = "collate_fn() input should include a single OTX task"
-                    raise RuntimeError(msg)
-
                 if not isinstance(entity, TorchDataItem):
                     msg = "All entities should be TorchDataItem before collate_fn()"
                     raise TypeError(msg)

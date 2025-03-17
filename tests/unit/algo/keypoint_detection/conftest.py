@@ -7,12 +7,12 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.core.data.entity.base import BboxInfo, ImageInfo
-from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
+from otx.core.data.entity.base import ImageInfo
+from otx.data import TorchDataBatch
 
 
 @pytest.fixture()
-def fxt_keypoint_det_batch_data_entity() -> KeypointDetBatchDataEntity:
+def fxt_keypoint_det_batch_data_entity() -> TorchDataBatch:
     batch_size = 2
     random_tensor = torch.randn((batch_size, 3, 192, 256))
     tv_tensor = tv_tensors.Image(data=random_tensor)
@@ -24,15 +24,15 @@ def fxt_keypoint_det_batch_data_entity() -> KeypointDetBatchDataEntity:
         dtype=torch.float32,
     )
     keypoints = torch.randn((batch_size, 17, 2))
-    keypoints_visible = torch.randn((batch_size, 17))
-    labels = torch.ones(batch_size)
-    return KeypointDetBatchDataEntity(
+    keypoints_visible = torch.randint(0, 1, (batch_size, 17))
+    keypoints = torch.cat([keypoints, keypoints_visible.unsqueeze(-1)], dim=-1)
+    labels = torch.ones(batch_size, dtype=torch.long)
+
+    return TorchDataBatch(
         batch_size=2,
         images=tv_tensor,
         imgs_info=img_infos,
-        bboxes=bboxes,
-        labels=labels,
-        bbox_info=BboxInfo(center=(96, 128), scale=(1, 1), rotation=0),
-        keypoints=keypoints,
-        keypoints_visible=keypoints_visible,
+        bboxes=[bboxes for _ in range(batch_size)],
+        labels=list(labels),
+        keypoints=list(keypoints),
     )
