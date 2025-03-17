@@ -134,7 +134,7 @@ class TestOTXTiling:
             x (TorchDataBatch): Input batch data entity.
 
         Returns:
-            TorchPredItem: Output batch prediction entity.
+            TorchPredBatch: Output batch prediction entity.
         """
         bboxes = []
         labels = []
