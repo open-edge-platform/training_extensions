@@ -116,6 +116,18 @@ class OTXKeypointDetectionModel(OTXModel):
         preds: TorchPredBatch,
         inputs: TorchDataBatch,
     ) -> MetricInput:
+        if inputs.keypoints is None:
+            msg = "The input ground truth keypoints are not provided."
+            raise ValueError(msg)
+
+        if preds.keypoints is None or preds.scores is None:
+            msg = "The predicted keypoints or scores are not provided."
+            raise ValueError(msg)
+
+        if len(preds.keypoints) != len(inputs.keypoints):
+            msg = "The number of predicted keypoints and ground truth keypoints does not match."
+            raise ValueError(msg)
+
         return {
             "preds": [
                 {
@@ -137,7 +149,7 @@ class OTXKeypointDetectionModel(OTXModel):
         """Model forward function used for the model tracing during model exportation."""
         return self.model.forward(inputs=image, mode="tensor")
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
         """Generates a dummy input, suitable for launching forward() on it.
 
         Args:
@@ -156,13 +168,14 @@ class OTXKeypointDetectionModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
+
         return TorchDataBatch(
             batch_size,
             images,
-            infos,
-            bboxes=[],
             labels=[],
+            bboxes=[],
             keypoints=[],
+            imgs_info=infos,  # type: ignore[arg-type]
         )
 
     @property
@@ -234,6 +247,18 @@ class OVKeypointDetectionModel(OVModel):
         preds: TorchPredBatch,
         inputs: TorchDataBatch,
     ) -> MetricInput:
+        if inputs.keypoints is None:
+            msg = "The input ground truth keypoints are not provided."
+            raise ValueError(msg)
+
+        if preds.keypoints is None or preds.scores is None:
+            msg = "The predicted keypoints or scores are not provided."
+            raise ValueError(msg)
+
+        if len(preds.keypoints) != len(inputs.keypoints):
+            msg = "The number of predicted keypoints and ground truth keypoints does not match."
+            raise ValueError(msg)
+
         return {
             "preds": [
                 {

@@ -171,6 +171,14 @@ class OTXSegmentationModel(OTXModel):
             MetricInput: A list of dictionaries where each dictionary contains 'preds' and 'target' keys
             corresponding to the predicted and target masks for metric evaluation.
         """
+        if preds.masks is None:
+            msg = "The predicted masks are not provided."
+            raise ValueError(msg)
+
+        if inputs.masks is None:
+            msg = "The input ground truth masks are not provided."
+            raise ValueError(msg)
+
         return [
             {
                 "preds": pred_mask,
@@ -269,7 +277,7 @@ class OTXSegmentationModel(OTXModel):
             feature_vector=outputs["feature_vector"],
         )
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
         """Returns a dummy input for semantic segmentation model."""
         images = torch.rand(self.data_input_params.as_ncwh(batch_size))
         infos = []
@@ -281,7 +289,7 @@ class OTXSegmentationModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return TorchDataBatch(batch_size, images, infos, masks=[])
+        return TorchDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
 
 
 class OVSegmentationModel(OVModel):
@@ -356,6 +364,14 @@ class OVSegmentationModel(OVModel):
             MetricInput: A list of dictionaries where each dictionary contains 'preds' and 'target' keys
             corresponding to the predicted and target masks for metric evaluation.
         """
+        if preds.masks is None:
+            msg = "The predicted masks are not provided."
+            raise ValueError(msg)
+
+        if inputs.masks is None:
+            msg = "The input ground truth masks are not provided."
+            raise ValueError(msg)
+
         return [
             {
                 "preds": pred_mask,

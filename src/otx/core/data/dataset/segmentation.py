@@ -8,16 +8,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import cv2
-import torch
 import numpy as np
+import torch
 from datumaro.components.annotation import Bbox, Ellipse, Image, Mask, Polygon, RotatedBbox
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import SegLabelInfo
-from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset

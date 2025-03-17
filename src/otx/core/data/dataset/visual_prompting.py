@@ -53,10 +53,9 @@ class OTXVisualPromptingDataset(OTXDataset):
         transforms: Transforms,
         use_bbox: bool = True,
         use_point: bool = False,
-        stack_images: bool = True,
         **kwargs,
     ) -> None:
-        super().__init__(dm_subset, transforms, stack_images=stack_images, **kwargs)
+        super().__init__(dm_subset, transforms, **kwargs)
         if not use_bbox and not use_point:
             # if both are False, use bbox as default
             use_bbox = True
@@ -144,7 +143,7 @@ class OTXVisualPromptingDataset(OTXDataset):
                 img_shape=img_shape,
                 ori_shape=img_shape,
             ),
-            masks=None,
+            masks=masks,
             labels=labels,
             polygons=polygons,
             points=points,
@@ -162,4 +161,4 @@ class OTXVisualPromptingDataset(OTXDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect VisualPromptingDataEntity into VisualPromptingBatchDataEntity in data loader."""  # noqa: E501
-        return partial(VisualPromptingBatchDataEntity.collate_fn, stack_images=self.stack_images)
+        return partial(VisualPromptingBatchDataEntity.collate_fn, stack_images=False)

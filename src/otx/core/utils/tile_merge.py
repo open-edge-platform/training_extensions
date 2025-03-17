@@ -528,6 +528,16 @@ class SegmentationTileMerge(TileMerge):
             batch_size = tile_preds.batch_size
             saliency_maps = tile_preds.saliency_map if explain_mode else [[] for _ in range(batch_size)]
             feature_vectors = tile_preds.feature_vector if explain_mode else [[] for _ in range(batch_size)]
+            if saliency_maps is None or feature_vectors is None:
+                msg = "The saliency maps or feature vectors are not provided."
+                raise ValueError(msg)
+            if tile_preds.imgs_info is None:
+                msg = "Image information is not provided."
+                raise ValueError(msg)
+            if tile_preds.masks is None:
+                msg = "The predicted masks are not provided."
+                raise ValueError(msg)
+
             for tile_attr, tile_img_info, tile_masks, tile_s_map, tile_f_vect in zip(
                 tile_attrs,
                 tile_preds.imgs_info,
@@ -535,6 +545,10 @@ class SegmentationTileMerge(TileMerge):
                 saliency_maps,
                 feature_vectors,
             ):
+                if tile_img_info is None:
+                    msg = f"Image information is not provided : {tile_preds.imgs_info}."
+                    raise ValueError(msg)
+
                 tile_id = tile_attr["tile_id"]
                 if tile_id not in img_ids:
                     img_ids.append(tile_id)
@@ -544,7 +558,7 @@ class SegmentationTileMerge(TileMerge):
                     image=torch.empty(tile_img_info.ori_shape),
                     img_info=tile_img_info,
                     masks=tile_masks,
-                    score=[],
+                    scores=[],
                 )
 
                 if explain_mode:
@@ -574,6 +588,12 @@ class SegmentationTileMerge(TileMerge):
             TorchPredItem: Merged prediction entity.
         """
         img_size = img_info.ori_shape
+        if any(entity is None for entity in entities):
+            msg = f"Some entities are None: {entities}."
+            raise ValueError(msg)
+        if entities[0].masks is None:
+            msg = "The predicted masks are not provided."
+            raise ValueError(msg)
         num_classes = len(entities[0].masks)
 
         # Create a vote map for overlapping tiles
@@ -581,6 +601,12 @@ class SegmentationTileMerge(TileMerge):
         full_logits_mask = torch.zeros((num_classes, *img_size), device=img_info.device)
 
         for tile_entity in entities:
+            if tile_entity.img_info is None:
+                msg = "Image information is not provided."
+                raise ValueError(msg)
+            if tile_entity.masks is None:
+                msg = "The predicted masks are not provided."
+                raise ValueError(msg)
             offset_x, offset_y, tile_w, tile_h = tile_entity.img_info.padding
             vote_mask[offset_y : offset_y + tile_h, offset_x : offset_x + tile_w] += 1
             full_logits_mask[:, offset_y : offset_y + tile_h, offset_x : offset_x + tile_w] += tile_entity.masks[
@@ -594,5 +620,5 @@ class SegmentationTileMerge(TileMerge):
             image=torch.empty(img_size),
             img_info=img_info,
             masks=full_logits_mask.argmax(0).unsqueeze(0),
-            score=[],
+            scores=[],
         )

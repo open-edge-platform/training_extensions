@@ -596,8 +596,8 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     def _resize_keypoints(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize keypoints with scale_factor only for `Resize`."""
-        if (keypoints := getattr(inputs, "keypoints", None)) is not None:
-            inputs.keypoints[:, :2] = rescale_keypoints(keypoints[:, :2], scale_factor)  # type: ignore[union-attr]
+        if inputs.keypoints is not None:  # type: ignore[union-attr]
+            inputs.keypoints[:, :2] = rescale_keypoints(inputs.keypoints[:, :2], scale_factor)  # type: ignore[union-attr]
         return inputs
 
     def _resize_masks(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:

@@ -298,7 +298,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             TorchDataBatch(
                 batch_size=self.batch_size,
                 images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
-                imgs_info=tile_infos[i : i + self.batch_size],
+                imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
                 masks=[[] for _ in range(self.batch_size)],
             )
             for i in range(0, len(tiles), self.batch_size)
