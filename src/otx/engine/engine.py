@@ -154,6 +154,7 @@ class Engine:
             model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
         )
 
+
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points
     # ------------------------------------------------------------------------ #
@@ -978,6 +979,16 @@ class Engine:
             raise ValueError(msg)
         if not isinstance(model, OTXModel):
             raise TypeError(model)
+        
+        ## Modified
+
+        if instantiated_config.get("freeze_backbone", True):
+            # Backbone Freezing
+            for name, param in model.named_parameters():
+                if "backbone" in name:
+                    param.requires_grad = False
+                elif "head" in name:
+                    param.requires_grad = True  # head는 학습 가능 유지
 
         model.label_info = datamodule.label_info
 
