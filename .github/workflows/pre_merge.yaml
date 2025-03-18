@@ -83,7 +83,7 @@ jobs:
           # so we use the latest version of codecov uploader binary
           curl -Os https://uploader.codecov.io/latest/linux/codecov
           chmod +x codecov
-          ./codecov -t ${{ secrets.CODECOV_TOKEN }} --sha $COMMIT_ID -U $HTTP_PROXY -f .tox/coverage_unit-test-${{ matrix.tox-env }}.xml -F ${{ matrix.tox-env }}
+          ./codecov -t ${{ secrets.CODECOV_TOKEN }} --sha $COMMIT_ID -f .tox/coverage_unit-test-${{ matrix.tox-env }}.xml -F ${{ matrix.tox-env }}
   Integration-Test:
     if: |
       github.event.pull_request.draft == false &&
