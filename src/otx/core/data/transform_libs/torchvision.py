@@ -6,23 +6,19 @@ from __future__ import annotations
 
 import ast
 import copy
-import io
 import itertools
 import math
 import operator
 import typing
 from inspect import isclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Sequence, TypeVar, Union
 
 import cv2
-import decord
 import numpy as np
 import PIL.Image
 import torch
 import torchvision.transforms.v2 as tvt_v2
 import typeguard
-from datumaro.components.media import Video
 from lightning.pytorch.cli import instantiate_class
 from numpy import random
 from omegaconf import DictConfig
@@ -43,7 +39,6 @@ from otx.core.data.entity.base import (
 )
 from otx.core.data.transform_libs.utils import (
     CV2_INTERP_CODES,
-    area_polygon,
     cache_randomness,
     centers_bboxes,
     clip_bboxes,
@@ -203,151 +198,6 @@ class ResizetoLongestEdge(tvt_v2.Transform):
         neww = int(neww + 0.5)
         newh = int(newh + 0.5)
         return (newh, neww)
-
-
-class DecodeVideo(tvt_v2.Transform):
-    """Sample video frames from original data video."""
-
-    def __init__(
-        self,
-        test_mode: bool,
-        clip_len: int = 8,
-        frame_interval: int = 4,
-        num_clips: int = 1,
-        out_of_bound_opt: str = "loop",
-    ) -> None:
-        super().__init__()
-        self.test_mode = test_mode
-        self.clip_len = clip_len
-        self.frame_interval = frame_interval
-        self.num_clips = num_clips
-        self.out_of_bound_opt = out_of_bound_opt
-        self._transformed_types = [Video]
-
-    def _transform(self, inpt: Video, params: dict) -> tv_tensors.Video:
-        total_frames = self._get_total_frames(inpt)
-        fps_scale_ratio = 1.0
-        ori_clip_len = self._get_ori_clip_len(fps_scale_ratio)
-        clip_offsets = self._sample_clips(total_frames, ori_clip_len)
-
-        frame_inds = clip_offsets[:, None] + np.arange(self.clip_len)[None, :] * self.frame_interval
-        frame_inds = np.concatenate(frame_inds)
-
-        frame_inds = frame_inds.reshape((-1, self.clip_len))
-        if self.out_of_bound_opt == "loop":
-            frame_inds = np.mod(frame_inds, total_frames)
-        elif self.out_of_bound_opt == "repeat_last":
-            safe_inds = frame_inds < total_frames
-            unsafe_inds = 1 - safe_inds
-            last_ind = np.max(safe_inds * frame_inds, axis=1)
-            new_inds = safe_inds * frame_inds + (unsafe_inds.T * last_ind).T
-            frame_inds = new_inds
-        else:
-            msg = "Illegal out_of_bound optio."
-            raise ValueError(msg)
-
-        start_index = 0
-        frame_inds = np.concatenate(frame_inds) + start_index
-
-        outputs = torch.stack(
-            [torch.tensor(cv2.cvtColor(inpt[idx].data, cv2.COLOR_RGB2BGR)) for idx in frame_inds],
-            dim=0,
-        )
-        outputs = outputs.permute(0, 3, 1, 2)
-        outputs = tv_tensors.Video(outputs)
-        inpt.close()
-
-        return outputs
-
-    @staticmethod
-    def _get_total_frames(inpt: Video) -> int:
-        length = 0
-        for _ in inpt:
-            length += 1
-        return length
-
-    def _get_train_clips(self, num_frames: int, ori_clip_len: float) -> np.array:
-        """Get clip offsets in train mode.
-
-        It will calculate the average interval for selected frames,
-        and randomly shift them within offsets between [0, avg_interval].
-        If the total number of frames is smaller than clips num or origin
-        frames length, it will return all zero indices.
-
-        Args:
-            num_frames (int): Total number of frame in the video.
-            ori_clip_len (float): length of original sample clip.
-
-        Returns:
-            np.ndarray: Sampled frame indices in train mode.
-        """
-        avg_interval = (num_frames - ori_clip_len + 1) // self.num_clips
-
-        if avg_interval > 0:
-            base_offsets = np.arange(self.num_clips) * avg_interval
-            clip_offsets = base_offsets + np.random.default_rng().integers(avg_interval, size=self.num_clips)
-        elif num_frames > max(self.num_clips, ori_clip_len):
-            clip_offsets = np.sort(np.random.default_rng().integers(num_frames - ori_clip_len + 1, size=self.num_clips))
-        elif avg_interval == 0:
-            ratio = (num_frames - ori_clip_len + 1.0) / self.num_clips
-            clip_offsets = np.around(np.arange(self.num_clips) * ratio)
-        else:
-            clip_offsets = np.zeros((self.num_clips,), dtype=np.int32)
-
-        return clip_offsets
-
-    def _get_test_clips(self, num_frames: int, ori_clip_len: float) -> np.array:
-        """Get clip offsets in test mode.
-
-        If the total number of frames is
-        not enough, it will return all zero indices.
-
-        Args:
-            num_frames (int): Total number of frame in the video.
-            ori_clip_len (float): length of original sample clip.
-
-        Returns:
-            np.ndarray: Sampled frame indices in test mode.
-        """
-        max_offset = max(num_frames - ori_clip_len, 0)
-        if self.num_clips > 1:
-            num_segments = self.num_clips - 1
-            # align test sample strategy with `PySlowFast` repo
-            offset_between = max_offset / float(num_segments)
-            clip_offsets = np.arange(self.num_clips) * offset_between
-            clip_offsets = np.round(clip_offsets)
-        else:
-            clip_offsets = np.array([max_offset // 2])
-        return clip_offsets
-
-    def _sample_clips(self, num_frames: int, ori_clip_len: float) -> np.array:
-        """Choose clip offsets for the video in a given mode.
-
-        Args:
-            num_frames (int): Total number of frame in the video.
-
-        Returns:
-            np.ndarray: Sampled frame indices.
-        """
-        if self.test_mode:
-            clip_offsets = self._get_test_clips(num_frames, ori_clip_len)
-        else:
-            clip_offsets = self._get_train_clips(num_frames, ori_clip_len)
-
-        return clip_offsets
-
-    def _get_ori_clip_len(self, fps_scale_ratio: float) -> float:
-        """Calculate length of clip segment for different strategy.
-
-        Args:
-            fps_scale_ratio (float): Scale ratio to adjust fps.
-        """
-        if self.test_mode:
-            ori_clip_len = (self.clip_len - 1) * self.frame_interval + 1
-        else:
-            ori_clip_len = self.clip_len * self.frame_interval
-
-        return ori_clip_len
 
 
 class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
@@ -2600,107 +2450,6 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         return repr_str
 
 
-class FilterAnnotations(tvt_v2.Transform, NumpytoTVTensorMixin):
-    """Implementation of mmdet.datasets.transforms.FilterAnnotations with torchvision format.
-
-    Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/datasets/transforms/loading.py#L713-L800
-
-    Args:
-        min_gt_bbox_wh (tuple[float]): Minimum width and height of ground truth
-            boxes. Default: (1., 1.)
-        min_gt_mask_area (int): Minimum foreground area of ground truth masks.
-            Default: 1
-        by_box (bool): Filter instances with bounding boxes not meeting the
-            min_gt_bbox_wh threshold. Default: True
-        by_mask (bool): Filter instances with masks not meeting
-            min_gt_mask_area threshold. Default: False
-        by_polygon (bool): Filter instances with polygons not meeting
-            min_gt_mask_area threshold. Default: False
-        keep_empty (bool): Whether to return DataEntity as it is when it
-            becomes an empty bbox after filtering. Defaults to True.
-        is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
-    """
-
-    def __init__(
-        self,
-        min_gt_bbox_wh: tuple[int, int] = (1, 1),
-        min_gt_mask_area: int = 1,
-        by_box: bool = True,
-        by_mask: bool = False,
-        by_polygon: bool = False,
-        keep_empty: bool = True,
-        is_numpy_to_tvtensor: bool = False,
-    ) -> None:
-        super().__init__()
-        # TODO (mmdet): add more filter options
-        assert by_box or by_mask or by_polygon  # noqa: S101
-        self.min_gt_bbox_wh = min_gt_bbox_wh
-        self.min_gt_mask_area = min_gt_mask_area
-        self.by_box = by_box
-        self.by_mask = by_mask
-        self.by_polygon = by_polygon
-        self.keep_empty = keep_empty
-        self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
-
-    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
-    def forward(self, *_inputs: DataItemType) -> DataItemType | None:
-        """Transform function to filter annotations."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        assert hasattr(inputs, "bboxes")  # noqa: S101
-        bboxes = inputs.bboxes
-        if bboxes.shape[0] == 0:
-            return self.convert(inputs)
-
-        tests = []
-        if self.by_box:
-            widths = bboxes[..., 2] - bboxes[..., 0]
-            heights = bboxes[..., 3] - bboxes[..., 1]
-            tests.append(((widths > self.min_gt_bbox_wh[0]) & (heights > self.min_gt_bbox_wh[1])).numpy())
-        if self.by_mask:
-            assert hasattr(inputs, "masks")  # noqa: S101
-            areas = inputs.masks.sum((1, 2))
-            tests.append(areas >= self.min_gt_mask_area)
-        if self.by_polygon:
-            areas = []
-            for polygon in inputs.polygons:
-                x = np.asarray(polygon.points[0::2])
-                y = np.asarray(polygon.points[1::2])
-                areas.append(area_polygon(x, y))
-            areas = np.asarray(areas)
-            tests.append(areas >= self.min_gt_mask_area)
-
-        keep = tests[0]
-        for t in tests[1:]:
-            keep = keep & t
-
-        if not keep.any() and self.keep_empty:
-            return self.convert(inputs)
-
-        keep = list(keep)
-        keys = ("bboxes", "labels", "masks", "polygons")
-        for key in keys:
-            if hasattr(inputs, key):
-                if key == "polygons" and len(polygons := inputs.polygons) > 0:
-                    polygons = inputs.polygons  # type: ignore[union-attr]
-                    inputs.polygons = [polygons[i] for i in np.where(keep)[0]]  # type: ignore[union-attr]
-                else:
-                    if len(attr := getattr(inputs, key)) == 0:
-                        continue
-                    setattr(inputs, key, attr[keep])
-
-        return self.convert(inputs)
-
-    def __repr__(self):
-        return (
-            f"{self.__class__.__name__}"
-            f"(min_gt_bbox_wh={self.min_gt_bbox_wh}, "
-            f"keep_empty={self.keep_empty}, "
-            f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
-        )
-
-
 tvt_v2.PerturbBoundingBoxes = PerturbBoundingBoxes
 tvt_v2.PadtoSquare = PadtoSquare
 tvt_v2.ResizetoLongestEdge = ResizetoLongestEdge
@@ -2723,120 +2472,6 @@ class Compose(tvt_v2.Compose):
                 return outputs
             inputs = outputs if needs_unpacking else (outputs,)
         return outputs
-
-
-class FormatShape(tvt_v2.Transform):
-    """Format final imgs shape to the given input_format."""
-
-    def __init__(self, input_format: str, collapse: bool = False) -> None:
-        self.input_format = input_format
-        self.collapse = collapse
-        if self.input_format not in [
-            "NCTHW",
-            "NCHW",
-            "NPTCHW",
-        ]:
-            msg = f"The input format {self.input_format} is invalid."
-            raise ValueError(msg)
-
-    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
-    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
-        """Perform the SampleFrames loading."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        if not isinstance(inputs.image, np.ndarray):
-            inputs.image = np.array(inputs.image)
-
-        # [M x H x W x C]
-        # M = 1 * N_crops * N_clips * T
-        if self.collapse and inputs.video_info.num_clips != 1:  # type: ignore[union-attr]
-            msg = "num_clips should be 1."
-            raise ValueError(msg)
-
-        if self.input_format == "NCTHW":
-            imgs = inputs.image
-            num_clips = inputs.video_info.num_clips
-            clip_len = inputs.video_info.clip_len
-            if isinstance(clip_len, dict):
-                clip_len = clip_len["RGB"]
-
-            imgs = imgs.reshape((-1, num_clips, clip_len) + imgs.shape[1:])
-            # N_crops x N_clips x T x H x W x C
-            imgs = np.transpose(imgs, (0, 1, 5, 2, 3, 4))
-            # N_crops x N_clips x C x T x H x W
-            imgs = imgs.reshape((-1,) + imgs.shape[2:])
-            # M' x C x T x H x W
-            # M' = N_crops x N_clips
-            inputs.image = imgs
-            inputs.img_info.img_shape = imgs.shape
-        elif self.input_format == "NCHW":
-            imgs = inputs.image
-            imgs = np.transpose(imgs, (0, 3, 1, 2))
-
-            # M x C x H x W
-            inputs.image = imgs
-            inputs.img_info.img_shape = imgs.shape
-        elif self.input_format == "NPTCHW":
-            num_proposals = inputs.proposals.shape[0]  # WJ  # type: ignore[union-attr]
-            num_clips = inputs.video_info.num_clips
-            clip_len = inputs.video_info.clip_len
-            imgs = inputs.image
-            imgs = imgs.reshape((num_proposals, num_clips * clip_len) + imgs.shape[1:])
-            # P x M x H x W x C
-            # M = N_clips x T
-            imgs = np.transpose(imgs, (0, 1, 4, 2, 3))
-            # P x M x C x H x W
-            inputs.image["imgs"] = imgs
-            inputs.img_info.img_shape = imgs.shape
-
-        if self.collapse:
-            if inputs.image.shape[0] != 1:
-                msg = "num_clips should be 1."
-                raise ValueError(msg)
-            inputs.image = inputs.image.squeeze(0)
-            inputs.img_info.img_shape = inputs.image.shape
-
-        inputs.image = tv_tensors.Image(inputs.image)
-        return inputs
-
-    def __repr__(self) -> str:
-        repr_str = self.__class__.__name__
-        repr_str += f"(input_format='{self.input_format}')"
-        return repr_str
-
-
-class DecordInit(tvt_v2.Transform):
-    """Using decord to initialize the video_reader."""
-
-    def __init__(self, num_threads: int = 1, **kwargs) -> None:
-        self.num_threads = num_threads
-        self.kwargs = kwargs
-
-    def _get_video_reader(self, filename: str) -> decord.VideoReader:
-        with Path(filename).open("rb") as f:
-            file_byte = f.read()
-        file_obj = io.BytesIO(file_byte)
-        return decord.VideoReader(file_obj, num_threads=self.num_threads)
-
-    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
-    def __call__(self, *_inputs: DataItemType) -> DataItemType | None:
-        """Perform the Decord initialization."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-
-        if isinstance(inputs, TorchDataItem):
-            # TODO(ashwinvaidya17): Add support for TorchDataItem
-            return inputs
-
-        container = self._get_video_reader(inputs.video.path)
-        inputs.video_info.video_reader = container
-        inputs.video_info.num_frames = len(container)
-        inputs.video_info.avg_fps = container.get_avg_fps()
-        return inputs
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(num_threads={self.num_threads})"
 
 
 class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):

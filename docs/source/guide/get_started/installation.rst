@@ -26,7 +26,7 @@ package:
 
         .. code-block:: shell
 
-            pip install otx
+            pip install otx[base]
 
     .. tab-item:: Source
 
@@ -40,7 +40,7 @@ package:
             python -m venv .otx
             source .otx/bin/activate
 
-            pip install -e .[base]
+            pip install -e .
 
 2. Once the package is installed in the virtual environment, you can use full
 OpenVINO™ Training Extensions command line functionality.
@@ -62,7 +62,7 @@ from source to use XPU functionality.
     git clone https://github.com/openvinotoolkit/training_extensions.git
     cd training_extensions
 
-    pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
+    pip install -e . --extra-index-url https://download.pytorch.org/whl/test/xpu
 
 .. note::
 

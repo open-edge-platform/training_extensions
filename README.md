@@ -105,7 +105,7 @@ conda activate otx_env
 # Clone the repository and install in editable mode
 git clone https://github.com/openvinotoolkit/training_extensions.git
 cd training_extensions
-pip install -e .[base]  # for zsh: pip install -e '.[base]'
+pip install -e .  # for zsh: pip install -e '.'
 ```
 
 </details>
