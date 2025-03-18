@@ -988,8 +988,10 @@ class Engine:
                 if "backbone" in name:
                     param.requires_grad = False
                 elif "head" in name:
-                    param.requires_grad = True  # head는 학습 가능 유지
+                    param.requires_grad = True 
 
+        ## ------
+            
         model.label_info = datamodule.label_info
 
         return cls(
