@@ -46,7 +46,6 @@ TASK_NAME_TO_MAIN_METRIC_NAME = {
     "h_label_cls": "test/accuracy",
     "detection": "test/map_50",
     "instance_segmentation": "test/map_50",
-    "visual_prompting": "test/f1-score",
     "keypoint_detection": "test/PCK",
 }
 
@@ -210,11 +209,7 @@ def test_otx_export_infer(
             key=lambda p: p.stat().st_mtime,
         )
         assert latest_dir.exists()
-        if task == "visual_prompting":
-            assert (latest_dir / f"exported_model_image_encoder.{ext}").exists()
-            assert (latest_dir / f"exported_model_decoder.{ext}").exists()
-        else:
-            assert (latest_dir / f"exported_model.{ext}").exists()
+        assert (latest_dir / f"exported_model.{ext}").exists()
 
         if fmt == "ONNX":
             onnx_model_path = latest_dir / f"exported_model.{ext}"
@@ -231,10 +226,7 @@ def test_otx_export_infer(
             else:
                 export_test_recipe = f"src/otx/recipe/{task}/openvino_model.yaml"
 
-            if task == "visual_prompting":
-                exported_model_path = str(latest_dir / "exported_model_decoder.xml")
-            else:
-                exported_model_path = str(latest_dir / "exported_model.xml")
+            exported_model_path = str(latest_dir / "exported_model.xml")
 
             tmp_path_test = __run_cli_test(export_test_recipe, exported_model_path, Path("outputs") / "openvino", "cpu")
             assert (tmp_path_test / "outputs").exists()
@@ -263,10 +255,7 @@ def test_otx_export_infer(
                 key=lambda p: p.stat().st_mtime,
             )
             assert latest_dir.exists()
-            if task == "visual_prompting":
-                optimized_model_path = str(latest_dir / "optimized_model_decoder.xml")
-            else:
-                optimized_model_path = str(latest_dir / "optimized_model.xml")
+            optimized_model_path = str(latest_dir / "optimized_model.xml")
 
             # 6) test optimized model
             tmp_path_test = __run_cli_test(
@@ -310,8 +299,7 @@ def test_otx_export_infer(
             msg = f"Recipe: {recipe}, (torch_accuracy, ov_accuracy, ptq_acc): {torch_acc}, {ov_acc}, {ptq_acc}"
             log.info(msg)
 
-            # Not compare w/ instance segmentation and visual prompting tasks because training isn't able to be deterministic, which can lead to unstable test result.
-            if "maskrcnn_efficientnetb2b" in recipe or task == "visual_prompting":
+            if "maskrcnn_efficientnetb2b" in recipe:
                 return
 
             # This test seems flaky, so let's disable it.
