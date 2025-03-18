@@ -41,5 +41,5 @@ gigaflops: 20.6
 size: 9.1
 
 # Model spec
-model_category: ACCURACY
+model_category: BALANCE
 is_default_for_task: true
