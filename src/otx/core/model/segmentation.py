@@ -13,6 +13,7 @@ import logging as log
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import torch
 import torch.nn.functional as f
 from model_api.tilers import SemanticSegmentationTiler
@@ -336,7 +337,7 @@ class OVSegmentationModel(OVModel):
         outputs: list[ImageResultWithSoftPrediction],
         inputs: TorchDataBatch,
     ) -> TorchPredBatch | OTXBatchLossEntity:
-        masks = [tv_tensors.Mask(mask.resultImage, device=self.device) for mask in outputs]
+        masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0), device=self.device) for mask in outputs]
         predicted_f_vectors = (
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
         )
