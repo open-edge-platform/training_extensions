@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## \[Unreleased\]
 
 ### Removed
+
 - Remove Visual Prompting
   (<https://github.com/openvinotoolkit/training_extensions/pull/4291>)
 

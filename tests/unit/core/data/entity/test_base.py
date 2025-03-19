@@ -5,9 +5,9 @@
 import pytest
 import torch
 import torchvision.transforms.v2 as tvt
-import torchvision.transforms.v2.functional as F  # noqa: N812
 
-from otx.core.data.entity.base import ImageType, OTXBatchDataEntity, OTXDataEntity, Points
+from otx.core.data.entity.base import ImageType, OTXBatchDataEntity, OTXDataEntity
+
 
 class TestOTXDataEntity:
     def test_image_type(
