@@ -118,4 +118,4 @@ jobs:
           python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
           rm /tmp/requirements.txt
       - name: Run Integration Test
-        run: tox -vv -e integration-test-all
+        run: tox -vv -e integration-test-${{ matrix.task }}
