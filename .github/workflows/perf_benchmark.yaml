@@ -112,8 +112,6 @@ jobs:
             task: "instance_segmentation"
           - task-short: "ssg"
             task: "semantic_segmentation"
-          - task-short: "vsp"
-            task: "visual_prompting"
     name: Perf-Benchmark-${{ matrix.task-short }}
     runs-on: [self-hosted, linux, x64, dmount-v2]
     timeout-minutes: 8640
