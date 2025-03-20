@@ -442,7 +442,7 @@ class SegLabelInfo(LabelInfo):
 
 @dataclass
 class NullLabelInfo(LabelInfo):
-    """Represent no label information. It is used for Visual Prompting tasks."""
+    """Represent no label information."""
 
     def __init__(self) -> None:
         super().__init__(label_names=[], label_groups=[[]], label_ids=[])

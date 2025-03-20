@@ -14,7 +14,7 @@ from warnings import warn
 import datumaro
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig, VisualPromptingConfig
+from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.types import PathLike
@@ -44,7 +44,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification" / "padim.yaml",
     OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
     OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection" / "padim.yaml",
-    OTXTaskType.VISUAL_PROMPTING: RECIPE_PATH / "visual_prompting" / "sam_tiny_vit.yaml",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
@@ -56,13 +55,11 @@ TASK_PER_DATA_FORMAT = {
         OTXTaskType.DETECTION,
         OTXTaskType.ROTATED_DETECTION,
         OTXTaskType.INSTANCE_SEGMENTATION,
-        OTXTaskType.VISUAL_PROMPTING,
     ],
     "coco": [
         OTXTaskType.DETECTION,
         OTXTaskType.ROTATED_DETECTION,
         OTXTaskType.INSTANCE_SEGMENTATION,
-        OTXTaskType.VISUAL_PROMPTING,
     ],
     "common_semantic_segmentation_with_subset_dirs": [OTXTaskType.SEMANTIC_SEGMENTATION],
     "mvtec_classification": [
@@ -81,7 +78,6 @@ OVMODEL_PER_TASK = {
     OTXTaskType.ROTATED_DETECTION: "otx.core.model.rotated_detection.OVRotatedDetectionModel",
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.core.model.instance_segmentation.OVInstanceSegmentationModel",
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.core.model.segmentation.OVSegmentationModel",
-    OTXTaskType.VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVVisualPromptingModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
@@ -226,7 +222,6 @@ class AutoConfigurator:
         val_config = data_config.pop("val_subset")
         test_config = data_config.pop("test_subset")
         tile_config = data_config.pop("tile_config", {})
-        vpm_config = data_config.pop("vpm_config", {})
 
         _ = data_config.pop("__path__", {})  # Remove __path__ key that for CLI
         _ = data_config.pop("config", {})  # Remove config key that for CLI
@@ -240,7 +235,6 @@ class AutoConfigurator:
             val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
             test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
             tile_config=TileConfig(**tile_config),
-            vpm_config=VisualPromptingConfig(**vpm_config),
             **data_config,
         )
 
@@ -431,7 +425,6 @@ class AutoConfigurator:
             test_subset=datamodule.test_subset,
             input_size=datamodule.input_size,
             tile_config=datamodule.tile_config,
-            vpm_config=datamodule.vpm_config,
             image_color_channel=datamodule.image_color_channel,
             stack_images=datamodule.stack_images,
             include_polygons=datamodule.include_polygons,

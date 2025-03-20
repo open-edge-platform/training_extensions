@@ -85,10 +85,7 @@ def test_engine_from_config(
 
     # Test with IR Model
     if task in OVMODEL_PER_TASK:
-        if task.lower() == "visual_prompting":
-            test_metric_from_ov_model = engine.test(checkpoint=exported_model_path["decoder"], accelerator="cpu")
-        else:
-            test_metric_from_ov_model = engine.test(checkpoint=exported_model_path, accelerator="cpu")
+        test_metric_from_ov_model = engine.test(checkpoint=exported_model_path, accelerator="cpu")
         assert len(test_metric_from_ov_model) > 0
 
     # List of models with explain supported.

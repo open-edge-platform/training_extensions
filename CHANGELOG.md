@@ -9,6 +9,11 @@ All notable changes to this project will be documented in this file.
 - Fix DataInputParams Serialization
   (<https://github.com/openvinotoolkit/training_extensions/pull/4293>)
 
+### Removed
+
+- Remove Visual Prompting
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>)
+
 ## \[2.4.0\]
 
 ### New features

@@ -34,8 +34,6 @@ from otx.core.data.entity.base import (
     _pad_image_info,
     _resize_image_info,
     _resized_crop_image_info,
-    pad_points,
-    resize_points,
 )
 from otx.core.data.transform_libs.utils import (
     CV2_INTERP_CODES,
@@ -338,7 +336,6 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         interpolation (str): Interpolation method. Defaults to 'bilinear'.
         interpolation_mask (str): Interpolation method for mask. Defaults to 'nearest'.
         transform_bbox (bool): Whether to transform bounding boxes. Defaults to False.
-        transform_bbox_points (bool): Whether to transform bounding points. Defaults to False.
         transform_keypoints (bool): Whether to transform keypoints. Defaults to False.
         transform_mask (bool): Whether to transform masks. Defaults to False.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
@@ -353,7 +350,6 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         interpolation: str = "bilinear",
         interpolation_mask: str = "nearest",
         transform_bbox: bool = False,
-        transform_bbox_points: bool = False,
         transform_keypoints: bool = False,
         transform_mask: bool = False,
         is_numpy_to_tvtensor: bool = False,
@@ -370,7 +366,6 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             self.scale = tuple(scale)  # type: ignore[assignment]
 
         self.transform_bbox = transform_bbox
-        self.transform_bbox_points = transform_bbox_points
         self.transform_keypoints = transform_keypoints
         self.transform_mask = transform_mask
         self.interpolation = interpolation
@@ -438,12 +433,6 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="XYXY", canvas_size=inputs.img_info.img_shape)  # type: ignore[union-attr]
         return inputs
 
-    def _resize_bbox_points(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
-        """Resize points with scale_factor only for `Resize`."""
-        if (points := getattr(inputs, "points", None)) is not None:
-            inputs.points = resize_points(points, points.canvas_size, inputs.img_info.img_shape)  # type: ignore[union-attr]
-        return inputs
-
     def _resize_keypoints(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize keypoints with scale_factor only for `Resize`."""
         if (keypoints := getattr(inputs, "keypoints", None)) is not None:
@@ -473,9 +462,6 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         if self.transform_bbox:
             inputs = self._resize_bboxes(inputs, scale_factor)  # type: ignore[arg-type, assignment]
 
-        if self.transform_bbox_points:
-            inputs = self._resize_bbox_points(inputs, scale_factor)  # type: ignore[arg-type, assignment]
-
         if self.transform_keypoints:
             inputs = self._resize_keypoints(inputs, scale_factor)  # type: ignore[arg-type, assignment]
 
@@ -493,7 +479,6 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         repr_str += f"interpolation={self.interpolation}, "
         repr_str += f"interpolation_mask={self.interpolation_mask}, "
         repr_str += f"transform_bbox={self.transform_bbox}, "
-        repr_str += f"transform_bbox_points={self.transform_bbox_points}, "
         repr_str += f"transform_keypoint={self.transform_keypoints}, "
         repr_str += f"transform_mask={self.transform_mask}, "
         repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
@@ -1969,7 +1954,6 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
               on the edge. For example, padding [1, 2, 3, 4] with 2 elements on
               both sides in symmetric mode will result in
               [2, 1, 1, 2, 3, 4, 4, 3]
-        transform_point (bool): Whether to transform bounding points. Defaults to False.
         transform_mask (bool): Whether to transform masks. Defaults to False.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
     """
@@ -2055,13 +2039,6 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
         return inputs
 
     @typing.no_type_check  # TODO(ashwinvaidya17): temporary
-    def _pad_points(self, inputs: DataItemType) -> DataItemType:
-        """Pad points according to inputs.image_info.padding."""
-        if (points := getattr(inputs, "points", None)) is not None:
-            inputs.points = pad_points(points, points.canvas_size, inputs.img_info.padding)
-        return inputs
-
-    @typing.no_type_check  # TODO(ashwinvaidya17): temporary
     def _pad_masks(self, inputs: DataItemType) -> DataItemType:
         """Pad masks according to inputs.image_info.padding."""
         if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
@@ -2095,8 +2072,6 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
         inputs = _inputs[0]
 
         outputs = self._pad_img(inputs)
-        if self.transform_point:
-            outputs = self._pad_points(outputs)
 
         if self.transform_mask:
             outputs = self._pad_masks(outputs)

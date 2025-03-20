@@ -46,8 +46,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "tox==4.24.1",
-    "pre-commit==4.1.0",
+    "tox==4.24.2",
+    "pre-commit==4.2.0",
     "pylint",
     "pytest",
     "coverage",
@@ -55,7 +55,7 @@ dev = [
     "pytest-mock",
     "pytest-csv",
     "pytest-cov",
-    "onnxruntime==1.20.1",
+    "onnxruntime==1.21.0",
 ]
 
 docs = [
@@ -88,7 +88,7 @@ base = [
 ]
 
 ci_tox = [
-    "tox==4.24.1",
+    "tox==4.24.2",
 ]
 
 ci_publish = [
@@ -99,10 +99,10 @@ ci_benchmark = [
     "pandas<2.3",       # To avoid conflict with nncf==2.9.0
     "matplotlib==3.10.1",
     "nbconvert==7.16.6",
-    "ipython==9.0.1",
+    "ipython==9.0.2",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
-    "mlflow==2.20.3",
+    "mlflow==2.20.4",
     "py-cpuinfo==9.0.0",
 ]
 
