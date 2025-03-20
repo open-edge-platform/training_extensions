@@ -621,7 +621,7 @@
                 <span class="n">input_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
                 <span class="n">mean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span>
                 <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_std</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 
             <span class="c1"># Instantiate the model and needed components</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instantiate_model</span><span class="p">(</span><span class="n">model_config</span><span class="o">=</span><span class="n">model_config</span><span class="p">)</span>
