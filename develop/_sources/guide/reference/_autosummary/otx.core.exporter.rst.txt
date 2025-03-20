@@ -31,5 +31,4 @@ otx.core.exporter
    otx.core.exporter.base
    otx.core.exporter.exportable_code
    otx.core.exporter.native
-   otx.core.exporter.visual_prompting
 

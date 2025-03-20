@@ -20,7 +20,6 @@ otx.core.config.data
       SamplerConfig
       SubsetConfig
       TileConfig
-      VisualPromptingConfig
    
    
 

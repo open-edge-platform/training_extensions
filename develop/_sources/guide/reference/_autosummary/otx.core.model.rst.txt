@@ -36,5 +36,4 @@ otx.core.model
    otx.core.model.multiclass_classification
    otx.core.model.multilabel_classification
    otx.core.model.segmentation
-   otx.core.model.visual_prompting
 
