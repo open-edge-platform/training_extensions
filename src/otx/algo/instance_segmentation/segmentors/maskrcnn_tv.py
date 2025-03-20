@@ -94,7 +94,7 @@ class MaskRCNN(_MaskRCNN):
             scores = pred["scores"]
             _scale_factor = [1 / s for s in scale_factor]  # (H, W)
             boxes = boxes * boxes.new_tensor(_scale_factor[::-1]).repeat((1, int(boxes.size(-1) / 2)))
-            h, w = ori_shape[1:]
+            h, w = ori_shape
             boxes[:, 0::2].clamp_(min=0, max=w - 1)
             boxes[:, 1::2].clamp_(min=0, max=h - 1)
             keep_indices = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1]) > 0
