@@ -64,10 +64,14 @@ class OTXMulticlassClsModel(OTXModel):
             torch_compile=torch_compile,
         )
         
+
+        ### Modified
+
         if linear_finetuning and hasattr(self, "model") and self.model is not None:
             for name, param in self.model.named_parameters():
                 param.requires_grad = "head" in name
 
+        ### --------
 
 
     def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
