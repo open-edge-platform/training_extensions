@@ -39,13 +39,6 @@ Training to deployment tutorials
       :text-align: center
 
       Learn how to train an anomaly detection model
-   
-   .. grid-item-card:: Visual Prompting
-      :link: visual_prompting
-      :link-type: doc
-      :text-align: center
-
-      Learn how to train a visual prompting model
 
 .. toctree::
    :maxdepth: 1
@@ -56,4 +49,3 @@ Training to deployment tutorials
    instance_segmentation
    semantic_segmentation
    anomaly_detection
-   visual_prompting

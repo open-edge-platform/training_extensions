@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from otx.core.config.data import VisualPromptingConfig
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
@@ -54,7 +53,6 @@ class OTXDatasetFactory:
         stack_images: bool = True,
         include_polygons: bool = False,
         ignore_index: int = 255,
-        vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
     ) -> OTXDataset:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
@@ -108,13 +106,6 @@ class OTXDatasetFactory:
             from .dataset.segmentation import OTXSegmentationDataset
 
             return OTXSegmentationDataset(ignore_index=ignore_index, **common_kwargs)
-
-        if task == OTXTaskType.VISUAL_PROMPTING:
-            from .dataset.visual_prompting import OTXVisualPromptingDataset
-
-            use_bbox = getattr(vpm_config, "use_bbox", False)
-            use_point = getattr(vpm_config, "use_point", False)
-            return OTXVisualPromptingDataset(use_bbox=use_bbox, use_point=use_point, **common_kwargs)
 
         if task == OTXTaskType.KEYPOINT_DETECTION:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset
