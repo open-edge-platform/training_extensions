@@ -279,14 +279,14 @@ class AutoConfigurator:
         model_config = deepcopy(self.config["model"])
 
         if data_input_params is not None:
-            model_config["init_args"]["data_input_params"] = data_input_params
+            model_config["init_args"]["data_input_params"] = data_input_params.as_dict()
         elif (datamodule := self.get_datamodule()) is not None:
             # get data_input_params info from datamodule
             model_config["init_args"]["data_input_params"] = DataInputParams(
                 input_size=datamodule.input_size,
                 mean=datamodule.input_mean,
                 std=datamodule.input_std,
-            )
+            ).as_dict()
 
         model_cls = get_model_cls_from_config(Namespace(model_config))
 
