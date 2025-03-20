@@ -179,9 +179,9 @@ class TestOVModel:
 
 
 class TestDataInputParams:
-    def test_to_dict(self):
+    def test_as_dict(self):
         params = DataInputParams(input_size=(224, 224), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
-        params_dict = params.to_dict()
+        params_dict = params.as_dict()
         assert params_dict == {
             "input_size": (224, 224),
             "mean": (0.485, 0.456, 0.406),
