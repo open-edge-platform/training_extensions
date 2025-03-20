@@ -58,7 +58,6 @@ jobs:
           - task: H_LABEL_CLS
           # - task: INSTANCE_SEGMENTATION
           # - task: SEMANTIC_SEGMENTATION
-          # - task: VISUAL_PROMPTING
 
     name: Perf-Benchmark-${{ matrix.task }}
     runs-on: [self-hosted, Linux, X64, dev, dmount]

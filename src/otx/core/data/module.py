@@ -14,7 +14,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 from torchvision.transforms.v2 import Normalize
 
-from otx.core.config.data import TileConfig, VisualPromptingConfig
+from otx.core.config.data import TileConfig
 from otx.core.data.dataset.tile import OTXTileDatasetFactory
 from otx.core.data.factory import OTXDatasetFactory
 from otx.core.data.mem_cache import (
@@ -49,8 +49,6 @@ class OTXDataModule(LightningDataModule):
         test_subset (SubsetConfig): Configuration for the test subset.
         tile_config (TileConfig, optional): Configuration for tiling.
         Defaults to TileConfig(enable_tiler=False).
-        vpm_config (VisualPromptingConfig, optional): Configuration for visual prompting.
-        Defaults to VisualPromptingConfig().
         mem_cache_size (str, optional): Size of the memory cache. Defaults to "1GB".
         mem_cache_img_max_size (tuple[int, int] | None, optional): Maximum size of images in the memory cache.
         Defaults to None.
@@ -76,7 +74,6 @@ class OTXDataModule(LightningDataModule):
         val_subset: SubsetConfig,
         test_subset: SubsetConfig,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
         mem_cache_size: str = "1GB",
         mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
@@ -99,7 +96,6 @@ class OTXDataModule(LightningDataModule):
         self.test_subset = test_subset
 
         self.tile_config = tile_config
-        self.vpm_config = vpm_config
 
         self.mem_cache_size = mem_cache_size
         self.mem_cache_img_max_size = mem_cache_img_max_size
@@ -211,7 +207,6 @@ class OTXDataModule(LightningDataModule):
                 image_color_channel=image_color_channel,
                 include_polygons=include_polygons,
                 ignore_index=ignore_index,
-                vpm_config=vpm_config,
             )
 
             if self.tile_config.enable_tiler:
@@ -350,7 +345,6 @@ class OTXDataModule(LightningDataModule):
                 self.val_subset,
                 self.test_subset,
                 self.tile_config,
-                self.vpm_config,
                 self.mem_cache_size,
                 self.mem_cache_img_max_size,
                 self.image_color_channel,

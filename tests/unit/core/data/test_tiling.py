@@ -25,7 +25,6 @@ from otx.algo.segmentation.litehrnet import LiteHRNet
 from otx.core.config.data import (
     SubsetConfig,
     TileConfig,
-    VisualPromptingConfig,
 )
 from otx.core.data.dataset.tile import OTXTileTransform
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
@@ -103,7 +102,6 @@ class TestOTXTiling:
                 "val_subset": val_subset,
                 "test_subset": test_subset,
                 "tile_config": TileConfig(),
-                "vpm_config": VisualPromptingConfig(),
             },
             OTXTaskType.INSTANCE_SEGMENTATION: {
                 "data_format": "coco_instances",
@@ -112,7 +110,6 @@ class TestOTXTiling:
                 "val_subset": val_subset,
                 "test_subset": test_subset,
                 "tile_config": TileConfig(),
-                "vpm_config": VisualPromptingConfig(),
             },
             OTXTaskType.SEMANTIC_SEGMENTATION: {
                 "data_format": "common_semantic_segmentation_with_subset_dirs",
@@ -121,7 +118,6 @@ class TestOTXTiling:
                 "val_subset": val_subset,
                 "test_subset": test_subset,
                 "tile_config": TileConfig(),
-                "vpm_config": VisualPromptingConfig(),
             },
         }
 
