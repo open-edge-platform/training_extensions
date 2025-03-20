@@ -63,13 +63,10 @@ class OTXMulticlassClsModel(OTXModel):
             metric=metric,
             torch_compile=torch_compile,
         )
-
-        if linear_finetuning:
-            for name, param in self.model.named_parameters() :
-                if "head" in name :
-                    param.requires_grad = True
-                else:
-                    param.requires_grad = False
+        
+        if linear_finetuning and hasattr(self, "model") and self.model is not None:
+            for name, param in self.model.named_parameters():
+                param.requires_grad = "head" in name
 
 
 
