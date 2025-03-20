@@ -126,6 +126,7 @@ class OTXModel(LightningModule):
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
         model_name: str = "OTXModel",
+        linear_finetuning: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = NullMetricCallable,
@@ -154,6 +155,7 @@ class OTXModel(LightningModule):
         self._check_preprocessing_params(data_input_params)
         self.data_input_params = data_input_params
         self.model_name = model_name
+        self.linear_finetuning = linear_finetuning
         self.model = self._create_model()
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)

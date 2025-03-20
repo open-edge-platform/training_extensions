@@ -3,6 +3,7 @@ model:
   init_args:
     model_name: mobilenetv3_large
     label_info: 1000
+    linear_finetuning: True
 
     optimizer:
       class_path: torch.optim.SGD
@@ -32,7 +33,6 @@ callback_monitor: val/accuracy
 data: ../../_base_/data/classification.yaml
 overrides:
   max_epochs: 90
-  freeze_backbone: true
 
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup

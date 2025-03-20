@@ -979,18 +979,6 @@ class Engine:
             raise ValueError(msg)
         if not isinstance(model, OTXModel):
             raise TypeError(model)
-        
-        ## Modified
-
-        if instantiated_config.get("freeze_backbone", True):
-            # Backbone Freezing
-            for name, param in model.named_parameters():
-                if "backbone" in name:
-                    param.requires_grad = False
-                elif "head" in name:
-                    param.requires_grad = True 
-
-        ## ------
             
         model.label_info = datamodule.label_info
 

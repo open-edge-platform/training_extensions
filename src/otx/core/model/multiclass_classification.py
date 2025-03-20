@@ -42,12 +42,12 @@ class OTXMulticlassClsModel(OTXModel):
     metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
     torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
     """
-
     def __init__(
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
         model_name: str = "multiclass_classification_model",
+        linear_finetuning: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
@@ -57,11 +57,21 @@ class OTXMulticlassClsModel(OTXModel):
             label_info=label_info,
             data_input_params=data_input_params,
             model_name=model_name,
+            linear_finetuning=linear_finetuning,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
+
+        if linear_finetuning:
+            for name, param in self.model.named_parameters() :
+                if "head" in name :
+                    param.requires_grad = True
+                else:
+                    param.requires_grad = False
+
+
 
     def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
         if self.training:
