@@ -14,7 +14,6 @@ from lightning import Callback
 from lightning.pytorch.loggers.logger import DummyLogger
 from torch.cuda import is_available as is_cuda_available
 
-from otx.core.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 
 from .bs_search_algo import BsSearchAlgo
@@ -45,9 +44,6 @@ def adapt_batch_size(
     """
     if not (is_cuda_available() or is_xpu_available()):
         msg = "Adaptive batch size supports CUDA or XPU."
-        raise RuntimeError(msg)
-    if engine.task == OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING:  # type: ignore[has-type]
-        msg = "Zero shot visual prompting task doesn't support adaptive batch size."
         raise RuntimeError(msg)
 
     engine.model.patch_optimizer_and_scheduler_for_adaptive_bs()

@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -20,15 +19,10 @@ from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.entity.keypoint_detection import KeypointDetDataEntity
-from otx.core.data.entity.object_detection_3d import Det3DDataEntity
 from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
     Compose,
-    Decode3DInputsAffineTransforms,
-    DecodeVideo,
-    FilterAnnotations,
-    GetBBoxCenterScale,
     MinIoURandomCrop,
     Pad,
     PhotoMetricDistortion,
@@ -41,9 +35,6 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
-
-if TYPE_CHECKING:
-    from otx.core.data.entity.classification import MulticlassClsBatchDataEntity, MulticlassClsDataEntity
 
 
 class MockFrame:
@@ -58,24 +49,6 @@ class MockVideo:
 
     def close(self):
         return
-
-
-class TestDecodeVideo:
-    def test_train_case(self):
-        transform = DecodeVideo(test_mode=False)
-        video = MockVideo()
-        assert len(transform._transform(video, {})) == 8
-
-        transform = DecodeVideo(test_mode=False, out_of_bound_opt="repeat_last")
-        assert len(transform._transform(video, {})) == 8
-
-    def test_eval_case(self):
-        transform = DecodeVideo(test_mode=True)
-        video = MockVideo()
-        assert len(transform._transform(video, {})) == 8
-
-        transform = DecodeVideo(test_mode=True, out_of_bound_opt="repeat_last")
-        assert len(transform._transform(video, {})) == 8
 
 
 @pytest.fixture()
@@ -148,51 +121,6 @@ class TestResize:
             assert results.img_info.scale_factor == expected_scale_factor
         else:
             assert results.image.shape[:2] == expected_shape
-            assert results.img_info.img_shape == expected_shape
-            assert results.img_info.scale_factor == expected_scale_factor
-
-        assert torch.all(results.bboxes.data == fxt_det_data_entity[0].bboxes.data)
-
-    @pytest.mark.parametrize(
-        ("keep_ratio", "expected_shape", "expected_scale_factor"),
-        [
-            (True, (96, 96), (1.5, 1.5)),
-            (False, (128, 96), (2.0, 1.5)),
-        ],
-    )
-    @pytest.mark.parametrize("is_array", [True, False])
-    def test_forward_only_image_with_list_of_images(
-        self,
-        resize: Resize,
-        fxt_det_data_entity: tuple[tuple, DetDataEntity, DetBatchDataEntity],
-        keep_ratio: bool,
-        is_array: bool,
-        expected_shape: tuple,
-        expected_scale_factor: tuple,
-    ) -> None:
-        """Test forward only image."""
-        resize.keep_ratio = keep_ratio
-        resize.transform_bbox = False
-        resize.transform_mask = False
-        entity = deepcopy(fxt_det_data_entity[0])
-        if is_array:
-            entity.image = entity.image.transpose(1, 2, 0)
-        else:
-            entity.image = torch.as_tensor(entity.image)
-
-        entity.image = [entity.image, entity.image]
-
-        results = resize(entity)
-
-        assert results.img_info.ori_shape == (64, 64)
-        if keep_ratio:
-            assert results.image[0].shape[:2] == expected_shape
-            assert results.image[1].shape[:2] == expected_shape
-            assert results.img_info.img_shape == expected_shape
-            assert results.img_info.scale_factor == expected_scale_factor
-        else:
-            assert results.image[0].shape[:2] == expected_shape
-            assert results.image[1].shape[:2] == expected_shape
             assert results.img_info.img_shape == expected_shape
             assert results.img_info.scale_factor == expected_scale_factor
 
@@ -282,31 +210,6 @@ class TestRandomFlip:
         polygons_results = deepcopy(results.polygons)
         polygons_results = [Polygon(points=revert_hflip(polygon, width)) for polygon in polygons_results]
         assert polygons_results == fxt_inst_seg_data_entity[0].polygons
-
-    @pytest.mark.parametrize("is_array", [True, False])
-    def test_forward_with_list_of_images(
-        self,
-        random_flip: RandomFlip,
-        fxt_multi_class_cls_data_entity: tuple[
-            MulticlassClsDataEntity,
-            MulticlassClsBatchDataEntity,
-            MulticlassClsBatchDataEntity,
-        ],
-        is_array: bool,
-    ) -> None:
-        entity = deepcopy(fxt_multi_class_cls_data_entity[0])
-        if is_array:
-            entity.image = entity.image.transpose(1, 2, 0)
-        else:
-            entity.image = torch.as_tensor(entity.image)
-
-        entity.image = [entity.image, entity.image]
-
-        results = random_flip.forward(entity)
-
-        # test image
-        for img in results.image:
-            assert np.all(F.to_image(img.copy()).flip(-1).numpy() == fxt_multi_class_cls_data_entity[0].image)
 
 
 class TestPhotoMetricDistortion:
@@ -781,96 +684,6 @@ class TestRandomCrop:
         )
 
 
-class TestFilterAnnotations:
-    @pytest.fixture()
-    def iseg_entity(self) -> InstanceSegDataEntity:
-        masks = np.zeros((3, 224, 224))
-        masks[..., 10:20, 10:20] = 1
-        masks[..., 20:40, 20:40] = 1
-        masks[..., 40:80, 40:80] = 1
-        return InstanceSegDataEntity(
-            image=np.random.random((224, 224, 3)),
-            img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
-            bboxes=tv_tensors.BoundingBoxes(
-                np.array([[10, 10, 20, 20], [20, 20, 40, 40], [40, 40, 80, 80]]),
-                format="xyxy",
-                canvas_size=(224, 224),
-            ),
-            labels=torch.LongTensor([1, 2, 3]),
-            masks=tv_tensors.Mask(masks),
-            polygons=[
-                Polygon(points=[10, 10, 10, 20, 20, 20, 20, 10]),
-                Polygon(points=[20, 20, 20, 40, 40, 40, 40, 20]),
-                Polygon(points=[40, 40, 40, 80, 80, 80, 80, 40]),
-            ],
-        )
-
-    @pytest.mark.parametrize("keep_empty", [True, False])
-    def test_forward_keep_empty_by_box(self, iseg_entity, keep_empty: bool) -> None:
-        transform = FilterAnnotations(min_gt_bbox_wh=(50, 50), keep_empty=keep_empty, by_box=True)
-
-        results = transform(deepcopy(iseg_entity))
-
-        if keep_empty:
-            assert np.all(results.image == iseg_entity.image)
-            assert torch.all(results.bboxes == iseg_entity.bboxes)
-            assert torch.all(results.masks == iseg_entity.masks)
-        else:
-            assert results.bboxes.shape[0] == 0
-            assert results.masks.shape[0] == 0
-            assert len(results.polygons) == 0
-
-    @pytest.mark.parametrize("keep_empty", [True, False])
-    def test_forward_keep_empty_by_mask(self, iseg_entity, keep_empty: bool) -> None:
-        transform = FilterAnnotations(min_gt_mask_area=2500, keep_empty=keep_empty, by_box=False, by_mask=True)
-
-        results = transform(deepcopy(iseg_entity))
-
-        if keep_empty:
-            assert np.all(results.image == iseg_entity.image)
-            assert torch.all(results.bboxes == iseg_entity.bboxes)
-            assert torch.all(results.masks == iseg_entity.masks)
-        else:
-            assert results.bboxes.shape[0] == 0
-            assert results.masks.shape[0] == 0
-            assert len(results.polygons) == 0
-
-    @pytest.mark.parametrize("keep_empty", [True, False])
-    def test_forward_keep_empty_by_polygon(self, iseg_entity, keep_empty: bool) -> None:
-        transform = FilterAnnotations(min_gt_mask_area=2500, keep_empty=keep_empty, by_box=False, by_polygon=True)
-
-        results = transform(deepcopy(iseg_entity))
-
-        if keep_empty:
-            assert np.all(results.image == iseg_entity.image)
-            assert torch.all(results.bboxes == iseg_entity.bboxes)
-            assert torch.all(results.masks == iseg_entity.masks)
-        else:
-            assert results.bboxes.shape[0] == 0
-            assert results.masks.shape[0] == 0
-            assert len(results.polygons) == 0
-
-    def test_forward(self, iseg_entity) -> None:
-        # test filter annotations
-        transform = FilterAnnotations(min_gt_bbox_wh=(15, 15))
-
-        results = transform(deepcopy(iseg_entity))
-
-        assert torch.all(results.labels == torch.LongTensor([2, 3]))
-        assert torch.all(results.bboxes == torch.tensor([[20, 20, 40, 40], [40, 40, 80, 80]]))
-        assert len(results.masks) == 2
-        assert len(results.polygons) == 2
-
-    def test_repr(self):
-        transform = FilterAnnotations(
-            min_gt_bbox_wh=(1, 1),
-            keep_empty=False,
-        )
-        assert (
-            repr(transform) == "FilterAnnotations(min_gt_bbox_wh=(1, 1), keep_empty=False, is_numpy_to_tvtensor=False)"
-        )
-
-
 class TestTopdownAffine:
     @pytest.fixture()
     def keypoint_det_entity(self) -> KeypointDetDataEntity:
@@ -891,158 +704,11 @@ class TestTopdownAffine:
     def test_forward(self, keypoint_det_entity) -> None:
         transform = Compose(
             [
-                GetBBoxCenterScale(),
                 TopdownAffine(input_size=(5, 5)),
             ],
         )
         results = transform(deepcopy(keypoint_det_entity))
 
-        assert np.array_equal(results.bbox_info.center, np.array([3.5, 3.5]))
-        assert np.array_equal(results.bbox_info.scale, np.array([8.75, 8.75]))
+        assert np.array_equal(results.bbox_info.center, np.array([5, 5]))
+        assert np.array_equal(results.bbox_info.scale, np.array([10, 10]))
         assert results.keypoints.shape == (4, 2)
-
-
-class TestDecode3DInputsAffineTransforms:
-    @pytest.fixture()
-    def decode_transform(self) -> Decode3DInputsAffineTransforms:
-        return Decode3DInputsAffineTransforms(input_size=(380, 1280), decode_annotations=True)
-
-    @pytest.fixture()
-    def original_kitti_format(self) -> dict[str, np.array]:
-        return {
-            "name": np.array([0]),
-            "alpha": np.array([1.55]),
-            "bbox": np.array([[614.23999023, 181.77999878, 727.30999756, 284.76998901]]),
-            "dimensions": np.array([[4.15, 1.57, 1.73]]),
-            "location": np.array([[1.0, 1.75, 13.22]]),
-            "rotation_y": np.array([1.62]),
-            "occluded": np.array([0]),
-            "truncated": np.array([0.0]),
-        }
-
-    @pytest.fixture()
-    def det_3d_data_entity(self, original_kitti_format) -> Det3DDataEntity:
-        return Det3DDataEntity(
-            image=np.random.rand(725, 1920, 3),
-            img_info=ImageInfo(
-                img_idx=0,
-                img_shape=(380, 1280),
-                ori_shape=(725, 1920),
-                image_color_channel=True,
-                ignored_labels=[],
-            ),
-            boxes=np.zeros((50, 4), dtype=np.float32),
-            labels=np.zeros((50), dtype=np.int8),
-            calib_matrix=np.array(
-                [
-                    [721.5377, 0.0, 609.5593, 44.85728],
-                    [0.0, 721.5377, 172.854, 0.2163791],
-                    [0.0, 0.0, 1.0, 0.002745884],
-                ],
-            ),
-            boxes_3d=np.zeros((50, 6), dtype=np.float32),
-            size_2d=np.zeros((50, 2), dtype=np.float32),
-            size_3d=np.zeros((50, 3), dtype=np.float32),
-            depth=np.zeros((50, 1), dtype=np.float32),
-            heading_angle=np.zeros((50, 2), dtype=np.float32),
-            original_kitti_format=deepcopy(original_kitti_format),
-        )
-
-    def test_general_call(
-        self,
-        decode_transform: Decode3DInputsAffineTransforms,
-        det_3d_data_entity: Det3DDataEntity,
-        original_kitti_format: dict[str, np.array],
-    ) -> None:
-        """Test __call__."""
-        results = decode_transform(det_3d_data_entity)
-
-        assert results.image.shape == (3, 380, 1280)
-        assert results.labels.dtype == torch.long
-        for key in ["boxes", "boxes_3d", "size_2d", "size_3d", "depth", "heading_angle"]:
-            assert hasattr(results, key)
-            assert getattr(results, key).size()[0] == 1  # only one object
-            if key != "boxes":
-                assert isinstance(getattr(results, key), torch.Tensor)
-                assert getattr(results, key).dtype == torch.float32
-            else:
-                assert isinstance(getattr(results, key), tv_tensors.BoundingBoxes)
-
-        assert results.boxes.format == tv_tensors.BoundingBoxFormat.XYXY
-        assert results.boxes_3d.shape == (1, 6)
-        assert results.calib_matrix.shape == (3, 4)
-        # dimensions are in the right position and differ from original_kitti_format
-        assert original_kitti_format["dimensions"][0, 0] == results.size_3d[0, 2]
-
-    def test_no_decode_annotations(
-        self,
-        decode_transform: Decode3DInputsAffineTransforms,
-        det_3d_data_entity: Det3DDataEntity,
-        mocker,
-    ) -> None:
-        """Test __call__."""
-        decode_transform.decode_annotations = False
-        results = decode_transform(det_3d_data_entity)
-
-        assert results.image.shape == (3, 380, 1280)
-        assert isinstance(results.image, torch.Tensor)
-        for key in ["boxes", "boxes_3d", "size_2d", "size_3d", "depth", "heading_angle"]:
-            assert hasattr(results, key)
-            assert getattr(results, key).size()[0] == 0  # all annotations filtered
-            if key != "boxes":
-                assert isinstance(getattr(results, key), torch.Tensor)
-            else:
-                assert isinstance(getattr(results, key), tv_tensors.BoundingBoxes)
-        assert results.calib_matrix.shape == (3, 4)
-        assert isinstance(results.calib_matrix, torch.Tensor)
-
-    def test_no_input_size(
-        self,
-        decode_transform: Decode3DInputsAffineTransforms,
-        det_3d_data_entity: Det3DDataEntity,
-        mocker,
-    ) -> None:
-        # no resize and affine transforms
-        decode_transform.input_size = None
-        decode_transform._affine_transforms = mocker.MagicMock()
-        results = decode_transform(det_3d_data_entity)
-        assert results.image.shape == (3, 725, 1920)  # no resize
-        assert isinstance(results.image, torch.Tensor)
-        assert decode_transform._affine_transforms.call_count == 0
-
-    def test_affine_transforms(self, decode_transform):
-        inputs = {
-            "image": np.random.rand(480, 640, 3),
-            "ori_shape": np.array([480, 640]),
-        }
-        transformed_inputs_0 = decode_transform._affine_transforms(inputs["image"], inputs["ori_shape"], (256, 256))
-
-        assert transformed_inputs_0[0].shape == (3, 256, 256)
-        assert transformed_inputs_0[0].dtype == torch.float32
-        assert transformed_inputs_0[1] == 1  # no crop
-        assert transformed_inputs_0[2].shape == (2, 3)
-        assert isinstance(transformed_inputs_0[3], bool)
-        assert not transformed_inputs_0[3]
-
-        # test crop
-        decode_transform.random_crop = True
-        decode_transform.p_crop = 1.0
-        transformed_inputs_1 = decode_transform._affine_transforms(inputs["image"], inputs["ori_shape"], (256, 256))
-
-        assert transformed_inputs_1[0].shape == (3, 256, 256)
-        assert transformed_inputs_1[2].shape == (2, 3)
-        assert np.any(transformed_inputs_1[2] != transformed_inputs_0[2])
-        assert transformed_inputs_1[1] != 1
-        assert not transformed_inputs_1[3]
-
-        # test flip
-        decode_transform.random_crop = False
-        decode_transform.random_horizontal_flip = True
-        decode_transform.p_flip = 1.0
-        transformed_inputs_2 = decode_transform._affine_transforms(inputs["image"], inputs["ori_shape"], (256, 256))
-
-        assert transformed_inputs_2[0].shape == (3, 256, 256)
-        assert transformed_inputs_2[2].shape == (2, 3)
-        assert np.all(transformed_inputs_2[2] == transformed_inputs_0[2])
-        assert transformed_inputs_2[1] == 1  # no crop
-        assert transformed_inputs_2[3]  # flip is True

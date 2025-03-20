@@ -12,13 +12,18 @@ from torch._dynamo.testing import CompileCounter
 from otx.algo.detection.ssd import SSD
 from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXModelExporter
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 
 
 class TestSSD:
     @pytest.fixture()
     def fxt_model(self) -> SSD:
-        return SSD(model_name="ssd_mobilenetv2", label_info=3)
+        return SSD(
+            model_name="ssd_mobilenetv2",
+            label_info=3,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
     @pytest.fixture()
     def fxt_checkpoint(self, fxt_model, fxt_data_module, tmpdir, monkeypatch: pytest.MonkeyPatch):
@@ -48,7 +53,11 @@ class TestSSD:
         assert loaded_model.model.bbox_head.anchor_generator.heights[0][0] == 50
 
     def test_load_state_dict_pre_hook(self, fxt_model) -> None:
-        prev_model = SSD(model_name="ssd_mobilenetv2", label_info=2)
+        prev_model = SSD(
+            model_name="ssd_mobilenetv2",
+            label_info=2,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         state_dict = prev_model.state_dict()
         fxt_model.model_classes = [1, 2, 3]
         fxt_model.ckpt_classes = [1, 2]
@@ -60,8 +69,10 @@ class TestSSD:
             or torch.all(prev_model.state_dict()[key] != state_dict[key])
         ]
 
+        classification_layers = fxt_model._identify_classification_layers()
+
         for key in keys:
-            assert key in fxt_model.classification_layers
+            assert key in classification_layers
 
     def test_loss(self, fxt_model, fxt_data_module):
         data = next(iter(fxt_data_module.train_dataloader()))
@@ -89,7 +100,11 @@ class TestSSD:
     @pytest.mark.parametrize(
         "model",
         [
-            SSD(model_name="ssd_mobilenetv2", label_info=3),
+            SSD(
+                model_name="ssd_mobilenetv2",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_compiled_model(self, model):
@@ -101,6 +116,6 @@ class TestSSD:
         model.model = torch.compile(model.model, backend=cnt)
 
         # Prepare inputs
-        x = torch.randn(1, 3, *model.input_size)
+        x = torch.randn(1, 3, *model.data_input_params.input_size)
         model.model(x)
         assert cnt.frame_count == 1

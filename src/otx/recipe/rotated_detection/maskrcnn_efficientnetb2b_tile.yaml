@@ -1,5 +1,5 @@
 model:
-  class_path: otx.core.model.rotated_detection.RotatedMaskRCNNModel
+  class_path: otx.algo.instance_segmentation.maskrcnn.RotatedMaskRCNNModel
   init_args:
     model_name: maskrcnn_efficientnet_b2b
     label_info: 80

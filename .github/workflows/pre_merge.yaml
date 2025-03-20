@@ -132,13 +132,8 @@ jobs:
           - task: "multi_cls_classification"
           - task: "multi_label_classification"
           - task: "hlabel_classification"
-          - task: "visual_prompting"
-          - task: "zero_shot_visual_prompting"
-          - task: "anomaly_classification"
-          - task: "anomaly_detection"
-          - task: "anomaly_segmentation"
+          - task: "anomaly"
           - task: "keypoint_detection"
-          - task: "object_detection_3d"
     name: Integration-Test-${{ matrix.task }}-py310
     steps:
       - name: Checkout repository

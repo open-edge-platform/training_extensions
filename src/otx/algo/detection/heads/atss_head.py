@@ -26,7 +26,7 @@ from otx.algo.detection.utils.utils import unmap
 from otx.algo.modules.conv_module import Conv2dModule
 from otx.algo.modules.norm import build_norm_layer
 from otx.algo.modules.scale import Scale
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.detection import DetBatchDataEntity
 
 EPS = 1e-12

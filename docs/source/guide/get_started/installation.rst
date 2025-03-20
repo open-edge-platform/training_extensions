@@ -40,39 +40,14 @@ package:
             python -m venv .otx
             source .otx/bin/activate
 
-            pip install -e .
+            pip install -e .[base]
 
-2. Install PyTorch & Requirements for training
-according to your system environment.
-
-.. tab-set::
-
-    .. tab-item:: Minimum requirements
-
-        .. code-block:: shell
-
-            pip install '.[base]'
-
-        .. note::
-
-            Models from mmlab are not available for this environment. If you want to use mmlab models, you must install them with Full Requirements.
-            Also, some tasks may not be supported by minimum requirements.
-
-    .. tab-item:: Full Requirements
-
-        .. code-block:: shell
-
-            otx install -v --option full
-
-[Optional] Refer to the `torch official installation guide <https://pytorch.org/get-started/previous-versions/>`_
-
-.. note::
-
-    Currently, only torch==2.2 was fully validated. (older versions are not supported due to security issues).
-
-
-3. Once the package is installed in the virtual environment, you can use full
+2. Once the package is installed in the virtual environment, you can use full
 OpenVINO™ Training Extensions command line functionality.
+
+.. code-block:: shell
+
+    otx --help
 
 *************************************************************
 Install OpenVINO™ Training Extensions for users (XPU devices)
@@ -81,17 +56,13 @@ Install OpenVINO™ Training Extensions for users (XPU devices)
 1. Install OpenVINO™ Training Extensions
 from source to use XPU functionality.
 
-.. tab-set::
+.. code-block:: shell
 
-    .. tab-item:: Minimum requirements
+    # Clone the training_extensions repository with the following command:
+    git clone https://github.com/openvinotoolkit/training_extensions.git
+    cd training_extensions
 
-        .. code-block:: shell
-
-            # Clone the training_extensions repository with the following command:
-            git clone https://github.com/openvinotoolkit/training_extensions.git
-            cd training_extensions
-
-            pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
+    pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
 
 .. note::
 
@@ -159,7 +130,7 @@ would be used to setup them.
 
 .. code-block:: shell
 
-    $ otx install --option dev
+    $ pip install -e '.[dev]'
     $ pytest tests/
 
 Another option to run the tests is using the testing automation tool `tox <https://tox.wiki/en/latest/index.html>`_. Following commands will install

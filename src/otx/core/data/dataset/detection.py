@@ -19,7 +19,7 @@ from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from .base import OTXDataset
 
 
-class OTXDetectionDataset(OTXDataset[DetDataEntity]):
+class OTXDetectionDataset(OTXDataset):
     """OTXDataset class for detection task."""
 
     def _get_item_impl(self, index: int) -> DetDataEntity | None:
@@ -54,7 +54,7 @@ class OTXDetectionDataset(OTXDataset[DetDataEntity]):
             labels=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
         )
 
-        return self._apply_transforms(entity)
+        return self._apply_transforms(entity)  # type: ignore[return-value]
 
     @property
     def collate_fn(self) -> Callable:

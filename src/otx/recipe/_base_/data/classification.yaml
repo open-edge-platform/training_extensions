@@ -1,5 +1,7 @@
 task: MULTI_CLASS_CLS
-input_size: 224
+input_size:
+  - 224
+  - 224
 mem_cache_size: 1GB
 mem_cache_img_max_size:
   - 500

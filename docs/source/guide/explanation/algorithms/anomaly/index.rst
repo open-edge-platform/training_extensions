@@ -77,13 +77,15 @@ Models
 ******
 As mentioned above, the goal of visual anomaly detection is to learn a representation of normal behaviour in the data and then identify instances that deviate from this normal behaviour. OpenVINO Training Extensions supports several deep learning approaches to this task, including the following:
 
-+-------+----------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+
-| Name  | Classification                                                                                                                               | Detection                                                                                                                                        | Segmentation                                                                                                                               | Complexity (GFLOPs) | Model size (MB) |
-+=======+==============================================================================================================================================+==================================================================================================================================================+============================================================================================================================================+=====================+=================+
-| PADIM | `padim <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_classification/padim.yaml>`_              | `padim <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_detection/padim.yaml>`_                       | `padim <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_segmentation/padim.yaml>`_              | 3.9                 | 168.4           |
-+-------+----------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+
-| STFPM | `stfpm <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_classification/stfpm.yaml>`_              | `stfpm <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_detection/stfpm.yaml>`_                       | `stfpm <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_segmentation/stfpm.yaml>`_              | 5.6                 | 21.1            |
-+-------+----------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+
++--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
+| Name   | Recipe                                                                                                            | Complexity (GFLOPs)  | Model size (MB) |
++========+===================================================================================================================+======================+=================+
+| PADIM  | `padim <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_/padim.yaml>`_ | 3.9                  | 168.4           |
++--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
+| STFPM  | `stfpm <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_/stfpm.yaml>`_ | 5.6                  | 21.1            |
++--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
+| U-Flow | `uflow <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_/uflow.yaml>`_ | 59.6                 | 62.88           |
++--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
 
 
 Clustering-based Models
@@ -153,3 +155,28 @@ Since STFPM trains the student network, we use the following parameters for its 
    - ``Early Stopping``: Early stopping is used to stop the training process when the validation loss stops improving. The default value of the early stopping patience is ``10``.
 
 For more information on STFPM's training. We invite you to read Anomalib's `STFPM documentation <https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/stfpm.html>`_.
+
+Normalizing Flow Models
+-----------------------------------
+Normalizing Flow models use invertible neural networks to transform image features into a simpler distribution, like a Gaussian. During inference, the Flow network is used to compute the likelihood of the input image under the learned distribution, assigning low probabilities to anomalous samples. OpenVINO Training Extensions currently supports `U-Flow: Unsupervised Anomaly Detection via Normalizing Flow <https://arxiv.org/pdf/2103.04257.pdf>`_.
+
+U-Flow
+^^^^^
+
+.. figure:: ../../../../../utils/images/uflow.png
+   :width: 600
+   :align: center
+   :alt: Anomaly Task Types
+
+U-Flow consists of four stages.
+
+1. **Feature Extraction**: The images are passed through a pre-trained bacbone to extract feature embeddings at multiple scales.
+2. **Normalizing Flow**: The feature embeddings are passed through a U-shaped normalizing flow network to learn the distribution of normal images.
+3. **Anomaly Score Calculation**: The anomaly score is calculated as the negative log-likelihood of the feature embeddings under the learned distribution.
+4. **Anomaly Map Generation**: The anomaly score is used to generate an anomaly map, which highlights the anomalous regions in the image.
+
+Training Parameters
+~~~~~~~~~~~~~~~~~~~~
+There are currently no configurable training parameters exposed for U-Flow.
+
+For more information on UFlow's training. We invite you to read Anomalib's `U-Flow documentation <https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/uflow.html>`_.

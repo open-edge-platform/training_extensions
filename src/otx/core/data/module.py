@@ -6,16 +6,15 @@
 from __future__ import annotations
 
 import logging as log
-from copy import deepcopy
-from typing import TYPE_CHECKING, Iterable, Literal
+from typing import TYPE_CHECKING
 
-import torch
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
+from torchvision.transforms.v2 import Normalize
 
-from otx.core.config.data import TileConfig, UnlabeledDataConfig, VisualPromptingConfig
+from otx.core.config.data import TileConfig
 from otx.core.data.dataset.tile import OTXTileDatasetFactory
 from otx.core.data.factory import OTXDatasetFactory
 from otx.core.data.mem_cache import (
@@ -39,22 +38,35 @@ if TYPE_CHECKING:
 
 
 class OTXDataModule(LightningDataModule):
-    """LightningDataModule extension for OTX pipeline.
+    """This class extends the LightningDataModule to provide data handling capabilities for the OTX pipeline.
 
     Args:
-        input_size (int | tuple[int, int] | None, optional):
-            Final image or video shape of data after data transformation. It'll be applied to all subset configs
-            If it's not None. Defaults to None.
-        adaptive_input_size (Literal["auto", "downscale"] | None, optional):
-            The adaptive input size mode. If it's set, appropriate input size is found by analyzing dataset.
-            "auto" can find both bigger and smaller input size than current input size and "downscale" uses only
-            smaller size than default setting. Defaults to None.
-        input_size_multiplier (int, optional):
-            adaptive_input_size will finds multiple of input_size_multiplier value if it's set. It's usefull when
-            a model requries multiple of specific value as input_size. Defaults to 1.
+        task (OTXTaskType): The type of task (e.g., classification, detection).
+        data_format (str): The format of the data (e.g., 'coco', 'voc').
+        data_root (str): The root directory where the data is stored.
+        train_subset (SubsetConfig): Configuration for the training subset.
+        val_subset (SubsetConfig): Configuration for the validation subset.
+        test_subset (SubsetConfig): Configuration for the test subset.
+        tile_config (TileConfig, optional): Configuration for tiling.
+        Defaults to TileConfig(enable_tiler=False).
+        mem_cache_size (str, optional): Size of the memory cache. Defaults to "1GB".
+        mem_cache_img_max_size (tuple[int, int] | None, optional): Maximum size of images in the memory cache.
+        Defaults to None.
+        image_color_channel (ImageColorChannel, optional): Color channel configuration for images.
+        Defaults to ImageColorChannel.RGB.
+        stack_images (bool, optional): Whether to stack images. Defaults to True.
+        include_polygons (bool, optional): Whether to include polygons in the data. Defaults to False.
+        ignore_index (int, optional): Index to ignore in segmentation tasks. Defaults to 255.
+        unannotated_items_ratio (float, optional): Ratio of unannotated items to include. Defaults to 0.0.
+        auto_num_workers (bool, optional): Whether to automatically determine the number of workers. Defaults to False.
+        device (DeviceType, optional): Device type to use (e.g., 'cpu', 'gpu'). Defaults to DeviceType.auto.
+        input_size (tuple[int, int] | str, optional): Final image or video shape after transformation.
+        Can be "auto" to determine size automatically. Defaults to "auto".
+        input_size_multiplier (int, optional): Multiplier for adaptive input size.
+        Useful for models requiring specific input size multiples. Defaults to 1.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         task: OTXTaskType,
         data_format: str,
@@ -62,9 +74,7 @@ class OTXDataModule(LightningDataModule):
         train_subset: SubsetConfig,
         val_subset: SubsetConfig,
         test_subset: SubsetConfig,
-        unlabeled_subset: UnlabeledDataConfig = UnlabeledDataConfig(data_root=None),  # noqa: B008
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
         mem_cache_size: str = "1GB",
         mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
@@ -74,8 +84,7 @@ class OTXDataModule(LightningDataModule):
         unannotated_items_ratio: float = 0.0,
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
-        input_size: int | tuple[int, int] | None = None,
-        adaptive_input_size: Literal["auto", "downscale"] | None = None,
+        input_size: tuple[int, int] | str = "auto",
         input_size_multiplier: int = 1,
     ) -> None:
         """Constructor."""
@@ -87,10 +96,8 @@ class OTXDataModule(LightningDataModule):
         self.train_subset = train_subset
         self.val_subset = val_subset
         self.test_subset = test_subset
-        self.unlabeled_subset = unlabeled_subset
 
         self.tile_config = tile_config
-        self.vpm_config = vpm_config
 
         self.mem_cache_size = mem_cache_size
         self.mem_cache_img_max_size = mem_cache_img_max_size
@@ -108,38 +115,48 @@ class OTXDataModule(LightningDataModule):
         self.save_hyperparameters(ignore=["input_size"])
 
         dataset = DmDataset.import_from(self.data_root, format=self.data_format)
-        if self.task != "H_LABEL_CLS":
+        if self.task != OTXTaskType.H_LABEL_CLS and not (
+            self.task == OTXTaskType.KEYPOINT_DETECTION and self.data_format == "arrow"
+        ):
             dataset = pre_filtering(
                 dataset,
                 self.data_format,
                 self.unannotated_items_ratio,
                 ignore_index=self.ignore_index if self.task == "SEMANTIC_SEGMENTATION" else None,
             )
-
-        unlabeled_dataset = None
-        if self.unlabeled_subset.data_root is not None:
-            # If unlabeled_subset's data_root is not None, use that folder as the Unlabeled dataset root.
-            log.info(
-                f"Unlabeled dataset is loaded from {self.unlabeled_subset.data_root}.",
-            )
-            unlabeled_dataset = DmDataset.import_from(
-                self.unlabeled_subset.data_root,
-                format=self.unlabeled_subset.data_format,
-                subset=self.unlabeled_subset.subset_name,
-            )
-
-        if adaptive_input_size is not None:
+        if isinstance(input_size, str) and input_size == "auto":
             input_size = adapt_input_size_to_dataset(
                 dataset,
                 self.task,
-                input_size,
-                adaptive_input_size == "downscale",
                 input_size_multiplier,
             )
-        if input_size is not None:
-            for subset_cfg in [train_subset, val_subset, test_subset, unlabeled_subset]:
-                if subset_cfg.input_size is None:
-                    subset_cfg.input_size = input_size
+        elif not isinstance(input_size, tuple):
+            msg = f"input_size should be tuple of ints or 'auto', but got {input_size}"
+            raise ValueError(msg)
+
+        for subset_cfg in [train_subset, val_subset, test_subset]:
+            if subset_cfg.input_size is None:
+                subset_cfg.input_size = input_size  # type: ignore[assignment]
+
+        # get mean and std from Normalize transform
+        mean = (0.0, 0.0, 0.0)
+        std = (1.0, 1.0, 1.0)
+        if train_subset.transforms is not None:
+            for transform in train_subset.transforms:
+                if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
+                    # CLI case with jsonargparse
+                    mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
+                    std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
+                    break
+
+                if isinstance(transform, Normalize):
+                    # torchvision.transforms case
+                    mean = transform.mean
+                    std = transform.std
+                    break
+
+        self.input_mean = mean
+        self.input_std = std
         self.input_size = input_size
 
         if self.tile_config.enable_tiler and self.tile_config.enable_adaptive_tiling:
@@ -194,7 +211,6 @@ class OTXDataModule(LightningDataModule):
                 stack_images=stack_images,
                 include_polygons=include_polygons,
                 ignore_index=ignore_index,
-                vpm_config=vpm_config,
             )
 
             if self.tile_config.enable_tiler:
@@ -206,50 +222,6 @@ class OTXDataModule(LightningDataModule):
             self.subsets[name] = dataset
             label_infos += [self.subsets[name].label_info]
             log.info(f"Add name: {name}, self.subsets: {self.subsets}")
-
-        if unlabeled_dataset is not None:
-            name = self.unlabeled_subset.subset_name
-            dm_subset = unlabeled_dataset.subsets()[name]
-
-            if isinstance(self.unlabeled_subset.transforms, dict):
-                # When applying multi-transforms to a single unlabeled dataset
-                # This adds as many subsets as the number of keys in the transforms. The dataset is the same,
-                # only the transforms are different.
-                dm_subset = dm_subset.as_dataset()
-                for transform_key, transforms in self.unlabeled_subset.transforms.items():
-                    unlabeled_config = deepcopy(self.unlabeled_subset)
-                    # TODO (harimkang): Revisit this with core.config.data.UnlabeledDataConfig.transforms.
-                    unlabeled_config.transforms = transforms  # type: ignore[assignment]
-
-                    unlabeled_dataset = OTXDatasetFactory.create(
-                        task=self.task,
-                        dm_subset=dm_subset,
-                        cfg_subset=unlabeled_config,
-                        mem_cache_handler=mem_cache_handler,
-                        mem_cache_img_max_size=mem_cache_img_max_size,
-                        image_color_channel=image_color_channel,
-                        stack_images=stack_images,
-                        include_polygons=include_polygons,
-                        ignore_index=ignore_index,
-                        vpm_config=vpm_config,
-                        data_format=self.data_format,
-                    )
-                    self.subsets[transform_key] = unlabeled_dataset
-            else:
-                unlabeled_dataset = OTXDatasetFactory.create(
-                    task=self.task,
-                    dm_subset=dm_subset.as_dataset(),
-                    cfg_subset=self.unlabeled_subset,
-                    mem_cache_handler=mem_cache_handler,
-                    mem_cache_img_max_size=mem_cache_img_max_size,
-                    image_color_channel=image_color_channel,
-                    stack_images=stack_images,
-                    include_polygons=include_polygons,
-                    ignore_index=ignore_index,
-                    vpm_config=vpm_config,
-                    data_format=self.data_format,
-                )
-                self.subsets[name] = unlabeled_dataset
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -267,7 +239,7 @@ class OTXDataModule(LightningDataModule):
             raise KeyError(msg)
         return dataset
 
-    def train_dataloader(self) -> Iterable:
+    def train_dataloader(self) -> DataLoader:
         """Get train dataloader."""
         config = self.train_subset
         dataset = self._get_dataset(config.subset_name)
@@ -294,23 +266,7 @@ class OTXDataModule(LightningDataModule):
                     "sampler": RandomSampler(dataset, num_samples=num_samples),
                 },
             )
-        dataloader: DataLoader = DataLoader(**common_args)
-        if (unlabeled_dataloader := self.unlabeled_dataloader()) is not None:
-            # Utilize the CombinedLoader provided by Lightning to bundle multiple dataloaders.
-            # https://lightning.ai/docs/pytorch/stable/data/iterables.html
-            from lightning.pytorch.utilities import CombinedLoader
-
-            iterables = {
-                "labeled": dataloader,
-                **unlabeled_dataloader,
-            }
-            # CombinedLoader should always behave relative to the labeled dataloader.
-            # if len(labeled_dataloader) < len(unlabeled_dataloader), the mode should be "min_size"
-            # if len(labeled_dataloader) > len(unlabeled_dataloader), the mode should be "max_size_cycle"
-            min_unlabeled_length = min(len(loader) for loader in unlabeled_dataloader.values())
-            mode = "min_size" if len(dataloader) < min_unlabeled_length else "max_size_cycle"
-            return CombinedLoader(iterables, mode=mode)
-        return dataloader
+        return DataLoader(**common_args)
 
     def val_dataloader(self) -> DataLoader:
         """Get val dataloader."""
@@ -357,63 +313,6 @@ class OTXDataModule(LightningDataModule):
             persistent_workers=config.num_workers > 0,
         )
 
-    def unlabeled_dataloader(self) -> dict[str, DataLoader] | None:
-        """Returns a dictionary of unlabeled dataloaders.
-
-        The method creates and returns dataloaders for unlabeled datasets based on the configuration settings.
-        If the data root is not specified in the configuration, it returns None.
-
-        Returns:
-            dict[str, DataLoader] | None: A dictionary containing unlabeled dataloaders, where the keys are the names of
-            the datasets and the values are the corresponding DataLoader objects.
-        """
-        config = self.unlabeled_subset
-        if config.data_root is None:
-            return None
-
-        common_args = {
-            "batch_size": config.batch_size,
-            "num_workers": config.num_workers,
-            "pin_memory": True,
-            "persistent_workers": config.num_workers > 0,
-        }
-
-        dataloaders = {}
-        if isinstance(config.transforms, dict):
-            log.warning(f"Unlabeled dataset has multiple transforms : {list(config.transforms.keys())}")
-            common_args["worker_init_fn"] = lambda _: torch.manual_seed(0)  # type: ignore[assignment]
-            for key in config.transforms:
-                dataset = self._get_dataset(key)
-                # For unlabeled datasets using Multi-Transforms, must use generators and samplers
-                # with the same seed to get the same data.
-                generator = torch.Generator().manual_seed(0)
-                sampler = instantiate_sampler(
-                    config.sampler,
-                    dataset=dataset,
-                    batch_size=config.batch_size,
-                    generator=generator,
-                )
-
-                dataloaders[key] = DataLoader(
-                    dataset=dataset,
-                    collate_fn=dataset.collate_fn,
-                    sampler=sampler,
-                    shuffle=False,
-                    **common_args,
-                )
-        else:
-            dataset = self._get_dataset(config.subset_name)
-            sampler = instantiate_sampler(config.sampler, dataset=dataset, batch_size=config.batch_size)
-            dataloaders[config.subset_name] = DataLoader(
-                dataset=dataset,
-                collate_fn=dataset.collate_fn,
-                sampler=sampler,
-                shuffle=sampler is None,
-                **common_args,
-            )
-
-        return dataloaders
-
     def setup(self, stage: str) -> None:
         """Setup for each stage."""
 
@@ -449,9 +348,7 @@ class OTXDataModule(LightningDataModule):
                 self.train_subset,
                 self.val_subset,
                 self.test_subset,
-                self.unlabeled_subset,
                 self.tile_config,
-                self.vpm_config,
                 self.mem_cache_size,
                 self.mem_cache_img_max_size,
                 self.image_color_channel,

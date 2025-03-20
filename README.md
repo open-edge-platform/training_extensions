@@ -14,8 +14,8 @@
 <!-- markdownlint-disable MD042 -->
 
 [![python](https://img.shields.io/badge/python-3.10%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.1.1%2B-orange)]()
-[![openvino](https://img.shields.io/badge/openvino-2024.0-purple)]()
+[![pytorch](https://img.shields.io/badge/pytorch-2.5%2B-orange)]()
+[![openvino](https://img.shields.io/badge/openvino-2025.0-purple)]()
 
 <!-- markdownlint-enable  MD042 -->
 
@@ -53,7 +53,6 @@ OpenVINO™ Training Extensions supports the following computer vision tasks:
 - **Semantic segmentation**
 - **Instance segmentation** including tiling algorithm support
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
-- **Visual Prompting** tasks including segment anything model
 
 OpenVINO™ Training Extensions supports the [following learning methods](https://openvinotoolkit.github.io/training_extensions/latest/guide/explanation/algorithms/index.html):
 

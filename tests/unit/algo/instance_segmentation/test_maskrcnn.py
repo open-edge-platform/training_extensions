@@ -9,12 +9,17 @@ from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.instance_segmentation.maskrcnn_tv import MaskRCNNTV
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 
 
 class TestMaskRCNN:
     def test_load_weights(self, mocker) -> None:
-        model = MaskRCNN(2, "maskrcnn_resnet_50")
+        model = MaskRCNN(
+            label_info=2,
+            model_name="maskrcnn_resnet_50",
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_iseg_ckpt")
         model.load_from_otx_v1_ckpt({})
         mock_load_ckpt.assert_called_once_with({}, "model.")
@@ -24,10 +29,26 @@ class TestMaskRCNN:
     @pytest.mark.parametrize(
         "model",
         [
-            MaskRCNN(3, "maskrcnn_resnet_50"),
-            MaskRCNN(3, "maskrcnn_efficientnet_b2b"),
-            MaskRCNN(3, "maskrcnn_swin_tiny"),
-            MaskRCNNTV(3, "maskrcnn_resnet_50"),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_resnet_50",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_efficientnet_b2b",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_swin_tiny",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNNTV(
+                label_info=3,
+                model_name="maskrcnn_resnet_50",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_loss(self, model, fxt_data_module):
@@ -51,10 +72,26 @@ class TestMaskRCNN:
     @pytest.mark.parametrize(
         "model",
         [
-            MaskRCNN(3, "maskrcnn_resnet_50"),
-            MaskRCNN(3, "maskrcnn_efficientnet_b2b"),
-            MaskRCNN(3, "maskrcnn_swin_tiny"),
-            MaskRCNNTV(3, "maskrcnn_resnet_50"),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_resnet_50",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_efficientnet_b2b",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_swin_tiny",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNNTV(
+                label_info=3,
+                model_name="maskrcnn_resnet_50",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_predict(self, model, fxt_data_module):
@@ -67,10 +104,26 @@ class TestMaskRCNN:
     @pytest.mark.parametrize(
         "model",
         [
-            MaskRCNN(3, "maskrcnn_resnet_50"),
-            MaskRCNN(3, "maskrcnn_efficientnet_b2b"),
-            MaskRCNN(3, "maskrcnn_swin_tiny"),
-            MaskRCNNTV(3, "maskrcnn_resnet_50"),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_resnet_50",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_efficientnet_b2b",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNN(
+                label_info=3,
+                model_name="maskrcnn_swin_tiny",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            MaskRCNNTV(
+                label_info=3,
+                model_name="maskrcnn_resnet_50",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_export(self, model):

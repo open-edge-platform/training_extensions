@@ -1,7 +1,7 @@
 model:
-  class_path: otx.algo.classification.torchvision_model.TVModelForHLabelCls
+  class_path: otx.algo.classification.hlabel_models.torchvision_model.TVModelHLabelCls
   init_args:
-    backbone: efficientnet_v2_l
+    model_name: efficientnet_v2_l
     label_info: 1000
 
     optimizer:

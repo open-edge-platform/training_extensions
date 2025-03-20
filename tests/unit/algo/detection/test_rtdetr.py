@@ -11,14 +11,19 @@ from torch._dynamo.testing import CompileCounter
 from otx.algo.detection.rtdetr import RTDETR
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
+from otx.core.model.base import DataInputParams
 from otx.core.types import LabelInfo
 
 
 class TestRTDETR:
     def test_customize_outputs(self, mocker):
         label_info = LabelInfo(["a", "b", "c"], ["0", "1", "2"], [["a", "b", "c"]])
-        mocker.patch("otx.algo.detection.rtdetr.RTDETR._build_model", return_value=mocker.MagicMock())
-        model = RTDETR(model_name="rtdetr_18", label_info=label_info)
+        mocker.patch("otx.algo.detection.rtdetr.RTDETR._create_model", return_value=mocker.MagicMock())
+        model = RTDETR(
+            model_name="rtdetr_18",
+            label_info=label_info,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         model.model.load_from = None
         model.train()
         outputs = {
@@ -109,9 +114,21 @@ class TestRTDETR:
     @pytest.mark.parametrize(
         "model",
         [
-            RTDETR(model_name="rtdetr_18", label_info=3),
-            RTDETR(model_name="rtdetr_50", label_info=3),
-            RTDETR(model_name="rtdetr_101", label_info=3),
+            RTDETR(
+                model_name="rtdetr_18",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            RTDETR(
+                model_name="rtdetr_50",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
+            RTDETR(
+                model_name="rtdetr_101",
+                label_info=3,
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_compiled_model(self, model):
@@ -123,7 +140,7 @@ class TestRTDETR:
         model.model = torch.compile(model.model, backend=cnt)
 
         # Prepare inputs
-        x = torch.randn(1, 3, *model.input_size)
+        x = torch.randn(1, 3, *model.data_input_params.input_size)
         model.model.training = False  # do not calculate loss
         model.model(x)
         assert cnt.frame_count == 1

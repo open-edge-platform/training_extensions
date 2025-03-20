@@ -9,19 +9,31 @@ from unittest.mock import create_autospec
 
 import pytest
 from lightning.pytorch.cli import ReduceLROnPlateau
+from torch import nn
 from torch.optim import Optimizer
 
-from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel, OTXMultilabelClsModel
+from otx.core.model.base import DataInputParams
+from otx.core.model.hlabel_classification import OTXHlabelClsModel
+from otx.core.model.multiclass_classification import OTXMulticlassClsModel
+from otx.core.model.multilabel_classification import OTXMultilabelClsModel
 from otx.core.types.export import TaskLevelExportParameters
 
-SKIP_MMLAB_TEST = False
-try:
-    import mmpretrain  # noqa: F401
-except ImportError:
-    SKIP_MMLAB_TEST = True
+
+class MockClsModel(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.backbone = nn.Sequential()
+        self.head = nn.Linear(5, 2)
+
+    def init_weights(self):
+        pass
 
 
 class TestOTXMulticlassClsModel:
+    @pytest.fixture(autouse=True)
+    def mock_model(self, mocker):
+        OTXMulticlassClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
+
     @pytest.fixture()
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
@@ -38,7 +50,7 @@ class TestOTXMulticlassClsModel:
     ) -> None:
         model = OTXMulticlassClsModel(
             label_info=1,
-            input_size=(224, 224),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,
@@ -51,28 +63,6 @@ class TestOTXMulticlassClsModel:
         assert not model._export_parameters.hierarchical
         assert model._export_parameters.output_raw_scores
 
-        model = OTXMultilabelClsModel(
-            label_info=1,
-            input_size=(224, 224),
-            torch_compile=False,
-            optimizer=mock_optimizer,
-            scheduler=mock_scheduler,
-        )
-
-        assert model._export_parameters.multilabel
-        assert not model._export_parameters.hierarchical
-
-        model = OTXHlabelClsModel(
-            label_info=fxt_hlabel_multilabel_info,
-            input_size=(224, 224),
-            torch_compile=False,
-            optimizer=mock_optimizer,
-            scheduler=mock_scheduler,
-        )
-
-        assert not model._export_parameters.multilabel
-        assert model._export_parameters.hierarchical
-
     def test_convert_pred_entity_to_compute_metric(
         self,
         mock_optimizer,
@@ -81,7 +71,7 @@ class TestOTXMulticlassClsModel:
     ) -> None:
         model = OTXMulticlassClsModel(
             label_info=1,
-            input_size=(224, 224),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,
@@ -97,6 +87,10 @@ class TestOTXMulticlassClsModel:
 
 
 class TestOTXMultilabelClsModel:
+    @pytest.fixture(autouse=True)
+    def mock_model(self, mocker):
+        OTXMultilabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
+
     @pytest.fixture()
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
@@ -112,7 +106,7 @@ class TestOTXMultilabelClsModel:
     ) -> None:
         model = OTXMultilabelClsModel(
             label_info=1,
-            input_size=(224, 224),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,
@@ -132,7 +126,7 @@ class TestOTXMultilabelClsModel:
     ) -> None:
         model = OTXMultilabelClsModel(
             label_info=1,
-            input_size=(224, 224),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,
@@ -148,6 +142,10 @@ class TestOTXMultilabelClsModel:
 
 
 class TestOTXHlabelClsModel:
+    @pytest.fixture(autouse=True)
+    def mock_model(self, mocker):
+        OTXHlabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
+
     @pytest.fixture()
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
@@ -164,7 +162,7 @@ class TestOTXHlabelClsModel:
     ) -> None:
         model = OTXHlabelClsModel(
             label_info=fxt_hlabel_multilabel_info,
-            input_size=(224, 224),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,
@@ -185,7 +183,7 @@ class TestOTXHlabelClsModel:
     ) -> None:
         model = OTXHlabelClsModel(
             label_info=fxt_hlabel_multilabel_info,
-            input_size=(224, 224),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,
@@ -209,7 +207,10 @@ class TestOTXHlabelClsModel:
         assert "target" in metric_input
 
     def test_set_label_info(self, fxt_hlabel_multilabel_info):
-        model = OTXHlabelClsModel(label_info=fxt_hlabel_multilabel_info, input_size=(224, 224))
+        model = OTXHlabelClsModel(
+            label_info=fxt_hlabel_multilabel_info,
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         assert model.label_info.num_multilabel_classes == fxt_hlabel_multilabel_info.num_multilabel_classes
 
         fxt_hlabel_multilabel_info.num_multilabel_classes = 0

@@ -39,6 +39,3 @@ training_targets:
 # Stats.
 gigaflops: 9.4
 size: 7.6
-
-# Model spec
-model_category: BALANCE

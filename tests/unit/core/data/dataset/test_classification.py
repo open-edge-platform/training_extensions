@@ -11,7 +11,7 @@ from otx.core.data.dataset.classification import (
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.core.data.entity.classification import HlabelClsDataEntity, MulticlassClsDataEntity, MultilabelClsDataEntity
+from otx.data.torch import TorchDataItem
 
 
 class TestOTXMulticlassClsDataset:
@@ -25,7 +25,7 @@ class TestOTXMulticlassClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], MulticlassClsDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)
 
     def test_get_item_from_bbox_dataset(
         self,
@@ -37,7 +37,7 @@ class TestOTXMulticlassClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], MulticlassClsDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)
 
 
 class TestOTXMultilabelClsDataset:
@@ -51,7 +51,7 @@ class TestOTXMultilabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], MultilabelClsDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)
 
     def test_get_item_from_bbox_dataset(
         self,
@@ -63,7 +63,7 @@ class TestOTXMultilabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], MultilabelClsDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)
 
 
 class TestOTXHlabelClsDataset:
@@ -92,7 +92,7 @@ class TestOTXHlabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], HlabelClsDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)
 
     def test_get_item_from_bbox_dataset(
         self,
@@ -107,4 +107,4 @@ class TestOTXHlabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], HlabelClsDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)

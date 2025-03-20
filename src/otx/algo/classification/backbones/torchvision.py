@@ -3,13 +3,12 @@
 
 """Torchvison model's Backbone Class."""
 
-from typing import Literal
 
 import torch
 from torch import nn
 from torchvision.models import get_model, get_model_weights
 
-TVModelType = Literal[
+TVModels = [
     "alexnet",
     "convnext_base",
     "convnext_large",
@@ -88,12 +87,14 @@ class TorchvisionBackbone(nn.Module):
 
     def __init__(
         self,
-        backbone: TVModelType,
-        pretrained: bool = False,
+        backbone: str,
+        pretrained: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
-
+        if backbone not in TVModels:
+            msg = f"Backbone model name is not supported: {backbone}. Available models: {TVModels}"
+            raise ValueError(msg)
         tv_model_cfg = {"name": backbone}
         if pretrained:
             tv_model_cfg["weights"] = get_model_weights(backbone)

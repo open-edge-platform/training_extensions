@@ -42,11 +42,7 @@ def find_recipe_folder(base_path: Path, folder_name: str) -> Path:
 
 def get_task_list(task: str) -> list[OTXTaskType]:
     if task == "all":
-        tasks = [
-            task_type
-            for task_type in OTXTaskType
-            if task_type not in (OTXTaskType.DETECTION_SEMI_SL, OTXTaskType.DIFFUSION)
-        ]
+        tasks = list(OTXTaskType)
     elif task == "multi_cls_classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS]
     elif task == "multi_label_classification":
@@ -55,31 +51,10 @@ def get_task_list(task: str) -> list[OTXTaskType]:
         tasks = [OTXTaskType.H_LABEL_CLS]
     elif task == "classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
-    elif task == "visual_prompting_all":
-        tasks = [OTXTaskType.VISUAL_PROMPTING, OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING]
-    elif task == "visual_prompting":
-        tasks = [OTXTaskType.VISUAL_PROMPTING]
-    elif task == "zero_shot_visual_prompting":
-        tasks = [OTXTaskType.ZERO_SHOT_VISUAL_PROMPTING]
-    elif task == "anomaly":
-        tasks = [
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_DETECTION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-        ]
     elif task == "anomaly":
         tasks = [OTXTaskType.ANOMALY]
-    elif task == "anomaly_classification":
-        tasks = [OTXTaskType.ANOMALY_CLASSIFICATION]
-    elif task == "anomaly_detection":
-        tasks = [OTXTaskType.ANOMALY_DETECTION]
-    elif task == "anomaly_segmentation":
-        tasks = [OTXTaskType.ANOMALY_SEGMENTATION]
     elif task == "keypoint_detection":
         tasks = [OTXTaskType.KEYPOINT_DETECTION]
-    elif task == "object_detection_3d":
-        tasks = [OTXTaskType.OBJECT_DETECTION_3D]
     else:
         tasks = [OTXTaskType(task.upper())]
     return tasks
@@ -131,42 +106,16 @@ def fxt_asset_dir() -> Path:
 def fxt_target_dataset_per_task() -> dict:
     return {
         "multi_class_cls": "tests/assets/classification_dataset",
-        "multi_class_cls_semisl": "tests/assets/classification_semisl_dataset/unlabeled",
         "multi_label_cls": "tests/assets/multilabel_classification",
         "h_label_cls": "tests/assets/hlabel_classification",
         "detection": "tests/assets/car_tree_bug",
         "rotated_detection": "tests/assets/car_tree_bug",
         "instance_segmentation": "tests/assets/car_tree_bug",
-        "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset/supervised",
-        "semantic_segmentation_semisl": "tests/assets/common_semantic_segmentation_dataset/unlabeled",
-        "visual_prompting": "tests/assets/car_tree_bug",
-        "zero_shot_visual_prompting": "tests/assets/car_tree_bug_zero_shot",
+        "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset",
         "anomaly": "tests/assets/anomaly_hazelnut",
         "anomaly_classification": "tests/assets/anomaly_hazelnut",
         "anomaly_detection": "tests/assets/anomaly_hazelnut",
         "anomaly_segmentation": "tests/assets/anomaly_hazelnut",
         "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
-        "object_detection_3d": "tests/assets/kitti3d",
         "tiling_detection": "tests/assets/tiling_small_objects",
-    }
-
-
-@pytest.fixture(scope="module")
-def fxt_cli_override_command_per_task() -> dict:
-    return {
-        "multi_class_cls": [],
-        "multi_label_cls": [],
-        "h_label_cls": [],
-        "detection": [],
-        "rotated_detection": [],
-        "instance_segmentation": [],
-        "semantic_segmentation": [],
-        "visual_prompting": [],
-        "zero_shot_visual_prompting": [],
-        "anomaly": [],
-        "anomaly_classification": [],
-        "anomaly_detection": [],
-        "anomaly_segmentation": [],
-        "keypoint_detection": [],
-        "object_detection_3d": [],
     }

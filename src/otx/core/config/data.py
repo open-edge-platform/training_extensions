@@ -59,14 +59,11 @@ class SubsetConfig:
     # TODO (vinnamki): Revisit data configuration objects to support a union type in structured config
     # Omegaconf does not allow to have a union type, https://github.com/omry/omegaconf/issues/144
     transforms: list[dict[str, Any]]
-
     transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
     num_workers: int = 2
     sampler: SamplerConfig = field(default_factory=lambda: SamplerConfig())
     to_tv_image: bool = True
-    input_size: (
-        Any
-    ) = None  # type is `int | tuple[int, int] | None` TODO (eunwoosh): Revisit after error above is solved
+    input_size: tuple[int, int] | None = None
 
 
 @dataclass
@@ -86,32 +83,6 @@ class TileConfig:
     def clone(self) -> TileConfig:
         """Return a deep copied one of this instance."""
         return deepcopy(self)
-
-
-@dataclass
-class VisualPromptingConfig:
-    """DTO for visual prompting data module configuration."""
-
-    use_bbox: bool = False
-    use_point: bool = False
-
-
-@dataclass
-class UnlabeledDataConfig(SubsetConfig):
-    """DTO for unlabeled data."""
-
-    data_root: str | None = None
-    data_format: str = "image_dir"
-
-    batch_size: int = 0
-    subset_name: str = "unlabeled"
-
-    # TODO (harimkang): If not multi-transform, support for list type, as should support for other subsets.
-    transforms: dict[str, list[dict[str, Any]]] = field(default_factory=dict)  # type: ignore[assignment]
-
-    transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
-    num_workers: int = 2
-    to_tv_image: bool = True
 
 
 @dataclass

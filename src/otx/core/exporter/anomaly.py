@@ -9,6 +9,7 @@ from typing import Any
 from anomalib import TaskType as AnomalibTaskType
 
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import NullLabelInfo
 
@@ -58,6 +59,7 @@ class OTXAnomalyModelExporter(OTXNativeModelExporter):
         self.normalization_scale = normalization_scale
         self.via_onnx = via_onnx
         self.onnx_export_configuration = onnx_export_configuration if onnx_export_configuration is not None else {}
+        data_input_params = DataInputParams(input_size=image_shape, mean=mean_values, std=scale_values)
 
         super().__init__(
             task_level_export_parameters=TaskLevelExportParameters(
@@ -66,9 +68,7 @@ class OTXAnomalyModelExporter(OTXNativeModelExporter):
                 label_info=NullLabelInfo(),
                 optimization_config={},
             ),
-            input_size=(1, 3, *image_shape),
-            mean=mean_values,
-            std=scale_values,
+            data_input_params=data_input_params,
             swap_rgb=False,
         )
 

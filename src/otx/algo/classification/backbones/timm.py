@@ -26,7 +26,7 @@ class TimmBackbone(nn.Module):
     def __init__(
         self,
         model_name: str,
-        pretrained: bool = False,
+        pretrained: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)

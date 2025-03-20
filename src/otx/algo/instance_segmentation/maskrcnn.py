@@ -6,9 +6,13 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
+import cv2
+import torch
+from datumaro import Polygon
 from torch import nn
+from torchvision import tv_tensors
 from torchvision.ops import RoIAlign
 
 from otx.algo.common.backbones import ResNet, build_model_including_pytorchcv
@@ -25,21 +29,42 @@ from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.algo.instance_segmentation.utils.roi_extractors import SingleRoIExtractor
 from otx.algo.modules.norm import build_norm_layer
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
+from otx.algo.utils.utils import load_checkpoint
+from otx.core.config.data import TileConfig
+from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.model.instance_segmentation import ExplainableOTXInstanceSegModel
+from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.instance_segmentation import OTXInstanceSegModel
+
+if TYPE_CHECKING:
+    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+
+    from otx.core.metrics import MetricCallable
+    from otx.core.model.base import DataInputParams
+    from otx.core.schedulers import LRSchedulerListCallable
+    from otx.core.types.label import LabelInfoTypes
 
 
-class MaskRCNN(ExplainableOTXInstanceSegModel):
-    """MaskRCNN Model."""
+class MaskRCNN(OTXInstanceSegModel):
+    """Implementation of MaskRCNN for instance segmentation.
 
-    AVAILABLE_MODEL_VERSIONS: ClassVar[list[str]] = [
-        "maskrcnn_resnet_50",
-        "maskrcnn_efficientnet_b2b",
-        "maskrcnn_swin_tiny",
-    ]
+    Args:
+        label_info (LabelInfoTypes): Information about the labels used in the model.
+        data_input_params (DataInputParams): Parameters for the data input.
+        model_name (str, optional): Name of the model. Defaults to "maskrcnn_resnet_50".
+        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric for evaluating the model.
+            Defaults to MaskRLEMeanAPFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
+    """
 
-    load_from: ClassVar[dict[str, Any]] = {
+    pretrained_weights: ClassVar[dict[str, Any]] = {
         "maskrcnn_resnet_50": "https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_mstrain-poly_3x_coco/"
         "mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth",
         "maskrcnn_efficientnet_b2b": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
@@ -49,16 +74,36 @@ class MaskRCNN(ExplainableOTXInstanceSegModel):
         "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco_20210908_165006-90a4008c.pth",
     }
 
-    mean = (123.675, 116.28, 103.53)
-    std = (58.395, 57.12, 57.375)
-    effnet_std = (1.0, 1.0, 1.0)
+    def __init__(
+        self,
+        label_info: LabelInfoTypes,
+        data_input_params: DataInputParams,
+        model_name: Literal[
+            "maskrcnn_resnet_50",
+            "maskrcnn_efficientnet_b2b",
+            "maskrcnn_swin_tiny",
+        ] = "maskrcnn_resnet_50",
+        optimizer: OptimizerCallable = DefaultOptimizerCallable,
+        scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
+        metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
+        torch_compile: bool = False,
+        tile_config: TileConfig = TileConfig(enable_tiler=False),
+    ) -> None:
+        super().__init__(
+            label_info=label_info,
+            data_input_params=data_input_params,
+            model_name=model_name,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            metric=metric,
+            torch_compile=torch_compile,
+            tile_config=tile_config,
+        )
 
-    def _build_model(self, num_classes: int) -> TwoStageDetector:
-        if self.model_name not in self.AVAILABLE_MODEL_VERSIONS:
-            msg = f"Model version {self.model_name} is not supported."
-            raise ValueError(msg)
+    def _create_model(self, num_classes: int | None = None) -> MaskRCNN:
+        num_classes = num_classes if num_classes is not None else self.num_classes
 
-        # TODO(Sungchul, Kirill): depricate train_cfg/test_cfg
+        # TODO(Kirill): depricate train_cfg/test_cfg
         train_cfg = {
             "rpn": {
                 "allowed_border": -1,
@@ -251,7 +296,7 @@ class MaskRCNN(ExplainableOTXInstanceSegModel):
             class_agnostic=False,
         )
 
-        return TwoStageDetector(
+        model = TwoStageDetector(
             backbone=backbone,
             neck=neck,
             rpn_head=rpn_head,
@@ -259,6 +304,9 @@ class MaskRCNN(ExplainableOTXInstanceSegModel):
             roi_criterion=roi_criterion,
             rpn_criterion=rpn_criterion,
         )
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     def _build_backbone(self) -> nn.Module:
         """Builds the backbone for the model."""
@@ -302,15 +350,9 @@ class MaskRCNN(ExplainableOTXInstanceSegModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std if "efficientnet" not in self.model_name else self.effnet_std,
+            data_input_params=self.data_input_params,
             resize_mode="fit_to_window",
             pad_value=0,
             swap_rgb=False,
@@ -350,3 +392,83 @@ class MaskRCNN(ExplainableOTXInstanceSegModel):
             return {"model_type": "transformer"}
 
         return {}
+
+
+class RotatedMaskRCNNModel(MaskRCNN):
+    """Base class for the rotated detection models used in OTX."""
+
+    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> InstanceSegBatchPredEntity:
+        """Predict step for rotated detection task.
+
+        Note: This method is overridden to convert masks to rotated bounding boxes.
+
+        Returns:
+            InstanceSegBatchPredEntity: The predicted polygons (rboxes), scores, labels, masks.
+        """
+        preds = super().predict_step(*args, **kwargs)
+
+        batch_scores: list[torch.Tensor] = []
+        batch_bboxes: list[tv_tensors.BoundingBoxes] = []
+        batch_labels: list[torch.LongTensor] = []
+        batch_polygons: list[list[Polygon]] = []
+        batch_masks: list[tv_tensors.Mask] = []
+
+        for img_info, pred_bboxes, pred_scores, pred_labels, pred_masks in zip(
+            preds.imgs_info,
+            preds.bboxes,
+            preds.scores,
+            preds.labels,
+            preds.masks,
+        ):
+            boxes = []
+            scores = []
+            labels = []
+            masks = []
+            polygons = []
+
+            for bbox, score, label, mask in zip(pred_bboxes, pred_scores, pred_labels, pred_masks):
+                if mask.sum() == 0:
+                    continue
+                np_mask = mask.detach().cpu().numpy().astype(int)
+                contours, hierarchies = cv2.findContours(np_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+                if hierarchies is None:
+                    continue
+                rbox_polygons = []
+                for contour, hierarchy in zip(contours, hierarchies[0]):
+                    # skip inner contours
+                    if hierarchy[3] != -1 or len(contour) <= 2:
+                        continue
+                    rbox_points = Polygon(cv2.boxPoints(cv2.minAreaRect(contour)).reshape(-1))
+                    rbox_polygons.append((rbox_points, rbox_points.get_area()))
+
+                # select the largest polygon
+                if len(rbox_polygons) > 0:
+                    rbox_polygons.sort(key=lambda x: x[1], reverse=True)
+                    polygons.append(rbox_polygons[0][0])
+                    scores.append(score)
+                    boxes.append(bbox)
+                    labels.append(label)
+                    masks.append(mask)
+
+            if len(boxes):
+                scores = torch.stack(scores)
+                boxes = tv_tensors.BoundingBoxes(torch.stack(boxes), format="XYXY", canvas_size=img_info.ori_shape)
+                labels = torch.stack(labels)
+                masks = torch.stack(masks)
+
+            batch_scores.append(scores)
+            batch_bboxes.append(boxes)
+            batch_labels.append(labels)
+            batch_polygons.append(polygons)
+            batch_masks.append(masks)
+
+        return InstanceSegBatchPredEntity(
+            batch_size=preds.batch_size,
+            images=preds.images,
+            imgs_info=preds.imgs_info,
+            scores=batch_scores,
+            bboxes=batch_bboxes,
+            masks=batch_masks,
+            polygons=batch_polygons,
+            labels=batch_labels,
+        )

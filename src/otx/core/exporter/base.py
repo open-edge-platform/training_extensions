@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     import onnx
     import openvino
 
-    from otx.core.model.base import OTXModel
+    from otx.core.model.base import DataInputParams, OTXModel
 
 
 class OTXModelExporter:
@@ -33,9 +33,7 @@ class OTXModelExporter:
     Args:
         task_level_export_parameters (TaskLevelExportParameters): Collection of export parameters
             which can be defined at a task level.
-        input_size (tuple[int, ...]): Input shape.
-        mean (tuple[float, float, float], optional): Mean values of 3 channels. Defaults to (0.0, 0.0, 0.0).
-        std (tuple[float, float, float], optional): Std values of 3 channels. Defaults to (1.0, 1.0, 1.0).
+        data_input_params (DataInputParams): Data input parameters for model preprocessing.
         resize_mode (Literal["crop", "standard", "fit_to_window", "fit_to_window_letterbox"], optional):
             A resize type for model preprocess. "standard" resizes images without keeping ratio.
             "fit_to_window" resizes images while keeping ratio.
@@ -53,18 +51,14 @@ class OTXModelExporter:
     def __init__(
         self,
         task_level_export_parameters: TaskLevelExportParameters,
-        input_size: tuple[int, ...],
-        mean: tuple[float, float, float] = (0.0, 0.0, 0.0),
-        std: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        data_input_params: DataInputParams,
         resize_mode: Literal["crop", "standard", "fit_to_window", "fit_to_window_letterbox"] = "standard",
         pad_value: int = 0,
         swap_rgb: bool = False,
         output_names: list[str] | None = None,
         input_names: list[str] | None = None,
     ) -> None:
-        self.input_size = input_size
-        self.mean = mean
-        self.std = std
+        self.data_input_params = data_input_params
         self.resize_mode = resize_mode
         self.pad_value = pad_value
         self.swap_rgb = swap_rgb
@@ -270,8 +264,8 @@ class OTXModelExporter:
         Returns:
             dict[tuple[str, str] ,str]: updated metadata
         """
-        mean_str = " ".join(map(str, self.mean))
-        std_str = " ".join(map(str, self.std))
+        mean_str = " ".join(map(str, self.data_input_params.mean))
+        std_str = " ".join(map(str, self.data_input_params.std))
 
         extra_data = {
             ("model_info", "mean_values"): mean_str.strip(),

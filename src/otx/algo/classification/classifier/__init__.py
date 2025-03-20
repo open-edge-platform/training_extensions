@@ -5,6 +5,5 @@
 
 from .base_classifier import ImageClassifier
 from .h_label_classifier import HLabelClassifier
-from .semi_sl_classifier import SemiSLClassifier
 
-__all__ = ["ImageClassifier", "SemiSLClassifier", "HLabelClassifier"]
+__all__ = ["ImageClassifier", "HLabelClassifier"]

@@ -23,7 +23,7 @@ from otx.core.utils.mask_util import polygon_to_bitmap
 from .base import OTXDataset, Transforms
 
 
-class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
+class OTXInstanceSegDataset(OTXDataset):
     """OTXDataset class for instance segmentation.
 
     Args:
@@ -110,7 +110,7 @@ class OTXInstanceSegDataset(OTXDataset[InstanceSegDataEntity]):
             polygons=gt_polygons,
         )
 
-        return self._apply_transforms(entity)
+        return self._apply_transforms(entity)  # type: ignore[return-value]
 
     @property
     def collate_fn(self) -> Callable:

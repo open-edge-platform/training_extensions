@@ -1,5 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 import pytest
 import torch
@@ -7,12 +8,8 @@ import torch
 from otx.algo.utils.xai_utils import process_saliency_maps, process_saliency_maps_in_pred_entity
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.classification import (
-    HlabelClsBatchPredEntity,
-    MulticlassClsBatchPredEntity,
-    MultilabelClsBatchPredEntity,
-)
 from otx.core.types.explain import TargetExplainGroup
+from otx.data.torch import TorchPredBatch
 
 NUM_CLASSES = 6
 BATCH_SIZE = 3
@@ -23,8 +20,8 @@ IMAGE_SHAPE = (OUT_SIZE, OUT_SIZE)
 PRED_LABELS = [[0, 2, 3], [1], []]
 PRED_LABELS_TOP_ONE = [[1], [0], [4]]
 HCLS_LABELS = [[0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
-SALIENCY_MAPS = [np.ones((NUM_CLASSES, RAW_SIZE, RAW_SIZE), dtype=np.uint8) for _ in range(BATCH_SIZE)]
-SALIENCY_MAPS_IMAGE = [np.ones((RAW_SIZE, RAW_SIZE), dtype=np.uint8) for _ in range(BATCH_SIZE)]
+SALIENCY_MAPS = [torch.ones((NUM_CLASSES, RAW_SIZE, RAW_SIZE), dtype=torch.float32) for _ in range(BATCH_SIZE)]
+SALIENCY_MAPS_IMAGE = [torch.ones((RAW_SIZE, RAW_SIZE), dtype=torch.float32) for _ in range(BATCH_SIZE)]
 ORI_IMG_SHAPES = [(OUT_SIZE, OUT_SIZE)] * BATCH_SIZE
 IMGS_INFO = [ImageInfo(img_idx=i, img_shape=IMAGE_SHAPE, ori_shape=(OUT_SIZE, OUT_SIZE)) for i in range(BATCH_SIZE)]
 PADDINDS = [(0, 0, 0, 0)] * BATCH_SIZE
@@ -36,7 +33,7 @@ def test_process_all(postprocess) -> None:
 
     with pytest.raises(ValueError, match="Shape mismatch."):
         processed_saliency_maps = process_saliency_maps(
-            SALIENCY_MAPS_IMAGE,
+            [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS_IMAGE],
             explain_config,
             PRED_LABELS,
             ORI_IMG_SHAPES,
@@ -45,7 +42,7 @@ def test_process_all(postprocess) -> None:
         )
 
     processed_saliency_maps = process_saliency_maps(
-        SALIENCY_MAPS,
+        [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS],
         explain_config,
         PRED_LABELS,
         ORI_IMG_SHAPES,
@@ -72,7 +69,7 @@ def test_process_predictions(postprocess) -> None:
 
     with pytest.raises(ValueError, match="Shape mismatch."):
         processed_saliency_maps = process_saliency_maps(
-            SALIENCY_MAPS_IMAGE,
+            [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS_IMAGE],
             explain_config,
             PRED_LABELS,
             ORI_IMG_SHAPES,
@@ -81,7 +78,7 @@ def test_process_predictions(postprocess) -> None:
         )
 
     processed_saliency_maps = process_saliency_maps(
-        SALIENCY_MAPS,
+        [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS],
         explain_config,
         PRED_LABELS,
         ORI_IMG_SHAPES,
@@ -112,7 +109,7 @@ def test_process_image(postprocess) -> None:
 
     with pytest.raises(ValueError, match="Shape mismatch."):
         processed_saliency_maps = process_saliency_maps(
-            SALIENCY_MAPS,
+            [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS],
             explain_config,
             PRED_LABELS,
             ORI_IMG_SHAPES,
@@ -121,7 +118,7 @@ def test_process_image(postprocess) -> None:
         )
 
     processed_saliency_maps = process_saliency_maps(
-        SALIENCY_MAPS_IMAGE,
+        [saliency_map.numpy().astype(np.uint8) for saliency_map in SALIENCY_MAPS_IMAGE],
         explain_config,
         PRED_LABELS,
         ORI_IMG_SHAPES,
@@ -139,8 +136,8 @@ def test_process_image(postprocess) -> None:
         assert all(s_map_dict["map_per_image"].shape == (RAW_SIZE, RAW_SIZE) for s_map_dict in processed_saliency_maps)
 
 
-def _get_pred_result_multiclass(pred_labels, pred_scores) -> MulticlassClsBatchPredEntity:
-    return MulticlassClsBatchPredEntity(
+def _get_pred_result_multiclass(pred_labels, pred_scores) -> TorchPredBatch:
+    return TorchPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
         imgs_info=IMGS_INFO,
@@ -151,8 +148,8 @@ def _get_pred_result_multiclass(pred_labels, pred_scores) -> MulticlassClsBatchP
     )
 
 
-def _get_pred_result_multilabel(pred_labels, pred_scores) -> MultilabelClsBatchPredEntity:
-    return MultilabelClsBatchPredEntity(
+def _get_pred_result_multilabel(pred_labels, pred_scores) -> TorchPredBatch:
+    return TorchPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
         imgs_info=IMGS_INFO,
@@ -163,8 +160,8 @@ def _get_pred_result_multilabel(pred_labels, pred_scores) -> MultilabelClsBatchP
     )
 
 
-def _get_pred_result_hcls(pred_labels, pred_scores) -> MultilabelClsBatchPredEntity:
-    return HlabelClsBatchPredEntity(
+def _get_pred_result_hcls(pred_labels, pred_scores) -> TorchPredBatch:
+    return TorchPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
         imgs_info=IMGS_INFO,

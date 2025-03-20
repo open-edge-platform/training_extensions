@@ -34,7 +34,6 @@ OpenVINO™ Training Extensions supports the following computer vision tasks:
 - **Semantic segmentation**
 - **Instance segmentation** including tiling algorithm support
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
-- **Visual Prompting** tasks including segment anything model, zero-shot visual prompting
 
 OpenVINO™ Training Extensions supports the :doc:`following learning methods <../explanation/algorithms/index>`:
 
@@ -117,13 +116,6 @@ Documentation content
         :text-align: center
 
         Learn how to train an anomaly detection model
-
-    .. grid-item-card:: Visual Prompting
-        :link: ../tutorials/base/how_to_train/visual_prompting
-        :link-type: doc
-        :text-align: center
-
-        Learn how to train a visual prompting model
 
     .. grid-item-card:: Advanced
         :link: ../tutorials/advanced/index
