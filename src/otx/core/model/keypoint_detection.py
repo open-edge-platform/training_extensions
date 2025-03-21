@@ -182,8 +182,8 @@ class OTXKeypointDetectionModel(OTXModel):
             infos.append(
                 ImageInfo(
                     img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
+                    img_shape=img.shape[:2],
+                    ori_shape=img.shape[:2],
                 ),
             )
 
