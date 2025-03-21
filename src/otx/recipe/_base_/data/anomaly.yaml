@@ -4,7 +4,6 @@ data_format: mvtec
 mem_cache_size: 1GB
 mem_cache_img_max_size: null
 image_color_channel: RGB
-stack_images: false
 unannotated_items_ratio: 0.0
 train_subset:
   subset_name: train

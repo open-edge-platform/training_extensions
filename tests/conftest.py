@@ -16,7 +16,6 @@ from otx.core.data.entity.instance_segmentation import (
     InstanceSegBatchPredEntity,
     InstanceSegDataEntity,
 )
-from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity, SegDataEntity
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
@@ -294,24 +293,24 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, InstanceSegDataEntity, InstanceSe
 
 
 @pytest.fixture(scope="session")
-def fxt_seg_data_entity() -> tuple[tuple, SegDataEntity, SegBatchDataEntity]:
+def fxt_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
     img_size = (32, 32)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.uint8).numpy()
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_masks = Mask(torch.randint(low=0, high=2, size=img_size, dtype=torch.uint8))
     # define data entity
-    single_data_entity = SegDataEntity(
+    single_data_entity = TorchDataItem(
         image=fake_image,
         img_info=fake_image_info,
         masks=fake_masks,
     )
-    batch_data_entity = SegBatchDataEntity(
+    batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],
         masks=[fake_masks],
     )
-    batch_pred_data_entity = SegBatchPredEntity(
+    batch_pred_data_entity = TorchPredItem(
         batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],

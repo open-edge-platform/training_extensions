@@ -7,7 +7,6 @@ mem_cache_img_max_size:
   - 500
   - 500
 image_color_channel: RGB
-stack_images: true
 data_format: imagenet_with_subset_dirs
 unannotated_items_ratio: 0.0
 train_subset:

@@ -435,13 +435,13 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     def _resize_keypoints(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize keypoints with scale_factor only for `Resize`."""
-        if (keypoints := getattr(inputs, "keypoints", None)) is not None:
-            inputs.keypoints = rescale_keypoints(keypoints, scale_factor)  # type: ignore[union-attr]
+        if inputs.keypoints is not None:  # type: ignore[union-attr]
+            inputs.keypoints[:, :2] = rescale_keypoints(inputs.keypoints[:, :2], scale_factor)  # type: ignore[union-attr]
         return inputs
 
     def _resize_masks(self, inputs: DataItemType, scale_factor: tuple[float, float]) -> DataItemType:
         """Resize masks with scale_factor only for `Resize`."""
-        masks = inputs.mask if isinstance(inputs, TorchDataItem) else getattr(inputs, "masks", None)
+        masks = getattr(inputs, "masks", None)
         if masks is not None and len(masks) > 0:
             # bit mask
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
@@ -2452,24 +2452,6 @@ class Compose(tvt_v2.Compose):
 class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
     """Get the bbox image as the model input by affine transform.
 
-    Required Keys:
-
-        - img
-        - bbox_center
-        - bbox_scale
-        - bbox_rotation (optional)
-        - keypoints (optional)
-
-    Modified Keys:
-
-        - img
-        - bbox_scale
-
-    Added Keys:
-
-        - input_size
-        - transformed_keypoints
-
     Args:
         input_size (tuple[int, int]): The size of the model input.
         affine_transforms_prob (float): The probability of applying affine
@@ -2664,21 +2646,24 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         h, w = self.input_size
         warp_size = (int(w), int(h))
         apply_transforms = np.random.rand()
+        ori_img_shape = inputs.img_info.ori_shape
 
         if apply_transforms <= self.affine_transforms_prob:
+            bbox_center = np.array(ori_img_shape) / 2.0
+            bbox_scale = np.array(ori_img_shape)
+
             offset, scale, rotate = self._get_transform_params()
-            center = inputs.bbox_info.center + offset * inputs.bbox_info.scale
-            scale = self._fix_aspect_ratio(inputs.bbox_info.scale * scale, aspect_ratio=w / h)
+            center = bbox_center + offset * bbox_scale
+            scale = self._fix_aspect_ratio(bbox_scale * scale, aspect_ratio=w / h)
             rot = rotate
 
             warp_mat = self._get_warp_matrix(center, scale, rot, output_size=(w, h))
             inputs.image = self._get_warp_image(inputs.image, warp_mat, warp_size)
             if inputs.keypoints is not None:
-                keypoints = np.expand_dims(inputs.keypoints, axis=0)
-                inputs.keypoints = cv2.transform(keypoints, warp_mat)[0]
+                keypoints = np.expand_dims(inputs.keypoints[:, :2], axis=0)
+                inputs.keypoints[:, :2] = torch.as_tensor(cv2.transform(keypoints, warp_mat)[0])
 
         else:
-            img_shape = inputs.img_info.ori_shape
             resized_numpy_image = cv2.resize(
                 to_np_image(inputs.image),
                 warp_size,
@@ -2686,16 +2671,14 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             )
             inputs.image = torch.from_numpy(resized_numpy_image).to(dtype=torch.float32).permute(2, 0, 1)
             if inputs.keypoints is not None:
-                scale_factor = (warp_size[0] / img_shape[0], warp_size[1] / img_shape[1])
-                inputs.keypoints = rescale_keypoints(inputs.keypoints, scale_factor)
+                scale_factor = (warp_size[0] / ori_img_shape[0], warp_size[1] / ori_img_shape[1])
+                inputs.keypoints[:, :2] = rescale_keypoints(inputs.keypoints[:, :2], scale_factor)
 
-        if not isinstance(inputs, TorchDataItem):
-            if inputs.keypoints is None:
-                inputs.keypoints = np.zeros([])
-                inputs.keypoints_visible = np.ones((1, 1, 1))
-            else:
-                # update keypoints_visible after affine transforms
-                inputs.keypoints_visible = inputs.keypoints_visible * (inputs.keypoints > 0).all(axis=1)
+        if inputs.keypoints is None:
+            inputs.keypoints = torch.zeros([])
+        else:
+            # update keypoints_visible after affine transforms
+            inputs.keypoints[:, 2] = inputs.keypoints[:, 2] * (inputs.keypoints[:, :2] > 0).all(axis=1)
 
         return self.convert(inputs)
 

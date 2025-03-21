@@ -46,7 +46,6 @@ overrides:
       - 640
       - 640
     task: DETECTION
-    stack_images: true
     data_format: coco_instances
     train_subset:
       batch_size: 4

@@ -21,7 +21,6 @@ overrides:
     - data.test_subset.transforms
 
   data:
-    stack_images: false
     train_subset:
       transforms:
         - class_path: torchvision.transforms.v2.ToImage
