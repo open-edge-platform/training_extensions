@@ -62,7 +62,7 @@ class OTXMulticlassClsModel(OTXModel):
             metric=metric,
             torch_compile=torch_compile,
         )
-        
+
         if freeze_backbone:
             classification_layers = self._identify_classification_layers(prefix='')
             for name, param in self.model.named_parameters():

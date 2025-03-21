@@ -979,7 +979,7 @@ class Engine:
             raise ValueError(msg)
         if not isinstance(model, OTXModel):
             raise TypeError(model)
-            
+
         model.label_info = datamodule.label_info
 
         return cls(
