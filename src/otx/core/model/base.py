@@ -12,7 +12,8 @@ import json
 import logging
 import warnings
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Literal, NamedTuple, Sequence
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import numpy as np
 import openvino
@@ -70,16 +71,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger()
 
 
-class DataInputParams(NamedTuple):
+@dataclass
+class DataInputParams:
     """Parameters of the input data such as input size, mean, and std."""
 
     input_size: tuple[int, int]
     mean: tuple[float, float, float]
     std: tuple[float, float, float]
 
-    def to_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return self._asdict()
+        return {"input_size": self.input_size, "mean": self.mean, "std": self.std}
 
     def as_ncwh(self, batch_size: int = 1) -> tuple[int, int, int, int]:
         """Convert input_size to NCWH format."""

@@ -461,7 +461,7 @@ class ConfigConverter:
             input_size=datamodule.input_size,
             mean=datamodule.input_mean,
             std=datamodule.input_std,
-        )
+        ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False, skip={"label_info"})
         model = model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
