@@ -47,7 +47,7 @@ class OTXMulticlassClsModel(OTXModel):
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
         model_name: str = "multiclass_classification_model",
-        linear_finetuning: bool = False,
+        freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
@@ -57,17 +57,16 @@ class OTXMulticlassClsModel(OTXModel):
             label_info=label_info,
             data_input_params=data_input_params,
             model_name=model_name,
-            linear_finetuning=linear_finetuning,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
         )
         
-
-        if linear_finetuning and hasattr(self, "model") and self.model is not None:
+        if freeze_backbone:
+            classification_layers = self._identify_classification_layers(prefix='')
             for name, param in self.model.named_parameters():
-                param.requires_grad = "head" in name
+                param.requires_grad = name in classification_layers
 
     def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
         if self.training:
