@@ -50,7 +50,6 @@ class OTXDatasetFactory:
         data_format: str,
         mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
-        stack_images: bool = True,
         include_polygons: bool = False,
         ignore_index: int = 255,
     ) -> OTXDataset:
@@ -63,7 +62,6 @@ class OTXDatasetFactory:
             "mem_cache_handler": mem_cache_handler,
             "mem_cache_img_max_size": mem_cache_img_max_size,
             "image_color_channel": image_color_channel,
-            "stack_images": stack_images,
             "to_tv_image": cfg_subset.to_tv_image,
         }
 

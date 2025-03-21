@@ -29,12 +29,22 @@ if TYPE_CHECKING:
 @register_pytree_node
 @dataclass
 class TorchDataItem(ValidateItemMixin, Mapping):
-    """Torch data item implementation."""
+    """Torch data item implementation.
+
+    Attributes:
+        image (torch.Tensor): The image tensor.
+        label (torch.Tensor | None): The label tensor, optional.
+        masks (Mask | None): The masks, optional.
+        bboxes (BoundingBoxes | None): The bounding boxes, optional.
+        keypoints (torch.Tensor | None): The keypoints, optional.
+        img_info (ImageInfo | None): Additional image information, optional.
+    """
 
     image: torch.Tensor
     label: torch.Tensor | None = None
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
+    keypoints: torch.Tensor | None = None
     img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
@@ -51,6 +61,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
             images=torch.stack([item.image for item in items]),
             labels=[item.label for item in items],
             bboxes=[item.bboxes for item in items],
+            keypoints=[item.keypoints for item in items],
             masks=[item.masks for item in items],
             imgs_info=[item.img_info for item in items],
         )
@@ -72,36 +83,29 @@ class TorchDataBatch(ValidateBatchMixin):
 
     batch_size: int  # TODO(ashwinvaidya17): Remove this
     images: torch.Tensor
-    labels: list[torch.Tensor] | None
+    labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
+    keypoints: list[torch.Tensor] | None = None
     imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
 
 @dataclass
-class TorchPredItem(ValidateItemMixin):
+class TorchPredItem(TorchDataItem):
     """Torch prediction data item implementation."""
 
-    image: torch.Tensor
-    label: torch.Tensor | None
     scores: torch.Tensor | None = None
     feature_vector: torch.Tensor | None = None
     saliency_map: torch.Tensor | None = None
 
 
 @dataclass
-class TorchPredBatch(ValidateBatchMixin):
+class TorchPredBatch(TorchDataBatch):
     """Torch prediction data item batch implementation."""
 
-    batch_size: int  # TODO(ashwinvaidya17): Remove this
-    images: torch.Tensor
-    labels: list[torch.Tensor] | None
     scores: list[torch.Tensor] | None = None
     feature_vector: list[torch.Tensor] | None = None
     saliency_map: list[torch.Tensor] | None = None
-    masks: list[torch.Tensor] | None = None
-    bboxes: list[torch.Tensor] | None = None
-    imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
     @property
     def has_xai_outputs(self) -> bool:

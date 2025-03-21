@@ -30,7 +30,7 @@ class OTXMulticlassClsDataset(OTXDataset):
         img = item.media_as(Image)
         roi = item.attributes.get("roi", None)
         img_data, img_shape, _ = self._get_img_data_and_shape(img, roi)
-        image = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        image = to_dtype(to_image(img_data), dtype=torch.float32)
         if roi:
             # extract labels from ROI
             labels_ids = [
@@ -78,7 +78,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        img_data = to_dtype(to_image(img_data), dtype=torch.float32)
 
         label_ids = set()
         for ann in item.annotations:
@@ -116,11 +116,6 @@ class OTXMultilabelClsDataset(OTXDataset):
             for ignore_label in ignored_labels:
                 onehot[ignore_label] = -1
         return onehot
-
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect MultilabelClsDataEntity into MultilabelClsBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn
 
 
 class OTXHlabelClsDataset(OTXDataset):
@@ -210,7 +205,7 @@ class OTXHlabelClsDataset(OTXDataset):
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        img_data = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        img_data = to_dtype(to_image(img_data), dtype=torch.float32)
 
         label_ids = set()
         for ann in item.annotations:
@@ -292,8 +287,3 @@ class OTXHlabelClsDataset(OTXDataset):
                 class_indices[num_multiclass_heads + in_group_idx] = -1
 
         return class_indices
-
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect HlabelClsDataEntity into HlabelClsBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn

@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 import numpy as np
 import pytest
 import torch
@@ -49,28 +51,28 @@ def test_rescale_size(size: tuple[int, int], scale: float, expected_size: tuple[
 
 
 def test_rescale_keypoints():
-    keypoints = np.array([[10, 20], [30, 40], [50, 60]], dtype=float)
+    keypoints = torch.tensor([[10, 20], [30, 40], [50, 60]], dtype=torch.float32)
 
     # Test with a single float scale factor
     scale_factor = 2.0
-    rescaled_keypoints = rescale_keypoints(keypoints.copy(), scale_factor)
-    expected_keypoints = np.array([[20, 40], [60, 80], [100, 120]])
-    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
+    rescaled_keypoints = rescale_keypoints(deepcopy(keypoints), scale_factor)
+    expected_keypoints = torch.tensor([[20, 40], [60, 80], [100, 120]], dtype=torch.float32)
+    assert torch.allclose(rescaled_keypoints, expected_keypoints)
 
     # Test with a tuple scale factor
     scale_factor = (2.0, 0.5)
-    rescaled_keypoints = rescale_keypoints(keypoints.copy(), scale_factor)
-    expected_keypoints = np.array([[5, 40], [15, 80], [25, 120]])
-    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
+    rescaled_keypoints = rescale_keypoints(deepcopy(keypoints), scale_factor)
+    expected_keypoints = torch.tensor([[5, 40], [15, 80], [25, 120]], dtype=torch.float32)
+    assert torch.allclose(rescaled_keypoints, expected_keypoints)
 
     # Test with a different tuple scale factor
     scale_factor = (0.5, 2.0)
-    rescaled_keypoints = rescale_keypoints(keypoints.copy(), scale_factor)
-    expected_keypoints = np.array([[20, 10], [60, 20], [100, 30]])
-    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
+    rescaled_keypoints = rescale_keypoints(deepcopy(keypoints), scale_factor)
+    expected_keypoints = torch.tensor([[20, 10], [60, 20], [100, 30]], dtype=torch.float32)
+    assert torch.allclose(rescaled_keypoints, expected_keypoints)
 
     # Test with a single float scale factor of 1.0 (no scaling)
     scale_factor = 1.0
-    rescaled_keypoints = rescale_keypoints(keypoints.copy(), scale_factor)
+    rescaled_keypoints = rescale_keypoints(deepcopy(keypoints), scale_factor)
     expected_keypoints = keypoints
-    np.testing.assert_array_almost_equal(rescaled_keypoints, expected_keypoints)
+    assert torch.allclose(rescaled_keypoints, expected_keypoints)

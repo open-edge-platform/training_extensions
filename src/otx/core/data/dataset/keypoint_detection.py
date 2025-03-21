@@ -6,20 +6,20 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from functools import partial
 from typing import Callable, List, Union
 
 import numpy as np
 import torch
 from datumaro import AnnotationType, Bbox, Dataset, DatasetSubset, Image, Points
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
-from otx.core.data.entity.base import BboxInfo, ImageInfo
-from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity, KeypointDetDataEntity
+from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 
@@ -88,7 +88,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
             raise ValueError(msg)
         return Dataset.from_iterable(dm_items, categories=self.dm_subset.categories())
 
-    def _get_item_impl(self, index: int) -> KeypointDetDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -114,13 +114,10 @@ class OTXKeypointDetectionDataset(OTXDataset):
             if len(keypoint_anns) > 0 and hasattr(keypoint_anns[0], "visibility")
             else np.minimum(1, keypoints)[..., 0]
         )
+        keypoints = np.hstack((keypoints, keypoints_visible.reshape(-1, 1)))
 
-        bbox_center = np.array(img_shape) / 2.0
-        bbox_scale = np.array(img_shape)
-        bbox_rotation = 0.0
-
-        entity = KeypointDetDataEntity(
-            image=img_data,
+        entity = TorchDataItem(
+            image=to_dtype(to_image(img_data), torch.float32),
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
@@ -133,15 +130,8 @@ class OTXKeypointDetectionDataset(OTXDataset):
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=img_shape,
             ),
-            labels=torch.as_tensor([ann.label for ann in bbox_anns]),
-            bbox_info=BboxInfo(center=bbox_center, scale=bbox_scale, rotation=bbox_rotation),
-            keypoints=keypoints,
-            keypoints_visible=keypoints_visible,
+            label=torch.as_tensor([ann.label for ann in bbox_anns]),
+            keypoints=torch.as_tensor(keypoints, dtype=torch.float32),
         )
 
         return self._apply_transforms(entity)  # type: ignore[return-value]
-
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
-        return partial(KeypointDetBatchDataEntity.collate_fn, stack_images=self.stack_images)

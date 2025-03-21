@@ -258,6 +258,6 @@ class OTXDataset(Dataset):
         pass
 
     @property
-    @abstractmethod
     def collate_fn(self) -> Callable:
-        """Collection function to collect OTXDataEntity into OTXBatchDataEntity in data loader."""
+        """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
+        return TorchDataItem.collate_fn

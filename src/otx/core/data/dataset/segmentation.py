@@ -5,19 +5,20 @@
 
 from __future__ import annotations
 
-from functools import partial
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
+import torch
 from datumaro.components.annotation import Bbox, Ellipse, Image, Mask, Polygon, RotatedBbox
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.segmentation import SegBatchDataEntity, SegDataEntity
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import SegLabelInfo
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 
@@ -164,7 +165,6 @@ class OTXSegmentationDataset(OTXDataset):
         mem_cache_img_max_size: tuple[int, int] | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
-        stack_images: bool = True,
         to_tv_image: bool = True,
         ignore_index: int = 255,
         data_format: str = "",
@@ -176,11 +176,9 @@ class OTXSegmentationDataset(OTXDataset):
             mem_cache_img_max_size,
             max_refetch,
             image_color_channel,
-            stack_images,
             to_tv_image,
             data_format=data_format,
         )
-
         if self.has_polygons:
             # insert background class at index 0 since polygons represent only objects
             self.label_info.label_names.insert(0, "otx_background_lbl")
@@ -202,7 +200,7 @@ class OTXSegmentationDataset(OTXDataset):
             return True
         return False
 
-    def _get_item_impl(self, index: int) -> SegDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
@@ -213,10 +211,9 @@ class OTXSegmentationDataset(OTXDataset):
         if roi_meta:
             extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
 
-        masks = tv_tensors.Mask(extracted_mask[None])
-
-        entity = SegDataEntity(
-            image=img_data,
+        masks = tv_tensors.Mask(extracted_mask[None], dtype=torch.long)
+        entity = TorchDataItem(
+            image=to_dtype(to_image(img_data), dtype=torch.float32),
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
@@ -226,10 +223,4 @@ class OTXSegmentationDataset(OTXDataset):
             ),
             masks=masks,
         )
-        transformed_entity = self._apply_transforms(entity)
-        return transformed_entity.wrap(masks=transformed_entity.masks[0]) if transformed_entity else None  # type: ignore[union-attr, index]
-
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect SegDataEntity into SegBatchDataEntity in data loader."""
-        return partial(SegBatchDataEntity.collate_fn, stack_images=self.stack_images)
+        return self._apply_transforms(entity)

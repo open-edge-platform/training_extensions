@@ -28,12 +28,12 @@ from datumaro.plugins.tiling.util import (
     x1y1x2y2_to_xywh,
 )
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.detection import DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
-from otx.core.data.entity.segmentation import SegDataEntity
 from otx.core.data.entity.tile import (
     TileBatchDetDataEntity,
     TileBatchInstSegDataEntity,
@@ -44,6 +44,7 @@ from otx.core.data.entity.tile import (
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
 
@@ -55,7 +56,6 @@ if TYPE_CHECKING:
     from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
     from otx.core.data.dataset.segmentation import OTXSegmentationDataset
     from otx.core.data.entity.base import OTXDataEntity
-    from otx.data.torch import TorchDataItem
 
 # ruff: noqa: SLF001
 # NOTE: Disable private-member-access (SLF001).
@@ -695,7 +695,7 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             ori_masks=masks,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> SegDataEntity:
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:  # type: ignore[override]
         """Convert a tile datumaro dataset item to SegDataEntity."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
@@ -705,8 +705,8 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return SegDataEntity(
-            image=tile_img,
+        return TorchDataItem(
+            image=to_dtype(to_image(tile_img)),
             img_info=img_info,
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),
         )
