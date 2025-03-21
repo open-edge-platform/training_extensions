@@ -130,11 +130,6 @@ def test_otx_e2e(
         ]
     ):
         return
-    if task == "visual_prompting":
-        fxt_export_list = [
-            ExportCase2Test("ONNX", False, "exported_model_decoder.onnx"),
-            ExportCase2Test("OPENVINO", False, "exported_model_decoder.xml"),
-        ]  # TODO (sungchul): EXPORTABLE_CODE will be supported
 
     tmp_path_test = tmp_path / f"otx_test_{model_name}"
     for export_case in fxt_export_list:
@@ -172,8 +167,6 @@ def test_otx_e2e(
         msg = "There is no OV IR."
         raise RuntimeError(msg)
     exported_model_path = str(ov_files[0])
-    if task == "visual_prompting":
-        recipe = str(Path(recipe).parents[0] / "openvino_model.yaml")
 
     command_cfg = [
         "otx",
@@ -344,7 +337,6 @@ def test_otx_ov_test(
         "multi_label_cls",
         "instance_segmentation",
         "h_label_cls",
-        "visual_prompting",
         "anomaly",
     ]:
         # OMZ doesn't have proper model for Pytorch MaskRCNN interface
