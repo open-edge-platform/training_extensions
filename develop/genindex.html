@@ -385,10 +385,12 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.config.data.html#otx.core.config.data.SubsetConfig.batch_size">batch_size (otx.core.config.data.SubsetConfig attribute)</a>
 </li>
-      <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.benchmark">benchmark() (otx.engine.Engine method)</a>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.bboxes">bboxes (otx.data.TorchDataItem attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.engine.html#otx.engine.Engine.benchmark">benchmark() (otx.engine.Engine method)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.core.model.detection.html#otx.core.model.detection.OTXDetectionModel.best_confidence_threshold">best_confidence_threshold (otx.core.model.detection.OTXDetectionModel property)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.bias_init_with_prob">bias_init_with_prob() (in module otx.algo.utils.weight_init)</a>
@@ -654,8 +656,6 @@
 </li>
         <li><a href="guide/reference/_autosummary/otx.core.model.multilabel_classification.html#otx.core.model.multilabel_classification.OTXMultilabelClsModel.forward_explain">(otx.core.model.multilabel_classification.OTXMultilabelClsModel method)</a>
 </li>
-        <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OTXSegmentationModel.forward_explain">(otx.core.model.segmentation.OTXSegmentationModel method)</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -690,8 +690,6 @@
 </li>
         <li><a href="guide/reference/_autosummary/otx.core.model.multilabel_classification.html#otx.core.model.multilabel_classification.OTXMultilabelClsModel.forward_for_tracing">(otx.core.model.multilabel_classification.OTXMultilabelClsModel method)</a>
 </li>
-        <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OTXSegmentationModel.forward_for_tracing">(otx.core.model.segmentation.OTXSegmentationModel method)</a>
-</li>
       </ul></li>
       <li><a href="guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.forward_tiles">forward_tiles() (otx.core.model.base.OTXModel method)</a>
 
@@ -699,8 +697,6 @@
         <li><a href="guide/reference/_autosummary/otx.core.model.detection.html#otx.core.model.detection.OTXDetectionModel.forward_tiles">(otx.core.model.detection.OTXDetectionModel method)</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.core.model.instance_segmentation.html#otx.core.model.instance_segmentation.OTXInstanceSegModel.forward_tiles">(otx.core.model.instance_segmentation.OTXInstanceSegModel method)</a>
-</li>
-        <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OTXSegmentationModel.forward_tiles">(otx.core.model.segmentation.OTXSegmentationModel method)</a>
 </li>
       </ul></li>
       <li><a href="guide/reference/_autosummary/otx.core.optimizer.html#otx.core.optimizer.OptimizerCallableSupportAdaptiveBS.from_callable">from_callable() (otx.core.optimizer.OptimizerCallableSupportAdaptiveBS class method)</a>
@@ -796,8 +792,6 @@
 </li>
         <li><a href="guide/reference/_autosummary/otx.core.model.multilabel_classification.html#otx.core.model.multilabel_classification.OTXMultilabelClsModel.get_dummy_input">(otx.core.model.multilabel_classification.OTXMultilabelClsModel method)</a>
 </li>
-        <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OTXSegmentationModel.get_dummy_input">(otx.core.model.segmentation.OTXSegmentationModel method)</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -867,6 +861,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.core.config.html#otx.core.config.ignore_aliases">ignore_aliases() (in module otx.core.config)</a>
 </li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.image">image (otx.data.TorchDataItem attribute)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.img_info">img_info (otx.data.TorchDataItem attribute)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.core.utils.utils.html#otx.core.utils.utils.import_object_from_module">import_object_from_module() (in module otx.core.utils.utils)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.EfficientNetBackbone.init_block_channels">init_block_channels (otx.algo.classification.backbones.EfficientNetBackbone attribute)</a>
@@ -893,10 +891,10 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.utils.tile_merge.html#otx.core.utils.tile_merge.InstanceSegTileMerge">InstanceSegTileMerge (class in otx.core.utils.tile_merge)</a>
 </li>
-      <li><a href="guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter.instantiate">instantiate() (otx.tools.converter.ConfigConverter static method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter.instantiate">instantiate() (otx.tools.converter.ConfigConverter static method)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.core.utils.instantiators.html#otx.core.utils.instantiators.instantiate_callbacks">instantiate_callbacks() (in module otx.core.utils.instantiators)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.cli.cli.html#otx.cli.cli.OTXCLI.instantiate_classes">instantiate_classes() (otx.cli.cli.OTXCLI method)</a>
@@ -935,11 +933,13 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.utils.weight_init.html#otx.algo.utils.weight_init.KaimingInit">KaimingInit (class in otx.algo.utils.weight_init)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.core.utils.tile_merge.html#otx.core.utils.tile_merge.keep_chunkify">keep_chunkify() (in module otx.core.utils.tile_merge)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="guide/reference/_autosummary/otx.algo.classification.backbones.html#otx.algo.classification.backbones.EfficientNetBackbone.kernel_sizes_per_layers">kernel_sizes_per_layers (otx.algo.classification.backbones.EfficientNetBackbone attribute)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.keypoints">keypoints (otx.data.TorchDataItem attribute)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.utils.utils.html#otx.algo.utils.utils.InstanceData.keys">keys() (otx.algo.utils.utils.InstanceData method)</a>
 </li>
@@ -949,6 +949,8 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.label">label (otx.data.TorchDataItem attribute)</a>
+</li>
       <li><a href="guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.label_info">label_info (otx.core.model.base.OTXModel property)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.types.html#otx.core.types.LabelInfo">LabelInfo (class in otx.core.types)</a>
@@ -1062,6 +1064,8 @@
       <li><a href="guide/reference/_autosummary/otx.cli.html#otx.cli.main">main() (in module otx.cli)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.map_class_names">map_class_names() (otx.core.model.base.OTXModel static method)</a>
+</li>
+      <li><a href="guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.masks">masks (otx.data.TorchDataItem attribute)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.utils.tile_merge.html#otx.core.utils.tile_merge.DetectionTileMerge.merge">merge() (otx.core.utils.tile_merge.DetectionTileMerge method)</a>
 
@@ -1226,8 +1230,6 @@
         <li><a href="guide/reference/_autosummary/otx.core.model.multiclass_classification.html#module-otx.core.model.multiclass_classification">otx.core.model.multiclass_classification</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.core.model.multilabel_classification.html#module-otx.core.model.multilabel_classification">otx.core.model.multilabel_classification</a>
-</li>
-        <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#module-otx.core.model.segmentation">otx.core.model.segmentation</a>
 </li>
         <li><a href="guide/reference/_autosummary/otx.core.optimizer.html#module-otx.core.optimizer">otx.core.optimizer</a>
 </li>
@@ -1674,6 +1676,8 @@
         <li><a href="guide/reference/_autosummary/otx.cli.utils.jsonargparse.html#module-otx.cli.utils.jsonargparse">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     otx.cli.utils.workspace
 
@@ -1681,8 +1685,6 @@
         <li><a href="guide/reference/_autosummary/otx.cli.utils.workspace.html#module-otx.cli.utils.workspace">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     otx.core
 
@@ -1835,13 +1837,6 @@
 
       <ul>
         <li><a href="guide/reference/_autosummary/otx.core.model.multilabel_classification.html#module-otx.core.model.multilabel_classification">module</a>
-</li>
-      </ul></li>
-      <li>
-    otx.core.model.segmentation
-
-      <ul>
-        <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#module-otx.core.model.segmentation">module</a>
 </li>
       </ul></li>
       <li>
@@ -2014,8 +2009,6 @@
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.exporter.native.html#otx.core.exporter.native.OTXNativeModelExporter">OTXNativeModelExporter (class in otx.core.exporter.native)</a>
 </li>
-      <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OTXSegmentationModel">OTXSegmentationModel (class in otx.core.model.segmentation)</a>
-</li>
       <li><a href="guide/reference/_autosummary/otx.core.types.html#otx.core.types.OTXTaskType">OTXTaskType (class in otx.core.types)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.algo.utils.support_otx_v1.html#otx.algo.utils.support_otx_v1.OTXv1Helper">OTXv1Helper (class in otx.algo.utils.support_otx_v1)</a>
@@ -2033,8 +2026,6 @@
       <li><a href="guide/reference/_autosummary/otx.core.model.multiclass_classification.html#otx.core.model.multiclass_classification.OVMulticlassClassificationModel">OVMulticlassClassificationModel (class in otx.core.model.multiclass_classification)</a>
 </li>
       <li><a href="guide/reference/_autosummary/otx.core.model.multilabel_classification.html#otx.core.model.multilabel_classification.OVMultilabelClassificationModel">OVMultilabelClassificationModel (class in otx.core.model.multilabel_classification)</a>
-</li>
-      <li><a href="guide/reference/_autosummary/otx.core.model.segmentation.html#otx.core.model.segmentation.OVSegmentationModel">OVSegmentationModel (class in otx.core.model.segmentation)</a>
 </li>
   </ul></td>
 </tr></table>

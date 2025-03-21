@@ -276,7 +276,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span><span class="p">,</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">,</span> <span class="n">T_OTXDataEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchPredEntity</span><span class="p">,</span> <span class="n">DetPredEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.instance_segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">,</span> <span class="n">InstanceSegPredEntity</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">SegBatchPredEntity</span><span class="p">,</span> <span class="n">SegPredEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchPredBatch</span><span class="p">,</span> <span class="n">TorchPredItem</span>
 
 <span class="c1"># Maximum number of elements 2**31 -1</span>
 <span class="n">MAX_ELEMENTS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span>
@@ -794,9 +794,9 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.utils.tile_merge.html#otx.core.utils.tile_merge.SegmentationTileMerge.merge">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">batch_tile_preds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SegBatchPredEntity</span><span class="p">],</span>
+        <span class="n">batch_tile_preds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TorchPredBatch</span><span class="p">],</span>
         <span class="n">batch_tile_attrs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SegPredEntity</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">TorchPredItem</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge batch tile predictions to a list of full-size prediction data entities.</span>
 
 <span class="sd">        Args:</span>
@@ -804,7 +804,7 @@
 <span class="sd">            batch_tile_attrs (list[list[dict]]): segmentation tile attributes.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            list[SegPredEntity]: List of full-size prediction data entities after merging.</span>
+<span class="sd">            list[TorchPredItem]: List of full-size prediction data entities after merging.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">entities_to_merge</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
         <span class="n">img_ids</span> <span class="o">=</span> <span class="p">[]</span>
@@ -814,6 +814,16 @@
             <span class="n">batch_size</span> <span class="o">=</span> <span class="n">tile_preds</span><span class="o">.</span><span class="n">batch_size</span>
             <span class="n">saliency_maps</span> <span class="o">=</span> <span class="n">tile_preds</span><span class="o">.</span><span class="n">saliency_map</span> <span class="k">if</span> <span class="n">explain_mode</span> <span class="k">else</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
             <span class="n">feature_vectors</span> <span class="o">=</span> <span class="n">tile_preds</span><span class="o">.</span><span class="n">feature_vector</span> <span class="k">if</span> <span class="n">explain_mode</span> <span class="k">else</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">saliency_maps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">feature_vectors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The saliency maps or feature vectors are not provided.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tile_preds</span><span class="o">.</span><span class="n">imgs_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Image information is not provided.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tile_preds</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The predicted masks are not provided.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
             <span class="k">for</span> <span class="n">tile_attr</span><span class="p">,</span> <span class="n">tile_img_info</span><span class="p">,</span> <span class="n">tile_masks</span><span class="p">,</span> <span class="n">tile_s_map</span><span class="p">,</span> <span class="n">tile_f_vect</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                 <span class="n">tile_attrs</span><span class="p">,</span>
                 <span class="n">tile_preds</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
@@ -821,16 +831,19 @@
                 <span class="n">saliency_maps</span><span class="p">,</span>
                 <span class="n">feature_vectors</span><span class="p">,</span>
             <span class="p">):</span>
+                <span class="k">if</span> <span class="n">tile_img_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Image information is not provided : </span><span class="si">{</span><span class="n">tile_preds</span><span class="o">.</span><span class="n">imgs_info</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
                 <span class="n">tile_id</span> <span class="o">=</span> <span class="n">tile_attr</span><span class="p">[</span><span class="s2">&quot;tile_id&quot;</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">tile_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">img_ids</span><span class="p">:</span>
                     <span class="n">img_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tile_id</span><span class="p">)</span>
                 <span class="n">tile_img_info</span><span class="o">.</span><span class="n">padding</span> <span class="o">=</span> <span class="n">tile_attr</span><span class="p">[</span><span class="s2">&quot;roi&quot;</span><span class="p">]</span>
-
-                <span class="n">seg_pred_entity</span> <span class="o">=</span> <span class="n">SegPredEntity</span><span class="p">(</span>
-                    <span class="n">image</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">tile_img_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">),</span>
+                <span class="n">seg_pred_entity</span> <span class="o">=</span> <span class="n">TorchPredItem</span><span class="p">(</span>
+                    <span class="n">image</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="n">tile_img_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">)),</span>
                     <span class="n">img_info</span><span class="o">=</span><span class="n">tile_img_info</span><span class="p">,</span>
-                    <span class="n">masks</span><span class="o">=</span><span class="n">tile_masks</span><span class="p">,</span>
-                    <span class="n">score</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">masks</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span><span class="n">tile_masks</span><span class="p">),</span>
+                    <span class="n">scores</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([]),</span>
                 <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">explain_mode</span><span class="p">:</span>
@@ -847,20 +860,26 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_merge_entities</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">img_info</span><span class="p">:</span> <span class="n">ImageInfo</span><span class="p">,</span>
-        <span class="n">entities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SegPredEntity</span><span class="p">],</span>
+        <span class="n">entities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TorchPredItem</span><span class="p">],</span>
         <span class="n">explain_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SegPredEntity</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredItem</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge tile predictions to one single prediction.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            img_info (ImageInfo): Image information about the original image before tiling.</span>
-<span class="sd">            entities (list[SegPredEntity]): List of tile prediction entities.</span>
+<span class="sd">            entities (list[TorchPredItem]): List of tile prediction entities.</span>
 <span class="sd">            explain_mode (bool): Whether or not tiles have explain features. Default: False.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            SegPredEntity: Merged prediction entity.</span>
+<span class="sd">            TorchPredItem: Merged prediction entity.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">img_size</span> <span class="o">=</span> <span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">entity</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Some entities are None: </span><span class="si">{</span><span class="n">entities</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The predicted masks are not provided.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">masks</span><span class="p">)</span>
 
         <span class="c1"># Create a vote map for overlapping tiles</span>
@@ -868,6 +887,12 @@
         <span class="n">full_logits_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_classes</span><span class="p">,</span> <span class="o">*</span><span class="n">img_size</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">img_info</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">tile_entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tile_entity</span><span class="o">.</span><span class="n">img_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Image information is not provided.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tile_entity</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The predicted masks are not provided.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">offset_x</span><span class="p">,</span> <span class="n">offset_y</span><span class="p">,</span> <span class="n">tile_w</span><span class="p">,</span> <span class="n">tile_h</span> <span class="o">=</span> <span class="n">tile_entity</span><span class="o">.</span><span class="n">img_info</span><span class="o">.</span><span class="n">padding</span>
             <span class="n">vote_mask</span><span class="p">[</span><span class="n">offset_y</span> <span class="p">:</span> <span class="n">offset_y</span> <span class="o">+</span> <span class="n">tile_h</span><span class="p">,</span> <span class="n">offset_x</span> <span class="p">:</span> <span class="n">offset_x</span> <span class="o">+</span> <span class="n">tile_w</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">full_logits_mask</span><span class="p">[:,</span> <span class="n">offset_y</span> <span class="p">:</span> <span class="n">offset_y</span> <span class="o">+</span> <span class="n">tile_h</span><span class="p">,</span> <span class="n">offset_x</span> <span class="p">:</span> <span class="n">offset_x</span> <span class="o">+</span> <span class="n">tile_w</span><span class="p">]</span> <span class="o">+=</span> <span class="n">tile_entity</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span>
@@ -877,11 +902,11 @@
             <span class="p">]</span>
         <span class="n">full_logits_mask</span> <span class="o">=</span> <span class="n">full_logits_mask</span> <span class="o">/</span> <span class="n">vote_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">SegPredEntity</span><span class="p">(</span>
-            <span class="n">image</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">img_size</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">TorchPredItem</span><span class="p">(</span>
+            <span class="n">image</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="n">img_size</span><span class="p">)),</span>
             <span class="n">img_info</span><span class="o">=</span><span class="n">img_info</span><span class="p">,</span>
-            <span class="n">masks</span><span class="o">=</span><span class="n">full_logits_mask</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-            <span class="n">score</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">masks</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span><span class="n">full_logits_mask</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([]),</span>
         <span class="p">)</span></div>
 
 </pre></div>
