@@ -13,6 +13,7 @@ import logging as log
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import torch
 import torch.nn.functional as f
 from model_api.tilers import SemanticSegmentationTiler
@@ -20,7 +21,6 @@ from torchvision import tv_tensors
 
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
@@ -31,6 +31,7 @@ from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
 from otx.core.utils.tile_merge import SegmentationTileMerge
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -78,7 +79,7 @@ class OTXSegmentationModel(OTXModel):
             tile_config=tile_config,
         )
 
-    def _customize_inputs(self, entity: SegBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -86,14 +87,14 @@ class OTXSegmentationModel(OTXModel):
         else:
             mode = "predict"
 
-        masks = torch.stack(entity.masks).long() if mode == "loss" else None
+        masks = torch.vstack(entity.masks).long() if mode == "loss" else None
         return {"inputs": entity.images, "img_metas": entity.imgs_info, "masks": masks, "mode": mode}
 
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: SegBatchDataEntity,
-    ) -> SegBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -103,22 +104,22 @@ class OTXSegmentationModel(OTXModel):
                 losses[k] = v
             return losses
 
-        if self.explain_mode:
-            return SegBatchPredEntity(
-                batch_size=len(outputs["preds"]),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                scores=[],
-                masks=outputs["preds"],
-                feature_vector=outputs["feature_vector"],
-            )
+        preds = outputs["preds"] if self.explain_mode else outputs
+        feature_vector = outputs["feature_vector"] if self.explain_mode else None
+        masks = [
+            tv_tensors.Mask(mask.unsqueeze(0), device=self.device)
+            if mask.ndim == 2
+            else tv_tensors.Mask(mask, device=self.device)
+            for mask in preds
+        ]
 
-        return SegBatchPredEntity(
-            batch_size=len(outputs),
+        return TorchPredBatch(
+            batch_size=len(preds),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
-            masks=outputs,
+            masks=masks,
+            feature_vector=feature_vector,
         )
 
     @property
@@ -158,19 +159,27 @@ class OTXSegmentationModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: SegBatchPredEntity,  # type: ignore[override]
-        inputs: SegBatchDataEntity,  # type: ignore[override]
+        preds: TorchPredBatch,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (SegBatchPredEntity): The predicted segmentation batch entity containing predicted masks.
-            inputs (SegBatchDataEntity): The input segmentation batch entity containing ground truth masks.
+            preds (TorchPredBatch): The predicted segmentation batch entity containing predicted masks.
+            inputs (TorchDataBatch): The input segmentation batch entity containing ground truth masks.
 
         Returns:
             MetricInput: A list of dictionaries where each dictionary contains 'preds' and 'target' keys
             corresponding to the predicted and target masks for metric evaluation.
         """
+        if preds.masks is None:
+            msg = "The predicted masks are not provided."
+            raise ValueError(msg)
+
+        if inputs.masks is None:
+            msg = "The input ground truth masks are not provided."
+            raise ValueError(msg)
+
         return [
             {
                 "preds": pred_mask,
@@ -194,20 +203,20 @@ class OTXSegmentationModel(OTXModel):
 
         raise TypeError(label_info)
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> SegBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> TorchPredBatch:
         """Unpack segmentation tiles.
 
         Args:
             inputs (TileBatchSegDataEntity): Tile batch data entity.
 
         Returns:
-            SegBatchPredEntity: Merged semantic segmentation prediction.
+            TorchPredBatch: Merged semantic segmentation prediction.
         """
         if self.explain_mode:
             msg = "Explain mode is not supported for tiling"
             raise NotImplementedError(msg)
 
-        tile_preds: list[SegBatchPredEntity] = []
+        tile_preds: list[TorchPredBatch] = []
         tile_attrs: list[list[dict[str, int | str]]] = []
         merger = SegmentationTileMerge(
             inputs.imgs_info,
@@ -233,9 +242,9 @@ class OTXSegmentationModel(OTXModel):
             tile_attrs.append(batch_tile_attrs)
         pred_entities = merger.merge(tile_preds, tile_attrs)
 
-        pred_entity = SegBatchPredEntity(
+        pred_entity = TorchPredBatch(
             batch_size=inputs.batch_size,
-            images=[pred_entity.image for pred_entity in pred_entities],
+            images=torch.stack([pred_entity.image for pred_entity in pred_entities]),
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
             masks=[pred_entity.masks for pred_entity in pred_entities],
             scores=[],
@@ -256,11 +265,11 @@ class OTXSegmentationModel(OTXModel):
         outputs = self.model(inputs=image, mode="tensor")
         return torch.softmax(outputs, dim=1)
 
-    def forward_explain(self, inputs: SegBatchDataEntity) -> SegBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward explain function."""
         outputs = self.model(inputs=inputs.images, mode="explain")
 
-        return SegBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs["preds"]),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -269,7 +278,7 @@ class OTXSegmentationModel(OTXModel):
             feature_vector=outputs["feature_vector"],
         )
 
-    def get_dummy_input(self, batch_size: int = 1) -> SegBatchDataEntity:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
         """Returns a dummy input for semantic segmentation model."""
         images = torch.rand(self.data_input_params.as_ncwh(batch_size))
         infos = []
@@ -281,7 +290,7 @@ class OTXSegmentationModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return SegBatchDataEntity(batch_size, images, infos, masks=[])
+        return TorchDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
 
 
 class OVSegmentationModel(OVModel):
@@ -326,13 +335,13 @@ class OVSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ImageResultWithSoftPrediction],
-        inputs: SegBatchDataEntity,
-    ) -> SegBatchPredEntity | OTXBatchLossEntity:
-        masks = [tv_tensors.Mask(mask.resultImage, device=self.device) for mask in outputs]
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
+        masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0), device=self.device) for mask in outputs]
         predicted_f_vectors = (
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
         )
-        return SegBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -343,19 +352,27 @@ class OVSegmentationModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: SegBatchPredEntity,  # type: ignore[override]
-        inputs: SegBatchDataEntity,  # type: ignore[override]
+        preds: TorchPredBatch,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (SegBatchPredEntity): The predicted segmentation batch entity containing predicted masks.
-            inputs (SegBatchDataEntity): The input segmentation batch entity containing ground truth masks.
+            preds (TorchPredBatch): The predicted segmentation batch entity containing predicted masks.
+            inputs (TorchDataBatch): The input segmentation batch entity containing ground truth masks.
 
         Returns:
             MetricInput: A list of dictionaries where each dictionary contains 'preds' and 'target' keys
             corresponding to the predicted and target masks for metric evaluation.
         """
+        if preds.masks is None:
+            msg = "The predicted masks are not provided."
+            raise ValueError(msg)
+
+        if inputs.masks is None:
+            msg = "The input ground truth masks are not provided."
+            raise ValueError(msg)
+
         return [
             {
                 "preds": pred_mask,

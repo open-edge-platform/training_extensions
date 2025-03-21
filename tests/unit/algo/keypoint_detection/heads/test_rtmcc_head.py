@@ -8,8 +8,8 @@ from torchvision import tv_tensors
 
 from otx.algo.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from otx.algo.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
-from otx.core.data.entity.base import BboxInfo, ImageInfo
-from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
+from otx.core.data.entity.base import ImageInfo
+from otx.data import TorchDataBatch
 
 
 class TestRTMCCHead:
@@ -25,16 +25,15 @@ class TestRTMCCHead:
         batch_size = 2
         img_infos = [ImageInfo(img_idx=i, img_shape=(192, 256), ori_shape=(192, 256)) for i in range(batch_size)]
         keypoints = torch.randn((batch_size, 17, 2))
-        keypoints_visible = torch.randn((batch_size, 17))
-        return KeypointDetBatchDataEntity(
+        keypoints_visible = torch.randint(0, 1, (batch_size, 17))
+        keypoints = torch.cat([keypoints, keypoints_visible.unsqueeze(-1)], dim=-1)
+        return TorchDataBatch(
             batch_size=batch_size,
             images=tv_tensors.Image(data=torch.randn((batch_size, 3, 192, 256))),
             imgs_info=img_infos,
-            bbox_info=BboxInfo(center=(96, 128), scale=(1, 1), rotation=0),
             bboxes=[],
             labels=[],
-            keypoints=keypoints,
-            keypoints_visible=keypoints_visible,
+            keypoints=list(keypoints),
         )
 
     @pytest.fixture()

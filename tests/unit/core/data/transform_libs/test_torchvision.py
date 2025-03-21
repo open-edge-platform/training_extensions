@@ -15,10 +15,9 @@ from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.core.data.entity.base import BboxInfo, ImageInfo, OTXDataEntity
+from otx.core.data.entity.base import ImageInfo, OTXDataEntity
 from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
-from otx.core.data.entity.keypoint_detection import KeypointDetDataEntity
 from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
@@ -35,6 +34,7 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
+from otx.data import TorchDataItem
 
 
 class MockFrame:
@@ -686,19 +686,17 @@ class TestRandomCrop:
 
 class TestTopdownAffine:
     @pytest.fixture()
-    def keypoint_det_entity(self) -> KeypointDetDataEntity:
-        return KeypointDetDataEntity(
-            image=np.random.randint(0, 255, size=(10, 10, 3), dtype=np.uint8),
+    def keypoint_det_entity(self) -> TorchDataItem:
+        return TorchDataItem(
+            image=torch.randint(0, 255, size=(3, 10, 10), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
                 np.array([[0, 0, 7, 7]], dtype=np.float32),
                 format="xyxy",
                 canvas_size=(10, 10),
             ),
-            labels=torch.LongTensor([0]),
-            keypoints=tv_tensors.TVTensor(np.array([[0, 4], [4, 2], [2, 6], [6, 0]])),
-            keypoints_visible=tv_tensors.TVTensor(np.array([1, 1, 1, 0])),
-            bbox_info=BboxInfo(center=np.array([5, 5]), scale=np.array([10, 10]), rotation=0),
+            label=torch.LongTensor([0]),
+            keypoints=tv_tensors.TVTensor(np.array([[0, 4, 1], [4, 2, 1], [2, 6, 1], [6, 0, 0]])),
         )
 
     def test_forward(self, keypoint_det_entity) -> None:
@@ -708,7 +706,4 @@ class TestTopdownAffine:
             ],
         )
         results = transform(deepcopy(keypoint_det_entity))
-
-        assert np.array_equal(results.bbox_info.center, np.array([5, 5]))
-        assert np.array_equal(results.bbox_info.scale, np.array([10, 10]))
-        assert results.keypoints.shape == (4, 2)
+        assert results.keypoints.shape == (4, 3)
