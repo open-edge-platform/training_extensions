@@ -191,7 +191,7 @@ class ValidateBatchMixin:
     @staticmethod
     def _images_validator(image_batch: torch.Tensor) -> torch.Tensor:
         """Validate the image batch."""
-        if not isinstance(image_batch, list) or not isinstance(image_batch, torch.Tensor):
+        if not isinstance(image_batch, list) and not isinstance(image_batch, torch.Tensor):
             msg = f"Image batch must be a torch tensor or list of tensors. Got {type(image_batch)}"
             raise TypeError(msg)
         if isinstance(image_batch, torch.Tensor):
