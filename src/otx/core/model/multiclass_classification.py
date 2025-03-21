@@ -64,8 +64,8 @@ class OTXMulticlassClsModel(OTXModel):
         )
 
         if freeze_backbone:
-            classification_layers = self._identify_classification_layers(prefix='')
-            for name, param in self.model.named_parameters():
+            classification_layers = self._identify_classification_layers()
+            for name, param in self.named_parameters():
                 param.requires_grad = name in classification_layers
 
     def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
