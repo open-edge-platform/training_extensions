@@ -153,8 +153,7 @@ class Engine:
         self._model: OTXModel = (
             model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
         )
-
-
+    
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points
     # ------------------------------------------------------------------------ #
