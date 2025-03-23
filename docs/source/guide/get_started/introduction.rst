@@ -9,7 +9,7 @@ Introduction
 
 **OpenVINO™ Training Extensions** is a low-code transfer learning framework for Computer Vision.
 
-The framework's CLI commands and API allow users to easily train, infer, optimize and deploy models, even with limited deep learning expertise. OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on `PyTorch <https://pytorch.org/>`_ , `Lightning <https://lightning.ai/>`_ and `OpenVINO™ toolkit <https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html>`_.
+The framework's CLI commands and API allow users to easily train, infer, optimize and export models, even with limited deep learning expertise. OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on `PyTorch <https://pytorch.org/>`_ , `Lightning <https://lightning.ai/>`_ and `OpenVINO™ toolkit <https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html>`_.
 
 OpenVINO™ Training Extensions provide `recipe <https://github.com/openvinotoolkit/training_extensions/tree/develop/src/otx/recipe>`_ for every supported task type, which consolidates necessary information to build a model. Model configs are validated on various datasets and serve one-stop shop for obtaining the best models in general.
 
