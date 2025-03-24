@@ -344,10 +344,28 @@
         <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># default visibility threshold</span>
         <span class="n">visibility_threshold</span> <span class="o">=</span> <span class="mf">0.5</span>
-        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The input image information is not provided.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
-            <span class="n">kps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The image information for the image </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is not provided.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="c1"># scale to the original image size</span>
+            <span class="n">orig_h</span><span class="p">,</span> <span class="n">orig_w</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ori_shape</span>  <span class="c1"># type: ignore[union-attr]</span>
+            <span class="n">kp_scale_h</span><span class="p">,</span> <span class="n">kp_scale_w</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">orig_h</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">orig_w</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">inverted_scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">kp_scale_h</span><span class="p">,</span> <span class="n">kp_scale_w</span><span class="p">)</span>
+            <span class="n">kp_scale_h</span> <span class="o">=</span> <span class="n">kp_scale_w</span> <span class="o">=</span> <span class="n">inverted_scale</span>
+            <span class="c1"># decode kps</span>
+            <span class="n">kps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">kp_scale_w</span><span class="p">,</span> <span class="n">kp_scale_h</span><span class="p">],</span>
+                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">score</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="n">visible_keypoints</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">kps</span><span class="p">,</span> <span class="n">score</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">visibility_threshold</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">keypoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">visible_keypoints</span><span class="p">)</span>
@@ -429,8 +447,8 @@
             <span class="n">infos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">ImageInfo</span><span class="p">(</span>
                     <span class="n">img_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                    <span class="n">img_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                    <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="n">img_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
+                    <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
                 <span class="p">),</span>
             <span class="p">)</span>
 

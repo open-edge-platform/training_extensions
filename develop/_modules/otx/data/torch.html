@@ -315,9 +315,16 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Batched TorchDataItems with stacked tensors</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if all images have the same size. TODO(kprokofi): remove this check once OV IR models are moved.</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">):</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># we need this only in case of OV inference, where no resize</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
+
         <span class="k">return</span> <span class="n">TorchDataBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span>
-            <span class="n">images</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]),</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">],</span>
             <span class="n">bboxes</span><span class="o">=</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">bboxes</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">],</span>
             <span class="n">keypoints</span><span class="o">=</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">keypoints</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">],</span>
@@ -345,7 +352,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Torch data item batch implementation.&quot;&quot;&quot;</span>
 
     <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># TODO(ashwinvaidya17): Remove this</span>
-    <span class="n">images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">images</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">masks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Mask</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">bboxes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">BoundingBoxes</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
