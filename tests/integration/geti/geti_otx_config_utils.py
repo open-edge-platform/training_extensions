@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import metadata_keys
+from model_template import parse_model_template
 from omegaconf import OmegaConf
-from sc_sdk.entities.model_template import parse_model_template
 
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
