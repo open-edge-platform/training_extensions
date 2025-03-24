@@ -39,7 +39,6 @@ dependencies = [
     "einops==0.8.1",
     "decord==0.6.0",
     "typeguard>=4.3,<4.5",
-    "numba==0.61.0",
     # TODO(ashwinvaidya17): https://github.com/openvinotoolkit/anomalib/issues/2126
     "setuptools<70",
 ]

@@ -134,6 +134,7 @@ The list of supported recipes for object detection is available with the command
             ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
             │ DETECTION │ atss_mobilenetv2_tile │ src/otx/recipe/detection/atss_mobilenetv2_tile.yaml            │
             │ DETECTION │ atss_resnext101       │ src/otx/recipe/detection/atss_resnext101.yaml                  │
+            │ DETECTION │ atss_resnext101_tile  │ src/otx/recipe/detection/atss_resnext101_tile.yaml             │
             │ DETECTION │ atss_mobilenetv2      │ src/otx/recipe/detection/atss_mobilenetv2.yaml                 │
             └───────────┴───────────────────────┴────────────────────────────────────────────────────────────────┘
 
@@ -150,6 +151,7 @@ The list of supported recipes for object detection is available with the command
                 'atss_mobilenetv2',
                 'atss_mobilenetv2_tile',
                 'atss_resnext101',
+                'atss_resnext101_tile',
             ]
             '''
 
@@ -406,7 +408,6 @@ using ``otx test`` and passing the IR model path to the ``--checkpoint`` paramet
 
             (otx) ...$ otx test --work_dir otx-workspace \
                                 --checkpoint otx-workspace/20240312_052847/exported_model.xml \
-                                --engine.device cpu
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
@@ -434,7 +435,6 @@ using ``otx test`` and passing the IR model path to the ``--checkpoint`` paramet
             (otx) ...$ otx test --config src/otx/recipe/detection/atss_mobilenetv2.yaml \
                                 --data_root data/wgisd \
                                 --checkpoint otx-workspace/20240312_052847/exported_model.xml \
-                                --engine.device cpu
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
@@ -553,7 +553,6 @@ it to the ``otx test`` function.
 
             (otx) ...$ otx test --work_dir otx-workspace \
                                 --checkpoint otx-workspace/20240312_055042/optimized_model.xml \
-                                --engine.device cpu
 
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

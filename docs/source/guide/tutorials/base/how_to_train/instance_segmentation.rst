@@ -138,6 +138,7 @@ The list of supported recipes for instance segmentation is available with the co
           │ INSTANCE_SEGMENTATION │ maskrcnn_swint                │ src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml                           │
           │ INSTANCE_SEGMENTATION │ maskrcnn_efficientnetb2b      │ src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml                 │
           │ INSTANCE_SEGMENTATION │ rtmdet_inst_tiny              │ src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml                         │
+          │ INSTANCE_SEGMENTATION │ rtmdet_inst_tiny_tile         │ src/otx/recipe/instance_segmentation/rtmdet_inst_tiny_tile.yaml                    │
           │ INSTANCE_SEGMENTATION │ maskrcnn_efficientnetb2b_tile │ src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b_tile.yaml            │
           │ INSTANCE_SEGMENTATION │ maskrcnn_swint_tile           │ src/otx/recipe/instance_segmentation/maskrcnn_swint_tile.yaml                      │
           └───────────────────────┴───────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
@@ -156,6 +157,7 @@ The list of supported recipes for instance segmentation is available with the co
             'maskrcnn_r50',
             'maskrcnn_r50_tile',
             'rtmdet_inst_tiny',
+            'rtmdet_inst_tiny_tile',
             'maskrcnn_swint_tile',
             'maskrcnn_efficientnetb2b_tile',
             'openvino_model',
@@ -462,7 +464,6 @@ it to the ``otx test`` function.
 
             (otx) ...$ otx test --work_dir otx-workspace \
                                 --checkpoint otx-workspace/20240312_055042/optimized_model.xml \
-                                --engine.device cpu
 
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
