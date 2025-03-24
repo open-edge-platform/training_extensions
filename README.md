@@ -144,7 +144,7 @@ engine = Engine(data_root="data/wgisd", task="DETECTION")
 engine.train()
 ```
 
-For more examples, see documentation: [CLI Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
+For more examples, see documentation: [API Quick-Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
 
 </details>
 
@@ -155,7 +155,7 @@ For more examples, see documentation: [CLI Guide](https://openvinotoolkit.github
 otx train --data_root data/wgisd --task DETECTION
 ```
 
-For more examples, see documentation: [API Quick-Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
+For more examples, see documentation: [CLI Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
 
 </details>
 
