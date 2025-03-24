@@ -252,7 +252,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/detection.html">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/base/explain.html">XAI Tutorial</a></li>
@@ -498,10 +497,9 @@ CLI</label><div class="sd-tab-content docutils">
 <li><p>classification: <a class="reference external" href="https://www.image-net.org/">Imagenet</a>, <a class="reference external" href="https://cocodataset.org/#format-data">COCO</a> (multi-label), <a class="reference internal" href="../algorithms/classification/hierarhical_classification.html#hierarchical-dataset"><span class="std std-ref">custom hierarchical</span></a></p></li>
 <li><p>object detection: <a class="reference external" href="https://cocodataset.org/#format-data">COCO</a>, <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html">Pascal-VOC</a>, <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/yolo.html">YOLO</a></p></li>
 <li><p>semantic segmentation: <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/common_semantic_segmentation.html">Common Semantic Segmentation</a>, <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html">Pascal-VOC</a>, <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/cityscapes.html">Cityscapes</a>, <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/ade20k2020.html">ADE20k</a></p></li>
-<li><p>anomaly classification: <a class="reference external" href="https://www.mvtec.com/company/research/datasets/mvtec-ad">MVTec</a></p></li>
-<li><p>anomaly detection: <a class="reference external" href="https://www.mvtec.com/company/research/datasets/mvtec-ad">MVTec</a></p></li>
-<li><p>anomaly segmentation: <a class="reference external" href="https://www.mvtec.com/company/research/datasets/mvtec-ad">MVTec</a></p></li>
+<li><p>anomaly: <a class="reference external" href="https://www.mvtec.com/company/research/datasets/mvtec-ad">MVTec</a></p></li>
 <li><p>instance segmentation: <a class="reference external" href="https://cocodataset.org/#format-data">COCO</a>, <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html">Pascal-VOC</a></p></li>
+<li><p>keypoint detection: <a class="reference external" href="https://cocodataset.org/#format-data">COCO</a></p></li>
 </ul>
 <p>If we have a dataset format occluded with other tasks, for example <code class="docutils literal notranslate"><span class="pre">COCO</span></code> format, we should directly emphasize the task type. If not, OpenVINO™ Training Extensions automatically chooses the task type that you might not intend:</p>
 <div class="sd-tab-set docutils">
@@ -519,7 +517,7 @@ API</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-3">
 CLI</label><div class="sd-tab-content docutils">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--data_root<span class="w"> </span>&lt;path_to_data_root&gt;
-<span class="w">                     </span>--task<span class="w"> </span><span class="o">{</span>MULTI_CLASS_CLS,<span class="w"> </span>MULTI_LABEL_CLS,<span class="w"> </span>H_LABEL_CLS,<span class="w"> </span>DETECTION,<span class="w"> </span>INSTANCE_SEGMENTATION,<span class="w"> </span>SEMANTIC_SEGMENTATION,<span class="w">  </span>ANOMALY_CLASSIFICATION,<span class="w"> </span>ANOMALY_DETECTION,<span class="w"> </span>ANOMALY_SEGMENTATION,<span class="w"> </span>VISUAL_PROMPTING<span class="o">}</span>
+<span class="w">                     </span>--task<span class="w"> </span><span class="o">{</span>MULTI_CLASS_CLS,<span class="w"> </span>MULTI_LABEL_CLS,<span class="w"> </span>H_LABEL_CLS,<span class="w"> </span>DETECTION,<span class="w"> </span>INSTANCE_SEGMENTATION,<span class="w"> </span>SEMANTIC_SEGMENTATION,<span class="w">  </span>ANOMALY,<span class="w"> </span>KEYPOINT_DETECTION<span class="o">}</span>
 <span class="w">                     </span>...
 </pre></div>
 </div>

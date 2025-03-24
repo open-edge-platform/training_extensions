@@ -252,7 +252,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/detection.html">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../tutorials/base/how_to_train/anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/base/explain.html">XAI Tutorial</a></li>
@@ -478,10 +477,13 @@ the data pipeline to match the input size during other engine entry points.</p>
 API 1</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.yolox</span><span class="w"> </span><span class="kn">import</span> <span class="n">YOLOXS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">input_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">YOLOXS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">)</span>  <span class="c1"># should be tuple[int, int]</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">YOLOXS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">data_input_params</span><span class="o">=</span><span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span>
+                                                               <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span>
+                                                               <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">)))</span>
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">)</span>
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -495,7 +497,7 @@ API 2</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span>
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;yolox_s&quot;</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>  <span class="c1"># model input size will be aligned with the datamodule input size</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;yolox_s&quot;</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>  <span class="c1"># model input size, mean and std values will be aligned with the datamodule</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -503,7 +505,7 @@ API 2</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w"> </span>--data.input_size<span class="w"> </span><span class="m">512</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w"> </span>--data.input_size<span class="w"> </span><span class="o">[</span><span class="m">512</span>,512<span class="o">]</span>
 </pre></div>
 </div>
 </div>
@@ -526,10 +528,12 @@ API</label><div class="sd-tab-content docutils">
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span>
     <span class="o">...</span>
-    <span class="n">adaptive_input_size</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>  <span class="c1"># auto or downscale</span>
+    <span class="n">input_size</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>  <span class="c1"># auto or downscale</span>
     <span class="n">input_size_multiplier</span><span class="o">=</span><span class="n">YOLOXS</span><span class="o">.</span><span class="n">input_size_multiplier</span><span class="p">,</span> <span class="c1"># should set the input_size_multiplier of the model</span>
 <span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">YOLOXS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">YOLOXS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
+                                                        <span class="n">mean</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span>
+                                                        <span class="n">std</span><span class="o">=</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_std</span><span class="p">))</span>
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
@@ -538,7 +542,7 @@ API</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-4">
 CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w"> </span>--data.adaptive_input_size<span class="w"> </span><span class="s2">&quot;auto | downscale&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w"> </span>--data.input_size<span class="w"> </span><span class="s2">&quot;auto&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -558,7 +562,6 @@ to 256x256 to maintain detectability.</p>
 <li><p>If the recalculated input size falls below the minimum threshold defined by MIN_DETECTION_INPUT_SIZE, the input size will be scaled up. This is done by increasing the smaller dimension (width or height) to MIN_DETECTION_INPUT_SIZE while maintaining the aspect ratio, ensuring that the model’s minimum criteria for object detection are met.</p></li>
 </ul>
 </li>
-<li><p>(downscale only) Any scale-up beyond the default model input size is restricted.</p></li>
 </ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>

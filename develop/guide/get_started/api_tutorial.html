@@ -252,7 +252,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/detection.html">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/base/explain.html">XAI Tutorial</a></li>
@@ -520,21 +519,31 @@ List of available model names</label><div class="sd-tab-content docutils">
 
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">[</span>
-<span class="sd">    &#39;yolox_tiny_tile&#39;,</span>
-<span class="sd">    &#39;yolox_x&#39;,</span>
-<span class="sd">    &#39;yolox_l_tile&#39;,</span>
-<span class="sd">    &#39;yolox_x_tile&#39;, &#39;yolox_l&#39;,</span>
-<span class="sd">    &#39;atss_r50_fpn&#39;,</span>
-<span class="sd">    &#39;ssd_mobilenetv2&#39;,</span>
 <span class="sd">    &#39;yolox_s&#39;,</span>
-<span class="sd">    &#39;yolox_tiny&#39;,</span>
-<span class="sd">    &#39;openvino_model&#39;,</span>
-<span class="sd">    &#39;atss_mobilenetv2&#39;,</span>
-<span class="sd">    &#39;yolox_s_tile&#39;,</span>
-<span class="sd">    &#39;rtmdet_tiny&#39;,</span>
-<span class="sd">    &#39;atss_mobilenetv2_tile&#39;,</span>
+<span class="sd">    &#39;yolox_tiny_tile&#39;,</span>
+<span class="sd">    &#39;ssd_mobilenetv2&#39;,</span>
 <span class="sd">    &#39;atss_resnext101&#39;,</span>
+<span class="sd">    &#39;yolox_tiny&#39;,</span>
+<span class="sd">    &#39;rtdetr_18&#39;,</span>
+<span class="sd">    &#39;atss_resnext101_tile&#39;,</span>
+<span class="sd">    &#39;yolox_s_tile&#39;,</span>
+<span class="sd">    &#39;rtmdet_tiny_tile&#39;,</span>
+<span class="sd">    &#39;yolox_l_tile&#39;,</span>
 <span class="sd">    &#39;ssd_mobilenetv2_tile&#39;,</span>
+<span class="sd">    &#39;dfine_x&#39;,</span>
+<span class="sd">    &#39;rtmdet_tiny&#39;,</span>
+<span class="sd">    &#39;yolox_l&#39;,</span>
+<span class="sd">    &#39;rtdetr_50&#39;,</span>
+<span class="sd">    &#39;atss_mobilenetv2_tile&#39;,</span>
+<span class="sd">    &#39;yolox_x_tile&#39;,</span>
+<span class="sd">    &#39;yolox_x&#39;,</span>
+<span class="sd">    &#39;rtdetr_18_tile&#39;,</span>
+<span class="sd">    &#39;atss_mobilenetv2&#39;,</span>
+<span class="sd">    &#39;openvino_model&#39;,</span>
+<span class="sd">    &#39;rtdetr_101&#39;,</span>
+<span class="sd">    &#39;rtdetr_50_tile&#39;,</span>
+<span class="sd">    &#39;rtdetr_101_tile&#39;,</span>
+<span class="sd">    &#39;dfine_x_tile&#39;</span>
 <span class="sd">]</span>
 <span class="sd">&#39;&#39;&#39;</span>
 </pre></div>
@@ -569,11 +578,17 @@ Print available configuration information</label><div class="sd-tab-content docu
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">[</span>
 <span class="sd">    &#39;yolox_tiny_tile&#39;,</span>
-<span class="sd">    &#39;ssd_mobilenetv2_tile&#39;,</span>
-<span class="sd">    &#39;yolox_l_tile&#39;,</span>
-<span class="sd">    &#39;yolox_s_tile&#39;,</span>
-<span class="sd">    &#39;yolox_x_tile&#39;,</span>
 <span class="sd">    &#39;atss_mobilenetv2_tile&#39;,</span>
+<span class="sd">    &#39;atss_resnext101_tile&#39;,</span>
+<span class="sd">    &#39;yolox_x_tile&#39;,</span>
+<span class="sd">    &#39;yolox_s_tile&#39;,</span>
+<span class="sd">    &#39;rtmdet_tiny_tile&#39;,</span>
+<span class="sd">    &#39;rtdetr_50_tile&#39;,</span>
+<span class="sd">    &#39;yolox_l_tile&#39;,</span>
+<span class="sd">    &#39;ssd_mobilenetv2_tile&#39;,</span>
+<span class="sd">    &#39;rtdetr_18_tile&#39;,</span>
+<span class="sd">    &#39;rtdetr_101_tile&#39;,</span>
+<span class="sd">    &#39;dfine_x_tile&#39;</span>
 <span class="sd">]</span>
 <span class="sd">&#39;&#39;&#39;</span>
 </pre></div>
@@ -676,7 +691,7 @@ Custom Model</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.atss</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">,</span> <span class="n">data_input_params</span><span class="o">=</span><span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">103.53</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">)))</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -689,7 +704,7 @@ Custom Model with checkpoint</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.atss</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="s2">&quot;data/wgisd&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="s2">&quot;&lt;path/to/checkpoint&gt;&quot;</span><span class="p">)</span>
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -704,7 +719,7 @@ Custom Optimizer &amp; Scheduler</label><div class="sd-tab-content docutils">
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.detection.atss</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ATSS</span><span class="p">(</span><span class="n">label_info</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">)</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
 <span class="n">scheduler</span> <span class="o">=</span> <span class="n">CosineAnnealingLR</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">T_max</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">eta_min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
@@ -766,14 +781,14 @@ Fix Training Seed &amp; Set Deterministic</label><div class="sd-tab-content docu
 <input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-7">
 Use Mixed Precision</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="s2">&quot;16&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This uses lightning’s precision value. You can use the values below:
-- “64”, “32”, “16”, “bf16”,
-- 64, 32, 16</p>
+- “64”, “32”, “bf16”,
+- 64, 32, bf16</p>
 </div>
 </div>
 <input id="sd-tab-item-8" name="sd-tab-set-2" type="radio">

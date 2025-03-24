@@ -43,7 +43,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'guide/tutorials/base/how_to_train/semantic_segmentation';</script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="Anomaly Detection Tutorial" href="anomaly_detection.html" />
+    <link rel="next" title="XAI Tutorial" href="../explain.html" />
     <link rel="prev" title="Instance Segmentation model" href="instance_segmentation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
@@ -252,7 +252,6 @@
 <li class="toctree-l3"><a class="reference internal" href="detection.html">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../explain.html">XAI Tutorial</a></li>
@@ -488,7 +487,7 @@ environment:</p>
 </section>
 <section id="dataset-preparation">
 <h2>Dataset preparation<a class="headerlink" href="#dataset-preparation" title="Link to this heading">#</a></h2>
-<p>For the semnatic segmentation, we’ll use the common_semantic_segmentation_dataset/supervised located at the tests/assets</p>
+<p>For the semnatic segmentation, we’ll use the common_semantic_segmentation_dataset located at the tests/assets</p>
 </section>
 <section id="training">
 <h2>Training<a class="headerlink" href="#training" title="Link to this heading">#</a></h2>
@@ -504,18 +503,25 @@ The list of supported recipes for semantic segmentation is available with the co
 CLI</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>find<span class="w"> </span>--task<span class="w"> </span>SEMANTIC_SEGMENTATION
 
-┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span class="w"> </span>Task<span class="w">                  </span>┃<span class="w"> </span>Model<span class="w"> </span>Name<span class="w">                    </span>┃<span class="w"> </span>Recipe<span class="w"> </span>Path<span class="w">                                                                        </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>openvino_model<span class="w">                </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/openvino_model.yaml<span class="w">                           </span>│
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_t<span class="w">                     </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_t.yaml<span class="w">                             </span>│
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_b<span class="w">                     </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_b.yaml<span class="w">                        </span>│
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>dino_v2<span class="w">                       </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/dino_v2.yaml<span class="w">                           </span>│
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_18<span class="w">                  </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w">                 </span>│
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_s<span class="w">                     </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_s.yaml<span class="w">                         </span>│
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_x<span class="w">                   </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_x.yaml<span class="w">                         </span>│
-│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_s<span class="w">                   </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_s.yaml<span class="w">                         </span>│
-└───────────────────────┴───────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span class="w"> </span>Task<span class="w">                  </span>┃<span class="w"> </span>Model<span class="w"> </span>Name<span class="w">        </span>┃<span class="w"> </span>Recipe<span class="w"> </span>Path<span class="w">                                                                                    </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_x_tile<span class="w">  </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_x_tile.yaml<span class="w">                                     </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>openvino_model<span class="w">    </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/openvino_model.yaml<span class="w">                                       </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>dino_v2_tile<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/dino_v2_tile.yaml<span class="w">                                         </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_s<span class="w">       </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_s.yaml<span class="w">                                          </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_b<span class="w">         </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_b.yaml<span class="w">                                            </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_18_tile<span class="w"> </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18_tile.yaml<span class="w">                                    </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>dino_v2<span class="w">           </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/dino_v2.yaml<span class="w">                                              </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_s<span class="w">         </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_s.yaml<span class="w">                                            </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_b_tile<span class="w">    </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_b_tile.yaml<span class="w">                                       </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_t<span class="w">         </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_t.yaml<span class="w">                                            </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_t_tile<span class="w">    </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_t_tile.yaml<span class="w">                                       </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_18<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w">                                         </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>segnext_s_tile<span class="w">    </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/segnext_s_tile.yaml<span class="w">                                       </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_x<span class="w">       </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_x.yaml<span class="w">                                          </span>│
+│<span class="w"> </span>SEMANTIC_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>litehrnet_s_tile<span class="w">  </span>│<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_s_tile.yaml<span class="w">                                     </span>│
+└───────────────────────┴───────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
 </pre></div>
 </div>
 </div>
@@ -528,14 +534,21 @@ API</label><div class="sd-tab-content docutils">
 <span class="nb">print</span><span class="p">(</span><span class="n">model_lists</span><span class="p">)</span>
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">[</span>
-<span class="sd">  &#39;openvino_model&#39;,</span>
-<span class="sd">  &#39;dino_v2&#39;,</span>
-<span class="sd">  &#39;litehrnet_x&#39;,</span>
-<span class="sd">  &#39;litehrnet_18&#39;,</span>
-<span class="sd">  &#39;segnext_s&#39;,</span>
-<span class="sd">  &#39;segnext_b&#39;,</span>
-<span class="sd">  &#39;segnext_t&#39;,</span>
-<span class="sd">  &#39;litehrnet_s&#39;,</span>
+<span class="sd"> &#39;segnext_s_tile&#39;,</span>
+<span class="sd"> &#39;segnext_t&#39;,</span>
+<span class="sd"> &#39;litehrnet_s&#39;,</span>
+<span class="sd"> &#39;litehrnet_s_tile&#39;,</span>
+<span class="sd"> &#39;segnext_t_tile&#39;,</span>
+<span class="sd"> &#39;dino_v2_tile&#39;,</span>
+<span class="sd"> &#39;litehrnet_x&#39;,</span>
+<span class="sd"> &#39;litehrnet_x_tile&#39;,</span>
+<span class="sd"> &#39;segnext_s&#39;,</span>
+<span class="sd"> &#39;openvino_model&#39;,</span>
+<span class="sd"> &#39;litehrnet_18&#39;,</span>
+<span class="sd"> &#39;dino_v2&#39;,</span>
+<span class="sd"> &#39;segnext_b&#39;,</span>
+<span class="sd"> &#39;segnext_b_tile&#39;,</span>
+<span class="sd"> &#39;litehrnet_18_tile&#39;</span>
 <span class="sd">]</span>
 <span class="sd">&#39;&#39;&#39;</span>
 </pre></div>
@@ -550,10 +563,10 @@ with:</p>
 </ul>
 <p>Let’s prepare an OpenVINO™ Training Extensions semantic segmentation workspace running the following command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># or its config path</span>
-<span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w"> </span>--data_root<span class="w"> </span>tests/assets/common_semantic_segmentation_dataset/supervised<span class="w"> </span>--print_config
+<span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w"> </span>--data_root<span class="w"> </span>tests/assets/common_semantic_segmentation_dataset<span class="w"> </span>--print_config
 
 ...
-data_root:<span class="w"> </span>data/common_semantic_segmentation_dataset/supervised
+data_root:<span class="w"> </span>data/common_semantic_segmentation_dataset
 work_dir:<span class="w"> </span>otx-workspace
 callback_monitor:<span class="w"> </span>val/Dice
 disable_infer_num_classes:<span class="w"> </span><span class="nb">false</span>
@@ -567,7 +580,7 @@ data:
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you want to get configuration as yaml file, please use <code class="docutils literal notranslate"><span class="pre">--print_config</span></code> parameter and <code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">configs.yaml</span></code>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w"> </span>--data_root<span class="w"> </span>data/common_semantic_segmentation_dataset/supervised<span class="w"> </span>--print_config<span class="w"> </span>&gt;<span class="w"> </span>configs.yaml
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w"> </span>--data_root<span class="w"> </span>data/common_semantic_segmentation_dataset<span class="w"> </span>--print_config<span class="w"> </span>&gt;<span class="w"> </span>configs.yaml
 <span class="c1"># Update configs.yaml &amp; Train configs.yaml</span>
 <span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>configs.yaml
 </pre></div>
@@ -584,14 +597,14 @@ data:
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 CLI (auto-config)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--data_root<span class="w"> </span>data/common_semantic_segmentation_dataset/supervised<span class="w"> </span>--task<span class="w"> </span>SEMANTIC_SEGMENTATION
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--data_root<span class="w"> </span>data/common_semantic_segmentation_dataset<span class="w"> </span>--task<span class="w"> </span>SEMANTIC_SEGMENTATION
 </pre></div>
 </div>
 </div>
 <input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
 CLI (with config)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w"> </span>--data_root<span class="w"> </span>data/common_semantic_segmentation_dataset/supervised
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/semantic_segmentation/litehrnet_18.yaml<span class="w"> </span>--data_root<span class="w"> </span>data/common_semantic_segmentation_dataset
 </pre></div>
 </div>
 </div>
@@ -600,7 +613,7 @@ CLI (with config)</label><div class="sd-tab-content docutils">
 API (from_config)</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
-<span class="n">data_root</span> <span class="o">=</span> <span class="s2">&quot;data/common_semantic_segmentation_dataset/supervised&quot;</span>
+<span class="n">data_root</span> <span class="o">=</span> <span class="s2">&quot;data/common_semantic_segmentation_dataset&quot;</span>
 <span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/litehrnet_18.yaml&quot;</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
@@ -618,7 +631,7 @@ API (from_config)</label><div class="sd-tab-content docutils">
 API</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 
-<span class="n">data_root</span> <span class="o">=</span> <span class="s2">&quot;data/common_semantic_segmentation_dataset/supervised&quot;</span>
+<span class="n">data_root</span> <span class="o">=</span> <span class="s2">&quot;data/common_semantic_segmentation_dataset&quot;</span>
 
 <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span>
           <span class="n">model</span><span class="o">=</span><span class="s2">&quot;litehrnet_18&quot;</span><span class="p">,</span>
@@ -707,7 +720,7 @@ CLI (with work_dir)</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-9">
 CLI (with config)</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--config<span class="w">  </span>src/otx/recipe/semantic_segmentation/maskrcnn_r50.yaml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--data_root<span class="w"> </span>tests/assets/common_semantic_segmentation_dataset/supervised<span class="w"> </span><span class="se">\</span>
+<span class="w">                    </span>--data_root<span class="w"> </span>tests/assets/common_semantic_segmentation_dataset<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_051135/checkpoints/epoch_059.ckpt
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃<span class="w">        </span>Test<span class="w"> </span>metric<span class="w">        </span>┃<span class="w">       </span>DataLoader<span class="w"> </span><span class="m">0</span><span class="w">        </span>┃
@@ -806,7 +819,6 @@ it to the <code class="docutils literal notranslate"><span class="pre">otx</span
 CLI</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_055042/optimized_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
 
 ...
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -847,10 +859,10 @@ efficient model representation ready-to-use semantic segmentation model.</p>
           <p class="prev-next-title">Instance Segmentation model</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="anomaly_detection.html" title="next page">
+  <a class='right-next' id="next-link" href="../explain.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Anomaly Detection Tutorial</p>
+      <p class="prev-next-title">XAI Tutorial</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>

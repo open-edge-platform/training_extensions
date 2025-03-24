@@ -4,12 +4,12 @@ LoRA: Low Rank Adaptation for Classification Tasks
 .. note::
 
     LoRA is only supported for VisionTransformer models.
-    See the model in otx.algo.classification.vit.
+    See the model in otx.algo.classification.multiclass_models.vit.
 
 Overview
 --------
 
-OpenVINO™ Training Extensions now supports Low Rank Adaptation (LoRA) for classification tasks using Transformer models. 
+OpenVINO™ Training Extensions now supports Low Rank Adaptation (LoRA) for classification tasks using VisionTransformer models.
 LoRA is a parameter-efficient approach to adapt pre-trained models by introducing low-rank matrices that capture important adaptations without the need to retrain the entire model.
 
 Benefits of LoRA
@@ -28,9 +28,9 @@ How to Use LoRA in OpenVINO™ Training Extensions
 
         .. code-block:: python
 
-            from otx.algo.classification.vit import VisionTransformerForMulticlassCls
+            from otx.algo.classification.multiclass_models.vit import VisionTransformerMulticlassCls
 
-            model = VisionTransformerForMulticlassCls(..., lora=True)
+            model = VisionTransformerMulticlassCls(..., lora=True)
 
     .. tab-item:: CLI
 

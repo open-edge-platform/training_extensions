@@ -252,7 +252,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/detection.html">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../base/explain.html">XAI Tutorial</a></li>
@@ -463,11 +462,11 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>LoRA is only supported for VisionTransformer models.
-See the model in otx.algo.classification.vit.</p>
+See the model in otx.algo.classification.multiclass_models.vit.</p>
 </div>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
-<p>OpenVINO™ Training Extensions now supports Low Rank Adaptation (LoRA) for classification tasks using Transformer models.
+<p>OpenVINO™ Training Extensions now supports Low Rank Adaptation (LoRA) for classification tasks using VisionTransformer models.
 LoRA is a parameter-efficient approach to adapt pre-trained models by introducing low-rank matrices that capture important adaptations without the need to retrain the entire model.</p>
 </section>
 <section id="benefits-of-lora">
@@ -484,9 +483,9 @@ LoRA is a parameter-efficient approach to adapt pre-trained models by introducin
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.vit</span><span class="w"> </span><span class="kn">import</span> <span class="n">VisionTransformerForMulticlassCls</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.classification.multiclass_models.vit</span><span class="w"> </span><span class="kn">import</span> <span class="n">VisionTransformerMulticlassCls</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">VisionTransformerForMulticlassCls</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">lora</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">VisionTransformerMulticlassCls</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">lora</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

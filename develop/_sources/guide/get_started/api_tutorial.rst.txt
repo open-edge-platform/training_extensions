@@ -80,21 +80,31 @@ If you want to use other models offered by OpenVINO™ Training Extension beside
 
             '''
             [
-                'yolox_tiny_tile',
-                'yolox_x',
-                'yolox_l_tile',
-                'yolox_x_tile', 'yolox_l',
-                'atss_r50_fpn',
-                'ssd_mobilenetv2',
                 'yolox_s',
-                'yolox_tiny',
-                'openvino_model',
-                'atss_mobilenetv2',
-                'yolox_s_tile',
-                'rtmdet_tiny',
-                'atss_mobilenetv2_tile',
+                'yolox_tiny_tile',
+                'ssd_mobilenetv2',
                 'atss_resnext101',
+                'yolox_tiny',
+                'rtdetr_18',
+                'atss_resnext101_tile',
+                'yolox_s_tile',
+                'rtmdet_tiny_tile',
+                'yolox_l_tile',
                 'ssd_mobilenetv2_tile',
+                'dfine_x',
+                'rtmdet_tiny',
+                'yolox_l',
+                'rtdetr_50',
+                'atss_mobilenetv2_tile',
+                'yolox_x_tile',
+                'yolox_x',
+                'rtdetr_18_tile',
+                'atss_mobilenetv2',
+                'openvino_model',
+                'rtdetr_101',
+                'rtdetr_50_tile',
+                'rtdetr_101_tile',
+                'dfine_x_tile'
             ]
             '''
 
@@ -128,11 +138,17 @@ If you want to use other models offered by OpenVINO™ Training Extension beside
         '''
         [
             'yolox_tiny_tile',
-            'ssd_mobilenetv2_tile',
-            'yolox_l_tile',
-            'yolox_s_tile',
-            'yolox_x_tile',
             'atss_mobilenetv2_tile',
+            'atss_resnext101_tile',
+            'yolox_x_tile',
+            'yolox_s_tile',
+            'rtmdet_tiny_tile',
+            'rtdetr_50_tile',
+            'yolox_l_tile',
+            'ssd_mobilenetv2_tile',
+            'rtdetr_18_tile',
+            'rtdetr_101_tile',
+            'dfine_x_tile'
         ]
         '''
 
@@ -248,7 +264,7 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
             from otx.algo.detection.atss import ATSS
             from otx.engine import Engine
 
-            model = ATSS(label_info=5, variant="mobilenetv2")
+            model = ATSS(label_info=5, model_name="mobilenetv2", data_input_params=DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)))
 
             engine = Engine(data_root="data/wgisd", model=model)
             engine.train()
@@ -260,7 +276,7 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
             from otx.algo.detection.atss import ATSS
             from otx.engine import Engine
 
-            model = ATSS(label_info=5, variant="mobilenetv2")
+            model = ATSS(label_info=5, model_name="mobilenetv2")
 
             engine = Engine(data_root="data/wgisd", model=model, checkpoint="<path/to/checkpoint>")
             engine.train()
@@ -274,7 +290,7 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
             from otx.algo.detection.atss import ATSS
             from otx.engine import Engine
 
-            model = ATSS(label_info=5, variant="mobilenetv2")
+            model = ATSS(label_info=5, model_name="mobilenetv2")
             optimizer = SGD(model.parameters(), lr=0.01, weight_decay=1e-4, momentum=0.9)
             scheduler = CosineAnnealingLR(optimizer, T_max=10000, eta_min=0)
 
@@ -334,13 +350,13 @@ The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModul
 
         .. code-block:: python
 
-            engine.train(precision="16")
+            engine.train(precision="bf16")
 
         .. note::
 
             This uses lightning's precision value. You can use the values below:
-            - "64", "32", "16", "bf16",
-            - 64, 32, 16
+            - "64", "32", "bf16",
+            - 64, 32, bf16
 
     .. tab-item:: Change Validation Metric
 

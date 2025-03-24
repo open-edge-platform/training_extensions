@@ -252,7 +252,6 @@
 <li class="toctree-l3"><a class="reference internal" href="detection.html">Object Detection model</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../explain.html">XAI Tutorial</a></li>
@@ -575,6 +574,7 @@ CLI</label><div class="sd-tab-content docutils">
 │<span class="w"> </span>INSTANCE_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>maskrcnn_swint<span class="w">                </span>│<span class="w"> </span>src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml<span class="w">                           </span>│
 │<span class="w"> </span>INSTANCE_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>maskrcnn_efficientnetb2b<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml<span class="w">                 </span>│
 │<span class="w"> </span>INSTANCE_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>rtmdet_inst_tiny<span class="w">              </span>│<span class="w"> </span>src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml<span class="w">                         </span>│
+│<span class="w"> </span>INSTANCE_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>rtmdet_inst_tiny_tile<span class="w">         </span>│<span class="w"> </span>src/otx/recipe/instance_segmentation/rtmdet_inst_tiny_tile.yaml<span class="w">                    </span>│
 │<span class="w"> </span>INSTANCE_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>maskrcnn_efficientnetb2b_tile<span class="w"> </span>│<span class="w"> </span>src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b_tile.yaml<span class="w">            </span>│
 │<span class="w"> </span>INSTANCE_SEGMENTATION<span class="w"> </span>│<span class="w"> </span>maskrcnn_swint_tile<span class="w">           </span>│<span class="w"> </span>src/otx/recipe/instance_segmentation/maskrcnn_swint_tile.yaml<span class="w">                      </span>│
 └───────────────────────┴───────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
@@ -594,6 +594,7 @@ API</label><div class="sd-tab-content docutils">
 <span class="sd">  &#39;maskrcnn_r50&#39;,</span>
 <span class="sd">  &#39;maskrcnn_r50_tile&#39;,</span>
 <span class="sd">  &#39;rtmdet_inst_tiny&#39;,</span>
+<span class="sd">  &#39;rtmdet_inst_tiny_tile&#39;,</span>
 <span class="sd">  &#39;maskrcnn_swint_tile&#39;,</span>
 <span class="sd">  &#39;maskrcnn_efficientnetb2b_tile&#39;,</span>
 <span class="sd">  &#39;openvino_model&#39;,</span>
@@ -885,7 +886,6 @@ it to the <code class="docutils literal notranslate"><span class="pre">otx</span
 CLI</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_055042/optimized_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
 
 ...
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

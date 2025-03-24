@@ -252,7 +252,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/detection.html">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tutorials/base/how_to_train/anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/base/explain.html">XAI Tutorial</a></li>
@@ -463,9 +462,9 @@
 </div><section id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h1>
 <p><strong>OpenVINO™ Training Extensions</strong> is a low-code transfer learning framework for Computer Vision.</p>
-<p>The framework’s CLI commands and API allow users to easily train, infer, optimize and deploy models, even with limited deep learning expertise. OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on <a class="reference external" href="https://pytorch.org/">PyTorch</a> , <a class="reference external" href="https://lightning.ai/">Lightning</a> and <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html">OpenVINO™ toolkit</a>.</p>
-<p>OpenVINO™ Training Extensions provide <a class="reference external" href="https://github.com/openvinotoolkit/training_extensions/tree/develop/src/otx/recipe">recipe</a> for every supported task type, which consolidates necessary information to build a model. Model templates are validated on various datasets and serve one-stop shop for obtaining the best models in general. If you are an experienced user, you can configure your own model based on <a class="reference external" href="https://pytorch.org/vision/stable/index.html">torchvision</a>, <a class="reference external" href="https://github.com/open-mmlab/mmcv">mmcv</a> and <a class="reference external" href="https://github.com/openvinotoolkit/open_model_zoo">OpenVINO Model Zoo (OMZ)</a> frameworks.</p>
-<p>Furthermore, OpenVINO™ Training Extensions provides <a class="reference internal" href="../explanation/additional_features/auto_configuration.html"><span class="doc">automatic configuration</span></a> of task types and hyperparameters. The framework will identify the most suitable recipe based on your dataset, and choose the best hyperparameter configuration. The development team is continuously extending functionalities to make training as simple as possible so that single CLI command can obtain accurate, efficient and robust models ready to be integrated into your project.</p>
+<p>The framework’s CLI commands and API allow users to easily train, infer, optimize and export models, even with limited deep learning expertise. OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on <a class="reference external" href="https://pytorch.org/">PyTorch</a> , <a class="reference external" href="https://lightning.ai/">Lightning</a> and <a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html">OpenVINO™ toolkit</a>.</p>
+<p>OpenVINO™ Training Extensions provide <a class="reference external" href="https://github.com/openvinotoolkit/training_extensions/tree/develop/src/otx/recipe">recipe</a> for every supported task type, which consolidates necessary information to build a model. Model configs are validated on various datasets and serve one-stop shop for obtaining the best models in general.</p>
+<p>The framework will identify the most suitable recipe based on your dataset, and choose the best hyperparameter configuration. The development team is continuously extending functionalities to make training as simple as possible so that single CLI command can obtain accurate, efficient and robust models ready to be integrated into your project.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -481,20 +480,18 @@
 <ul class="simple">
 <li><p><strong>Classification</strong>, including multi-class, multi-label and hierarchical image classification tasks.</p></li>
 <li><p><strong>Object detection</strong> including rotated bounding box support</p></li>
-<li><p><strong>Semantic segmentation</strong></p></li>
+<li><p><strong>Semantic segmentation</strong> including tiling algorithm support</p></li>
 <li><p><strong>Instance segmentation</strong> including tiling algorithm support</p></li>
 <li><p><strong>Anomaly recognition</strong> tasks including anomaly classification, detection and segmentation</p></li>
 </ul>
-<p>OpenVINO™ Training Extensions supports the <a class="reference internal" href="../explanation/algorithms/index.html"><span class="doc">following learning methods</span></a>:</p>
-<ul class="simple">
-<li><p><strong>Supervised</strong>, incremental training, which includes class incremental scenario.</p></li>
-</ul>
-<p>OpenVINO™ Training Extensions will provide the <a class="reference internal" href="../explanation/additional_features/index.html"><span class="doc">following features</span></a> in coming releases:</p>
+<p>OpenVINO™ Training Extensions provide the <a class="reference internal" href="../explanation/additional_features/index.html"><span class="doc">following features</span></a>:</p>
 <ul class="simple">
 <li><p><strong>Distributed training</strong> to accelerate the training process when you have multiple GPUs</p></li>
 <li><p><strong>Half-precision training</strong> to save GPUs memory and use larger batch sizes</p></li>
+<li><p><strong>Class incremental learning</strong> to add new classes to the existing model</p></li>
 <li><p>OpenVINO™ Training Extensions uses <a class="reference external" href="https://openvinotoolkit.github.io/datumaro/stable/index.html">Datumaro</a> as the backend to handle datasets. On account of that, OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. In the future there will be more supported formats available to give more freedom of datasets format choice.</p></li>
 <li><p>Improved <a class="reference internal" href="../explanation/additional_features/auto_configuration.html"><span class="doc">auto-configuration functionality</span></a>. OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model recipe to provide the best accuracy/speed trade-off. It will also make a random auto-split of your dataset if there is no validation set provided.</p></li>
+<li><p>Native <strong>Intel GPUs (XPU) support</strong>. OpenVINO™ Training Extensions can be installed with XPU support to use Intel GPUs for training and testing.</p></li>
 </ul>
 </section>
 <section id="documentation-content">
@@ -581,7 +578,7 @@ Semantic Segmentation</div>
 Anomaly Task</div>
 <p class="sd-card-text">Learn how to train an anomaly detection model</p>
 </div>
-<a class="sd-stretched-link sd-hide-link-text reference internal" href="../tutorials/base/how_to_train/anomaly_detection.html"><span class="doc">Anomaly Detection Tutorial</span></a></div>
+<span class="sd-stretched-link sd-hide-link-text">../tutorials/base/how_to_train/anomaly_detection</span></div>
 </div>
 <div class="sd-col sd-d-flex-row docutils">
 <div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-text-center docutils">
@@ -604,7 +601,6 @@ Advanced</div>
 <li><p>Explanation of the task and main supervised training pipeline.</p></li>
 <li><p>Description of the supported datasets formats for each task.</p></li>
 <li><p>Available recipes and models.</p></li>
-<li><p>Incremental learning approach.</p></li>
 </ol>
 </div></blockquote>
 <p><a class="reference internal" href="../explanation/additional_features/index.html#features-section-ref"><span class="std std-ref">Additional Features</span></a> section consists of:</p>
@@ -612,6 +608,9 @@ Advanced</div>
 <div><ol class="arabic simple">
 <li><p>Overview of model optimization algorithms.</p></li>
 <li><p>Auto-configuration algorithm to select the most appropriate training pipeline for a given dataset.</p></li>
+<li><p>Tiling algorithm to detect small objects in large images.</p></li>
+<li><p>explainable AI algorithms to visualize the model’s decision-making process.</p></li>
+<li><p>Additional useful features like configurable input size, class incremental learning, and adaptive training.</p></li>
 </ol>
 </div></blockquote>
 <ol class="arabic simple" start="4">

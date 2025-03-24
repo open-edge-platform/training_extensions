@@ -37,15 +37,3 @@ To see which models are available for the task, the following command can be exe
 .. code-block:: shell
 
         (otx) ...$ otx find --task MULTI_LABEL_CLS
-
-In the table below the `mAP <https://en.wikipedia.org/w/index.php?title=Information_retrieval&oldid=793358396#Average_precision>`_ metrics on some academic datasets using our :ref:`supervised pipeline <ml_cls_supervised_pipeline>` are presented. The results were obtained on our recipes without any changes (including input resolution, which is 224x224 for all recipes). We trained each model with single Nvidia GeForce RTX3090.
-
-+-----------------------+-----------------+-----------+------------------+-----------+
-| Model name            | Pascal-VOC 2007 | COCO 2014 | Aerial Maritime  | Mean mAP  |
-+=======================+=================+===========+==================+===========+
-| MobileNet-V3-large-1x | 86.14           | 67.94     | 69.61            | 74.56     |
-+-----------------------+-----------------+-----------+------------------+-----------+
-| EfficientNet-B0       | 86.07           | 67.87     | 73.83            | 75.92     |
-+-----------------------+-----------------+-----------+------------------+-----------+
-| EfficientNet-V2-S     | 91.91           | 77.28     | 71.52            | 80.24     |
-+-----------------------+-----------------+-----------+------------------+-----------+

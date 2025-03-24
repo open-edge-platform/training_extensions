@@ -252,7 +252,6 @@
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="anomaly_detection.html">Anomaly Detection Tutorial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../explain.html">XAI Tutorial</a></li>
@@ -565,6 +564,7 @@ CLI</label><div class="sd-tab-content docutils">
 ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
 │<span class="w"> </span>DETECTION<span class="w"> </span>│<span class="w"> </span>atss_mobilenetv2_tile<span class="w"> </span>│<span class="w"> </span>src/otx/recipe/detection/atss_mobilenetv2_tile.yaml<span class="w">            </span>│
 │<span class="w"> </span>DETECTION<span class="w"> </span>│<span class="w"> </span>atss_resnext101<span class="w">       </span>│<span class="w"> </span>src/otx/recipe/detection/atss_resnext101.yaml<span class="w">                  </span>│
+│<span class="w"> </span>DETECTION<span class="w"> </span>│<span class="w"> </span>atss_resnext101_tile<span class="w">  </span>│<span class="w"> </span>src/otx/recipe/detection/atss_resnext101_tile.yaml<span class="w">             </span>│
 │<span class="w"> </span>DETECTION<span class="w"> </span>│<span class="w"> </span>atss_mobilenetv2<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/detection/atss_mobilenetv2.yaml<span class="w">                 </span>│
 └───────────┴───────────────────────┴────────────────────────────────────────────────────────────────┘
 </pre></div>
@@ -582,6 +582,7 @@ API</label><div class="sd-tab-content docutils">
 <span class="sd">    &#39;atss_mobilenetv2&#39;,</span>
 <span class="sd">    &#39;atss_mobilenetv2_tile&#39;,</span>
 <span class="sd">    &#39;atss_resnext101&#39;,</span>
+<span class="sd">    &#39;atss_resnext101_tile&#39;,</span>
 <span class="sd">]</span>
 <span class="sd">&#39;&#39;&#39;</span>
 </pre></div>
@@ -822,7 +823,6 @@ using <code class="docutils literal notranslate"><span class="pre">otx</span> <s
 CLI (with work_dir)</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_052847/exported_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
 ...
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃<span class="w">        </span>Test<span class="w"> </span>metric<span class="w">        </span>┃<span class="w">       </span>DataLoader<span class="w"> </span><span class="m">0</span><span class="w">        </span>┃
@@ -851,7 +851,6 @@ CLI (with config)</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/detection/atss_mobilenetv2.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--data_root<span class="w"> </span>data/wgisd<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_052847/exported_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
 ...
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃<span class="w">        </span>Test<span class="w"> </span>metric<span class="w">        </span>┃<span class="w">       </span>DataLoader<span class="w"> </span><span class="m">0</span><span class="w">        </span>┃
@@ -965,7 +964,6 @@ it to the <code class="docutils literal notranslate"><span class="pre">otx</span
 CLI</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_055042/optimized_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
 
 ...
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

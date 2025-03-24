@@ -50,7 +50,7 @@ OpenVINO™ Training Extensions command line functionality.
     otx --help
 
 *************************************************************
-Install OpenVINO™ Training Extensions for users (XPU devices)
+Install OpenVINO™ Training Extensions for users (Intel GPUs)
 *************************************************************
 
 1. Install OpenVINO™ Training Extensions
