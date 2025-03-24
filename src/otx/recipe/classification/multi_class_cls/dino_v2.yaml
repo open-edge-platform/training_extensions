@@ -7,10 +7,8 @@ model:
     optimizer:
       class_path: torch.optim.AdamW
       init_args:
-        # lr: 0.0001 # Original learning rate
-        lr: 0.001 # Increased learning rate for linear head
+        lr: 0.001  # Increased learning rate for linear head
         weight_decay: 0.05
-    # Add parameter groups for different learning rates if needed
 
     scheduler:
       class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
