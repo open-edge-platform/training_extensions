@@ -21,9 +21,8 @@ from dataclasses import dataclass, field
 from enum import Enum, IntEnum, auto
 from typing import NamedTuple, cast
 
-from omegaconf import DictConfig, ListConfig, OmegaConf
-
 import metadata_keys
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 
 class Domain(Enum):
@@ -38,8 +37,6 @@ class Domain(Enum):
     ANOMALY_SEGMENTATION = auto()
     INSTANCE_SEGMENTATION = auto()
     ROTATED_DETECTION = auto()
-    ACTION_CLASSIFICATION = auto()
-    ACTION_DETECTION = auto()
     KEYPOINT_DETECTION = auto()
 
     def __str__(self):
@@ -128,7 +125,7 @@ class TaskType(Enum):
 
     def __init__(
         self,
-        value: int,  # noqa: ARG002
+        value: int,
         task_info: TaskInfo,
     ):
         self.domain = task_info.domain
@@ -273,24 +270,6 @@ class TaskType(Enum):
             is_local=True,
         ),
     )
-    ACTION_CLASSIFICATION = (
-        14,
-        TaskInfo(
-            domain=Domain.ACTION_CLASSIFICATION,
-            is_trainable=True,
-            is_anomaly=False,
-            is_global=False,
-            is_local=True,
-        ),
-    )
-    ACTION_DETECTION = (
-        15,
-        TaskInfo(domain=Domain.ACTION_DETECTION, is_trainable=True, is_anomaly=False, is_global=False, is_local=True),
-    )
-    VISUAL_PROMPTING = (
-        16,
-        TaskInfo(domain=Domain.SEGMENTATION, is_trainable=True, is_anomaly=False, is_global=False, is_local=True),
-    )
     KEYPOINT_DETECTION = (
         17,
         TaskInfo(domain=Domain.KEYPOINT_DETECTION, is_trainable=True, is_anomaly=False, is_global=False, is_local=True),
@@ -326,9 +305,6 @@ def task_type_to_label_domain(task_type: TaskType) -> Domain:
         TaskType.ANOMALY_DETECTION: Domain.ANOMALY_DETECTION,
         TaskType.ANOMALY_SEGMENTATION: Domain.ANOMALY_SEGMENTATION,
         TaskType.ROTATED_DETECTION: Domain.ROTATED_DETECTION,
-        TaskType.ACTION_CLASSIFICATION: Domain.ACTION_CLASSIFICATION,
-        TaskType.ACTION_DETECTION: Domain.ACTION_DETECTION,
-        TaskType.VISUAL_PROMPTING: Domain.SEGMENTATION,
         TaskType.KEYPOINT_DETECTION: Domain.KEYPOINT_DETECTION,
     }
 
@@ -382,7 +358,7 @@ class HyperParameterData:
             else:
                 raise ValueError(
                     f"Unexpected configurable parameter file found at path {base_hyper_parameter_path}"
-                    f", expected a dictionary-like format, got list-like instead."
+                    f", expected a dictionary-like format, got list-like instead.",
                 )
         if self.has_overrides and has_valid_configurable_parameters:
             self.substitute_parameter_overrides()
@@ -440,7 +416,7 @@ class HyperParameterData:
                 else:
                     raise ValueError(
                         f"Unable to perform parameter override. Parameter or parameter group named {key} "
-                        f"is not valid for the base hyper parameters specified in {self.base_path}"
+                        f"is not valid for the base hyper parameters specified in {self.base_path}",
                     )
             elif metadata_keys.allows_model_template_override(key):
                 parameter_dict[key] = value
@@ -680,9 +656,6 @@ TRAINABLE_TASK_TYPES: Sequence[TaskType] = (
     TaskType.ANOMALY_CLASSIFICATION,
     TaskType.ANOMALY_SEGMENTATION,
     TaskType.ROTATED_DETECTION,
-    TaskType.ACTION_CLASSIFICATION,
-    TaskType.ACTION_DETECTION,
-    TaskType.VISUAL_PROMPTING,
     TaskType.KEYPOINT_DETECTION,
 )
 
