@@ -87,10 +87,28 @@ class OTXKeypointDetectionModel(OTXModel):
         scores = []
         # default visibility threshold
         visibility_threshold = 0.5
-        for output in outputs:
+        if inputs.imgs_info is None:
+            msg = "The input image information is not provided."
+            raise ValueError(msg)
+        for i, output in enumerate(outputs):
             if not isinstance(output, tuple):
                 raise TypeError(output)
-            kps = torch.as_tensor(output[0], device=self.device)
+            if inputs.imgs_info[i] is None:
+                msg = f"The image information for the image {i} is not provided."
+                raise ValueError(msg)
+            # scale to the original image size
+            orig_h, orig_w = inputs.imgs_info[i].ori_shape  # type: ignore[union-attr]
+            kp_scale_h, kp_scale_w = (
+                orig_h / self.data_input_params.input_size[0],
+                orig_w / self.data_input_params.input_size[1],
+            )
+            inverted_scale = max(kp_scale_h, kp_scale_w)
+            kp_scale_h = kp_scale_w = inverted_scale
+            # decode kps
+            kps = torch.as_tensor(output[0], device=self.device) * torch.tensor(
+                [kp_scale_w, kp_scale_h],
+                device=self.device,
+            )
             score = torch.as_tensor(output[1], device=self.device)
             visible_keypoints = torch.cat([kps, score.unsqueeze(1) > visibility_threshold], dim=1)
             keypoints.append(visible_keypoints)
@@ -164,8 +182,8 @@ class OTXKeypointDetectionModel(OTXModel):
             infos.append(
                 ImageInfo(
                     img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
+                    img_shape=img.shape[:2],
+                    ori_shape=img.shape[:2],
                 ),
             )
 
