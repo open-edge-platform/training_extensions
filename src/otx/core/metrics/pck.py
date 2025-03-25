@@ -178,28 +178,14 @@ class PCKMeasure(Metric):
     def compute(self) -> dict:
         """Compute PCK score metric."""
         pred_kpts = np.stack([p[0].cpu().numpy() for p in self.preds])
-        gt_kpts_processed = []
-        for p in self.targets:
-            if len(p[0].shape) == 3 and p[0].shape[0] == 1:
-                gt_kpts_processed.append(p[0].squeeze())
-            else:
-                gt_kpts_processed.append(p[0])
-        gt_kpts = np.stack(gt_kpts_processed)
-
-        kpts_visible = []
-        for p in self.targets:
-            if len(p[1].shape) == 3 and p[1].shape[0] == 1:
-                kpts_visible.append(p[1].squeeze())
-            else:
-                kpts_visible.append(p[1])
-
-        kpts_visible_stacked = np.stack(kpts_visible)
+        target_kpts = np.stack([t[0].cpu().numpy() for t in self.targets])
+        kpts_visible = np.stack([t[1].cpu().numpy() for t in self.targets])
 
         normalize = np.tile(np.array([self.input_size[::-1]]), (pred_kpts.shape[0], 1))
         _, avg_acc, _ = keypoint_pck_accuracy(
             pred_kpts,
-            gt_kpts,
-            mask=kpts_visible_stacked > 0,
+            target_kpts,
+            mask=kpts_visible > 0,
             thr=self.dist_threshold,
             norm_factor=normalize,
         )

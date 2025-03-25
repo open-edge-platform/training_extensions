@@ -29,13 +29,23 @@ if TYPE_CHECKING:
 @register_pytree_node
 @dataclass
 class TorchDataItem(ValidateItemMixin, Mapping):
-    """Torch data item implementation."""
+    """Torch data item implementation.
+
+    Attributes:
+        image (torch.Tensor): The image tensor.
+        label (torch.Tensor | None): The label tensor, optional.
+        masks (Mask | None): The masks, optional.
+        bboxes (BoundingBoxes | None): The bounding boxes, optional.
+        keypoints (torch.Tensor | None): The keypoints, optional.
+        img_info (ImageInfo | None): Additional image information, optional.
+    """
 
     # TODO(ashwinvaidya17): Image should only be a torch.Tensor. Kept for backward compatibility.
     image: torch.Tensor | list[torch.Tensor]  # Tile sizes are different.
     label: torch.Tensor | None = None
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
+    keypoints: torch.Tensor | None = None
     img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
@@ -47,11 +57,11 @@ class TorchDataItem(ValidateItemMixin, Mapping):
         Returns:
             Batched TorchDataItems with stacked tensors
         """
-        img_shape = items[0].image.shape  # type: ignore[union-attr]
-        if all(item.image.shape == img_shape for item in items):  # type: ignore[union-attr]
+        # Check if all images have the same size. TODO(kprokofi): remove this check once OV IR models are moved.
+        if all(item.image.shape == items[0].image.shape for item in items):  # type: ignore[union-attr]
             images = torch.stack([item.image for item in items])
         else:
-            # TODO(ashwinvaidya17): tiles are not of the same size. Kept for backward compatibility.
+            # we need this only in case of OV inference, where no resize
             images = [item.image for item in items]
 
         return TorchDataBatch(
@@ -59,6 +69,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
             images=images,
             labels=[item.label for item in items],
             bboxes=[item.bboxes for item in items],
+            keypoints=[item.keypoints for item in items],
             masks=[item.masks for item in items],
             imgs_info=[item.img_info for item in items],
         )
@@ -79,21 +90,18 @@ class TorchDataBatch(ValidateBatchMixin):
     """Torch data item batch implementation."""
 
     batch_size: int  # TODO(ashwinvaidya17): Remove this
-    images: (
-        torch.Tensor | list[torch.Tensor]
-    )  # TODO(ashwinvaidya17): tiles are not of the same size. Kept for backward compatibility.
-    labels: list[torch.Tensor] | None
+    images: torch.Tensor | list[torch.Tensor]
+    labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
+    keypoints: list[torch.Tensor] | None = None
     imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
 
 @dataclass
-class TorchPredItem(ValidateItemMixin):
+class TorchPredItem(TorchDataItem):
     """Torch prediction data item implementation."""
 
-    image: torch.Tensor
-    label: torch.Tensor | None
     scores: torch.Tensor | None = None
     feature_vector: torch.Tensor | None = None
     saliency_map: torch.Tensor | None = None
@@ -102,18 +110,12 @@ class TorchPredItem(ValidateItemMixin):
 
 
 @dataclass
-class TorchPredBatch(ValidateBatchMixin):
+class TorchPredBatch(TorchDataBatch):
     """Torch prediction data item batch implementation."""
 
-    batch_size: int  # TODO(ashwinvaidya17): Remove this
-    images: torch.Tensor
-    labels: list[torch.Tensor] | None
     scores: list[torch.Tensor] | None = None
     feature_vector: list[torch.Tensor] | None = None
     saliency_map: list[torch.Tensor] | None = None
-    masks: list[torch.Tensor] | None = None
-    bboxes: list[torch.Tensor] | None = None
-    imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
     @property
     def has_xai_outputs(self) -> bool:

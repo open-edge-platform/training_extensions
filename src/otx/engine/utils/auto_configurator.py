@@ -426,7 +426,6 @@ class AutoConfigurator:
             input_size=datamodule.input_size,
             tile_config=datamodule.tile_config,
             image_color_channel=datamodule.image_color_channel,
-            stack_images=datamodule.stack_images,
             include_polygons=datamodule.include_polygons,
             ignore_index=datamodule.ignore_index,
             unannotated_items_ratio=datamodule.unannotated_items_ratio,

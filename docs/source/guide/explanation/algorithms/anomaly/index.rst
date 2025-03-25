@@ -42,7 +42,7 @@ The anomaly segmentation task locates anomalies at the pixel level. Similar to a
 
 Dataset Format
 **************
-At the moment, the anomaly tasks support the MVTec AD dataset format, which is one of the most popular formats for detecting anomalies. 
+At the moment, the anomaly tasks support the MVTec AD dataset format, which is one of the most popular formats for detecting anomalies.
 
 .. code-block::
 
@@ -100,9 +100,9 @@ PADIM
    :align: center
    :alt: Anomaly Task Types
 
-Padim is a clustering-based anomaly detection approach. The model uses a patch-based mechanism that extracts patches from the input image and then uses a CNN to extract features from the patches. 
+Padim is a clustering-based anomaly detection approach. The model uses a patch-based mechanism that extracts patches from the input image and then uses a CNN to extract features from the patches.
 
-To eliminate the redundant information from the extracted features, the model randomly selects a subset of the features to reduce the dimensionality of the features. A multi-variate Gaussian distribution is fitted for each patch embedding. This means each patch of the set of training images has a corresponding multivariate Gaussian distribution. 
+To eliminate the redundant information from the extracted features, the model randomly selects a subset of the features to reduce the dimensionality of the features. A multi-variate Gaussian distribution is fitted for each patch embedding. This means each patch of the set of training images has a corresponding multivariate Gaussian distribution.
 
 To predict the anomaly score, Mahalanobis distance is calculated to score each patch position of the test image. The matrices of Mahalanobis distances constitute the anomaly map, with higher scores indicating anomalous regions.
 
@@ -132,9 +132,9 @@ STFPM
    :align: center
    :alt: Anomaly Task Types
 
-The STFPM algorithm is composed of a pre-trained teacher network and a student network with the same architecture. The student network learns the distribution of anomaly-free images by matching the features to their corresponding features in the teacher network. 
+The STFPM algorithm is composed of a pre-trained teacher network and a student network with the same architecture. The student network learns the distribution of anomaly-free images by matching the features to their corresponding features in the teacher network.
 
-Multiple-scale feature matching is utilized to enable the student network during training to receive a mixture of multi-level knowledge from the feature pyramid, thereby enabling the detection of anomalies of various sizes. To compute the anomaly scores during the inference, the student network's feature pyramid is compared to the teacher network's feature pyramid. 
+Multiple-scale feature matching is utilized to enable the student network during training to receive a mixture of multi-level knowledge from the feature pyramid, thereby enabling the detection of anomalies of various sizes. To compute the anomaly scores during the inference, the student network's feature pyramid is compared to the teacher network's feature pyramid.
 
 The anomaly score is computed as the sum of the L2 distances between the student and teacher feature pyramids. This distance is then used to compute the anomaly map and the anomaly score.
 

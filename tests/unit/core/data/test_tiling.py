@@ -28,7 +28,6 @@ from otx.core.config.data import (
 )
 from otx.core.data.dataset.tile import OTXTileTransform
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
-from otx.core.data.entity.segmentation import SegBatchDataEntity
 from otx.core.data.entity.tile import TileBatchInstSegDataEntity, TileBatchSegDataEntity
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import DataInputParams
@@ -379,7 +378,7 @@ class TestOTXTiling:
                 elif task is OTXTaskType.INSTANCE_SEGMENTATION:
                     assert isinstance(batch, InstanceSegBatchDataEntity)
                 elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
-                    assert isinstance(batch, SegBatchDataEntity)
+                    assert isinstance(batch, TorchDataBatch)
                 else:
                     pytest.skip("Task not supported")
 
@@ -402,7 +401,7 @@ class TestOTXTiling:
                 elif task is OTXTaskType.INSTANCE_SEGMENTATION:
                     assert isinstance(batch, InstanceSegBatchDataEntity)
                 elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
-                    assert isinstance(batch, SegBatchDataEntity)
+                    assert isinstance(batch, TorchDataBatch)
                 else:
                     pytest.skip("Task not supported")
 
