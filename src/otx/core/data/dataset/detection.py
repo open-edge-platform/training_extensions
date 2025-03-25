@@ -27,7 +27,7 @@ class OTXDetectionDataset(OTXDataset):
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        image = to_dtype(to_image(img_data), dtype=torch.float32) / 255.0
+        image = to_dtype(to_image(img_data), dtype=torch.float32)
 
         bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
 
