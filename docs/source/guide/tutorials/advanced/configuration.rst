@@ -5,41 +5,49 @@ How to write OTX Configuration (recipe)
 Configuration
 ***************
 
-Example of ``recipe/classification/multi_class_cls``
+Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
 
 .. code-block:: yaml
 
-    model:
-        class_path: otx.algo.classification.mobilenet_v3.MobileNetV3ForMulticlassCls
-        init_args:
-            label_info: 1000
-            light: True
+  model:
+    class_path: otx.algo.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
+    init_args:
+      model_name: mobilenetv3_large
+      label_info: 1000
 
-    optimizer:
+      optimizer:
         class_path: torch.optim.SGD
         init_args:
-            lr: 0.0058
-            momentum: 0.9
-            weight_decay: 0.0001
+          lr: 0.0058
+          momentum: 0.9
+          weight_decay: 0.0001
 
-    scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
-      init_args:
-        num_warmup_steps: 10
-        main_scheduler_callable:
-          class_path: lightning.pytorch.cli.ReduceLROnPlateau
-          init_args:
-            mode: max
-            factor: 0.5
-            patience: 1
-            monitor: val/accuracy
+      scheduler:
+        class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+        init_args:
+          num_warmup_steps: 10
+          main_scheduler_callable:
+            class_path: lightning.pytorch.cli.ReduceLROnPlateau
+            init_args:
+              mode: max
+              factor: 0.5
+              patience: 3
+              monitor: val/accuracy
 
-    engine:
-        task: MULTI_CLASS_CLS
-        device: auto
+  engine:
+    task: MULTI_CLASS_CLS
+    device: auto
 
-    callback_monitor: val/accuracy
-    data: ../../_base_/data/torchvision_base.yaml
+  callback_monitor: val/accuracy
+
+  data: ../../_base_/data/classification.yaml
+  overrides:
+    max_epochs: 90
+
+    callbacks:
+      - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+        init_args:
+          patience: 5
 
 We can use the ``~.yaml`` with the above values configured.
 
