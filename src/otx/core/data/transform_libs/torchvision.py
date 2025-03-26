@@ -1226,10 +1226,13 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         warp_matrix = self._get_random_homography_matrix(height, width)
 
         img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
-        inputs.image = torch.from_numpy(img).permute(2, 0, 1)
+        if isinstance(inputs, TorchDataItem):
+            inputs.image = torch.from_numpy(img).permute(2, 0, 1)
+        else:
+            inputs.image = img
         inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
-        bboxes = getattr(inputs, "bboxes", [])
+        bboxes = inputs.bboxes  # type: ignore[union-attr]
         num_bboxes = len(bboxes) if bboxes is not None else 0
         if num_bboxes:
             bboxes = project_bboxes(bboxes, warp_matrix)
@@ -1775,10 +1778,11 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         mixup_gt_bboxes = torch.cat((inputs.bboxes, cp_retrieve_gt_bboxes), dim=0)
 
-        _labels = (
-            inputs.label if isinstance(inputs, TorchDataItem) else inputs.labels
-        )  # TODO(ashwinvaidya17): temporary
-
+        # TODO(ashwinvaidya17): temporary
+        if isinstance(inputs, TorchDataItem):  # noqa: SIM108
+            _labels = inputs.label
+        else:
+            _labels = inputs.labels
         mixup_gt_bboxes_labels = torch.cat((_labels, retrieve_gt_bboxes_labels), dim=0)
 
         # remove outside bbox
