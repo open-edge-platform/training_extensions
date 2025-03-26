@@ -43,7 +43,6 @@ def _test_augmentation(
         mode="sinlgeprocessing",
         mem_size=0,
     )
-    mem_cache_handler.instances = []  # Clear cache between tests
 
     # Evaluate all on/off aug combinations
     img_shape = None
