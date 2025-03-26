@@ -489,7 +489,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
         tile_shape = tile_img.shape[:2]
-        tile_img = to_dtype(to_image(tile_img), dtype=torch.float32) / 255.0
+        tile_img = to_dtype(to_image(tile_img), dtype=torch.float32)
         img_info = ImageInfo(
             img_idx=parent_idx,
             img_shape=tile_shape,
