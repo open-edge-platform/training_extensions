@@ -18,7 +18,7 @@ from otx.algo.instance_segmentation.utils.utils import empty_instances, unpack_i
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 
 if TYPE_CHECKING:
-    from otx.algo.utils.mmengine_utils import InstanceData
+    from otx.algo.utils.utils import InstanceData
 
 
 class RoIHead(nn.Module):

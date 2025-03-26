@@ -18,7 +18,7 @@ from otx.algo.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
 from otx.algo.common.utils.structures import AssignResult
 
 if TYPE_CHECKING:
-    from otx.algo.utils.mmengine_utils import InstanceData
+    from otx.algo.utils.utils import InstanceData
 
 
 def bbox_center_distance(bboxes: Tensor, priors: Tensor) -> Tensor:

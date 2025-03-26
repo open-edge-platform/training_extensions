@@ -56,9 +56,3 @@ To see which models are available for the task, the following command can be exe
 .. code-block:: shell
 
         (otx) ...$ otx find --task H_LABEL_CLS
-
-.. ********************
-.. Incremental Learning
-.. ********************
-
-.. To be added soon
