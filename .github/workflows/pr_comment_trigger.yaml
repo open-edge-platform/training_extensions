@@ -7,8 +7,8 @@ on:
 env:
   COMMENT_BODY: ${{ github.event.comment.body }}
 
-# Declare default permissions as read only.
-permissions: read-all
+permissions:
+  issues: write
 
 jobs:
   pr-triggered-integration-test:
