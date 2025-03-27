@@ -15,20 +15,20 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     name: PR-Comment-Integration-Tests
     steps:
-      - name: Extract task name from comment
-        id: extract_task
+      - name: Extract and Validate Task Name
         run: |
-          TASK_NAME=$(echo "${{ github.event.comment.body }}" | awk '{print $2}')
-          echo "TASK_NAME=${TASK_NAME}" >> $GITHUB_ENV
+          ALLOWED_TASKS=("detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
+          COMMENT_BODY="${{ github.event.comment.body }}"
+          TASK_NAME=$(echo "$COMMENT_BODY" | awk '{print $2}')
 
-      - name: Validate task name
-        run: |
-          VALID_TASKS=("all" "detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
-
-          if [[ ! " ${VALID_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
-            echo "Error: Invalid task '${TASK_NAME}'. Allowed tasks are: ${VALID_TASKS[*]}"
+          if [[ ! " ${ALLOWED_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
+            echo "❌ Invalid task: $TASK_NAME"
             exit 1
           fi
+
+          echo "✅ Running integration test for: $TASK_NAME"
+          echo "TASK_NAME=$TASK_NAME" >> $GITHUB_ENV
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
