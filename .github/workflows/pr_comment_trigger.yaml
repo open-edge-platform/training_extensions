@@ -16,9 +16,10 @@ jobs:
     name: PR-Comment-Integration-Tests
     steps:
       - name: Extract and Validate Task Name
+      - env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           ALLOWED_TASKS=("detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
-          COMMENT_BODY="${{ github.event.comment.body }}"
           TASK_NAME=$(echo "$COMMENT_BODY" | awk '{print $2}')
 
           if [[ ! " ${ALLOWED_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
