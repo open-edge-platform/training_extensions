@@ -18,7 +18,7 @@ from otx.algo.common.utils.structures import AssignResult, SamplingResult
 from otx.utils.device import is_xpu_available
 
 if TYPE_CHECKING:
-    from otx.algo.utils.mmengine_utils import InstanceData
+    from otx.algo.utils.utils import InstanceData
 
 
 def ensure_rng(rng: int | np.random.RandomState | None = None) -> np.random.RandomState:
