@@ -34,23 +34,23 @@ jobs:
           rm /tmp/requirements.txt
 
       - name: Extract, Validate, and Run Integration Test
-          run: |
-            ALLOWED_TASKS=("detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
-            COMMENT_BODY="${{ github.event.comment.body }}"
-        
-            # Ensure comment starts with "/run " and extract task name
-            if [[ "$COMMENT_BODY" =~ ^/run\ ([a-zA-Z0-9_-]+)$ ]]; then
-              TASK_NAME="${BASH_REMATCH[1]}"
-            else
-              echo "❌ Invalid format. Use '/run <task_name>'"
-              exit 1
-            fi
-        
-            # Validate the extracted task name
-            if [[ ! " ${ALLOWED_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
-              echo "❌ Invalid task: $TASK_NAME. Allowed tasks: ${ALLOWED_TASKS[*]}"
-              exit 1
-            fi
-        
-            echo "✅ Running integration test for: $TASK_NAME"
-            tox -vv -e "integration-test-${TASK_NAME}"
+        run: |
+          ALLOWED_TASKS=("detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
+          COMMENT_BODY="${{ github.event.comment.body }}"
+
+          # Ensure comment starts with "/run " and extract task name
+          if [[ "$COMMENT_BODY" =~ ^/run\ ([a-zA-Z0-9_-]+)$ ]]; then
+            TASK_NAME="${BASH_REMATCH[1]}"
+          else
+            echo "❌ Invalid format. Use '/run <task_name>'"
+            exit 1
+          fi
+
+          # Validate the extracted task name
+          if [[ ! " ${ALLOWED_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
+            echo "❌ Invalid task: $TASK_NAME. Allowed tasks: ${ALLOWED_TASKS[*]}"
+            exit 1
+          fi
+
+          echo "✅ Running integration test for: $TASK_NAME"
+          tox -vv -e "integration-test-${TASK_NAME}"
