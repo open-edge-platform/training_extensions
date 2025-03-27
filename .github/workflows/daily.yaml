@@ -16,9 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - task: "multi_cls_classification"
-          - task: "multi_label_classification"
-          - task: "hlabel_classification"
+          - task: "multi_class_cls"
+          - task: "multi_label_cls"
+          - task: "h_label_cls"
           - task: "anomaly"
           - task: "keypoint_detection"
           - task: "detection"
