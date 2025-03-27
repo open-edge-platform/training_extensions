@@ -24,6 +24,9 @@ jobs:
           script: |
             const prUrl = context.payload.issue.pull_request.url;
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            
+            console.log(`🚀 Workflow run started: ${runUrl}`);
+
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
