@@ -124,9 +124,10 @@ class VisionTransformer(BaseModule):
                 "patch_size": 14,
                 "embed_dim": 384,
                 "depth": 12,
-                "num_heads": 6,
+                "num_heads": 8,
                 "reg_tokens": 4,
                 "no_embed_class": True,
+                "drop_rate": 0.1,
             },
         ),
         **dict.fromkeys(
