@@ -18,27 +18,6 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     name: PR-Comment-Integration-Tests
     steps:
-      - name: Extract and Validate Task Name
-        run: |
-          ALLOWED_TASKS=("detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
-
-          # Extract task name only if the comment starts with "/run "
-          if [[ "$COMMENT_BODY" =~ ^/run\ ([a-zA-Z0-9_-]+)$ ]]; then
-            TASK_NAME="${BASH_REMATCH[1]}"
-          else
-            echo "❌ Invalid format. Use '/run <task_name>'"
-            exit 1
-          fi
-
-          # Check if TASK_NAME is in the allowed list
-          if [[ ! " ${ALLOWED_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
-            echo "❌ Invalid task: $TASK_NAME. Allowed tasks: ${ALLOWED_TASKS[*]}"
-            exit 1
-          fi
-
-          echo "✅ Running integration test for: $TASK_NAME"
-          echo "TASK_NAME=$TASK_NAME" >> $GITHUB_ENV
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -54,5 +33,24 @@ jobs:
           python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
           rm /tmp/requirements.txt
 
-      - name: Run Integration Test
-        run: tox -vv -e integration-test-${{ env.TASK_NAME }}
+      - name: Extract, Validate, and Run Integration Test
+          run: |
+            ALLOWED_TASKS=("detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
+            COMMENT_BODY="${{ github.event.comment.body }}"
+        
+            # Ensure comment starts with "/run " and extract task name
+            if [[ "$COMMENT_BODY" =~ ^/run\ ([a-zA-Z0-9_-]+)$ ]]; then
+              TASK_NAME="${BASH_REMATCH[1]}"
+            else
+              echo "❌ Invalid format. Use '/run <task_name>'"
+              exit 1
+            fi
+        
+            # Validate the extracted task name
+            if [[ ! " ${ALLOWED_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
+              echo "❌ Invalid task: $TASK_NAME. Allowed tasks: ${ALLOWED_TASKS[*]}"
+              exit 1
+            fi
+        
+            echo "✅ Running integration test for: $TASK_NAME"
+            tox -vv -e "integration-test-${TASK_NAME}"
