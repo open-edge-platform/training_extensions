@@ -7,18 +7,20 @@ model:
     optimizer:
       class_path: torch.optim.AdamW
       init_args:
-        lr: 0.0008  # Increased learning rate for better training
-        weight_decay: 0.02  # Reduced weight decay
+        lr: 0.0001
+        weight_decay: 0.05
 
     scheduler:
       class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
       init_args:
-        num_warmup_steps: 5  # Small warm-up for stability
+        num_warmup_steps: 200  # Increased from 5 to 200 for better stability
         main_scheduler_callable:
-          class_path: torch.optim.lr_scheduler.CosineAnnealingLR
+          class_path: lightning.pytorch.cli.ReduceLROnPlateau
           init_args:
-            T_max: 120
-            eta_min: 1e-06
+            mode: max
+            factor: 0.5
+            patience: 3
+            monitor: val/accuracy
 
 engine:
   task: MULTI_CLASS_CLS
@@ -27,11 +29,10 @@ engine:
 callback_monitor: val/accuracy
 
 data: ../../_base_/data/classification.yaml
-
 overrides:
-  max_epochs: 120  # Increased epochs for better convergence
+  max_epochs: 90
 
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
-        patience: 10  # Increased patience to allow more training
+        patience: 5
