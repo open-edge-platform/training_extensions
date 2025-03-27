@@ -1,7 +1,7 @@
 Anomaly Detection Tutorial
 ================================
 
-This tutorial demonstrates how to train, evaluate, and deploy a classification, detection, or segmentation model for anomaly detection in industrial or medical applications.
+This tutorial demonstrates how to train, evaluate, and deploy a classification, detection, or segmentation model for anomaly task in industrial or medical applications.
 Read :doc:`../../../explanation/algorithms/anomaly/index` for more information about the Anomaly tasks.
 
 .. note::
@@ -97,12 +97,12 @@ anomaly detection tasks
         .. code-block:: shell
 
             (otx) ...$  otx find --task ANOMALY_DETECTION
-            ┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓                                 
-            ┃ Task              ┃ Model Name ┃ Recipe Path                                 ┃                                 
-            ┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩                                 
-            │ ANOMALY_DETECTION │ stfpm      │ src/otx/recipe/anomaly_detection/stfpm.yaml │                                 
-            │ ANOMALY_DETECTION │ padim      │ src/otx/recipe/anomaly_detection/padim.yaml │                                 
-            └───────────────────┴────────────┴─────────────────────────────────────────────┘ 
+            ┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+            ┃ Task              ┃ Model Name ┃ Recipe Path                                 ┃
+            ┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+            │ ANOMALY_DETECTION │ stfpm      │ src/otx/recipe/anomaly_detection/stfpm.yaml │
+            │ ANOMALY_DETECTION │ padim      │ src/otx/recipe/anomaly_detection/padim.yaml │
+            └───────────────────┴────────────┴─────────────────────────────────────────────┘
 
     .. tab-item:: API
 
@@ -342,7 +342,7 @@ optimization.
 
         .. code-block:: shell
 
-            (otx) ...$ otx optimize  --work_dir otx-workspace \ 
+            (otx) ...$ otx optimize  --work_dir otx-workspace \
                                      --checkpoint otx-workspace/20240312_052847/exported_model.xml
 
             ...
@@ -368,7 +368,7 @@ it to the ``otx test`` function.
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --work_dir otx-workspace \ 
+            (otx) ...$ otx test --work_dir otx-workspace \
                                 --checkpoint otx-workspace/20240313_055042/optimized_model.xml \
                                 --engine.device cpu
 

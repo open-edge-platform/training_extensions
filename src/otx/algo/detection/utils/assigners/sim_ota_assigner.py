@@ -18,7 +18,7 @@ from otx.algo.common.utils.assigners import BboxOverlaps2D
 from otx.algo.common.utils.structures import AssignResult
 
 if TYPE_CHECKING:
-    from otx.algo.utils.mmengine_utils import InstanceData
+    from otx.algo.utils.utils import InstanceData
 
 INF = 100000.0
 EPS = 1.0e-7

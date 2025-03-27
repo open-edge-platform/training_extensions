@@ -25,10 +25,13 @@ Usage example:
 
             from otx.algo.detection.yolox import YOLOXS
             from otx.core.data.module import OTXDataModule
+            from otx.core.model.base import OTXDataModule
             from otx.engine import Engine
 
             input_size = (512, 512)
-            model = YOLOXS(label_info=5, input_size=input_size)  # should be tuple[int, int]
+            model = YOLOXS(label_info=5, data_input_params=DataInputParams(input_size=(512, 512),
+                                                                           mean=(0.,0.,0.),
+                                                                           std=(1.,1.,1.)))
             datamodule = OTXDataModule(..., input_size=input_size)
             engine = Engine(model=model, datamodule=datamodule)
             engine.train()
@@ -41,14 +44,14 @@ Usage example:
             from otx.engine import Engine
 
             datamodule = OTXDataModule(..., input_size=(512, 512))
-            engine = Engine(model="yolox_s", datamodule=datamodule)  # model input size will be aligned with the datamodule input size
+            engine = Engine(model="yolox_s", datamodule=datamodule)  # model input size, mean and std values will be aligned with the datamodule
             engine.train()
 
     .. tab-item:: CLI
 
         .. code-block:: bash
 
-            (otx) ...$ otx train ... --data.input_size 512
+            (otx) ...$ otx train ... --data.input_size [512,512]
 
 .. _adaptive-input-size:
 
@@ -76,10 +79,12 @@ To activate this feature, use the following command with the desired mode:
 
             datamodule = OTXDataModule(
                 ...
-                adaptive_input_size="auto",  # auto or downscale
+                input_size="auto",  # auto or downscale
                 input_size_multiplier=YOLOXS.input_size_multiplier, # should set the input_size_multiplier of the model
             )
-            model = YOLOXS(label_info=5, input_size=datamodule.input_size)
+            model = YOLOXS(label_info=5, input_size=DataInputParams(input_size=datamodule.input_size,
+                                                                    mean=datamodule.input_mean,
+                                                                    std=datamodule.input_std))
             engine = Engine(model=model, datamodule=datamodule)
             engine.train()
 
@@ -87,7 +92,7 @@ To activate this feature, use the following command with the desired mode:
 
         .. code-block:: bash
 
-            (otx) ...$ otx train ... --data.adaptive_input_size "auto | downscale"
+            (otx) ...$ otx train ... --data.input_size "auto"
 
 The adaptive process includes the following steps:
 
@@ -105,8 +110,6 @@ The adaptive process includes the following steps:
 
    * If the recalculated input size exceeds the maximum image size determined in the previous step, it will be capped at that maximum size.
    * If the recalculated input size falls below the minimum threshold defined by MIN_DETECTION_INPUT_SIZE, the input size will be scaled up. This is done by increasing the smaller dimension (width or height) to MIN_DETECTION_INPUT_SIZE while maintaining the aspect ratio, ensuring that the model's minimum criteria for object detection are met.
-
-4. (downscale only) Any scale-up beyond the default model input size is restricted.
 
 
 .. Note::
