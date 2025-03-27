@@ -42,6 +42,7 @@ class OTXMulticlassClsModel(OTXModel):
     metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
     torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
     """
+
     def __init__(
         self,
         label_info: LabelInfoTypes,
