@@ -8,7 +8,9 @@ env:
   COMMENT_BODY: ${{ github.event.comment.body }}
 
 permissions:
-  issues: write
+  pull-requests: write
+  contents: read
+  issues: read
 
 jobs:
   pr-triggered-integration-test:
@@ -18,17 +20,34 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     name: PR-Comment-Integration-Tests
     steps:
-      - name: Post workflow run link in PR
+      - name: Update PR description with workflow run link
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prUrl = context.payload.issue.pull_request.url;
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
+
+            // Get existing PR body
+            const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 Workflow run started: [View run](${runUrl})`
+              pull_number: context.issue.number
+            });
+
+            const tag = "<!-- INTEGRATION-RUN-LINK -->";
+            const runSection = `${tag}\n🚀 Workflow run: [View run](${runUrl})\n`;
+
+            // Replace or append the run section
+            const newBody = pr.body.includes(tag)
+              ? pr.body.replace(new RegExp(`${tag}[\\s\\S]*?(\n|$)`), runSection)
+              : `${pr.body}\n\n${runSection}`;
+
+            // Update PR body
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: newBody
             });
 
       - name: Checkout repository
@@ -66,20 +85,3 @@ jobs:
 
           echo "✅ Running integration test for: $TASK_NAME"
           tox -vv -e "integration-test-${TASK_NAME}"
-
-      - name: Post result to PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const conclusion = "${{ job.status }}";
-            const message = conclusion === "success"
-              ? "✅ Workflow succeeded!"
-              : conclusion === "failure"
-                ? "❌ Workflow failed."
-                : "⚠️ Workflow finished with status: " + conclusion;
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: message
-            });
