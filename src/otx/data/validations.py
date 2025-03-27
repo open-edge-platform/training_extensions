@@ -191,18 +191,32 @@ class ValidateBatchMixin:
     @staticmethod
     def _images_validator(image_batch: torch.Tensor) -> torch.Tensor:
         """Validate the image batch."""
-        if not isinstance(image_batch, torch.Tensor):
-            msg = f"Image batch must be a torch tensor. Got {type(image_batch)}"
+        if not isinstance(image_batch, list) and not isinstance(image_batch, torch.Tensor):
+            msg = f"Image batch must be a torch tensor or list of tensors. Got {type(image_batch)}"
             raise TypeError(msg)
-        if image_batch.dtype != torch.float32:
-            msg = "Image batch must have dtype float32"
-            raise ValueError(msg)
-        if image_batch.ndim != 4:
-            msg = "Image batch must have 4 dimensions"
-            raise ValueError(msg)
-        if image_batch.shape[1] not in [1, 3]:
-            msg = "Image batch must have 1 or 3 channels"
-            raise ValueError(msg)
+        if isinstance(image_batch, torch.Tensor):
+            if image_batch.dtype != torch.float32:
+                msg = "Image batch must have dtype float32"
+                raise ValueError(msg)
+            if image_batch.ndim != 4:
+                msg = "Image batch must have 4 dimensions"
+                raise ValueError(msg)
+            if image_batch.shape[1] not in [1, 3]:
+                msg = "Image batch must have 1 or 3 channels"
+                raise ValueError(msg)
+        else:
+            if not all(isinstance(image, torch.Tensor) for image in image_batch):
+                msg = "Image batch must be a list of torch tensors"
+                raise TypeError(msg)
+            if not all(image.dtype == torch.float32 for image in image_batch):
+                msg = "Image batch must have dtype float32"
+                raise ValueError(msg)
+            if not all(image.ndim == 3 for image in image_batch):
+                msg = "Image batch must have 3 dimensions"
+                raise ValueError(msg)
+            if not all(image.shape[0] in [1, 3] for image in image_batch):
+                msg = "Image batch must have 1 or 3 channels"
+                raise ValueError(msg)
         return image_batch
 
     @staticmethod

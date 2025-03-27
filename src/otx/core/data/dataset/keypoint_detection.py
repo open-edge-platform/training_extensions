@@ -130,7 +130,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
                 format=tv_tensors.BoundingBoxFormat.XYXY,
                 canvas_size=img_shape,
             ),
-            label=torch.as_tensor([ann.label for ann in bbox_anns]),
+            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
             keypoints=torch.as_tensor(keypoints, dtype=torch.float32),
         )
 
