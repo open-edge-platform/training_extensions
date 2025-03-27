@@ -85,3 +85,41 @@ jobs:
 
           echo "✅ Running integration test for: $TASK_NAME"
           tox -vv -e "integration-test-${TASK_NAME}"
+
+      - name: Update PR description with workflow run link and result
+        if: always() # Ensure this runs even if the job fails
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }} # Or your PAT if needed
+          script: |
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const status = "${{ job.status }}";
+
+            let statusEmoji = "⚠️";
+            if (status === "success") statusEmoji = "✅";
+            else if (status === "failure") statusEmoji = "❌";
+
+            const resultLine = `${statusEmoji} Workflow status: **${status.toUpperCase()}**`;
+
+            // Get existing PR body
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+
+            const tag = "<!-- INTEGRATION-RUN-LINK -->";
+            const runSection = `${tag}\n🚀 [View workflow run](${runUrl})\n${resultLine}\n`;
+
+            // Replace or append the run section
+            const newBody = pr.body.includes(tag)
+              ? pr.body.replace(new RegExp(`${tag}[\\s\\S]*?(\\n|$)`), runSection)
+              : `${pr.body}\n\n${runSection}`;
+
+            // Update PR body
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: newBody
+            });
