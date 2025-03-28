@@ -54,22 +54,23 @@ class TestDeitTiny:
         fxt_model.load_from_otx_v1_ckpt({})
         mock_load_ckpt.assert_called_once_with({}, "multiclass", "model.")
 
-    def test_freeze_backbone(self, request):
-        model_cls, input_fxt_name, label_info_fxt_name = request.param
-        fxt_label_info = request.getfixturevalue(label_info_fxt_name)
+    def test_freeze_backbone(self, fxt_model_and_input):
+        fxt_model, fxt_input = fxt_model_and_input
+        fxt_label_info = fxt_model.label_info
+        data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
 
-        model = model_cls(
+        model = fxt_model.__class__(
             label_info=fxt_label_info,
-            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=data_input_params,
             freeze_backbone=True,
         )
 
         classification_layers = model._identify_classification_layers()
         assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
 
-        model = model_cls(
+        model = fxt_model.__class__(
             label_info=fxt_label_info,
-            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=data_input_params,
             freeze_backbone=False,
         )
 
