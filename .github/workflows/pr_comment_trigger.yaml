@@ -62,60 +62,42 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # Or your PAT if needed
           script: |
+            const status = '${{ steps.tests.outcome }}'; // success, failure, skipped
+            const emoji = {
+              success: "✅",
+              failure: "❌",
+              skipped: "⚠️",
+            }[status] || "❓";
+
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-
-            // Get workflow run result
-            const { data: workflowRun } = await github.rest.actions.getWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: process.env.GITHUB_RUN_ID
-            });
-
-            // Get existing PR body
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number
             });
 
-            // Get the last commit message
             const { data: commits } = await github.rest.pulls.listCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number
             });
             const lastCommit = commits[commits.length - 1];
-            const lastCommitMsg = lastCommit.commit.message.split('\n')[0]; // first line only
+            const lastCommitMsg = lastCommit.commit.message.split('\n')[0];
 
             const tag = "<!-- INTEGRATION-RUN-LINK -->";
-
-            // Map conclusion to emoji
-            const conclusion = workflowRun.conclusion || "in_progress";
-            const statusEmojiMap = {
-              success: "✅",
-              failure: "❌",
-              cancelled: "⚠️",
-              timed_out: "⚠️",
-              neutral: "⚠️",
-              in_progress: "⏳",
-            };
-            const emoji = statusEmojiMap[conclusion] || "❓";
-
             const runSection = `${tag}
 
             ## 🚀 Integration Run Summary
 
             - **Last Commit:** ${lastCommitMsg}
-            - **Result:** ${emoji} ${conclusion.toUpperCase()}
+            - **Result:** ${emoji} ${status.toUpperCase()}
             - **Workflow Run:** [View Run](${runUrl})
             `;
 
-            // Replace or append the run section
             const newBody = pr.body.includes(tag)
               ? pr.body.replace(new RegExp(`${tag}[\\s\\S]*?(\n|$)`), runSection)
               : `${pr.body}\n\n${runSection}`;
 
-            // Update PR body
             await github.rest.pulls.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
