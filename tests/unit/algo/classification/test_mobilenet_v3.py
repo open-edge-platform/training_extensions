@@ -82,6 +82,7 @@ class TestMobileNetV3MulticlassCls:
 
         assert all(param.requires_grad for param in model.parameters())
 
+
 @pytest.fixture()
 def fxt_multi_label_cls_model():
     return MobileNetV3MultilabelCls(

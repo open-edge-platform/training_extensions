@@ -52,7 +52,7 @@ class TestTimmModelForMulticlassCls:
         assert outputs.has_xai_outputs == explain_mode
 
     def test_freeze_backbone(self):
-        data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
 
         model = TimmModelMulticlassCls(
             label_info=10,
@@ -71,6 +71,7 @@ class TestTimmModelForMulticlassCls:
             freeze_backbone=False,
         )
         assert all(param.requires_grad for param in model.parameters())
+
 
 @pytest.fixture()
 def fxt_multi_label_cls_model():
