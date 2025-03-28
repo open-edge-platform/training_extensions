@@ -143,6 +143,11 @@ def pytest_addoption(parser: pytest.Parser):
         type=str,
         help="Which device to use.",
     )
+    parser.addoption(
+        "--run-category-only",
+        action="store_true",
+        help="Run only the model category tests that categorised as BALANCE, SPEED, ACCURACY.",
+    )
 
 
 @pytest.fixture(scope="session")

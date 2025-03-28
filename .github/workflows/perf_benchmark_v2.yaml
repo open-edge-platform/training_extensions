@@ -51,11 +51,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - task: ANOMALY
-          - task: DETECTION
-          - task: MULTI_CLASS_CLS
-          - task: MULTI_LABEL_CLS
-          - task: H_LABEL_CLS
+          - task: anomaly
+          - task: detection
+          - task: multi_class_cls
+          - task: multi_label_cls
+          - task: h_label_cls
           # - task: INSTANCE_SEGMENTATION
           # - task: SEMANTIC_SEGMENTATION
 
