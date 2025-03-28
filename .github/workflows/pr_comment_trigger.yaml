@@ -20,36 +20,6 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     name: PR-Comment-Integration-Tests
     steps:
-      - name: Update PR description with workflow run link
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-
-            // Get existing PR body
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-
-            const tag = "<!-- INTEGRATION-RUN-LINK -->";
-            const runSection = `${tag}\n🚀 Workflow run: [View run](${runUrl})\n`;
-
-            // Replace or append the run section
-            const newBody = pr.body.includes(tag)
-              ? pr.body.replace(new RegExp(`${tag}[\\s\\S]*?(\n|$)`), runSection)
-              : `${pr.body}\n\n${runSection}`;
-
-            // Update PR body
-            await github.rest.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              body: newBody
-            });
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -93,13 +63,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }} # Or your PAT if needed
           script: |
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-            const status = "${{ job.status }}";
 
-            let statusEmoji = "⚠️";
-            if (status === "success") statusEmoji = "✅";
-            else if (status === "failure") statusEmoji = "❌";
-
-            const resultLine = `${statusEmoji} Workflow status: **${status.toUpperCase()}**`;
+            // Get workflow run result
+            const { data: workflowRun } = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: process.env.GITHUB_RUN_ID
+            });
 
             // Get existing PR body
             const { data: pr } = await github.rest.pulls.get({
@@ -108,12 +78,41 @@ jobs:
               pull_number: context.issue.number
             });
 
+            // Get the last commit message
+            const { data: commits } = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            const lastCommit = commits[commits.length - 1];
+            const lastCommitMsg = lastCommit.commit.message.split('\n')[0]; // first line only
+
             const tag = "<!-- INTEGRATION-RUN-LINK -->";
-            const runSection = `${tag}\n🚀 [View workflow run](${runUrl})\n${resultLine}\n`;
+
+            // Map conclusion to emoji
+            const conclusion = workflowRun.conclusion || "in_progress";
+            const statusEmojiMap = {
+              success: "✅",
+              failure: "❌",
+              cancelled: "⚠️",
+              timed_out: "⚠️",
+              neutral: "⚠️",
+              in_progress: "⏳",
+            };
+            const emoji = statusEmojiMap[conclusion] || "❓";
+
+            const runSection = `${tag}
+
+            ## 🚀 Integration Run Summary
+
+            - **Last Commit:** ${lastCommitMsg}
+            - **Result:** ${emoji} ${conclusion.toUpperCase()}
+            - **Workflow Run:** [View Run](${runUrl})
+            `;
 
             // Replace or append the run section
             const newBody = pr.body.includes(tag)
-              ? pr.body.replace(new RegExp(`${tag}[\\s\\S]*?(\\n|$)`), runSection)
+              ? pr.body.replace(new RegExp(`${tag}[\\s\\S]*?(\n|$)`), runSection)
               : `${pr.body}\n\n${runSection}`;
 
             // Update PR body
