@@ -1,0 +1,63 @@
+model:
+  class_path: otx.algo.classification.multiclass_models.timm_model.TimmModelMulticlassCls
+  init_args:
+    model_name: mobilenetv4_conv_medium  # Using the medium variant from Timm
+    label_info: 1000  # Default number of classes, can be adjusted
+    optimizer:
+      class_path: torch.optim.AdamW  # Modern optimizer with weight decay
+      init_args:
+        lr: 0.0005  # Slightly lower learning rate for MobileNetV4
+        weight_decay: 0.01  # Regularization to prevent overfitting
+        betas: [0.9, 0.999]  # Standard AdamW parameters
+    scheduler:
+      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 10
+        main_scheduler_callable:
+          class_path: lightning.pytorch.cli.CosineAnnealingLR  # More suitable for modern architectures
+          init_args:
+            T_max: 90  # Total number of epochs
+            eta_min: 1e-6  # Minimum learning rate
+
+engine:
+  task: MULTI_CLASS_CLS
+  device: auto
+
+callback_monitor: val/accuracy
+
+data: ../../_base_/data/classification.yaml
+
+overrides:
+  max_epochs: 90
+  precision: 16  # Mixed precision training for efficiency
+  callbacks:
+    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      init_args:
+        patience: 5
+        min_delta: 0.001  # Small improvement threshold
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: val/accuracy
+        mode: max
+        save_top_k: 3
+        filename: 'mobilenetv4-{epoch:02d}-{val/accuracy:.2f}'
+
+# Tiny dataset specific augmentations
+augmentations:
+  train:
+    - RandomResizedCrop:
+        size: [224, 224]
+        scale: [0.8, 1.0]
+    - RandomHorizontalFlip: 
+        p: 0.5
+    - ColorJitter:
+        brightness: 0.2
+        contrast: 0.2
+        saturation: 0.2
+    - RandomRotation:
+        degrees: 15
+  val:
+    - Resize: 
+        size: [224, 224]
+    - CenterCrop:
+        size: [224, 224]
