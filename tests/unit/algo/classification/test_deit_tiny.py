@@ -55,11 +55,11 @@ class TestDeitTiny:
         mock_load_ckpt.assert_called_once_with({}, "multiclass", "model.")
 
     def test_freeze_backbone(self, fxt_model_and_input):
-        fxt_model, fxt_input = fxt_model_and_input
+        fxt_model, fxt_input = fxt_model_and_input()
         fxt_label_info = fxt_model.label_info
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
 
-        model = fxt_model.__class__(
+        model = VisionTransformerMulticlassCls(
             label_info=fxt_label_info,
             data_input_params=data_input_params,
             freeze_backbone=True,
@@ -68,7 +68,7 @@ class TestDeitTiny:
         classification_layers = model._identify_classification_layers()
         assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
 
-        model = fxt_model.__class__(
+        model = VisionTransformerMulticlassCls(
             label_info=fxt_label_info,
             data_input_params=data_input_params,
             freeze_backbone=False,
