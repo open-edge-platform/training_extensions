@@ -120,7 +120,6 @@ class TestOTXTiling:
             },
         }
 
-    @pytest.mark.intense()
     def det_dummy_forward(self, x: TorchDataBatch) -> TorchPredBatch:
         """Dummy detection forward function for testing.
 
@@ -175,7 +174,6 @@ class TestOTXTiling:
 
         return pred_entity
 
-    @pytest.mark.intense()
     def inst_seg_dummy_forward(self, x: InstanceSegBatchDataEntity) -> InstanceSegBatchPredEntity:
         """Dummy instance segmantation forward function for testing.
 
@@ -238,7 +236,6 @@ class TestOTXTiling:
 
         return pred_entity
 
-    @pytest.mark.intense()
     @pytest.mark.parametrize(
         "task",
         [OTXTaskType.DETECTION, OTXTaskType.INSTANCE_SEGMENTATION, OTXTaskType.SEMANTIC_SEGMENTATION],
@@ -384,7 +381,6 @@ class TestOTXTiling:
 
             assert sampled_count == count, "Sampled count should be equal to the count of the dataloader batch size"
 
-    @pytest.mark.intense()
     def test_train_dataloader(self, fxt_data_config) -> None:
         for task, data_config in fxt_data_config.items():
             # Enable tile adapter
@@ -405,7 +401,6 @@ class TestOTXTiling:
                 else:
                     pytest.skip("Task not supported")
 
-    @pytest.mark.intense()
     def test_val_dataloader(self, fxt_data_config) -> None:
         for task, data_config in fxt_data_config.items():
             # Enable tile adapter
@@ -426,7 +421,6 @@ class TestOTXTiling:
                 else:
                     pytest.skip("Task not supported")
 
-    @pytest.mark.intense()
     def test_det_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.DETECTION]
         model = ATSS(
@@ -451,7 +445,6 @@ class TestOTXTiling:
         for batch in tile_datamodule.val_dataloader():
             model.forward_tiles(batch)
 
-    @pytest.mark.intense()
     def test_explain_det_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.DETECTION]
         model = ATSS(
@@ -478,7 +471,6 @@ class TestOTXTiling:
             assert prediction.saliency_map[0].ndim == 3
         self.explain_mode = False
 
-    @pytest.mark.intense()
     def test_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
         model = MaskRCNN(
@@ -503,7 +495,6 @@ class TestOTXTiling:
         for batch in tile_datamodule.val_dataloader():
             model.forward_tiles(batch)
 
-    @pytest.mark.intense()
     def test_explain_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
         model = MaskRCNN(
@@ -530,7 +521,6 @@ class TestOTXTiling:
             assert prediction.saliency_map[0].ndim == 3
         self.explain_mode = False
 
-    @pytest.mark.intense()
     def test_seg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.SEMANTIC_SEGMENTATION]
         model = LiteHRNet(
@@ -554,7 +544,6 @@ class TestOTXTiling:
         for batch in tile_datamodule.val_dataloader():
             model.forward_tiles(batch)
 
-    @pytest.mark.intense()
     def test_seg_tiler(self, mocker):
         rng = np.random.default_rng()
         rnd_tile_size = rng.integers(low=100, high=500)

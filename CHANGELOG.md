@@ -24,6 +24,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
 - Add UFlow anomaly detection algorithm
   (<https://github.com/openvinotoolkit/training_extensions/pull/4251>)
+- Improve Pre-Merge Test
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4307>)
 
 ### Enhancements
 
