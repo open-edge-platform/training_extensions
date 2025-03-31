@@ -134,11 +134,7 @@ def to_np_image(img: np.ndarray | Tensor | list) -> np.ndarray | list[np.ndarray
 
 
 def to_tensor_image(img: np.ndarray | Tensor | list) -> Tensor | list[Tensor]:
-    """Convert numpy 3D image to torch.Tensor 3D image.
-
-    TODO (sungchul): move it into base data entity?
-
-    """
+    """Convert numpy 3D image to torch.Tensor 3D image."""
     if isinstance(img, Tensor):
         return img
     if isinstance(img, list):
