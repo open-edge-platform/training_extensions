@@ -22,12 +22,12 @@ from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
+from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -157,23 +157,24 @@ class DFine(OTXDetectionModel):
 
     def _customize_inputs(
         self,
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
-        for bb, ll in zip(entity.bboxes, entity.labels):
-            # convert to cxcywh if needed
-            if len(scaled_bboxes := bb):
-                converted_bboxes = (
-                    box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
-                )
-                # normalize the bboxes
-                scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
-                    converted_bboxes.device,
-                )
-            targets.append({"boxes": scaled_bboxes, "labels": ll})
+        if entity.bboxes is not None and entity.labels is not None:
+            for bb, ll in zip(entity.bboxes, entity.labels):
+                # convert to cxcywh if needed
+                if len(scaled_bboxes := bb):
+                    converted_bboxes = (
+                        box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
+                    )
+                    # normalize the bboxes
+                    scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
+                        converted_bboxes.device,
+                    )
+                targets.append({"boxes": scaled_bboxes, "labels": ll})
 
         if self.explain_mode:
             return {"entity": entity}
@@ -186,8 +187,8 @@ class DFine(OTXDetectionModel):
     def _customize_outputs(
         self,
         outputs: list[torch.Tensor] | dict,  # type: ignore[override]
-        inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -203,7 +204,7 @@ class DFine(OTXDetectionModel):
                     raise TypeError(msg)
             return losses
 
-        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]
+        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
 
         if self.explain_mode:
@@ -219,21 +220,18 @@ class DFine(OTXDetectionModel):
                 msg = "No saliency maps in the model output."
                 raise ValueError(msg)
 
-            saliency_map = outputs["saliency_map"].detach().cpu().numpy()
-            feature_vector = outputs["feature_vector"].detach().cpu().numpy()
-
-            return DetBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
                 labels=labels,
-                feature_vector=feature_vector,
-                saliency_map=saliency_map,
+                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             )
 
-        return DetBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -352,7 +350,7 @@ class DFine(OTXDetectionModel):
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""

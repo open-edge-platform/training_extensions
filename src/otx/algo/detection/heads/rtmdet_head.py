@@ -31,7 +31,7 @@ from otx.algo.modules.norm import build_norm_layer, is_norm
 from otx.algo.modules.scale import Scale
 from otx.algo.utils.utils import InstanceData
 from otx.algo.utils.weight_init import bias_init_with_prob, constant_init, normal_init
-from otx.core.data.entity.detection import DetBatchDataEntity
+from otx.data import TorchDataBatch
 
 
 class RTMDetHead(ATSSHeadModule):
@@ -161,14 +161,14 @@ class RTMDetHead(ATSSHeadModule):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (DetBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

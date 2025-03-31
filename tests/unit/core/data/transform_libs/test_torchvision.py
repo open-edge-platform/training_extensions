@@ -16,7 +16,6 @@ from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
 from otx.core.data.entity.base import ImageInfo, OTXDataEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
@@ -34,7 +33,7 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
-from otx.data import TorchDataItem
+from otx.data import TorchDataBatch, TorchDataItem
 
 
 class MockFrame:
@@ -52,12 +51,12 @@ class MockVideo:
 
 
 @pytest.fixture()
-def det_data_entity() -> DetDataEntity:
-    return DetDataEntity(
-        image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 112, 224), dtype=torch.uint8)),
+def det_data_entity() -> TorchDataItem:
+    return TorchDataItem(
+        image=tv_tensors.Image(torch.randn(size=(3, 112, 224), dtype=torch.float32)),
         img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
         bboxes=tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(112, 224)),
-        labels=LongTensor([1]),
+        label=LongTensor([1]),
     )
 
 
@@ -66,7 +65,7 @@ class TestMinIoURandomCrop:
     def min_iou_random_crop(self) -> MinIoURandomCrop:
         return MinIoURandomCrop()
 
-    def test_forward(self, min_iou_random_crop: MinIoURandomCrop, det_data_entity: DetDataEntity) -> None:
+    def test_forward(self, min_iou_random_crop: MinIoURandomCrop, det_data_entity: TorchDataItem) -> None:
         """Test forward."""
         results = min_iou_random_crop(deepcopy(det_data_entity))
 
@@ -92,13 +91,11 @@ class TestResize:
             (False, (128, 96), (2.0, 1.5)),
         ],
     )
-    @pytest.mark.parametrize("is_array", [True, False])
     def test_forward_only_image(
         self,
         resize: Resize,
-        fxt_det_data_entity: tuple[tuple, DetDataEntity, DetBatchDataEntity],
+        fxt_det_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
         keep_ratio: bool,
-        is_array: bool,
         expected_shape: tuple,
         expected_scale_factor: tuple,
     ) -> None:
@@ -107,20 +104,16 @@ class TestResize:
         resize.transform_bbox = False
         resize.transform_mask = False
         entity = deepcopy(fxt_det_data_entity[0])
-        if is_array:
-            entity.image = entity.image.transpose(1, 2, 0)
-        else:
-            entity.image = torch.as_tensor(entity.image)
 
         results = resize(entity)
 
         assert results.img_info.ori_shape == (64, 64)
         if keep_ratio:
-            assert results.image.shape[:2] == expected_shape
+            assert results.image.shape[1:] == expected_shape
             assert results.img_info.img_shape == expected_shape
             assert results.img_info.scale_factor == expected_scale_factor
         else:
-            assert results.image.shape[:2] == expected_shape
+            assert results.image.shape[1:] == expected_shape
             assert results.img_info.img_shape == expected_shape
             assert results.img_info.scale_factor == expected_scale_factor
 
@@ -217,7 +210,7 @@ class TestPhotoMetricDistortion:
     def photo_metric_distortion(self) -> PhotoMetricDistortion:
         return PhotoMetricDistortion()
 
-    def test_forward(self, photo_metric_distortion: PhotoMetricDistortion, det_data_entity: DetDataEntity) -> None:
+    def test_forward(self, photo_metric_distortion: PhotoMetricDistortion, det_data_entity: TorchDataItem) -> None:
         """Test forward."""
         results = photo_metric_distortion(deepcopy(det_data_entity))
 
@@ -241,13 +234,13 @@ class TestRandomAffine:
         with pytest.raises(AssertionError):
             RandomAffine(scaling_ratio_range=(0, 0.5))
 
-    def test_forward(self, random_affine: RandomAffine, det_data_entity: DetDataEntity) -> None:
+    def test_forward(self, random_affine: RandomAffine, det_data_entity: TorchDataItem) -> None:
         """Test forward."""
         results = random_affine(deepcopy(det_data_entity))
 
         assert results.image.shape[:2] == (112, 224)
-        assert results.labels.shape[0] == results.bboxes.shape[0]
-        assert results.labels.dtype == torch.int64
+        assert results.label.shape[0] == results.bboxes.shape[0]
+        assert results.label.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
         assert results.img_info.img_shape == results.image.shape[:2]
 
@@ -364,13 +357,13 @@ class TestYOLOXHSVRandomAug:
     def yolox_hsv_random_aug(self) -> YOLOXHSVRandomAug:
         return YOLOXHSVRandomAug()
 
-    def test_forward(self, yolox_hsv_random_aug: YOLOXHSVRandomAug, det_data_entity: DetDataEntity) -> None:
+    def test_forward(self, yolox_hsv_random_aug: YOLOXHSVRandomAug, det_data_entity: TorchDataItem) -> None:
         """Test forward."""
         results = yolox_hsv_random_aug(deepcopy(det_data_entity))
 
         assert results.image.shape[:2] == (112, 224)
-        assert results.labels.shape[0] == results.bboxes.shape[0]
-        assert results.labels.dtype == torch.int64
+        assert results.label.shape[0] == results.bboxes.shape[0]
+        assert results.label.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
 
 
@@ -494,16 +487,16 @@ class TestRandomCrop:
         )
 
     @pytest.fixture()
-    def det_entity(self) -> DetDataEntity:
-        return DetDataEntity(
-            image=np.random.randint(0, 255, size=(10, 10), dtype=np.uint8),
+    def det_entity(self) -> TorchDataItem:
+        return TorchDataItem(
+            image=torch.randn(3, 10, 10, dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
                 np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
                 format="xyxy",
                 canvas_size=(10, 10),
             ),
-            labels=torch.LongTensor([0, 1]),
+            label=torch.LongTensor([0, 1]),
         )
 
     @pytest.fixture()
@@ -649,15 +642,15 @@ class TestRandomCrop:
     @pytest.mark.parametrize("allow_negative_crop", [True, False])
     def test_forward_allow_negative_crop(self, det_entity, allow_negative_crop: bool) -> None:
         # test the crop does not contain any gt-bbox allow_negative_crop = False
-        det_entity.image = np.random.randint(0, 255, size=(10, 10), dtype=np.uint8)
+        det_entity.image = torch.randn(3, 10, 10, dtype=torch.float32)
         det_entity.bboxes = tv_tensors.wrap(torch.zeros((0, 4)), like=det_entity.bboxes)
-        det_entity.labels = torch.LongTensor()
+        det_entity.label = torch.LongTensor()
         transform = RandomCrop(crop_size=(5, 3), allow_negative_crop=allow_negative_crop)
 
         results = transform(deepcopy(det_entity))
 
         if allow_negative_crop:
-            assert results.image.shape == transform.crop_size
+            assert results.image.shape[1:] == transform.crop_size
             assert len(results.bboxes) == len(det_entity.bboxes) == 0
         else:
             assert results is None

@@ -203,7 +203,7 @@ class RPNHeadModule(AnchorHead):
     def predict(
         self,
         x: tuple[Tensor, ...],
-        entity: OTXBatchDataEntity,
+        entity: OTXBatchDataEntity,  # type: ignore[override]
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Forward-prop of the detection head and predict detection results on the features of the upstream network.

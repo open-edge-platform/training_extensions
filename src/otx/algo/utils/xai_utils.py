@@ -18,7 +18,6 @@ import numpy as np
 import torch
 
 from otx.core.config.explain import ExplainConfig
-from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.types.explain import TargetExplainGroup
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
     from otx.core.data.module import OTXDataModule
 
 ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
-OTXBatchPredEntitiesSupportXAI = TorchPredBatch | DetBatchPredEntity | InstanceSegBatchPredEntity
+OTXBatchPredEntitiesSupportXAI = TorchPredBatch | InstanceSegBatchPredEntity
 
 
 def process_saliency_maps_in_pred_entity(

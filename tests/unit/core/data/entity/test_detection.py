@@ -7,56 +7,45 @@ from torch import LongTensor
 from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetBatchDataEntity, DetDataEntity
-from otx.core.types.task import OTXTaskType
+from otx.data import TorchDataItem
 
-
-class TestDetDataEntity:
-    def test_task(self) -> None:
-        data_entity = DetDataEntity(
-            tv_tensors.Image(torch.randn(3, 224, 224)),
-            ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
-            tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(224, 224)),
-            LongTensor([1]),
-        )
-        assert data_entity.task == OTXTaskType.DETECTION
+# TODO(ashwinvaidya17): Have a single entity test for TorchDataItem and TorchDataBatch
 
 
 class TestDetBatchDataEntity:
     def test_collate_fn(self) -> None:
         data_entities = [
-            DetDataEntity(
-                tv_tensors.Image(torch.randn(3, 224, 224)),
-                ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
-                tv_tensors.BoundingBoxes(
+            TorchDataItem(
+                image=tv_tensors.Image(torch.randn(3, 224, 224)),
+                img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
+                bboxes=tv_tensors.BoundingBoxes(
                     data=torch.Tensor([0, 0, 50, 50]),
                     format="xywh",
                     canvas_size=(224, 224),
                 ),
-                LongTensor([1]),
+                label=LongTensor([1]),
             ),
-            DetDataEntity(
-                tv_tensors.Image(torch.randn(3, 224, 224)),
-                ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
-                tv_tensors.BoundingBoxes(
+            TorchDataItem(
+                image=tv_tensors.Image(torch.randn(3, 224, 224)),
+                img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
+                bboxes=tv_tensors.BoundingBoxes(
                     data=torch.Tensor([0, 0, 50, 50]),
                     format="xywh",
                     canvas_size=(224, 224),
                 ),
-                LongTensor([1]),
+                label=LongTensor([1]),
             ),
-            DetDataEntity(
-                tv_tensors.Image(torch.randn(3, 224, 224)),
-                ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
-                tv_tensors.BoundingBoxes(
+            TorchDataItem(
+                image=tv_tensors.Image(torch.randn(3, 224, 224)),
+                img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
+                bboxes=tv_tensors.BoundingBoxes(
                     data=torch.Tensor([0, 0, 50, 50]),
                     format="xywh",
                     canvas_size=(224, 224),
                 ),
-                LongTensor([1]),
+                label=LongTensor([1]),
             ),
         ]
 
-        data_batch = DetBatchDataEntity.collate_fn(data_entities)
+        data_batch = TorchDataItem.collate_fn(data_entities)
         assert len(data_batch.imgs_info) == len(data_batch.images)
-        assert data_batch.task == OTXTaskType.DETECTION

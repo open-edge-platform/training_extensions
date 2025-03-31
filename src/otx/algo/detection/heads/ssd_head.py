@@ -17,7 +17,7 @@ from otx.algo.common.utils.coders import BaseBBoxCoder
 from otx.algo.common.utils.prior_generators import BasePriorGenerator
 from otx.algo.common.utils.samplers import PseudoSampler
 from otx.algo.detection.heads.anchor_head import AnchorHead
-from otx.core.data.entity.detection import DetBatchDataEntity
+from otx.data import TorchDataBatch
 
 
 class SSDHeadModule(AnchorHead):
@@ -113,14 +113,14 @@ class SSDHeadModule(AnchorHead):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (DetBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.
