@@ -163,15 +163,14 @@ class DetectionTileMerge(TileMerge):
                     raise ValueError(msg)
                 tile_img_info = tile_preds.imgs_info[i]
                 tile_attr = tile_attrs[i]
-                tile_bboxes = tile_preds.bboxes[i]
-                tile_labels = tile_preds.labels[i] if tile_preds.labels is not None else None
-                tile_scores = tile_preds.scores[i] if tile_preds.scores is not None else None
                 tile_s_map = tile_preds.saliency_map[i] if tile_preds.saliency_map is not None else None
                 tile_f_vect = tile_preds.feature_vector[i] if tile_preds.feature_vector is not None else None
 
+                tile_bboxes = tile_preds.bboxes[i] if tile_preds.bboxes[i].numel() > 0 else None
                 offset_x, offset_y, _, _ = tile_attr["roi"]
-                tile_bboxes[:, 0::2] += offset_x
-                tile_bboxes[:, 1::2] += offset_y
+                if tile_bboxes is not None:
+                    tile_bboxes[:, 0::2] += offset_x
+                    tile_bboxes[:, 1::2] += offset_y
 
                 tile_id = tile_attr["tile_id"]
                 if tile_id not in img_ids:
@@ -182,8 +181,8 @@ class DetectionTileMerge(TileMerge):
                     image=torch.empty(3, *tile_img_info.ori_shape),  # type: ignore[union-attr]
                     img_info=tile_img_info,
                     bboxes=tile_bboxes,
-                    label=tile_labels,
-                    scores=tile_scores,
+                    label=tile_preds.labels[i] if tile_preds.labels is not None else None,
+                    scores=tile_preds.scores[i] if tile_preds.scores is not None else None,
                 )
 
                 if explain_mode:
@@ -220,7 +219,7 @@ class DetectionTileMerge(TileMerge):
         tiles_coords = []
         img_size = img_info.ori_shape
         for tile_entity in entities:
-            num_preds = len(tile_entity.bboxes)  # type: ignore[arg-type]
+            num_preds = len(tile_entity.bboxes) if tile_entity.bboxes is not None else 0
             if num_preds > 0:
                 bboxes.extend(tile_entity.bboxes if tile_entity.bboxes is not None else [])
                 labels.extend(tile_entity.label if tile_entity.label is not None else [])
@@ -232,9 +231,9 @@ class DetectionTileMerge(TileMerge):
                 if tile_entity.saliency_map is not None:
                     saliency_maps.append(tile_entity.saliency_map.cpu().numpy())
 
-        bboxes = torch.stack(bboxes) if len(bboxes) > 0 else None
-        labels = torch.stack(labels) if len(labels) > 0 else None
-        scores = torch.stack(scores) if len(scores) > 0 else None
+        bboxes = torch.stack(bboxes) if len(bboxes) > 0 else torch.empty((0, 4), device=img_info.device)
+        labels = torch.stack(labels) if len(labels) > 0 else torch.empty((0,), dtype=torch.long, device=img_info.device)
+        scores = torch.stack(scores) if len(scores) > 0 else torch.empty((0,), device=img_info.device)
 
         bboxes, labels, scores, _ = self.nms_postprocess(bboxes, scores, labels)
 

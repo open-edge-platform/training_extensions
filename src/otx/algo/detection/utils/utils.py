@@ -68,10 +68,8 @@ def unpack_det_entity(entity: TorchDataBatch) -> tuple:
     batch_gt_instances = []
     batch_img_metas = []
     imgs_infos = entity.imgs_info if entity.imgs_info is not None else [[] for _ in range(entity.batch_size)]  # type: ignore[union-attr,misc]
-    bboxes = entity.bboxes if entity.bboxes is not None else [[] for _ in range(entity.batch_size)]  # type: ignore[union-attr]
-    labels = entity.labels if entity.labels is not None else [[] for _ in range(entity.batch_size)]  # type: ignore[union-attr]
 
-    for img_info, _bboxes, _labels in zip(imgs_infos, bboxes, labels):
+    for idx, img_info in enumerate(imgs_infos):
         metainfo = {
             "img_id": img_info.img_idx,  # type: ignore[union-attr]
             "img_shape": img_info.img_shape,  # type: ignore[union-attr]
@@ -80,7 +78,9 @@ def unpack_det_entity(entity: TorchDataBatch) -> tuple:
             "ignored_labels": img_info.ignored_labels,  # type: ignore[union-attr]
         }
         batch_img_metas.append(metainfo)
-        batch_gt_instances.append(InstanceData(bboxes=_bboxes, labels=_labels))
+        _bbox = entity.bboxes[idx] if entity.bboxes is not None else []
+        _label = entity.labels[idx] if entity.labels is not None else []
+        batch_gt_instances.append(InstanceData(bboxes=_bbox, labels=_label))
 
     return batch_gt_instances, batch_img_metas
 

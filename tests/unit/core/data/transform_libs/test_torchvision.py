@@ -56,7 +56,7 @@ def det_data_entity() -> TorchDataItem:
         image=tv_tensors.Image(torch.randn(size=(3, 112, 224), dtype=torch.float32)),
         img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
         bboxes=tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(112, 224)),
-        label=LongTensor([1]),
+        label=LongTensor([1], dtype=torch.long),
     )
 
 
@@ -240,7 +240,7 @@ class TestRandomAffine:
 
         assert results.image.shape[:2] == (112, 224)
         assert results.label.shape[0] == results.bboxes.shape[0]
-        assert results.label.dtype == torch.int64
+        assert results.label.dtype == torch.long
         assert results.bboxes.dtype == torch.float32
         assert results.img_info.img_shape == results.image.shape[:2]
 

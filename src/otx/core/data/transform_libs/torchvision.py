@@ -58,6 +58,7 @@ from otx.core.data.transform_libs.utils import (
     rescale_polygons,
     scale_size,
     to_np_image,
+    to_tensor_image,
     translate_bboxes,
     translate_masks,
     translate_polygons,
@@ -295,12 +296,16 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                         )
 
                         # labels
-                        if (labels := getattr(inputs, "labels", None)) is not None:
-                            inputs.labels = labels[mask]  # type: ignore[union-attr]
+                        labels = inputs.label if isinstance(inputs, TorchDataItem) else inputs.labels
+                        if labels is not None:
+                            if isinstance(inputs, TorchDataItem):
+                                inputs.label = labels[mask]  # type: ignore[union-attr]
+                            else:
+                                inputs.labels = labels[mask]  # type: ignore[union-attr]
 
                 # adjust the img no matter whether the gt is empty before crop
                 img = img[patch[1] : patch[3], patch[0] : patch[2]]
-                inputs.image = img
+                inputs.image = to_tensor_image(img)
                 inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])
                 return self.convert(inputs)
 
@@ -406,11 +411,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             else:
                 img = cv2.resize(img, scale[::-1], interpolation=CV2_INTERP_CODES[self.interpolation])
 
-            if isinstance(inputs, TorchDataItem):
-                # convert to tensor and permute to (C, H, W)
-                inputs.image = torch.tensor(img, dtype=torch.float32).permute(2, 0, 1)
-            else:
-                inputs.image = img
+            inputs.image = to_tensor_image(img)
 
             if isinstance(inputs, TorchDataItem):
                 inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
@@ -710,7 +711,7 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 dst=None,
                 interpolation=CV2_INTERP_CODES[self.interpolation],
             )
-            inputs.image = img
+            inputs.image = to_tensor_image(img)
             inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
             if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None:
@@ -957,7 +958,9 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
             # flip image
             img = to_np_image(inputs.image)
             img = flip_image(img, direction=cur_dir)
-            inputs.image = img
+            # copy is required as flip_image might return a view which is non-contiguous, and thus cannot be converted
+            # to tensor directly
+            inputs.image = to_tensor_image(img.copy())
             img_shape = get_image_shape(img)
 
             # flip bboxes
@@ -1118,7 +1121,7 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
             if swap_flag:
                 img = img[..., swap_value]
 
-            inputs.image = img  # f32
+            inputs.image = to_tensor_image(img)
         return self.convert(inputs)
 
     def __repr__(self) -> str:
@@ -1222,7 +1225,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         warp_matrix = self._get_random_homography_matrix(height, width)
 
         img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
-        inputs.image = img
+        inputs.image = to_tensor_image(img)
         inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
         bboxes = inputs.bboxes
@@ -1234,8 +1237,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             # remove outside bbox
             valid_index = is_inside_bboxes(bboxes, (height, width))
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_index], format="XYXY", canvas_size=(height, width))  # type: ignore[union-attr]
-            if inputs.label is not None:
-                inputs.label = inputs.label[valid_index]  # type: ignore[union-attr]
+            inputs.label = inputs.label[valid_index]  # type: ignore[union-attr,index]
 
         return self.convert(inputs)
 
@@ -1477,13 +1479,17 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         mosaic_bboxes = mosaic_bboxes[inside_inds]
         mosaic_bboxes_labels = mosaic_bboxes_labels[inside_inds]
 
-        inputs.image = mosaic_img
+        inputs.image = to_tensor_image(mosaic_img)
         inputs.img_info = _resized_crop_image_info(
             inputs.img_info,
             mosaic_img.shape[:2],
         )  # TODO (sungchul): need to add proper function
+
         inputs.bboxes = tv_tensors.BoundingBoxes(mosaic_bboxes, format="XYXY", canvas_size=mosaic_img.shape[:2])
-        inputs.labels = mosaic_bboxes_labels
+        if isinstance(inputs, TorchDataItem):
+            inputs.label = mosaic_bboxes_labels
+        else:
+            inputs.labels = mosaic_bboxes_labels
         if with_mask:
             if len(mosaic_masks) > 0:
                 inputs.masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
@@ -1779,13 +1785,16 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         mixup_gt_bboxes = mixup_gt_bboxes[inside_inds]
         mixup_gt_bboxes_labels = mixup_gt_bboxes_labels[inside_inds]
 
-        inputs.image = mixup_img.astype(np.uint8)
+        inputs.image = to_tensor_image(mixup_img)
         inputs.img_info = _resized_crop_image_info(
             inputs.img_info,
             mixup_img.shape[:2],
         )  # TODO (sungchul): need to add proper function
         inputs.bboxes = tv_tensors.BoundingBoxes(mixup_gt_bboxes, format="XYXY", canvas_size=mixup_img.shape[:2])
-        inputs.labels = mixup_gt_bboxes_labels
+        if isinstance(inputs, TorchDataItem):
+            inputs.label = mixup_gt_bboxes_labels
+        else:
+            inputs.labels = torch.tensor(mixup_gt_bboxes_labels)
         if with_mask:
             inside_inds = inside_inds.numpy()
             if (masks := getattr(retrieve_results, "masks", None)) is not None and len(masks) > 0:
@@ -1913,7 +1922,7 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
         img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_gains[1], 0, 255)
         img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_gains[2], 0, 255)
         img = cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR)
-        inputs.image = img
+        inputs.image = to_tensor_image(img)
         return self.convert(inputs)
 
     def __repr__(self):
@@ -2041,8 +2050,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
             self.border_type[self.padding_mode],
             value=pad_val,
         )
-
-        inputs.image = padded_img
+        inputs.image = to_tensor_image(padded_img)
         inputs.img_info = _pad_image_info(inputs.img_info, padding)
         return inputs
 
@@ -2313,10 +2321,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         img = img[crop_y1:crop_y2, crop_x1:crop_x2, ...]
         cropped_img_shape = img.shape[:2]
 
-        if isinstance(inputs, TorchDataItem):
-            inputs.image = torch.tensor(img, dtype=torch.float32).permute(2, 0, 1)
-        else:
-            inputs.image = img
+        inputs.image = to_tensor_image(img)
         inputs.img_info = _crop_image_info(inputs.img_info, *cropped_img_shape)
 
         valid_inds: np.ndarray = np.array([1])  # for semantic segmentation
@@ -2334,8 +2339,12 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_inds], format="XYXY", canvas_size=cropped_img_shape)
 
-            if (labels := getattr(inputs, "labels", None)) is not None:
-                inputs.labels = labels[valid_inds]
+            labels = inputs.label if isinstance(inputs, TorchDataItem) else inputs.labels
+            if labels is not None:
+                if isinstance(inputs, TorchDataItem):
+                    inputs.label = labels[valid_inds]
+                else:
+                    inputs.labels = labels[valid_inds]
 
         if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
