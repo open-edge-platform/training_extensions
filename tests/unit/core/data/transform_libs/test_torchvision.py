@@ -13,9 +13,8 @@ import torch
 from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
-from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.core.data.entity.base import ImageInfo, OTXDataEntity
+from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
@@ -56,7 +55,7 @@ def det_data_entity() -> TorchDataItem:
         image=tv_tensors.Image(torch.randn(size=(3, 112, 224), dtype=torch.float32)),
         img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
         bboxes=tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(112, 224)),
-        label=LongTensor([1], dtype=torch.long),
+        label=LongTensor([1]),
     )
 
 
@@ -75,7 +74,7 @@ class TestMinIoURandomCrop:
             patch = tv_tensors.wrap(torch.tensor([[0, 0, *results.img_info.img_shape]]), like=results.bboxes)
             ious = overlap_bboxes(patch, results.bboxes)
             assert torch.all(ious >= mode)
-            assert results.image.shape[:2] == results.img_info.img_shape
+            assert results.image.shape[1:] == results.img_info.img_shape
             assert results.img_info.scale_factor is None
 
 
@@ -142,7 +141,7 @@ class TestResize:
         resize.keep_ratio = keep_ratio
         results = resize(entity)
 
-        assert results.image.shape[:2] == expected_shape
+        assert results.image.shape[1:] == expected_shape
         assert results.img_info.img_shape == expected_shape
         assert torch.all(
             results.bboxes
@@ -182,7 +181,7 @@ class TestRandomFlip:
         results = random_flip.forward(entity)
 
         # test image
-        assert np.all(F.to_image(results.image.copy()).flip(-1).numpy() == fxt_inst_seg_data_entity[0].image)
+        assert np.all(results.image.flip(-1).numpy() == fxt_inst_seg_data_entity[0].image)
 
         # test bboxes
         bboxes_results = results.bboxes.clone()
@@ -214,7 +213,7 @@ class TestPhotoMetricDistortion:
         """Test forward."""
         results = photo_metric_distortion(deepcopy(det_data_entity))
 
-        assert results.image.dtype == np.float32
+        assert results.image.dtype == torch.float32
 
 
 class TestRandomAffine:
@@ -238,11 +237,11 @@ class TestRandomAffine:
         """Test forward."""
         results = random_affine(deepcopy(det_data_entity))
 
-        assert results.image.shape[:2] == (112, 224)
+        assert results.image.shape[1:] == (112, 224)
         assert results.label.shape[0] == results.bboxes.shape[0]
         assert results.label.dtype == torch.long
         assert results.bboxes.dtype == torch.float32
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[1:]
 
 
 class TestCachedMosaic:
@@ -290,11 +289,11 @@ class TestCachedMosaic:
 
         results = cached_mosaic(deepcopy(entity))
 
-        assert results.image.shape[:2] == (256, 256)
+        assert results.image.shape[1:] == (256, 256)
         assert results.labels.shape[0] == results.bboxes.shape[0]
         assert results.labels.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[1:]
         assert results.masks.shape[1:] == (256, 256)
 
 
@@ -344,11 +343,11 @@ class TestCachedMixUp:
 
         results = cached_mixup(deepcopy(entity))
 
-        assert results.image.shape[:2] == (64, 64)
+        assert results.image.shape[1:] == (64, 64)
         assert results.labels.shape[0] == results.bboxes.shape[0]
         assert results.labels.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[1:]
         assert results.masks.shape[1:] == (64, 64)
 
 
@@ -361,7 +360,7 @@ class TestYOLOXHSVRandomAug:
         """Test forward."""
         results = yolox_hsv_random_aug(deepcopy(det_data_entity))
 
-        assert results.image.shape[:2] == (112, 224)
+        assert results.image.shape[1:] == (112, 224)
         assert results.label.shape[0] == results.bboxes.shape[0]
         assert results.label.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
@@ -380,7 +379,7 @@ class TestPad:
 
         results = transform(deepcopy(entity))
 
-        assert results.image.shape[:2] == (96, 128)
+        assert results.image.shape[1:] == (96, 128)
         assert results.masks.shape[1:] == (96, 128)
 
         # test pad img/masks with size_divisor
@@ -389,7 +388,7 @@ class TestPad:
         results = transform(deepcopy(entity))
 
         # (64, 64) -> (66, 66)
-        assert results.image.shape[:2] == (66, 66)
+        assert results.image.shape[1:] == (66, 66)
         assert results.masks.shape[1:] == (66, 66)
 
         # test pad img/masks with pad_to_square
@@ -399,7 +398,7 @@ class TestPad:
 
         results = transform(deepcopy(entity))
 
-        assert results.image.shape[:2] == (128, 128)
+        assert results.image.shape[1:] == (128, 128)
         assert results.masks.shape[1:] == (128, 128)
 
         # test pad img/masks with pad_to_square and size_divisor
@@ -409,7 +408,7 @@ class TestPad:
 
         results = transform(deepcopy(entity))
 
-        assert results.image.shape[:2] == (132, 132)
+        assert results.image.shape[1:] == (132, 132)
         assert results.masks.shape[1:] == (132, 132)
 
 
@@ -442,10 +441,10 @@ class TestRandomResize:
 
         results = transform(deepcopy(entity))
 
-        assert results.image.shape[0] >= 224
-        assert results.image.shape[0] <= 448
         assert results.image.shape[1] >= 224
         assert results.image.shape[1] <= 448
+        assert results.image.shape[2] >= 224
+        assert results.image.shape[2] <= 448
         assert results.img_info.img_shape[0] >= 224
         assert results.img_info.img_shape[0] <= 448
         assert results.img_info.img_shape[1] >= 224
@@ -480,16 +479,16 @@ class TestRandomResize:
 
 class TestRandomCrop:
     @pytest.fixture()
-    def entity(self) -> OTXDataEntity:
-        return OTXDataEntity(
-            image=np.random.randint(0, 255, size=(24, 32), dtype=np.int32),
+    def entity(self) -> TorchDataItem:
+        return TorchDataItem(
+            image=torch.randn((3, 24, 32), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(24, 32), ori_shape=(24, 32)),
         )
 
     @pytest.fixture()
     def det_entity(self) -> TorchDataItem:
         return TorchDataItem(
-            image=torch.randn(3, 10, 10, dtype=torch.float32),
+            image=torch.randn((3, 10, 10), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
                 np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
@@ -502,7 +501,7 @@ class TestRandomCrop:
     @pytest.fixture()
     def iseg_entity(self) -> InstanceSegDataEntity:
         return InstanceSegDataEntity(
-            image=np.random.randint(0, 255, size=(10, 10), dtype=np.uint8),
+            image=np.random.randint(0, 255, size=(10, 10, 3), dtype=np.uint8),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
                 np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
@@ -553,7 +552,7 @@ class TestRandomCrop:
 
         results = transform(deepcopy(entity))
 
-        assert results.image.shape[:2] == target_shape
+        assert results.image.shape[1:] == target_shape
 
     def test_forward_absolute_range(self, entity) -> None:
         # test absolute_range crop
@@ -561,10 +560,10 @@ class TestRandomCrop:
 
         results = transform(deepcopy(entity))
 
-        h, w = results.image.shape
+        h, w = results.image.shape[1:]
         assert 10 <= w <= 20
         assert 10 <= h <= 20
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[1:]
 
     def test_forward_relative_range(self, entity) -> None:
         # test relative_range crop
@@ -572,10 +571,10 @@ class TestRandomCrop:
 
         results = transform(deepcopy(entity))
 
-        h, w = results.image.shape
+        h, w = results.image.shape[1:]
         assert 24 * 0.9 <= h <= 24
         assert 32 * 0.8 <= w <= 32
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[1:]
 
     def test_forward_bboxes_labels_masks_polygons(self, iseg_entity) -> None:
         # test with bboxes, labels, masks, and polygons
@@ -583,12 +582,12 @@ class TestRandomCrop:
 
         results = transform(deepcopy(iseg_entity))
 
-        assert results.image.shape[:2] == (7, 5)
+        assert results.image.shape[1:] == (7, 5)
         assert results.bboxes.shape[0] == 2
         assert results.labels.shape[0] == 2
         assert results.masks.shape[0] == 2
         assert results.masks.shape[1:] == (7, 5)
-        assert results.img_info.img_shape == results.image.shape[:2]
+        assert results.img_info.img_shape == results.image.shape[1:]
 
     def test_forward_recompute_bbox_from_mask(self, iseg_entity) -> None:
         # test recompute_bbox = True
@@ -627,7 +626,7 @@ class TestRandomCrop:
     def test_forward_bbox_clip_border_false(self, det_entity) -> None:
         # test bbox_clip_border = False
         det_entity.bboxes = tv_tensors.wrap(torch.tensor([[0.1, 0.1, 0.2, 0.2]]), like=det_entity.bboxes)
-        det_entity.labels = torch.LongTensor([0])
+        det_entity.label = torch.LongTensor([0])
         transform = RandomCrop(
             crop_size=(10, 11),
             allow_negative_crop=False,
