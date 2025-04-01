@@ -53,3 +53,23 @@ class TestDeitTiny:
         mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_cls_effnet_b0_ckpt")
         fxt_model.load_from_otx_v1_ckpt({})
         mock_load_ckpt.assert_called_once_with({}, "multiclass", "model.")
+
+    def test_freeze_backbone(self):
+        data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+
+        model = VisionTransformerMulticlassCls(
+            label_info="fxt_multiclass_labelinfo",
+            data_input_params=data_input_params,
+            freeze_backbone=True,
+        )
+
+        classification_layers = model._identify_classification_layers()
+        assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
+
+        model = VisionTransformerMulticlassCls(
+            label_info="fxt_multiclass_labelinfo",
+            data_input_params=data_input_params,
+            freeze_backbone=False,
+        )
+
+        assert all(param.requires_grad for param in model.parameters())
