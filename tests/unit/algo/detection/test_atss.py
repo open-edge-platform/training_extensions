@@ -8,10 +8,10 @@ from torch._dynamo.testing import CompileCounter
 
 from otx.algo.detection.atss import ATSS
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
+from otx.data import TorchPredBatch
 
 
 class TestATSS:
@@ -71,7 +71,7 @@ class TestATSS:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)
-        assert isinstance(output, DetBatchPredEntity)
+        assert isinstance(output, TorchPredBatch)
 
     @pytest.mark.parametrize(
         "model",

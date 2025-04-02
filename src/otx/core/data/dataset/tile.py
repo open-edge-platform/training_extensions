@@ -32,7 +32,6 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetDataEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
 from otx.core.data.entity.tile import (
     TileBatchDetDataEntity,
@@ -44,7 +43,7 @@ from otx.core.data.entity.tile import (
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
-from otx.data.torch import TorchDataItem
+from otx.data import TorchDataItem
 
 from .base import OTXDataset
 
@@ -487,8 +486,8 @@ class OTXTileDetTestDataset(OTXTileDataset):
             ori_labels=labels,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> DetDataEntity:
-        """Convert a tile datumaro dataset item to DetDataEntity."""
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:  # type: ignore[override]
+        """Convert a tile datumaro dataset item to TorchDataItem."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
         tile_shape = tile_img.shape[:2]
@@ -497,16 +496,9 @@ class OTXTileDetTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return DetDataEntity(
-            image=tile_img,
+        return TorchDataItem(
+            image=to_dtype(to_image(tile_img), torch.float32),
             img_info=img_info,
-            # we don't need tile-level annotations
-            bboxes=tv_tensors.BoundingBoxes(
-                [],
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=tile_shape,
-            ),
-            labels=torch.as_tensor([]),
         )
 
 

@@ -10,7 +10,6 @@ from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity, DetDataEntity
 from otx.core.data.entity.instance_segmentation import (
     InstanceSegBatchDataEntity,
     InstanceSegBatchPredEntity,
@@ -229,24 +228,29 @@ def fxt_h_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchP
 
 
 @pytest.fixture(scope="session")
-def fxt_det_data_entity() -> tuple[tuple, DetDataEntity, DetBatchDataEntity]:
+def fxt_det_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
     img_size = (64, 64)
-    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32).numpy()
+    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     # define data entity
-    single_data_entity = DetDataEntity(fake_image, fake_image_info, fake_bboxes, fake_labels)
-    batch_data_entity = DetBatchDataEntity(
+    single_data_entity = TorchDataItem(
+        image=fake_image,
+        img_info=fake_image_info,
+        bboxes=fake_bboxes,
+        label=fake_labels,
+    )
+    batch_data_entity = TorchDataBatch(
         batch_size=1,
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=[Image(fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = DetBatchPredEntity(
+    batch_pred_data_entity = TorchPredBatch(
         batch_size=1,
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=[Image(fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
