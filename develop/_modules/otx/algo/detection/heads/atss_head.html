@@ -282,7 +282,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.modules.scale</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scale</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceData</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetBatchDataEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDataBatch</span>
 
 <span class="n">EPS</span> <span class="o">=</span> <span class="mf">1e-12</span>
 
@@ -445,14 +445,14 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_loss_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-        <span class="n">entity</span><span class="p">:</span> <span class="n">DetBatchDataEntity</span><span class="p">,</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform forward propagation of the detection head and prepare for loss calculation.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            x (tuple[Tensor]): Features from the upstream network, each is</span>
 <span class="sd">                a 4D-tensor.</span>
-<span class="sd">            entity (DetBatchDataEntity): Entity from OTX dataset.</span>
+<span class="sd">            entity (TorchDataBatch): Entity from OTX dataset.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict: A dictionary of components for loss calculation.</span>
