@@ -144,7 +144,8 @@ def pytest_addoption(parser: pytest.Parser):
     )
     parser.addoption(
         "--run-category-only",
-        action="store_true",
+        type=bool,
+        default=False,
         help="Run only the model category tests that categorised as BALANCE, SPEED, ACCURACY.",
     )
 
