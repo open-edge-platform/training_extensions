@@ -1,9 +1,22 @@
-#
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# TODO(Eugene): Remove this when fixed
+# *"value" missing in
+# 	mem_cache_size
+# 	storage_cache_scheme
+# 	enable_early_stopping
+# 	use_adaptive_interval
+# 	auto_num_workers
+
+# * confidence_threshold "default_value": 0.35, != "value": 0.01,
+# * nms_iou_threshold "default_value": 0.5, != "value": 0.01,
+
 
 from __future__ import annotations
 
+import argparse
 import json
-import os
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass
@@ -12,7 +25,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import metadata_keys
-from model_template import parse_model_template
 from omegaconf import OmegaConf
 
 from otx.core.types.export import OTXExportFormatType
@@ -144,7 +156,7 @@ class OTXConfig:
 
     @classmethod
     def from_json_file(cls, config_file_path: Path) -> OTXConfig:
-        with open(config_file_path) as fp:
+        with Path.open(config_file_path) as fp:
             config: dict = json.load(fp)
 
         opt_type_name: str | None = config.get("optimization_type")
@@ -181,8 +193,15 @@ class OTXConfig:
         with fpath.open("w") as fp:
             json.dump(
                 {
+                    "job_type": self.job_type,
                     "model_template_id": self.model_template_id,
                     "hyperparameters": self.hyper_parameters,
+                    "export_parameters": [
+                        {"type": param.export_format, "precision": param.precision, "with_xai": param.with_xai}
+                        for param in self.export_parameters
+                    ],
+                    "optimization_type": "NONE" if self.optimization_type is None else self.optimization_type,
+                    "sub_task_type": "MULTI_CLASS_CLS" if self.sub_task_type is None else self.sub_task_type,
                 },
                 fp,
             )
@@ -242,40 +261,47 @@ def substitute_parameter_overrides(override_dict: dict, parameter_dict: dict):
             values are substituted
     """
     for key, value in override_dict.items():
-        if key in metadata_keys.deprecated_keys():
-            continue
         if isinstance(value, dict) and not metadata_keys.allows_dictionary_values(key):
             if key in parameter_dict:
                 substitute_parameter_overrides(value, parameter_dict[key])
             else:
-                raise ValueError(f"Unable to perform parameter override. Parameter or parameter group named {key}.")
+                msg = f"Unable to perform parameter override. Parameter or parameter group named {key}."
+                raise ValueError(msg)
         elif metadata_keys.allows_model_template_override(key):
             parameter_dict[key] = value
         else:
-            raise KeyError(f"{key} is not a valid keyword for hyper parameter overrides")
+            msg = f"{key} is not a valid keyword for hyper parameter overrides"
+            raise KeyError(msg)
 
 
-def load_hyper_parameters(model_template_path: dict) -> dict:
+def load_hyper_parameters(model_template_path: Path) -> dict:
     """Load hyper parameters.
 
     Loads the actual hyper parameters defined in the file at `base_path`, and performs any overrides specified in
     the `parameter_overrides`.
 
     Args:
-        model_template_path (str): file path to the model template file in which the HyperParameters live.
+        model_template_path (Path): file path to the model template file in which the HyperParameters live.
     """
 
     model_template = OmegaConf.load(model_template_path)
     model_template = OmegaConf.to_container(model_template)
 
-    model_template_dir = os.path.dirname(model_template_path)
-    base_hyper_parameter_path = os.path.join(
-        model_template_dir,
-        model_template["hyper_parameters"]["base_path"],
-    )
+    base_hyper_parameter_path = model_template_path.parent / model_template["hyper_parameters"]["base_path"]
 
     config_dict = OmegaConf.load(base_hyper_parameter_path)
     data = OmegaConf.to_container(config_dict)
+    if model_template["hyper_parameters"]["parameter_overrides"]:
+
+        def add_value_key(d: dict) -> None:
+            for k, v in list(d.items()):  # Use list to avoid modifying during iteration
+                if isinstance(v, dict):
+                    add_value_key(v)
+                if k == "default_value":
+                    d["value"] = v
+
+        add_value_key(model_template["hyper_parameters"]["parameter_overrides"])
+
     substitute_parameter_overrides(
         model_template["hyper_parameters"]["parameter_overrides"],
         data,
@@ -284,11 +310,16 @@ def load_hyper_parameters(model_template_path: dict) -> dict:
 
 
 if __name__ == "__main__":
-    model_template_path = "src/otx/tools/templates/detection/detection/mobilenetv2_atss/template.yaml"
-    geti_model_template = parse_model_template(model_template_path)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--recipe-path",
+        type=str,
+        help="Path to the recipe file.",
+    )
+    args = parser.parse_args()
 
-    model_template = OmegaConf.load(model_template_path)
-    hyper_parameters = load_hyper_parameters(model_template_path)
+    model_template = OmegaConf.load(args.recipe_path)
+    hyper_parameters = load_hyper_parameters(args.recipe_path)
 
     otx_config = OTXConfig(
         job_type=JobType.TRAIN,
@@ -316,33 +347,6 @@ if __name__ == "__main__":
         optimization_type=None,
         sub_task_type=None,
     )
-
-    # otx_config = OTXConfig(
-    #     job_type=JobType.TRAIN,
-    #     model_template_id=model_template["model_template_id"],
-    #     hyper_parameters=model_template["hyper_parameters"],
-    #     export_parameters=[
-    #         ExportParameter(
-    #             export_format=ExportFormat.OPENVINO,
-    #             precision=PrecisionType.FP32,
-    #             with_xai=True,
-    #         ),
-    #         ExportParameter(
-    #             export_format=ExportFormat.OPENVINO,
-    #             precision=PrecisionType.FP32,
-    #         ),
-    #         ExportParameter(
-    #             export_format=ExportFormat.OPENVINO,
-    #             precision=PrecisionType.FP16,
-    #         ),
-    #         ExportParameter(
-    #             export_format=ExportFormat.ONNX,
-    #             precision=PrecisionType.FP32,
-    #         ),
-    #     ],
-    #     optimization_type=None,
-    #     sub_task_type=None,
-    # )
 
     otx_config.to_otx2_config(Path("otx-workspace"))
 
