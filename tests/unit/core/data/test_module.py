@@ -36,6 +36,7 @@ class TestModule:
         train_subset.batch_size = 4
         train_subset.input_size = None
         train_subset.subset_name = "train_1"
+        train_subset.transforms = []
         val_subset = MagicMock(spec=SubsetConfig)
         val_subset.sampler = DictConfig(
             {"class_path": "torch.utils.data.RandomSampler", "init_args": {"num_samples": 3}},
@@ -119,6 +120,7 @@ class TestModule:
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
             test_subset=fxt_config.test_subset,
+            input_size=(240, 240),
         )
 
         assert module.train_dataloader().batch_size == 4
@@ -126,9 +128,9 @@ class TestModule:
         assert module.test_dataloader().batch_size == 1
         assert module.predict_dataloader().batch_size == 1
         assert mock_otx_dataset_factory.create.call_count == 3
-        assert fxt_config.train_subset.input_size is None
-        assert fxt_config.val_subset.input_size is None
-        assert fxt_config.test_subset.input_size is None
+        assert fxt_config.train_subset.input_size == (240, 240)
+        assert fxt_config.val_subset.input_size == (240, 240)
+        assert fxt_config.test_subset.input_size == (240, 240)
 
     def test_init_input_size(
         self,
@@ -184,7 +186,7 @@ class TestModule:
             train_subset=fxt_config.train_subset,
             val_subset=fxt_config.val_subset,
             test_subset=fxt_config.test_subset,
-            adaptive_input_size="auto",
+            input_size="auto",
         )
 
         assert fxt_config.train_subset.input_size == (1234, 1234)
@@ -198,10 +200,13 @@ class TestModule:
         cfg.data_root = "."
         cfg.train_subset.subset_name = "train"
         cfg.train_subset.num_workers = 0
+        cfg.train_subset.input_size = None
         cfg.val_subset.subset_name = "val"
         cfg.val_subset.num_workers = 0
+        cfg.val_subset.input_size = None
         cfg.test_subset.subset_name = "test"
         cfg.test_subset.num_workers = 0
+        cfg.test_subset.input_size = None
         cfg.mem_cache_size = "1GB"
         cfg.tile_config = {}
         cfg.tile_config.enable_tiler = False
@@ -220,7 +225,7 @@ class TestModule:
         # Dataset will have "train", "val", and "test" subsets
         mock_dm_subsets = {name: MagicMock() for name in ["train", "val", "test"]}
         mock_dm_dataset.return_value.subsets.return_value = mock_dm_subsets
-        module = OTXDataModule(**fxt_real_tv_cls_config)
+        module = OTXDataModule(**fxt_real_tv_cls_config, input_size=(240, 240))
         logger = CSVLogger(tmpdir)
         logger.log_hyperparams(module.hparams_initial)
         logger.save()

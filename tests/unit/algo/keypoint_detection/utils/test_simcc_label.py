@@ -64,17 +64,17 @@ class TestSimCCLabel:
         assert keypoints.shape == (1, 17, 2)
         assert scores.shape == (1, 17)
 
-        codec.decode_visibility = True
+        codec.decode_scores = True
 
         simcc_x = np.random.rand(1, 17, int(192 * codec.simcc_split_ratio)) * 10
         simcc_y = np.random.rand(1, 17, int(256 * codec.simcc_split_ratio)) * 10
         keypoints, scores = codec.decode(simcc_x, simcc_y)
 
-        assert len(scores) == 2
-        assert scores[0].shape == (1, 17)
-        assert scores[1].shape == (1, 17)
-        assert scores[1].min() >= 0.0
-        assert scores[1].max() <= 1.0
+        assert len(scores) == 1
+        assert scores.shape == (1, 17)
+        assert scores.shape == (1, 17)
+        assert scores.min() >= 0.0
+        assert scores.max() <= 1.0
 
     @pytest.mark.parametrize(
         "fxt_codec",

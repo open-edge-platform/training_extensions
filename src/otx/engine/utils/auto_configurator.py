@@ -14,9 +14,9 @@ from warnings import warn
 import datumaro
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig, VisualPromptingConfig
+from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.types import PathLike
 from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.types.task import OTXTaskType
@@ -44,7 +44,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification" / "padim.yaml",
     OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
     OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection" / "padim.yaml",
-    OTXTaskType.VISUAL_PROMPTING: RECIPE_PATH / "visual_prompting" / "sam_tiny_vit.yaml",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
@@ -56,16 +55,14 @@ TASK_PER_DATA_FORMAT = {
         OTXTaskType.DETECTION,
         OTXTaskType.ROTATED_DETECTION,
         OTXTaskType.INSTANCE_SEGMENTATION,
-        OTXTaskType.VISUAL_PROMPTING,
     ],
     "coco": [
         OTXTaskType.DETECTION,
         OTXTaskType.ROTATED_DETECTION,
         OTXTaskType.INSTANCE_SEGMENTATION,
-        OTXTaskType.VISUAL_PROMPTING,
     ],
     "common_semantic_segmentation_with_subset_dirs": [OTXTaskType.SEMANTIC_SEGMENTATION],
-    "mvtec": [
+    "mvtec_classification": [
         OTXTaskType.ANOMALY,
         OTXTaskType.ANOMALY_CLASSIFICATION,
         OTXTaskType.ANOMALY_DETECTION,
@@ -74,14 +71,13 @@ TASK_PER_DATA_FORMAT = {
 }
 
 OVMODEL_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: "otx.core.model.classification.OVMulticlassClassificationModel",
-    OTXTaskType.MULTI_LABEL_CLS: "otx.core.model.classification.OVMultilabelClassificationModel",
-    OTXTaskType.H_LABEL_CLS: "otx.core.model.classification.OVHlabelClassificationModel",
+    OTXTaskType.MULTI_CLASS_CLS: "otx.core.model.multiclass_classification.OVMulticlassClassificationModel",
+    OTXTaskType.MULTI_LABEL_CLS: "otx.core.model.multilabel_classification.OVMultilabelClassificationModel",
+    OTXTaskType.H_LABEL_CLS: "otx.core.model.hlabel_classification.OVHlabelClassificationModel",
     OTXTaskType.DETECTION: "otx.core.model.detection.OVDetectionModel",
     OTXTaskType.ROTATED_DETECTION: "otx.core.model.rotated_detection.OVRotatedDetectionModel",
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.core.model.instance_segmentation.OVInstanceSegmentationModel",
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.core.model.segmentation.OVSegmentationModel",
-    OTXTaskType.VISUAL_PROMPTING: "otx.core.model.visual_prompting.OVVisualPromptingModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
@@ -226,12 +222,11 @@ class AutoConfigurator:
         val_config = data_config.pop("val_subset")
         test_config = data_config.pop("test_subset")
         tile_config = data_config.pop("tile_config", {})
-        vpm_config = data_config.pop("vpm_config", {})
 
         _ = data_config.pop("__path__", {})  # Remove __path__ key that for CLI
         _ = data_config.pop("config", {})  # Remove config key that for CLI
 
-        if data_config.get("adaptive_input_size") is not None:
+        if data_config.get("input_size") == "auto":
             model_cls = get_model_cls_from_config(Namespace(self.config["model"]))
             data_config["input_size_multiplier"] = model_cls.input_size_multiplier
 
@@ -240,7 +235,6 @@ class AutoConfigurator:
             val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
             test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
             tile_config=TileConfig(**tile_config),
-            vpm_config=VisualPromptingConfig(**vpm_config),
             **data_config,
         )
 
@@ -248,7 +242,7 @@ class AutoConfigurator:
         self,
         model_name: str | None = None,
         label_info: LabelInfoTypes | None = None,
-        input_size: tuple[int, int] | int | None = None,
+        data_input_params: DataInputParams | None = None,
     ) -> OTXModel:
         """Retrieves the OTXModel instance based on the provided model name and meta information.
 
@@ -256,9 +250,8 @@ class AutoConfigurator:
             model_name (str | None): The name of the model to retrieve. If None, the default model will be used.
             label_info (LabelInfoTypes | None): The meta information about the labels.
                 If provided, the number of classes will be updated in the model's configuration.
-            input_size (tuple[int, int] | int | None, optional):
-                Model input size in the order of height and width or a single integer for a side of a square.
-                Defaults to None.
+            data_input_params (DataInputParams | None): The data input parameters containing the input size,
+                input mean and std.
 
         Returns:
             OTXModel: The instantiated OTXModel instance.
@@ -285,10 +278,15 @@ class AutoConfigurator:
 
         model_config = deepcopy(self.config["model"])
 
-        if input_size is not None:
-            model_config["init_args"]["input_size"] = (
-                (input_size, input_size) if isinstance(input_size, int) else input_size
-            )
+        if data_input_params is not None:
+            model_config["init_args"]["data_input_params"] = data_input_params.as_dict()
+        elif (datamodule := self.get_datamodule()) is not None:
+            # get data_input_params info from datamodule
+            model_config["init_args"]["data_input_params"] = DataInputParams(
+                input_size=datamodule.input_size,
+                mean=datamodule.input_mean,
+                std=datamodule.input_std,
+            ).as_dict()
 
         model_cls = get_model_cls_from_config(Namespace(model_config))
 
@@ -425,10 +423,9 @@ class AutoConfigurator:
             train_subset=datamodule.train_subset,
             val_subset=datamodule.val_subset,
             test_subset=datamodule.test_subset,
+            input_size=datamodule.input_size,
             tile_config=datamodule.tile_config,
-            vpm_config=datamodule.vpm_config,
             image_color_channel=datamodule.image_color_channel,
-            stack_images=datamodule.stack_images,
             include_polygons=datamodule.include_polygons,
             ignore_index=datamodule.ignore_index,
             unannotated_items_ratio=datamodule.unannotated_items_ratio,

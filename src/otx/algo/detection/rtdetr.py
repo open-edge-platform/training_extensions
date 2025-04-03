@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from torch import Tensor, nn
@@ -18,14 +18,15 @@ from otx.algo.detection.backbones import PResNet
 from otx.algo.detection.detectors import DETR
 from otx.algo.detection.heads import RTDETRTransformer
 from otx.algo.detection.necks import HybridEncoder
+from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.core.model.detection import ExplainableOTXDetModel
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.detection import OTXDetectionModel
+from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -35,42 +36,48 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-PRETRAINED_ROOT: str = "https://github.com/lyuwenyu/storage/releases/download/v0.1/"
-
-PRETRAINED_WEIGHTS: dict[str, str] = {
-    "rtdetr_18": PRETRAINED_ROOT + "rtdetr_r18vd_5x_coco_objects365_from_paddle.pth",
-    "rtdetr_50": PRETRAINED_ROOT + "rtdetr_r50vd_2x_coco_objects365_from_paddle.pth",
-    "rtdetr_101": PRETRAINED_ROOT + "rtdetr_r101vd_2x_coco_objects365_from_paddle.pth",
-}
-
-
-class RTDETR(ExplainableOTXDetModel):
+class RTDETR(OTXDetectionModel):
     """OTX Detection model class for RTDETR.
 
-    Default input size per model:
-        - ssd_mobilenetv2 : (640, 640)
+    Attributes:
+        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+        input_size_multiplier (int): Multiplier for the input size.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (literal, optional): Name of the model to use. Defaults to "rtdetr_50".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.
+        multi_scale (bool, optional): Whether to use multi-scale training. Defaults to False.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
 
+    pretrained_weights: ClassVar[dict[str, str]] = {
+        "rtdetr_18": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r18vd_5x_coco_objects365_from_paddle.pth",
+        "rtdetr_50": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r50vd_2x_coco_objects365_from_paddle.pth",
+        "rtdetr_101": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r101vd_2x_coco_objects365_from_paddle.pth",
+    }
     input_size_multiplier = 32
-    mean: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    std: tuple[float, float, float] = (255.0, 255.0, 255.0)
 
     def __init__(
         self,
-        model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"],
         label_info: LabelInfoTypes,
-        input_size: tuple[int, int] = (640, 640),
+        data_input_params: DataInputParams,
+        model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"] = "rtdetr_50",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.load_from: str = PRETRAINED_WEIGHTS[model_name]
         super().__init__(
-            model_name=model_name,
             label_info=label_info,
-            input_size=input_size,
+            data_input_params=data_input_params,
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -78,16 +85,17 @@ class RTDETR(ExplainableOTXDetModel):
             tile_config=tile_config,
         )
 
-    def _build_model(self, num_classes: int) -> DETR:
+    def _create_model(self, num_classes: int | None = None) -> DETR:
+        num_classes = num_classes if num_classes is not None else self.num_classes
         backbone = PResNet(model_name=self.model_name)
         encoder = HybridEncoder(
             model_name=self.model_name,
-            eval_spatial_size=self.input_size,
+            eval_spatial_size=self.data_input_params.input_size,
         )
         decoder = RTDETRTransformer(
             model_name=self.model_name,
             num_classes=num_classes,
-            eval_spatial_size=self.input_size,
+            eval_spatial_size=self.data_input_params.input_size,
         )
 
         optimizer_configuration = [
@@ -99,34 +107,39 @@ class RTDETR(ExplainableOTXDetModel):
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
         ]
 
-        return DETR(
+        model = DETR(
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
-            input_size=self.input_size[0],
+            input_size=self.data_input_params.input_size[0],
         )
+        model.init_weights()
+        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+
+        return model
 
     def _customize_inputs(
         self,
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
-        for bb, ll in zip(entity.bboxes, entity.labels):
-            # convert to cxcywh if needed
-            if len(scaled_bboxes := bb):
-                converted_bboxes = (
-                    box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
-                )
-                # normalize the bboxes
-                scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
-                    converted_bboxes.device,
-                )
-            targets.append({"boxes": scaled_bboxes, "labels": ll})
+        if entity.bboxes is not None and entity.labels is not None:
+            for bb, ll in zip(entity.bboxes, entity.labels):
+                # convert to cxcywh if needed
+                if len(scaled_bboxes := bb):
+                    converted_bboxes = (
+                        box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
+                    )
+                    # normalize the bboxes
+                    scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
+                        converted_bboxes.device,
+                    )
+                targets.append({"boxes": scaled_bboxes, "labels": ll})
 
         if self.explain_mode:
             return {"entity": entity}
@@ -139,8 +152,8 @@ class RTDETR(ExplainableOTXDetModel):
     def _customize_outputs(
         self,
         outputs: list[torch.Tensor] | dict,  # type: ignore[override]
-        inputs: DetBatchDataEntity,
-    ) -> DetBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -156,7 +169,7 @@ class RTDETR(ExplainableOTXDetModel):
                     raise TypeError(msg)
             return losses
 
-        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]
+        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
 
         if self.explain_mode:
@@ -172,21 +185,18 @@ class RTDETR(ExplainableOTXDetModel):
                 msg = "No saliency maps in the model output."
                 raise ValueError(msg)
 
-            saliency_map = outputs["saliency_map"].detach().cpu().numpy()
-            feature_vector = outputs["feature_vector"].detach().cpu().numpy()
-
-            return DetBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
                 labels=labels,
-                feature_vector=feature_vector,
-                saliency_map=saliency_map,
+                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             )
 
-        return DetBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -270,15 +280,9 @@ class RTDETR(ExplainableOTXDetModel):
     @property
     def _exporter(self) -> OTXModelExporter:
         """Creates OTXModelExporter object that can export the model."""
-        if self.input_size is None:
-            msg = f"Input size attribute is not set for {self.__class__}"
-            raise ValueError(msg)
-
         return OTXNativeModelExporter(
             task_level_export_parameters=self._export_parameters,
-            input_size=(1, 3, *self.input_size),
-            mean=self.mean,
-            std=self.std,
+            data_input_params=self.data_input_params,
             resize_mode="standard",
             swap_rgb=False,
             via_onnx=False,
@@ -305,7 +309,7 @@ class RTDETR(ExplainableOTXDetModel):
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""

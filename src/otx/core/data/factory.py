@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from otx.core.config.data import VisualPromptingConfig
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
@@ -35,31 +34,6 @@ class TransformLibFactory:
 
             return TorchVisionTransformLib.generate(config)
 
-        if config.transform_lib_type == TransformLibType.MMCV:
-            from .transform_libs.mmcv import MMCVTransformLib
-
-            return MMCVTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMPRETRAIN:
-            from .transform_libs.mmpretrain import MMPretrainTransformLib
-
-            return MMPretrainTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMDET:
-            from .transform_libs.mmdet import MMDetTransformLib
-
-            return MMDetTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMSEG:
-            from .transform_libs.mmseg import MMSegTransformLib
-
-            return MMSegTransformLib.generate(config)
-
-        if config.transform_lib_type == TransformLibType.MMACTION:
-            from .transform_libs.mmaction import MMActionTransformLib
-
-            return MMActionTransformLib.generate(config)
-
         raise NotImplementedError(config.transform_lib_type)
 
 
@@ -76,10 +50,8 @@ class OTXDatasetFactory:
         data_format: str,
         mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
-        stack_images: bool = True,
         include_polygons: bool = False,
         ignore_index: int = 255,
-        vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
     ) -> OTXDataset:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
@@ -90,7 +62,6 @@ class OTXDatasetFactory:
             "mem_cache_handler": mem_cache_handler,
             "mem_cache_img_max_size": mem_cache_img_max_size,
             "image_color_channel": image_color_channel,
-            "stack_images": stack_images,
             "to_tv_image": cfg_subset.to_tv_image,
         }
 
@@ -133,13 +104,6 @@ class OTXDatasetFactory:
             from .dataset.segmentation import OTXSegmentationDataset
 
             return OTXSegmentationDataset(ignore_index=ignore_index, **common_kwargs)
-
-        if task == OTXTaskType.VISUAL_PROMPTING:
-            from .dataset.visual_prompting import OTXVisualPromptingDataset
-
-            use_bbox = getattr(vpm_config, "use_bbox", False)
-            use_point = getattr(vpm_config, "use_point", False)
-            return OTXVisualPromptingDataset(use_bbox=use_bbox, use_point=use_point, **common_kwargs)
 
         if task == OTXTaskType.KEYPOINT_DETECTION:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset

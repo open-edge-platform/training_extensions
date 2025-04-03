@@ -1,8 +1,9 @@
 model:
-  class_path: otx.algo.classification.mobilenet_v3.MobileNetV3ForMulticlassCls
+  class_path: otx.algo.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
   init_args:
-    mode: large
+    model_name: mobilenetv3_large
     label_info: 1000
+    freeze_backbone: False
 
     optimizer:
       class_path: torch.optim.SGD

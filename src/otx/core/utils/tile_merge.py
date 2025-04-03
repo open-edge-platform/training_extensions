@@ -7,23 +7,55 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections import defaultdict
-from typing import Generic
+from typing import Callable
 
 import cv2
 import numpy as np
 import torch
+from packaging import version
 from torchvision import tv_tensors
 from torchvision.ops import batched_nms
 
 from otx.algo.explain.explain_algo import InstSegExplainAlgo
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, T_OTXBatchPredEntity, T_OTXDataEntity
-from otx.core.data.entity.detection import DetBatchPredEntity, DetPredEntity
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity, InstanceSegPredEntity
-from otx.core.data.entity.segmentation import SegBatchPredEntity, SegPredEntity
+from otx.data import TorchPredBatch, TorchPredItem
+
+# Maximum number of elements 2**31 -1
+MAX_ELEMENTS: int = np.iinfo(np.int32).max
 
 
-class TileMerge(Generic[T_OTXDataEntity, T_OTXBatchPredEntity]):
+# NOTE: RuntimeError: nonzero is not supported for tensors with more than INT_MAX elements,
+# See https://github.com/pytorch/pytorch/issues/51871
+int_max_check_condition: Callable[[torch.Tensor], bool] = (
+    lambda tile_masks: version.parse(torch.__version__) < version.parse("2.6")
+    and torch.numel(tile_masks) > MAX_ELEMENTS
+)
+
+
+def keep_chunkify(tensor: torch.Tensor, max_element: int = MAX_ELEMENTS) -> torch.Tensor:
+    """Splits tensor into chunks and processes each chunk separately.
+
+    Args:
+        tensor (torch.Tensor): Input tensor of shape (B, H, W).
+
+    Returns:
+        torch.Tensor: Boolean mask of shape (B,) indicating nonzero sum.
+    """
+    _, h, w = tensor.shape
+    max_batch_size = int(max_element) // (h * w)
+    chunk_size = max(1, min(max_batch_size, tensor.shape[0]))
+
+    keep_indices = []
+    for i in range(0, tensor.shape[0], chunk_size):
+        chunk = tensor[i : i + chunk_size]
+        keep_indices.append(chunk.sum(dim=(1, 2)) > 0)  # Process chunk
+
+    return torch.cat(keep_indices, dim=0)
+
+
+class TileMerge:
     """Base class for tile merge.
 
     Args:
@@ -106,9 +138,9 @@ class DetectionTileMerge(TileMerge):
 
     def merge(
         self,
-        batch_tile_preds: list[DetBatchPredEntity],
+        batch_tile_preds: list[TorchPredBatch],
         batch_tile_attrs: list[list[dict]],
-    ) -> list[DetPredEntity]:
+    ) -> list[TorchPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:
@@ -121,34 +153,36 @@ class DetectionTileMerge(TileMerge):
         explain_mode = self.explain_mode
 
         for tile_preds, tile_attrs in zip(batch_tile_preds, batch_tile_attrs, strict=True):
+            if tile_preds.imgs_info is None or tile_preds.bboxes is None:
+                msg = "imgs_info or bboxes is None"
+                raise ValueError(msg)
             batch_size = len(tile_attrs)
-            saliency_maps = tile_preds.saliency_map if explain_mode else [[] for _ in range(batch_size)]
-            feature_vectors = tile_preds.feature_vector if explain_mode else [[] for _ in range(batch_size)]
-            for tile_attr, tile_img_info, tile_bboxes, tile_labels, tile_scores, tile_s_map, tile_f_vect in zip(
-                tile_attrs,
-                tile_preds.imgs_info,
-                tile_preds.bboxes,
-                tile_preds.labels,
-                tile_preds.scores,
-                saliency_maps,
-                feature_vectors,
-                strict=True,
-            ):
+            for i in range(batch_size):
+                if tile_preds.imgs_info[i] is None:
+                    msg = "imgs_info is None"
+                    raise ValueError(msg)
+                tile_img_info = tile_preds.imgs_info[i]
+                tile_attr = tile_attrs[i]
+                tile_s_map = tile_preds.saliency_map[i] if tile_preds.saliency_map is not None else None
+                tile_f_vect = tile_preds.feature_vector[i] if tile_preds.feature_vector is not None else None
+
+                tile_bboxes = tile_preds.bboxes[i] if tile_preds.bboxes[i].numel() > 0 else None
                 offset_x, offset_y, _, _ = tile_attr["roi"]
-                tile_bboxes[:, 0::2] += offset_x
-                tile_bboxes[:, 1::2] += offset_y
+                if tile_bboxes is not None:
+                    tile_bboxes[:, 0::2] += offset_x
+                    tile_bboxes[:, 1::2] += offset_y
 
                 tile_id = tile_attr["tile_id"]
                 if tile_id not in img_ids:
                     img_ids.append(tile_id)
-                tile_img_info.padding = tile_attr["roi"]
+                tile_img_info.padding = tile_attr["roi"]  # type: ignore[union-attr]
 
-                det_pred_entity = DetPredEntity(
-                    image=torch.empty(tile_img_info.ori_shape),
+                det_pred_entity = TorchPredItem(
+                    image=torch.empty(3, *tile_img_info.ori_shape),  # type: ignore[union-attr]
                     img_info=tile_img_info,
                     bboxes=tile_bboxes,
-                    labels=tile_labels,
-                    score=tile_scores,
+                    label=tile_preds.labels[i] if tile_preds.labels is not None else None,
+                    scores=tile_preds.scores[i] if tile_preds.scores is not None else None,
                 )
 
                 if explain_mode:
@@ -164,9 +198,9 @@ class DetectionTileMerge(TileMerge):
     def _merge_entities(
         self,
         img_info: ImageInfo,
-        entities: list[DetPredEntity],
+        entities: list[TorchPredItem],
         explain_mode: bool = False,
-    ) -> DetPredEntity:
+    ) -> TorchPredItem:
         """Merge tile predictions to one single prediction.
 
         Args:
@@ -175,7 +209,7 @@ class DetectionTileMerge(TileMerge):
             explain_mode (bool): Whether or not tiles have explain features. Default: False.
 
         Returns:
-            DetPredEntity: Merged prediction entity.
+            TorchPredItem: Merged prediction entity.
         """
         bboxes: list | torch.Tensor = []
         labels: list | torch.Tensor = []
@@ -185,28 +219,30 @@ class DetectionTileMerge(TileMerge):
         tiles_coords = []
         img_size = img_info.ori_shape
         for tile_entity in entities:
-            num_preds = len(tile_entity.bboxes)
+            num_preds = len(tile_entity.bboxes) if tile_entity.bboxes is not None else 0
             if num_preds > 0:
-                bboxes.extend(tile_entity.bboxes)
-                labels.extend(tile_entity.labels)
-                scores.extend(tile_entity.score)
+                bboxes.extend(tile_entity.bboxes if tile_entity.bboxes is not None else [])
+                labels.extend(tile_entity.label if tile_entity.label is not None else [])
+                scores.extend(tile_entity.scores if tile_entity.scores is not None else [])
             if explain_mode:
-                tiles_coords.append(tile_entity.img_info.padding)
-                feature_vectors.append(tile_entity.feature_vector)
-                saliency_maps.append(tile_entity.saliency_map)
+                tiles_coords.append(tile_entity.img_info.padding)  # type: ignore[union-attr]
+                if tile_entity.feature_vector is not None:
+                    feature_vectors.append(tile_entity.feature_vector.cpu().numpy())
+                if tile_entity.saliency_map is not None:
+                    saliency_maps.append(tile_entity.saliency_map.cpu().numpy())
 
         bboxes = torch.stack(bboxes) if len(bboxes) > 0 else torch.empty((0, 4), device=img_info.device)
-        labels = torch.stack(labels) if len(labels) > 0 else torch.empty((0,), device=img_info.device)
+        labels = torch.stack(labels) if len(labels) > 0 else torch.empty((0,), dtype=torch.long, device=img_info.device)
         scores = torch.stack(scores) if len(scores) > 0 else torch.empty((0,), device=img_info.device)
 
         bboxes, labels, scores, _ = self.nms_postprocess(bboxes, scores, labels)
 
-        det_pred_entity = DetPredEntity(
-            image=torch.empty(img_size),
+        det_pred_entity = TorchPredItem(
+            image=torch.empty(3, *img_size),
             img_info=img_info,
-            score=scores,
+            scores=scores,
             bboxes=tv_tensors.BoundingBoxes(bboxes, canvas_size=img_size, format="XYXY"),
-            labels=labels,
+            label=labels,
         )
 
         if explain_mode:
@@ -333,7 +369,10 @@ class InstanceSegTileMerge(TileMerge):
                 feature_vectors,
                 strict=True,
             ):
-                keep_indices = tile_masks.to_sparse().sum((1, 2)).to_dense() > 0
+                if int_max_check_condition(tile_masks):
+                    keep_indices = keep_chunkify(tile_masks)
+                else:
+                    keep_indices = tile_masks.to_sparse().sum((1, 2)).to_dense() > 0
                 keep_indices = keep_indices.nonzero(as_tuple=True)[0]
                 _bboxes = tile_bboxes[keep_indices]
                 _labels = tile_labels[keep_indices]
@@ -472,9 +511,9 @@ class SegmentationTileMerge(TileMerge):
 
     def merge(
         self,
-        batch_tile_preds: list[SegBatchPredEntity],
+        batch_tile_preds: list[TorchPredBatch],
         batch_tile_attrs: list[list[dict]],
-    ) -> list[SegPredEntity]:
+    ) -> list[TorchPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:
@@ -482,7 +521,7 @@ class SegmentationTileMerge(TileMerge):
             batch_tile_attrs (list[list[dict]]): segmentation tile attributes.
 
         Returns:
-            list[SegPredEntity]: List of full-size prediction data entities after merging.
+            list[TorchPredItem]: List of full-size prediction data entities after merging.
         """
         entities_to_merge = defaultdict(list)
         img_ids = []
@@ -492,6 +531,16 @@ class SegmentationTileMerge(TileMerge):
             batch_size = tile_preds.batch_size
             saliency_maps = tile_preds.saliency_map if explain_mode else [[] for _ in range(batch_size)]
             feature_vectors = tile_preds.feature_vector if explain_mode else [[] for _ in range(batch_size)]
+            if saliency_maps is None or feature_vectors is None:
+                msg = "The saliency maps or feature vectors are not provided."
+                raise ValueError(msg)
+            if tile_preds.imgs_info is None:
+                msg = "Image information is not provided."
+                raise ValueError(msg)
+            if tile_preds.masks is None:
+                msg = "The predicted masks are not provided."
+                raise ValueError(msg)
+
             for tile_attr, tile_img_info, tile_masks, tile_s_map, tile_f_vect in zip(
                 tile_attrs,
                 tile_preds.imgs_info,
@@ -499,16 +548,19 @@ class SegmentationTileMerge(TileMerge):
                 saliency_maps,
                 feature_vectors,
             ):
+                if tile_img_info is None:
+                    msg = f"Image information is not provided : {tile_preds.imgs_info}."
+                    raise ValueError(msg)
+
                 tile_id = tile_attr["tile_id"]
                 if tile_id not in img_ids:
                     img_ids.append(tile_id)
                 tile_img_info.padding = tile_attr["roi"]
-
-                seg_pred_entity = SegPredEntity(
-                    image=torch.empty(tile_img_info.ori_shape),
+                seg_pred_entity = TorchPredItem(
+                    image=torch.empty((3, *tile_img_info.ori_shape)),
                     img_info=tile_img_info,
-                    masks=tile_masks,
-                    score=[],
+                    masks=tv_tensors.Mask(tile_masks),
+                    scores=torch.tensor([]),
                 )
 
                 if explain_mode:
@@ -524,20 +576,26 @@ class SegmentationTileMerge(TileMerge):
     def _merge_entities(
         self,
         img_info: ImageInfo,
-        entities: list[SegPredEntity],
+        entities: list[TorchPredItem],
         explain_mode: bool = False,
-    ) -> SegPredEntity:
+    ) -> TorchPredItem:
         """Merge tile predictions to one single prediction.
 
         Args:
             img_info (ImageInfo): Image information about the original image before tiling.
-            entities (list[SegPredEntity]): List of tile prediction entities.
+            entities (list[TorchPredItem]): List of tile prediction entities.
             explain_mode (bool): Whether or not tiles have explain features. Default: False.
 
         Returns:
-            SegPredEntity: Merged prediction entity.
+            TorchPredItem: Merged prediction entity.
         """
         img_size = img_info.ori_shape
+        if any(entity is None for entity in entities):
+            msg = f"Some entities are None: {entities}."
+            raise ValueError(msg)
+        if entities[0].masks is None:
+            msg = "The predicted masks are not provided."
+            raise ValueError(msg)
         num_classes = len(entities[0].masks)
 
         # Create a vote map for overlapping tiles
@@ -545,6 +603,12 @@ class SegmentationTileMerge(TileMerge):
         full_logits_mask = torch.zeros((num_classes, *img_size), device=img_info.device)
 
         for tile_entity in entities:
+            if tile_entity.img_info is None:
+                msg = "Image information is not provided."
+                raise ValueError(msg)
+            if tile_entity.masks is None:
+                msg = "The predicted masks are not provided."
+                raise ValueError(msg)
             offset_x, offset_y, tile_w, tile_h = tile_entity.img_info.padding
             vote_mask[offset_y : offset_y + tile_h, offset_x : offset_x + tile_w] += 1
             full_logits_mask[:, offset_y : offset_y + tile_h, offset_x : offset_x + tile_w] += tile_entity.masks[
@@ -554,9 +618,9 @@ class SegmentationTileMerge(TileMerge):
             ]
         full_logits_mask = full_logits_mask / vote_mask.unsqueeze(0)
 
-        return SegPredEntity(
-            image=torch.empty(img_size),
+        return TorchPredItem(
+            image=torch.empty((3, *img_size)),
             img_info=img_info,
-            masks=full_logits_mask.argmax(0).unsqueeze(0),
-            score=[],
+            masks=tv_tensors.Mask(full_logits_mask.argmax(0).unsqueeze(0)),
+            scores=torch.tensor([]),
         )

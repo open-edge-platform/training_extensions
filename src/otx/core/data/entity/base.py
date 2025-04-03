@@ -8,7 +8,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field, fields
-from typing import TYPE_CHECKING, Any, Dict, Generic, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Iterator
 
 import torch
 import torchvision.transforms.v2.functional as F  # noqa: N812
@@ -23,6 +23,16 @@ from otx.core.types.task import OTXTaskType
 if TYPE_CHECKING:
     import decord
     import numpy as np
+
+# Temporary for transition
+T_OTXPredEntity = Any
+T_OTXBatchPredEntity = Any
+
+T_OTXBatchLossEntity = Any
+
+T_OTXBatchDataEntity = Any
+
+T_OTXDataEntity = Any
 
 
 def custom_wrap(wrappee: Tensor, *, like: tv_tensors.TVTensor, **kwargs) -> tv_tensors.TVTensor:
@@ -344,82 +354,6 @@ class VideoInfo(tv_tensors.TVTensor):
         )
 
 
-class BboxInfo(tv_tensors.TVTensor):
-    """`torch.Tensor` subclass for bbox info, e.g., center, scale, and rotation.
-
-    Attributes:
-        data: Any data that can be turned into a tensor with `torch.as_tensor`.
-        center (np.ndarray): Bbox center coordinates.
-        scale (np.ndarray): Bbox scales for width and height.
-        rotation (float): Bbox rotation for bbox augmentations.
-    """
-
-    center: np.ndarray
-    scale: np.ndarray
-    rotation: float
-
-    @classmethod
-    def _wrap(
-        cls,
-        dummy_tensor: Tensor,
-        *,
-        center: np.ndarray | None = None,
-        scale: np.ndarray | None = None,
-        rotation: float | None = None,
-    ) -> BboxInfo:
-        bbox_info = dummy_tensor.as_subclass(cls)
-        bbox_info.center = center
-        bbox_info.scale = scale
-        bbox_info.rotation = rotation
-        return bbox_info
-
-    def __new__(  # noqa: D102
-        cls,
-        center: np.ndarray | None = None,
-        scale: np.ndarray | None = None,
-        rotation: float | None = None,
-    ) -> BboxInfo:
-        return cls._wrap(
-            dummy_tensor=Tensor(),
-            center=center,
-            scale=scale,
-            rotation=rotation,
-        )
-
-    @classmethod
-    def _wrap_output(
-        cls,
-        output: Tensor,
-        args: tuple[()] = (),
-        kwargs: Mapping[str, Any] | None = None,
-    ) -> BboxInfo:
-        flat_params, _ = tree_flatten(args + (tuple(kwargs.values()) if kwargs else ()))
-
-        if isinstance(output, Tensor) and not isinstance(output, BboxInfo):
-            bbox_info = next(x for x in flat_params if isinstance(x, BboxInfo))
-            output = BboxInfo._wrap(
-                dummy_tensor=output,
-                center=bbox_info.center,
-                scale=bbox_info.scale,
-                rotation=bbox_info.rotation,
-            )
-        elif isinstance(output, (tuple, list)):
-            bbox_infos = [x for x in flat_params if isinstance(x, BboxInfo)]
-            output = type(output)(
-                BboxInfo._wrap(
-                    dummy_tensor=dummy_tensor,
-                    center=bbox_info.center,
-                    scale=bbox_info.scale,
-                    rotation=bbox_info.rotation,
-                )
-                for dummy_tensor, bbox_info in zip(output, bbox_infos)
-            )
-        return output
-
-    def __repr__(self, *, tensor_contents: Any = None) -> str:  # noqa: ANN401
-        return f"BboxInfo(center={self.center}, scale={self.scale}, rotation={self.rotation})"
-
-
 @F.register_kernel(functional=F.resize, tv_tensor_cls=ImageInfo)
 def _resize_image_info(image_info: ImageInfo, size: list[int], **kwargs) -> ImageInfo:  # noqa: ARG001
     """Register ImageInfo to TorchVision v2 resize kernel."""
@@ -650,12 +584,6 @@ def get_size_points(point: Points) -> list[int]:
     return list(point.canvas_size)
 
 
-T_OTXDataEntity = TypeVar(
-    "T_OTXDataEntity",
-    bound="OTXDataEntity",
-)
-
-
 @register_pytree_node
 @dataclass
 class OTXDataEntity(Mapping):
@@ -733,14 +661,8 @@ class OTXPredEntity(OTXDataEntity):
     feature_vector: np.ndarray | list | None = None
 
 
-T_OTXBatchDataEntity = TypeVar(
-    "T_OTXBatchDataEntity",
-    bound="OTXBatchDataEntity",
-)
-
-
 @dataclass
-class OTXBatchDataEntity(Generic[T_OTXDataEntity]):
+class OTXBatchDataEntity:
     """Base Batch data entity for OTX.
 
     This entity is the output of PyTorch DataLoader,
@@ -883,14 +805,3 @@ class OTXBatchPredEntity(OTXBatchDataEntity):
 
 class OTXBatchLossEntity(Dict[str, Tensor]):
     """Data entity to represent model output losses."""
-
-
-T_OTXBatchPredEntity = TypeVar(
-    "T_OTXBatchPredEntity",
-    bound=OTXBatchPredEntity,
-)
-
-T_OTXBatchLossEntity = TypeVar(
-    "T_OTXBatchLossEntity",
-    bound=OTXBatchLossEntity,
-)

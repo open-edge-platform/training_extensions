@@ -6,22 +6,28 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.algo.keypoint_detection.rtmpose import RTMPoseTiny
+from otx.algo.keypoint_detection.rtmpose import RTMPose
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.keypoint_detection import KeypointDetBatchDataEntity
+from otx.core.model.base import DataInputParams
+from otx.data import TorchDataBatch
 
 
 class TestRTMPoseTiny:
     @pytest.fixture()
-    def fxt_keypoint_det_model(self) -> RTMPoseTiny:
-        return RTMPoseTiny(label_info=10)
+    def fxt_keypoint_det_model(self) -> RTMPose:
+        return RTMPose(
+            label_info=10,
+            model_name="rtmpose_tiny",
+            data_input_params=DataInputParams((192, 256), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
     def test_customize_inputs(self, fxt_keypoint_det_model, fxt_keypoint_det_batch_data_entity):
         outputs = fxt_keypoint_det_model._customize_inputs(fxt_keypoint_det_batch_data_entity)
         entity = outputs["entity"]
-        assert isinstance(entity.bboxes, tv_tensors.BoundingBoxes)
-        assert isinstance(entity.keypoints, torch.Tensor)
-        assert isinstance(entity.keypoints_visible, torch.Tensor)
+        assert isinstance(entity.bboxes, list)
+        assert isinstance(entity.bboxes[0], tv_tensors.BoundingBoxes)
+        assert isinstance(entity.keypoints, list)
+        assert isinstance(entity.keypoints[0], torch.Tensor)
 
     def test_customize_outputs(self, fxt_keypoint_det_model, fxt_keypoint_det_batch_data_entity):
         outputs = {"loss": torch.tensor(1.0)}
@@ -29,7 +35,7 @@ class TestRTMPoseTiny:
         preds = fxt_keypoint_det_model._customize_outputs(outputs, fxt_keypoint_det_batch_data_entity)
         assert isinstance(preds, OTXBatchLossEntity)
 
-        outputs = [(torch.randn((2, 17, 2)), torch.randn((2, 17)))]
+        outputs = [(torch.randn(17, 2), torch.randn(17))]
         fxt_keypoint_det_model.training = False
         preds = fxt_keypoint_det_model._customize_outputs(outputs, fxt_keypoint_det_batch_data_entity)
-        assert isinstance(preds, KeypointDetBatchDataEntity)
+        assert isinstance(preds, TorchDataBatch)

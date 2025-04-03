@@ -14,9 +14,10 @@ from otx.algo.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Lo
 from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder
 from otx.algo.instance_segmentation.losses import ROICriterion
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.core.model.base import DataInputParams
 
 
 @pytest.fixture()
@@ -78,7 +79,11 @@ class TestClassIncrementalMixin:
         fxt_inst_seg_batch_entity_with_ignored_label,
         fxt_instance_list,
     ) -> None:
-        maskrcnn = MaskRCNN(3, "maskrcnn_resnet_50")
+        maskrcnn = MaskRCNN(
+            label_info=3,
+            model_name="maskrcnn_resnet_50",
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
         input_tensors = [
             torch.randn([4, 256, 144, 256]),
             torch.randn([4, 256, 72, 128]),

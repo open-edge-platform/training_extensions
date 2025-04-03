@@ -12,7 +12,7 @@ from omegaconf import DictConfig
 from otx.algo.detection.heads.yolox_head import YOLOXHeadModule
 from otx.algo.detection.utils.assigners import SimOTAAssigner
 from otx.algo.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 
 
 class TestYOLOXHeadModule:

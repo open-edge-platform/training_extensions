@@ -11,7 +11,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 
 

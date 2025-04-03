@@ -106,8 +106,7 @@ class TestBsSearchAlgo:
         mock_train_func = self.get_mock_train_func(cuda_oom_bound=1, max_runnable_bs=1)
 
         bs_search_algo = BsSearchAlgo(mock_train_func, 128, 1000)
-        with pytest.raises(RuntimeError):
-            bs_search_algo.auto_decrease_batch_size()
+        assert bs_search_algo.auto_decrease_batch_size() == 2
 
     def test_auto_decrease_batch_size_bs2_not_oom_but_most_mem(self):
         """Batch size 2 doesn't make oom but use most of memory."""
@@ -140,8 +139,7 @@ class TestBsSearchAlgo:
         mock_train_func = self.get_mock_train_func(cuda_oom_bound=1, max_runnable_bs=1)
 
         bs_search_algo = BsSearchAlgo(mock_train_func, 128, 1000)
-        with pytest.raises(RuntimeError):
-            bs_search_algo.find_big_enough_batch_size()
+        assert bs_search_algo.find_big_enough_batch_size() == 2
 
     def test_find_big_enough_batch_size_bs2_not_oom_but_most_mem(self):
         """Batch size 2 doesn't make oom but use most of memory."""

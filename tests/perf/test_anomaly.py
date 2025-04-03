@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX anomaly perfomance benchmark tests."""
@@ -18,8 +18,9 @@ class TestPerfAnomalyClassification(PerfTestBase):
     """Benchmark anomaly classification."""
 
     MODEL_TEST_CASES: ClassVar[list[Benchmark.Model]] = [
+        Benchmark.Model(task="anomaly", name="uflow", category="accuracy"),
         Benchmark.Model(task="anomaly", name="padim", category="speed"),
-        Benchmark.Model(task="anomaly", name="stfpm", category="accuracy"),
+        Benchmark.Model(task="anomaly", name="stfpm", category="other"),
     ]
 
     DATASET_TEST_CASES: ClassVar[list[Benchmark.Dataset]] = [

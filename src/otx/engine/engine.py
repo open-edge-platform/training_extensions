@@ -23,7 +23,7 @@ from lightning.pytorch.plugins.precision import MixedPrecision
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel, OVModel
 from otx.core.types import PathLike
 from otx.core.types.device import DeviceType
 from otx.core.types.export import OTXExportFormatType
@@ -143,8 +143,13 @@ class Engine:
         get_model_args: dict[str, Any] = {}
         if self._datamodule is not None:
             get_model_args["label_info"] = self._datamodule.label_info
-            if (input_size := self._datamodule.input_size) is not None:
-                get_model_args["input_size"] = (input_size, input_size) if isinstance(input_size, int) else input_size
+            input_size = self._datamodule.input_size
+            get_model_args["data_input_params"] = DataInputParams(
+                input_size=input_size,
+                mean=self._datamodule.input_mean,
+                std=self._datamodule.input_std,
+            )
+
         self._model: OTXModel = (
             model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
         )
@@ -682,7 +687,6 @@ class Engine:
         checkpoint: PathLike | None = None,
         datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
         explain_config: ExplainConfig | None = None,
-        dump: bool | None = False,
         **kwargs,
     ) -> list | None:
         r"""Run XAI using the specified model and data (test subset).
@@ -691,7 +695,6 @@ class Engine:
             checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
             datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.
             explain_config (ExplainConfig | None, optional): Config used to handle saliency maps.
-            dump (bool): Whether to dump "saliency_map" or not.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
@@ -702,7 +705,6 @@ class Engine:
             ...     datamodule=OTXDataModule(),
             ...     checkpoint=<checkpoint/path>,
             ...     explain_config=ExplainConfig(),
-            ...     dump=True,
             ... )
 
         CLI Usage:
@@ -725,7 +727,6 @@ class Engine:
                 ```
         """
         from otx.algo.utils.xai_utils import (
-            dump_saliency_maps,
             process_saliency_maps_in_pred_entity,
             set_crop_padded_map_flag,
         )
@@ -770,13 +771,6 @@ class Engine:
         explain_config = set_crop_padded_map_flag(explain_config, datamodule)
 
         predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
-        if dump:
-            dump_saliency_maps(
-                predict_result,
-                explain_config,
-                datamodule,
-                output_dir=Path(self.work_dir),
-            )
         model.explain_mode = False
         return predict_result
 

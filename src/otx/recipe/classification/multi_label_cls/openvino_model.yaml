@@ -1,5 +1,5 @@
 model:
-  class_path: otx.core.model.classification.OVMultilabelClassificationModel
+  class_path: otx.core.model.multilabel_classification.OVMultilabelClassificationModel
   init_args:
     label_info: 1000
     model_name: openvino.xml

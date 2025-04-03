@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Converter for v1 config."""
@@ -16,7 +16,7 @@ from jsonargparse import ArgumentParser, Namespace
 
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel
+from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types import PathLike
 from otx.core.types.task import OTXTaskType
 from otx.engine import Engine
@@ -118,6 +118,10 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.INSTANCE_SEGMENTATION,
         "model_name": "rtmdet_inst_tiny",
     },
+    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
+        "task": OTXTaskType.INSTANCE_SEGMENTATION,
+        "model_name": "maskrcnn_r50_tv",
+    },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
         "task": OTXTaskType.ROTATED_DETECTION,
@@ -169,6 +173,10 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.ANOMALY,
         "model_name": "stfpm",
     },
+    "ote_anomaly_uflow": {
+        "task": OTXTaskType.ANOMALY,
+        "model_name": "uflow",
+    },
     # ANOMALY CLASSIFICATION
     "ote_anomaly_classification_padim": {
         "task": OTXTaskType.ANOMALY_CLASSIFICATION,
@@ -199,7 +207,7 @@ TEMPLATE_ID_DICT = {
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
         "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny_single_obj",
+        "model_name": "rtmpose_tiny",
     },
 }
 
@@ -413,7 +421,7 @@ class ConfigConverter:
             config (dict): The configuration dictionary.
         """
         config.pop("config")  # Remove config key that for CLI
-        config["data"].pop("__path__")  # Remove __path__ key that for CLI overriding
+        config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
 
     @staticmethod
     def instantiate(
@@ -453,7 +461,11 @@ class ConfigConverter:
         # Update num_classes & Instantiate Model
         model_config = config.pop("model")
         model_config["init_args"]["label_info"] = datamodule.label_info
-
+        model_config["init_args"]["data_input_params"] = DataInputParams(
+            input_size=datamodule.input_size,
+            mean=datamodule.input_mean,
+            std=datamodule.input_std,
+        ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False, skip={"label_info"})
         model = model_parser.instantiate_classes(Namespace(model=model_config)).get("model")

@@ -1,0 +1,29 @@
+# Description.
+model_template_id: ote_anomaly_uflow
+name: U-FLOW
+task_type: ANOMALY_CLASSIFICATION
+task_family: VISION
+instantiation: "CLASS"
+summary: This model generally achieves high accuracy across a wide range of tasks, but it is slower than other models.
+application: ~
+
+# Algo backend.
+framework: OTXAnomalyClassification v0.1.0
+
+# Hyper Parameters
+hyper_parameters:
+  base_path: ./configuration.yaml
+
+# Training resources.
+max_nodes: 1
+training_targets:
+  - GPU
+  - CPU
+
+# Computational Complexity
+gigaflops: 19.6
+size: 62.88
+
+# Model spec
+model_category: ACCURACY
+is_default_for_task: false

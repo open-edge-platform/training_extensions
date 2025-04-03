@@ -22,16 +22,12 @@ from otx.core.data.dataset.anomaly import (
     AnomalySegmentationDataItem,
 )
 from otx.core.data.dataset.classification import (
-    HlabelClsDataEntity,
     HLabelInfo,
-    MulticlassClsDataEntity,
-    MultilabelClsDataEntity,
     OTXHlabelClsDataset,
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
 from otx.core.data.dataset.detection import (
-    DetDataEntity,
     OTXDetectionDataset,
 )
 from otx.core.data.dataset.instance_segmentation import (
@@ -40,10 +36,10 @@ from otx.core.data.dataset.instance_segmentation import (
 )
 from otx.core.data.dataset.segmentation import (
     OTXSegmentationDataset,
-    SegDataEntity,
 )
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.task import OTXTaskType
+from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -152,12 +148,12 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
 
 @pytest.fixture(
     params=[
-        (OTXHlabelClsDataset, HlabelClsDataEntity, {}),
-        (OTXMultilabelClsDataset, MultilabelClsDataEntity, {}),
-        (OTXMulticlassClsDataset, MulticlassClsDataEntity, {}),
-        (OTXDetectionDataset, DetDataEntity, {}),
+        (OTXHlabelClsDataset, TorchDataItem, {}),
+        (OTXMultilabelClsDataset, TorchDataItem, {}),
+        (OTXMulticlassClsDataset, TorchDataItem, {}),
+        (OTXDetectionDataset, TorchDataItem, {}),
         (OTXInstanceSegDataset, InstanceSegDataEntity, {"include_polygons": True}),
-        (OTXSegmentationDataset, SegDataEntity, {}),
+        (OTXSegmentationDataset, TorchDataItem, {}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
         (AnomalyDataset, AnomalyDetectionDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),

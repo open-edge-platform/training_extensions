@@ -121,4 +121,3 @@ For instance segmentation networks the following algorithm is used to generate s
 
             (otx) ...$ otx explain ... --checkpoint <checkpoint-path> # .pth or .xml weights of the model
                                        --data_root <dataset_path> # Path to data folder or single image 
-                                       --dump True # Wherether to save saliency map images or not

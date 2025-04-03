@@ -9,25 +9,33 @@ import pytest
 import torch
 
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity
 from otx.core.metrics.dice import SegmCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.segmentation import OTXSegmentationModel
 from otx.core.types.label import SegLabelInfo
+from otx.data import TorchDataBatch, TorchPredBatch
 
 
 class TestOTXSegmentationModel:
     @pytest.fixture()
     def model(self, label_info, optimizer, scheduler, metric, torch_compile):
-        return OTXSegmentationModel(label_info, "segm_model", (512, 512), optimizer, scheduler, metric, torch_compile)
+        return OTXSegmentationModel(
+            label_info,
+            DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            "segm_model",
+            optimizer,
+            scheduler,
+            metric,
+            torch_compile,
+        )
 
     @pytest.fixture()
     def batch_data_entity(self):
-        return SegBatchDataEntity(
+        return TorchDataBatch(
             batch_size=2,
             images=torch.randn(2, 3, 224, 224),
             imgs_info=[],
-            masks=[torch.randn(224, 224), torch.randn(224, 224)],
+            masks=[torch.randn(1, 224, 224), torch.randn(1, 224, 224)],
         )
 
     @pytest.fixture()
@@ -87,7 +95,7 @@ class TestOTXSegmentationModel:
     def test_init(self, model):
         assert model.num_classes == 3
         assert model.model_name == "segm_model"
-        assert model.input_size == (512, 512)
+        assert model.data_input_params.input_size == (224, 224)
 
     def test_customize_inputs(self, model, batch_data_entity):
         customized_inputs = model._customize_inputs(batch_data_entity)
@@ -105,7 +113,7 @@ class TestOTXSegmentationModel:
         model.training = False
         outputs = torch.randn(2, 10, 224, 224)
         customized_outputs = model._customize_outputs(outputs, batch_data_entity)
-        assert isinstance(customized_outputs, SegBatchPredEntity)
+        assert isinstance(customized_outputs, TorchPredBatch)
         assert len(customized_outputs.scores) == 0
         assert customized_outputs.images.shape == (2, 3, 224, 224)
         assert customized_outputs.imgs_info == []

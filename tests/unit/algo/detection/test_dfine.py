@@ -15,14 +15,19 @@ from otx.algo.detection.heads.dfine_decoder import DFINETransformer
 from otx.algo.detection.losses.dfine_loss import DFINECriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.algo.detection.rtdetr import DETR
-from otx.core.data.entity.detection import DetBatchPredEntity
+from otx.core.model.base import DataInputParams
+from otx.data import TorchPredBatch
 
 
 class TestDFine:
     @pytest.mark.parametrize(
         "model",
         [
-            DFine(label_info=3, model_name="dfine_hgnetv2_x"),
+            DFine(
+                label_info=3,
+                model_name="dfine_hgnetv2_x",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_loss(self, model, fxt_data_module):
@@ -33,7 +38,11 @@ class TestDFine:
     @pytest.mark.parametrize(
         "model",
         [
-            DFine(label_info=3, model_name="dfine_hgnetv2_x"),
+            DFine(
+                label_info=3,
+                model_name="dfine_hgnetv2_x",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_predict(self, model, fxt_data_module):
@@ -41,12 +50,16 @@ class TestDFine:
         data.images = torch.randn(2, 3, 640, 640)
         model.eval()
         output = model(data)
-        assert isinstance(output, DetBatchPredEntity)
+        assert isinstance(output, TorchPredBatch)
 
     @pytest.mark.parametrize(
         "model",
         [
-            DFine(label_info=3, model_name="dfine_hgnetv2_x"),
+            DFine(
+                label_info=3,
+                model_name="dfine_hgnetv2_x",
+                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            ),
         ],
     )
     def test_export(self, model):

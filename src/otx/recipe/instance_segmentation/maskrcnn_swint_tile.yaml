@@ -3,9 +3,6 @@ model:
   init_args:
     model_name: maskrcnn_swin_tiny
     label_info: 80
-    input_size:
-      - 1344
-      - 1344
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -36,8 +33,9 @@ overrides:
   max_epochs: 100
   data:
     input_size:
-      - 512
-      - 512
+      - 1344
+      - 1344
+
     tile_config:
       enable_tiler: true
       enable_adaptive_tiling: true

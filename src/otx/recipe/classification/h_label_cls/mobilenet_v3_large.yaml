@@ -1,7 +1,7 @@
 model:
-  class_path: otx.algo.classification.mobilenet_v3.MobileNetV3ForHLabelCls
+  class_path: otx.algo.classification.hlabel_models.mobilenet_v3.MobileNetV3HLabelCls
   init_args:
-    mode: large
+    model_name: mobilenetv3_large
 
     optimizer:
       class_path: torch.optim.SGD

@@ -133,6 +133,15 @@ def to_np_image(img: np.ndarray | Tensor | list) -> np.ndarray | list[np.ndarray
     return np.ascontiguousarray(img.numpy().transpose(1, 2, 0))
 
 
+def to_tensor_image(img: np.ndarray | Tensor | list) -> Tensor | list[Tensor]:
+    """Convert numpy 3D image to torch.Tensor 3D image."""
+    if isinstance(img, Tensor):
+        return img
+    if isinstance(img, list):
+        return [to_tensor_image(im) for im in img]
+    return torch.from_numpy(img).permute(2, 0, 1)
+
+
 def rescale_bboxes(boxes: Tensor, scale_factor: tuple[float, float]) -> Tensor:
     """Rescale boxes w.r.t. rescale_factor in-place.
 
@@ -201,6 +210,27 @@ def rescale_polygons(polygons: list[Polygon], scale_factor: float | tuple[float,
         p[1::2] *= h_scale
         polygon.points = p.tolist()
     return polygons
+
+
+def rescale_keypoints(keypoints: Tensor, scale_factor: float | tuple[float, float]) -> Tensor:
+    """Rescale keypoints as large as possible while keeping the aspect ratio.
+
+    Args:
+        keypoints (Tensor): Keypoints to be rescaled.
+        scale_factor (float | tuple[float, float]): Scale factor to be applied to keypoints with (height, width)
+            or single float value.
+
+    Returns:
+        (Tensor): The rescaled keypoints.
+    """
+    if isinstance(scale_factor, float):
+        w_scale = h_scale = scale_factor
+    else:
+        h_scale, w_scale = scale_factor
+
+    keypoints[:, 0] *= w_scale
+    keypoints[:, 1] *= h_scale
+    return keypoints
 
 
 def translate_bboxes(boxes: Tensor, distances: Sequence[float]) -> Tensor:

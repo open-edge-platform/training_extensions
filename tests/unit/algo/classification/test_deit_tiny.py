@@ -5,21 +5,20 @@
 
 import pytest
 
-from otx.algo.classification.vit import (
-    VisionTransformerForHLabelCls,
-    VisionTransformerForMulticlassCls,
-    VisionTransformerForMultilabelCls,
-)
+from otx.algo.classification.hlabel_models.vit import VisionTransformerHLabelCls
+from otx.algo.classification.multiclass_models.vit import VisionTransformerMulticlassCls
+from otx.algo.classification.multilabel_models.vit import VisionTransformerMultilabelCls
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.data.entity.base import OTXBatchLossEntity
+from otx.core.model.base import DataInputParams
 
 
 class TestDeitTiny:
     @pytest.fixture(
         params=[
-            (VisionTransformerForMulticlassCls, "fxt_multiclass_cls_batch_data_entity", "fxt_multiclass_labelinfo"),
-            (VisionTransformerForMultilabelCls, "fxt_multilabel_cls_batch_data_entity", "fxt_multilabel_labelinfo"),
-            (VisionTransformerForHLabelCls, "fxt_hlabel_cls_batch_data_entity", "fxt_hlabel_cifar"),
+            (VisionTransformerMulticlassCls, "fxt_multiclass_cls_batch_data_entity", "fxt_multiclass_labelinfo"),
+            (VisionTransformerMultilabelCls, "fxt_multilabel_cls_batch_data_entity", "fxt_multilabel_labelinfo"),
+            (VisionTransformerHLabelCls, "fxt_hlabel_cls_batch_data_entity", "fxt_hlabel_cifar"),
         ],
         ids=["multiclass", "multilabel", "hlabel"],
     )
@@ -28,7 +27,10 @@ class TestDeitTiny:
         fxt_input = request.getfixturevalue(input_fxt_name)
         fxt_label_info = request.getfixturevalue(label_info_fxt_name)
 
-        model = model_cls(label_info=fxt_label_info)
+        model = model_cls(
+            label_info=fxt_label_info,
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        )
 
         return model, fxt_input
 
@@ -37,10 +39,10 @@ class TestDeitTiny:
         fxt_model, fxt_input = fxt_model_and_input
 
         fxt_model.train()
-        assert isinstance(fxt_model.forward(fxt_input), OTXBatchLossEntity)
+        assert isinstance(fxt_model(fxt_input), OTXBatchLossEntity)
 
         fxt_model.eval()
-        assert not isinstance(fxt_model.forward(fxt_input), OTXBatchLossEntity)
+        assert not isinstance(fxt_model(fxt_input), OTXBatchLossEntity)
 
         fxt_model.explain_mode = explain_mode
         preds = fxt_model.predict_step(fxt_input, batch_idx=0)
@@ -51,3 +53,23 @@ class TestDeitTiny:
         mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_cls_effnet_b0_ckpt")
         fxt_model.load_from_otx_v1_ckpt({})
         mock_load_ckpt.assert_called_once_with({}, "multiclass", "model.")
+
+    def test_freeze_backbone(self):
+        data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+
+        model = VisionTransformerMulticlassCls(
+            label_info="fxt_multiclass_labelinfo",
+            data_input_params=data_input_params,
+            freeze_backbone=True,
+        )
+
+        classification_layers = model._identify_classification_layers()
+        assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
+
+        model = VisionTransformerMulticlassCls(
+            label_info="fxt_multiclass_labelinfo",
+            data_input_params=data_input_params,
+            freeze_backbone=False,
+        )
+
+        assert all(param.requires_grad for param in model.parameters())

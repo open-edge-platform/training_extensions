@@ -5,7 +5,7 @@
 
 import pytest
 
-from otx.core.config.data import SubsetConfig, VisualPromptingConfig
+from otx.core.config.data import SubsetConfig
 from otx.core.data.dataset.anomaly import AnomalyDataset
 from otx.core.data.dataset.classification import (
     HLabelInfo,
@@ -16,7 +16,6 @@ from otx.core.data.dataset.classification import (
 from otx.core.data.dataset.detection import OTXDetectionDataset
 from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.core.data.dataset.segmentation import OTXSegmentationDataset
-from otx.core.data.dataset.visual_prompting import OTXVisualPromptingDataset
 from otx.core.data.factory import OTXDatasetFactory, TransformLibFactory
 from otx.core.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.core.types.image import ImageColorChannel
@@ -24,25 +23,6 @@ from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
 
 lib_type_parameters = [(TransformLibType.TORCHVISION, TorchVisionTransformLib)]
-SKIP_MMLAB_TEST = False
-try:
-    from otx.core.data.transform_libs.mmaction import MMActionTransformLib
-    from otx.core.data.transform_libs.mmcv import MMCVTransformLib
-    from otx.core.data.transform_libs.mmdet import MMDetTransformLib
-    from otx.core.data.transform_libs.mmpretrain import MMPretrainTransformLib
-    from otx.core.data.transform_libs.mmseg import MMSegTransformLib
-
-    lib_type_parameters.extend(
-        [
-            (TransformLibType.MMCV, MMCVTransformLib),
-            (TransformLibType.MMPRETRAIN, MMPretrainTransformLib),
-            (TransformLibType.MMDET, MMDetTransformLib),
-            (TransformLibType.MMSEG, MMSegTransformLib),
-            (TransformLibType.MMACTION, MMActionTransformLib),
-        ],
-    )
-except ImportError:
-    SKIP_MMLAB_TEST = True
 
 
 class TestTransformLibFactory:
@@ -69,7 +49,6 @@ class TestOTXDatasetFactory:
             (OTXTaskType.ROTATED_DETECTION, OTXInstanceSegDataset),
             (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset),
             (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset),
-            (OTXTaskType.VISUAL_PROMPTING, OTXVisualPromptingDataset),
             (OTXTaskType.ANOMALY, AnomalyDataset),
             (OTXTaskType.ANOMALY_CLASSIFICATION, AnomalyDataset),
             (OTXTaskType.ANOMALY_DETECTION, AnomalyDataset),
@@ -87,9 +66,6 @@ class TestOTXDatasetFactory:
     ) -> None:
         mocker.patch.object(TransformLibFactory, "generate", return_value=None)
         cfg_subset = mocker.MagicMock(spec=SubsetConfig)
-        vpm_config = mocker.MagicMock(spec=VisualPromptingConfig)
-        vpm_config.use_bbox = False
-        vpm_config.use_point = False
         image_color_channel = ImageColorChannel.BGR
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
         assert isinstance(
@@ -98,7 +74,6 @@ class TestOTXDatasetFactory:
                 dm_subset=fxt_mock_dm_subset,
                 mem_cache_handler=fxt_mem_cache_handler,
                 cfg_subset=cfg_subset,
-                vpm_config=vpm_config,
                 image_color_channel=image_color_channel,
                 data_format="",
             ),

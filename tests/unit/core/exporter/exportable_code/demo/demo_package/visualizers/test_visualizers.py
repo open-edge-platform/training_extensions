@@ -5,13 +5,11 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
-from model_api.models.utils import (
+from model_api.models.result import (
     ClassificationResult,
-    Detection,
     DetectionResult,
     ImageResultWithSoftPrediction,
     InstanceSegmentationResult,
-    SegmentedObject,
 )
 from numpy.random import PCG64, Generator
 
@@ -146,14 +144,24 @@ class TestDetectionVisualizer:
 
     def test_draw_no_predictions(self, visualizer):
         frame = np.zeros((100, 100, 3), dtype=np.uint8)
-        predictions = DetectionResult([], saliency_map=None, feature_vector=None)
+        predictions = DetectionResult(
+            bboxes=np.ndarray([]),
+            labels=np.ndarray([]),
+            scores=np.ndarray([]),
+            label_names=[],
+            saliency_map=None,
+            feature_vector=None,
+        )
         output_frame = visualizer.draw(frame, predictions)
         assert np.array_equal(frame, output_frame)
 
     def test_draw_with_predictions(self, visualizer):
         frame = np.zeros((100, 100, 3), dtype=np.uint8)
         predictions = DetectionResult(
-            [Detection(10, 40, 30, 80, 0.7, 2, "Car")],
+            bboxes=np.array([[10, 10, 30, 30]]),
+            labels=np.array([0]),
+            label_names=["Car"],
+            scores=np.array([0.7]),
             saliency_map=None,
             feature_vector=None,
         )
@@ -184,28 +192,16 @@ class TestInstanceSegmentationVisualizer:
 
         # Create instance segmentation results with multiple objects
         predictions = InstanceSegmentationResult(
-            segmentedObjects=[
-                SegmentedObject(
-                    xmin=10,
-                    ymin=10,
-                    xmax=30,
-                    ymax=30,
-                    score=0.9,
-                    id=0,
-                    mask=rand_generator.integers(2, size=(100, 100), dtype=np.uint8),
-                    str_label="person",
-                ),
-                SegmentedObject(
-                    xmin=40,
-                    ymin=40,
-                    xmax=60,
-                    ymax=60,
-                    score=0.8,
-                    id=1,
-                    mask=rand_generator.integers(2, size=(100, 100), dtype=np.uint8),
-                    str_label="car",
-                ),
-            ],
+            bboxes=np.array([[10, 10, 30, 30], [40, 40, 60, 60]]),
+            labels=np.array([0, 1]),
+            masks=np.array(
+                [
+                    rand_generator.integers(2, size=(100, 100), dtype=np.uint8),
+                    rand_generator.integers(2, size=(100, 100), dtype=np.uint8),
+                ],
+            ),
+            scores=np.array([0.9, 0.8]),
+            label_names=["person", "car"],
             saliency_map=None,
             feature_vector=None,
         )
@@ -221,7 +217,13 @@ class TestInstanceSegmentationVisualizer:
         copied_frame = frame.copy()
 
         # Create instance segmentation results with no objects
-        predictions = InstanceSegmentationResult(segmentedObjects=[], saliency_map=None, feature_vector=None)
+        predictions = InstanceSegmentationResult(
+            bboxes=np.array([]),
+            labels=np.array([]),
+            masks=np.array([]),
+            saliency_map=None,
+            feature_vector=None,
+        )
 
         drawn_frame = visualizer.draw(frame, predictions)
         assert np.array_equal(drawn_frame, copied_frame)

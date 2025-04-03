@@ -127,8 +127,8 @@ class TestTorchVisionTransformLib:
                 [
                     v2.RandomResizedCrop(size=(224, 224), antialias=True),
                     v2.RandomHorizontalFlip(p=0.5),
-                    v2.ToDtype(torch.float32, scale=True),
-                    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                    v2.ToDtype(torch.float32),
+                    v2.Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
                 ],
             )
         prefix = "torchvision.transforms.v2"
@@ -144,11 +144,10 @@ class TestTorchVisionTransformLib:
           - class_path: {prefix}.ToDtype
             init_args:
                 dtype: ${{as_torch_dtype:torch.float32}}
-                scale: True
           - class_path: {prefix}.Normalize
             init_args:
-                mean: [0.485, 0.456, 0.406]
-                std: [0.229, 0.224, 0.225]
+                mean: [123.675, 116.28, 103.53]
+                std: [58.395, 57.12, 57.375]
         """
         created = OmegaConf.create(cfg)
         if request.param == "from_obj":
@@ -201,11 +200,10 @@ class TestTorchVisionTransformLib:
           - class_path: {prefix}.ToDtype
             init_args:
                 dtype: ${{as_torch_dtype:torch.float32}}
-                scale: True
           - class_path: {prefix}.Normalize
             init_args:
-                mean: [0.485, 0.456, 0.406]
-                std: [0.229, 0.224, 0.225]
+                mean: [123.675, 116.28, 103.53]
+                std: [58.395, 57.12, 57.375]
         """
         cfg_org = OmegaConf.create(cfg_str)
 
@@ -271,7 +269,7 @@ class TestTorchVisionTransformLib:
         assert TorchVisionTransformLib._eval_input_size_str("(5, 5) / 2") == (2, 2)
         assert TorchVisionTransformLib._eval_input_size_str("(10, 11) * -0.5") == (-5, -6)
 
-    @pytest.mark.parametrize("input_str", ["1+1", "1+-5", "rm fake", "hoho", "DecordDecode()"])
+    @pytest.mark.parametrize("input_str", ["1+1", "1+-5", "rm fake", "hoho"])
     def test_eval_input_size_str_wrong_value(self, input_str):
         with pytest.raises(SyntaxError):
             assert TorchVisionTransformLib._eval_input_size_str(input_str)

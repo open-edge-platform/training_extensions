@@ -1,0 +1,44 @@
+model:
+  class_path: otx.algo.anomaly.uflow.Uflow
+  init_args:
+    backbone: "resnet18"
+    flow_steps: 4
+    affine_clamp: 2.0
+    affine_subnet_channels_ratio: 1.0
+    permute_soft: False
+    task: ANOMALY
+
+engine:
+  task: ANOMALY
+  device: auto
+
+callback_monitor: image_F1Score
+
+data: ../_base_/data/anomaly.yaml
+
+overrides:
+  precision: 32
+  max_epochs: 200
+  num_sanity_val_steps: 0
+  data:
+    input_size: [448, 448]
+    train_subset:
+      transforms:
+        - class_path: torchvision.transforms.v2.Resize
+          init_args:
+            size: [448, 448]
+            antialias: true
+    val_subset:
+      transforms:
+        - class_path: torchvision.transforms.v2.Resize
+          init_args:
+            size: [448, 448]
+            antialias: true
+      sampler:
+        class_path: torch.utils.data.RandomSampler
+    test_subset:
+      transforms:
+        - class_path: torchvision.transforms.v2.Resize
+          init_args:
+            size: [448, 448]
+            antialias: true

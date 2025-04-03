@@ -19,7 +19,7 @@ from otx.algo.common.utils.utils import multi_apply
 from otx.algo.detection.heads.base_head import BaseDenseHead
 from otx.algo.detection.utils.prior_generators.utils import anchor_inside_flags
 from otx.algo.detection.utils.utils import images_to_levels, unmap
-from otx.algo.utils.mmengine_utils import InstanceData
+from otx.algo.utils.utils import InstanceData
 
 
 class AnchorHead(BaseDenseHead):

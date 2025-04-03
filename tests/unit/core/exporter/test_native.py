@@ -6,6 +6,7 @@ import pytest
 import torch
 
 from otx.core.exporter.native import OTXNativeModelExporter
+from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.precision import OTXPrecisionType
 
@@ -16,7 +17,7 @@ class TestOTXNativeModelExporter:
         # Create an instance of OTXNativeModelExporter with default params
         return OTXNativeModelExporter(
             task_level_export_parameters=mocker.MagicMock(TaskLevelExportParameters),
-            input_size=(3, 224, 224),
+            data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
     @pytest.fixture()

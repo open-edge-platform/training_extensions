@@ -9,13 +9,13 @@ import pytest
 import torch
 
 from otx.algo.classification.backbones import VisionTransformer
-from otx.algo.utils.mmengine_utils import load_checkpoint_to_model
+from otx.algo.utils.utils import load_checkpoint_to_model
 
 
 class TestVisionTransformer:
     @pytest.fixture()
     def config(self) -> dict:
-        return {"arch": "vit-tiny", "img_size": 224, "patch_size": 16, "drop_path_rate": 0.1}
+        return {"model_name": "vit-tiny", "img_size": 224, "patch_size": 16, "drop_path_rate": 0.1}
 
     def test_init_weights(self, tmp_path, config):
         # test weight init cfg
