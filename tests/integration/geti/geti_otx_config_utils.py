@@ -1,18 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# TODO(Eugene): Remove this when fixed
-# *"value" missing in
-# 	mem_cache_size
-# 	storage_cache_scheme
-# 	enable_early_stopping
-# 	use_adaptive_interval
-# 	auto_num_workers
-
-# * confidence_threshold "default_value": 0.35, != "value": 0.01,
-# * nms_iou_threshold "default_value": 0.5, != "value": 0.01,
-
-
 from __future__ import annotations
 
 import argparse
@@ -318,8 +306,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    model_template = OmegaConf.load(args.recipe_path)
-    hyper_parameters = load_hyper_parameters(args.recipe_path)
+    recipe_path = Path(args.recipe_path)
+    model_template = OmegaConf.load(recipe_path)
+    hyper_parameters = load_hyper_parameters(recipe_path)
 
     otx_config = OTXConfig(
         job_type=JobType.TRAIN,
