@@ -30,10 +30,7 @@ from otx.core.data.dataset.classification import (
 from otx.core.data.dataset.detection import (
     OTXDetectionDataset,
 )
-from otx.core.data.dataset.instance_segmentation import (
-    InstanceSegDataEntity,
-    OTXInstanceSegDataset,
-)
+from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.core.data.dataset.segmentation import (
     OTXSegmentationDataset,
 )
@@ -152,7 +149,7 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         (OTXMultilabelClsDataset, TorchDataItem, {}),
         (OTXMulticlassClsDataset, TorchDataItem, {}),
         (OTXDetectionDataset, TorchDataItem, {}),
-        (OTXInstanceSegDataset, InstanceSegDataEntity, {"include_polygons": True}),
+        (OTXInstanceSegDataset, TorchDataItem, {"include_polygons": True}),
         (OTXSegmentationDataset, TorchDataItem, {}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY}),
         (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),

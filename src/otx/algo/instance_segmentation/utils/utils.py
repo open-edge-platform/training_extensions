@@ -12,14 +12,14 @@ from torch import Tensor
 
 from otx.algo.common.utils.utils import sample_point
 from otx.algo.utils.utils import InstanceData
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.data import TorchDataBatch
 
 
-def unpack_inst_seg_entity(entity: InstanceSegBatchDataEntity) -> tuple:
+def unpack_inst_seg_entity(entity: TorchDataBatch) -> tuple:
     """Unpack gt_instances, gt_instances_ignore and img_metas based on batch_data_samples.
 
     Args:
-        batch_data_samples (DetBatchDataEntity): Data entity from dataset.
+        entity (TorchDataBatch): Data entity from dataset.
 
     Returns:
         tuple:
@@ -32,30 +32,34 @@ def unpack_inst_seg_entity(entity: InstanceSegBatchDataEntity) -> tuple:
     """
     batch_gt_instances = []
     batch_img_metas = []
-    for img_info, masks, polygons, bboxes, labels in zip(
-        entity.imgs_info,
-        entity.masks,
-        entity.polygons,
-        entity.bboxes,
-        entity.labels,
-    ):
+    img_infos = entity.imgs_info
+    masks = entity.masks
+    polygons = entity.polygons
+    bboxes = entity.bboxes
+    labels = entity.labels
+    for index in range(len(img_infos)):  # type: ignore[union-attr,arg-type]
+        img_info = img_infos[index]  # type: ignore[index]
+        mask = masks[index] if masks is not None else None
+        polygon = polygons[index] if polygons is not None else None
+        bbox = bboxes[index] if bboxes is not None else None
+        label = labels[index] if labels is not None else None
         metainfo = {
-            "img_id": img_info.img_idx,
-            "img_shape": img_info.img_shape,
-            "ori_shape": img_info.ori_shape,
-            "scale_factor": img_info.scale_factor,
-            "ignored_labels": img_info.ignored_labels,
+            "img_id": img_info.img_idx,  # type: ignore[union-attr]
+            "img_shape": img_info.img_shape,  # type: ignore[union-attr]
+            "ori_shape": img_info.ori_shape,  # type: ignore[union-attr]
+            "scale_factor": img_info.scale_factor,  # type: ignore[union-attr]
+            "ignored_labels": img_info.ignored_labels,  # type: ignore[union-attr]
         }
         batch_img_metas.append(metainfo)
 
-        gt_masks = masks if len(masks) > 0 else polygons
+        gt_masks = mask if mask is not None else polygon
 
         batch_gt_instances.append(
             InstanceData(
                 metainfo=metainfo,
                 masks=gt_masks,
-                bboxes=bboxes,
-                labels=labels,
+                bboxes=bbox,
+                labels=label,
             ),
         )
 
