@@ -107,7 +107,7 @@ class OTXInstanceSegDataset(OTXDataset):
             ),
             masks=tv_tensors.Mask(masks, dtype=torch.uint8),
             label=torch.as_tensor(labels, dtype=torch.long),
-            polygons=gt_polygons,
+            polygons=gt_polygons if len(gt_polygons) > 0 else None,
         )
 
         return self._apply_transforms(entity)  # type: ignore[return-value]
