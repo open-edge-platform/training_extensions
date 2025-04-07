@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 from contextlib import contextmanager
 from copy import deepcopy
@@ -12,11 +11,8 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import metadata_keys
 from omegaconf import OmegaConf
 
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT, ConfigConverter
 
@@ -25,6 +21,57 @@ if TYPE_CHECKING:
 
 
 BASE_MODEL_FILENAME = "model_fp32_xai.pth"
+
+DEFAULT_VALUE = "default_value"
+VALUE = "value"
+MIN_VALUE = "min_value"
+MAX_VALUE = "max_value"
+STEP_SIZE = "step_size"
+DESCRIPTION = "description"
+HEADER = "header"
+WARNING = "warning"
+EDITABLE = "editable"
+VISIBLE_IN_UI = "visible_in_ui"
+AFFECTS_OUTCOME_OF = "affects_outcome_of"
+UI_RULES = "ui_rules"
+TYPE = "type"
+OPTIONS = "options"
+ENUM_NAME = "enum_name"
+
+
+def allows_model_template_override(keyword: str) -> bool:
+    """Returns True if the metadata element described by `keyword` can be overridden in a model template file.
+
+    :param keyword: Name of the metadata key to check.
+    :return: True if the metadata indicated by `keyword` can be overridden in a model template .yaml file, False
+        otherwise.
+    """
+    overrideable_keys = [
+        DEFAULT_VALUE,
+        VALUE,
+        MIN_VALUE,
+        MAX_VALUE,
+        DESCRIPTION,
+        HEADER,
+        EDITABLE,
+        WARNING,
+        VISIBLE_IN_UI,
+        OPTIONS,
+        ENUM_NAME,
+        UI_RULES,
+        AFFECTS_OUTCOME_OF,
+    ]
+    return keyword in overrideable_keys
+
+
+def allows_dictionary_values(keyword: str) -> bool:
+    """Returns True if the metadata element described by `keyword` allows having a dictionary as its value.
+
+    :param keyword: Name of the metadata key to check.
+    :return: True if the metadata indicated by `keyword` allows having a dictionary as its value, False otherwise.
+    """
+    keys_allowing_dictionary_values = [OPTIONS, UI_RULES]
+    return keyword in keys_allowing_dictionary_values
 
 
 class JobType(str, Enum):
@@ -60,78 +107,6 @@ class ExportParameter:
     precision: PrecisionType = PrecisionType.FP32
     with_xai: bool = False
 
-    def to_mlflow_artifact_fnames(self) -> list[str]:
-        fname = "model_"
-        precision_name = (
-            self.precision.name.lower() + "-pot"
-            if self.precision == PrecisionType.INT8
-            else self.precision.name.lower()
-        )
-        fname += precision_name + "_"
-        if self.with_xai:
-            fname += "xai"
-        else:
-            fname += "non-xai"
-
-        if self.export_format == ExportFormat.OPENVINO:
-            return [
-                f"{fname}.bin",
-                f"{fname}.xml",
-            ]
-        if self.export_format == ExportFormat.ONNX:
-            return [
-                f"{fname}.onnx",
-            ]
-        if self.export_format == ExportFormat.BASE_FRAMEWORK:
-            return [f"{fname}.pth"]
-        raise ValueError
-
-    def to_exportable_code_artifact_fname(self) -> str:
-        fname = "exportable-code_"
-        precision_name = (
-            self.precision.name.lower() + "-pot"
-            if self.precision == PrecisionType.INT8
-            else self.precision.name.lower()
-        )
-        fname += precision_name + "_"
-        if self.with_xai:
-            fname += "xai"
-        else:
-            fname += "non-xai"
-
-        return fname + ".whl"
-
-    def to_otx2_export_format(self) -> OTXExportFormatType:
-        if self.export_format == ExportFormat.OPENVINO:
-            return OTXExportFormatType.OPENVINO
-        if self.export_format == ExportFormat.ONNX:
-            return OTXExportFormatType.ONNX
-
-        raise ValueError(self.export_format)
-
-    def to_otx2_precision(self) -> OTXPrecisionType:
-        if self.precision == PrecisionType.FP32:
-            return OTXPrecisionType.FP32
-        if self.precision == PrecisionType.FP16:
-            return OTXPrecisionType.FP16
-
-        raise ValueError(self.precision)
-
-
-def str2bool(value: str | bool) -> bool:
-    """Convert given value to boolean."""
-    if isinstance(value, bool):
-        return value
-
-    if isinstance(value, str):
-        if value.lower() == "true":
-            return True
-        if value.lower() == "false":
-            return False
-        raise ValueError(value)
-
-    raise TypeError(value)
-
 
 @dataclass(frozen=True)
 class OTXConfig:
@@ -140,42 +115,7 @@ class OTXConfig:
     hyper_parameters: dict
     export_parameters: list[ExportParameter]
     optimization_type: OptimizationType | None
-    sub_task_type: OTXTaskType | None
-
-    @classmethod
-    def from_json_file(cls, config_file_path: Path) -> OTXConfig:
-        with Path.open(config_file_path) as fp:
-            config: dict = json.load(fp)
-
-        opt_type_name: str | None = config.get("optimization_type")
-
-        if opt_type_name.upper() == "NNCF":
-            optimization_type = OptimizationType.NNCF
-        elif opt_type_name.upper() == "POT":
-            optimization_type = OptimizationType.POT
-        else:
-            optimization_type = None
-
-        sub_task_type = config.get("sub_task_type")
-
-        if sub_task_type is not None:
-            sub_task_type = OTXTaskType(sub_task_type)
-
-        return OTXConfig(
-            job_type=JobType(config["job_type"]),
-            model_template_id=config["model_template_id"],
-            hyper_parameters=config["hyperparameters"],
-            export_parameters=[
-                ExportParameter(
-                    export_format=ExportFormat(cfg["type"].upper()),
-                    precision=PrecisionType(cfg["precision"].upper()),
-                    with_xai=str2bool(cfg["with_xai"]),
-                )
-                for cfg in config.get("export_parameters", [])
-            ],
-            optimization_type=optimization_type,
-            sub_task_type=sub_task_type,
-        )
+    sub_task_type: OTXTaskType
 
     def to_json_file(self, fpath: Path) -> None:
         with fpath.open("w") as fp:
@@ -189,7 +129,7 @@ class OTXConfig:
                         for param in self.export_parameters
                     ],
                     "optimization_type": "NONE" if self.optimization_type is None else self.optimization_type,
-                    "sub_task_type": "MULTI_CLASS_CLS" if self.sub_task_type is None else self.sub_task_type,
+                    "sub_task_type": self.sub_task_type,
                 },
                 fp,
             )
@@ -249,20 +189,20 @@ def substitute_parameter_overrides(override_dict: dict, parameter_dict: dict):
             values are substituted
     """
     for key, value in override_dict.items():
-        if isinstance(value, dict) and not metadata_keys.allows_dictionary_values(key):
+        if isinstance(value, dict) and not allows_dictionary_values(key):
             if key in parameter_dict:
                 substitute_parameter_overrides(value, parameter_dict[key])
             else:
                 msg = f"Unable to perform parameter override. Parameter or parameter group named {key}."
                 raise ValueError(msg)
-        elif metadata_keys.allows_model_template_override(key):
+        elif allows_model_template_override(key):
             parameter_dict[key] = value
         else:
             msg = f"{key} is not a valid keyword for hyper parameter overrides"
             raise KeyError(msg)
 
 
-def load_hyper_parameters(model_template_path: Path) -> dict:
+def load_hyper_parameters(model_template_path: Path) -> tuple[str, dict]:
     """Load hyper parameters.
 
     Loads the actual hyper parameters defined in the file at `base_path`, and performs any overrides specified in
@@ -294,49 +234,4 @@ def load_hyper_parameters(model_template_path: Path) -> dict:
         model_template["hyper_parameters"]["parameter_overrides"],
         data,
     )
-    return data
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--recipe-path",
-        type=str,
-        help="Path to the recipe file.",
-    )
-    args = parser.parse_args()
-
-    recipe_path = Path(args.recipe_path)
-    model_template = OmegaConf.load(recipe_path)
-    hyper_parameters = load_hyper_parameters(recipe_path)
-
-    otx_config = OTXConfig(
-        job_type=JobType.TRAIN,
-        model_template_id=model_template.model_template_id,
-        hyper_parameters=hyper_parameters,
-        export_parameters=[
-            ExportParameter(
-                export_format=ExportFormat.OPENVINO,
-                precision=PrecisionType.FP32,
-                with_xai=True,
-            ),
-            ExportParameter(
-                export_format=ExportFormat.OPENVINO,
-                precision=PrecisionType.FP32,
-            ),
-            ExportParameter(
-                export_format=ExportFormat.OPENVINO,
-                precision=PrecisionType.FP16,
-            ),
-            ExportParameter(
-                export_format=ExportFormat.ONNX,
-                precision=PrecisionType.FP32,
-            ),
-        ],
-        optimization_type=None,
-        sub_task_type=None,
-    )
-
-    otx_config.to_otx2_config(Path("otx-workspace"))
-
-    print(otx_config)
+    return (model_template["model_template_id"], data)
