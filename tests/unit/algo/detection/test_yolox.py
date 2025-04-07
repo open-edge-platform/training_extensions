@@ -10,9 +10,9 @@ from otx.algo.detection.backbones.csp_darknet import CSPDarknetModule
 from otx.algo.detection.heads.yolox_head import YOLOXHeadModule
 from otx.algo.detection.necks.yolox_pafpn import YOLOXPAFPNModule
 from otx.algo.detection.yolox import YOLOX
-from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.model.base import DataInputParams
+from otx.data import TorchPredBatch
 
 
 class TestYOLOX:
@@ -123,7 +123,7 @@ class TestYOLOX:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)
-        assert isinstance(output, DetBatchPredEntity)
+        assert isinstance(output, TorchPredBatch)
 
     @pytest.mark.parametrize(
         "model",

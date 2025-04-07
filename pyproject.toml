@@ -28,7 +28,7 @@ classifiers = [
 dependencies = [
     "datumaro==1.10.0rc0",
     "omegaconf==2.3.0",
-    "rich==13.9.4",
+    "rich==14.0.0",
     "jsonargparse==4.30.0",
     "psutil==7.0.0", # Mem cache needs system checks
     "ftfy==6.3.1",

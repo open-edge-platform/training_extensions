@@ -40,7 +40,7 @@ def _test_augmentation(
         format=data_format,
     )
     mem_cache_handler = MemCacheHandlerSingleton.create(
-        mode="sinlgeprocessing",
+        mode="singleprocessing",
         mem_size=0,
     )
 
