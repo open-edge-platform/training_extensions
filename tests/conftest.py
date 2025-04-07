@@ -22,6 +22,15 @@ from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchP
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
+import pytest
+from pathlib import Path
+from collections import defaultdict
+import yaml
+
+from otx.core.types.task import OTXTaskType
+from otx.tools.converter import TEMPLATE_ID_DICT
+from tests.integration.geti.geti_otx_config_utils import load_hyper_parameters
+
 
 def pytest_addoption(parser: pytest.Parser):
     """Add custom options for perf tests."""
@@ -472,3 +481,53 @@ def fxt_export_list() -> list[ExportCase2Test]:
         ExportCase2Test("OPENVINO", False, "exported_model.xml"),
         ExportCase2Test("OPENVINO", True, "exportable_code.zip"),
     ]
+
+
+def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskType, list[Path]]:
+    from otx import __file__ as otx_init_path
+    template_dir = Path(otx_init_path).parent / "tools" / "templates"
+    template_paths = template_dir.rglob("template.yaml")
+    template_dict = defaultdict(list)
+
+    for template_path in template_paths:
+        with open(template_path) as file:
+            template = yaml.safe_load(file)
+
+        model_id = template.get("model_template_id")
+        if not model_id or model_id not in TEMPLATE_ID_DICT:
+            continue
+
+        model_info = TEMPLATE_ID_DICT[model_id]
+        model_task = model_info["task"]
+
+        if model_category_only and "model_category" not in template:
+            continue
+
+        template_dict[model_task].append(template_path)
+
+    if OTXTaskType.MULTI_CLASS_CLS in template_dict:
+        template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
+        template_dict[OTXTaskType.H_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
+
+    return template_dict
+
+
+def pytest_generate_tests(metafunc):
+    if "task_template" in metafunc.fixturenames:
+        task_name = metafunc.config.getoption("task")
+        model_category_only = metafunc.config.getoption("run_category_only")
+
+        template_dict = get_model_template_paths(model_category_only)
+
+        if task_name.lower() == "all":
+            params = [
+                (task, path)
+                for task, paths in template_dict.items()
+                for path in paths
+            ]
+        else:
+            task_enum = OTXTaskType(task_name)
+            params = [(task_enum, path) for path in template_dict.get(task_enum, [])]
+
+        ids = [f"{task.value}/{path.parent.name}" for task, path in params]
+        metafunc.parametrize("task_template", params, ids=ids)
