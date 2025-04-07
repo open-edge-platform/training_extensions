@@ -54,7 +54,7 @@ jobs:
           fi
 
           echo "✅ Running integration test for: $TASK_NAME"
-          tox -vv -e "integration-test-${TASK_NAME}" -- --run-category-only=False
+          tox -vv -e "integration-test-${TASK_NAME}"
 
       - name: Update PR description with workflow run link and result
         if: always() # Ensure this runs even if the job fails
