@@ -1,21 +1,18 @@
-import pytest
-from pathlib import Path
-import yaml
-from collections import defaultdict
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
-import importlib
-import inspect
+import pytest
+from tests.integration.geti.geti_otx_config_utils import (
+    ExportFormat,
+    ExportParameter,
+    JobType,
+    OTXConfig,
+    PrecisionType,
+    load_hyper_parameters,
+)
 
 from otx.core.types.task import OTXTaskType
-from otx.tools.converter import TEMPLATE_ID_DICT, ConfigConverter
-from tests.integration.geti.geti_otx_config_utils import (
-    load_hyper_parameters,
-    OTXConfig,
-    JobType,
-    ExportFormat,
-    PrecisionType,
-    ExportParameter,
-)
+from otx.tools.converter import ConfigConverter
 
 ARROW_FILE_PATHS = {
     OTXTaskType.MULTI_CLASS_CLS: "tests/assets/geti_config_arrow/classification/multi_class_cls/datum-0-of-1.arrow",
@@ -29,8 +26,9 @@ ARROW_FILE_PATHS = {
     # OTXTaskType.KEYPOINT_DETECTION: "tests/assets/geti_config_arrow/keypoint_detection/datum-0-of-1.arrow", ->????
 }
 
-@pytest.fixture
-def engine(task_template, tmp_path):
+
+@pytest.fixture()
+def fxt_trained_model(task_template, tmp_path):
     task, template_path = task_template
 
     arrow_path = ARROW_FILE_PATHS.get(task)
@@ -40,8 +38,7 @@ def engine(task_template, tmp_path):
     model_template_id, hyper_parameters = load_hyper_parameters(template_path)
 
     sub_task_type = (
-        task if task in [OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
-        else OTXTaskType.MULTI_CLASS_CLS
+        task if task in [OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS] else OTXTaskType.MULTI_CLASS_CLS
     )
 
     otx_config = OTXConfig(
@@ -66,26 +63,32 @@ def engine(task_template, tmp_path):
     )
 
     train_kwargs["max_epochs"] = 2
-    return engine_instance
+    engine_instance.train(**train_kwargs)
+    return engine_instance, tmp_path
 
 
-def test_train(engine):
-    engine.train(max_epochs=2)
+def test_otx_e2e(fxt_trained_model, fxt_export_list):
+    """Test Geti OTX E2E pipeline.
 
-def test_test(engine):
+    Args:
+        fxt_trained_model (tuple): Tuple containing the trained engine instance and temporary path.
+    """
+
+    engine, tmp_path = fxt_trained_model
+
+    # OTX Test
     engine.test()
 
-def test_export(engine):
-    engine.export()
+    # OTX Export
+    for export_case in fxt_export_list:
+        export_format = export_case["export_format"]
+        precision = export_case["precision"]
+        with_xai = export_case["with_xai"]
+        engine.export(export_format=export_format, precision=precision, with_xai=with_xai)
 
-def test_ov(engine):
-    engine.test_ov()
-
-def test_predict(engine):
-    engine.predict()
-
-def test_optimize(engine):
-    engine.optimize()
-
-def test_explain(engine):
-    engine.explain()
+        # infer exported model (only for OpenVINO)
+        if export_format == ExportFormat.OPENVINO:
+            engine.test(checkpoint=tmp_path / "model.bin")
+            engine.explain(checkpoint=tmp_path / "model.bin")
+            engine.optimize(checkpoint=tmp_path / "model.bin")
+            engine.predict(checkpoint=tmp_path / "model.bin")

@@ -1,9 +1,13 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from collections import defaultdict
+from pathlib import Path
+
 import pytest
 import torch
+import yaml
 from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
@@ -19,17 +23,9 @@ from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
+from otx.tools.converter import TEMPLATE_ID_DICT
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
-
-import pytest
-from pathlib import Path
-from collections import defaultdict
-import yaml
-
-from otx.core.types.task import OTXTaskType
-from otx.tools.converter import TEMPLATE_ID_DICT
-from tests.integration.geti.geti_otx_config_utils import load_hyper_parameters
 
 
 def pytest_addoption(parser: pytest.Parser):
@@ -485,12 +481,13 @@ def fxt_export_list() -> list[ExportCase2Test]:
 
 def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskType, list[Path]]:
     from otx import __file__ as otx_init_path
+
     template_dir = Path(otx_init_path).parent / "tools" / "templates"
     template_paths = template_dir.rglob("template.yaml")
     template_dict = defaultdict(list)
 
     for template_path in template_paths:
-        with open(template_path) as file:
+        with Path.open(template_path) as file:
             template = yaml.safe_load(file)
 
         model_id = template.get("model_template_id")
@@ -520,11 +517,7 @@ def pytest_generate_tests(metafunc):
         template_dict = get_model_template_paths(model_category_only)
 
         if task_name.lower() == "all":
-            params = [
-                (task, path)
-                for task, paths in template_dict.items()
-                for path in paths
-            ]
+            params = [(task, path) for task, paths in template_dict.items() for path in paths]
         else:
             task_enum = OTXTaskType(task_name)
             params = [(task_enum, path) for path in template_dict.get(task_enum, [])]
