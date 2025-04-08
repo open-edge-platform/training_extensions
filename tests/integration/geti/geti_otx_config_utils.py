@@ -141,6 +141,7 @@ class OTXConfig:
         with self.monkeypatch_cls_task_type(override_cls_task_type=self.sub_task_type):
             otx2_config = ConfigConverter.convert(fpath)
 
+        otx2_config["data"]["input_size"] = tuple(otx2_config["data"]["input_size"])  # cast to tuple
         otx2_config["data"]["data_format"] = "arrow"
         otx2_config["data"]["train_subset"]["subset_name"] = "TRAINING"
         otx2_config["data"]["val_subset"]["subset_name"] = "VALIDATION"

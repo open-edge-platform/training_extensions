@@ -1,7 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
+from pathlib import Path
+
+import numpy as np
 import pytest
+import torch
 from tests.integration.geti.geti_otx_config_utils import (
     ExportFormat,
     ExportParameter,
@@ -15,6 +20,7 @@ from otx.core.types.task import OTXTaskType
 from otx.tools.converter import ConfigConverter
 
 ARROW_FILE_PATHS = {
+    # OTXTaskType.KEYPOINT_DETECTION ---> NOT SUPPORTED
     OTXTaskType.MULTI_CLASS_CLS: "tests/assets/geti_config_arrow/classification/multi_class_cls/datum-0-of-1.arrow",
     OTXTaskType.H_LABEL_CLS: "tests/assets/geti_config_arrow/classification/h_label_cls/datum-0-of-1.arrow",
     OTXTaskType.MULTI_LABEL_CLS: "tests/assets/geti_config_arrow/classification/multi_label_cls/datum-0-of-1.arrow",
@@ -23,24 +29,38 @@ ARROW_FILE_PATHS = {
     OTXTaskType.INSTANCE_SEGMENTATION: "tests/assets/geti_config_arrow/detection/datum-0-of-1.arrow",
     OTXTaskType.SEMANTIC_SEGMENTATION: "tests/assets/geti_config_arrow/semantic_segmentation/datum-0-of-1.arrow",
     OTXTaskType.ANOMALY: "tests/assets/geti_config_arrow/anomaly/datum-0-of-1.arrow",
-    # OTXTaskType.KEYPOINT_DETECTION: "tests/assets/geti_config_arrow/keypoint_detection/datum-0-of-1.arrow", ->????
 }
 
 
 @pytest.fixture()
-def fxt_trained_model(task_template, tmp_path):
-    task, template_path = task_template
+def fxt_trained_model(
+    task_template: tuple[OTXTaskType, str],
+    tmp_path: Path,
+) -> tuple[OTXTaskType, Path]:
+    """Fixture to train the model using the given task template.
 
-    arrow_path = ARROW_FILE_PATHS.get(task)
+    Args:
+        task_template (tuple): task template defined in conftest.pytest_generate_tests.
+        tmp_path (Path): Temporary path for training.
+
+    Returns:
+        tuple: Tuple containing the trained engine instance and temporary path.
+    """
+    task_type, template_path = task_template
+
+    arrow_path = ARROW_FILE_PATHS.get(task_type)
     if not arrow_path:
-        pytest.skip(f"No arrow file for task: {task}")
+        pytest.skip(f"No arrow file for task: {task_type}")
 
     model_template_id, hyper_parameters = load_hyper_parameters(template_path)
 
     sub_task_type = (
-        task if task in [OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS] else OTXTaskType.MULTI_CLASS_CLS
+        task_type
+        if task_type in [OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
+        else OTXTaskType.MULTI_CLASS_CLS
     )
 
+    # Matching geti config.json style
     otx_config = OTXConfig(
         job_type=JobType.TRAIN,
         model_template_id=model_template_id,
@@ -77,18 +97,55 @@ def test_otx_e2e(fxt_trained_model, fxt_export_list):
     engine, tmp_path = fxt_trained_model
 
     # OTX Test
-    engine.test()
+    engine.test(
+        checkpoint=tmp_path / "best_checkpoint.ckpt",
+    )
 
     # OTX Export
     for export_case in fxt_export_list:
-        export_format = export_case["export_format"]
-        precision = export_case["precision"]
-        with_xai = export_case["with_xai"]
-        engine.export(export_format=export_format, precision=precision, with_xai=with_xai)
+        exported_model_path = engine.export(
+            export_format=export_case.export_format,
+            export_demo_package=export_case.export_demo_package,
+        )
+        assert exported_model_path.name == export_case.expected_output
+        if not export_case.export_demo_package and export_case.export_format == ExportFormat.OPENVINO:
+            engine.test(
+                checkpoint=exported_model_path,
+            )
 
-        # infer exported model (only for OpenVINO)
-        if export_format == ExportFormat.OPENVINO:
-            engine.test(checkpoint=tmp_path / "model.bin")
-            engine.explain(checkpoint=tmp_path / "model.bin")
-            engine.optimize(checkpoint=tmp_path / "model.bin")
-            engine.predict(checkpoint=tmp_path / "model.bin")
+    # OTX Test XAI
+
+    # Supported only for classification, detection and segmentation tasks.
+    if engine.task in [
+        OTXTaskType.MULTI_CLASS_CLS,
+        OTXTaskType.MULTI_LABEL_CLS,
+        OTXTaskType.H_LABEL_CLS,
+        OTXTaskType.DETECTION,
+        OTXTaskType.INSTANCE_SEGMENTATION,
+        OTXTaskType.SEMANTIC_SEGMENTATION,
+    ]:
+        # Test XAI with OpenVINO
+        exported_model_path = engine.export(
+            export_format=ExportFormat.OPENVINO,
+            explain=True,
+        )
+
+        result = engine.explain(
+            checkpoint=exported_model_path,
+        )
+        assert isinstance(result, list)
+        assert result[0].has_xai_outputs
+        assert isinstance(result[0].feature_vector, list)
+        assert isinstance(result[0].feature_vector[0], np.ndarray)
+        assert isinstance(result[0].saliency_map[0], dict)
+
+        # Test XAI with PyTorch
+        result = engine.explain(
+            checkpoint=tmp_path / "best_checkpoint.ckpt",
+        )
+
+        assert isinstance(result, list)
+        assert result[0].has_xai_outputs
+        assert isinstance(result[0].feature_vector, list)
+        assert isinstance(result[0].feature_vector[0], torch.Tensor)
+        assert isinstance(result[0].saliency_map[0], dict)
