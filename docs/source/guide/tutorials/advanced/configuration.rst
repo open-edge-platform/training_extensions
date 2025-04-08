@@ -105,7 +105,7 @@ Data overrides
 ``data`` can currently be provided as a list of different transforms.
 The way to override this is as follows.
 
-Let's try to change the size of Resize and the prob of RandomFlip which are already set in `base data configuration of instance segmentation <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
+Let's try to change the size of Resize and the prob of RandomFlip which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
 To change them, you can just set the values in the overrides.
 
 .. code-block:: yaml
@@ -166,7 +166,7 @@ Reset overrides
 If you want to **reset** the configurations to the default values, especially ``data``, ``callbacks``, or ``logger`` that are difficult to be reset, you can use the ``reset`` keyword.
 The way to override this is as follows.
 
-Let's try to reset all transforms which are already set in `base data configuration of instance segmentation <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
+Let's try to reset all transforms which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
 To reset them, you can just add the keys in ``reset`` in the overrides.
 ``reset`` also supports both types, string and list.
 If you want to reset single one, string or list can be used.
