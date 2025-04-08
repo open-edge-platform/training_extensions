@@ -31,7 +31,7 @@ Dataset Format
 **************
 
 At the current point we support `COCO <https://cocodataset.org/#format-data>`_ and
-`Pascal-VOC <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_ dataset formats.
+`Pascal-VOC <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_ dataset formats.
 Learn more about the formats by following the links above. Here is an example of expected format for COCO dataset:
 
 .. code::
@@ -59,21 +59,21 @@ We support the following ready-to-use model recipes:
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 | Recipe ID                                                                                                                                                  | Name                | Complexity (GFLOPs) | Model size (MB) |
 +============================================================================================================================================================+=====================+=====================+=================+
-| `Custom_Object_Detection_YOLOX <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_tiny.yaml>`_            |      YOLOX-TINY     | 6.5                 | 20.4            |
+| `Custom_Object_Detection_YOLOX <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_tiny.yaml>`_            |      YOLOX-TINY     | 6.5                 | 20.4            |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_YOLOX_S <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_s.yaml>`_                    |       YOLOX_S       | 33.51               | 46.0            |
+| `Object_Detection_YOLOX_S <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_s.yaml>`_                    |       YOLOX_S       | 33.51               | 46.0            |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_YOLOX_L <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_l.yaml>`_                    |       YOLOX_L       | 194.57              | 207.0           |
+| `Object_Detection_YOLOX_L <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_l.yaml>`_                    |       YOLOX_L       | 194.57              | 207.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_YOLOX_X <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_x.yaml>`_                    |       YOLOX_X       | 352.42              | 378.0           |
+| `Object_Detection_YOLOX_X <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_x.yaml>`_                    |       YOLOX_X       | 352.42              | 378.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Custom_Object_Detection_Gen3_SSD <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/ssd_mobilenetv2.yaml>`_    |         SSD         | 9.4                 | 7.6             |
+| `Custom_Object_Detection_Gen3_SSD <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/ssd_mobilenetv2.yaml>`_    |         SSD         | 9.4                 | 7.6             |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Custom_Object_Detection_Gen3_ATSS <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/atss_mobilenetv2.yaml>`_  |  MobileNetV2-ATSS   | 20.6                | 9.1             |
+| `Custom_Object_Detection_Gen3_ATSS <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/atss_mobilenetv2.yaml>`_  |  MobileNetV2-ATSS   | 20.6                | 9.1             |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_ResNeXt101_ATSS <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/atss_resnext101.yaml>`_    |   ResNeXt101-ATSS   | 434.75              | 344.0           |
+| `Object_Detection_ResNeXt101_ATSS <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/atss_resnext101.yaml>`_    |   ResNeXt101-ATSS   | 434.75              | 344.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `D-Fine X Detection <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/dfine_x.yaml>`                           |   D-Fine X          | 202.486             | 240.0           |
+| `D-Fine X Detection <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/dfine_x.yaml>`                           |   D-Fine X          | 202.486             | 240.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 
 Above table can be found using the following command

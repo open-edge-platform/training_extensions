@@ -40,7 +40,7 @@ For the supervised training we use the following algorithms components:
 Dataset Format
 **************
 
-For the dataset handling inside OpenVINO™ Training Extensions, we use `Dataset Management Framework (Datumaro) <https://github.com/openvinotoolkit/datumaro>`_. For instance segmentation we support `COCO <https://cocodataset.org/#format-data>`_ dataset format.
+For the dataset handling inside OpenVINO™ Training Extensions, we use `Dataset Management Framework (Datumaro) <https://github.com/open-edge-platform/datumaro>`_. For instance segmentation we support `COCO <https://cocodataset.org/#format-data>`_ dataset format.
 
 .. note::
 
@@ -55,13 +55,13 @@ We support the following ready-to-use model recipes:
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
 | Model Recipe                                                                                                                                                                                                  | Name                       | Complexity (GFLOPs) | Model size (MB) |
 +===============================================================================================================================================================================================================+============================+=====================+=================+
-| `Instance Segmentation MaskRCNN EfficientNetB2B <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml>`_                    | MaskRCNN-EfficientNetB2B   | 68.48               | 13.27           |
+| `Instance Segmentation MaskRCNN EfficientNetB2B <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml>`_                    | MaskRCNN-EfficientNetB2B   | 68.48               | 13.27           |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation MaskRCNN ResNet50 <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml>`_                                    | MaskRCNN-ResNet50          | 533.80              | 177.90          |
+| `Instance Segmentation MaskRCNN ResNet50 <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml>`_                                    | MaskRCNN-ResNet50          | 533.80              | 177.90          |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation MaskRCNN SwinT <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml>`_                                        | MaskRCNN-SwinT             | 566                 | 191.46          |
+| `Instance Segmentation MaskRCNN SwinT <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml>`_                                        | MaskRCNN-SwinT             | 566                 | 191.46          |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation RTMDet-Inst Tiny <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml>`_                                    | RTMDet-Ins-tiny            | 52.86               | 22.8            |
+| `Instance Segmentation RTMDet-Inst Tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml>`_                                    | RTMDet-Ins-tiny            | 52.86               | 22.8            |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
 
 Above table can be found using the following command
