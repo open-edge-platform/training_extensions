@@ -412,7 +412,7 @@ To use the exported model as an input for ``otx explain``, please dump additiona
 Optimization
 ************
 
-``otx optimize`` optimizes a model using `PTQ <https://github.com/open-edge-platform/nncf#post-training-quantization>`_ depending on the model and transforms it to ``INT8`` format.
+``otx optimize`` optimizes a model using `PTQ <https://github.com/openvinotoolkit/nncf#post-training-quantization>`_ depending on the model and transforms it to ``INT8`` format.
 
 - PTQ optimization used for models exported in the OpenVINO™ IR format
 
