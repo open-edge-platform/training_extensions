@@ -64,7 +64,7 @@ For basic subcommand help, the Verbosity Level is 0. In this case, the CLI provi
     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
     Github Repository:
-    https://github.com/openvinotoolkit/training_extensions.
+    https://github.com/open-edge-platform/training_extensions.
 
     A better guide is provided by the documentation.
     ╭─ Quick-Start ─────────────────────────────────────────────────────────╮
@@ -119,7 +119,7 @@ For Verbosity Level 1, it shows Quick-Guide & the essential arguments.
     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
     Github Repository:
-    https://github.com/openvinotoolkit/training_extensions.
+    https://github.com/open-edge-platform/training_extensions.
 
     A better guide is provided by the documentation.
     ╭─ Quick-Start ─────────────────────────────────────────────────────────╮
@@ -412,7 +412,7 @@ To use the exported model as an input for ``otx explain``, please dump additiona
 Optimization
 ************
 
-``otx optimize`` optimizes a model using `PTQ <https://github.com/openvinotoolkit/nncf#post-training-quantization>`_ depending on the model and transforms it to ``INT8`` format.
+``otx optimize`` optimizes a model using `PTQ <https://github.com/open-edge-platform/nncf#post-training-quantization>`_ depending on the model and transforms it to ``INT8`` format.
 
 - PTQ optimization used for models exported in the OpenVINO™ IR format
 
