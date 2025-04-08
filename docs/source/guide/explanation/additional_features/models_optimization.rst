@@ -1,7 +1,7 @@
 Models Optimization
 ===================
 
-OpenVINO™ Training Extensions provides optimization algorithm: `Post-Training Quantization tool (PTQ) <https://github.com/open-edge-platform/nncf#post-training-quantization>`_.
+OpenVINO™ Training Extensions provides optimization algorithm: `Post-Training Quantization tool (PTQ) <https://github.com/openvinotoolkit/nncf#post-training-quantization>`_.
 
 *******************************
 Post-Training Quantization Tool
