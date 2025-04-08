@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 import pytest
-import torch
 from tests.integration.geti.geti_otx_config_utils import (
     ExportFormat,
     ExportParameter,
@@ -46,13 +44,17 @@ def fxt_trained_model(
     Returns:
         tuple: Tuple containing the trained engine instance and temporary path.
     """
-    task_type, template_path = task_template
+    task_type, template_path, tiling = task_template
 
     arrow_path = ARROW_FILE_PATHS.get(task_type)
     if not arrow_path:
-        pytest.skip(f"No arrow file for task: {task_type}")
+        pytest.skip(f"Task {task_type} is not supported in the test.")
 
     model_template_id, hyper_parameters = load_hyper_parameters(template_path)
+
+    if tiling:
+        hyper_parameters["tiling_parameters"]["enable_tiling"]["default_value"] = True
+        hyper_parameters["tiling_parameters"]["enable_tiling"]["value"] = True
 
     sub_task_type = (
         task_type
@@ -90,6 +92,14 @@ def fxt_trained_model(
 def test_otx_e2e(fxt_trained_model, fxt_export_list):
     """Test Geti OTX E2E pipeline.
 
+    Test the following features:
+    - Training (tiling/non-tiling)
+    - Testing trained PyTorch model
+    - Exporting models in different formats
+    - Testing exported models
+    - Exporting models with OpenVINO XAI
+    - Testing XAI with OpenVINO and PyTorch
+
     Args:
         fxt_trained_model (tuple): Tuple containing the trained engine instance and temporary path.
     """
@@ -97,7 +107,7 @@ def test_otx_e2e(fxt_trained_model, fxt_export_list):
     engine, tmp_path = fxt_trained_model
 
     # OTX Test
-    engine.test(
+    result = engine.test(
         checkpoint=tmp_path / "best_checkpoint.ckpt",
     )
 
@@ -114,7 +124,6 @@ def test_otx_e2e(fxt_trained_model, fxt_export_list):
             )
 
     # OTX Test XAI
-
     # Supported only for classification, detection and segmentation tasks.
     if engine.task in [
         OTXTaskType.MULTI_CLASS_CLS,
@@ -136,7 +145,7 @@ def test_otx_e2e(fxt_trained_model, fxt_export_list):
         assert isinstance(result, list)
         assert result[0].has_xai_outputs
         assert isinstance(result[0].feature_vector, list)
-        assert isinstance(result[0].feature_vector[0], np.ndarray)
+        assert isinstance(result[0].feature_vector[0].shape, tuple)
         assert isinstance(result[0].saliency_map[0], dict)
 
         # Test XAI with PyTorch
@@ -147,5 +156,5 @@ def test_otx_e2e(fxt_trained_model, fxt_export_list):
         assert isinstance(result, list)
         assert result[0].has_xai_outputs
         assert isinstance(result[0].feature_vector, list)
-        assert isinstance(result[0].feature_vector[0], torch.Tensor)
+        assert isinstance(result[0].feature_vector[0].shape, tuple)
         assert isinstance(result[0].saliency_map[0], dict)

@@ -13,6 +13,7 @@ import yaml
 
 from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT
+from tests.utils import ModelCategory
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -63,7 +64,7 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     return tasks
 
 
-def get_model_category_list(task) -> list[str]:
+def get_model_category_list(task: str, model_category: ModelCategory = ModelCategory.ALL) -> list[str]:
     """
     Retrieve the list of model categories from `otx/tools/templates`.
 
@@ -73,6 +74,7 @@ def get_model_category_list(task) -> list[str]:
 
     Args:
         task (str): The task for which to retrieve model categories.
+        category (ModelCategory): The model category to retrieve.
 
     Raises:
         FileNotFoundError: If no recipe is found for the specified task.
@@ -97,6 +99,10 @@ def get_model_category_list(task) -> list[str]:
             template = yaml.safe_load(file)
 
         if "model_category" in template and "model_template_id" in template:
+            # Check if the model category matches the specified category
+            if model_category != ModelCategory.ALL and template["model_category"] != model_category.value:
+                continue
+
             model_id = template["model_template_id"]
             model_name = TEMPLATE_ID_DICT[model_id]["model_name"]
             model_task = TEMPLATE_ID_DICT[model_id]["task"]
@@ -170,6 +176,7 @@ def pytest_configure(config):
     pytest.TASK_LIST = task_list
     pytest.RECIPE_LIST = target_recipe_list
     pytest.RECIPE_OV_LIST = target_ov_recipe_list
+    pytest.CLI_RECIPE_LIST = get_model_category_list(task, ModelCategory.BALANCE)
     pytest.TILE_RECIPE_LIST = tile_recipe_list
 
 

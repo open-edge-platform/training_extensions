@@ -9,6 +9,7 @@ import pytest
 import torch
 import yaml
 from datumaro import Polygon
+from omegaconf import OmegaConf
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
@@ -479,7 +480,7 @@ def fxt_export_list() -> list[ExportCase2Test]:
     ]
 
 
-def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskType, list[Path]]:
+def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskType, list[dict]]:
     from otx import __file__ as otx_init_path
 
     template_dir = Path(otx_init_path).parent / "tools" / "templates"
@@ -500,8 +501,29 @@ def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskT
         if model_category_only and "model_category" not in template:
             continue
 
-        template_dict[model_task].append(template_path)
+        base_config_path = template_path.parent / template["hyper_parameters"]["base_path"]
+        base_config = OmegaConf.load(base_config_path)
 
+        has_tiling = "tiling_parameters" in base_config
+
+        # Add base (no-tiling)
+        template_dict[model_task].append(
+            {
+                "template_path": template_path,
+                "tiling": False,
+            },
+        )
+
+        # Add tiling version if available
+        if has_tiling:
+            template_dict[model_task].append(
+                {
+                    "template_path": template_path,
+                    "tiling": True,
+                },
+            )
+
+    # Alias multi-class template for multi-label and hierarchical
     if OTXTaskType.MULTI_CLASS_CLS in template_dict:
         template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
         template_dict[OTXTaskType.H_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
@@ -513,14 +535,21 @@ def pytest_generate_tests(metafunc):
     if "task_template" in metafunc.fixturenames:
         task_name = metafunc.config.getoption("task")
         model_category_only = metafunc.config.getoption("run_category_only")
-
         template_dict = get_model_template_paths(model_category_only)
 
+        params = []
         if task_name.lower() == "all":
-            params = [(task, path) for task, paths in template_dict.items() for path in paths]
+            params = [
+                (task, entry["template_path"], entry["tiling"])
+                for task, entries in template_dict.items()
+                for entry in entries
+            ]
         else:
             task_enum = OTXTaskType(task_name)
-            params = [(task_enum, path) for path in template_dict.get(task_enum, [])]
+            params = [
+                (task_enum, entry["template_path"], entry["tiling"]) for entry in template_dict.get(task_enum, [])
+            ]
 
-        ids = [f"{task.value}/{path.parent.name}" for task, path in params]
+        ids = [f"{task.name}/{path.parent.name}" + ("/tiling" if tiling else "") for task, path, tiling in params]
+
         metafunc.parametrize("task_template", params, ids=ids)

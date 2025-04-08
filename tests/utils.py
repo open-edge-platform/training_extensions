@@ -7,11 +7,19 @@ import logging
 import subprocess
 import sys
 from collections import namedtuple
+from enum import Enum
 from unittest.mock import patch
 
 from otx.cli import main
 
 ExportCase2Test = namedtuple("ExportCase2Test", ["export_format", "export_demo_package", "expected_output"])
+
+
+class ModelCategory(str, Enum):
+    ALL = "ALL"
+    SPEED = "SPEED"
+    ACCURACY = "ACCURACY"
+    BALANCE = "BALANCE"
 
 
 def run_main(command_cfg: list[str], open_subprocess: bool) -> None:
