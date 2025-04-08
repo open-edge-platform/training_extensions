@@ -111,3 +111,25 @@ class TestOTXTVModel:
             assert outputs.feature_vector[0].ndim == 2
             assert outputs.saliency_map[0].ndim == 3
             assert outputs.saliency_map[0].shape[-2:] != torch.Size([1, 1])
+
+    def test_freeze_backbone(self):
+        data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+
+        model = TVModelMulticlassCls(
+            model_name="mobilenet_v3_small",
+            label_info=10,
+            data_input_params=data_input_params,
+            freeze_backbone=True,
+        )
+
+        classification_layers = model._identify_classification_layers()
+        assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
+
+        model = TVModelMulticlassCls(
+            model_name="mobilenet_v3_small",
+            label_info=10,
+            data_input_params=data_input_params,
+            freeze_backbone=False,
+        )
+
+        assert all(param.requires_grad for param in model.parameters())

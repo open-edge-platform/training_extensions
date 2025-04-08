@@ -167,10 +167,10 @@ Preview all configuration values that will be executed through that command line
       work_dir: ./otx-workspace
       device: auto
     model:
-      class_path: otx.algo.detection.atss.ATSS
-      init_args:
-        label_info: 1000
-        variant: mobilenetv2
+    class_path: otx.algo.detection.atss.ATSS
+    init_args:
+        label_info: 80
+        model_name: atss_mobilenetv2
     optimizer: ...
     scheduler: ...
     data:
@@ -208,13 +208,15 @@ Find
     (otx) ...$ otx find --help
     ╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
     │ Usage: otx [options] find [-h]                                                                                                                                                            │
-    │                           [--task {ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,DETEC                                        │
+    │                           [--task --task {ANOMALY,ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,                              │
+    │                                            DETECTION,ROTATED_DETECTION,KEYPOINT_DETECTION,INSTANCE_SEGMENTATION,SEMANTIC_SEGMENTATION,VISUAL_PROMPTING}                                   │
     │                           [--pattern PATTERN]                                                                                                                                             │
     │                                                                                                                                                                                           │
     │                                                                                                                                                                                           │
     │ Options:                                                                                                                                                                                  │
     │   -h, --help            Show this help message and exit.                                                                                                                                  │
-    │   --task {ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,DETECTION,ROTATED_DETECTION,DE                                        │
+    │   --task {ANOMALY,ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,                                                              │
+    │            DETECTION,ROTATED_DETECTION,KEYPOINT_DETECTION,INSTANCE_SEGMENTATION,SEMANTIC_SEGMENTATION},                                                                                   │
     │                         Value for filtering by task. Default is None, which shows all recipes. (type: None, default: None)                                                                │
     │   --pattern PATTERN     This allows you to filter the model name of the recipe. For example, if you want to find all models that contain the word 'efficient', you can use '--pattern     │
     │                         efficient' (type: None, default: None)                                                                                                                            │
@@ -227,26 +229,35 @@ Example to find ready-to-use recipes for the detection task:
 .. code-block:: shell
 
     (otx) ...$ otx find --task DETECTION
-    ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-    ┃ Task      ┃ Model Name            ┃ Recipe Path                                 ┃
-    ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-    │ DETECTION │ yolox_tiny            │ recipe/detection/yolox_tiny.yaml            │
-    │ DETECTION │ atss_mobilenetv2_tile │ recipe/detection/atss_mobilenetv2_tile.yaml │
-    │ DETECTION │ openvino_model        │ recipe/detection/openvino_model.yaml        │
-    │ DETECTION │ atss_mobilenetv2      │ recipe/detection/atss_mobilenetv2.yaml      │
-    │ DETECTION │ atss_resnext101       │ recipe/detection/atss_resnext101.yaml       │
-    │ DETECTION │ yolox_l_tile          │ recipe/detection/yolox_l_tile.yaml          │
-    │ DETECTION │ ssd_mobilenetv2_tile  │ recipe/detection/ssd_mobilenetv2_tile.yaml  │
-    │ DETECTION │ atss_r50_fpn          │ recipe/detection/atss_r50_fpn.yaml          │
-    │ DETECTION │ yolox_tiny_tile       │ recipe/detection/yolox_tiny_tile.yaml       │
-    │ DETECTION │ yolox_s               │ recipe/detection/yolox_s.yaml               │
-    │ DETECTION │ yolox_s_tile          │ recipe/detection/yolox_s_tile.yaml          │
-    │ DETECTION │ rtmdet_tiny           │ recipe/detection/rtmdet_tiny.yaml           │
-    │ DETECTION │ yolox_x               │ recipe/detection/yolox_x.yaml               │
-    │ DETECTION │ yolox_x_tile          │ recipe/detection/yolox_x_tile.yaml          │
-    │ DETECTION │ ssd_mobilenetv2       │ recipe/detection/ssd_mobilenetv2.yaml       │
-    │ DETECTION │ yolox_l               │ recipe/detection/yolox_l.yaml               │
-    └───────────┴───────────────────────┴─────────────────────────────────────────────┘
+    ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ Task      ┃ Model Name            ┃ Recipe Path                                                              ┃
+    ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+    │ DETECTION │ yolox_l               │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_l.yaml               │
+    │ DETECTION │ rtdetr_18             │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtdetr_18.yaml             │
+    │ DETECTION │ rtdetr_101_tile       │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtdetr_101_tile.yaml       │
+    │ DETECTION │ atss_resnext101_tile  │ /home/kprokofi/otx_2/src/otx/recipe/detection/atss_resnext101_tile.yaml  │
+    │ DETECTION │ ssd_mobilenetv2       │ /home/kprokofi/otx_2/src/otx/recipe/detection/ssd_mobilenetv2.yaml       │
+    │ DETECTION │ rtmdet_tiny_tile      │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtmdet_tiny_tile.yaml      │
+    │ DETECTION │ rtdetr_50             │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtdetr_50.yaml             │
+    │ DETECTION │ ssd_mobilenetv2_tile  │ /home/kprokofi/otx_2/src/otx/recipe/detection/ssd_mobilenetv2_tile.yaml  │
+    │ DETECTION │ yolox_x_tile          │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_x_tile.yaml          │
+    │ DETECTION │ yolox_l_tile          │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_l_tile.yaml          │
+    │ DETECTION │ rtmdet_tiny           │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtmdet_tiny.yaml           │
+    │ DETECTION │ yolox_s               │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_s.yaml               │
+    │ DETECTION │ yolox_x               │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_x.yaml               │
+    │ DETECTION │ dfine_x_tile          │ /home/kprokofi/otx_2/src/otx/recipe/detection/dfine_x_tile.yaml          │
+    │ DETECTION │ yolox_tiny_tile       │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_tiny_tile.yaml       │
+    │ DETECTION │ atss_mobilenetv2      │ /home/kprokofi/otx_2/src/otx/recipe/detection/atss_mobilenetv2.yaml      │
+    │ DETECTION │ yolox_s_tile          │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_s_tile.yaml          │
+    │ DETECTION │ yolox_tiny            │ /home/kprokofi/otx_2/src/otx/recipe/detection/yolox_tiny.yaml            │
+    │ DETECTION │ rtdetr_50_tile        │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtdetr_50_tile.yaml        │
+    │ DETECTION │ openvino_model        │ /home/kprokofi/otx_2/src/otx/recipe/detection/openvino_model.yaml        │
+    │ DETECTION │ rtdetr_101            │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtdetr_101.yaml            │
+    │ DETECTION │ atss_resnext101       │ /home/kprokofi/otx_2/src/otx/recipe/detection/atss_resnext101.yaml       │
+    │ DETECTION │ dfine_x               │ /home/kprokofi/otx_2/src/otx/recipe/detection/dfine_x.yaml               │
+    │ DETECTION │ rtdetr_18_tile        │ /home/kprokofi/otx_2/src/otx/recipe/detection/rtdetr_18_tile.yaml        │
+    │ DETECTION │ atss_mobilenetv2_tile │ /home/kprokofi/otx_2/src/otx/recipe/detection/atss_mobilenetv2_tile.yaml │
+    └───────────┴───────────────────────┴──────────────────────────────────────────────────────────────────────────┘
 
 Example to find yolo named model for the detection task:
 
@@ -302,7 +313,7 @@ Training
 
 ``otx train`` trains a model (a particular model recipe) on a dataset:
 
-The results will be saved in ``./otx-workspace/`` folder by default. The output folder can be modified by ``--work_dir`` option. These files are used by other commands: ``export``, ``test``, ``demo``, etc.
+The results will be saved in ``./otx-workspace/`` folder by default. The output folder can be modified by ``--work_dir`` option.
 
 ``otx train`` receives ``--config`` as a argument. ``config`` can be a path to the specific ``*.yaml`` file. Also, the path to data root should be passed to the CLI to start training.
 

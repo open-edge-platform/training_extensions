@@ -144,7 +144,7 @@ engine = Engine(data_root="data/wgisd", task="DETECTION")
 engine.train()
 ```
 
-For more examples, see documentation: [CLI Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
+For more examples, see documentation: [API Quick-Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
 
 </details>
 
@@ -155,7 +155,7 @@ For more examples, see documentation: [CLI Guide](https://openvinotoolkit.github
 otx train --data_root data/wgisd --task DETECTION
 ```
 
-For more examples, see documentation: [API Quick-Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
+For more examples, see documentation: [CLI Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
 
 </details>
 
@@ -163,70 +163,9 @@ In addition to the examples above, please refer to the documentation for tutoria
 
 ---
 
-## Updates - v2.2.0 (3Q24)
-
-### New features
-
-- Add RT-DETR model for Object Detection
-- Add Multi-Label & H-label Classification with torchvision models
-- Add Hugging-Face Model Wrapper for Classification
-- Add LoRA finetuning capability for ViT Architectures
-- Add Hugging-Face Model Wrapper for Object Detection
-- Add Hugging-Face Model Wrapper for Semantic Segmentation
-- Enable torch.compile to work with classification
-- Add `otx benchmark` subcommand
-- Add RTMPose for Keypoint Detection Task
-- Add Semi-SL MeanTeacher algorithm for Semantic Segmentation
-- Update head and h-label format for hierarchical label classification
-- Support configurable input size
-
-### Enhancements
-
-- Reimplement of ViT Architecture following TIMM
-- Enable to override data configurations
-- Enable to use input_size at transforms in recipe
-- Enable to use polygon and bitmap mask as prompt inputs for zero-shot learning
-- Refactoring `ConvModule` by removing `conv_cfg`, `norm_cfg`, and `act_cfg`
-- Support ImageFromBytes
-- enable model export
-- Move templates from OTX1.X to OTX2.X
-- Include Geti arrow dataset subset names
-- Include full image with anno in case there's no tile in tile dataset
-- Add type checker in converter for callable functions (optimizer, scheduler)
-- Change sematic segmentation to consider bbox only annotations
-- Relieve memory usage criteria on batch size 2 during adaptive batch size
-- Remove background label from RT Info for segmentation task
-- Prevent using too low confidence thresholds in detection
-
-### Bug fixes
-
-- Fix Combined Dataloader & unlabeled warmup loss in Semi-SL
-- Revert #3579 to fix issues with replacing coco_instance with a different format in some dataset
-- Add num_devices in Engine for multi-gpu training
-- Add missing tile recipes and various tile recipe changes
-- Change categories mapping logic
-- Fix config converter for tiling
-- Fix num_trials calculation on dataset length less than num_class
-- Fix out_features in HierarchicalCBAMClsHead
-- Fix multilabel_accuracy of MixedHLabelAccuracy
-- Fix wrong indices setting in HLabelInfo
-
-### Known issues
-
-- Post-Training Quantization (PTQ) optimization applied to maskrcnn_swint in the instance segmentation task may result in significantly reduced accuracy. This issue is expected to be addressed with an upgrade to OpenVINO and NNCF in a future release.
-
 ### Release History
 
 Please refer to the [CHANGELOG.md](CHANGELOG.md)
-
----
-
-## Branches
-
-- [develop](https://github.com/openvinotoolkit/training_extensions/tree/develop)
-  - Mainly maintained branch for developing new features for the future release
-- [misc](https://github.com/openvinotoolkit/training_extensions/tree/misc)
-  - Previously developed models can be found on this branch
 
 ---
 
@@ -240,13 +179,6 @@ By contributing to the project, you agree to the license and copyright terms the
 ## Issues / Discussions
 
 Please use [Issues](https://github.com/openvinotoolkit/training_extensions/issues/new/choose) tab for your bug reporting, feature requesting, or any questions.
-
----
-
-## Known limitations
-
-- [misc](https://github.com/openvinotoolkit/training_extensions/tree/misc) branch contains training, evaluation, and export scripts for models based on TensorFlow and PyTorch.
-  These scripts are not ready for production. They are exploratory and have not been validated.
 
 ---
 

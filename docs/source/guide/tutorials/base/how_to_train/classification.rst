@@ -108,27 +108,19 @@ The list of supported recipes for classification is available with the command l
     .. code-block:: shell
 
       (otx) ...$ otx find --task MULTI_CLASS_CLS
-      ┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-      ┃ Task            ┃ Model Name               ┃ Recipe Path                                                                    ┃
-      ┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-      │ MULTI_CLASS_CLS │ openvino_model           │ src/otx/recipe/classification/multi_class_cls/openvino_model.yaml              │
-      │ MULTI_CLASS_CLS │ tv_efficientnet_b0       │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b0.yaml          │
-      │ MULTI_CLASS_CLS │ tv_resnet_50             │ src/otx/recipe/classification/multi_class_cls/tv_resnet_50.yaml                │
-      │ MULTI_CLASS_CLS │ efficientnet_v2_light    │ src/otx/recipe/classification/multi_class_cls/efficientnet_v2_light.yaml       │
-      │ MULTI_CLASS_CLS │ tv_efficientnet_b3       │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml          │
-      │ MULTI_CLASS_CLS │ efficientnet_b0_light    │ src/otx/recipe/classification/multi_class_cls/efficientnet_b0_light.yaml       │
-      │ MULTI_CLASS_CLS │ tv_efficientnet_v2_l     │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml        │
-      │ MULTI_CLASS_CLS │ tv_efficientnet_b1       │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b1.yaml          │
-      │ MULTI_CLASS_CLS │ tv_mobilenet_v3_small    │ src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml       │
-      │ MULTI_CLASS_CLS │ otx_mobilenet_v3_large   │ src/otx/recipe/classification/multi_class_cls/otx_mobilenet_v3_large.yaml      │
-      │ MULTI_CLASS_CLS │ otx_deit_tiny            │ src/otx/recipe/classification/multi_class_cls/otx_deit_tiny.yaml               │
-      │ MULTI_CLASS_CLS │ tv_efficientnet_b4       │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b4.yaml          │
-      │ MULTI_CLASS_CLS │ otx_efficientnet_v2      │ src/otx/recipe/classification/multi_class_cls/otx_efficientnet_v2.yaml         │
-      │ MULTI_CLASS_CLS │ mobilenet_v3_large_light │ src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large_light.yaml    │
-      │ MULTI_CLASS_CLS │ otx_efficientnet_b0      │ src/otx/recipe/classification/multi_class_cls/otx_efficientnet_b0.yaml         │
-      │ MULTI_CLASS_CLS │ otx_dino_v2              │ src/otx/recipe/classification/multi_class_cls/otx_dino_v2.yaml                 │
-      │ MULTI_CLASS_CLS │ otx_dino_v2_linear_probe │ src/otx/recipe/classification/multi_class_cls/otx_dino_v2_linear_probe.yaml    │
-      └─────────────────┴──────────────────────────┴────────────────────────────────────────────────────────────────────────────────┘
+      ┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+      ┃ Task            ┃ Model Name            ┃ Recipe Path                                                                                                 ┃
+      ┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+      │ MULTI_CLASS_CLS │ openvino_model        │ src/otx/recipe/classification/multi_class_cls/openvino_model.yaml                                           │
+      │ MULTI_CLASS_CLS │ tv_efficientnet_v2_l  │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml                                     │
+      │ MULTI_CLASS_CLS │ dino_v2               │ src/otx/recipe/classification/multi_class_cls/dino_v2.yaml                                                  │
+      │ MULTI_CLASS_CLS │ efficientnet_v2       │ src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml                                          │
+      │ MULTI_CLASS_CLS │ tv_efficientnet_b3    │ src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml                                       │
+      │ MULTI_CLASS_CLS │ deit_tiny             │ src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml                                                │
+      │ MULTI_CLASS_CLS │ mobilenet_v3_large    │ src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml                                       │
+      │ MULTI_CLASS_CLS │ efficientnet_b0       │ src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml                                          │
+      │ MULTI_CLASS_CLS │ tv_mobilenet_v3_small │ src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml                                    │
+      └─────────────────┴───────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
   .. tab-item:: API
 
@@ -179,7 +171,7 @@ Let's check the multi-class classification configuration running the following c
 
     .. code-block:: shell
 
-        (otx) ...$ otx train --config  src/otx/recipe/classification/multi_class_cls/otx_mobilenet_v3_large.yaml --data_root data/flower_photos --print_config > configs.yaml
+        (otx) ...$ otx train --config  src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml --data_root data/flower_photos --print_config > configs.yaml
         # Update configs.yaml & Train configs.yaml
         (otx) ...$ otx train --config configs.yaml
 
@@ -232,7 +224,7 @@ Here are the main outputs can expect with CLI:
             data_root = "data/flower_photos"
 
             engine = Engine(
-                      model="otx_mobilenet_v3_large",
+                      model="mobilenet_v3_large",
                       data_root=data_root,
                       work_dir="otx-workspace",
                     )
@@ -325,7 +317,7 @@ folder on flower_photos dataset and save results to ``otx-workspace``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --config  src/otx/recipe/classification/multi_class_cls/otx_mobilenet_v3_large.yaml \
+            (otx) ...$ otx test --config  src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
                                 --data_root data/flower_photos \
                                 --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_014.ckpt
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -394,7 +386,6 @@ using ``otx test`` and passing the IR model path to the ``--checkpoint`` paramet
 
             (otx) ...$ otx test --work_dir otx-workspace \
                                 --checkpoint otx-workspace/20240312_052847/exported_model.xml \
-                                --engine.device cpu
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
@@ -408,10 +399,9 @@ using ``otx test`` and passing the IR model path to the ``--checkpoint`` paramet
 
         .. code-block:: shell
 
-            (otx) ...$ otx test --config src/otx/recipe/classification/multi_class_cls/otx_mobilenet_v3_large.yaml \
+            (otx) ...$ otx test --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
                                 --data_root data/flower_photos \
                                 --checkpoint otx-workspace/20240312_052847/exported_model.xml \
-                                --engine.device cpu
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
@@ -519,7 +509,6 @@ it to the ``otx test`` function.
 
             (otx) ...$ otx test --work_dir otx-workspace \
                                 --checkpoint otx-workspace/20240312_055042/optimized_model.xml \
-                                --engine.device cpu
 
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

@@ -41,7 +41,7 @@ class ValidateItemMixin:
     def _image_validator(image: torch.Tensor) -> torch.Tensor:
         """Validate the image."""
         if not isinstance(image, torch.Tensor):
-            msg = "Image must be a torch tensor"
+            msg = f"Image must be a torch tensor. Got {type(image)}"
             raise TypeError(msg)
         if image.ndim != 3:
             msg = "Image must have 3 dimensions"
@@ -75,8 +75,8 @@ class ValidateItemMixin:
         if not isinstance(scores, torch.Tensor):
             msg = "Scores must be a torch tensor"
             raise TypeError(msg)
-        if scores.dtype != torch.float32:
-            msg = "Scores must have dtype torch.float32"
+        if not scores.dtype.is_floating_point:
+            msg = f"Scores must have a floating point dtype. Got {scores.dtype}"
             raise ValueError(msg)
         if scores.ndim != 1:
             msg = "Scores must have 1 dimension"
@@ -191,18 +191,32 @@ class ValidateBatchMixin:
     @staticmethod
     def _images_validator(image_batch: torch.Tensor) -> torch.Tensor:
         """Validate the image batch."""
-        if not isinstance(image_batch, torch.Tensor):
-            msg = f"Image batch must be a torch tensor. Got {type(image_batch)}"
+        if not isinstance(image_batch, list) and not isinstance(image_batch, torch.Tensor):
+            msg = f"Image batch must be a torch tensor or list of tensors. Got {type(image_batch)}"
             raise TypeError(msg)
-        if image_batch.dtype != torch.float32:
-            msg = "Image batch must have dtype float32"
-            raise ValueError(msg)
-        if image_batch.ndim != 4:
-            msg = "Image batch must have 4 dimensions"
-            raise ValueError(msg)
-        if image_batch.shape[1] not in [1, 3]:
-            msg = "Image batch must have 1 or 3 channels"
-            raise ValueError(msg)
+        if isinstance(image_batch, torch.Tensor):
+            if image_batch.dtype != torch.float32:
+                msg = f"Image batch must have dtype float32. Found {image_batch.dtype}"
+                raise ValueError(msg)
+            if image_batch.ndim != 4:
+                msg = "Image batch must have 4 dimensions"
+                raise ValueError(msg)
+            if image_batch.shape[1] not in [1, 3]:
+                msg = "Image batch must have 1 or 3 channels"
+                raise ValueError(msg)
+        else:
+            if not all(isinstance(image, torch.Tensor) for image in image_batch):
+                msg = "Image batch must be a list of torch tensors"
+                raise TypeError(msg)
+            if not all(image.dtype == torch.float32 for image in image_batch):
+                msg = "Image batch must have dtype float32"
+                raise ValueError(msg)
+            if not all(image.ndim == 3 for image in image_batch):
+                msg = "Image batch must have 3 dimensions"
+                raise ValueError(msg)
+            if not all(image.shape[0] in [1, 3] for image in image_batch):
+                msg = "Image batch must have 1 or 3 channels"
+                raise ValueError(msg)
         return image_batch
 
     @staticmethod
@@ -317,8 +331,8 @@ class ValidateBatchMixin:
             msg = f"Boxes batch must be a list of torch tensors. Got {type(boxes_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
-        if boxes_batch[0].dtype != torch.float32:
-            msg = "Boxes batch must have dtype torch.float32"
+        if not boxes_batch[0].dtype.is_floating_point:
+            msg = f"Boxes batch must have a floating point dtype. Got {boxes_batch[0].dtype}"
             raise ValueError(msg)
         if boxes_batch[0].ndim != 2:
             msg = "Boxes batch must have 2 dimensions"

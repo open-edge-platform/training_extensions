@@ -9,10 +9,10 @@ from torch import nn
 from torch._dynamo.testing import CompileCounter
 
 from otx.algo.detection.rtdetr import RTDETR
-from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
+from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.model.base import DataInputParams
 from otx.core.types import LabelInfo
+from otx.data import TorchDataBatch, TorchPredBatch
 
 
 class TestRTDETR:
@@ -31,9 +31,12 @@ class TestRTDETR:
             "loss_vfl": torch.tensor(0.3),
             "loss_giou": torch.tensor(0.2),
         }
-        inputs = DetBatchDataEntity(
+        inputs = TorchDataBatch(
             batch_size=2,
-            imgs_info=[mocker.MagicMock(), mocker.MagicMock()],
+            imgs_info=[
+                ImageInfo(img_idx=0, img_shape=(640, 640), ori_shape=(640, 640)),
+                ImageInfo(img_idx=1, img_shape=(640, 640), ori_shape=(640, 640)),
+            ],
             images=torch.randn(2, 3, 640, 640),
             bboxes=[
                 torch.tensor([[0.2739, 0.2848, 0.3239, 0.3348], [0.1652, 0.1109, 0.2152, 0.1609]]),
@@ -68,7 +71,7 @@ class TestRTDETR:
         )
         result = model._customize_outputs(outputs, inputs)
 
-        assert isinstance(result, DetBatchPredEntity)
+        assert isinstance(result, TorchPredBatch)
         assert isinstance(result.scores, torch.Tensor)
         assert isinstance(result.bboxes, torch.Tensor)
         assert isinstance(result.labels, torch.Tensor)

@@ -18,8 +18,7 @@ from otx.algo.common.utils.utils import dynamic_topk, filter_scores_and_topk, ga
 from otx.algo.detection.utils.utils import unpack_det_entity
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.utils import InstanceData
-from otx.core.data.entity.base import OTXBatchDataEntity
-from otx.core.data.entity.detection import DetBatchDataEntity
+from otx.data import TorchDataBatch
 
 
 class BaseDenseHead(BaseModule):
@@ -63,14 +62,14 @@ class BaseDenseHead(BaseModule):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (DetBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.
@@ -84,7 +83,7 @@ class BaseDenseHead(BaseModule):
     def predict(
         self,
         x: tuple[Tensor],
-        entity: OTXBatchDataEntity,
+        entity: TorchDataBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Perform forward propagation of the detection head and predict detection results.
@@ -92,7 +91,7 @@ class BaseDenseHead(BaseModule):
         Args:
             x (tuple[Tensor]): Multi-level features from the
                 upstream network, each is a 4D-tensor.
-            entity (DetBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
             rescale (bool, optional): Whether to rescale the results.
                 Defaults to False.
 
@@ -108,7 +107,8 @@ class BaseDenseHead(BaseModule):
                 "scale_factor": img_info.scale_factor,
                 "ignored_labels": img_info.ignored_labels,
             }
-            for img_info in entity.imgs_info
+            for img_info in entity.imgs_info  # type: ignore[union-attr]
+            if img_info is not None
         ]
 
         outs = self(x)
