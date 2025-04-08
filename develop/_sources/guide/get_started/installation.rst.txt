@@ -33,7 +33,7 @@ package:
         .. code-block:: shell
 
             # Clone the training_extensions repository with the following command:
-            git clone https://github.com/openvinotoolkit/training_extensions.git
+            git clone https://github.com/open-edge-platform/training_extensions.git
             cd training_extensions
 
             # Set up a virtual environment.
@@ -59,7 +59,7 @@ from source to use XPU functionality.
 .. code-block:: shell
 
     # Clone the training_extensions repository with the following command:
-    git clone https://github.com/openvinotoolkit/training_extensions.git
+    git clone https://github.com/open-edge-platform/training_extensions.git
     cd training_extensions
 
     pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
@@ -100,7 +100,7 @@ Docker images: ``otx:${OTX_VERSION}-cuda`` and ``otx:${OTX_VERSION}-cuda-pretrai
 
 .. code-block:: shell
 
-    git clone https://github.com/openvinotoolkit/training_extensions.git
+    git clone https://github.com/open-edge-platform/training_extensions.git
     cd docker
     ./build.sh
 

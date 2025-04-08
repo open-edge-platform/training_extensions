@@ -64,7 +64,7 @@ For basic subcommand help, the Verbosity Level is 0. In this case, the CLI provi
     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
     Github Repository:
-    https://github.com/openvinotoolkit/training_extensions.
+    https://github.com/open-edge-platform/training_extensions.
 
     A better guide is provided by the documentation.
     ╭─ Quick-Start ─────────────────────────────────────────────────────────╮
@@ -119,7 +119,7 @@ For Verbosity Level 1, it shows Quick-Guide & the essential arguments.
     ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
     Github Repository:
-    https://github.com/openvinotoolkit/training_extensions.
+    https://github.com/open-edge-platform/training_extensions.
 
     A better guide is provided by the documentation.
     ╭─ Quick-Start ─────────────────────────────────────────────────────────╮

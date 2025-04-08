@@ -266,7 +266,7 @@ Authors: @samet-akcay @harimkang
    https://www.netapp.com/media/16928-wp-7299.pdf
 
 .. [7]
-   https://github.com/openvinotoolkit/datumaro
+   https://github.com/open-edge-platform/datumaro
 
 .. [8]
    https://pytorch.org/vision/0.16/transforms.html
