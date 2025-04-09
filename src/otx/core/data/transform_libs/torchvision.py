@@ -296,12 +296,8 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                         )
 
                         # labels
-                        labels = inputs.label if isinstance(inputs, TorchDataItem) else inputs.labels
-                        if labels is not None:
-                            if isinstance(inputs, TorchDataItem):
-                                inputs.label = labels[mask]  # type: ignore[union-attr]
-                            else:
-                                inputs.labels = labels[mask]  # type: ignore[union-attr]
+                        if inputs.label is not None:
+                            inputs.label = inputs.label[mask]  # type: ignore[union-attr]
 
                 # adjust the img no matter whether the gt is empty before crop
                 img = img[patch[1] : patch[3], patch[0] : patch[2]]
@@ -1237,10 +1233,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             # remove outside bbox
             valid_index = is_inside_bboxes(bboxes, (height, width))
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_index], format="XYXY", canvas_size=(height, width))  # type: ignore[union-attr]
-            if isinstance(inputs, TorchDataItem):
-                inputs.label = inputs.label[valid_index]  # type: ignore[union-attr,index]
-            else:
-                inputs.labels = inputs.labels[valid_index]  # type: ignore[union-attr,index]
+            inputs.label = inputs.label[valid_index]  # type: ignore[union-attr,index]
 
         return self.convert(inputs)
 
@@ -1489,10 +1482,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         )  # TODO (sungchul): need to add proper function
 
         inputs.bboxes = tv_tensors.BoundingBoxes(mosaic_bboxes, format="XYXY", canvas_size=mosaic_img.shape[:2])
-        if isinstance(inputs, TorchDataItem):
-            inputs.label = mosaic_bboxes_labels
-        else:
-            inputs.labels = mosaic_bboxes_labels
+        inputs.label = mosaic_bboxes_labels
         if with_mask:
             if len(mosaic_masks) > 0:
                 inputs.masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
@@ -1779,9 +1769,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         mixup_gt_bboxes = torch.cat((inputs.bboxes, cp_retrieve_gt_bboxes), dim=0)
         # TODO(ashwinvaidya17): remove this once we have a unified TorchDataItem
-        _label = inputs.label if isinstance(inputs, TorchDataItem) else inputs.labels
-
-        mixup_gt_bboxes_labels = torch.cat((_label, retrieve_gt_bboxes_labels), dim=0)
+        mixup_gt_bboxes_labels = torch.cat((inputs.label, retrieve_gt_bboxes_labels), dim=0)
 
         # remove outside bbox
         inside_inds = is_inside_bboxes(mixup_gt_bboxes, (target_h, target_w))
@@ -1794,10 +1782,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
             mixup_img.shape[:2],
         )  # TODO (sungchul): need to add proper function
         inputs.bboxes = tv_tensors.BoundingBoxes(mixup_gt_bboxes, format="XYXY", canvas_size=mixup_img.shape[:2])
-        if isinstance(inputs, TorchDataItem):
-            inputs.label = mixup_gt_bboxes_labels
-        else:
-            inputs.labels = torch.tensor(mixup_gt_bboxes_labels)
+        inputs.label = mixup_gt_bboxes_labels
         if with_mask:
             inside_inds = inside_inds.numpy()
             if (masks := getattr(retrieve_results, "masks", None)) is not None and len(masks) > 0:
@@ -2342,12 +2327,8 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_inds], format="XYXY", canvas_size=cropped_img_shape)
 
-            labels = inputs.label if isinstance(inputs, TorchDataItem) else inputs.labels
-            if labels is not None:
-                if isinstance(inputs, TorchDataItem):
-                    inputs.label = labels[valid_inds]
-                else:
-                    inputs.labels = labels[valid_inds]
+            if inputs.label is not None:
+                inputs.label = inputs.label[valid_inds]
 
         if (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks

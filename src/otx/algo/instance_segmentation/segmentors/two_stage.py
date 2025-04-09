@@ -12,7 +12,7 @@ import torch
 from torch import Tensor, nn
 
 from otx.algo.utils.utils import InstanceData
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.data import TorchDataBatch
 
 
 class TwoStageDetector(nn.Module):
@@ -146,11 +146,11 @@ class TwoStageDetector(nn.Module):
             x = self.neck(x)
         return x
 
-    def loss(self, batch_inputs: InstanceSegBatchDataEntity) -> dict[str, Tensor]:
+    def loss(self, batch_inputs: TorchDataBatch) -> dict[str, Tensor]:
         """Calculate losses from a batch of inputs and data samples.
 
         Args:
-            batch_inputs (InstanceSegBatchDataEntity): The input data entity.
+            batch_inputs (TorchDataBatch): The input data entity.
 
         Returns:
             dict: A dictionary of loss components
@@ -158,13 +158,13 @@ class TwoStageDetector(nn.Module):
         x = self.extract_feat(batch_inputs.images)
 
         # Copy data entity and set gt_labels to 0 in RPN
-        rpn_entity = InstanceSegBatchDataEntity(
-            images=torch.empty(0),
+        rpn_entity = TorchDataBatch(
+            images=torch.empty(0, 1, 0, 0),
             batch_size=batch_inputs.batch_size,
-            imgs_info=batch_inputs.imgs_info,
+            imgs_info=batch_inputs.imgs_info,  # type: ignore[union-attr]
             bboxes=batch_inputs.bboxes,
             masks=batch_inputs.masks,
-            labels=[torch.zeros_like(labels) for labels in batch_inputs.labels],
+            labels=[torch.zeros_like(labels) for labels in batch_inputs.labels],  # type: ignore[union-attr]
             polygons=batch_inputs.polygons,
         )
 
@@ -212,7 +212,7 @@ class TwoStageDetector(nn.Module):
 
     def predict(
         self,
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
         rescale: bool = True,
     ) -> list[InstanceData]:
         """Predict results from a batch of inputs and data samples with post-processing."""

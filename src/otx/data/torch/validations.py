@@ -9,6 +9,7 @@ from dataclasses import fields
 
 import numpy as np
 import torch
+from datumaro import Polygon
 from torchvision.tv_tensors import BoundingBoxes, Mask
 
 from otx.core.data.entity.base import ImageInfo
@@ -27,6 +28,7 @@ class ValidateItemMixin:
             "masks": self._mask_validator,
             "bboxes": self._boxes_validator,
             "keypoints": self._keypoints_validator,
+            "polygons": self._polygons_validator,
             "img_info": self._img_info_validator,
         }
         # TODO(ashwinvaidya17): Revisit this
@@ -155,6 +157,19 @@ class ValidateItemMixin:
         return keypoints
 
     @staticmethod
+    def _polygons_validator(polygons: list[Polygon]) -> list[Polygon]:
+        """Validate the polygons."""
+        if len(polygons) == 0:
+            return polygons
+        if not isinstance(polygons, list):
+            msg = f"Polygons must be a list of datumaro.Polygon. Got {type(polygons)}"
+            raise TypeError(msg)
+        if not isinstance(polygons[0], Polygon):
+            msg = f"Polygons must be a list of datumaro.Polygon. Got {type(polygons[0])}"
+            raise TypeError(msg)
+        return polygons
+
+    @staticmethod
     def _img_info_validator(img_info: ImageInfo) -> ImageInfo:
         """Validate the image info."""
         if not isinstance(img_info, ImageInfo):
@@ -176,6 +191,7 @@ class ValidateBatchMixin:
             "masks": self._masks_validator,
             "bboxes": self._boxes_validator,
             "keypoints": self._keypoints_validator,
+            "polygons": self._polygons_validator,
             "imgs_info": self._imgs_info_validator,
             "batch_size": self._batch_size_validator,
         }
@@ -246,7 +262,7 @@ class ValidateBatchMixin:
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if not scores_batch[0].dtype.is_floating_point:
-            msg = "Scores batch must have a floating point dtype (float16, float32, or float64)"
+            msg = f"Scores batch must have a floating point dtype. Got {scores_batch[0].dtype}"
             raise ValueError(msg)
         if scores_batch[0].ndim > 1:
             msg = "Scores batch must have 1 or 2 dimensions"
@@ -304,9 +320,6 @@ class ValidateBatchMixin:
         if isinstance(saliency_map_batch[0], torch.Tensor) and not saliency_map_batch[0].dtype.is_floating_point:
             msg = f"Saliency map must have a floating point dtype. Got {saliency_map_batch[0].dtype}"
             raise ValueError(msg)
-        if saliency_map_batch[0].ndim != 3:
-            msg = "Saliency map must have 3 dimensions"
-            raise ValueError(msg)
         return saliency_map_batch
 
     @staticmethod
@@ -317,9 +330,6 @@ class ValidateBatchMixin:
         if not isinstance(masks_batch, list) or not isinstance(masks_batch[0], torch.Tensor):
             msg = f"Masks batch must be a list of torch tensors. Got {type(masks_batch)}"
             raise TypeError(msg)
-        if masks_batch[0].ndim != 3:
-            msg = "Masks batch must have 3 dimensions"
-            raise ValueError(msg)
         return masks_batch
 
     @staticmethod
@@ -386,3 +396,22 @@ class ValidateBatchMixin:
             msg = "Batch size must be an integer"
             raise TypeError(msg)
         return batch_size
+
+    @staticmethod
+    def _polygons_validator(polygons_batch: list[list[Polygon] | None]) -> list[list[Polygon] | None]:
+        """Validate the polygons batch."""
+        if all(polygon is None for polygon in polygons_batch):
+            return []
+        if not isinstance(polygons_batch, list):
+            msg = "Polygons batch must be a list"
+            raise TypeError(msg)
+        if not isinstance(polygons_batch[0], list):
+            msg = "Polygons batch must be a list of list"
+            raise TypeError(msg)
+        if len(polygons_batch[0]) == 0:
+            msg = f"Polygons batch must not be empty. Got {polygons_batch}"
+            raise ValueError(msg)
+        if not isinstance(polygons_batch[0][0], Polygon):
+            msg = "Polygons batch must be a list of list of datumaro.Polygon"
+            raise TypeError(msg)
+        return polygons_batch

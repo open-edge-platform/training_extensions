@@ -32,7 +32,6 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegDataEntity
 from otx.core.data.entity.tile import (
     TileBatchDetDataEntity,
     TileBatchInstSegDataEntity,
@@ -505,7 +504,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
 class OTXTileInstSegTestDataset(OTXTileDataset):
     """OTX tile inst-seg test dataset.
 
-    OTXTileDetTestDataset wraps a list of tiles (InstanceSegDataEntity) into a single TileDetDataEntity
+    OTXTileDetTestDataset wraps a list of tiles (TorchDataItem) into a single TileDetDataEntity
     for testing/predicting.
 
     Args:
@@ -610,8 +609,8 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             ori_polygons=gt_polygons,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> InstanceSegDataEntity:
-        """Convert a tile dataset item to InstanceSegDataEntity."""
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:  # type: ignore[override]
+        """Convert a tile dataset item to TorchDataItem."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
         tile_shape = tile_img.shape[:2]
@@ -620,18 +619,10 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return InstanceSegDataEntity(
-            image=tile_img,
+        return TorchDataItem(
+            image=to_dtype(to_image(tile_img), torch.float32),
             img_info=img_info,
-            # we don't need tile-level annotations
-            bboxes=tv_tensors.BoundingBoxes(
-                [],
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=tile_shape,
-            ),
-            labels=torch.as_tensor([]),
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),
-            polygons=[],
         )
 
 
@@ -698,7 +689,7 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             ori_shape=tile_shape,
         )
         return TorchDataItem(
-            image=to_dtype(to_image(tile_img)),
+            image=to_dtype(to_image(tile_img), torch.float32),
             img_info=img_info,
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),
         )
