@@ -254,7 +254,7 @@ class OTXDataset(Dataset):
         return resized_img
 
     @abstractmethod
-    def _get_item_impl(self, idx: int) -> T_OTXDataEntity | TorchDataItem | None:
+    def _get_item_impl(self, idx: int) -> TorchDataItem | None:
         pass
 
     @property

@@ -316,7 +316,7 @@ class OTXTileDataset(OTXDataset):
         """Collate function from the original dataset."""
         return self._dataset.collate_fn
 
-    def _get_item_impl(self, index: int) -> OTXDataEntity | TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         """Get item implementation from the original dataset."""
         return self._dataset._get_item_impl(index)
 
