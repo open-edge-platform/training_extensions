@@ -118,6 +118,10 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.INSTANCE_SEGMENTATION,
         "model_name": "rtmdet_inst_tiny",
     },
+    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
+        "task": OTXTaskType.INSTANCE_SEGMENTATION,
+        "model_name": "maskrcnn_r50_tv",
+    },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
         "task": OTXTaskType.ROTATED_DETECTION,
@@ -461,7 +465,7 @@ class ConfigConverter:
             input_size=datamodule.input_size,
             mean=datamodule.input_mean,
             std=datamodule.input_std,
-        )
+        ).as_dict()
         model_parser = ArgumentParser()
         model_parser.add_subclass_arguments(OTXModel, "model", required=False, fail_untyped=False, skip={"label_info"})
         model = model_parser.instantiate_classes(Namespace(model=model_config)).get("model")

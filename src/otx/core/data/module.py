@@ -14,7 +14,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 from torchvision.transforms.v2 import Normalize
 
-from otx.core.config.data import TileConfig, VisualPromptingConfig
+from otx.core.config.data import TileConfig
 from otx.core.data.dataset.tile import OTXTileDatasetFactory
 from otx.core.data.factory import OTXDatasetFactory
 from otx.core.data.mem_cache import (
@@ -49,14 +49,11 @@ class OTXDataModule(LightningDataModule):
         test_subset (SubsetConfig): Configuration for the test subset.
         tile_config (TileConfig, optional): Configuration for tiling.
         Defaults to TileConfig(enable_tiler=False).
-        vpm_config (VisualPromptingConfig, optional): Configuration for visual prompting.
-        Defaults to VisualPromptingConfig().
         mem_cache_size (str, optional): Size of the memory cache. Defaults to "1GB".
         mem_cache_img_max_size (tuple[int, int] | None, optional): Maximum size of images in the memory cache.
         Defaults to None.
         image_color_channel (ImageColorChannel, optional): Color channel configuration for images.
         Defaults to ImageColorChannel.RGB.
-        stack_images (bool, optional): Whether to stack images. Defaults to True.
         include_polygons (bool, optional): Whether to include polygons in the data. Defaults to False.
         ignore_index (int, optional): Index to ignore in segmentation tasks. Defaults to 255.
         unannotated_items_ratio (float, optional): Ratio of unannotated items to include. Defaults to 0.0.
@@ -77,11 +74,9 @@ class OTXDataModule(LightningDataModule):
         val_subset: SubsetConfig,
         test_subset: SubsetConfig,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        vpm_config: VisualPromptingConfig = VisualPromptingConfig(),  # noqa: B008
         mem_cache_size: str = "1GB",
         mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
-        stack_images: bool = True,
         include_polygons: bool = False,
         ignore_index: int = 255,
         unannotated_items_ratio: float = 0.0,
@@ -101,13 +96,11 @@ class OTXDataModule(LightningDataModule):
         self.test_subset = test_subset
 
         self.tile_config = tile_config
-        self.vpm_config = vpm_config
 
         self.mem_cache_size = mem_cache_size
         self.mem_cache_img_max_size = mem_cache_img_max_size
 
         self.image_color_channel = image_color_channel
-        self.stack_images = stack_images
         self.include_polygons = include_polygons
         self.ignore_index = ignore_index
         self.unannotated_items_ratio = unannotated_items_ratio
@@ -212,10 +205,8 @@ class OTXDataModule(LightningDataModule):
                 data_format=self.data_format,
                 mem_cache_img_max_size=mem_cache_img_max_size,
                 image_color_channel=image_color_channel,
-                stack_images=stack_images,
                 include_polygons=include_polygons,
                 ignore_index=ignore_index,
-                vpm_config=vpm_config,
             )
 
             if self.tile_config.enable_tiler:
@@ -354,11 +345,9 @@ class OTXDataModule(LightningDataModule):
                 self.val_subset,
                 self.test_subset,
                 self.tile_config,
-                self.vpm_config,
                 self.mem_cache_size,
                 self.mem_cache_img_max_size,
                 self.image_color_channel,
-                self.stack_images,
                 self.include_polygons,
                 self.ignore_index,
                 self.unannotated_items_ratio,

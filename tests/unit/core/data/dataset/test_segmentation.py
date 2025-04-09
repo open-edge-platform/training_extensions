@@ -4,7 +4,7 @@
 """Unit tests of classification datasets."""
 
 from otx.core.data.dataset.segmentation import OTXSegmentationDataset
-from otx.core.data.entity.segmentation import SegDataEntity
+from otx.data import TorchDataItem
 
 
 class TestOTXSegmentationDataset:
@@ -18,7 +18,7 @@ class TestOTXSegmentationDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], SegDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)
         assert "otx_background_lbl" in [label_name.lower() for label_name in dataset.label_info.label_names]
 
     def test_get_item_from_bbox_dataset(
@@ -31,6 +31,6 @@ class TestOTXSegmentationDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], SegDataEntity)
+        assert isinstance(dataset[0], TorchDataItem)
         # OTXSegmentationDataset should add background when getting a dataset which includes only bbox annotations
         assert "otx_background_lbl" in [label_name.lower() for label_name in dataset.label_info.label_names]

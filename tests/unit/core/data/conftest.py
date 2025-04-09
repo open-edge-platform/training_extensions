@@ -15,12 +15,7 @@ from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 from datumaro.components.media import Image
 
-from otx.core.data.dataset.anomaly import (
-    AnomalyClassificationDataItem,
-    AnomalyDataset,
-    AnomalyDetectionDataItem,
-    AnomalySegmentationDataItem,
-)
+from otx.core.data.dataset.anomaly import AnomalyDataset
 from otx.core.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
@@ -28,16 +23,11 @@ from otx.core.data.dataset.classification import (
     OTXMultilabelClsDataset,
 )
 from otx.core.data.dataset.detection import (
-    DetDataEntity,
     OTXDetectionDataset,
 )
-from otx.core.data.dataset.instance_segmentation import (
-    InstanceSegDataEntity,
-    OTXInstanceSegDataset,
-)
+from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.core.data.dataset.segmentation import (
     OTXSegmentationDataset,
-    SegDataEntity,
 )
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.task import OTXTaskType
@@ -153,13 +143,13 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         (OTXHlabelClsDataset, TorchDataItem, {}),
         (OTXMultilabelClsDataset, TorchDataItem, {}),
         (OTXMulticlassClsDataset, TorchDataItem, {}),
-        (OTXDetectionDataset, DetDataEntity, {}),
-        (OTXInstanceSegDataset, InstanceSegDataEntity, {"include_polygons": True}),
-        (OTXSegmentationDataset, SegDataEntity, {}),
-        (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY}),
-        (AnomalyDataset, AnomalyClassificationDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
-        (AnomalyDataset, AnomalyDetectionDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),
-        (AnomalyDataset, AnomalySegmentationDataItem, {"task_type": OTXTaskType.ANOMALY_SEGMENTATION}),
+        (OTXDetectionDataset, TorchDataItem, {}),
+        (OTXInstanceSegDataset, TorchDataItem, {"include_polygons": True}),
+        (OTXSegmentationDataset, TorchDataItem, {}),
+        (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY}),
+        (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
+        (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),
+        (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY_SEGMENTATION}),
     ],
     ids=[
         "hlabel_cls",

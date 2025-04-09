@@ -10,13 +10,6 @@ from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity, DetDataEntity
-from otx.core.data.entity.instance_segmentation import (
-    InstanceSegBatchDataEntity,
-    InstanceSegBatchPredEntity,
-    InstanceSegDataEntity,
-)
-from otx.core.data.entity.segmentation import SegBatchDataEntity, SegBatchPredEntity, SegDataEntity
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
@@ -107,7 +100,7 @@ def pytest_addoption(parser: pytest.Parser):
         type=str,
         default="__CURRENT_BRANCH_COMMIT__",
         help="Target OTX ref (tag / branch name / commit hash) on main repo to test. Defaults to the current branch. "
-        "`pip install otx[full]@https://github.com/openvinotoolkit/training_extensions.git@{otx_ref}` will be executed before run, "
+        "`pip install otx[full]@https://github.com/open-edge-platform/training_extensions.git@{otx_ref}` will be executed before run, "
         "and reverted after run. Works only for v2.x assuming CLI compatibility.",
     )
     parser.addoption(
@@ -143,6 +136,11 @@ def pytest_addoption(parser: pytest.Parser):
         default="gpu",
         type=str,
         help="Which device to use.",
+    )
+    parser.addoption(
+        "--run-category-only",
+        action="store_true",
+        help="Run only the model category tests that categorised as BALANCE, SPEED, ACCURACY.",
     )
 
 
@@ -225,24 +223,29 @@ def fxt_h_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchP
 
 
 @pytest.fixture(scope="session")
-def fxt_det_data_entity() -> tuple[tuple, DetDataEntity, DetBatchDataEntity]:
+def fxt_det_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
     img_size = (64, 64)
-    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32).numpy()
+    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     # define data entity
-    single_data_entity = DetDataEntity(fake_image, fake_image_info, fake_bboxes, fake_labels)
-    batch_data_entity = DetBatchDataEntity(
+    single_data_entity = TorchDataItem(
+        image=fake_image,
+        img_info=fake_image_info,
+        bboxes=fake_bboxes,
+        label=fake_labels,
+    )
+    batch_data_entity = TorchDataBatch(
         batch_size=1,
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=[Image(fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = DetBatchPredEntity(
+    batch_pred_data_entity = TorchPredBatch(
         batch_size=1,
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=[Image(fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
@@ -253,40 +256,39 @@ def fxt_det_data_entity() -> tuple[tuple, DetDataEntity, DetBatchDataEntity]:
 
 
 @pytest.fixture(scope="session")
-def fxt_inst_seg_data_entity() -> tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity]:
+def fxt_inst_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
     img_size = (64, 64)
-    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.uint8).numpy()
+    fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     fake_masks = Mask(torch.randint(low=0, high=255, size=(1, *img_size), dtype=torch.uint8))
     fake_polygons = [Polygon(points=[1, 1, 2, 2, 3, 3, 4, 4])]
     # define data entity
-    single_data_entity = InstanceSegDataEntity(
+    single_data_entity = TorchDataItem(
         image=fake_image,
         img_info=fake_image_info,
         bboxes=fake_bboxes,
         masks=fake_masks,
-        labels=fake_labels,
+        label=fake_labels,
         polygons=fake_polygons,
     )
-    batch_data_entity = InstanceSegBatchDataEntity(
+    batch_data_entity = TorchDataBatch(
         batch_size=1,
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=[Image(data=fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
         masks=[fake_masks],
         polygons=[fake_polygons],
     )
-    batch_pred_data_entity = InstanceSegBatchPredEntity(
+    batch_pred_data_entity = TorchPredBatch(
         batch_size=1,
-        images=[Image(data=torch.from_numpy(fake_image))],
+        images=[Image(data=fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
         masks=[fake_masks],
-        scores=[],
         polygons=[fake_polygons],
     )
 
@@ -294,24 +296,24 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, InstanceSegDataEntity, InstanceSe
 
 
 @pytest.fixture(scope="session")
-def fxt_seg_data_entity() -> tuple[tuple, SegDataEntity, SegBatchDataEntity]:
+def fxt_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
     img_size = (32, 32)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.uint8).numpy()
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_masks = Mask(torch.randint(low=0, high=2, size=img_size, dtype=torch.uint8))
     # define data entity
-    single_data_entity = SegDataEntity(
+    single_data_entity = TorchDataItem(
         image=fake_image,
         img_info=fake_image_info,
         masks=fake_masks,
     )
-    batch_data_entity = SegBatchDataEntity(
+    batch_data_entity = TorchDataBatch(
         batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],
         masks=[fake_masks],
     )
-    batch_pred_data_entity = SegBatchPredEntity(
+    batch_pred_data_entity = TorchPredItem(
         batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],

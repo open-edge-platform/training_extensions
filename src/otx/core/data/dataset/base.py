@@ -254,10 +254,10 @@ class OTXDataset(Dataset):
         return resized_img
 
     @abstractmethod
-    def _get_item_impl(self, idx: int) -> T_OTXDataEntity | TorchDataItem | None:
+    def _get_item_impl(self, idx: int) -> TorchDataItem | None:
         pass
 
     @property
-    @abstractmethod
     def collate_fn(self) -> Callable:
-        """Collection function to collect OTXDataEntity into OTXBatchDataEntity in data loader."""
+        """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
+        return TorchDataItem.collate_fn

@@ -86,14 +86,6 @@ class TileConfig:
 
 
 @dataclass
-class VisualPromptingConfig:
-    """DTO for visual prompting data module configuration."""
-
-    use_bbox: bool = False
-    use_point: bool = False
-
-
-@dataclass
 class SamplerConfig:
     """Configuration class for defining the sampler used in the data loading process.
 

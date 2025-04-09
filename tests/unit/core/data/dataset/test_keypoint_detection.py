@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import numpy as np
 import pytest
 from datumaro import Dataset as DmDataset
 from torch import Tensor
@@ -36,13 +35,13 @@ class TestOTXKeypointDetectionDataset:
         )
 
         entity = dataset._get_item_impl(0)
-
         assert hasattr(entity, "image")
-        assert isinstance(entity.image, np.ndarray)
+        assert isinstance(entity.image, Tensor)
         assert hasattr(entity, "img_info")
         assert isinstance(entity.img_info, ImageInfo)
-        assert hasattr(entity, "labels")
-        assert isinstance(entity.labels, Tensor)
+        assert hasattr(entity, "label")
+        assert isinstance(entity.label, Tensor)
         assert hasattr(entity, "bboxes")
         assert hasattr(entity, "keypoints")
-        assert hasattr(entity, "keypoints_visible")
+        assert isinstance(entity.keypoints, Tensor)
+        assert entity.keypoints.shape == (4, 3)

@@ -5,7 +5,6 @@ Advanced Tutorials
    :maxdepth: 1
 
    configuration
-   semi_supervised_learning
    huggingface_model
    multi_gpu
    low_rank_adaptation

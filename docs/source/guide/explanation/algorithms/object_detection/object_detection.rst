@@ -31,7 +31,7 @@ Dataset Format
 **************
 
 At the current point we support `COCO <https://cocodataset.org/#format-data>`_ and
-`Pascal-VOC <https://openvinotoolkit.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_ dataset formats.
+`Pascal-VOC <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_ dataset formats.
 Learn more about the formats by following the links above. Here is an example of expected format for COCO dataset:
 
 .. code::
@@ -59,21 +59,21 @@ We support the following ready-to-use model recipes:
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 | Recipe ID                                                                                                                                                  | Name                | Complexity (GFLOPs) | Model size (MB) |
 +============================================================================================================================================================+=====================+=====================+=================+
-| `Custom_Object_Detection_YOLOX <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_tiny.yaml>`_            |      YOLOX-TINY     | 6.5                 | 20.4            |
+| `Custom_Object_Detection_YOLOX <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_tiny.yaml>`_            |      YOLOX-TINY     | 6.5                 | 20.4            |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_YOLOX_S <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_s.yaml>`_                    |       YOLOX_S       | 33.51               | 46.0            |
+| `Object_Detection_YOLOX_S <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_s.yaml>`_                    |       YOLOX_S       | 33.51               | 46.0            |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_YOLOX_L <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_l.yaml>`_                    |       YOLOX_L       | 194.57              | 207.0           |
+| `Object_Detection_YOLOX_L <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_l.yaml>`_                    |       YOLOX_L       | 194.57              | 207.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_YOLOX_X <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/yolox_x.yaml>`_                    |       YOLOX_X       | 352.42              | 378.0           |
+| `Object_Detection_YOLOX_X <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/yolox_x.yaml>`_                    |       YOLOX_X       | 352.42              | 378.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Custom_Object_Detection_Gen3_SSD <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/ssd_mobilenetv2.yaml>`_    |         SSD         | 9.4                 | 7.6             |
+| `Custom_Object_Detection_Gen3_SSD <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/ssd_mobilenetv2.yaml>`_    |         SSD         | 9.4                 | 7.6             |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Custom_Object_Detection_Gen3_ATSS <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/atss_mobilenetv2.yaml>`_  |  MobileNetV2-ATSS   | 20.6                | 9.1             |
+| `Custom_Object_Detection_Gen3_ATSS <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/atss_mobilenetv2.yaml>`_  |  MobileNetV2-ATSS   | 20.6                | 9.1             |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `Object_Detection_ResNeXt101_ATSS <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/atss_resnext101.yaml>`_    |   ResNeXt101-ATSS   | 434.75              | 344.0           |
+| `Object_Detection_ResNeXt101_ATSS <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/atss_resnext101.yaml>`_    |   ResNeXt101-ATSS   | 434.75              | 344.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
-| `D-Fine X Detection <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/detection/dfine_x.yaml>`                           |   D-Fine X          | 202.486             | 240.0           |
+| `D-Fine X Detection <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/detection/dfine_x.yaml>`                           |   D-Fine X          | 202.486             | 240.0           |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+---------------------+-----------------+
 
 Above table can be found using the following command
@@ -88,34 +88,3 @@ YOLOX achieved the same accuracy as SSD, and even outperforms its inference on C
 So if you have resources for a long training, you can pick the YOLOX model.
 ATSS still shows good performance among `RetinaNet <https://arxiv.org/abs/1708.02002>`_ based models. Therfore, We added ATSS with large scale backbone, ResNeXt101-ATSS. We integrated large ResNeXt101 backbone to our Custom ATSS head, and it shows good transfer learning performance.
 In addition, we added a YOLOX variants to support users' diverse situations.
-
-In the table below the test mAP on some academic datasets using our :ref:`supervised pipeline <od_supervised_pipeline>` is presented.
-
-For `COCO <https://cocodataset.org/#home>`__ dataset the accuracy of pretrained weights is shown, and we report official COCO mAP with AP50.
-Except for COCO, we report AP50 as performance metric.
-
-5 datasets were selected as transfer learning datasets.
-`BDD100K <https://www.bdd100k.com/>`_ is the largest dataset among we used. 70000 images are used as train images and 10000 images are used for validation.
-`Brackish <https://public.roboflow.com/object-detection/brackish-underwater>`_ and `Plantdoc <https://public.roboflow.com/object-detection/plantdoc>`_ are datasets of medium size. They have around 10000 images for train and 1500 images for validation.
-`BCCD <https://public.roboflow.com/object-detection/bccd>`_ and `Chess pieces <https://public.roboflow.com/object-detection/chess-full>`_ are datasets of small size. They have around 300 images for train and 100 images for validation.
-We used our own recipes without any modification.
-For hyperparameters, please, refer to the related recipe.
-We trained each model with a single Nvidia GeForce RTX3090.
-
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+
-| Model name                 | COCO(AP50)       | BDD100K   | Brackish  | Plantdoc  | BCCD      | Chess pieces |
-+============================+==================+===========+===========+===========+===========+==============+
-| YOLOX-TINY                 | 31.0 (48.2)      | 24.8      | 96.3      | 51.5      | 88.5      | 99.2         |
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+
-| SSD                        | 13.5             | 28.2      | 96.5      | 52.9      | 91.1      | 99.1         |
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+
-| MobileNetV2-ATSS           | 32.5 (49.5)      | 40.2      | 99.1      | 63.4      | 93.4      | 99.1         |
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+
-| ResNeXt101-ATSS            | 45.1 (63.8)      | 45.5      | 99.3      | 69.3      | 93.1      | 99.1         |
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+
-| YOLOX-S                    | 40.3 (59.1)      | 37.1      | 93.6      | 54.8      | 92.7      | 98.8         |
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+
-| YOLOX-L                    | 49.4 (67.1)      | 44.5      | 94.6      | 55.8      | 91.8      | 99.0         |
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+
-| YOLOX-X                    | 50.9 (68.4)      | 44.2      | 96.3      | 56.2      | 91.5      | 98.9         |
-+----------------------------+------------------+-----------+-----------+-----------+-----------+--------------+

@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence, TypeAlias
+from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 from anomalib import TaskType as AnomalibTaskType
@@ -15,14 +15,6 @@ from anomalib.callbacks.thresholding import _ThresholdCallback
 from torch import nn
 
 from otx import __version__
-from otx.core.data.entity.anomaly import (
-    AnomalyClassificationBatchPrediction,
-    AnomalyClassificationDataBatch,
-    AnomalyDetectionBatchPrediction,
-    AnomalyDetectionDataBatch,
-    AnomalySegmentationBatchPrediction,
-    AnomalySegmentationDataBatch,
-)
 from otx.core.data.entity.base import ImageInfo
 from otx.core.exporter.anomaly import OTXAnomalyModelExporter
 from otx.core.model.base import OTXModel
@@ -31,6 +23,7 @@ from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.utils import remove_state_dict_prefix
+from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     import types
@@ -44,14 +37,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import STEP_OUTPUT
     from torch.optim.optimizer import Optimizer
     from torchmetrics import Metric
-
-
-AnomalyModelInputs: TypeAlias = (
-    AnomalyClassificationDataBatch | AnomalySegmentationDataBatch | AnomalyDetectionDataBatch
-)
-AnomalyModelOutputs: TypeAlias = (
-    AnomalyClassificationBatchPrediction | AnomalySegmentationBatchPrediction | AnomalyDetectionBatchPrediction
-)
 
 
 class OTXAnomaly(OTXModel):
@@ -178,7 +163,7 @@ class OTXAnomaly(OTXModel):
     def on_predict_batch_end(
         self,
         outputs: dict,
-        batch: AnomalyModelInputs,
+        batch: TorchDataBatch,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
@@ -195,15 +180,12 @@ class OTXAnomaly(OTXModel):
 
     def _customize_inputs(
         self,
-        inputs: AnomalyModelInputs,
+        inputs: TorchDataBatch,
     ) -> dict[str, Any]:
         """Customize inputs for the model."""
         return_dict = {"image": inputs.images, "label": torch.vstack(inputs.labels).squeeze()}
-        if isinstance(inputs, AnomalySegmentationDataBatch) and inputs.masks is not None:
-            return_dict["mask"] = inputs.masks
-        if isinstance(inputs, AnomalyDetectionDataBatch) and inputs.masks is not None and inputs.boxes is not None:
-            return_dict["mask"] = inputs.masks
-            return_dict["boxes"] = inputs.boxes
+        if inputs.masks is not None:
+            return_dict["mask"] = torch.vstack(inputs.masks)
 
         if return_dict["label"].size() == torch.Size([]):  # when last batch size is 1
             return_dict["label"] = return_dict["label"].unsqueeze(0)
@@ -212,45 +194,18 @@ class OTXAnomaly(OTXModel):
     def _customize_outputs(
         self,
         outputs: dict,
-        inputs: AnomalyModelInputs,
-    ) -> AnomalyModelOutputs:
-        if self.task == AnomalibTaskType.CLASSIFICATION:
-            return AnomalyClassificationBatchPrediction(
-                batch_size=len(outputs),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                labels=outputs["label"],
-                # Note: this is the anomalous score. It should be inverted to report Normal score
-                scores=outputs["pred_scores"],
-                anomaly_maps=outputs["anomaly_maps"],
-            )
-        if self.task == AnomalibTaskType.SEGMENTATION:
-            return AnomalySegmentationBatchPrediction(
-                batch_size=len(outputs),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                labels=outputs["label"],
-                # Note: this is the anomalous score. It should be inverted to report Normal score
-                scores=outputs["pred_scores"],
-                anomaly_maps=outputs["anomaly_maps"],
-                masks=outputs["mask"],
-            )
-        if self.task == AnomalibTaskType.DETECTION:
-            return AnomalyDetectionBatchPrediction(
-                batch_size=len(outputs),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                labels=outputs["label"],
-                # Note: this is the anomalous score. It should be inverted to report Normal score
-                scores=outputs["pred_scores"],
-                anomaly_maps=outputs["anomaly_maps"],
-                masks=outputs["mask"],
-                boxes=outputs["pred_boxes"],
-                box_scores=outputs["box_scores"],
-                box_labels=outputs["box_labels"],
-            )
-        msg = f"Unsupported task type {self.task}"
-        raise ValueError(msg)
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
+        return TorchPredBatch(
+            batch_size=len(outputs),
+            images=inputs.images,
+            imgs_info=inputs.imgs_info,
+            labels=[label for label in outputs["label"]],  # noqa: C416 Ruff incorrectly recommends list()
+            # Note: this is the anomalous score. It should be inverted to report Normal score
+            scores=[score for score in outputs["pred_scores"]],  # noqa: C416 Ruff incorrectly recommends list()
+            saliency_map=[anomaly_map for anomaly_map in outputs["anomaly_maps"]],  # noqa: C416 Ruff incorrectly recommends list()
+            masks=[mask for mask in outputs["mask"]],  # noqa: C416 Ruff incorrectly recommends list()
+        )
 
     @property
     def _exporter(self) -> OTXAnomalyModelExporter:
@@ -306,7 +261,7 @@ class OTXAnomaly(OTXModel):
             to_exportable_code=to_exportable_code,
         )
 
-    def get_dummy_input(self, batch_size: int = 1) -> AnomalyModelInputs:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
         """Returns a dummy input for anomaly model."""
         images = torch.rand(batch_size, 3, *self.data_input_params.input_size)
         infos = []
@@ -318,33 +273,13 @@ class OTXAnomaly(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        if self.task == OTXTaskType.ANOMALY_CLASSIFICATION:
-            return AnomalyClassificationDataBatch(
-                batch_size=batch_size,
-                images=images,
-                imgs_info=infos,
-                labels=[torch.LongTensor(0)],
-            )
-        if self.task == OTXTaskType.ANOMALY_SEGMENTATION:
-            return AnomalySegmentationDataBatch(
-                batch_size=batch_size,
-                images=images,
-                imgs_info=infos,
-                labels=[torch.LongTensor(0)],
-                masks=torch.tensor(0),
-            )
-        if self.task == OTXTaskType.ANOMALY_DETECTION:
-            return AnomalyDetectionDataBatch(
-                batch_size=batch_size,
-                images=images,
-                imgs_info=infos,
-                labels=[torch.LongTensor(0)],
-                boxes=torch.tensor(0),
-                masks=torch.tensor(0),
-            )
-
-        msg = "Wrong anomaly task type"
-        raise RuntimeError(msg)
+        return TorchDataBatch(
+            batch_size=batch_size,
+            images=images,
+            imgs_info=infos,
+            labels=[torch.LongTensor(0)],
+            masks=torch.tensor(0),
+        )
 
 
 class AnomalyMixin:
@@ -364,7 +299,7 @@ class AnomalyMixin:
 
     def training_step(
         self,
-        inputs: AnomalyModelInputs,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call training step of the anomalib model."""
@@ -374,7 +309,7 @@ class AnomalyMixin:
 
     def validation_step(
         self,
-        inputs: AnomalyModelInputs,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call validation step of the anomalib model."""
@@ -384,7 +319,7 @@ class AnomalyMixin:
 
     def test_step(
         self,
-        inputs: AnomalyModelInputs,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -395,7 +330,7 @@ class AnomalyMixin:
 
     def predict_step(
         self,
-        inputs: AnomalyModelInputs,
+        inputs: TorchDataBatch,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -406,8 +341,8 @@ class AnomalyMixin:
 
     def forward(
         self,
-        inputs: AnomalyModelInputs,
-    ) -> AnomalyModelOutputs:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
         """Wrap forward method of the Anomalib model."""
         outputs = self.validation_step(inputs)
         # TODO(Ashwin): update forward implementation to comply with other OTX models

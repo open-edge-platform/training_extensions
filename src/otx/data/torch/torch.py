@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, fields
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 
@@ -19,6 +19,7 @@ from .validations import (
 )
 
 if TYPE_CHECKING:
+    from datumaro import Polygon
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
     from otx.core.data.entity.base import ImageInfo
@@ -29,12 +30,24 @@ if TYPE_CHECKING:
 @register_pytree_node
 @dataclass
 class TorchDataItem(ValidateItemMixin, Mapping):
-    """Torch data item implementation."""
+    """Torch data item implementation.
+
+    Attributes:
+        image (torch.Tensor): The image tensor.
+        label (torch.Tensor | None): The label tensor, optional.
+        masks (Mask | None): The masks, optional.
+        bboxes (BoundingBoxes | None): The bounding boxes, optional.
+        keypoints (torch.Tensor | None): The keypoints, optional.
+        polygons (list[Polygon] | None): The polygons, optional.
+        img_info (ImageInfo | None): Additional image information, optional.
+    """
 
     image: torch.Tensor
     label: torch.Tensor | None = None
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
+    keypoints: torch.Tensor | None = None
+    polygons: list[Polygon] | None = None
     img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
@@ -46,12 +59,21 @@ class TorchDataItem(ValidateItemMixin, Mapping):
         Returns:
             Batched TorchDataItems with stacked tensors
         """
+        # Check if all images have the same size. TODO(kprokofi): remove this check once OV IR models are moved.
+        if all(item.image.shape == items[0].image.shape for item in items):
+            images = torch.stack([item.image for item in items])
+        else:
+            # we need this only in case of OV inference, where no resize
+            images = [item.image for item in items]
+
         return TorchDataBatch(
             batch_size=len(items),
-            images=torch.stack([item.image for item in items]),
+            images=images,
             labels=[item.label for item in items],
             bboxes=[item.bboxes for item in items],
+            keypoints=[item.keypoints for item in items],
             masks=[item.masks for item in items],
+            polygons=[item.polygons for item in items],  # type: ignore[misc]
             imgs_info=[item.img_info for item in items],
         )
 
@@ -71,37 +93,31 @@ class TorchDataBatch(ValidateBatchMixin):
     """Torch data item batch implementation."""
 
     batch_size: int  # TODO(ashwinvaidya17): Remove this
-    images: torch.Tensor
-    labels: list[torch.Tensor] | None
+    images: torch.Tensor | list[torch.Tensor]
+    labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
-    imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+    keypoints: list[torch.Tensor] | None = None
+    polygons: list[list[Polygon]] | None = None
+    imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
 
 @dataclass
-class TorchPredItem(ValidateItemMixin):
+class TorchPredItem(TorchDataItem):
     """Torch prediction data item implementation."""
 
-    image: torch.Tensor
-    label: torch.Tensor | None
     scores: torch.Tensor | None = None
     feature_vector: torch.Tensor | None = None
     saliency_map: torch.Tensor | None = None
 
 
 @dataclass
-class TorchPredBatch(ValidateBatchMixin):
+class TorchPredBatch(TorchDataBatch):
     """Torch prediction data item batch implementation."""
 
-    batch_size: int  # TODO(ashwinvaidya17): Remove this
-    images: torch.Tensor
-    labels: list[torch.Tensor] | None
     scores: list[torch.Tensor] | None = None
     feature_vector: list[torch.Tensor] | None = None
     saliency_map: list[torch.Tensor] | None = None
-    masks: list[torch.Tensor] | None = None
-    bboxes: list[torch.Tensor] | None = None
-    imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
     @property
     def has_xai_outputs(self) -> bool:

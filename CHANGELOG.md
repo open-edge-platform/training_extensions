@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 
 - Fix otx install by moving base dependencies
   (<https://github.com/openvinotoolkit/training_extensions/pull/4285>)
+- Fix DataInputParams Serialization
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4293>)
+- Align KP detection validation with ModelAPI post processing
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4300>)
+
+### Removed
+
+- Remove Visual Prompting
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>)
 
 ## \[2.4.0\]
 
@@ -17,6 +26,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
 - Add UFlow anomaly detection algorithm
   (<https://github.com/openvinotoolkit/training_extensions/pull/4251>)
+- Improve Pre-Merge Test
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4307>)
 
 ### Enhancements
 

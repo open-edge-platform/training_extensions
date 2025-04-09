@@ -28,7 +28,7 @@ classifiers = [
 dependencies = [
     "datumaro==1.10.0",
     "omegaconf==2.3.0",
-    "rich==13.9.4",
+    "rich==14.0.0",
     "jsonargparse==4.30.0",
     "psutil==7.0.0", # Mem cache needs system checks
     "ftfy==6.3.1",
@@ -43,6 +43,7 @@ dependencies = [
     "setuptools<70",
     "torch==2.5.1",
     "lightning==2.4.0",
+    "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
     "timm==1.0.3",
     "openvino==2025.0",
@@ -55,8 +56,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "tox==4.24.1",
-    "pre-commit==4.1.0",
+    "tox==4.24.2",
+    "pre-commit==4.2.0",
     "pylint",
     "pytest",
     "coverage",
@@ -64,7 +65,7 @@ dev = [
     "pytest-mock",
     "pytest-csv",
     "pytest-cov",
-    "onnxruntime==1.20.1",
+    "onnxruntime==1.21.0",
 ]
 
 docs = [
@@ -84,7 +85,7 @@ docs = [
 ]
 
 ci_tox = [
-    "tox==4.24.1",
+    "tox==4.24.2",
 ]
 
 ci_publish = [
@@ -95,10 +96,10 @@ ci_benchmark = [
     "pandas<2.3",       # To avoid conflict with nncf==2.9.0
     "matplotlib==3.10.1",
     "nbconvert==7.16.6",
-    "ipython==9.0.1",
+    "ipython==9.0.2",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
-    "mlflow==2.20.3",
+    "mlflow==2.20.4",
     "py-cpuinfo==9.0.0",
 ]
 
@@ -106,8 +107,8 @@ ci_benchmark = [
 otx = "otx.cli:main"
 
 [project.urls]
-Documentation = "https://openvinotoolkit.github.io/training_extensions/"
-Repository = "https://github.com/openvinotoolkit/training_extensions/"
+Documentation = "https://open-edge-platform.github.io/training_extensions/"
+Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.setuptools.dynamic]
 version = {attr = "otx.__version__"}
@@ -369,6 +370,5 @@ markers = [
     "gpu",  # mark tests which require NVIDIA GPU
     "cpu",
     "xpu",  # mark tests which require Intel dGPU,
-    "intense", # intense unit tests which require better CI machines
 ]
 python_files = "tests/**/*.py"

@@ -7,18 +7,17 @@ from __future__ import annotations
 
 import warnings
 from collections import defaultdict
-from functools import partial
-from typing import Callable
 
 import numpy as np
 import torch
 from datumaro import Bbox, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
 from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.utils.mask_util import polygon_to_bitmap
+from otx.data import TorchDataItem
 
 from .base import OTXDataset, Transforms
 
@@ -38,7 +37,7 @@ class OTXInstanceSegDataset(OTXDataset):
         super().__init__(dm_subset, transforms, **kwargs)
         self.include_polygons = include_polygons
 
-    def _get_item_impl(self, index: int) -> InstanceSegDataEntity | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
@@ -87,11 +86,12 @@ class OTXInstanceSegDataset(OTXDataset):
             warnings.warn(f"No valid annotations found for image {item.id}!", stacklevel=2)
 
         bboxes = np.stack(gt_bboxes, dtype=np.float32, axis=0) if gt_bboxes else np.empty((0, 4))
-        masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((0, *img_shape), dtype=bool)
+        masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((len(gt_labels), *img_shape), dtype=bool)
+
         labels = np.array(gt_labels, dtype=np.int64)
 
-        entity = InstanceSegDataEntity(
-            image=img_data,
+        entity = TorchDataItem(
+            image=to_dtype(to_image(img_data), torch.float32),
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
@@ -106,13 +106,8 @@ class OTXInstanceSegDataset(OTXDataset):
                 dtype=torch.float32,
             ),
             masks=tv_tensors.Mask(masks, dtype=torch.uint8),
-            labels=torch.as_tensor(labels),
-            polygons=gt_polygons,
+            label=torch.as_tensor(labels, dtype=torch.long),
+            polygons=gt_polygons if len(gt_polygons) > 0 else None,
         )
 
         return self._apply_transforms(entity)  # type: ignore[return-value]
-
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect InstanceSegDataEntity into InstanceSegDataEntity in dataloader."""
-        return partial(InstanceSegBatchDataEntity.collate_fn, stack_images=self.stack_images)

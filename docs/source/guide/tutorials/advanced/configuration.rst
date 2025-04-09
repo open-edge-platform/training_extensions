@@ -5,41 +5,49 @@ How to write OTX Configuration (recipe)
 Configuration
 ***************
 
-Example of ``recipe/classification/multi_class_cls``
+Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
 
 .. code-block:: yaml
 
-    model:
-        class_path: otx.algo.classification.mobilenet_v3.MobileNetV3ForMulticlassCls
-        init_args:
-            label_info: 1000
-            light: True
+  model:
+    class_path: otx.algo.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
+    init_args:
+      model_name: mobilenetv3_large
+      label_info: 1000
 
-    optimizer:
+      optimizer:
         class_path: torch.optim.SGD
         init_args:
-            lr: 0.0058
-            momentum: 0.9
-            weight_decay: 0.0001
+          lr: 0.0058
+          momentum: 0.9
+          weight_decay: 0.0001
 
-    scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
-      init_args:
-        num_warmup_steps: 10
-        main_scheduler_callable:
-          class_path: lightning.pytorch.cli.ReduceLROnPlateau
-          init_args:
-            mode: max
-            factor: 0.5
-            patience: 1
-            monitor: val/accuracy
+      scheduler:
+        class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+        init_args:
+          num_warmup_steps: 10
+          main_scheduler_callable:
+            class_path: lightning.pytorch.cli.ReduceLROnPlateau
+            init_args:
+              mode: max
+              factor: 0.5
+              patience: 3
+              monitor: val/accuracy
 
-    engine:
-        task: MULTI_CLASS_CLS
-        device: auto
+  engine:
+    task: MULTI_CLASS_CLS
+    device: auto
 
-    callback_monitor: val/accuracy
-    data: ../../_base_/data/torchvision_base.yaml
+  callback_monitor: val/accuracy
+
+  data: ../../_base_/data/classification.yaml
+  overrides:
+    max_epochs: 90
+
+    callbacks:
+      - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+        init_args:
+          patience: 5
 
 We can use the ``~.yaml`` with the above values configured.
 
@@ -97,7 +105,7 @@ Data overrides
 ``data`` can currently be provided as a list of different transforms.
 The way to override this is as follows.
 
-Let's try to change the size of Resize and the prob of RandomFlip which are already set in `base data configuration of instance segmentation <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
+Let's try to change the size of Resize and the prob of RandomFlip which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
 To change them, you can just set the values in the overrides.
 
 .. code-block:: yaml
@@ -158,7 +166,7 @@ Reset overrides
 If you want to **reset** the configurations to the default values, especially ``data``, ``callbacks``, or ``logger`` that are difficult to be reset, you can use the ``reset`` keyword.
 The way to override this is as follows.
 
-Let's try to reset all transforms which are already set in `base data configuration of instance segmentation <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
+Let's try to reset all transforms which are already set in `base data configuration of instance segmentation <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/_base_/data/instance_segmentation.yaml>`_.
 To reset them, you can just add the keys in ``reset`` in the overrides.
 ``reset`` also supports both types, string and list.
 If you want to reset single one, string or list can be used.

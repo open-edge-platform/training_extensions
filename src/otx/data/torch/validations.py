@@ -9,6 +9,7 @@ from dataclasses import fields
 
 import numpy as np
 import torch
+from datumaro import Polygon
 from torchvision.tv_tensors import BoundingBoxes, Mask
 
 from otx.core.data.entity.base import ImageInfo
@@ -26,6 +27,8 @@ class ValidateItemMixin:
             "saliency_map": self._saliency_map_validator,
             "masks": self._mask_validator,
             "bboxes": self._boxes_validator,
+            "keypoints": self._keypoints_validator,
+            "polygons": self._polygons_validator,
             "img_info": self._img_info_validator,
         }
         # TODO(ashwinvaidya17): Revisit this
@@ -40,7 +43,7 @@ class ValidateItemMixin:
     def _image_validator(image: torch.Tensor) -> torch.Tensor:
         """Validate the image."""
         if not isinstance(image, torch.Tensor):
-            msg = "Image must be a torch tensor"
+            msg = f"Image must be a torch tensor. Got {type(image)}"
             raise TypeError(msg)
         if image.ndim != 3:
             msg = "Image must have 3 dimensions"
@@ -74,8 +77,8 @@ class ValidateItemMixin:
         if not isinstance(scores, torch.Tensor):
             msg = "Scores must be a torch tensor"
             raise TypeError(msg)
-        if scores.dtype != torch.float32:
-            msg = "Scores must have dtype torch.float32"
+        if not scores.dtype.is_floating_point:
+            msg = f"Scores must have a floating point dtype. Got {scores.dtype}"
             raise ValueError(msg)
         if scores.ndim != 1:
             msg = "Scores must have 1 dimension"
@@ -134,6 +137,39 @@ class ValidateItemMixin:
         return boxes
 
     @staticmethod
+    def _keypoints_validator(keypoints: torch.Tensor) -> torch.Tensor:
+        """Validate the keypoints."""
+        if not isinstance(keypoints, torch.Tensor):
+            msg = "Keypoints must be a torch tensor"
+            raise TypeError(msg)
+        if keypoints.dtype != torch.float32:
+            msg = "Keypoints must have dtype torch.float32"
+            raise ValueError(msg)
+        if keypoints.ndim != 2:
+            msg = "Keypoints must have 2 dimensions"
+            raise ValueError(msg)
+        if keypoints.shape[1] != 3:
+            msg = "Keypoints must have 2 coordinates and 1 visibility value"
+            raise ValueError(msg)
+        if any(keypoints[:, 2] > 1) or any(keypoints[:, 2] < 0):
+            msg = "Keypoints visibility must be between 0 and 1"
+            raise ValueError(msg)
+        return keypoints
+
+    @staticmethod
+    def _polygons_validator(polygons: list[Polygon]) -> list[Polygon]:
+        """Validate the polygons."""
+        if len(polygons) == 0:
+            return polygons
+        if not isinstance(polygons, list):
+            msg = f"Polygons must be a list of datumaro.Polygon. Got {type(polygons)}"
+            raise TypeError(msg)
+        if not isinstance(polygons[0], Polygon):
+            msg = f"Polygons must be a list of datumaro.Polygon. Got {type(polygons[0])}"
+            raise TypeError(msg)
+        return polygons
+
+    @staticmethod
     def _img_info_validator(img_info: ImageInfo) -> ImageInfo:
         """Validate the image info."""
         if not isinstance(img_info, ImageInfo):
@@ -154,6 +190,8 @@ class ValidateBatchMixin:
             "saliency_map": self._saliency_maps_validator,
             "masks": self._masks_validator,
             "bboxes": self._boxes_validator,
+            "keypoints": self._keypoints_validator,
+            "polygons": self._polygons_validator,
             "imgs_info": self._imgs_info_validator,
             "batch_size": self._batch_size_validator,
         }
@@ -169,18 +207,32 @@ class ValidateBatchMixin:
     @staticmethod
     def _images_validator(image_batch: torch.Tensor) -> torch.Tensor:
         """Validate the image batch."""
-        if not isinstance(image_batch, torch.Tensor):
-            msg = f"Image batch must be a torch tensor. Got {type(image_batch)}"
+        if not isinstance(image_batch, list) and not isinstance(image_batch, torch.Tensor):
+            msg = f"Image batch must be a torch tensor or list of tensors. Got {type(image_batch)}"
             raise TypeError(msg)
-        if image_batch.dtype != torch.float32:
-            msg = "Image batch must have dtype float32"
-            raise ValueError(msg)
-        if image_batch.ndim != 4:
-            msg = "Image batch must have 4 dimensions"
-            raise ValueError(msg)
-        if image_batch.shape[1] not in [1, 3]:
-            msg = "Image batch must have 1 or 3 channels"
-            raise ValueError(msg)
+        if isinstance(image_batch, torch.Tensor):
+            if image_batch.dtype != torch.float32:
+                msg = f"Image batch must have dtype float32. Found {image_batch.dtype}"
+                raise ValueError(msg)
+            if image_batch.ndim != 4:
+                msg = "Image batch must have 4 dimensions"
+                raise ValueError(msg)
+            if image_batch.shape[1] not in [1, 3]:
+                msg = "Image batch must have 1 or 3 channels"
+                raise ValueError(msg)
+        else:
+            if not all(isinstance(image, torch.Tensor) for image in image_batch):
+                msg = "Image batch must be a list of torch tensors"
+                raise TypeError(msg)
+            if not all(image.dtype == torch.float32 for image in image_batch):
+                msg = "Image batch must have dtype float32"
+                raise ValueError(msg)
+            if not all(image.ndim == 3 for image in image_batch):
+                msg = "Image batch must have 3 dimensions"
+                raise ValueError(msg)
+            if not all(image.shape[0] in [1, 3] for image in image_batch):
+                msg = "Image batch must have 1 or 3 channels"
+                raise ValueError(msg)
         return image_batch
 
     @staticmethod
@@ -210,7 +262,7 @@ class ValidateBatchMixin:
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
         if not scores_batch[0].dtype.is_floating_point:
-            msg = "Scores batch must have a floating point dtype (float16, float32, or float64)"
+            msg = f"Scores batch must have a floating point dtype. Got {scores_batch[0].dtype}"
             raise ValueError(msg)
         if scores_batch[0].ndim > 1:
             msg = "Scores batch must have 1 or 2 dimensions"
@@ -268,9 +320,6 @@ class ValidateBatchMixin:
         if isinstance(saliency_map_batch[0], torch.Tensor) and not saliency_map_batch[0].dtype.is_floating_point:
             msg = f"Saliency map must have a floating point dtype. Got {saliency_map_batch[0].dtype}"
             raise ValueError(msg)
-        if saliency_map_batch[0].ndim != 3:
-            msg = "Saliency map must have 3 dimensions"
-            raise ValueError(msg)
         return saliency_map_batch
 
     @staticmethod
@@ -281,13 +330,6 @@ class ValidateBatchMixin:
         if not isinstance(masks_batch, list) or not isinstance(masks_batch[0], torch.Tensor):
             msg = f"Masks batch must be a list of torch tensors. Got {type(masks_batch)}"
             raise TypeError(msg)
-        # assumes homogeneous data so validation is done only for the first element
-        if masks_batch[0].dtype != torch.bool:
-            msg = "Masks batch must have dtype torch.bool"
-            raise ValueError(msg)
-        if masks_batch[0].ndim != 3:
-            msg = "Masks batch must have 3 dimensions"
-            raise ValueError(msg)
         return masks_batch
 
     @staticmethod
@@ -299,8 +341,8 @@ class ValidateBatchMixin:
             msg = f"Boxes batch must be a list of torch tensors. Got {type(boxes_batch)}"
             raise TypeError(msg)
         # assumes homogeneous data so validation is done only for the first element
-        if boxes_batch[0].dtype != torch.float32:
-            msg = "Boxes batch must have dtype torch.float32"
+        if not boxes_batch[0].dtype.is_floating_point:
+            msg = f"Boxes batch must have a floating point dtype. Got {boxes_batch[0].dtype}"
             raise ValueError(msg)
         if boxes_batch[0].ndim != 2:
             msg = "Boxes batch must have 2 dimensions"
@@ -309,6 +351,29 @@ class ValidateBatchMixin:
             msg = "Boxes batch must have 4 coordinates"
             raise ValueError(msg)
         return boxes_batch
+
+    @staticmethod
+    def _keypoints_validator(keypoints_batch: list[torch.Tensor | None]) -> list[torch.Tensor]:
+        """Validate the keypoints batch."""
+        if all(keypoints is None for keypoints in keypoints_batch):
+            return []
+        if not isinstance(keypoints_batch, list) or not isinstance(keypoints_batch[0], torch.Tensor):
+            msg = f"Keypoints batch must be a list of torch tensors. Got {type(keypoints_batch)}"
+            raise TypeError(msg)
+        # assumes homogeneous data so validation is done only for the first element
+        if keypoints_batch[0].dtype != torch.float32:
+            msg = "Keypoints batch must have dtype torch.float32"
+            raise ValueError(msg)
+        if keypoints_batch[0].ndim != 2:
+            msg = "Keypoints batch must have 2 dimensions"
+            raise ValueError(msg)
+        if keypoints_batch[0].shape[1] != 3:
+            msg = "Keypoints batch must have 2 coordinates and 1 visibility value"
+            raise ValueError(msg)
+        if any(keypoints_batch[0][:, 2] > 1) or any(keypoints_batch[0][:, 2] < 0):
+            msg = "Keypoints visibility must be between 0 and 1"
+            raise ValueError(msg)
+        return keypoints_batch
 
     @staticmethod
     def _imgs_info_validator(imgs_info_batch: list[ImageInfo | None]) -> list[ImageInfo | None]:
@@ -331,3 +396,22 @@ class ValidateBatchMixin:
             msg = "Batch size must be an integer"
             raise TypeError(msg)
         return batch_size
+
+    @staticmethod
+    def _polygons_validator(polygons_batch: list[list[Polygon] | None]) -> list[list[Polygon] | None]:
+        """Validate the polygons batch."""
+        if all(polygon is None for polygon in polygons_batch):
+            return []
+        if not isinstance(polygons_batch, list):
+            msg = "Polygons batch must be a list"
+            raise TypeError(msg)
+        if not isinstance(polygons_batch[0], list):
+            msg = "Polygons batch must be a list of list"
+            raise TypeError(msg)
+        if len(polygons_batch[0]) == 0:
+            msg = f"Polygons batch must not be empty. Got {polygons_batch}"
+            raise ValueError(msg)
+        if not isinstance(polygons_batch[0][0], Polygon):
+            msg = "Polygons batch must be a list of list of datumaro.Polygon"
+            raise TypeError(msg)
+        return polygons_batch

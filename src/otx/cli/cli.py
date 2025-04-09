@@ -350,7 +350,7 @@ class OTXCLI:
                 input_size=self.datamodule.input_size,
                 mean=self.datamodule.input_mean,
                 std=self.datamodule.input_std,
-            )
+            ).as_dict()
 
             # Instantiate the model and needed components
             self.model = self.instantiate_model(model_config=model_config)
