@@ -205,7 +205,7 @@ class HLabelInfo(LabelInfo):
         empty_multiclass_head_indices: []
 
     All of the member variables should be considered for the Model API.
-    https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/algorithms/classification/utils/cls_utils.py#L97
+    https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/algorithms/classification/utils/cls_utils.py#L97
     """
 
     num_multiclass_heads: int

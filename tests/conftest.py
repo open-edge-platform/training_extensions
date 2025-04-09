@@ -100,7 +100,7 @@ def pytest_addoption(parser: pytest.Parser):
         type=str,
         default="__CURRENT_BRANCH_COMMIT__",
         help="Target OTX ref (tag / branch name / commit hash) on main repo to test. Defaults to the current branch. "
-        "`pip install otx[full]@https://github.com/openvinotoolkit/training_extensions.git@{otx_ref}` will be executed before run, "
+        "`pip install otx[full]@https://github.com/open-edge-platform/training_extensions.git@{otx_ref}` will be executed before run, "
         "and reverted after run. Works only for v2.x assuming CLI compatibility.",
     )
     parser.addoption(
@@ -139,8 +139,7 @@ def pytest_addoption(parser: pytest.Parser):
     )
     parser.addoption(
         "--run-category-only",
-        type=bool,
-        default=False,
+        action="store_true",
         help="Run only the model category tests that categorised as BALANCE, SPEED, ACCURACY.",
     )
 
