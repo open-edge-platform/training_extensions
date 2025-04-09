@@ -259,7 +259,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">TypeAlias</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">anomalib</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskType</span> <span class="k">as</span> <span class="n">AnomalibTaskType</span>
@@ -270,14 +270,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.anomaly</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">AnomalyClassificationBatchPrediction</span><span class="p">,</span>
-    <span class="n">AnomalyClassificationDataBatch</span><span class="p">,</span>
-    <span class="n">AnomalyDetectionBatchPrediction</span><span class="p">,</span>
-    <span class="n">AnomalyDetectionDataBatch</span><span class="p">,</span>
-    <span class="n">AnomalySegmentationBatchPrediction</span><span class="p">,</span>
-    <span class="n">AnomalySegmentationDataBatch</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.exporter.anomaly</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXAnomalyModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
@@ -286,6 +278,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPrecisionType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">remove_state_dict_prefix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDataBatch</span><span class="p">,</span> <span class="n">TorchPredBatch</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">types</span>
@@ -299,14 +292,6 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">STEP_OUTPUT</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optimizer</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metric</span>
-
-
-<span class="n">AnomalyModelInputs</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">AnomalyClassificationDataBatch</span> <span class="o">|</span> <span class="n">AnomalySegmentationDataBatch</span> <span class="o">|</span> <span class="n">AnomalyDetectionDataBatch</span>
-<span class="p">)</span>
-<span class="n">AnomalyModelOutputs</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">AnomalyClassificationBatchPrediction</span> <span class="o">|</span> <span class="n">AnomalySegmentationBatchPrediction</span> <span class="o">|</span> <span class="n">AnomalyDetectionBatchPrediction</span>
-<span class="p">)</span>
 
 
 <div class="viewcode-block" id="OTXAnomaly">
@@ -458,7 +443,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_batch_end</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-        <span class="n">batch</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
+        <span class="n">batch</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
         <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">dataloader_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -476,15 +461,12 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize inputs for the model.&quot;&quot;&quot;</span>
         <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()}</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">AnomalySegmentationDataBatch</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">AnomalyDetectionDataBatch</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">boxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span>
-            <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">boxes</span>
+        <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([]):</span>  <span class="c1"># when last batch size is 1</span>
             <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -493,45 +475,18 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnomalyModelOutputs</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">AnomalibTaskType</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">AnomalyClassificationBatchPrediction</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
-                <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span>
-                <span class="c1"># Note: this is the anomalous score. It should be inverted to report Normal score</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;pred_scores&quot;</span><span class="p">],</span>
-                <span class="n">anomaly_maps</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;anomaly_maps&quot;</span><span class="p">],</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">AnomalibTaskType</span><span class="o">.</span><span class="n">SEGMENTATION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">AnomalySegmentationBatchPrediction</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
-                <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span>
-                <span class="c1"># Note: this is the anomalous score. It should be inverted to report Normal score</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;pred_scores&quot;</span><span class="p">],</span>
-                <span class="n">anomaly_maps</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;anomaly_maps&quot;</span><span class="p">],</span>
-                <span class="n">masks</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">],</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">AnomalibTaskType</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">AnomalyDetectionBatchPrediction</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
-                <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span>
-                <span class="c1"># Note: this is the anomalous score. It should be inverted to report Normal score</span>
-                <span class="n">scores</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;pred_scores&quot;</span><span class="p">],</span>
-                <span class="n">anomaly_maps</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;anomaly_maps&quot;</span><span class="p">],</span>
-                <span class="n">masks</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">],</span>
-                <span class="n">boxes</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;pred_boxes&quot;</span><span class="p">],</span>
-                <span class="n">box_scores</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;box_scores&quot;</span><span class="p">],</span>
-                <span class="n">box_labels</span><span class="o">=</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;box_labels&quot;</span><span class="p">],</span>
-            <span class="p">)</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported task type </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]],</span>  <span class="c1"># noqa: C416 Ruff incorrectly recommends list()</span>
+            <span class="c1"># Note: this is the anomalous score. It should be inverted to report Normal score</span>
+            <span class="n">scores</span><span class="o">=</span><span class="p">[</span><span class="n">score</span> <span class="k">for</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;pred_scores&quot;</span><span class="p">]],</span>  <span class="c1"># noqa: C416 Ruff incorrectly recommends list()</span>
+            <span class="n">saliency_map</span><span class="o">=</span><span class="p">[</span><span class="n">anomaly_map</span> <span class="k">for</span> <span class="n">anomaly_map</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;anomaly_maps&quot;</span><span class="p">]],</span>  <span class="c1"># noqa: C416 Ruff incorrectly recommends list()</span>
+            <span class="n">masks</span><span class="o">=</span><span class="p">[</span><span class="n">mask</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;mask&quot;</span><span class="p">]],</span>  <span class="c1"># noqa: C416 Ruff incorrectly recommends list()</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXAnomalyModelExporter</span><span class="p">:</span>
@@ -592,7 +547,7 @@
 
 <div class="viewcode-block" id="OTXAnomaly.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.anomaly.html#otx.core.model.anomaly.OTXAnomaly.get_dummy_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnomalyModelInputs</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchDataBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for anomaly model.&quot;&quot;&quot;</span>
         <span class="n">images</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
         <span class="n">infos</span> <span class="o">=</span> <span class="p">[]</span>
@@ -604,33 +559,13 @@
                     <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_CLASSIFICATION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">AnomalyClassificationDataBatch</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)],</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_SEGMENTATION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">AnomalySegmentationDataBatch</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)],</span>
-                <span class="n">masks</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_DETECTION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">AnomalyDetectionDataBatch</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span>
-                <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">,</span>
-                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)],</span>
-                <span class="n">boxes</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-                <span class="n">masks</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-            <span class="p">)</span>
-
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Wrong anomaly task type&quot;</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">TorchDataBatch</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span>
+            <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="mi">0</span><span class="p">)],</span>
+            <span class="n">masks</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="p">)</span></div>
 </div>
 
 
@@ -665,7 +600,7 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.anomaly.html#otx.core.model.anomaly.AnomalyMixin.training_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">training_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
         <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">STEP_OUTPUT</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Call training step of the anomalib model.&quot;&quot;&quot;</span>
@@ -678,7 +613,7 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.anomaly.html#otx.core.model.anomaly.AnomalyMixin.validation_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validation_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
         <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">STEP_OUTPUT</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Call validation step of the anomalib model.&quot;&quot;&quot;</span>
@@ -691,7 +626,7 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.anomaly.html#otx.core.model.anomaly.AnomalyMixin.test_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
         <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">STEP_OUTPUT</span><span class="p">:</span>
@@ -705,7 +640,7 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.anomaly.html#otx.core.model.anomaly.AnomalyMixin.predict_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
         <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">STEP_OUTPUT</span><span class="p">:</span>
@@ -719,8 +654,8 @@
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.anomaly.html#otx.core.model.anomaly.AnomalyMixin.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">AnomalyModelInputs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnomalyModelOutputs</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap forward method of the Anomalib model.&quot;&quot;&quot;</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_step</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="c1"># TODO(Ashwin): update forward implementation to comply with other OTX models</span>
