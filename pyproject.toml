@@ -28,7 +28,7 @@ classifiers = [
 dependencies = [
     "datumaro==1.10.0rc0",
     "omegaconf==2.3.0",
-    "rich==13.9.4",
+    "rich==14.0.0",
     "jsonargparse==4.30.0",
     "psutil==7.0.0", # Mem cache needs system checks
     "ftfy==6.3.1",
@@ -39,7 +39,6 @@ dependencies = [
     "einops==0.8.1",
     "decord==0.6.0",
     "typeguard>=4.3,<4.5",
-    "numba==0.61.0",
     # TODO(ashwinvaidya17): https://github.com/openvinotoolkit/anomalib/issues/2126
     "setuptools<70",
 ]
@@ -374,6 +373,5 @@ markers = [
     "gpu",  # mark tests which require NVIDIA GPU
     "cpu",
     "xpu",  # mark tests which require Intel dGPU,
-    "intense", # intense unit tests which require better CI machines
 ]
 python_files = "tests/**/*.py"

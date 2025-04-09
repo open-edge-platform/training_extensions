@@ -5,11 +5,14 @@ from __future__ import annotations
 
 import importlib
 import inspect
+from collections import defaultdict
 from pathlib import Path
 
 import pytest
+import yaml
 
 from otx.core.types.task import OTXTaskType
+from otx.tools.converter import TEMPLATE_ID_DICT
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -43,11 +46,11 @@ def find_recipe_folder(base_path: Path, folder_name: str) -> Path:
 def get_task_list(task: str) -> list[OTXTaskType]:
     if task == "all":
         tasks = list(OTXTaskType)
-    elif task == "multi_cls_classification":
+    elif task == "multi_class_cls":
         tasks = [OTXTaskType.MULTI_CLASS_CLS]
-    elif task == "multi_label_classification":
+    elif task == "multi_label_cls":
         tasks = [OTXTaskType.MULTI_LABEL_CLS]
-    elif task == "hlabel_classification":
+    elif task == "h_label_cls":
         tasks = [OTXTaskType.H_LABEL_CLS]
     elif task == "classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
@@ -60,6 +63,75 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     return tasks
 
 
+def get_model_category_list(task) -> list[str]:
+    """
+    Retrieve the list of model categories from `otx/tools/templates`.
+
+    This function extracts `model_category` values from `template.yaml`, which may include
+    categories such as "balance" or "accuracy." It then maps each category to its corresponding
+    recipe in `otx/recipe`.
+
+    Args:
+        task (str): The task for which to retrieve model categories.
+
+    Raises:
+        FileNotFoundError: If no recipe is found for the specified task.
+
+    Returns:
+        list[str]: A list of recipe paths.
+    """
+
+    # Locate the OTX module and relevant directories
+    otx_module = importlib.import_module("otx")
+    otx_root = Path(inspect.getfile(otx_module)).parent
+    template_dir = otx_root / "tools" / "templates"
+    recipe_dir = otx_root / "recipe"
+
+    # Collect all template.yaml files
+    template_paths = template_dir.rglob("template.yaml")
+    template_dict = defaultdict(list)
+
+    # Extract model categories from templates
+    for template_path in template_paths:
+        with Path.open(template_path) as file:
+            template = yaml.safe_load(file)
+
+        if "model_category" in template and "model_template_id" in template:
+            model_id = template["model_template_id"]
+            model_name = TEMPLATE_ID_DICT[model_id]["model_name"]
+            model_task = TEMPLATE_ID_DICT[model_id]["task"]
+            template_dict[model_task].append(model_name)
+
+    # Extend classification categories
+    template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
+    template_dict[OTXTaskType.H_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
+
+    # Get the list of tasks to search for recipes
+    task_list = get_task_list(task.lower())
+    recipes = set()
+
+    # Find matching recipes for each model
+    for task_type in task_list:
+        if task_type not in template_dict:
+            continue
+
+        task_recipe_dirs = list(recipe_dir.rglob(task_type.lower()))
+        if not task_recipe_dirs:
+            continue
+
+        task_recipe_dir = task_recipe_dirs[0]  # Assuming one directory per task
+
+        for model_name in template_dict[task_type]:
+            recipe_paths = task_recipe_dir.rglob(f"{model_name}*.yaml")
+            recipes.update(recipe_paths)
+
+    if not recipes:
+        msg = f"No recipe found for task '{task}'."
+        raise FileNotFoundError(msg)
+
+    return [str(recipe) for recipe in recipes]
+
+
 def pytest_configure(config):
     """Configure pytest options and set task, recipe, and recipe_ov lists.
 
@@ -70,6 +142,7 @@ def pytest_configure(config):
         None
     """
     task = config.getoption("--task")
+    run_category_only = config.getoption("--run-category-only")
 
     # This assumes have OTX installed in environment.
     otx_module = importlib.import_module("otx")
@@ -89,6 +162,10 @@ def pytest_configure(config):
         target_recipe_list.extend(recipe_list)
         target_ov_recipe_list.extend(recipe_ov_list)
     tile_recipe_list = [recipe for recipe in target_recipe_list if "tile" in recipe]
+
+    # Run Model Category Recipes Only (i.e. model balance, accuracy, etc.)
+    if run_category_only:
+        target_recipe_list = get_model_category_list(task)
 
     pytest.TASK_LIST = task_list
     pytest.RECIPE_LIST = target_recipe_list

@@ -264,7 +264,7 @@ class OTXModel(LightningModule):
 
     def predict_step(
         self,
-        batch: T_OTXBatchDataEntity,
+        batch: T_OTXBatchDataEntity | OTXTileBatchDataEntity,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> T_OTXBatchPredEntity:

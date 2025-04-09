@@ -27,7 +27,7 @@ from otx.algo.modules.conv_module import Conv2dModule
 from otx.algo.modules.norm import build_norm_layer
 from otx.algo.modules.scale import Scale
 from otx.algo.utils.utils import InstanceData
-from otx.core.data.entity.detection import DetBatchDataEntity
+from otx.data import TorchDataBatch
 
 EPS = 1e-12
 
@@ -190,14 +190,14 @@ class ATSSHeadModule(ClassIncrementalMixin, AnchorHead):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: DetBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (DetBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.
