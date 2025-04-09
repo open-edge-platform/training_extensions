@@ -134,7 +134,7 @@ class OTXConfig:
                 fp,
             )
 
-    def to_otx2_config(self, work_dir: Path) -> dict[str, dict]:
+    def to_otx_config(self, work_dir: Path) -> dict[str, dict]:
         fpath = work_dir / "tmp_config.json"
         self.to_json_file(fpath)
 

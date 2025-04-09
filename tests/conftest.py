@@ -481,6 +481,15 @@ def fxt_export_list() -> list[ExportCase2Test]:
 
 
 def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskType, list[dict]]:
+    """Get model template paths from the templates directory.
+
+    Args:
+        model_category_only (bool): If True, only return templates with model categories.
+
+    Returns:
+        dict: A dictionary mapping task types to lists of template paths and tiling options.
+    """
+
     from otx import __file__ as otx_init_path
 
     template_dir = Path(otx_init_path).parent / "tools" / "templates"
@@ -532,6 +541,7 @@ def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskT
 
 
 def pytest_generate_tests(metafunc):
+    """Generate tests based on the task templates stored under src/otx/tools/templates."""
     if "task_template" in metafunc.fixturenames:
         task_name = metafunc.config.getoption("task")
         model_category_only = metafunc.config.getoption("run_category_only")
