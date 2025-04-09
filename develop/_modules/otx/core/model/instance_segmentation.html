@@ -267,7 +267,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.tilers</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegmentationTiler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
@@ -281,7 +280,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceData</span><span class="p">,</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span><span class="p">,</span> <span class="n">OTXBatchLossEntity</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.instance_segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span> <span class="n">InstanceSegBatchPredEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileBatchDataEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">stack_batch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span>
@@ -293,6 +291,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span><span class="p">,</span> <span class="n">LabelInfoTypes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_rle</span><span class="p">,</span> <span class="n">polygon_to_rle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.utils.tile_merge</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegTileMerge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchDataBatch</span><span class="p">,</span> <span class="n">TorchPredBatch</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
@@ -361,9 +360,9 @@
 
         <span class="k">return</span> <span class="n">detector</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span> <span class="o">=</span> <span class="n">stack_batch</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span> <span class="n">pad_size_divisor</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span> <span class="o">=</span> <span class="n">stack_batch</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span> <span class="n">pad_size_divisor</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>  <span class="c1"># type: ignore[assignment,arg-type]</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span>
@@ -374,8 +373,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceData</span><span class="p">]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceSegBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
@@ -395,13 +394,13 @@
         <span class="n">masks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">predictions</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">outputs</span>
-        <span class="k">for</span> <span class="n">img_info</span><span class="p">,</span> <span class="n">prediction</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span> <span class="n">predictions</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">img_info</span><span class="p">,</span> <span class="n">prediction</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span> <span class="n">predictions</span><span class="p">):</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediction</span><span class="o">.</span><span class="n">scores</span><span class="p">)</span>
             <span class="n">bboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
                     <span class="n">prediction</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
                     <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;XYXY&quot;</span><span class="p">,</span>
-                    <span class="n">canvas_size</span><span class="o">=</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">,</span>
+                    <span class="n">canvas_size</span><span class="o">=</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">,</span>  <span class="c1"># type: ignore[union-attr]</span>
                 <span class="p">),</span>
             <span class="p">)</span>
             <span class="n">output_masks</span> <span class="o">=</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span>
@@ -427,42 +426,40 @@
             <span class="n">saliency_map</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
             <span class="n">feature_vector</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 
-            <span class="k">return</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">),</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
                 <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
                 <span class="n">bboxes</span><span class="o">=</span><span class="n">bboxes</span><span class="p">,</span>
                 <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
-                <span class="n">polygons</span><span class="o">=</span><span class="p">[],</span>
                 <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
                 <span class="n">saliency_map</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">),</span>
                 <span class="n">feature_vector</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">feature_vector</span><span class="p">),</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">),</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
             <span class="n">bboxes</span><span class="o">=</span><span class="n">bboxes</span><span class="p">,</span>
             <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
-            <span class="n">polygons</span><span class="o">=</span><span class="p">[],</span>
             <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OTXInstanceSegModel.forward_tiles">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.instance_segmentation.html#otx.core.model.instance_segmentation.OTXInstanceSegModel.forward_tiles">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unpack instance segmentation tiles.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            inputs (OTXTileBatchDataEntity): Tile batch data entity.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            InstanceSegBatchPredEntity: Merged instance segmentation prediction.</span>
+<span class="sd">            TorchPredBatch: Merged instance segmentation prediction.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tile_preds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceSegBatchPredEntity</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tile_preds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TorchPredBatch</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">tile_attrs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">merger</span> <span class="o">=</span> <span class="n">InstanceSegTileMerge</span><span class="p">(</span>
             <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
@@ -479,15 +476,15 @@
             <span class="n">tile_attrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">batch_tile_attrs</span><span class="p">)</span>
         <span class="n">pred_entities</span> <span class="o">=</span> <span class="n">merger</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">tile_preds</span><span class="p">,</span> <span class="n">tile_attrs</span><span class="p">)</span>
 
-        <span class="n">pred_entity</span> <span class="o">=</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">(</span>
+        <span class="n">pred_entity</span> <span class="o">=</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">images</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">image</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">img_info</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
-            <span class="n">scores</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">score</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
+            <span class="n">scores</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">scores</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
             <span class="n">bboxes</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">bboxes</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
-            <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">labels</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
+            <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
             <span class="n">masks</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">masks</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
-            <span class="n">polygons</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">polygons</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>
+            <span class="n">polygons</span><span class="o">=</span><span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">polygons</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">],</span>  <span class="c1"># type: ignore[misc]</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
             <span class="n">pred_entity</span><span class="o">.</span><span class="n">saliency_map</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred_entity</span><span class="o">.</span><span class="n">saliency_map</span> <span class="k">for</span> <span class="n">pred_entity</span> <span class="ow">in</span> <span class="n">pred_entities</span><span class="p">]</span>
@@ -574,29 +571,28 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the prediction entity to the format that the metric can compute and cache the ground truth.</span>
 
 <span class="sd">        This function will convert mask to RLE format and cache the ground truth for the current batch.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            preds (InstanceSegBatchPredEntity): Current batch predictions.</span>
-<span class="sd">            inputs (InstanceSegBatchDataEntity): Current batch ground-truth inputs.</span>
+<span class="sd">            preds (TorchPredBatch): Current batch predictions.</span>
+<span class="sd">            inputs (TorchDataBatch): Current batch ground-truth inputs.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pred_info</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">target_info</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">)):</span>  <span class="c1"># type: ignore[arg-type]</span>
+            <span class="n">bboxes</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">preds</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">preds</span><span class="o">.</span><span class="n">scores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">preds</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
-        <span class="k">for</span> <span class="n">bboxes</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-        <span class="p">):</span>
             <span class="n">pred_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">{</span>
                     <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">bboxes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
@@ -605,18 +601,17 @@
                     <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span>
                 <span class="p">},</span>
             <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">)):</span>  <span class="c1"># type: ignore[arg-type]</span>
+            <span class="n">imgs_info</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">bboxes</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">polygons</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
-        <span class="k">for</span> <span class="n">imgs_info</span><span class="p">,</span> <span class="n">bboxes</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">polygons</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-        <span class="p">):</span>
             <span class="n">rles</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="p">[</span><span class="n">encode_rle</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span>
-                <span class="k">else</span> <span class="n">polygon_to_rle</span><span class="p">(</span><span class="n">polygons</span><span class="p">,</span> <span class="o">*</span><span class="n">imgs_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">polygon_to_rle</span><span class="p">(</span><span class="n">polygons</span><span class="p">,</span> <span class="o">*</span><span class="n">imgs_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">)</span>  <span class="c1"># type: ignore[union-attr,arg-type]</span>
             <span class="p">)</span>
             <span class="n">target_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">{</span>
@@ -629,7 +624,7 @@
 
 <div class="viewcode-block" id="OTXInstanceSegModel.get_dummy_input">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.instance_segmentation.html#otx.core.model.instance_segmentation.OTXInstanceSegModel.get_dummy_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchDataBatch</span><span class="p">:</span>  <span class="c1"># type: ignore[override]</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dummy input for instance segmentation model.&quot;&quot;&quot;</span>
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
         <span class="n">infos</span> <span class="o">=</span> <span class="p">[]</span>
@@ -641,12 +636,12 @@
                     <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">infos</span><span class="p">,</span> <span class="n">bboxes</span><span class="o">=</span><span class="p">[],</span> <span class="n">masks</span><span class="o">=</span><span class="p">[],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[],</span> <span class="n">polygons</span><span class="o">=</span><span class="p">[])</span></div>
+        <span class="k">return</span> <span class="n">TorchDataBatch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">imgs_info</span><span class="o">=</span><span class="n">infos</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXInstanceSegModel.forward_explain">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.instance_segmentation.html#otx.core.model.instance_segmentation.OTXInstanceSegModel.forward_explain">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model forward function.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">OTXTileBatchDataEntity</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_tiles</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
@@ -671,7 +666,7 @@
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_forward_explain_inst_seg</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">:</span> <span class="n">TwoStageDetector</span><span class="p">,</span>
-        <span class="n">entity</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tensor&quot;</span><span class="p">,</span>  <span class="c1"># noqa: ARG004</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward func of the BaseDetector instance, which located in is in ExplainableOTXInstanceSegModel().model.&quot;&quot;&quot;</span>
@@ -702,7 +697,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_results_from_head</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
-        <span class="n">entity</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceData</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the results from the head of the instance segmentation model.</span>
 
@@ -718,8 +713,8 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">otx.algo.instance_segmentation.rtmdet_inst</span><span class="w"> </span><span class="kn">import</span> <span class="n">RTMDetInst</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MaskRCNNTV</span><span class="p">):</span>
-            <span class="n">ori_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">]</span>
-            <span class="n">img_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">img_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">]</span>
+            <span class="n">ori_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">]</span>  <span class="c1"># type: ignore[union-attr]</span>
+            <span class="n">img_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">img_info</span><span class="o">.</span><span class="n">img_shape</span> <span class="k">for</span> <span class="n">img_info</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">]</span>  <span class="c1"># type: ignore[union-attr]</span>
             <span class="n">image_list</span> <span class="o">=</span> <span class="n">ImageList</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">img_shapes</span><span class="p">)</span>
             <span class="n">proposals</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rpn</span><span class="p">(</span><span class="n">image_list</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
             <span class="n">detections</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="p">(</span>
@@ -728,7 +723,8 @@
                 <span class="n">image_list</span><span class="o">.</span><span class="n">image_sizes</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">scale_factors</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">img_meta</span><span class="o">.</span><span class="n">scale_factor</span> <span class="k">if</span> <span class="n">img_meta</span><span class="o">.</span><span class="n">scale_factor</span> <span class="k">else</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">img_meta</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span>
+                <span class="n">img_meta</span><span class="o">.</span><span class="n">scale_factor</span> <span class="k">if</span> <span class="n">img_meta</span><span class="o">.</span><span class="n">scale_factor</span> <span class="k">else</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># type: ignore[union-attr]</span>
+                <span class="k">for</span> <span class="n">img_meta</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span>  <span class="c1"># type: ignore[union-attr]</span>
             <span class="p">]</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">postprocess</span><span class="p">(</span><span class="n">detections</span><span class="p">,</span> <span class="n">ori_shapes</span><span class="p">,</span> <span class="n">scale_factors</span><span class="p">)</span>
 
@@ -855,8 +851,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceSegmentationResult</span><span class="p">],</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstanceSegBatchPredEntity</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchPredBatch</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
         <span class="c1"># add label index</span>
         <span class="n">bboxes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
@@ -867,99 +863,96 @@
                 <span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
                     <span class="n">data</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
                     <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;XYXY&quot;</span><span class="p">,</span>
-                    <span class="n">canvas_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">img_shape</span><span class="p">,</span>
+                    <span class="n">canvas_size</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">img_shape</span><span class="p">,</span>  <span class="c1"># type: ignore[union-attr,index]</span>
                     <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">)</span>
             <span class="c1"># NOTE: OTX 1.5 filter predictions with result_based_confidence_threshold,</span>
             <span class="c1"># but OTX 2.0 doesn&#39;t have it in configuration.</span>
             <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
             <span class="n">masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
-            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">outputs</span> <span class="ow">and</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">saliency_map</span><span class="p">:</span>
             <span class="n">predicted_s_maps</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
-                <span class="n">image_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s_map</span> <span class="k">for</span> <span class="n">s_map</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">saliency_map</span> <span class="k">if</span> <span class="n">s_map</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">image_map</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">s_map</span> <span class="k">for</span> <span class="n">s_map</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">saliency_map</span> <span class="k">if</span> <span class="n">s_map</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="p">)</span>
                 <span class="n">predicted_s_maps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_map</span><span class="p">)</span>
 
             <span class="c1"># Squeeze dim 2D =&gt; 1D, (1, internal_dim) =&gt; (internal_dim)</span>
             <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">(</span>
+            <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
                 <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
                 <span class="n">bboxes</span><span class="o">=</span><span class="n">bboxes</span><span class="p">,</span>
-                <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
-                <span class="n">polygons</span><span class="o">=</span><span class="p">[],</span>
+                <span class="n">masks</span><span class="o">=</span><span class="n">masks</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
                 <span class="n">saliency_map</span><span class="o">=</span><span class="n">predicted_s_maps</span><span class="p">,</span>
                 <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">TorchPredBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
             <span class="n">bboxes</span><span class="o">=</span><span class="n">bboxes</span><span class="p">,</span>
-            <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
-            <span class="n">polygons</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">masks</span><span class="o">=</span><span class="n">masks</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_pred_entity_to_compute_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">InstanceSegBatchPredEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">InstanceSegBatchDataEntity</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">TorchPredBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TorchDataBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the prediction entity to the format that the metric can compute and cache the ground truth.</span>
 
 <span class="sd">        This function will convert mask to RLE format and cache the ground truth for the current batch.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            preds (InstanceSegBatchPredEntity): Current batch predictions.</span>
-<span class="sd">            inputs (InstanceSegBatchDataEntity): Current batch ground-truth inputs.</span>
+<span class="sd">            preds (TorchPredBatch): Current batch predictions.</span>
+<span class="sd">            inputs (TorchDataBatch): Current batch ground-truth inputs.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">pred_info</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">target_info</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">bboxes</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-        <span class="p">):</span>
-            <span class="n">pred_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">bboxes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                    <span class="s2">&quot;masks&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">encode_rle</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="o">.</span><span class="n">data</span><span class="p">],</span>
-                    <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">scores</span><span class="p">,</span>
-                    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span>
-                <span class="p">},</span>
-            <span class="p">)</span>
+        <span class="n">_bboxes</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span> <span class="k">if</span> <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">_masks</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">masks</span> <span class="k">if</span> <span class="n">preds</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">pred_info</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">_bboxes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">_bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+                <span class="s2">&quot;masks&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">encode_rle</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">_masks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">_masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">_masks</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,)),</span>
+                <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">))</span>  <span class="c1"># type: ignore[arg-type]</span>
+        <span class="p">]</span>
 
-        <span class="k">for</span> <span class="n">imgs_info</span><span class="p">,</span> <span class="n">bboxes</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">polygons</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="n">_bboxes</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">_masks</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">)):</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="n">rles</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">[</span><span class="n">encode_rle</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span>
-                <span class="k">else</span> <span class="n">polygon_to_rle</span><span class="p">(</span><span class="n">polygons</span><span class="p">,</span> <span class="o">*</span><span class="n">imgs_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">)</span>
+                <span class="p">[</span><span class="n">encode_rle</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">_masks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">_masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_masks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">polygon_to_rle</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="o">*</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">)</span>  <span class="c1"># type: ignore[index,union-attr]</span>
             <span class="p">)</span>
             <span class="n">target_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">bboxes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">_bboxes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">_bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
                     <span class="s2">&quot;masks&quot;</span><span class="p">:</span> <span class="n">rles</span><span class="p">,</span>
-                    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span>
+                    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
                 <span class="p">},</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;preds&quot;</span><span class="p">:</span> <span class="n">pred_info</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">target_info</span><span class="p">}</span>
