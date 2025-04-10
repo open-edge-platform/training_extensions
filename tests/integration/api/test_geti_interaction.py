@@ -228,28 +228,8 @@ class TestEngineAPI:
         assert predictions is not None
 
 
-@pytest.fixture()
-def fxt_engine_api(
-    task_template: tuple[OTXTaskType, str, bool],
-):
-    """Fixture to unpack the task template and return the task type, template path, and tiling flag.
-
-    Args:
-        task_template (tuple): task template defined in conftest.pytest_generate_tests.
-
-    Returns:
-        tuple: A tuple containing the task type, template path, and tiling flag.
-    """
-    task, template_path, tiling = task_template
-    return (
-        task,
-        template_path,
-        tiling,
-    )
-
-
 def test_engine_api(
-    fxt_engine_api: tuple[OTXTaskType, Path, bool],
+    task_template: tuple[OTXTaskType, Path, bool],
     tmp_path: Path,
 ):
     """Test the Engine API for Geti tasks.
@@ -259,7 +239,7 @@ def test_engine_api(
         tmp_path (Path): Temporary directory for testing.
     """
     # Unpack the fixture
-    task, template_path, tiling = fxt_engine_api
+    task, template_path, tiling = task_template
 
     if task not in DEFAULT_GETI_CONFIG_PER_TASK:
         pytest.skip("Only the Geti Tasks are tested to reduce unnecessary resource waste.")
