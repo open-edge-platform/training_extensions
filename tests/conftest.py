@@ -555,7 +555,7 @@ def pytest_generate_tests(metafunc):
                 for entry in entries
             ]
         else:
-            task_enum = OTXTaskType(task_name)
+            task_enum = OTXTaskType(task_name.upper())
             params = [
                 (task_enum, entry["template_path"], entry["tiling"]) for entry in template_dict.get(task_enum, [])
             ]
