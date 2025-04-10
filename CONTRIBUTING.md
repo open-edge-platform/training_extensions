@@ -53,7 +53,7 @@ Set up your development environment to start contributing. This involves install
    ```
 
 Make sure to address any pre-commit issues before finalizing your pull request.
-Pre-commit checks can be lauched by the command:
+Pre-commit checks can be launched by the command:
 
 ```bash
 tox -vv -e pre-commit
