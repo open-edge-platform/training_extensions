@@ -41,7 +41,7 @@ DEFAULT_GETI_CONFIG_PER_TASK = {
     OTXTaskType.DETECTION: TEST_PATH / "assets" / "geti_config_arrow" / "detection",
     OTXTaskType.INSTANCE_SEGMENTATION: TEST_PATH / "assets" / "geti_config_arrow" / "detection",
     OTXTaskType.SEMANTIC_SEGMENTATION: TEST_PATH / "assets" / "geti_config_arrow" / "semantic_segmentation",
-    OTXTaskType.ANOMALY: TEST_PATH / "assets" / "geti_config_arrow" / "anomaly",
+    OTXTaskType.ANOMALY_CLASSIFICATION: TEST_PATH / "assets" / "geti_config_arrow" / "anomaly",
 }
 
 
