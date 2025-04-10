@@ -231,7 +231,7 @@ def load_hyper_parameters(model_template_path: Path) -> tuple[str, dict]:
 
     config_dict = OmegaConf.load(base_hyper_parameter_path)
     data = OmegaConf.to_container(config_dict)
-    if model_template["hyper_parameters"]["parameter_overrides"]:
+    if model_template.get("hyper_parameters", {}).get("parameter_overrides"):
 
         def add_value_key(d: dict) -> None:
             for k, v in list(d.items()):  # Use list to avoid modifying during iteration
@@ -242,8 +242,8 @@ def load_hyper_parameters(model_template_path: Path) -> tuple[str, dict]:
 
         add_value_key(model_template["hyper_parameters"]["parameter_overrides"])
 
-    substitute_parameter_overrides(
-        model_template["hyper_parameters"]["parameter_overrides"],
-        data,
-    )
+        substitute_parameter_overrides(
+            model_template["hyper_parameters"]["parameter_overrides"],
+            data,
+        )
     return (model_template["model_template_id"], data)
