@@ -16,11 +16,11 @@ We use GitHub issues to track the bugs. Report a bug by using our Bug Report Tem
 
 ## Discussion
 
-We enabled [GitHub Discussions](https://github.com/open-edge-platform/training_extensions/discussions) in OTX to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium to the community to discuss about OTX but also help us de-clutter [Issues](https://github.com/open-edge-platform/training_extensions/issues/).
+We enabled [GitHub Discussions](https://github.com/open-edge-platform/training_extensions/discussions) in OTX to welcome the community to ask questions and/or propose ideas/solutions. This will not only provide a medium for the community to discuss OTX but also help us de-clutter [Issues](https://github.com/open-edge-platform/training_extensions/issues/).
 
 ## Feature Request
 
-We utilize GitHub issues to track the feature requests as well. If you are certain regarding the feature you are interested and have a solid proposal, you could then create the feature request by using our [Feature Request Template](https://github.com/open-edge-platform/training_extensions/issues/new?template=feature_request.md) in Issues. If it's still in an idea phase, you could then discuss that with the community in our [Discussion](https://github.com/open-edge-platform/training_extensions/discussions/categories/ideas).
+We utilize GitHub issues to track the feature requests as well. If you are certain regarding the feature you are interested and have a solid proposal, you could then create the feature request by using our [Feature Request Template](https://github.com/open-edge-platform/training_extensions/issues/new?template=feature_request.md) in Issues. If it's still in the idea phase, you could discuss it with the community in our [Discussion](https://github.com/open-edge-platform/training_extensions/discussions/categories/ideas).
 
 ## Development & PRs
 
