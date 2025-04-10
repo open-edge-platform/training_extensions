@@ -111,6 +111,11 @@ class OTXMultilabelClsDataset(OTXDataset):
 
     def _convert_to_onehot(self, labels: torch.tensor, ignored_labels: list[int]) -> torch.tensor:
         """Convert label to one-hot vector format."""
+
+        # Torch's one_hot() expects the input to be of type long
+        # However, when labels are empty, they are of type float32
+        labels = labels.to(dtype=torch.long, copy=False)
+
         onehot = functional.one_hot(labels, self.num_classes).sum(0).clamp_max_(1)
         if ignored_labels:
             for ignore_label in ignored_labels:
