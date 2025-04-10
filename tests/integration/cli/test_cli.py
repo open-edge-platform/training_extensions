@@ -15,7 +15,7 @@ from tests.utils import ExportCase2Test, run_main
 
 
 @pytest.fixture(
-    params=pytest.BALANCE_RECIPE_LIST,
+    params=pytest.DEFAULT_RECIPE_LIST,
     ids=lambda x: "/".join(Path(x).parts[-2:]),
 )
 def fxt_trained_model(

@@ -13,7 +13,6 @@ import yaml
 
 from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT
-from tests.utils import ModelCategory
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -64,7 +63,7 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     return tasks
 
 
-def get_model_category_list(task: str, model_category: ModelCategory = ModelCategory.ALL) -> list[str]:
+def get_model_category_list(task: str, default_model_only: bool = False) -> list[str]:
     """
     Retrieve the list of model categories from `otx/tools/templates`.
 
@@ -74,7 +73,7 @@ def get_model_category_list(task: str, model_category: ModelCategory = ModelCate
 
     Args:
         task (str): The task for which to retrieve model categories.
-        category (ModelCategory): The model category to retrieve.
+        default_model_only (bool): If True, only include default models. Defaults to False.
 
     Raises:
         FileNotFoundError: If no recipe is found for the specified task.
@@ -95,18 +94,23 @@ def get_model_category_list(task: str, model_category: ModelCategory = ModelCate
 
     # Extract model categories from templates
     for template_path in template_paths:
-        with Path.open(template_path) as file:
+        with template_path.open() as file:
             template = yaml.safe_load(file)
 
-        if "model_category" in template and "model_template_id" in template:
-            # Check if the model category matches the specified category
-            if model_category != ModelCategory.ALL and template["model_category"] != model_category.value:
-                continue
+        if default_model_only and not template.get("is_default_for_task", False):
+            continue
 
-            model_id = template["model_template_id"]
-            model_name = TEMPLATE_ID_DICT[model_id]["model_name"]
-            model_task = TEMPLATE_ID_DICT[model_id]["task"]
-            template_dict[model_task].append(model_name)
+        model_id = template.get("model_template_id")
+        if not model_id or "model_category" not in template:
+            continue
+
+        model_info = TEMPLATE_ID_DICT.get(model_id)
+        if not model_info:
+            continue
+
+        model_name = model_info["model_name"]
+        model_task = model_info["task"]
+        template_dict[model_task].append(model_name)
 
     # Extend classification categories
     template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
@@ -176,7 +180,7 @@ def pytest_configure(config):
     pytest.TASK_LIST = task_list
     pytest.RECIPE_LIST = target_recipe_list
     pytest.RECIPE_OV_LIST = target_ov_recipe_list
-    pytest.BALANCE_RECIPE_LIST = get_model_category_list(task, ModelCategory.BALANCE)
+    pytest.DEFAULT_RECIPE_LIST = get_model_category_list(task, default_model_only=True)
     pytest.TILE_RECIPE_LIST = tile_recipe_list
 
 

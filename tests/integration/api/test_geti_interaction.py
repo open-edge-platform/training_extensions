@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 TEST_PATH = Path(__file__).parent.parent.parent
 DEFAULT_GETI_CONFIG_PER_TASK = {
-    # OTXTaskType.KEYPOINT_DETECTION: Not supported yet
+    # OTXTaskType.KEYPOINT_DETECTION: Not supported yet as we can't import KP dataset to Geti
     OTXTaskType.MULTI_CLASS_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "multi_class_cls",
     OTXTaskType.MULTI_LABEL_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "multi_label_cls",
     OTXTaskType.H_LABEL_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "h_label_cls",
@@ -265,7 +265,9 @@ def test_engine_api(
         pytest.skip("Only the Geti Tasks are tested to reduce unnecessary resource waste.")
 
     config_arrow_path = DEFAULT_GETI_CONFIG_PER_TASK[task]
-    arrow_file_path = config_arrow_path / "datum-0-of-1.arrow"
+    arrow_file_path = (
+        config_arrow_path / "tile-datum-0-of-1.arrow" if tiling else config_arrow_path / "datum-0-of-1.arrow"
+    )
     image_path = config_arrow_path / "image.jpg"
 
     tester = TestEngineAPI(

@@ -42,9 +42,10 @@ ENUM_NAME = "enum_name"
 def allows_model_template_override(keyword: str) -> bool:
     """Returns True if the metadata element described by `keyword` can be overridden in a model template file.
 
-    :param keyword: Name of the metadata key to check.
-    :return: True if the metadata indicated by `keyword` can be overridden in a model template .yaml file, False
-        otherwise.
+    Args:
+        keyword (str): Name of the metadata key to check.
+    Returns:
+        bool: True if the key can be overridden, False otherwise.
     """
     overrideable_keys = [
         DEFAULT_VALUE,
@@ -67,8 +68,11 @@ def allows_model_template_override(keyword: str) -> bool:
 def allows_dictionary_values(keyword: str) -> bool:
     """Returns True if the metadata element described by `keyword` allows having a dictionary as its value.
 
-    :param keyword: Name of the metadata key to check.
-    :return: True if the metadata indicated by `keyword` allows having a dictionary as its value, False otherwise.
+    Args:
+        keyword (str): Name of the metadata key to check.
+
+    Returns:
+        bool: True if the key allows dictionary values, False otherwise.
     """
     keys_allowing_dictionary_values = [OPTIONS, UI_RULES]
     return keyword in keys_allowing_dictionary_values
@@ -156,7 +160,11 @@ class OTXConfig:
 
         This should be improved on the OTX side.
 
-        :param override_cls_task_type: Override classification task type if given. Otherwise, do nothing.
+        Args:
+            override_cls_task_type: Override classification task type if given. Otherwise, do nothing.
+
+        Yields:
+            None: Yields nothing.
         """
         if override_cls_task_type is None:
             yield
@@ -211,6 +219,9 @@ def load_hyper_parameters(model_template_path: Path) -> tuple[str, dict]:
 
     Args:
         model_template_path (Path): file path to the model template file in which the HyperParameters live.
+
+    Returns:
+        tuple[str, dict]: A tuple containing the model template ID and the loaded hyper parameters.
     """
 
     model_template = OmegaConf.load(model_template_path)
