@@ -15,7 +15,7 @@ from torch import Tensor, nn
 
 from otx.algo.instance_segmentation.utils.structures.bbox import bbox2roi
 from otx.algo.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.data import TorchDataBatch
 
 if TYPE_CHECKING:
     from otx.algo.utils.utils import InstanceData
@@ -331,7 +331,7 @@ class RoIHead(nn.Module):
         self,
         x: tuple[Tensor],
         rpn_results_list: list[InstanceData],
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Forward the roi head and predict detection results on the features of the upstream network."""
@@ -340,13 +340,13 @@ class RoIHead(nn.Module):
             raise NotImplementedError(msg)
         batch_img_metas = [
             {
-                "img_id": img_info.img_idx,
-                "img_shape": img_info.img_shape,
-                "ori_shape": img_info.ori_shape,
-                "scale_factor": img_info.scale_factor,
-                "ignored_labels": img_info.ignored_labels,
+                "img_id": img_info.img_idx,  # type: ignore[union-attr]
+                "img_shape": img_info.img_shape,  # type: ignore[union-attr]
+                "ori_shape": img_info.ori_shape,  # type: ignore[union-attr]
+                "scale_factor": img_info.scale_factor,  # type: ignore[union-attr]
+                "ignored_labels": img_info.ignored_labels,  # type: ignore[union-attr]
             }
-            for img_info in entity.imgs_info
+            for img_info in entity.imgs_info  # type: ignore[union-attr]
         ]
 
         # If it has the mask branch, the bbox branch does not need
@@ -505,7 +505,7 @@ class RoIHead(nn.Module):
         self,
         x: tuple[Tensor],
         rpn_results_list: list[InstanceData],
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> tuple[dict, dict, Any, Any, Any]:
         """Perform forward propagation and prepare outputs for loss calculation.
 
@@ -513,7 +513,7 @@ class RoIHead(nn.Module):
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
             rpn_results_list (list[InstanceData]): List of region proposals.
-            entity (InstanceSegBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

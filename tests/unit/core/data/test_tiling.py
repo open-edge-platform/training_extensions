@@ -27,7 +27,6 @@ from otx.core.config.data import (
     TileConfig,
 )
 from otx.core.data.dataset.tile import OTXTileTransform
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import DataInputParams
@@ -174,15 +173,15 @@ class TestOTXTiling:
 
         return pred_entity
 
-    def inst_seg_dummy_forward(self, x: InstanceSegBatchDataEntity) -> InstanceSegBatchPredEntity:
+    def inst_seg_dummy_forward(self, x: TorchDataBatch) -> TorchPredBatch:
         """Dummy instance segmantation forward function for testing.
 
         This function creates random bounding boxes/masks for each image in the batch.
         Args:
-            x (InstanceSegBatchDataEntity): Input batch data entity.
+            x (TorchDataBatch): Input batch data entity.
 
         Returns:
-            InstanceSegBatchPredEntity: Output batch prediction entity.
+            TorchPredBatch: Output batch prediction entity.
         """
         bboxes = []
         labels = []
@@ -220,7 +219,7 @@ class TestOTXTiling:
             if self.explain_mode:
                 feature_vectors.append(torch.zeros((1, 32)))
 
-        pred_entity = InstanceSegBatchPredEntity(
+        pred_entity = TorchPredBatch(
             batch_size=x.batch_size,
             images=x.images,
             imgs_info=x.imgs_info,
@@ -370,11 +369,11 @@ class TestOTXTiling:
             count = 0
             for batch in tile_datamodule.train_dataloader():
                 count += batch.batch_size
-                if task is OTXTaskType.DETECTION:
-                    assert isinstance(batch, TorchDataBatch)
-                elif task is OTXTaskType.INSTANCE_SEGMENTATION:
-                    assert isinstance(batch, InstanceSegBatchDataEntity)
-                elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
+                if task in (
+                    OTXTaskType.DETECTION,
+                    OTXTaskType.INSTANCE_SEGMENTATION,
+                    OTXTaskType.SEMANTIC_SEGMENTATION,
+                ):
                     assert isinstance(batch, TorchDataBatch)
                 else:
                     pytest.skip("Task not supported")
@@ -392,11 +391,11 @@ class TestOTXTiling:
             )
             tile_datamodule.prepare_data()
             for batch in tile_datamodule.train_dataloader():
-                if task is OTXTaskType.DETECTION:
-                    assert isinstance(batch, TorchDataBatch)
-                elif task is OTXTaskType.INSTANCE_SEGMENTATION:
-                    assert isinstance(batch, InstanceSegBatchDataEntity)
-                elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
+                if task in (
+                    OTXTaskType.DETECTION,
+                    OTXTaskType.INSTANCE_SEGMENTATION,
+                    OTXTaskType.SEMANTIC_SEGMENTATION,
+                ):
                     assert isinstance(batch, TorchDataBatch)
                 else:
                     pytest.skip("Task not supported")

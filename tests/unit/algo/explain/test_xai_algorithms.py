@@ -12,8 +12,8 @@ from otx.algo.explain.explain_algo import (
     ReciproCAM,
     ViTReciproCAM,
 )
+from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 
 
 def test_activationmap() -> None:
@@ -90,7 +90,7 @@ def test_instseg() -> None:
     assert explain_algo._norm_saliency_maps
 
     # One image, 3 masks to aggregate
-    pred = InstanceSegBatchPredEntity(
+    pred = InstanceData(
         batch_size=1,
         masks=tv_tensors.Mask(torch.ones(3, 10, 10)),
         scores=LongTensor([0.1, 0.2, 0.3]),
