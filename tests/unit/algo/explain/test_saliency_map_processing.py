@@ -9,7 +9,7 @@ from otx.algo.utils.xai_utils import process_saliency_maps, process_saliency_map
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.entity.base import ImageInfo
 from otx.core.types.explain import TargetExplainGroup
-from otx.data.torch import TorchPredBatch
+from otx.data import TorchPredBatch
 
 NUM_CLASSES = 6
 BATCH_SIZE = 3

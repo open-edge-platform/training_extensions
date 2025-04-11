@@ -16,7 +16,7 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.core.data.dataset.base import OTXDataset
 from otx.core.data.entity.base import ImageInfo
 from otx.core.types.label import HLabelInfo
-from otx.data.torch import TorchDataItem
+from otx.data import TorchDataItem
 
 if TYPE_CHECKING:
     from collections.abc import Callable

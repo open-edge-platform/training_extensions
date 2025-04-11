@@ -13,7 +13,7 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
+from otx.data import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 

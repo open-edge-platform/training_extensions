@@ -8,7 +8,7 @@ import openvino.runtime as ov
 import pytest
 
 from otx.core.data.entity.base import OTXBatchPredEntity
-from otx.data.torch import TorchPredBatch
+from otx.data import TorchPredBatch
 from otx.engine import Engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST

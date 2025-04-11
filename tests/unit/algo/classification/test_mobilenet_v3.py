@@ -10,7 +10,7 @@ from otx.algo.classification.multiclass_models.mobilenet_v3 import MobileNetV3Mu
 from otx.algo.classification.multilabel_models.mobilenet_v3 import MobileNetV3MultilabelCls
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.model.base import DataInputParams
-from otx.data.torch import TorchPredBatch
+from otx.data import TorchPredBatch
 
 
 @pytest.fixture()

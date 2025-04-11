@@ -31,7 +31,7 @@ from otx.core.data.dataset.segmentation import (
 )
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchDataItem
+from otx.data import TorchDataItem
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture

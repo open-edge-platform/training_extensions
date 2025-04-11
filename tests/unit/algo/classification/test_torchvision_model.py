@@ -13,7 +13,7 @@ from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchPredBatch
+from otx.data import TorchPredBatch
 
 
 @pytest.fixture()

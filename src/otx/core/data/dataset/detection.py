@@ -5,14 +5,13 @@
 
 from __future__ import annotations
 
-import numpy as np
 import torch
 from datumaro import Bbox, Image
-from torchvision import tv_tensors
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.data import TorchDataItem
+from otx.data.resolvers.torch import DatumaroResolver
 
 from .base import OTXDataset
 
@@ -23,16 +22,7 @@ class OTXDetectionDataset(OTXDataset):
     def _get_item_impl(self, index: int) -> TorchDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
-        ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-
-        bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
-
-        bboxes = (
-            np.stack([ann.points for ann in bbox_anns], axis=0).astype(np.float32)
-            if len(bbox_anns) > 0
-            else np.zeros((0, 4), dtype=np.float32)
-        )
 
         entity = TorchDataItem(
             image=to_dtype(to_image(img_data), torch.float32),
@@ -41,15 +31,9 @@ class OTXDetectionDataset(OTXDataset):
                 img_shape=img_shape,
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
             ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-                dtype=torch.float32,
-            ),
-            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
+            bboxes=DatumaroResolver.resolve_bbox(item, img_shape),
+            label=DatumaroResolver.resolve_label(item, Bbox),
         )
 
         return self._apply_transforms(entity)

@@ -12,7 +12,7 @@ from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.types.label import HLabelInfo
-from otx.data.torch import TorchDataBatch
+from otx.data import TorchDataBatch
 
 
 @pytest.fixture()

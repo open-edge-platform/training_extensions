@@ -64,7 +64,7 @@ from otx.core.data.transform_libs.utils import (
     translate_polygons,
 )
 from otx.core.utils.utils import import_object_from_module
-from otx.data.torch import TorchDataItem
+from otx.data import TorchDataItem
 
 if TYPE_CHECKING:
     from otx.core.config.data import SubsetConfig

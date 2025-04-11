@@ -18,7 +18,7 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import SegLabelInfo
-from otx.data.torch import TorchDataItem
+from otx.data import TorchDataItem
 
 from .base import OTXDataset
 

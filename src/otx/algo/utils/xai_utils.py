@@ -20,7 +20,7 @@ import torch
 from otx.core.config.explain import ExplainConfig
 from otx.core.types.explain import TargetExplainGroup
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
-from otx.data.torch import TorchPredBatch
+from otx.data import TorchPredBatch
 
 if TYPE_CHECKING:
     from torch import LongTensor, Tensor

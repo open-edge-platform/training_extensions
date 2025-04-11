@@ -10,7 +10,7 @@ from otx.algo.classification.multiclass_models.efficientnet import EfficientNetM
 from otx.algo.classification.multilabel_models.efficientnet import EfficientNetMultilabelCls
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.model.base import DataInputParams
-from otx.data.torch import TorchPredBatch
+from otx.data import TorchPredBatch
 
 
 @pytest.fixture()

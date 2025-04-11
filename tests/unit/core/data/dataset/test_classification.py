@@ -11,7 +11,7 @@ from otx.core.data.dataset.classification import (
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.data.torch import TorchDataItem
+from otx.data import TorchDataItem
 
 
 class TestOTXMulticlassClsDataset:

@@ -23,7 +23,7 @@ from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo, NullLabelInfo
-from otx.data.torch import TorchDataItem
+from otx.data import TorchDataItem
 
 if TYPE_CHECKING:
     from datumaro import DatasetSubset, Image
