@@ -143,20 +143,20 @@ class OTXConfig:
         self.to_json_file(fpath)
 
         with self.monkeypatch_cls_task_type(override_cls_task_type=self.sub_task_type):
-            otx2_config = ConfigConverter.convert(fpath)
+            otx_config = ConfigConverter.convert(fpath)
 
-        otx2_config["data"]["input_size"] = tuple(otx2_config["data"]["input_size"])  # cast to tuple
-        otx2_config["data"]["data_format"] = "arrow"
-        otx2_config["data"]["train_subset"]["subset_name"] = "TRAINING"
-        otx2_config["data"]["val_subset"]["subset_name"] = "VALIDATION"
-        otx2_config["data"]["test_subset"]["subset_name"] = "TESTING"
+        otx_config["data"]["input_size"] = tuple(otx_config["data"]["input_size"])  # cast to tuple
+        otx_config["data"]["data_format"] = "arrow"
+        otx_config["data"]["train_subset"]["subset_name"] = "TRAINING"
+        otx_config["data"]["val_subset"]["subset_name"] = "VALIDATION"
+        otx_config["data"]["test_subset"]["subset_name"] = "TESTING"
 
-        return otx2_config
+        return otx_config
 
     @staticmethod
     @contextmanager
     def monkeypatch_cls_task_type(override_cls_task_type: OTXTaskType | None = None) -> Iterator[None]:
-        """Monkeypath classification task type which is fixed as `MULTI_CLASS_CLS` in OTX side.
+        """Monkeypatch classification task type which is fixed as `MULTI_CLASS_CLS` in OTX side.
 
         This should be improved on the OTX side.
 

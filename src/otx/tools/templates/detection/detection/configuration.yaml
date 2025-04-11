@@ -292,7 +292,7 @@ postprocessing:
       type: UI_RULES
     value: 0.5
     visible_in_ui: true
-    warning: If you want to chage the value of IoU Threshold of model, then you need to re-train model with new IoU threshold.
+    warning: If you want to change the value of IoU Threshold of model, then you need to re-train model with new IoU threshold.
   max_num_detections:
     affects_outcome_of: INFERENCE
     default_value: 0

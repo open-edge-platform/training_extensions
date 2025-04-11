@@ -25,7 +25,7 @@ def fxt_trained_model(
     request: pytest.FixtureRequest,
     tmp_path,
 ):
-    """This fixture is used to train only BALACNCE models.
+    """This fixture is used to train only balance models.
 
     It will be used to test the CLI commands.
 

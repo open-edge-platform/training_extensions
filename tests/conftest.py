@@ -497,7 +497,7 @@ def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskT
     template_dict = defaultdict(list)
 
     for template_path in template_paths:
-        with Path.open(template_path) as file:
+        with template_path.open() as file:
             template = yaml.safe_load(file)
 
         model_id = template.get("model_template_id")

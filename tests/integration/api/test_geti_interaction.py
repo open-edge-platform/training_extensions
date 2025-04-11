@@ -31,17 +31,17 @@ from tests.integration.api.geti_otx_config_utils import (
 if TYPE_CHECKING:
     from otx.engine.engine import Engine
 
-TEST_PATH = Path(__file__).parent.parent.parent
+TEST_ARROW_PATH = Path(__file__).parent.parent.parent / "assets" / "geti_config_arrow"
 DEFAULT_GETI_CONFIG_PER_TASK = {
     # OTXTaskType.KEYPOINT_DETECTION: Not supported yet as we can't import KP dataset to Geti
-    OTXTaskType.MULTI_CLASS_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "multi_class_cls",
-    OTXTaskType.MULTI_LABEL_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "multi_label_cls",
-    OTXTaskType.H_LABEL_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "h_label_cls",
-    OTXTaskType.ROTATED_DETECTION: TEST_PATH / "assets" / "geti_config_arrow" / "detection",
-    OTXTaskType.DETECTION: TEST_PATH / "assets" / "geti_config_arrow" / "detection",
-    OTXTaskType.INSTANCE_SEGMENTATION: TEST_PATH / "assets" / "geti_config_arrow" / "detection",
-    OTXTaskType.SEMANTIC_SEGMENTATION: TEST_PATH / "assets" / "geti_config_arrow" / "semantic_segmentation",
-    OTXTaskType.ANOMALY_CLASSIFICATION: TEST_PATH / "assets" / "geti_config_arrow" / "anomaly",
+    OTXTaskType.MULTI_CLASS_CLS: TEST_ARROW_PATH / "classification" / "multi_class_cls",
+    OTXTaskType.MULTI_LABEL_CLS: TEST_ARROW_PATH / "classification" / "multi_label_cls",
+    OTXTaskType.H_LABEL_CLS: TEST_ARROW_PATH / "classification" / "h_label_cls",
+    OTXTaskType.ROTATED_DETECTION: TEST_ARROW_PATH / "detection",
+    OTXTaskType.DETECTION: TEST_ARROW_PATH / "detection",
+    OTXTaskType.INSTANCE_SEGMENTATION: TEST_ARROW_PATH / "detection",
+    OTXTaskType.SEMANTIC_SEGMENTATION: TEST_ARROW_PATH / "semantic_segmentation",
+    OTXTaskType.ANOMALY_CLASSIFICATION: TEST_ARROW_PATH / "anomaly",
 }
 
 
