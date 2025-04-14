@@ -60,7 +60,7 @@ class ValidateItemMixin:
         if not isinstance(label, np.ndarray):
             msg = "Label must be a numpy ndarray"
             raise TypeError(msg)
-        if label.dtype != np.long:
+        if label.dtype != int:
             msg = "Label must have dtype torch.long"
             raise ValueError(msg)
         # detection tasks allow multiple labels so the shape is [B, N]

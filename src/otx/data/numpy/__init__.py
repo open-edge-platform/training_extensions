@@ -1,7 +1,6 @@
-
 from .numpy import (
-    NumpyDataItem, 
     NumpyDataBatch,
+    NumpyDataItem,
     NumpyPredBatch,
 )
 

@@ -3,14 +3,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import numpy as np
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Sequence
 from dataclasses import dataclass, fields
+from typing import TYPE_CHECKING, Any, Sequence
 
+import numpy as np
 
 if TYPE_CHECKING:
     from datumaro import Polygon
+
     from otx.core.data.entity.base import ImageInfo
 
 
@@ -62,7 +63,7 @@ class NumpyDataItem:
 
     def __len__(self) -> int:
         return len(fields(self))
-    
+
 
 @dataclass
 class NumpyDataBatch:
