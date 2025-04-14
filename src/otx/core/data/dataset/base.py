@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Literal, Union
 
 import cv2
 import numpy as np
@@ -23,6 +23,7 @@ from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo, NullLabelInfo
+from otx.data.numpy import NumpyDataItem
 from otx.data.torch import TorchDataItem
 
 if TYPE_CHECKING:
@@ -96,6 +97,7 @@ class OTXDataset(Dataset):
         self.stack_images = stack_images
         self.to_tv_image = to_tv_image
         self.data_format = data_format
+        self.collate_mode = collate_mode
 
         if self.dm_subset.categories() and data_format == "arrow":
             self.label_info = LabelInfo.from_dm_label_groups_arrow(self.dm_subset.categories()[AnnotationType.label])
@@ -257,7 +259,12 @@ class OTXDataset(Dataset):
     def _get_item_impl(self, idx: int) -> TorchDataItem | None:
         pass
 
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn
+    def _get_collate_fn(self) -> Callable:
+        """Get collate function based on mode and stack_images flag."""
+        if self.collate_mode == "torch":
+            return TorchDataItem.collate_fn
+        if self.collate_mode == "numpy":
+            return NumpyDataItem.collate_fn
+
+        msg = f"Invalid collate mode: {self.collate_mode}"
+        raise ValueError(msg)

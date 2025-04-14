@@ -2,14 +2,16 @@
 
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass, fields
 from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from datumaro import Polygon
 
     from otx.core.data.entity.base import ImageInfo
@@ -67,14 +69,14 @@ class NumpyDataItem:
 
 @dataclass
 class NumpyDataBatch:
-    batch_size: int  # TODO(ashwinvaidya17): Remove this
+    batch_size: int
     images: np.ndarray | list[np.ndarray] | None = None
     labels: list[np.ndarray] | None = None
     masks: list[np.ndarray] | None = None
     bboxes: list[np.ndarray] | None = None
     keypoints: list[np.ndarray] | None = None
     polygons: list[list[Polygon]] | None = None
-    imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+    imgs_info: Sequence[ImageInfo | None] | None = None
 
 
 @dataclass
