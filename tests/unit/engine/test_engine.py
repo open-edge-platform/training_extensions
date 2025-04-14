@@ -83,8 +83,8 @@ class TestEngine:
 
     def test_training_with_override_args(self, fxt_engine, mocker) -> None:
         mocker.patch("pathlib.Path.symlink_to")
-        mocker.patch("otx.backend.native.engine.Trainer.fit")
-        mock_seed_everything = mocker.patch("otx.backend.native.engine.seed_everything")
+        mocker.patch("otx.backend.native.engine.engine.Trainer.fit")
+        mock_seed_everything = mocker.patch("otx.backend.native.engine.engine.seed_everything")
 
         assert fxt_engine._cache.args["max_epochs"] == 90
 
@@ -96,11 +96,11 @@ class TestEngine:
     def test_training_with_checkpoint(self, fxt_engine, resume: bool, mocker: MockerFixture, tmpdir) -> None:
         checkpoint = "path/to/checkpoint.ckpt"
 
-        mock_trainer = mocker.patch("otx.backend.native.engine.Trainer")
+        mock_trainer = mocker.patch("otx.backend.native.engine.engine.Trainer")
         mock_trainer.return_value.default_root_dir = Path(tmpdir)
         mock_trainer_fit = mock_trainer.return_value.fit
 
-        mock_torch_load = mocker.patch("otx.backend.native.engine.torch.load")
+        mock_torch_load = mocker.patch("otx.backend.native.engine.engine.torch.load")
         mock_load_state_dict_incrementally = mocker.patch.object(fxt_engine.model, "load_state_dict_incrementally")
 
         trained_checkpoint = Path(tmpdir) / "best.ckpt"
@@ -125,9 +125,9 @@ class TestEngine:
         ],
     )
     def test_test(self, fxt_engine, checkpoint, mocker: MockerFixture) -> None:
-        mock_test = mocker.patch("otx.backend.native.engine.Trainer.test")
-        _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.backend.native.engine.AutoConfigurator.get_ov_model")
+        mock_test = mocker.patch("otx.backend.native.engine.engine.Trainer.test")
+        _ = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
+        mock_get_ov_model = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.get_ov_model")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
 
         ext = Path(checkpoint).suffix
@@ -163,9 +163,9 @@ class TestEngine:
         ],
     )
     def test_predict(self, fxt_engine, checkpoint, explain, mocker: MockerFixture) -> None:
-        mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
-        _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.backend.native.engine.AutoConfigurator.get_ov_model")
+        mock_predict = mocker.patch("otx.backend.native.engine.engine.Trainer.predict")
+        _ = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
+        mock_get_ov_model = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.get_ov_model")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
         mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
 
@@ -198,7 +198,7 @@ class TestEngine:
         with pytest.raises(RuntimeError, match="To make export, checkpoint must be specified."):
             fxt_engine.export()
 
-        mock_export = mocker.patch("otx.backend.native.engine.OTXModel.export")
+        mock_export = mocker.patch("otx.backend.native.engine.engine.OTXModel.export")
 
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
         mock_load_from_checkpoint.return_value = fxt_engine.model
@@ -248,7 +248,7 @@ class TestEngine:
         )
 
         # check exportable code with IR OpenVINO model
-        mock_export = mocker.patch("otx.backend.native.engine.OVModel.export")
+        mock_export = mocker.patch("otx.backend.native.engine.engine.OVModel.export")
         fxt_engine.checkpoint = "path/to/checkpoint.xml"
 
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -256,7 +256,7 @@ class TestEngine:
             otx_ov_model = OVModel(model_name=f"{tmp_dir}/model.xml", model_type="Classification")
 
         mock_get_ov_model = mocker.patch(
-            "otx.backend.native.engine.AutoConfigurator.get_ov_model",
+            "otx.backend.native.engine.engine.AutoConfigurator.get_ov_model",
             return_value=otx_ov_model,
         )
         fxt_engine.export(checkpoint="path/to/checkpoint.xml", export_demo_package=True)
@@ -273,8 +273,8 @@ class TestEngine:
         with pytest.raises(RuntimeError, match="supports only OV IR or ONNX checkpoints"):
             fxt_engine.optimize()
 
-        mocker.patch("otx.backend.native.engine.OTXModel.load_state_dict")
-        mock_ov_model = mocker.patch("otx.backend.native.engine.AutoConfigurator.get_ov_model")
+        mocker.patch("otx.backend.native.engine.engine.OTXModel.load_state_dict")
+        mock_ov_model = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.get_ov_model")
 
         # Fetch Checkpoint
         fxt_engine.checkpoint = "path/to/exported_model.xml"
@@ -299,9 +299,9 @@ class TestEngine:
         ],
     )
     def test_explain(self, fxt_engine, checkpoint, mocker) -> None:
-        mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
-        _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.backend.native.engine.AutoConfigurator.get_ov_model")
+        mock_predict = mocker.patch("otx.backend.native.engine.engine.Trainer.predict")
+        _ = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
+        mock_get_ov_model = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.get_ov_model")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
         mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
 
@@ -392,8 +392,8 @@ class TestEngine:
         ],
     )
     def test_benchmark(self, fxt_engine, checkpoint, mocker: MockerFixture) -> None:
-        _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.backend.native.engine.AutoConfigurator.get_ov_model")
+        _ = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
+        mock_get_ov_model = mocker.patch("otx.backend.native.engine.engine.AutoConfigurator.get_ov_model")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
 
         ext = Path(checkpoint).suffix
