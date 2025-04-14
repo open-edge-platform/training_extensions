@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from otx.core.data.dataset.base import Transforms
 
 
-# NOTE: It is copied from https://github.com/openvinotoolkit/datumaro/pull/1409
+# NOTE: It is copied from https://github.com/open-edge-platform/datumaro/pull/1409
 # It will be replaced in the future.
 def _make_index_mask(
     binary_mask: np.ndarray,
@@ -85,7 +85,7 @@ def _extract_class_mask(item: DatasetItem, img_shape: tuple[int, int], ignore_in
     """Extract class mask from Datumaro masks.
 
     This is a temporary workaround and will be replaced with the native Datumaro interfaces
-    after some works, e.g., https://github.com/openvinotoolkit/datumaro/pull/1409 are done.
+    after some works, e.g., https://github.com/open-edge-platform/datumaro/pull/1409 are done.
 
     Args:
         item: Datumaro dataset item having mask annotations.

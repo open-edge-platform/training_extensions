@@ -18,7 +18,6 @@ import numpy as np
 import torch
 
 from otx.core.config.explain import ExplainConfig
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.types.explain import TargetExplainGroup
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
 from otx.data.torch import TorchPredBatch
@@ -29,27 +28,29 @@ if TYPE_CHECKING:
     from otx.core.data.module import OTXDataModule
 
 ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
-OTXBatchPredEntitiesSupportXAI = TorchPredBatch | InstanceSegBatchPredEntity
 
 
 def process_saliency_maps_in_pred_entity(
-    predict_result: list[OTXBatchPredEntitiesSupportXAI],
+    predict_result: list[TorchPredBatch],
     explain_config: ExplainConfig,
     label_info: LabelInfoTypes,
-) -> list[OTXBatchPredEntitiesSupportXAI]:
+) -> list[TorchPredBatch]:
     """Process saliency maps in PredEntity."""
 
     def _process(
-        predict_result_per_batch: OTXBatchPredEntitiesSupportXAI,
+        predict_result_per_batch: TorchPredBatch,
         label_info: LabelInfoTypes,
-    ) -> OTXBatchPredEntitiesSupportXAI:
+    ) -> TorchPredBatch:
+        if predict_result_per_batch.saliency_map is None:  # skip empty saliency maps
+            return predict_result_per_batch
+
         # Extract batch data with proper type handling
         labels = predict_result_per_batch.labels if predict_result_per_batch.labels is not None else []
         scores = predict_result_per_batch.scores if predict_result_per_batch.scores is not None else []
 
         saliency_map: list[np.ndarray] = [
             saliency_map.cpu().numpy() if isinstance(saliency_map, torch.Tensor) else saliency_map
-            for saliency_map in predict_result_per_batch.saliency_map  # type: ignore[union-attr]
+            for saliency_map in predict_result_per_batch.saliency_map
         ]
         imgs_info = predict_result_per_batch.imgs_info
         ori_img_shapes = [img_info.ori_shape for img_info in imgs_info]  # type: ignore[union-attr]

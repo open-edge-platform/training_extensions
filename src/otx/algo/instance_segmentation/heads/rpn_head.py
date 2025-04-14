@@ -23,7 +23,6 @@ from otx.algo.instance_segmentation.utils.utils import unpack_inst_seg_entity
 from otx.algo.modules import build_activation_layer
 from otx.algo.modules.conv_module import Conv2dModule
 from otx.algo.utils.utils import InstanceData
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 from otx.data import TorchDataBatch
 
 if TYPE_CHECKING:
@@ -163,14 +162,14 @@ class RPNHeadModule(AnchorHead):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: InstanceSegBatchDataEntity,  # type: ignore[override]
+        entity: TorchDataBatch,  # type: ignore[override]
     ) -> tuple:
         """Perform forward propagation and prepare outputs for loss calculation.
 
         Args:
             x (tuple[Tensor]): Features from the upstream network, each is
                 a 4D-tensor.
-            entity (InstanceSegBatchDataEntity): Entity from OTX dataset.
+            entity (TorchDataBatch): Entity from OTX dataset.
 
         Returns:
             dict: A dictionary of components for loss calculation.

@@ -12,7 +12,6 @@ import types
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 
-import numpy as np
 import torch
 from model_api.tilers import InstanceSegmentationTiler
 from torch import Tensor
@@ -26,7 +25,6 @@ from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.algo.utils.utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.metrics import MetricInput
@@ -38,6 +36,7 @@ from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
 from otx.core.utils.tile_merge import InstanceSegTileMerge
+from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -104,9 +103,9 @@ class OTXInstanceSegModel(OTXModel):
 
         return detector
 
-    def _customize_inputs(self, entity: InstanceSegBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
         if isinstance(entity.images, list):
-            entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)
+            entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)  # type: ignore[assignment,arg-type]
         inputs: dict[str, Any] = {}
 
         inputs["entity"] = entity
@@ -117,8 +116,8 @@ class OTXInstanceSegModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: list[InstanceData] | dict,
-        inputs: InstanceSegBatchDataEntity,
-    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -138,13 +137,13 @@ class OTXInstanceSegModel(OTXModel):
         masks: list[tv_tensors.Mask] = []
 
         predictions = outputs["predictions"] if isinstance(outputs, dict) else outputs
-        for img_info, prediction in zip(inputs.imgs_info, predictions):
+        for img_info, prediction in zip(inputs.imgs_info, predictions):  # type: ignore[arg-type]
             scores.append(prediction.scores)
             bboxes.append(
                 tv_tensors.BoundingBoxes(
                     prediction.bboxes,
                     format="XYXY",
-                    canvas_size=img_info.ori_shape,
+                    canvas_size=img_info.ori_shape,  # type: ignore[union-attr]
                 ),
             )
             output_masks = tv_tensors.Mask(
@@ -170,40 +169,38 @@ class OTXInstanceSegModel(OTXModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return InstanceSegBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(predictions),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
                 masks=masks,
-                polygons=[],
                 labels=labels,
                 saliency_map=list(saliency_map),
                 feature_vector=list(feature_vector),
             )
 
-        return InstanceSegBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(predictions),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
             bboxes=bboxes,
             masks=masks,
-            polygons=[],
             labels=labels,
         )
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> InstanceSegBatchPredEntity:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> TorchPredBatch:
         """Unpack instance segmentation tiles.
 
         Args:
             inputs (OTXTileBatchDataEntity): Tile batch data entity.
 
         Returns:
-            InstanceSegBatchPredEntity: Merged instance segmentation prediction.
+            TorchPredBatch: Merged instance segmentation prediction.
         """
-        tile_preds: list[InstanceSegBatchPredEntity] = []
+        tile_preds: list[TorchPredBatch] = []
         tile_attrs: list[list[dict[str, int | str]]] = []
         merger = InstanceSegTileMerge(
             inputs.imgs_info,
@@ -220,15 +217,15 @@ class OTXInstanceSegModel(OTXModel):
             tile_attrs.append(batch_tile_attrs)
         pred_entities = merger.merge(tile_preds, tile_attrs)
 
-        pred_entity = InstanceSegBatchPredEntity(
+        pred_entity = TorchPredBatch(
             batch_size=inputs.batch_size,
             images=[pred_entity.image for pred_entity in pred_entities],
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
-            scores=[pred_entity.score for pred_entity in pred_entities],
+            scores=[pred_entity.scores for pred_entity in pred_entities],
             bboxes=[pred_entity.bboxes for pred_entity in pred_entities],
-            labels=[pred_entity.labels for pred_entity in pred_entities],
+            labels=[pred_entity.label for pred_entity in pred_entities],
             masks=[pred_entity.masks for pred_entity in pred_entities],
-            polygons=[pred_entity.polygons for pred_entity in pred_entities],
+            polygons=[pred_entity.polygons for pred_entity in pred_entities],  # type: ignore[misc]
         )
         if self.explain_mode:
             pred_entity.saliency_map = [pred_entity.saliency_map for pred_entity in pred_entities]
@@ -308,29 +305,28 @@ class OTXInstanceSegModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: InstanceSegBatchPredEntity,  # type: ignore[override]
-        inputs: InstanceSegBatchDataEntity,  # type: ignore[override]
+        preds: TorchPredBatch,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
         This function will convert mask to RLE format and cache the ground truth for the current batch.
 
         Args:
-            preds (InstanceSegBatchPredEntity): Current batch predictions.
-            inputs (InstanceSegBatchDataEntity): Current batch ground-truth inputs.
+            preds (TorchPredBatch): Current batch predictions.
+            inputs (TorchDataBatch): Current batch ground-truth inputs.
 
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
         """
         pred_info = []
         target_info = []
+        for i in range(len(preds.imgs_info)):  # type: ignore[arg-type]
+            bboxes = preds.bboxes[i] if preds.bboxes is not None else None
+            masks = preds.masks[i] if preds.masks is not None else None
+            scores = preds.scores[i] if preds.scores is not None else None
+            labels = preds.labels[i] if preds.labels is not None else None
 
-        for bboxes, masks, scores, labels in zip(
-            preds.bboxes,
-            preds.masks,
-            preds.scores,
-            preds.labels,
-        ):
             pred_info.append(
                 {
                     "boxes": bboxes.data,
@@ -339,18 +335,17 @@ class OTXInstanceSegModel(OTXModel):
                     "labels": labels,
                 },
             )
+        for i in range(len(inputs.imgs_info)):  # type: ignore[arg-type]
+            imgs_info = inputs.imgs_info[i] if inputs.imgs_info is not None else None
+            bboxes = inputs.bboxes[i] if inputs.bboxes is not None else None
+            masks = inputs.masks[i] if inputs.masks is not None else None
+            polygons = inputs.polygons[i] if inputs.polygons is not None else None
+            labels = inputs.labels[i] if inputs.labels is not None else None
 
-        for imgs_info, bboxes, masks, polygons, labels in zip(
-            inputs.imgs_info,
-            inputs.bboxes,
-            inputs.masks,
-            inputs.polygons,
-            inputs.labels,
-        ):
             rles = (
                 [encode_rle(mask) for mask in masks.data]
                 if len(masks)
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)
+                else polygon_to_rle(polygons, *imgs_info.ori_shape)  # type: ignore[union-attr,arg-type]
             )
             target_info.append(
                 {
@@ -361,7 +356,7 @@ class OTXInstanceSegModel(OTXModel):
             )
         return {"preds": pred_info, "target": target_info}
 
-    def get_dummy_input(self, batch_size: int = 1) -> InstanceSegBatchDataEntity:
+    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
         """Returns a dummy input for instance segmentation model."""
         images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         infos = []
@@ -373,9 +368,9 @@ class OTXInstanceSegModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return InstanceSegBatchDataEntity(batch_size, images, infos, bboxes=[], masks=[], labels=[], polygons=[])
+        return TorchDataBatch(batch_size, images, imgs_info=infos)
 
-    def forward_explain(self, inputs: InstanceSegBatchDataEntity) -> InstanceSegBatchPredEntity:
+    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
         """Model forward function."""
         if isinstance(inputs, OTXTileBatchDataEntity):
             return self.forward_tiles(inputs)
@@ -399,7 +394,7 @@ class OTXInstanceSegModel(OTXModel):
     @torch.no_grad()
     def _forward_explain_inst_seg(
         self: TwoStageDetector,
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, Tensor]:
         """Forward func of the BaseDetector instance, which located in is in ExplainableOTXInstanceSegModel().model."""
@@ -428,7 +423,7 @@ class OTXInstanceSegModel(OTXModel):
     def get_results_from_head(
         self,
         x: tuple[Tensor],
-        entity: InstanceSegBatchDataEntity,
+        entity: TorchDataBatch,
     ) -> tuple[Tensor, Tensor, Tensor] | list[InstanceData] | list[dict[str, Tensor]]:
         """Get the results from the head of the instance segmentation model.
 
@@ -444,8 +439,8 @@ class OTXInstanceSegModel(OTXModel):
         from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInst
 
         if isinstance(self, MaskRCNNTV):
-            ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]
-            img_shapes = [img_info.img_shape for img_info in entity.imgs_info]
+            ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
+            img_shapes = [img_info.img_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
             image_list = ImageList(entity.images, img_shapes)
             proposals, _ = self.model.rpn(image_list, x)
             detections, _ = self.model.roi_heads(
@@ -454,7 +449,8 @@ class OTXInstanceSegModel(OTXModel):
                 image_list.image_sizes,
             )
             scale_factors = [
-                img_meta.scale_factor if img_meta.scale_factor else (1.0, 1.0) for img_meta in entity.imgs_info
+                img_meta.scale_factor if img_meta.scale_factor else (1.0, 1.0)  # type: ignore[union-attr]
+                for img_meta in entity.imgs_info  # type: ignore[union-attr]
             ]
             return self.model.postprocess(detections, ori_shapes, scale_factors)
 
@@ -571,8 +567,8 @@ class OVInstanceSegmentationModel(
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: InstanceSegBatchDataEntity,
-    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         # add label index
         bboxes = []
         scores = []
@@ -583,99 +579,96 @@ class OVInstanceSegmentationModel(
                 tv_tensors.BoundingBoxes(
                     data=output.bboxes,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[-1].img_shape,
+                    canvas_size=inputs.imgs_info[-1].img_shape,  # type: ignore[union-attr,index]
                     device=self.device,
+                    dtype=torch.float32,
                 ),
             )
             # NOTE: OTX 1.5 filter predictions with result_based_confidence_threshold,
             # but OTX 2.0 doesn't have it in configuration.
             scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
             masks.append(torch.tensor(output.masks, device=self.device))
-            labels.append(torch.tensor(output.labels.reshape(-1) - 1, device=self.device))
+            labels.append(torch.tensor(output.labels.reshape(-1) - 1, device=self.device, dtype=torch.long))
 
         if outputs and outputs[0].saliency_map:
             predicted_s_maps = []
             for out in outputs:
-                image_map = np.array([s_map for s_map in out.saliency_map if s_map.ndim > 1])
+                image_map = torch.tensor(
+                    [s_map for s_map in out.saliency_map if s_map.size > 0],
+                    dtype=torch.float32,
+                    device=self.device,
+                )
                 predicted_s_maps.append(image_map)
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return InstanceSegBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
-                masks=masks,
-                polygons=[],
+                masks=masks if any(mask.numel() > 0 for mask in masks) else None,
                 labels=labels,
                 saliency_map=predicted_s_maps,
                 feature_vector=predicted_f_vectors,
             )
 
-        return InstanceSegBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
             bboxes=bboxes,
-            masks=masks,
-            polygons=[],
+            masks=masks if any(mask.numel() > 0 for mask in masks) else None,
             labels=labels,
         )
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: InstanceSegBatchPredEntity,  # type: ignore[override]
-        inputs: InstanceSegBatchDataEntity,  # type: ignore[override]
+        preds: TorchPredBatch,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
         This function will convert mask to RLE format and cache the ground truth for the current batch.
 
         Args:
-            preds (InstanceSegBatchPredEntity): Current batch predictions.
-            inputs (InstanceSegBatchDataEntity): Current batch ground-truth inputs.
+            preds (TorchPredBatch): Current batch predictions.
+            inputs (TorchDataBatch): Current batch ground-truth inputs.
 
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
         """
-        pred_info = []
         target_info = []
 
-        for bboxes, masks, scores, labels in zip(
-            preds.bboxes,
-            preds.masks,
-            preds.scores,
-            preds.labels,
-        ):
-            pred_info.append(
-                {
-                    "boxes": bboxes.data,
-                    "masks": [encode_rle(mask) for mask in masks.data],
-                    "scores": scores,
-                    "labels": labels,
-                },
-            )
+        _bboxes = preds.bboxes if preds.bboxes is not None else None
+        _masks = preds.masks if preds.masks is not None else None
+        pred_info = [
+            {
+                "boxes": _bboxes[idx].data if _bboxes is not None else torch.empty((0, 4)),
+                "masks": [encode_rle(mask) for mask in _masks[idx].data]
+                if _masks is not None and len(_masks)
+                else torch.empty((0,)),
+                "scores": preds.scores[idx],  # type: ignore[index]
+                "labels": preds.labels[idx],  # type: ignore[index]
+            }
+            for idx in range(len(preds.labels))  # type: ignore[arg-type]
+        ]
 
-        for imgs_info, bboxes, masks, polygons, labels in zip(
-            inputs.imgs_info,
-            inputs.bboxes,
-            inputs.masks,
-            inputs.polygons,
-            inputs.labels,
-        ):
+        _bboxes = inputs.bboxes if inputs.bboxes is not None else None
+        _masks = inputs.masks if inputs.masks is not None else None
+        for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
             rles = (
-                [encode_rle(mask) for mask in masks.data]
-                if len(masks)
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)
+                [encode_rle(mask) for mask in _masks[idx].data]
+                if _masks is not None and _masks[idx] is not None
+                else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
             )
             target_info.append(
                 {
-                    "boxes": bboxes.data,
+                    "boxes": _bboxes[idx].data if _bboxes is not None else torch.empty((0, 4)),
                     "masks": rles,
-                    "labels": labels,
+                    "labels": inputs.labels[idx],  # type: ignore[index]
                 },
             )
         return {"preds": pred_info, "target": target_info}
