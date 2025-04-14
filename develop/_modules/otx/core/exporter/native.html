@@ -337,13 +337,13 @@
                 <span class="p">)</span>
                 <span class="n">exported_model</span> <span class="o">=</span> <span class="n">openvino</span><span class="o">.</span><span class="n">convert_model</span><span class="p">(</span>
                     <span class="n">tmp_dir</span> <span class="o">/</span> <span class="p">(</span><span class="n">base_model_name</span> <span class="o">+</span> <span class="s2">&quot;.onnx&quot;</span><span class="p">),</span>
-                    <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="n">input_size</span><span class="p">),),</span>
+                    <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="n">input_size</span><span class="p">),),</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">exported_model</span> <span class="o">=</span> <span class="n">openvino</span><span class="o">.</span><span class="n">convert_model</span><span class="p">(</span>
                 <span class="n">model</span><span class="p">,</span>
                 <span class="n">example_input</span><span class="o">=</span><span class="n">dummy_tensor</span><span class="p">,</span>
-                <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="n">input_size</span><span class="p">),),</span>
+                <span class="nb">input</span><span class="o">=</span><span class="p">(</span><span class="n">openvino</span><span class="o">.</span><span class="n">PartialShape</span><span class="p">(</span><span class="n">input_size</span><span class="p">),),</span>
             <span class="p">)</span>
         <span class="n">exported_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_postprocess_openvino_model</span><span class="p">(</span><span class="n">exported_model</span><span class="p">)</span>
 
