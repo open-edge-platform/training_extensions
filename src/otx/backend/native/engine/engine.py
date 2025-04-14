@@ -77,13 +77,13 @@ class OTXEngine(Engine):
 
         Auto-Configuration with data_root::
 
-            engine = Engine(
+            engine = OTXEngine(
                 data_root=<dataset/path>,
             )
 
         Create Engine with Custom OTXModel::
 
-            engine = Engine(
+            engine = OTXEngine(
                 data_root=<dataset/path>,
                 model=OTXModel(...),
                 checkpoint=<checkpoint/path>,
@@ -91,7 +91,7 @@ class OTXEngine(Engine):
 
         Create Engine with Custom OTXDataModule::
 
-            engine = Engine(
+            engine = OTXEngine(
                 model = OTXModel(...),
                 datamodule = OTXDataModule(...),
             )
@@ -936,7 +936,7 @@ class OTXEngine(Engine):
             Engine: An instance of the Engine class.
 
         Example:
-            >>> engine = Engine.from_config(
+            >>> engine = OTXEngine.from_config(
             ...     config="config.yaml",
             ... )
         """
@@ -957,7 +957,7 @@ class OTXEngine(Engine):
 
         # Remove any input that is not currently available in Engine and print a warning message.
         set_valid_args = TrainerArgumentsCache.get_trainer_constructor_args().union(
-            set(inspect.signature(Engine.__init__).parameters.keys()),
+            set(inspect.signature(OTXEngine.__init__).parameters.keys()),
         )
         removed_args = []
         for engine_key in list(engine_kwargs.keys()):
@@ -1016,7 +1016,7 @@ class OTXEngine(Engine):
             Engine: An instance of the Engine class.
 
         Example:
-            >>> engine = Engine.from_model_name(
+            >>> engine = OTXEngine.from_model_name(
             ...     model_name="atss_mobilenetv2",
             ...     task="DETECTION",
             ...     data_root=<dataset/path>,
@@ -1027,7 +1027,7 @@ class OTXEngine(Engine):
                 ...     "data.train_subset.batch_size": 2,
                 ...     "data.test_subset.subset_name": "TESTING",
                 ... }
-                >>> engine = Engine(
+                >>> engine = OTXEngine(
                 ...     model_name="atss_mobilenetv2",
                 ...     task="DETECTION",
                 ...     data_root=<dataset/path>,
@@ -1098,7 +1098,7 @@ class OTXEngine(Engine):
     def trainer(self) -> Trainer:
         """Returns the trainer object associated with the engine.
 
-        To get this property, you should execute `Engine.train()` function first.
+        To get this property, you should execute `OTXEngine.train()` function first.
 
         Returns:
             Trainer: The trainer object.
