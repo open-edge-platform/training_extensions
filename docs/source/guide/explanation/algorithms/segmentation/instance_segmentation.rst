@@ -40,7 +40,7 @@ For the supervised training we use the following algorithms components:
 Dataset Format
 **************
 
-For the dataset handling inside OpenVINO™ Training Extensions, we use `Dataset Management Framework (Datumaro) <https://github.com/openvinotoolkit/datumaro>`_. For instance segmentation we support `COCO <https://cocodataset.org/#format-data>`_ dataset format.
+For the dataset handling inside OpenVINO™ Training Extensions, we use `Dataset Management Framework (Datumaro) <https://github.com/open-edge-platform/datumaro>`_. For instance segmentation we support `COCO <https://cocodataset.org/#format-data>`_ dataset format.
 
 .. note::
 
@@ -55,13 +55,13 @@ We support the following ready-to-use model recipes:
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
 | Model Recipe                                                                                                                                                                                                  | Name                       | Complexity (GFLOPs) | Model size (MB) |
 +===============================================================================================================================================================================================================+============================+=====================+=================+
-| `Instance Segmentation MaskRCNN EfficientNetB2B <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml>`_                    | MaskRCNN-EfficientNetB2B   | 68.48               | 13.27           |
+| `Instance Segmentation MaskRCNN EfficientNetB2B <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml>`_                    | MaskRCNN-EfficientNetB2B   | 68.48               | 13.27           |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation MaskRCNN ResNet50 <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml>`_                                       | MaskRCNN-ResNet50          | 533.80              | 177.90          |
+| `Instance Segmentation MaskRCNN ResNet50 <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml>`_                                    | MaskRCNN-ResNet50          | 533.80              | 177.90          |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation MaskRCNN SwinT <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml>`_                                        | MaskRCNN-SwinT             | 566                 | 191.46          |
+| `Instance Segmentation MaskRCNN SwinT <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml>`_                                        | MaskRCNN-SwinT             | 566                 | 191.46          |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
-| `Instance Segmentation RTMDet-Inst Tiny <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml>`_                                    | RTMDet-Ins-tiny            | 52.86               | 22.8            |
+| `Instance Segmentation RTMDet-Inst Tiny <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml>`_                                    | RTMDet-Ins-tiny            | 52.86               | 22.8            |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------+---------------------+-----------------+
 
 Above table can be found using the following command
@@ -79,17 +79,3 @@ Meanwhile, MaskRCNN-EfficientNetB2B employs `EfficientNet-B2 <https://arxiv.org/
 Recently, we have updated RTMDet-Ins-tiny, integrating works from `RTMNet <https://arxiv.org/abs/2212.07784>`_ to prioritize real-time instance segmentation inference. While this model is tailored for real-time applications due to its lightweight design, it may not achieve the same level of accuracy as its counterparts, potentially necessitating more extensive training data.
 
 Our experiments indicate that MaskRCNN-SwinT and MaskRCNN-ResNet50 outperform MaskRCNN-EfficientNetB2B in terms of accuracy. However, if reducing training time is paramount, transitioning to MaskRCNN-EfficientNetB2B is recommended. Conversely, for applications where inference speed is crucial, RTMDet-Ins-tiny presents an optimal solution.
-
-In the table below the `mAP <https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient>`_ metric on some academic datasets using our :ref:`supervised pipeline <instance_segmentation_supervised_pipeline>` is presented. The results were obtained on our recipes without any changes. We use 1024x1024 image resolution, for other hyperparameters, please, refer to the related recipe. We trained each model with single Nvidia GeForce RTX3090.
-
-+---------------------------+--------------+------------+-----------------+
-| Model name                | ADE20k       | Cityscapes | Pascal-VOC 2007 |
-+===========================+==============+============+=================+
-| MaskRCNN-EfficientNetB2B  | N/A          | N/A        | N/A             |
-+---------------------------+--------------+------------+-----------------+
-| MaskRCNN-ResNet50         | N/A          | N/A        | N/A             |
-+---------------------------+--------------+------------+-----------------+
-| MaskRCNN-SwinT            | N/A          | N/A        | N/A             |
-+---------------------------+--------------+------------+-----------------+
-| RTMDet-Ins-tiny           | N/A          | N/A        | N/A             |
-+---------------------------+--------------+------------+-----------------+

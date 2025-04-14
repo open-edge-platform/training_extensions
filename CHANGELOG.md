@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Enhancements
+
+- Bump OV and NNCF to 2025.1
+  (https://github.com/open-edge-platform/training_extensions/pull/4334)
+
 ### Bug fixes
 
 - Fix DataInputParams Serialization
@@ -24,6 +29,8 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4184>)
 - Add UFlow anomaly detection algorithm
   (<https://github.com/openvinotoolkit/training_extensions/pull/4251>)
+- Improve Pre-Merge Test
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4307>)
 
 ### Enhancements
 

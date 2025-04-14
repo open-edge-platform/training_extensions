@@ -185,7 +185,7 @@ echo "Successfully started ci container - $CONTAINER_NAME"
 docker exec -it "$CONTAINER_NAME" bash -c \
     "./actions-runner/config.sh  \
     --unattended \
-    --url https://github.com/openvinotoolkit/training_extensions \
+    --url https://github.com/open-edge-platform/training_extensions \
     --token $GITHUB_TOKEN \
     --name $CONTAINER_NAME \
     --labels $LABELS \

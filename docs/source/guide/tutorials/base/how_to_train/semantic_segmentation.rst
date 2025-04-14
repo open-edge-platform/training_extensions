@@ -36,7 +36,7 @@ environment:
 Dataset preparation
 ***************************
 
-For the semnatic segmentation, we'll use the common_semantic_segmentation_dataset/supervised located at the tests/assets
+For the semnatic segmentation, we'll use the common_semantic_segmentation_dataset located at the tests/assets
 
 
 *********
@@ -58,18 +58,25 @@ The list of supported recipes for semantic segmentation is available with the co
 
           (otx) ...$ otx find --task SEMANTIC_SEGMENTATION
 
-          ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-          ┃ Task                  ┃ Model Name                    ┃ Recipe Path                                                                        ┃
-          ┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-          │ SEMANTIC_SEGMENTATION │ openvino_model                │ src/otx/recipe/semantic_segmentation/openvino_model.yaml                           │
-          │ SEMANTIC_SEGMENTATION │ segnext_t                     │ src/otx/recipe/semantic_segmentation/segnext_t.yaml                             │
-          │ SEMANTIC_SEGMENTATION │ segnext_b                     │ src/otx/recipe/semantic_segmentation/segnext_b.yaml                        │
-          │ SEMANTIC_SEGMENTATION │ dino_v2                       │ src/otx/recipe/semantic_segmentation/dino_v2.yaml                           │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_18                  │ src/otx/recipe/semantic_segmentation/litehrnet_18.yaml                 │
-          │ SEMANTIC_SEGMENTATION │ segnext_s                     │ src/otx/recipe/semantic_segmentation/segnext_s.yaml                         │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_x                   │ src/otx/recipe/semantic_segmentation/litehrnet_x.yaml                         │
-          │ SEMANTIC_SEGMENTATION │ litehrnet_s                   │ src/otx/recipe/semantic_segmentation/litehrnet_s.yaml                         │
-          └───────────────────────┴───────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────┘
+          ┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+          ┃ Task                  ┃ Model Name        ┃ Recipe Path                                                                                    ┃
+          ┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+          │ SEMANTIC_SEGMENTATION │ litehrnet_x_tile  │ src/otx/recipe/semantic_segmentation/litehrnet_x_tile.yaml                                     │
+          │ SEMANTIC_SEGMENTATION │ openvino_model    │ src/otx/recipe/semantic_segmentation/openvino_model.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ dino_v2_tile      │ src/otx/recipe/semantic_segmentation/dino_v2_tile.yaml                                         │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_s       │ src/otx/recipe/semantic_segmentation/litehrnet_s.yaml                                          │
+          │ SEMANTIC_SEGMENTATION │ segnext_b         │ src/otx/recipe/semantic_segmentation/segnext_b.yaml                                            │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_18_tile │ src/otx/recipe/semantic_segmentation/litehrnet_18_tile.yaml                                    │
+          │ SEMANTIC_SEGMENTATION │ dino_v2           │ src/otx/recipe/semantic_segmentation/dino_v2.yaml                                              │
+          │ SEMANTIC_SEGMENTATION │ segnext_s         │ src/otx/recipe/semantic_segmentation/segnext_s.yaml                                            │
+          │ SEMANTIC_SEGMENTATION │ segnext_b_tile    │ src/otx/recipe/semantic_segmentation/segnext_b_tile.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ segnext_t         │ src/otx/recipe/semantic_segmentation/segnext_t.yaml                                            │
+          │ SEMANTIC_SEGMENTATION │ segnext_t_tile    │ src/otx/recipe/semantic_segmentation/segnext_t_tile.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_18      │ src/otx/recipe/semantic_segmentation/litehrnet_18.yaml                                         │
+          │ SEMANTIC_SEGMENTATION │ segnext_s_tile    │ src/otx/recipe/semantic_segmentation/segnext_s_tile.yaml                                       │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_x       │ src/otx/recipe/semantic_segmentation/litehrnet_x.yaml                                          │
+          │ SEMANTIC_SEGMENTATION │ litehrnet_s_tile  │ src/otx/recipe/semantic_segmentation/litehrnet_s_tile.yaml                                     │
+          └───────────────────────┴───────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
 
     .. tab-item:: API
 
@@ -81,14 +88,21 @@ The list of supported recipes for semantic segmentation is available with the co
           print(model_lists)
           '''
           [
-            'openvino_model',
-            'dino_v2',
-            'litehrnet_x',
-            'litehrnet_18',
-            'segnext_s',
-            'segnext_b',
-            'segnext_t',
-            'litehrnet_s',
+           'segnext_s_tile',
+           'segnext_t',
+           'litehrnet_s',
+           'litehrnet_s_tile',
+           'segnext_t_tile',
+           'dino_v2_tile',
+           'litehrnet_x',
+           'litehrnet_x_tile',
+           'segnext_s',
+           'openvino_model',
+           'litehrnet_18',
+           'dino_v2',
+           'segnext_b',
+           'segnext_b_tile',
+           'litehrnet_18_tile'
           ]
           '''
 
@@ -103,10 +117,10 @@ Let's prepare an OpenVINO™ Training Extensions semantic segmentation workspace
 .. code-block:: shell
 
   # or its config path
-  (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assets/common_semantic_segmentation_dataset/supervised --print_config
+  (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root tests/assets/common_semantic_segmentation_dataset --print_config
 
   ...
-  data_root: data/common_semantic_segmentation_dataset/supervised
+  data_root: data/common_semantic_segmentation_dataset
   work_dir: otx-workspace
   callback_monitor: val/Dice
   disable_infer_num_classes: false
@@ -122,7 +136,7 @@ Let's prepare an OpenVINO™ Training Extensions semantic segmentation workspace
 
   .. code-block:: shell
 
-    (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root data/common_semantic_segmentation_dataset/supervised --print_config > configs.yaml
+    (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root data/common_semantic_segmentation_dataset --print_config > configs.yaml
     # Update configs.yaml & Train configs.yaml
     (otx) ...$ otx train --config configs.yaml
 
@@ -139,13 +153,13 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --data_root data/common_semantic_segmentation_dataset/supervised --task SEMANTIC_SEGMENTATION
+            (otx) ...$ otx train --data_root data/common_semantic_segmentation_dataset --task SEMANTIC_SEGMENTATION
 
     .. tab-item:: CLI (with config)
 
         .. code-block:: shell
 
-            (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root data/common_semantic_segmentation_dataset/supervised
+            (otx) ...$ otx train --config src/otx/recipe/semantic_segmentation/litehrnet_18.yaml --data_root data/common_semantic_segmentation_dataset
 
     .. tab-item:: API (from_config)
 
@@ -153,7 +167,7 @@ Here are the main outputs can expect with CLI:
 
             from otx.engine import Engine
 
-            data_root = "data/common_semantic_segmentation_dataset/supervised"
+            data_root = "data/common_semantic_segmentation_dataset"
             recipe = "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml"
 
             engine = Engine.from_config(
@@ -170,7 +184,7 @@ Here are the main outputs can expect with CLI:
 
             from otx.engine import Engine
 
-            data_root = "data/common_semantic_segmentation_dataset/supervised"
+            data_root = "data/common_semantic_segmentation_dataset"
 
             engine = Engine(
                       model="litehrnet_18",
@@ -267,7 +281,7 @@ and save performance results in ``otx-workspace``:
         .. code-block:: shell
 
             (otx) ...$ otx test --config  src/otx/recipe/semantic_segmentation/maskrcnn_r50.yaml \
-                                --data_root tests/assets/common_semantic_segmentation_dataset/supervised \
+                                --data_root tests/assets/common_semantic_segmentation_dataset \
                                 --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_059.ckpt
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃        Test metric        ┃       DataLoader 0        ┃
@@ -373,7 +387,6 @@ it to the ``otx test`` function.
 
             (otx) ...$ otx test --work_dir otx-workspace \
                                 --checkpoint otx-workspace/20240312_055042/optimized_model.xml \
-                                --engine.device cpu
 
             ...
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

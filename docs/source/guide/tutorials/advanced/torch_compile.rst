@@ -2,9 +2,7 @@
 ============================
 
 .. warning::
-    Not currently supported on all models.
-    As far as we check, it is available for Classification Task models and some segmentation models.
-    We will continue to optimize this and do not guarantee performance for now.
+    The support for `torch.compile` is in beta. Not all models are compatible with this feature.
 
 Overview
 --------
@@ -30,9 +28,9 @@ How to Use torch.compile in OpenVINO™ Training Extensions
 
         .. code-block:: python
 
-            from otx.algo.classification.vit import VisionTransformerForMulticlassCls
+            from otx.algo.classification.multiclass_models.vit import VisionTransformerMulticlassCls
 
-            model = VisionTransformerForMulticlassCls(..., torch_compile=True)
+            model = VisionTransformerMulticlassCls(..., torch_compile=True)
 
     .. tab-item:: CLI
 

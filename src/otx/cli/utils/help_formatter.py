@@ -102,9 +102,9 @@ def get_verbosity_subcommand() -> dict:
 
 INTRO_MARKDOWN = (
     "# OpenVINO™ Training Extensions CLI Guide\n\n"
-    "Github Repository: [https://github.com/openvinotoolkit/training_extensions](https://github.com/openvinotoolkit/training_extensions)."
+    "Github Repository: [https://github.com/open-edge-platform/training_extensions](https://github.com/open-edge-platform/training_extensions)."
     "\n\n"
-    "A better guide is provided by the [documentation](https://openvinotoolkit.github.io/training_extensions/stable/)."
+    "A better guide is provided by the [documentation](https://open-edge-platform.github.io/training_extensions/stable/)."
 )
 
 VERBOSE_USAGE = (

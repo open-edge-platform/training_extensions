@@ -19,7 +19,7 @@ from torch.autograd import Function
 from torchvision.ops import box_convert
 
 from otx.algo.utils.utils import InstanceData
-from otx.core.data.entity.detection import DetBatchDataEntity
+from otx.data import TorchDataBatch
 
 
 def images_to_levels(target: list[Tensor], num_levels: list[int]) -> list[Tensor]:
@@ -50,11 +50,11 @@ def unmap(data: Tensor, count: int, inds: Tensor, fill: int = 0) -> Tensor:
     return ret
 
 
-def unpack_det_entity(entity: DetBatchDataEntity) -> tuple:
+def unpack_det_entity(entity: TorchDataBatch) -> tuple:
     """Unpack gt_instances, gt_instances_ignore and img_metas based on batch_data_samples.
 
     Args:
-        batch_data_samples (DetBatchDataEntity): Data entity from dataset.
+        entity (TorchDataBatch): Data entity from dataset.
 
     Returns:
         tuple:
@@ -67,16 +67,20 @@ def unpack_det_entity(entity: DetBatchDataEntity) -> tuple:
     """
     batch_gt_instances = []
     batch_img_metas = []
-    for img_info, bboxes, labels in zip(entity.imgs_info, entity.bboxes, entity.labels):
+    imgs_infos = entity.imgs_info if entity.imgs_info is not None else [[] for _ in range(entity.batch_size)]  # type: ignore[union-attr,misc]
+
+    for idx, img_info in enumerate(imgs_infos):
         metainfo = {
-            "img_id": img_info.img_idx,
-            "img_shape": img_info.img_shape,
-            "ori_shape": img_info.ori_shape,
-            "scale_factor": img_info.scale_factor,
-            "ignored_labels": img_info.ignored_labels,
+            "img_id": img_info.img_idx,  # type: ignore[union-attr]
+            "img_shape": img_info.img_shape,  # type: ignore[union-attr]
+            "ori_shape": img_info.ori_shape,  # type: ignore[union-attr]
+            "scale_factor": img_info.scale_factor,  # type: ignore[union-attr]
+            "ignored_labels": img_info.ignored_labels,  # type: ignore[union-attr]
         }
         batch_img_metas.append(metainfo)
-        batch_gt_instances.append(InstanceData(bboxes=bboxes, labels=labels))
+        _bbox = entity.bboxes[idx] if entity.bboxes is not None else []
+        _label = entity.labels[idx] if entity.labels is not None else []
+        batch_gt_instances.append(InstanceData(bboxes=_bbox, labels=_label))
 
     return batch_gt_instances, batch_img_metas
 

@@ -15,8 +15,8 @@ from otx.algo.detection.heads.dfine_decoder import DFINETransformer
 from otx.algo.detection.losses.dfine_loss import DFINECriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.algo.detection.rtdetr import DETR
-from otx.core.data.entity.detection import DetBatchPredEntity
 from otx.core.model.base import DataInputParams
+from otx.data import TorchPredBatch
 
 
 class TestDFine:
@@ -50,7 +50,7 @@ class TestDFine:
         data.images = torch.randn(2, 3, 640, 640)
         model.eval()
         output = model(data)
-        assert isinstance(output, DetBatchPredEntity)
+        assert isinstance(output, TorchPredBatch)
 
     @pytest.mark.parametrize(
         "model",

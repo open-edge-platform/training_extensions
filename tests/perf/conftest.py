@@ -109,7 +109,7 @@ def fxt_otx_ref(request: pytest.FixtureRequest) -> str | None:
 
     if otx_ref:
         # Install specific version
-        cmd = ["pip", "install", f"otx@git+https://github.com/openvinotoolkit/training_extensions.git@{otx_ref}"]
+        cmd = ["pip", "install", f"otx@git+https://github.com/open-edge-platform/training_extensions.git@{otx_ref}"]
         subprocess.run(cmd, check=True)  # noqa: S603
         cmd = ["otx", "install"]
         subprocess.run(cmd, check=True)  # noqa: S603

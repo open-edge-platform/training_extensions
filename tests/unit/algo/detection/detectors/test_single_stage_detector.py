@@ -8,8 +8,8 @@ import torch
 from torch import nn
 
 from otx.algo.detection.detectors.single_stage_detector import SingleStageDetector
-from otx.core.data.entity.detection import DetBatchDataEntity
-from otx.core.types import LabelInfo
+from otx.core.data.entity.base import ImageInfo
+from otx.data import TorchPredBatch
 
 
 class TestSingleStageDetector:
@@ -49,9 +49,9 @@ class TestSingleStageDetector:
     @pytest.fixture()
     def batch(self):
         inputs = torch.randn(1, 3, 32, 32)
-        return DetBatchDataEntity(
+        return TorchPredBatch(
             batch_size=1,
-            imgs_info=[LabelInfo(["a"], ["0"], [["a"]])],
+            imgs_info=ImageInfo(img_idx=0, img_shape=(32, 32), ori_shape=(32, 32)),
             images=inputs,
             bboxes=[torch.tensor([[0.5, 0.5, 0.5, 0.5]])],
             labels=[torch.tensor([0])],

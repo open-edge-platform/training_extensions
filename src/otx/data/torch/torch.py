@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, fields
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 
@@ -19,6 +19,7 @@ from .validations import (
 )
 
 if TYPE_CHECKING:
+    from datumaro import Polygon
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
     from otx.core.data.entity.base import ImageInfo
@@ -37,6 +38,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
         masks (Mask | None): The masks, optional.
         bboxes (BoundingBoxes | None): The bounding boxes, optional.
         keypoints (torch.Tensor | None): The keypoints, optional.
+        polygons (list[Polygon] | None): The polygons, optional.
         img_info (ImageInfo | None): Additional image information, optional.
     """
 
@@ -45,6 +47,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
     keypoints: torch.Tensor | None = None
+    polygons: list[Polygon] | None = None
     img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
@@ -70,6 +73,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
             bboxes=[item.bboxes for item in items],
             keypoints=[item.keypoints for item in items],
             masks=[item.masks for item in items],
+            polygons=[item.polygons for item in items],  # type: ignore[misc]
             imgs_info=[item.img_info for item in items],
         )
 
@@ -94,7 +98,8 @@ class TorchDataBatch(ValidateBatchMixin):
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
     keypoints: list[torch.Tensor] | None = None
-    imgs_info: list[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+    polygons: list[list[Polygon]] | None = None
+    imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
 
 @dataclass
