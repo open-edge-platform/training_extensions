@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### New features
+
+- Add MobileNetV4 medium recipe
+  (https://github.com/open-edge-platform/training_extensions/pull/4341)
+
 ### Enhancements
 
 - Bump OV and NNCF to 2025.1
