@@ -7,17 +7,17 @@ from pathlib import Path
 import pytest
 import torch
 
+from otx.backend.native.engine.utils import auto_configurator as target_file
+from otx.backend.native.engine.utils.auto_configurator import (
+    DEFAULT_CONFIG_PER_TASK,
+    AutoConfigurator,
+    configure_task,
+)
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types.label import LabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
-from otx.engine.utils import auto_configurator as target_file
-from otx.engine.utils.auto_configurator import (
-    DEFAULT_CONFIG_PER_TASK,
-    AutoConfigurator,
-    configure_task,
-)
 from otx.utils.utils import should_pass_label_info
 
 

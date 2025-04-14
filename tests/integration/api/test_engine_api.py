@@ -9,11 +9,11 @@ import pytest
 from datumaro import Dataset as DmDataset
 from model_api.tilers import Tiler
 
+from otx.backend.native.engine import OTXEngine
+from otx.backend.native.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType
-from otx.engine import Engine
-from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
 from tests.test_helpers import CommonSemanticSegmentationExporter
 
 
@@ -40,7 +40,7 @@ def test_engine_from_config(
         )
 
     tmp_path_train = tmp_path / task
-    engine = Engine.from_config(
+    engine = OTXEngine.from_config(
         config_path=DEFAULT_CONFIG_PER_TASK[task],
         data_root=fxt_target_dataset_per_task[task.value.lower()],
         work_dir=tmp_path_train,
@@ -142,7 +142,7 @@ def test_engine_from_tile_recipe(
         data_root = tmp_path / "tiling_detection_css"
         dataset.export(data_root, format=CommonSemanticSegmentationExporter, save_media=True)
 
-    engine = Engine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=data_root,
         work_dir=tmp_path / task,

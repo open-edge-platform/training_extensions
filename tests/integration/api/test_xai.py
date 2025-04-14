@@ -7,9 +7,9 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
+from otx.backend.native.engine import OTXEngine
 from otx.core.data.entity.base import OTXBatchPredEntity
 from otx.data.torch import TorchPredBatch
-from otx.engine import Engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
 MULTI_CLASS_CLS = [recipe for recipe in RECIPE_LIST_ALL if "multi_class_cls" in recipe]
@@ -62,7 +62,7 @@ def test_forward_explain(
     if "yolov9" in recipe:
         pytest.skip("yolov9 on detection is not supported yet.")
 
-    engine = Engine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
@@ -127,7 +127,7 @@ def test_predict_with_explain(
         pytest.skip("yolov9 on detection is not supported yet.")
 
     tmp_path = tmp_path / f"otx_xai_{model_name}"
-    engine = Engine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,

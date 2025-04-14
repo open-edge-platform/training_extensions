@@ -34,8 +34,8 @@ if TYPE_CHECKING:
 
 _ENGINE_AVAILABLE = True
 try:
+    from otx.backend.native.engine import OTXEngine
     from otx.core.config import register_configs
-    from otx.engine import Engine
 
     register_configs()
 except ImportError:
@@ -145,7 +145,7 @@ class OTXCLI:
         )
         engine_skip = {"model", "datamodule", "work_dir"}
         parser.add_class_arguments(
-            Engine,
+            OTXEngine,
             "engine",
             fail_untyped=False,
             sub_configs=True,
@@ -179,7 +179,7 @@ class OTXCLI:
         parser.link_arguments("engine.device", "data.device")
 
         added_arguments = parser.add_method_arguments(
-            Engine,
+            OTXEngine,
             subcommand,
             skip=set(OTXCLI.engine_subcommands()[subcommand]),
             fail_untyped=False,
@@ -255,7 +255,7 @@ class OTXCLI:
                 # If the user specifies the config directly, not set the cache ckpt as default.
                 self._load_cache_ckpt(parser=sub_parser)
 
-            fn = getattr(Engine, subcommand)
+            fn = getattr(OTXEngine, subcommand)
             description = get_short_docstring(fn)
 
             self._subcommand_method_arguments[subcommand] = added_arguments
@@ -291,7 +291,7 @@ class OTXCLI:
             task = sys.argv[sys.argv.index("--task") + 1]
         enable_auto_config = data_root is not None and "--config" not in sys.argv
         if enable_auto_config:
-            from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
+            from otx.backend.native.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
             auto_configurator = AutoConfigurator(
                 data_root=data_root,
@@ -358,14 +358,14 @@ class OTXCLI:
             if instantiate_engine:
                 self.engine = self.instantiate_engine()
 
-    def instantiate_engine(self) -> Engine:
+    def instantiate_engine(self) -> OTXEngine:
         """Instantiate an Engine object with the specified parameters.
 
         Returns:
             An instance of the Engine class.
         """
         engine_kwargs = self.get_config_value(self.config_init, "engine")
-        return Engine(
+        return OTXEngine(
             model=self.model,
             datamodule=self.datamodule,
             work_dir=self.workspace.work_dir,
@@ -526,7 +526,7 @@ class OTXCLI:
         """
         self.console.print(f"[blue]{OTX_LOGO}[/blue] ver.{__version__}", justify="center")
         if self.subcommand == "find":
-            from otx.engine.utils.api import list_models
+            from otx.backend.native.engine.utils.api import list_models
 
             list_models(print_table=True, **self.config[self.subcommand])
         elif self.subcommand in self.engine_subcommands():

@@ -21,7 +21,7 @@ from otx.core.types.task import OTXTaskType
 from otx.tools.converter import ConfigConverter
 
 if TYPE_CHECKING:
-    from otx.engine.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
 TEST_PATH = Path(__file__).parent.parent.parent
 DEFAULT_GETI_CONFIG_PER_TASK = {
@@ -73,7 +73,7 @@ class TestEngineAPI:
         otx_config["data"]["test_subset"]["subset_name"] = "TESTING"
         return otx_config
 
-    def _instantiate_engine(self) -> tuple[Engine, dict[str, Any]]:
+    def _instantiate_engine(self) -> tuple[OTXEngine, dict[str, Any]]:
         return ConfigConverter.instantiate(
             config=self.otx_config,
             work_dir=self.tmp_path,

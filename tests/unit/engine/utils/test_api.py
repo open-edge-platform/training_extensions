@@ -3,8 +3,8 @@
 
 import pytest
 
+from otx.backend.native.engine.utils.api import RECIPE_PATH, list_models
 from otx.core.types.task import OTXTaskType
-from otx.engine.utils.api import RECIPE_PATH, list_models
 
 
 def test_list_models() -> None:
