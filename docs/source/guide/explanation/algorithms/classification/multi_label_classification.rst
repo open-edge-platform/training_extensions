@@ -19,7 +19,7 @@ For supervised learning we use the following algorithms components:
 Dataset Format
 **************
 
-The format should be converted in our `internal representation <https://github.com/openvinotoolkit/training_extensions/tree/develop/tests/assets/multilabel_classification>`_.
+The format should be converted in our `internal representation <https://github.com/open-edge-platform/training_extensions/tree/develop/tests/assets/multilabel_classification>`_.
 
 .. note::
     Names of the annotations files and overall dataset structure should be the same as above example. You need to convert train and validation sets separately.

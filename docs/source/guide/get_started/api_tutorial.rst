@@ -8,7 +8,7 @@ For demonstration purposes we will use the Object Detection ATSS model with `WGI
 
 .. note::
 
-    To start with we need to `install OpenVINO™ Training Extensions <https://github.com/openvinotoolkit/training_extensions/blob/develop/QUICK_START_GUIDE.md#setup-openvino-training-extensions>`_.
+    To start with we need to `install OpenVINO™ Training Extensions <https://github.com/open-edge-platform/training_extensions/blob/develop/QUICK_START_GUIDE.md#setup-openvino-training-extensions>`_.
 
 *******************
 Dataset preparation

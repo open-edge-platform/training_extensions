@@ -28,13 +28,13 @@ from otx.algo.instance_segmentation.segmentors.maskrcnn_tv import (
 )
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
+from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -149,16 +149,16 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
         return model
 
-    def _customize_inputs(self, entity: InstanceSegBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
         if isinstance(entity.images, list):
-            entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)
+            entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)  # type: ignore[arg-type,assignment]
         return {"entity": entity}
 
     def _customize_outputs(
         self,
         outputs: dict | list[dict],  # type: ignore[override]
-        inputs: InstanceSegBatchDataEntity,
-    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -180,13 +180,13 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
         # XAI wraps prediction under dictionary with key "predictions"
         predictions = outputs["predictions"] if isinstance(outputs, dict) else outputs
-        for img_info, prediction in zip(inputs.imgs_info, predictions):
+        for img_info, prediction in zip(inputs.imgs_info, predictions):  # type: ignore[arg-type]
             scores.append(prediction["scores"])
             bboxes.append(
                 tv_tensors.BoundingBoxes(
                     prediction["boxes"],
                     format="XYXY",
-                    canvas_size=img_info.ori_shape,
+                    canvas_size=img_info.ori_shape,  # type: ignore[union-attr]
                 ),
             )
             output_masks = tv_tensors.Mask(
@@ -212,27 +212,25 @@ class MaskRCNNTV(OTXInstanceSegModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return InstanceSegBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
                 masks=masks,
-                polygons=[],
                 labels=labels,
                 saliency_map=list(saliency_map),
                 feature_vector=list(feature_vector),
             )
 
-        return InstanceSegBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
             bboxes=bboxes,
             masks=masks,
-            polygons=[],
             labels=labels,
         )
 

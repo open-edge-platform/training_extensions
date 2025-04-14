@@ -35,9 +35,9 @@ For the supervised training we use the following algorithms components:
 Dataset Format
 **************
 
-For the dataset handling inside OpenVINO™ Training Extensions, we use `Dataset Management Framework (Datumaro) <https://github.com/openvinotoolkit/datumaro>`_.
+For the dataset handling inside OpenVINO™ Training Extensions, we use `Dataset Management Framework (Datumaro) <https://github.com/open-edge-platform/datumaro>`_.
 
-At this end we support `Common Semantic Segmentation <https://github.com/openvinotoolkit/datumaro/blob/develop/docs/source/docs/data-formats/formats/common_semantic_segmentation.md>`_ data format.
+At this end we support `Common Semantic Segmentation <https://github.com/open-edge-platform/datumaro/blob/develop/docs/source/docs/data-formats/formats/common_semantic_segmentation.md>`_ data format.
 If you organized supported dataset format, starting training will be very simple. We just need to pass a path to the root folder and desired model recipe to start training:
 
 
@@ -51,19 +51,19 @@ We support the following ready-to-use model recipes:
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
 | Recipe Path                                                                                                                                                                          | Complexity (GFLOPs) | Model size (M)  | FPS (GPU)       | iter time (sec) |
 +======================================================================================================================================================================================+=====================+=================+=================+=================+
-| `Lite-HRNet-s-mod2 <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/litehrnet_s.yaml>`_                                     | 1.44                | 0.82            |  37.68          |     0.151       |
+| `Lite-HRNet-s-mod2 <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/litehrnet_s.yaml>`_                                     | 1.44                | 0.82            |  37.68          |     0.151       |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
-| `Lite-HRNet-18-mod2 <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/litehrnet_18.yaml>`_                                   | 2.63                | 1.10            |  31.17          |     0.176       |
+| `Lite-HRNet-18-mod2 <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/litehrnet_18.yaml>`_                                   | 2.63                | 1.10            |  31.17          |     0.176       |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
-| `Lite-HRNet-x-mod3 <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/litehrnet_x.yaml>`_                                     | 9.20                | 1.50            |  15.07          |     0.347       |
+| `Lite-HRNet-x-mod3 <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/litehrnet_x.yaml>`_                                     | 9.20                | 1.50            |  15.07          |     0.347       |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
-| `SegNext_T <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/segnext_t.yaml>`_                                               | 12.44               | 4.23            |  104.90         |     0.126       |
+| `SegNext_T <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/segnext_t.yaml>`_                                               | 12.44               | 4.23            |  104.90         |     0.126       |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
-| `SegNext_S <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/segnext_s.yaml>`_                                               | 30.93               | 13.90           |  85.67          |     0.134       |
+| `SegNext_S <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/segnext_s.yaml>`_                                               | 30.93               | 13.90           |  85.67          |     0.134       |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
-| `SegNext_B <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/segnext_b.yaml>`_                                               | 64.65               | 27.56           |  61.91          |     0.215       |
+| `SegNext_B <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/segnext_b.yaml>`_                                               | 64.65               | 27.56           |  61.91          |     0.215       |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
-| `DinoV2 <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/dino_v2.yaml>`_                                                    | 124.01              | 24.40           |  3.52           |     0.116       |
+| `DinoV2 <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/semantic_segmentation/dino_v2.yaml>`_                                                    | 124.01              | 24.40           |  3.52           |     0.116       |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------+-----------------+-----------------+-----------------+
 
 All of these models differ in the trade-off between accuracy and inference/training speed. For example, ``SegNext_B`` is the recipe with heavy-size architecture for more accurate predictions, but it requires longer training.

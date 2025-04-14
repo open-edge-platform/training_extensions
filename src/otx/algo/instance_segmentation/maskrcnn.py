@@ -31,12 +31,12 @@ from otx.algo.modules.norm import build_norm_layer
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntity
 from otx.core.exporter.base import OTXModelExporter
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
+from otx.data import TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -397,13 +397,13 @@ class MaskRCNN(OTXInstanceSegModel):
 class RotatedMaskRCNNModel(MaskRCNN):
     """Base class for the rotated detection models used in OTX."""
 
-    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> InstanceSegBatchPredEntity:
+    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> TorchPredBatch:
         """Predict step for rotated detection task.
 
         Note: This method is overridden to convert masks to rotated bounding boxes.
 
         Returns:
-            InstanceSegBatchPredEntity: The predicted polygons (rboxes), scores, labels, masks.
+            TorchPredBatch: The predicted polygons (rboxes), scores, labels, masks.
         """
         preds = super().predict_step(*args, **kwargs)
 
@@ -462,7 +462,7 @@ class RotatedMaskRCNNModel(MaskRCNN):
             batch_polygons.append(polygons)
             batch_masks.append(masks)
 
-        return InstanceSegBatchPredEntity(
+        return TorchPredBatch(
             batch_size=preds.batch_size,
             images=preds.images,
             imgs_info=preds.imgs_info,

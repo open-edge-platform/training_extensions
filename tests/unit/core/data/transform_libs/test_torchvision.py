@@ -15,7 +15,6 @@ from torch import LongTensor
 from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegDataEntity
 from otx.core.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
@@ -128,7 +127,7 @@ class TestResize:
     def test_forward_bboxes_masks_polygons(
         self,
         resize: Resize,
-        fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity],
+        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
         keep_ratio: bool,
         expected_shape: tuple,
     ) -> None:
@@ -136,7 +135,6 @@ class TestResize:
         resize.transform_bbox = True
         resize.transform_mask = True
         entity = deepcopy(fxt_inst_seg_data_entity[0])
-        entity.image = entity.image.transpose(1, 2, 0)
 
         resize.keep_ratio = keep_ratio
         results = resize(entity)
@@ -164,24 +162,18 @@ class TestRandomFlip:
     def random_flip(self) -> RandomFlip:
         return RandomFlip(prob=1.0)
 
-    @pytest.mark.parametrize("is_array", [True, False])
     def test_forward(
         self,
         random_flip: RandomFlip,
-        fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity],
-        is_array: bool,
+        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
-        if is_array:
-            entity.image = entity.image.transpose(1, 2, 0)
-        else:
-            entity.image = torch.as_tensor(entity.image)
 
         results = random_flip.forward(entity)
 
         # test image
-        assert np.all(results.image.flip(-1).numpy() == fxt_inst_seg_data_entity[0].image)
+        assert torch.all(results.image.flip(-1) == fxt_inst_seg_data_entity[0].image)
 
         # test bboxes
         bboxes_results = results.bboxes.clone()
@@ -260,7 +252,7 @@ class TestCachedMosaic:
     def test_forward_pop_small_cache(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity],
+        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mosaic.max_cached_images = 4
@@ -273,25 +265,24 @@ class TestCachedMosaic:
         assert len(cached_mosaic.results_cache) == cached_mosaic.max_cached_images
 
         # check small cache
-        assert np.all(results.image == fxt_inst_seg_data_entity[0].image)
+        assert torch.all(results.image == fxt_inst_seg_data_entity[0].image)
         assert torch.all(results.bboxes == fxt_inst_seg_data_entity[0].bboxes)
 
     def test_forward(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity],
+        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
-        entity.image = entity.image.transpose(1, 2, 0)
         cached_mosaic.results_cache = [entity] * 4
         cached_mosaic.prob = 1.0
 
         results = cached_mosaic(deepcopy(entity))
 
         assert results.image.shape[1:] == (256, 256)
-        assert results.labels.shape[0] == results.bboxes.shape[0]
-        assert results.labels.dtype == torch.int64
+        assert results.label.shape[0] == results.bboxes.shape[0]
+        assert results.label.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
         assert results.img_info.img_shape == results.image.shape[1:]
         assert results.masks.shape[1:] == (256, 256)
@@ -313,7 +304,7 @@ class TestCachedMixUp:
     def test_forward_pop_small_cache(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity],
+        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mixup.max_cached_images = 1  # force to set to 1 for this test
@@ -326,17 +317,16 @@ class TestCachedMixUp:
         assert len(cached_mixup.results_cache) == cached_mixup.max_cached_images
 
         # check small cache
-        assert np.all(results.image == fxt_inst_seg_data_entity[0].image)
+        assert torch.all(results.image == fxt_inst_seg_data_entity[0].image)
         assert torch.all(results.bboxes == fxt_inst_seg_data_entity[0].bboxes)
 
     def test_forward(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity],
+        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
-        entity.image = entity.image.transpose(1, 2, 0)
         cached_mixup.results_cache = [entity]
         cached_mixup.prob = 1.0
         cached_mixup.flip_ratio = 0.0
@@ -344,8 +334,8 @@ class TestCachedMixUp:
         results = cached_mixup(deepcopy(entity))
 
         assert results.image.shape[1:] == (64, 64)
-        assert results.labels.shape[0] == results.bboxes.shape[0]
-        assert results.labels.dtype == torch.int64
+        assert results.label.shape[0] == results.bboxes.shape[0]
+        assert results.label.dtype == torch.int64
         assert results.bboxes.dtype == torch.float32
         assert results.img_info.img_shape == results.image.shape[1:]
         assert results.masks.shape[1:] == (64, 64)
@@ -369,10 +359,9 @@ class TestYOLOXHSVRandomAug:
 class TestPad:
     def test_forward(
         self,
-        fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity],
+        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
     ) -> None:
         entity = deepcopy(fxt_inst_seg_data_entity[0])
-        entity.image = entity.image.transpose(1, 2, 0)
 
         # test pad img/masks with size
         transform = Pad(size=(96, 128), transform_mask=True)
@@ -422,9 +411,8 @@ class TestRandomResize:
         transform_str = str(transform)
         assert isinstance(transform_str, str)
 
-    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, InstanceSegDataEntity, InstanceSegBatchDataEntity]):
+    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch]):
         entity = deepcopy(fxt_inst_seg_data_entity[0])
-        entity.image = entity.image.transpose(1, 2, 0)
 
         # choose target scale from init when override is True
         transform = RandomResize((224, 224), (1.0, 2.0))
@@ -499,16 +487,16 @@ class TestRandomCrop:
         )
 
     @pytest.fixture()
-    def iseg_entity(self) -> InstanceSegDataEntity:
-        return InstanceSegDataEntity(
-            image=np.random.randint(0, 255, size=(10, 10, 3), dtype=np.uint8),
+    def iseg_entity(self) -> TorchDataItem:
+        return TorchDataItem(
+            image=torch.randn((3, 10, 10), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
                 np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
                 format="xyxy",
                 canvas_size=(10, 10),
             ),
-            labels=torch.LongTensor([0, 1]),
+            label=torch.LongTensor([0, 1]),
             masks=tv_tensors.Mask(np.zeros((2, 10, 10), np.uint8)),
             polygons=[Polygon(points=[0, 0, 0, 7, 7, 7, 7, 0]), Polygon(points=[2, 3, 2, 9, 9, 9, 9, 3])],
         )
@@ -584,7 +572,7 @@ class TestRandomCrop:
 
         assert results.image.shape[1:] == (7, 5)
         assert results.bboxes.shape[0] == 2
-        assert results.labels.shape[0] == 2
+        assert results.label.shape[0] == 2
         assert results.masks.shape[0] == 2
         assert results.masks.shape[1:] == (7, 5)
         assert results.img_info.img_shape == results.image.shape[1:]
@@ -592,8 +580,8 @@ class TestRandomCrop:
     def test_forward_recompute_bbox_from_mask(self, iseg_entity) -> None:
         # test recompute_bbox = True
         iseg_entity.bboxes = tv_tensors.wrap(torch.tensor([[0.1, 0.1, 0.2, 0.2]]), like=iseg_entity.bboxes)
-        iseg_entity.labels = torch.LongTensor([0])
-        iseg_entity.polygons = []
+        iseg_entity.label = torch.LongTensor([0])
+        iseg_entity.polygons = None
         target_gt_bboxes = np.zeros((1, 4), dtype=np.float32)
         transform = RandomCrop(
             crop_size=(10, 11),
@@ -601,7 +589,6 @@ class TestRandomCrop:
             recompute_bbox=True,
             bbox_clip_border=True,
         )
-
         results = transform(deepcopy(iseg_entity))
 
         assert np.all(results.bboxes.numpy() == target_gt_bboxes)
@@ -609,7 +596,7 @@ class TestRandomCrop:
     def test_forward_recompute_bbox_from_polygon(self, iseg_entity) -> None:
         # test recompute_bbox = True
         iseg_entity.bboxes = tv_tensors.wrap(torch.tensor([[0.1, 0.1, 0.2, 0.2]]), like=iseg_entity.bboxes)
-        iseg_entity.labels = torch.LongTensor([0])
+        iseg_entity.label = torch.LongTensor([0])
         iseg_entity.masks = tv_tensors.Mask(np.zeros((0, *iseg_entity.img_info.img_shape), dtype=bool))
         target_gt_bboxes = np.array([[0.0, 0.0, 7.0, 7.0]], dtype=np.float32)
         transform = RandomCrop(
@@ -618,7 +605,6 @@ class TestRandomCrop:
             recompute_bbox=True,
             bbox_clip_border=True,
         )
-
         results = transform(deepcopy(iseg_entity))
 
         assert np.all(results.bboxes.numpy() == target_gt_bboxes)

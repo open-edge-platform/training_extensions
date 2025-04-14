@@ -5,8 +5,8 @@
 ---
 
 [Key Features](#key-features) •
-[Installation](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/installation.html) •
-[Documentation](https://openvinotoolkit.github.io/training_extensions/latest/index.html) •
+[Installation](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html) •
+[Documentation](https://open-edge-platform.github.io/training_extensions/latest/index.html) •
 [License](#license)
 
 [![PyPI](https://img.shields.io/pypi/v/otx)](https://pypi.org/project/otx)
@@ -19,10 +19,10 @@
 
 <!-- markdownlint-enable  MD042 -->
 
-[![Codecov](https://codecov.io/gh/openvinotoolkit/training_extensions/branch/develop/graph/badge.svg?token=9HVFNMPFGD)](https://codecov.io/gh/openvinotoolkit/training_extensions)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/openvinotoolkit/training_extensions/badge)](https://securityscorecards.dev/viewer/?uri=github.com/openvinotoolkit/training_extensions)
-[![Pre-Merge Test](https://github.com/openvinotoolkit/training_extensions/actions/workflows/pre_merge.yaml/badge.svg)](https://github.com/openvinotoolkit/training_extensions/actions/workflows/pre_merge.yaml)
-[![Build Docs](https://github.com/openvinotoolkit/training_extensions/actions/workflows/docs.yaml/badge.svg)](https://github.com/openvinotoolkit/training_extensions/actions/workflows/docs.yaml)
+[![Codecov](https://codecov.io/gh/open-edge-platform/training_extensions/branch/develop/graph/badge.svg?token=9HVFNMPFGD)](https://codecov.io/gh/open-edge-platform/training_extensions)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/open-edge-platform/training_extensions/badge)](https://securityscorecards.dev/viewer/?uri=github.com/open-edge-platform/training_extensions)
+[![Pre-Merge Test](https://github.com/open-edge-platform/training_extensions/actions/workflows/pre_merge.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/pre_merge.yaml)
+[![Build Docs](https://github.com/open-edge-platform/training_extensions/actions/workflows/docs.yaml/badge.svg)](https://github.com/open-edge-platform/training_extensions/actions/workflows/docs.yaml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Downloads](https://static.pepy.tech/personalized-badge/otx?period=total&units=international_system&left_color=grey&right_color=green&left_text=PyPI%20Downloads)](https://pepy.tech/project/otx)
 
@@ -42,7 +42,7 @@ If you are an experienced user, you can configure your own model based on [torch
 
 Furthermore, OpenVINO™ Training Extensions provides automatic configuration for ease of use.
 The framework will analyze your dataset and identify the most suitable model and figure out the best input size setting and other hyper-parameters.
-The development team is continuously extending this [Auto-configuration](https://openvinotoolkit.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html) functionalities to make training as simple as possible so that single CLI command can obtain accurate, efficient and robust models ready to be integrated into your project.
+The development team is continuously extending this [Auto-configuration](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html) functionalities to make training as simple as possible so that single CLI command can obtain accurate, efficient and robust models ready to be integrated into your project.
 
 ### Key Features
 
@@ -54,14 +54,14 @@ OpenVINO™ Training Extensions supports the following computer vision tasks:
 - **Instance segmentation** including tiling algorithm support
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
 
-OpenVINO™ Training Extensions supports the [following learning methods](https://openvinotoolkit.github.io/training_extensions/latest/guide/explanation/algorithms/index.html):
+OpenVINO™ Training Extensions supports the [following learning methods](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/algorithms/index.html):
 
 - **Supervised**, incremental training, which includes class incremental scenario.
 
 OpenVINO™ Training Extensions provides the following usability features:
 
-- [Auto-configuration](https://openvinotoolkit.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html). OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model to provide the best accuracy/speed trade-off.
-- [Datumaro](https://openvinotoolkit.github.io/datumaro/stable/index.html) data frontend: OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
+- [Auto-configuration](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html). OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model to provide the best accuracy/speed trade-off.
+- [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) data frontend: OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
 - **Distributed training** to accelerate the training process when you have multiple GPUs
 - **Mixed-precision training** to save GPUs memory and use larger batch sizes
 
@@ -69,7 +69,7 @@ OpenVINO™ Training Extensions provides the following usability features:
 
 ## Installation
 
-Please refer to the [installation guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/installation.html).
+Please refer to the [installation guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/installation.html).
 If you want to make changes to the library, then a local installation is recommended.
 
 <details>
@@ -102,7 +102,7 @@ conda activate otx_env
 # ...
 
 # Clone the repository and install in editable mode
-git clone https://github.com/openvinotoolkit/training_extensions.git
+git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions
 pip install -e .[base]  # for zsh: pip install -e '.[base]'
 ```
@@ -129,7 +129,7 @@ otx train --help -v   # Print required parameters
 otx train --help -vv  # Print all configurable parameters
 ```
 
-You can find details with examples in the [CLI Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/cli_commands.html). and [API Quick-Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
+You can find details with examples in the [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html). and [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html).
 
 Below is how to train with auto-configuration, which is provided to users with datasets and tasks:
 
@@ -144,7 +144,7 @@ engine = Engine(data_root="data/wgisd", task="DETECTION")
 engine.train()
 ```
 
-For more examples, see documentation: [API Quick-Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
+For more examples, see documentation: [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
 
 </details>
 
@@ -155,11 +155,11 @@ For more examples, see documentation: [API Quick-Guide](https://openvinotoolkit.
 otx train --data_root data/wgisd --task DETECTION
 ```
 
-For more examples, see documentation: [CLI Guide](https://openvinotoolkit.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
+For more examples, see documentation: [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html)
 
 </details>
 
-In addition to the examples above, please refer to the documentation for tutorials on using custom models, training parameter overrides, and [tutorial per task types](https://openvinotoolkit.github.io/training_extensions/latest/guide/tutorials/base/how_to_train/index.html), etc.
+In addition to the examples above, please refer to the documentation for tutorials on using custom models, training parameter overrides, and [tutorial per task types](https://open-edge-platform.github.io/training_extensions/latest/guide/tutorials/base/how_to_train/index.html), etc.
 
 ---
 
@@ -178,7 +178,7 @@ By contributing to the project, you agree to the license and copyright terms the
 
 ## Issues / Discussions
 
-Please use [Issues](https://github.com/openvinotoolkit/training_extensions/issues/new/choose) tab for your bug reporting, feature requesting, or any questions.
+Please use [Issues](https://github.com/open-edge-platform/training_extensions/issues/new/choose) tab for your bug reporting, feature requesting, or any questions.
 
 ---
 
@@ -196,8 +196,8 @@ For those who would like to contribute to the library, see [CONTRIBUTING.md](CON
 
 Thank you! we appreciate your support!
 
-<a href="https://github.com/openvinotoolkit/training_extensions/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=openvinotoolkit/training_extensions" />
+<a href="https://github.com/open-edge-platform/training_extensions/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=open-edge-platform/training_extensions" />
 </a>
 
 ---

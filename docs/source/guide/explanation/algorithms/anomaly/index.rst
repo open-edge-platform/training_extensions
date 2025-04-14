@@ -80,11 +80,11 @@ As mentioned above, the goal of visual anomaly detection is to learn a represent
 +--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
 | Name   | Recipe                                                                                                            | Complexity (GFLOPs)  | Model size (MB) |
 +========+===================================================================================================================+======================+=================+
-| PADIM  | `padim <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_/padim.yaml>`_ | 3.9                  | 168.4           |
+| PADIM  | `padim <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/anomaly_/padim.yaml>`_ | 3.9                  | 168.4           |
 +--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
-| STFPM  | `stfpm <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_/stfpm.yaml>`_ | 5.6                  | 21.1            |
+| STFPM  | `stfpm <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/anomaly_/stfpm.yaml>`_ | 5.6                  | 21.1            |
 +--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
-| U-Flow | `uflow <https://github.com/openvinotoolkit/training_extensions/blob/develop/src/otx/recipe/anomaly_/uflow.yaml>`_ | 59.6                 | 62.88           |
+| U-Flow | `uflow <https://github.com/open-edge-platform/training_extensions/blob/develop/src/otx/recipe/anomaly_/uflow.yaml>`_ | 59.6                 | 62.88           |
 +--------+-------------------------------------------------------------------------------------------------------------------+----------------------+-----------------+
 
 
