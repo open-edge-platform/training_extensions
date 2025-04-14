@@ -78,13 +78,13 @@ class OTXNativeModelExporter(OTXModelExporter):
                 )
                 exported_model = openvino.convert_model(
                     tmp_dir / (base_model_name + ".onnx"),
-                    input=(openvino.runtime.PartialShape(input_size),),
+                    input=(openvino.PartialShape(input_size),),
                 )
         else:
             exported_model = openvino.convert_model(
                 model,
                 example_input=dummy_tensor,
-                input=(openvino.runtime.PartialShape(input_size),),
+                input=(openvino.PartialShape(input_size),),
             )
         exported_model = self._postprocess_openvino_model(exported_model)
 

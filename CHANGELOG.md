@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Enhancements
+
+- Bump OV and NNCF to 2025.1
+  (https://github.com/open-edge-platform/training_extensions/pull/4334)
+
 ### Bug fixes
 
 - Fix DataInputParams Serialization
