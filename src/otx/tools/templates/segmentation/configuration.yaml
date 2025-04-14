@@ -107,6 +107,7 @@ learning_parameters:
   enable_early_stopping:
     affects_outcome_of: TRAINING
     default_value: true
+    value: true
     description: Early exit from training when validation accuracy isn't changed or decreased for several epochs.
     editable: true
     header: Enable early stopping of the training
@@ -192,6 +193,7 @@ learning_parameters:
   auto_num_workers:
     affects_outcome_of: TRAINING
     default_value: false
+    value: false
     description: Adapt number of workers according to current hardware status automatically.
     editable: true
     header: Enable auto adaptive num_workers
@@ -297,6 +299,7 @@ algo_backend:
   mem_cache_size:
     affects_outcome_of: TRAINING
     default_value: 100000000
+    value: 100000000
     description: Size of memory pool for caching decoded data to load data faster (bytes).
     editable: true
     header: Size of memory pool
@@ -313,6 +316,7 @@ algo_backend:
   storage_cache_scheme:
     affects_outcome_of: TRAINING
     default_value: NONE
+    value: NONE
     description: Scheme for storage cache
     editable: true
     enum_name: StorageCacheScheme

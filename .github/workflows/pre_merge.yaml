@@ -97,7 +97,7 @@ jobs:
           - task: "multi_class_cls"
           - task: "multi_label_cls"
           - task: "h_label_cls"
-          - task: "anomaly"
+          - task: "anomaly_classification"
           - task: "keypoint_detection"
           - task: "detection"
           - task: "instance_segmentation"

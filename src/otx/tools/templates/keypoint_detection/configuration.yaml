@@ -143,6 +143,7 @@ learning_parameters:
   enable_early_stopping:
     affects_outcome_of: TRAINING
     default_value: true
+    value: true
     description: Early exit from training when validation accuracy is not changed or decreased for several epochs.
     editable: true
     header: Enable early stopping of the training
@@ -189,6 +190,7 @@ learning_parameters:
   use_adaptive_interval:
     affects_outcome_of: TRAINING
     default_value: true
+    value: true
     description: Depending on the size of iteration per epoch, adaptively update the validation interval and related values.
     editable: true
     header: Use adaptive validation interval
@@ -226,6 +228,7 @@ learning_parameters:
   auto_num_workers:
     affects_outcome_of: TRAINING
     default_value: false
+    value: false
     description: Adapt number of workers according to current hardware status automatically.
     editable: true
     header: Enable auto adaptive num_workers
@@ -451,7 +454,7 @@ algo_backend:
       operator: AND
       rules: []
       type: UI_RULES
-    value: true
+    value: false
     visible_in_ui: false
     warning: null
   type: PARAMETER_GROUP

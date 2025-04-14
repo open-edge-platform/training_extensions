@@ -37,7 +37,7 @@ jobs:
 
       - name: Extract, Validate, and Run Integration Test
         run: |
-          ALLOWED_TASKS=("all" "detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
+          ALLOWED_TASKS=("all" "detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly_classification" "keypoint_detection")
 
           # Ensure comment starts with "/run " and extract task name
           if [[ "$COMMENT_BODY" =~ ^/run\ ([a-zA-Z0-9_-]+)$ ]]; then
