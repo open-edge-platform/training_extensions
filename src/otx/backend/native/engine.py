@@ -20,6 +20,7 @@ import torch
 from lightning import Trainer, seed_everything
 from lightning.pytorch.plugins.precision import MixedPrecision
 
+from otx.backend.native.utils import adapt_batch_size
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
@@ -34,7 +35,6 @@ from otx.engine.engine import Engine
 from otx.utils.device import is_xpu_available
 from otx.utils.utils import measure_flops
 
-from .adaptive_bs import adapt_batch_size
 from .utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
 if TYPE_CHECKING:
