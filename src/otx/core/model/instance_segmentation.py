@@ -13,7 +13,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 
 import torch
-import numpy as np
 from model_api.tilers import InstanceSegmentationTiler
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
@@ -321,12 +320,12 @@ class OTXInstanceSegModel(OTXModel):
         """
         pred_info = []
         target_info = []
-        for i in range(len(preds.imgs_info)):  # type: ignore[arg-type]
-            bboxes = preds.bboxes[i] if preds.bboxes is not None else None
-            masks = preds.masks[i] if preds.masks is not None else None
-            scores = preds.scores[i] if preds.scores is not None else None
-            labels = preds.labels[i] if preds.labels is not None else None
-
+        for bboxes, masks, scores, labels in zip(
+            preds.bboxes,
+            preds.masks,
+            preds.scores,
+            preds.labels,
+        ):
             pred_info.append(
                 {
                     "boxes": bboxes.data,
@@ -335,17 +334,18 @@ class OTXInstanceSegModel(OTXModel):
                     "labels": labels,
                 },
             )
-        for i in range(len(inputs.imgs_info)):  # type: ignore[arg-type]
-            imgs_info = inputs.imgs_info[i] if inputs.imgs_info is not None else None
-            bboxes = inputs.bboxes[i] if inputs.bboxes is not None else None
-            masks = inputs.masks[i] if inputs.masks is not None else None
-            polygons = inputs.polygons[i] if inputs.polygons is not None else None
-            labels = inputs.labels[i] if inputs.labels is not None else None
 
+        for imgs_info, bboxes, masks, polygons, labels in zip(
+            inputs.imgs_info,
+            inputs.bboxes,
+            inputs.masks,
+            inputs.polygons,
+            inputs.labels,
+        ):
             rles = (
                 [encode_rle(mask) for mask in masks.data]
                 if len(masks)
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)  # type: ignore[union-attr,arg-type]
+                else polygon_to_rle(polygons, *imgs_info.ori_shape)
             )
             target_info.append(
                 {
@@ -659,7 +659,7 @@ class OVInstanceSegmentationModel(
         for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
             rles = (
                 [encode_rle(torch.from_numpy(mask)) for mask in _masks[idx]]
-                if _masks is not None and _masks[idx] is not None
+                if _masks is not None and _masks[idx] is not None and len(_masks[idx])
                 else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
             )
             target_info.append(

@@ -315,7 +315,7 @@ class OTXDataset(Dataset):
                 )
 
             if masks is not None:
-                masks=tv_tensors.Mask(masks, dtype=torch.uint8)
+                masks = tv_tensors.Mask(masks, dtype=torch.uint8)
 
             if keypoints is not None:
                 keypoints = torch.as_tensor(keypoints, dtype=torch.float32)

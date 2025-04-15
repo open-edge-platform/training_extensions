@@ -9,11 +9,8 @@ import warnings
 from collections import defaultdict
 
 import numpy as np
-import torch
 from datumaro import Bbox, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
-from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.utils.mask_util import polygon_to_bitmap
@@ -86,7 +83,7 @@ class OTXInstanceSegDataset(OTXDataset):
             warnings.warn(f"No valid annotations found for image {item.id}!", stacklevel=2)
 
         bboxes = np.stack(gt_bboxes, dtype=np.float32, axis=0) if gt_bboxes else np.empty((0, 4))
-        masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((len(gt_labels), *img_shape), dtype=bool)
+        masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((0, *img_shape), dtype=bool)
 
         labels = np.array(gt_labels, dtype=np.int64)
 
