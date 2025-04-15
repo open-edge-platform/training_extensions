@@ -20,13 +20,30 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     name: PR-Comment-Integration-Tests
     steps:
-      - name: Checkout repository
+      - name: Get PR Info
+        id: pr_info
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            core.setOutput('head_ref', pr.head.ref);
+            core.setOutput('head_repo', pr.head.repo.full_name);
+
+      - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.issue.pull_request.head.ref }}
-          repository: ${{ github.event.issue.pull_request.head.repo.full_name }}
+          ref: ${{ steps.pr_info.outputs.head_ref }}
+          repository: ${{ steps.pr_info.outputs.head_repo }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Print current branch
+        run: echo "$(git branch)"
+      
       - name: Install Python
         uses: actions/setup-python@v5
         with:
