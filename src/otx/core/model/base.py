@@ -928,7 +928,6 @@ class OVModel(OTXModel):
 
     def __init__(
         self,
-        model_name: str,
         model_type: str,
         async_inference: bool = True,
         force_cpu: bool = True,
@@ -938,7 +937,6 @@ class OVModel(OTXModel):
         metric: MetricCallable = NullMetricCallable,
         **kwargs,
     ) -> None:
-        self.model_name = model_name
         self.model_type = model_type
         self.force_cpu = force_cpu
         self.async_inference = async_inference

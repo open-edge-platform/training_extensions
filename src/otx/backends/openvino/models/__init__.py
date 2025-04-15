@@ -1,0 +1,7 @@
+from .detection import OVDetectionModel
+from .instance_segmentation import OVInstanceSegmentationModel
+from .keypoint_detection import OVKeypointDetectionModel
+from .multilabel_classification import OVMultilabelClassificationModel
+from .hlabel_classification import OVHlabelClassificationModel
+from .multiclass_classification import OVMulticlassClassificationModel
+from .segmentation import OVSegmentationModel

@@ -16,7 +16,8 @@ from jsonargparse import ArgumentParser, Namespace
 
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel
+from otx.backends.openvino.models.base import OVModel
 from otx.core.types import PathLike
 from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.types.task import OTXTaskType
@@ -71,18 +72,18 @@ TASK_PER_DATA_FORMAT = {
 }
 
 OVMODEL_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: "otx.core.model.multiclass_classification.OVMulticlassClassificationModel",
-    OTXTaskType.MULTI_LABEL_CLS: "otx.core.model.multilabel_classification.OVMultilabelClassificationModel",
-    OTXTaskType.H_LABEL_CLS: "otx.core.model.hlabel_classification.OVHlabelClassificationModel",
-    OTXTaskType.DETECTION: "otx.core.model.detection.OVDetectionModel",
-    OTXTaskType.ROTATED_DETECTION: "otx.core.model.rotated_detection.OVRotatedDetectionModel",
-    OTXTaskType.INSTANCE_SEGMENTATION: "otx.core.model.instance_segmentation.OVInstanceSegmentationModel",
-    OTXTaskType.SEMANTIC_SEGMENTATION: "otx.core.model.segmentation.OVSegmentationModel",
+    OTXTaskType.MULTI_CLASS_CLS: "otx.backends.openvino.multiclass_classification.OVMulticlassClassificationModel",
+    OTXTaskType.MULTI_LABEL_CLS: "otx.backends.openvino.multilabel_classification.OVMultilabelClassificationModel",
+    OTXTaskType.H_LABEL_CLS: "otx.backends.openvino.hlabel_classification.OVHlabelClassificationModel",
+    OTXTaskType.DETECTION: "otx.backends.openvino.detection.OVDetectionModel",
+    OTXTaskType.ROTATED_DETECTION: "otx.backends.openvino.rotated_detection.OVRotatedDetectionModel",
+    OTXTaskType.INSTANCE_SEGMENTATION: "otx.backends.openvino.instance_segmentation.OVInstanceSegmentationModel",
+    OTXTaskType.SEMANTIC_SEGMENTATION: "otx.backends.openvino.segmentation.OVSegmentationModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_SEGMENTATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.KEYPOINT_DETECTION: "otx.core.model.keypoint_detection.OVKeypointDetectionModel",
+    OTXTaskType.KEYPOINT_DETECTION: "otx.backends.openvino.keypoint_detection.OVKeypointDetectionModel",
 }
 
 
@@ -364,7 +365,7 @@ class AutoConfigurator:
 
         return None
 
-    def get_ov_model(self, model_name: str, label_info: LabelInfo) -> OVModel:
+    def get_ov_model(self, model_name: str) -> OVModel:
         """Retrieves the OVModel instance based on the given model name and label information.
 
         Args:
@@ -386,7 +387,6 @@ class AutoConfigurator:
         ov_model = getattr(module, class_name)
         return ov_model(
             model_name=model_name,
-            num_classes=label_info.num_classes,
         )
 
     def update_ov_subset_pipeline(self, datamodule: OTXDataModule, subset: str = "test") -> OTXDataModule:
