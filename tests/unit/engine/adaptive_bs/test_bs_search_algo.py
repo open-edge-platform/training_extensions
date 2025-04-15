@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from otx.backend.native.engine.adaptive_bs import bs_search_algo as target_file
-from otx.backend.native.engine.adaptive_bs.bs_search_algo import (
+from otx.backend.native.utils.adaptive_bs import algorithm as target_file
+from otx.backend.native.utils.adaptive_bs.algorithm import (
     BsSearchAlgo,
     _get_max_memory_reserved,
     _get_total_memory_size,

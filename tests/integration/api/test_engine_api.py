@@ -10,7 +10,7 @@ from datumaro import Dataset as DmDataset
 from model_api.tilers import Tiler
 
 from otx.backend.native.engine import OTXEngine
-from otx.backend.native.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
+from otx.backend.native.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType

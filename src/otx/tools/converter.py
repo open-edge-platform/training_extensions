@@ -15,7 +15,7 @@ from warnings import warn
 from jsonargparse import ArgumentParser, Namespace
 
 from otx.backend.native.engine import OTXEngine
-from otx.backend.native.engine.utils.auto_configurator import AutoConfigurator
+from otx.backend.native.utils.auto_configurator import AutoConfigurator
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import DataInputParams, OTXModel

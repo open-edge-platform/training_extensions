@@ -291,7 +291,7 @@ class OTXCLI:
             task = sys.argv[sys.argv.index("--task") + 1]
         enable_auto_config = data_root is not None and "--config" not in sys.argv
         if enable_auto_config:
-            from otx.backend.native.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
+            from otx.backend.native.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
             auto_configurator = AutoConfigurator(
                 data_root=data_root,
@@ -526,7 +526,7 @@ class OTXCLI:
         """
         self.console.print(f"[blue]{OTX_LOGO}[/blue] ver.{__version__}", justify="center")
         if self.subcommand == "find":
-            from otx.backend.native.engine.utils.api import list_models
+            from otx.backend.native.cli.utils import list_models
 
             list_models(print_table=True, **self.config[self.subcommand])
         elif self.subcommand in self.engine_subcommands():

@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 import torch
 
-from otx.backend.native.engine.utils import auto_configurator as target_file
-from otx.backend.native.engine.utils.auto_configurator import (
+from otx.backend.native.utils import auto_configurator as target_file
+from otx.backend.native.utils.auto_configurator import (
     DEFAULT_CONFIG_PER_TASK,
     AutoConfigurator,
     configure_task,
