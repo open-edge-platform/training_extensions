@@ -1,7 +1,7 @@
 model:
   class_path: otx.algo.classification.hlabel_models.timm_model.TimmModelHLabelCls
   init_args:
-    model_name: mobilenetv4_medium_conv
+    model_name: mobilenetv4_conv_medium.e500_r224_in1k
 
     optimizer:
       class_path: torch.optim.SGD
