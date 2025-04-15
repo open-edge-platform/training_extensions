@@ -7,6 +7,7 @@ mem_cache_img_max_size: null
 image_color_channel: RGB
 data_format: coco_instances
 unannotated_items_ratio: 0.0
+collate_mode: torch
 train_subset:
   subset_name: train
   transform_lib_type: TORCHVISION

@@ -12,13 +12,16 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Literal, Union
 
 import cv2
 import numpy as np
+import torch
 from datumaro.components.annotation import AnnotationType
 from datumaro.components.media import ImageFromFile
 from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
 from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
 from torch.utils.data import Dataset
+from torchvision import tv_tensors
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
-from otx.core.data.entity.base import T_OTXDataEntity
+from otx.core.data.entity.base import ImageInfo, T_OTXDataEntity
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
@@ -87,6 +90,7 @@ class OTXDataset(Dataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        collate_mode: Literal["torch", "numpy"] = "torch",
     ) -> None:
         self.dm_subset = dm_subset
         self.transforms = transforms
@@ -259,12 +263,97 @@ class OTXDataset(Dataset):
     def _get_item_impl(self, idx: int) -> TorchDataItem | None:
         pass
 
-    def _get_collate_fn(self) -> Callable:
+    def get_collate_fn(self) -> Callable:
         """Get collate function based on mode and stack_images flag."""
         if self.collate_mode == "torch":
             return TorchDataItem.collate_fn
         if self.collate_mode == "numpy":
             return NumpyDataItem.collate_fn
+
+        msg = f"Invalid collate mode: {self.collate_mode}"
+        raise ValueError(msg)
+
+    def postprocess(
+        self,
+        image: np.ndarray,
+        img_info: ImageInfo,
+        label: np.ndarray | None = None,
+        bboxes: np.ndarray | None = None,
+        masks: np.ndarray | None = None,
+        polygons: list[dict[str, Any]] | None = None,
+        keypoints: np.ndarray | None = None,
+    ) -> T_OTXDataEntity:
+        """Postprocess the data item.
+
+        This function converts the data item to the appropriate format and applies
+        the necessary transformations if needed.
+
+        Args:
+            image: Image data.
+            label: Label data.
+            masks: Mask data.
+            bboxes: Bounding box data.
+            keypoints: Keypoint data.
+            polygons: Polygon data.
+            img_info: Image information.
+
+        Returns:
+            A data item with the provided data.
+        """
+        if self.collate_mode == "torch":
+            image = to_dtype(to_image(image), torch.float32)
+
+            if label is not None:
+                label = torch.as_tensor(label, dtype=torch.long)
+
+            if bboxes is not None:
+                bboxes = tv_tensors.BoundingBoxes(
+                    bboxes,
+                    format=tv_tensors.BoundingBoxFormat.XYXY,
+                    canvas_size=img_info.img_shape,
+                    dtype=torch.float32,
+                )
+
+            if masks is not None:
+                masks=tv_tensors.Mask(masks, dtype=torch.uint8)
+
+            if keypoints is not None:
+                keypoints = torch.as_tensor(keypoints, dtype=torch.float32)
+
+            entity = TorchDataItem(
+                image=image,
+                label=label,
+                masks=masks,
+                bboxes=bboxes,
+                keypoints=keypoints,
+                polygons=polygons,
+                img_info=img_info,
+            )
+            return self._apply_transforms(entity)
+
+        if self.collate_mode == "numpy":
+            image = image.astype(np.float32)
+            if label is not None:
+                label = np.array(label, dtype=np.int32)
+
+            if bboxes is not None:
+                bboxes = np.array(bboxes, dtype=np.float32)
+
+            if masks is not None:
+                masks = np.array(masks, dtype=np.uint8)
+
+            if keypoints is not None:
+                keypoints = np.array(keypoints, dtype=np.float32)
+
+            return NumpyDataItem(
+                image=image,
+                label=label,
+                masks=masks,
+                bboxes=bboxes,
+                keypoints=keypoints,
+                polygons=polygons,
+                img_info=img_info,
+            )
 
         msg = f"Invalid collate mode: {self.collate_mode}"
         raise ValueError(msg)

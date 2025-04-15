@@ -431,4 +431,5 @@ class AutoConfigurator:
             unannotated_items_ratio=datamodule.unannotated_items_ratio,
             auto_num_workers=datamodule.auto_num_workers,
             device=datamodule.device,
+            collate_mode=ov_config["collate_mode"],
         )

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
@@ -84,6 +84,7 @@ class OTXDataModule(LightningDataModule):
         device: DeviceType = DeviceType.auto,
         input_size: tuple[int, int] | str = "auto",
         input_size_multiplier: int = 1,
+        collate_mode: Literal["torch", "numpy"] = "torch",
     ) -> None:
         """Constructor."""
         super().__init__()
@@ -207,6 +208,7 @@ class OTXDataModule(LightningDataModule):
                 image_color_channel=image_color_channel,
                 include_polygons=include_polygons,
                 ignore_index=ignore_index,
+                collate_mode=collate_mode,
             )
 
             if self.tile_config.enable_tiler:
@@ -246,7 +248,7 @@ class OTXDataModule(LightningDataModule):
             "batch_size": config.batch_size,
             "num_workers": config.num_workers,
             "pin_memory": True,
-            "collate_fn": dataset.collate_fn,
+            "collate_fn": dataset.get_collate_fn(),
             "persistent_workers": config.num_workers > 0,
             "sampler": sampler,
             "shuffle": sampler is None,
@@ -275,7 +277,7 @@ class OTXDataModule(LightningDataModule):
             shuffle=False,
             num_workers=config.num_workers,
             pin_memory=True,
-            collate_fn=dataset.collate_fn,
+            collate_fn=dataset.get_collate_fn(),
             persistent_workers=config.num_workers > 0,
         )
 
@@ -290,7 +292,7 @@ class OTXDataModule(LightningDataModule):
             shuffle=False,
             num_workers=config.num_workers,
             pin_memory=True,
-            collate_fn=dataset.collate_fn,
+            collate_fn=dataset.get_collate_fn(),
             persistent_workers=config.num_workers > 0,
         )
 
@@ -305,7 +307,7 @@ class OTXDataModule(LightningDataModule):
             shuffle=False,
             num_workers=config.num_workers,
             pin_memory=True,
-            collate_fn=dataset.collate_fn,
+            collate_fn=dataset.get_collate_fn(),
             persistent_workers=config.num_workers > 0,
         )
 

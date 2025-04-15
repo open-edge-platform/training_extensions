@@ -21,6 +21,7 @@ overrides:
     - data.test_subset.transforms
 
   data:
+    collate_mode: numpy
     train_subset:
       to_tv_image: true
       transforms:

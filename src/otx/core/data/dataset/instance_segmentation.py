@@ -90,8 +90,12 @@ class OTXInstanceSegDataset(OTXDataset):
 
         labels = np.array(gt_labels, dtype=np.int64)
 
-        entity = TorchDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
+        return self.postprocess(
+            image=img_data,
+            label=labels,
+            bboxes=bboxes,
+            masks=masks,
+            polygons=gt_polygons if len(gt_polygons) > 0 else None,
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
@@ -99,15 +103,4 @@ class OTXInstanceSegDataset(OTXDataset):
                 image_color_channel=self.image_color_channel,
                 ignored_labels=ignored_labels,
             ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-                dtype=torch.float32,
-            ),
-            masks=tv_tensors.Mask(masks, dtype=torch.uint8),
-            label=torch.as_tensor(labels, dtype=torch.long),
-            polygons=gt_polygons if len(gt_polygons) > 0 else None,
         )
-
-        return self._apply_transforms(entity)  # type: ignore[return-value]

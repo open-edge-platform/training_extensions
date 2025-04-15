@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 
 import torch
+import numpy as np
 from model_api.tilers import InstanceSegmentationTiler
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
@@ -37,6 +38,7 @@ from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
 from otx.core.utils.tile_merge import InstanceSegTileMerge
 from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data.numpy import NumpyDataBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -171,7 +173,6 @@ class OTXInstanceSegModel(OTXModel):
 
             return TorchPredBatch(
                 batch_size=len(predictions),
-                images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
@@ -183,7 +184,6 @@ class OTXInstanceSegModel(OTXModel):
 
         return TorchPredBatch(
             batch_size=len(predictions),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
             bboxes=bboxes,
@@ -567,7 +567,7 @@ class OVInstanceSegmentationModel(
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> TorchPredBatch | OTXBatchLossEntity:
         # add label index
         bboxes = []
@@ -604,7 +604,6 @@ class OVInstanceSegmentationModel(
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return TorchPredBatch(
                 batch_size=len(outputs),
-                images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
@@ -616,7 +615,6 @@ class OVInstanceSegmentationModel(
 
         return TorchPredBatch(
             batch_size=len(outputs),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
             bboxes=bboxes,
@@ -627,7 +625,7 @@ class OVInstanceSegmentationModel(
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: TorchPredBatch,  # type: ignore[override]
-        inputs: TorchDataBatch,  # type: ignore[override]
+        inputs: NumpyDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
@@ -635,7 +633,7 @@ class OVInstanceSegmentationModel(
 
         Args:
             preds (TorchPredBatch): Current batch predictions.
-            inputs (TorchDataBatch): Current batch ground-truth inputs.
+            inputs (NumpyDataBatch): Current batch ground-truth inputs.
 
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
@@ -660,15 +658,15 @@ class OVInstanceSegmentationModel(
         _masks = inputs.masks if inputs.masks is not None else None
         for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
             rles = (
-                [encode_rle(mask) for mask in _masks[idx].data]
+                [encode_rle(torch.from_numpy(mask)) for mask in _masks[idx]]
                 if _masks is not None and _masks[idx] is not None
                 else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
             )
             target_info.append(
                 {
-                    "boxes": _bboxes[idx].data if _bboxes is not None else torch.empty((0, 4)),
+                    "boxes": torch.from_numpy(_bboxes[idx]) if _bboxes is not None else torch.empty((0, 4)),
                     "masks": rles,
-                    "labels": inputs.labels[idx],  # type: ignore[index]
+                    "labels": torch.from_numpy(inputs.labels[idx]),  # type: ignore[index]
                 },
             )
         return {"preds": pred_info, "target": target_info}

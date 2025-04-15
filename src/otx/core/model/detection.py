@@ -30,6 +30,7 @@ from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
 from otx.core.utils.tile_merge import DetectionTileMerge
 from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data.numpy import NumpyDataBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -569,7 +570,7 @@ class OVDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectionResult],
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> TorchPredBatch | OTXBatchLossEntity:
         # add label index
         bboxes = []
@@ -619,7 +620,6 @@ class OVDetectionModel(OVModel):
 
         return TorchPredBatch(
             batch_size=len(outputs),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
             bboxes=bboxes,
@@ -629,7 +629,7 @@ class OVDetectionModel(OVModel):
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: TorchPredBatch,  # type: ignore[override]
-        inputs: TorchDataBatch,  # type: ignore[override]
+        inputs: NumpyDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         return {
             "preds": [
@@ -642,8 +642,8 @@ class OVDetectionModel(OVModel):
             ],
             "target": [
                 {
-                    "boxes": bboxes.data,
-                    "labels": labels,
+                    "boxes": torch.from_numpy(bboxes),
+                    "labels": torch.from_numpy(labels),
                 }
                 for bboxes, labels in zip(inputs.bboxes, inputs.labels)  # type: ignore[arg-type]
             ],

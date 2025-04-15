@@ -77,12 +77,3 @@ class NumpyDataBatch:
     keypoints: list[np.ndarray] | None = None
     polygons: list[list[Polygon]] | None = None
     imgs_info: Sequence[ImageInfo | None] | None = None
-
-
-@dataclass
-class NumpyPredBatch(NumpyDataBatch):
-    """Numpy data item batch implementation."""
-
-    scores: list[np.ndarray] | None = None
-    feature_vector: list[np.ndarray] | None = None
-    saliency_map: list[np.ndarray] | None = None

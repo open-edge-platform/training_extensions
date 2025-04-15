@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.task import OTXTaskType
@@ -52,6 +52,7 @@ class OTXDatasetFactory:
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         include_polygons: bool = False,
         ignore_index: int = 255,
+        collate_mode: Literal["torch", "numpy"] = "torch",
     ) -> OTXDataset:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
@@ -63,6 +64,7 @@ class OTXDatasetFactory:
             "mem_cache_img_max_size": mem_cache_img_max_size,
             "image_color_channel": image_color_channel,
             "to_tv_image": cfg_subset.to_tv_image,
+            "collate_mode": collate_mode,
         }
 
         if task in (

@@ -6,10 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
-import torch
 from datumaro import Bbox, Image
-from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.data import TorchDataItem
@@ -34,22 +31,19 @@ class OTXDetectionDataset(OTXDataset):
             else np.zeros((0, 4), dtype=np.float32)
         )
 
-        entity = TorchDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-                dtype=torch.float32,
-            ),
-            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
+        labels = np.array([ann.label for ann in bbox_anns], dtype=np.int32)
+
+        img_info = ImageInfo(
+            img_idx=index,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+            image_color_channel=self.image_color_channel,
+            ignored_labels=ignored_labels,
         )
 
-        return self._apply_transforms(entity)
+        return self.postprocess(
+            image=img_data,
+            label=labels,
+            bboxes=bboxes,
+            img_info=img_info,
+        )

@@ -15,7 +15,6 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
-import numpy as np
 import openvino
 import torch
 from datumaro import LabelCategories
@@ -57,6 +56,7 @@ from otx.data.torch import TorchDataBatch, TorchPredBatch
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import numpy as np
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from lightning.pytorch.utilities.types import LRSchedulerTypeUnion, OptimizerLRScheduler
     from model_api.adapters import OpenvinoAdapter
@@ -1014,8 +1014,7 @@ class OVModel(OTXModel):
 
     def _customize_inputs(self, entity: T_OTXBatchDataEntity) -> dict[str, Any]:
         # restore original numpy image
-        images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
-        return {"inputs": images}
+        return {"inputs": entity.images}
 
     def _forward(self, inputs: T_OTXBatchDataEntity) -> T_OTXBatchPredEntity:
         """Model forward function."""

@@ -42,7 +42,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
         img_info (ImageInfo | None): Additional image information, optional.
     """
 
-    image: torch.Tensor
+    image: torch.Tensor | None = None
     label: torch.Tensor | None = None
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
@@ -93,7 +93,7 @@ class TorchDataBatch(ValidateBatchMixin):
     """Torch data item batch implementation."""
 
     batch_size: int  # TODO(ashwinvaidya17): Remove this
-    images: torch.Tensor | list[torch.Tensor]
+    images: torch.Tensor | list[torch.Tensor] | None = None
     labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
