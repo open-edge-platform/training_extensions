@@ -22,6 +22,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.issue.pull_request.head.ref }}
+          repository: ${{ github.event.issue.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Python
         uses: actions/setup-python@v5
@@ -36,6 +40,7 @@ jobs:
           rm /tmp/requirements.txt
 
       - name: Extract, Validate, and Run Integration Test
+        id: tests
         run: |
           ALLOWED_TASKS=("all" "detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly_classification" "keypoint_detection")
 
