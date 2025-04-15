@@ -1,10 +1,15 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from collections import defaultdict
+from pathlib import Path
+
 import pytest
 import torch
+import yaml
 from datumaro import Polygon
+from omegaconf import OmegaConf
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
@@ -14,6 +19,7 @@ from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
+from otx.tools.converter import TEMPLATE_ID_DICT
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
@@ -466,3 +472,88 @@ def fxt_export_list() -> list[ExportCase2Test]:
         ExportCase2Test("OPENVINO", False, "exported_model.xml"),
         ExportCase2Test("OPENVINO", True, "exportable_code.zip"),
     ]
+
+
+def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskType, list[dict]]:
+    """Get model template paths from the templates directory.
+
+    Args:
+        model_category_only (bool): If True, only return templates with model categories.
+
+    Returns:
+        dict: A dictionary mapping task types to lists of template paths and tiling options.
+    """
+
+    from otx import __file__ as otx_init_path
+
+    template_dir = Path(otx_init_path).parent / "tools" / "templates"
+    template_paths = template_dir.rglob("template.yaml")
+    template_dict = defaultdict(list)
+
+    for template_path in template_paths:
+        with template_path.open() as file:
+            template = yaml.safe_load(file)
+
+        model_id = template.get("model_template_id")
+        if not model_id or model_id not in TEMPLATE_ID_DICT:
+            continue
+
+        model_info = TEMPLATE_ID_DICT[model_id]
+        model_task = model_info["task"]
+
+        if model_category_only and "model_category" not in template:
+            continue
+
+        base_config_path = template_path.parent / template["hyper_parameters"]["base_path"]
+        base_config = OmegaConf.load(base_config_path)
+
+        has_tiling = "tiling_parameters" in base_config
+
+        # Add base (no-tiling)
+        template_dict[model_task].append(
+            {
+                "template_path": template_path,
+                "tiling": False,
+            },
+        )
+
+        # Add tiling version if available
+        if has_tiling:
+            template_dict[model_task].append(
+                {
+                    "template_path": template_path,
+                    "tiling": True,
+                },
+            )
+
+    # Alias multi-class template for multi-label and hierarchical
+    if OTXTaskType.MULTI_CLASS_CLS in template_dict:
+        template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
+        template_dict[OTXTaskType.H_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
+
+    return template_dict
+
+
+def pytest_generate_tests(metafunc):
+    """Generate tests based on the task templates stored under src/otx/tools/templates."""
+    if "task_template" in metafunc.fixturenames:
+        task_name = metafunc.config.getoption("task")
+        model_category_only = metafunc.config.getoption("run_category_only")
+        template_dict = get_model_template_paths(model_category_only)
+
+        params = []
+        if task_name.lower() == "all":
+            params = [
+                (task, entry["template_path"], entry["tiling"])
+                for task, entries in template_dict.items()
+                for entry in entries
+            ]
+        else:
+            task_enum = OTXTaskType(task_name.upper())
+            params = [
+                (task_enum, entry["template_path"], entry["tiling"]) for entry in template_dict.get(task_enum, [])
+            ]
+
+        ids = [f"{task.name}/{path.parent.name}" + ("/tiling" if tiling else "") for task, path, tiling in params]
+
+        metafunc.parametrize("task_template", params, ids=ids)
