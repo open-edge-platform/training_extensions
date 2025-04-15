@@ -51,7 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - task: anomaly
+          - task: anomaly_classification
           - task: detection
           - task: multi_class_cls
           - task: multi_label_cls
