@@ -265,7 +265,7 @@ class OTXDataModule(LightningDataModule):
             "batch_size": config.batch_size,
             "num_workers": config.num_workers,
             "pin_memory": True,
-            "collate_fn": dataset.get_collate_fn(),
+            "collate_fn": dataset.collate_fn,
             "persistent_workers": config.num_workers > 0,
             "sampler": sampler,
             "shuffle": sampler is None,
@@ -294,7 +294,7 @@ class OTXDataModule(LightningDataModule):
             shuffle=False,
             num_workers=config.num_workers,
             pin_memory=True,
-            collate_fn=dataset.get_collate_fn(),
+            collate_fn=dataset.collate_fn,
             persistent_workers=config.num_workers > 0,
         )
 
@@ -309,7 +309,7 @@ class OTXDataModule(LightningDataModule):
             shuffle=False,
             num_workers=config.num_workers,
             pin_memory=True,
-            collate_fn=dataset.get_collate_fn(),
+            collate_fn=dataset.collate_fn,
             persistent_workers=config.num_workers > 0,
         )
 

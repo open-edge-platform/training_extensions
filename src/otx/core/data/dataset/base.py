@@ -262,7 +262,8 @@ class OTXDataset(Dataset):
     def _get_item_impl(self, idx: int) -> TorchDataItem | None:
         pass
 
-    def get_collate_fn(self) -> Callable:
+    @property
+    def collate_fn(self) -> Callable:
         """Get collate function based on the collate mode. Used in PyTorch Lightning Dataloaders."""
         if self.collate_mode is CollateMode.Torch:
             return TorchDataItem.collate_fn
