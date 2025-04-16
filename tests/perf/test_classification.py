@@ -39,7 +39,7 @@ class TestPerfSingleLabelClassification(PerfTestBase):
         Benchmark.Model(task="classification/multi_class_cls", name="tv_mobilenet_v3_small", category="other"),
     ]
 
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         Benchmark.Dataset(
             name="multiclass_tiny_pneumonia",
             path=Path("multiclass_classification/mcls_tiny_pneumonia_12_6_200"),
@@ -82,7 +82,6 @@ class TestPerfSingleLabelClassification(PerfTestBase):
             num_repeat=5,
             extra_overrides={},
         ),
-
     ]
 
     BENCHMARK_CRITERIA = [  # noqa: RUF012
@@ -138,7 +137,7 @@ class TestPerfMultiLabelClassification(PerfTestBase):
         Benchmark.Model(task="classification/multi_label_cls", name="deit_tiny", category="other"),
     ]
 
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         Benchmark.Dataset(
             name="multilabel_tiny_bccd",
             path=Path("multilabel_classification/mlabel_tiny_bccd_24_6_100"),
@@ -222,7 +221,7 @@ class TestPerfHierarchicalLabelClassification(PerfTestBase):
         Benchmark.Model(task="classification/h_label_cls", name="deit_tiny", category="other"),
     ]
 
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         Benchmark.Dataset(
             name="hlabel_tiny_playingcards",
             path=Path("hlabel_classification/hlabel_tiny_playingcards-2L-6N_36_20_100"),

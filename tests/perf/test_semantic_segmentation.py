@@ -26,7 +26,7 @@ class TestPerfSemanticSegmentation(PerfTestBase):
         Benchmark.Model(task="semantic_segmentation", name="dino_v2", category="other"),
     ]
 
-    DATASET_TEST_CASES = [
+    DATASET_TEST_CASES = [  # noqa: RUF012
         Benchmark.Dataset(
             name="tiny_human_railway_animal",
             path=Path("semantic_seg/tiny_human_railway_animal_6_6_6"),
