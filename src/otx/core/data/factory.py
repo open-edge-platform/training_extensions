@@ -5,11 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
-from otx.core.types.image import ImageColorChannel
-from otx.core.types.task import OTXTaskType
-from otx.core.types.transformer_libs import TransformLibType
+from otx.core.types import CollateMode, ImageColorChannel, OTXTaskType, TransformLibType
 
 from .dataset.base import OTXDataset, Transforms
 
@@ -52,7 +50,7 @@ class OTXDatasetFactory:
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         include_polygons: bool = False,
         ignore_index: int = 255,
-        collate_mode: Literal["torch", "numpy"] = "torch",
+        collate_mode: CollateMode = CollateMode.Torch,
     ) -> OTXDataset:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)

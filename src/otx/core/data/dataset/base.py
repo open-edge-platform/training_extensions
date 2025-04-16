@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Literal, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
 
 import cv2
 import numpy as np
@@ -24,8 +24,7 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.core.data.entity.base import ImageInfo, T_OTXDataEntity
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
-from otx.core.types.image import ImageColorChannel
-from otx.core.types.label import LabelInfo, NullLabelInfo
+from otx.core.types import CollateMode, ImageColorChannel, LabelInfo, NullLabelInfo
 from otx.data.numpy import NumpyDataItem
 from otx.data.torch import TorchDataItem
 
@@ -90,7 +89,7 @@ class OTXDataset(Dataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
-        collate_mode: Literal["torch", "numpy"] = "torch",
+        collate_mode: CollateMode = CollateMode.Torch,
     ) -> None:
         self.dm_subset = dm_subset
         self.transforms = transforms
@@ -264,14 +263,112 @@ class OTXDataset(Dataset):
         pass
 
     def get_collate_fn(self) -> Callable:
-        """Get collate function based on mode and stack_images flag."""
-        if self.collate_mode == "torch":
+        """Get collate function based on the collate mode. Used in PyTorch Lightning Dataloaders."""
+        if self.collate_mode is CollateMode.Torch:
             return TorchDataItem.collate_fn
-        if self.collate_mode == "numpy":
+        if self.collate_mode is CollateMode.Numpy:
             return NumpyDataItem.collate_fn
 
         msg = f"Invalid collate mode: {self.collate_mode}"
         raise ValueError(msg)
+
+    def _postprocess_torch(
+        self,
+        image: np.ndarray,
+        img_info: ImageInfo,
+        label: np.ndarray | None,
+        bboxes: np.ndarray | None,
+        masks: np.ndarray | None,
+        polygons: list[dict[str, Any]] | None,
+        keypoints: np.ndarray | None,
+    ) -> TorchDataItem:
+        """Postprocess image and annotations for Torch-based pipeline.
+
+        Converts image and annotation data to appropriate PyTorch and torchvision tensor formats.
+        Wraps everything into a TorchDataItem instance, applying any configured transforms.
+
+        Args:
+            image (np.ndarray): Input image in HWC format (uint8 or float32).
+            img_info (ImageInfo): Metadata about the image (index, shape, etc.).
+            label (np.ndarray | None): Optional classification or detection labels.
+            bboxes (np.ndarray | None): Optional bounding boxes in XYXY format.
+            masks (np.ndarray | None): Optional segmentation masks.
+            polygons (list[dict[str, Any]] | None): Optional polygon annotations.
+            keypoints (np.ndarray | None): Optional keypoints (NxKx2 format).
+
+        Returns:
+            TorchDataItem: Fully constructed PyTorch-compatible data item.
+        """
+        image = to_dtype(to_image(image), torch.float32)
+        label = torch.as_tensor(label, dtype=torch.long) if label is not None else None
+        bboxes = (
+            tv_tensors.BoundingBoxes(
+                bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=img_info.img_shape,
+                dtype=torch.float32,
+            )
+            if bboxes is not None
+            else None
+        )
+        masks = tv_tensors.Mask(masks, dtype=torch.uint8) if masks is not None else None
+        keypoints = torch.as_tensor(keypoints, dtype=torch.float32) if keypoints is not None else None
+
+        entity = TorchDataItem(
+            image=image,
+            label=label,
+            masks=masks,
+            bboxes=bboxes,
+            keypoints=keypoints,
+            polygons=polygons,
+            img_info=img_info,
+        )
+        return self._apply_transforms(entity)
+
+    def _postprocess_numpy(
+        self,
+        image: np.ndarray,
+        img_info: ImageInfo,
+        label: np.ndarray | None,
+        bboxes: np.ndarray | None,
+        masks: np.ndarray | None,
+        polygons: list[dict[str, Any]] | None,
+        keypoints: np.ndarray | None,
+    ) -> NumpyDataItem:
+        """Postprocess image and annotations for NumPy-based pipeline.
+
+        Converts all image and annotation data to NumPy array formats with consistent types.
+        Wraps everything into a NumpyDataItem for inference or visualization tasks.
+
+        **Does not apply any transforms** to the image or annotations.
+
+        Args:
+            image (np.ndarray): Input image in HWC format (uint8 or float32).
+            img_info (ImageInfo): Metadata about the image (index, shape, etc.).
+            label (np.ndarray | None): Optional classification or detection labels.
+            bboxes (np.ndarray | None): Optional bounding boxes in XYXY format.
+            masks (np.ndarray | None): Optional segmentation masks.
+            polygons (list[dict[str, Any]] | None): Optional polygon annotations.
+            keypoints (np.ndarray | None): Optional keypoints (NxKx2 format).
+
+        Returns:
+            NumpyDataItem: Fully constructed NumPy-compatible data item.
+        """
+        image = image.astype(np.float32)
+        label = np.array(label, dtype=np.int64) if label is not None else None
+        bboxes = np.array(bboxes, dtype=np.float32) if bboxes is not None else None
+        masks = np.array(masks, dtype=np.uint8) if masks is not None else None
+        keypoints = np.array(keypoints, dtype=np.float32) if keypoints is not None else None
+
+        return NumpyDataItem(
+            image=image,
+            label=label,
+            masks=masks,
+            bboxes=bboxes,
+            keypoints=keypoints,
+            polygons=polygons,
+            img_info=img_info,
+        )
 
     def postprocess(
         self,
@@ -283,77 +380,27 @@ class OTXDataset(Dataset):
         polygons: list[dict[str, Any]] | None = None,
         keypoints: np.ndarray | None = None,
     ) -> T_OTXDataEntity:
-        """Postprocess the data item.
-
-        This function converts the data item to the appropriate format and applies
-        the necessary transformations if needed.
-
-        Args:
-            image: Image data.
-            label: Label data.
-            masks: Mask data.
-            bboxes: Bounding box data.
-            keypoints: Keypoint data.
-            polygons: Polygon data.
-            img_info: Image information.
-
-        Returns:
-            A data item with the provided data.
-        """
-        if self.collate_mode == "torch":
-            image = to_dtype(to_image(image), torch.float32)
-
-            if label is not None:
-                label = torch.as_tensor(label, dtype=torch.long)
-
-            if bboxes is not None:
-                bboxes = tv_tensors.BoundingBoxes(
-                    bboxes,
-                    format=tv_tensors.BoundingBoxFormat.XYXY,
-                    canvas_size=img_info.img_shape,
-                    dtype=torch.float32,
-                )
-
-            if masks is not None:
-                masks = tv_tensors.Mask(masks, dtype=torch.uint8)
-
-            if keypoints is not None:
-                keypoints = torch.as_tensor(keypoints, dtype=torch.float32)
-
-            entity = TorchDataItem(
-                image=image,
-                label=label,
-                masks=masks,
-                bboxes=bboxes,
-                keypoints=keypoints,
-                polygons=polygons,
-                img_info=img_info,
-            )
-            return self._apply_transforms(entity)
-
-        if self.collate_mode == "numpy":
-            image = image.astype(np.float32)
-            if label is not None:
-                label = np.array(label, dtype=np.int32)
-
-            if bboxes is not None:
-                bboxes = np.array(bboxes, dtype=np.float32)
-
-            if masks is not None:
-                masks = np.array(masks, dtype=np.uint8)
-
-            if keypoints is not None:
-                keypoints = np.array(keypoints, dtype=np.float32)
-
-            return NumpyDataItem(
-                image=image,
-                label=label,
-                masks=masks,
-                bboxes=bboxes,
-                keypoints=keypoints,
-                polygons=polygons,
-                img_info=img_info,
+        """Postprocess and wrap the data into a data entity."""
+        if self.collate_mode is CollateMode.Torch:
+            return self._postprocess_torch(
+                image,
+                img_info,
+                label,
+                bboxes,
+                masks,
+                polygons,
+                keypoints,
             )
 
+        if self.collate_mode is CollateMode.Numpy:
+            return self._postprocess_numpy(
+                image,
+                img_info,
+                label,
+                bboxes,
+                masks,
+                polygons,
+                keypoints,
+            )
         msg = f"Invalid collate mode: {self.collate_mode}"
         raise ValueError(msg)

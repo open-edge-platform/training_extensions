@@ -9,6 +9,11 @@ from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
 
+from .validations import (
+    ValidateBatchMixin,
+    ValidateItemMixin,
+)
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -18,7 +23,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class NumpyDataItem:
+class NumpyDataItem(ValidateItemMixin):
     """Data item for Numpy data."""
 
     image: np.ndarray | None = None
@@ -68,7 +73,9 @@ class NumpyDataItem:
 
 
 @dataclass
-class NumpyDataBatch:
+class NumpyDataBatch(ValidateBatchMixin):
+    """Batch of Numpy data items."""
+
     batch_size: int
     images: np.ndarray | list[np.ndarray] | None = None
     labels: list[np.ndarray] | None = None

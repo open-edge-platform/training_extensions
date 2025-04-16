@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
@@ -23,10 +23,7 @@ from otx.core.data.mem_cache import (
 )
 from otx.core.data.pre_filtering import pre_filtering
 from otx.core.data.utils import adapt_input_size_to_dataset, adapt_tile_config
-from otx.core.types.device import DeviceType
-from otx.core.types.image import ImageColorChannel
-from otx.core.types.label import LabelInfo
-from otx.core.types.task import OTXTaskType
+from otx.core.types import CollateMode, DeviceType, ImageColorChannel, LabelInfo, OTXTaskType
 from otx.core.utils.instantiators import instantiate_sampler
 from otx.core.utils.utils import get_adaptive_num_workers
 
@@ -38,31 +35,51 @@ if TYPE_CHECKING:
 
 
 class OTXDataModule(LightningDataModule):
-    """This class extends the LightningDataModule to provide data handling capabilities for the OTX pipeline.
+    """Extends LightningDataModule to handle data preparation for the OTX pipeline.
 
     Args:
-        task (OTXTaskType): The type of task (e.g., classification, detection).
-        data_format (str): The format of the data (e.g., 'coco', 'voc').
-        data_root (str): The root directory where the data is stored.
-        train_subset (SubsetConfig): Configuration for the training subset.
-        val_subset (SubsetConfig): Configuration for the validation subset.
-        test_subset (SubsetConfig): Configuration for the test subset.
-        tile_config (TileConfig, optional): Configuration for tiling.
-        Defaults to TileConfig(enable_tiler=False).
-        mem_cache_size (str, optional): Size of the memory cache. Defaults to "1GB".
-        mem_cache_img_max_size (tuple[int, int] | None, optional): Maximum size of images in the memory cache.
-        Defaults to None.
-        image_color_channel (ImageColorChannel, optional): Color channel configuration for images.
-        Defaults to ImageColorChannel.RGB.
-        include_polygons (bool, optional): Whether to include polygons in the data. Defaults to False.
-        ignore_index (int, optional): Index to ignore in segmentation tasks. Defaults to 255.
-        unannotated_items_ratio (float, optional): Ratio of unannotated items to include. Defaults to 0.0.
-        auto_num_workers (bool, optional): Whether to automatically determine the number of workers. Defaults to False.
-        device (DeviceType, optional): Device type to use (e.g., 'cpu', 'gpu'). Defaults to DeviceType.auto.
-        input_size (tuple[int, int] | str, optional): Final image or video shape after transformation.
-        Can be "auto" to determine size automatically. Defaults to "auto".
-        input_size_multiplier (int, optional): Multiplier for adaptive input size.
-        Useful for models requiring specific input size multiples. Defaults to 1.
+        task (OTXTaskType):
+            The type of task (e.g., classification, detection).
+        data_format (str):
+            The format of the dataset (e.g., 'coco', 'voc', 'datumaro').
+        data_root (str):
+            Path to the root directory containing the dataset.
+
+        train_subset (SubsetConfig):
+            Configuration for the training subset.
+        val_subset (SubsetConfig):
+            Configuration for the validation subset.
+        test_subset (SubsetConfig):
+            Configuration for the test subset.
+
+        tile_config (TileConfig, optional):
+            Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+
+        mem_cache_size (str, optional):
+            Size of the memory cache. Defaults to "1GB".
+        mem_cache_img_max_size (tuple[int, int] | None, optional):
+            Max image size allowed in memory cache. Defaults to None.
+
+        image_color_channel (ImageColorChannel, optional):
+            Image color channel configuration (e.g., RGB, BGR). Defaults to ImageColorChannel.RGB.
+        include_polygons (bool, optional):
+            Whether to include polygons in the data. Defaults to False.
+        ignore_index (int, optional):
+            Index to ignore for segmentation masks. Defaults to 255.
+        unannotated_items_ratio (float, optional):
+            Ratio of unannotated items to include in the dataset. Defaults to 0.0.
+
+        auto_num_workers (bool, optional):
+            Automatically determine the number of workers. Defaults to False.
+        device (DeviceType, optional):
+            Device type to use (e.g., 'cpu', 'gpu'). Defaults to DeviceType.auto.
+
+        input_size (tuple[int, int] | str, optional):
+            Final input size after transformation. Can be "auto" to infer automatically. Defaults to "auto".
+        input_size_multiplier (int, optional):
+            Multiplier to enforce specific input size multiples (useful for certain models). Defaults to 1.
+        collate_mode (CollateMode, optional):
+            Mode used to collate batches for data loading. Defaults to CollateMode.torch.
     """
 
     def __init__(
@@ -84,7 +101,7 @@ class OTXDataModule(LightningDataModule):
         device: DeviceType = DeviceType.auto,
         input_size: tuple[int, int] | str = "auto",
         input_size_multiplier: int = 1,
-        collate_mode: Literal["torch", "numpy"] = "torch",
+        collate_mode: CollateMode = CollateMode.Torch,
     ) -> None:
         """Constructor."""
         super().__init__()

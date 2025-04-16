@@ -31,7 +31,7 @@ class OTXDetectionDataset(OTXDataset):
             else np.zeros((0, 4), dtype=np.float32)
         )
 
-        labels = np.array([ann.label for ann in bbox_anns], dtype=np.int32)
+        labels = np.array([ann.label for ann in bbox_anns], dtype=np.int64)
 
         img_info = ImageInfo(
             img_idx=index,
