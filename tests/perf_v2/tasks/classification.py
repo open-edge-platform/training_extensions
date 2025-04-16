@@ -52,27 +52,43 @@ MULTI_CLASS_MODEL_TEST_CASES = [
 
 MULTI_CLASS_DATASET_TEST_CASES = [
     DatasetInfo(
-        name=f"multiclass_CUB_small_{idx}",
-        path=Path("multiclass_classification/multiclass_CUB_small") / f"{idx}",
+        name="multiclass_tiny_pneumonia",
+        path=Path("multiclass_classification/mcls_tiny_pneumonia_12_6_200"),
+        group="tiny",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="multiclass_tiny_cub_woodpecker",
+        path=Path("multiclass_classification/mcls_tiny_cub_woodpecker_24_12_200"),
+        group="tiny",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="multiclass_small_flowers",
+        path=Path("multiclass_classification/mcls_small_flowers_60_12_200"),
         group="small",
         extra_overrides={},
-    )
-    for idx in (1, 2, 3)
-] + [
+    ),
     DatasetInfo(
-        name="multiclass_CUB_medium",
-        path=Path("multiclass_classification/multiclass_CUB_medium"),
+        name="multiclass_small_eurosat",
+        path=Path("multiclass_classification/mcls_small_eurosat_80_40_200"),
+        group="small",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="multiclass_medium_resisc",
+        path=Path("multiclass_classification/mcls_medium_resisc_500_100_400"),
         group="medium",
         extra_overrides={},
     ),
     DatasetInfo(
-        name="multiclass_food101_large",
-        path=Path("multiclass_classification/multiclass_food101_large"),
+        name="multiclass_large_cub100",
+        path=Path("multiclass_classification/mcls_large_cub100_3764_900_1200"),
         group="large",
         extra_overrides={},
     ),
-]
 
+]
 
 # ============= Multi-label classification =============
 MULTI_LABEL_MODEL_TEST_CASES = [
@@ -83,27 +99,31 @@ MULTI_LABEL_MODEL_TEST_CASES = [
 ]
 
 MULTI_LABEL_DATASET_TEST_CASES = [
-    DatasetInfo(
-        name=f"multilabel_CUB_small_{idx}",
-        path=Path("multilabel_classification/multilabel_CUB_small") / f"{idx}",
-        group="small",
-        extra_overrides={},
-    )
-    for idx in (1, 2, 3)
-] + [
-    DatasetInfo(
-        name="multilabel_CUB_medium",
-        path=Path("multilabel_classification/multilabel_CUB_medium"),
-        group="medium",
-        extra_overrides={},
-    ),
-    DatasetInfo(
-        name="multilabel_food20_large",
-        path=Path("multilabel_classification/multilabel_food101_large"),
-        group="large",
-        extra_overrides={},
-    ),
-]
+        DatasetInfo(
+            name="multilabel_tiny_bccd",
+            path=Path("multilabel_classification/mlabel_tiny_bccd_24_6_100"),
+            group="tiny",
+            extra_overrides={},
+        ),
+        DatasetInfo(
+            name="multilabel_small_coco",
+            path=Path("multilabel_classification/mlabel_small_coco_80_20_100"),
+            group="small",
+            extra_overrides={},
+        ),
+        DatasetInfo(
+            name="multilabel_medium_edsavehicle",
+            path=Path("multilabel_classification/mlabel_medium_edsavehicle_600_150_200"),
+            group="medium",
+            extra_overrides={},
+        ),
+        DatasetInfo(
+            name="multilabel_large_aid",
+            path=Path("multilabel_classification/mlabel_large_aid_1000_300_300"),
+            group="large",
+            extra_overrides={},
+        ),
+    ]
 
 
 # ============= Hierarchical-label classification =============
@@ -117,18 +137,28 @@ H_LABEL_CLS_MODEL_TEST_CASES = [
 ]
 
 H_LABEL_CLS_DATASET_TEST_CASES = [
-    DatasetInfo(
-        name=f"hlabel_CUB_small_{idx}",
-        path=Path("hlabel_classification/hlabel_CUB_small") / f"{idx}",
-        group="small",
-        extra_overrides={},
-    )
-    for idx in (1, 2, 3)
-] + [
-    DatasetInfo(
-        name="hlabel_CUB_medium",
-        path=Path("hlabel_classification/hlabel_CUB_medium"),
-        group="medium",
-        extra_overrides={},
-    ),
-]
+        DatasetInfo(
+            name="hlabel_tiny_playingcards",
+            path=Path("hlabel_classification/hlabel_tiny_playingcards-2L-6N_36_20_100"),
+            group="tiny",
+            extra_overrides={},
+        ),
+        DatasetInfo(
+            name="hlabel_small_cub",
+            path=Path("hlabel_classification/hlabel_small_cub-3L-6N_72_24_100"),
+            group="small",
+            extra_overrides={},
+        ),
+        DatasetInfo(
+            name="hlabel_medium_stanfordcars",
+            path=Path("hlabel_classification/hlabel_medium_stanfordcars-26N-3L_350_50_200"),
+            group="medium",
+            extra_overrides={},
+        ),
+        DatasetInfo(
+            name="hlabel_large_plantdiseases",
+            path=Path("hlabel_classification/hlabel_large_plantdiseases-32N-5L_1000_300_300"),
+            group="large",
+            extra_overrides={},
+        ),
+    ]
