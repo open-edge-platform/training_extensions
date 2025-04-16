@@ -379,7 +379,7 @@ class OTXDataset(Dataset):
         masks: np.ndarray | None = None,
         polygons: list[dict[str, Any]] | None = None,
         keypoints: np.ndarray | None = None,
-    ) -> T_OTXDataEntity:
+    ) -> TorchDataItem | NumpyDataItem:
         """Postprocess and wrap the data into a data entity."""
         if self.collate_mode is CollateMode.Torch:
             return self._postprocess_torch(
