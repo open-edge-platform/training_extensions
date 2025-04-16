@@ -9,15 +9,14 @@ from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
-import torch
 from datumaro.components.annotation import Bbox, Ellipse, Image, Mask, Polygon, RotatedBbox
-from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
+from otx.core.types.collate import CollateMode
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import SegLabelInfo
+from otx.data.numpy import NumpyDataItem
 from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
@@ -168,6 +167,7 @@ class OTXSegmentationDataset(OTXDataset):
         to_tv_image: bool = True,
         ignore_index: int = 255,
         data_format: str = "",
+        collate_mode: CollateMode = CollateMode.Torch,
     ) -> None:
         super().__init__(
             dm_subset,
@@ -177,7 +177,8 @@ class OTXSegmentationDataset(OTXDataset):
             max_refetch,
             image_color_channel,
             to_tv_image,
-            data_format=data_format,
+            data_format,
+            collate_mode,
         )
         if self.has_polygons:
             # insert background class at index 0 since polygons represent only objects
@@ -200,7 +201,7 @@ class OTXSegmentationDataset(OTXDataset):
             return True
         return False
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
@@ -211,16 +212,16 @@ class OTXSegmentationDataset(OTXDataset):
         if roi_meta:
             extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
 
-        masks = tv_tensors.Mask(extracted_mask[None], dtype=torch.long)
-        entity = TorchDataItem(
-            image=to_dtype(to_image(img_data), dtype=torch.float32),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            masks=masks,
+        img_info = ImageInfo(
+            img_idx=index,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+            image_color_channel=self.image_color_channel,
+            ignored_labels=ignored_labels,
         )
-        return self._apply_transforms(entity)
+
+        return self.postprocess(
+            image=img_data,
+            img_info=img_info,
+            masks=extracted_mask[None],
+        )

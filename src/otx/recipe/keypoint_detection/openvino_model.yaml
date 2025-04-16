@@ -21,6 +21,7 @@ overrides:
     - data.test_subset.transforms
 
   data:
+    collate_mode: Numpy
     train_subset:
       transforms:
         - class_path: torchvision.transforms.v2.ToImage

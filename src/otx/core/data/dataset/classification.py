@@ -5,32 +5,25 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-import torch
+import numpy as np
 from datumaro import Image, Label
 from datumaro.components.annotation import AnnotationType
-from torch.nn import functional
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.base import OTXDataset
 from otx.core.data.entity.base import ImageInfo
 from otx.core.types.label import HLabelInfo
+from otx.data.numpy import NumpyDataItem
 from otx.data.torch import TorchDataItem
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 
 class OTXMulticlassClsDataset(OTXDataset):
     """OTXDataset class for multi-class classification task."""
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         roi = item.attributes.get("roi", None)
         img_data, img_shape, _ = self._get_img_data_and_shape(img, roi)
-        image = to_dtype(to_image(img_data), dtype=torch.float32)
         if roi:
             # extract labels from ROI
             labels_ids = [
@@ -48,22 +41,18 @@ class OTXMulticlassClsDataset(OTXDataset):
             msg = f"Multi-class Classification can't use the multi-label, currently len(labels) = {len(label_anns)}"
             raise ValueError(msg)
 
-        entity = TorchDataItem(
-            image=image,
-            label=torch.as_tensor(label_anns, dtype=torch.long),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-            ),
+        img_info = ImageInfo(
+            img_idx=index,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+            image_color_channel=self.image_color_channel,
         )
-        return self._apply_transforms(entity)
 
-    @property
-    def collate_fn(self) -> Callable:
-        """Collection function to collect MulticlassClsDataEntity into MulticlassClsBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn
+        return self.postprocess(
+            image=img_data,
+            label=label_anns,
+            img_info=img_info,
+        )
 
 
 class OTXMultilabelClsDataset(OTXDataset):
@@ -73,12 +62,11 @@ class OTXMultilabelClsDataset(OTXDataset):
         super().__init__(**kwargs)
         self.num_classes = len(self.dm_subset.categories()[AnnotationType.label])
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        img_data = to_dtype(to_image(img_data), dtype=torch.float32)
 
         label_ids = set()
         for ann in item.annotations:
@@ -94,29 +82,33 @@ class OTXMultilabelClsDataset(OTXDataset):
                 # For Chained Task: Detection (Bbox) -> Classification (Label)
                 label = Label(label=ann.label)
                 label_ids.add(label.label)
-        labels = torch.as_tensor(list(label_ids))
+        labels = np.array(list(label_ids))
 
-        entity = TorchDataItem(
+        img_info = ImageInfo(
+            img_idx=index,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+            image_color_channel=self.image_color_channel,
+            ignored_labels=ignored_labels,
+        )
+
+        return self.postprocess(
             image=img_data,
             label=self._convert_to_onehot(labels, ignored_labels),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
+            img_info=img_info,
         )
-        return self._apply_transforms(entity)
 
-    def _convert_to_onehot(self, labels: torch.tensor, ignored_labels: list[int]) -> torch.tensor:
+    def _convert_to_onehot(self, labels: np.ndarray, ignored_labels: list[int]) -> np.ndarray:
         """Convert label to one-hot vector format."""
-        # Torch's one_hot() expects the input to be of type long
-        # However, when labels are empty, they are of type float32
-        onehot = functional.one_hot(labels.long(), self.num_classes).sum(0).clamp_max_(1)
-        if ignored_labels:
-            for ignore_label in ignored_labels:
-                onehot[ignore_label] = -1
+        onehot = np.zeros(self.num_classes, dtype=np.int64)
+
+        if labels.size > 0:
+            labels = labels.astype(np.int64)
+            onehot[labels] = 1
+
+        for ignore_label in ignored_labels:
+            onehot[ignore_label] = -1
+
         return onehot
 
 
@@ -207,7 +199,6 @@ class OTXHlabelClsDataset(OTXDataset):
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        img_data = to_dtype(to_image(img_data), dtype=torch.float32)
 
         label_ids = set()
         for ann in item.annotations:
@@ -225,19 +216,19 @@ class OTXHlabelClsDataset(OTXDataset):
                 label_ids.add(label.label)
 
         hlabel_labels = self._convert_label_to_hlabel_format([Label(label=idx) for idx in label_ids], ignored_labels)
-
-        entity = TorchDataItem(
-            image=img_data,
-            label=torch.as_tensor(hlabel_labels),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
+        img_info = ImageInfo(
+            img_idx=index,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+            image_color_channel=self.image_color_channel,
+            ignored_labels=ignored_labels,
         )
-        return self._apply_transforms(entity)
+
+        return self.postprocess(
+            image=img_data,
+            label=np.array(hlabel_labels),
+            img_info=img_info,
+        )
 
     def _convert_label_to_hlabel_format(self, label_anns: list[Label], ignored_labels: list[int]) -> list[int]:
         """Convert format of the label to the h-label.

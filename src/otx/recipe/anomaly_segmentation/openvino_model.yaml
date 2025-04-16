@@ -16,6 +16,7 @@ data: ../_base_/data/torchvision_base.yaml
 
 overrides:
   data:
+    collate_mode: Numpy
     task: ANOMALY_SEGMENTATION
     image_color_channel: RGB
     data_format: mvtec

@@ -14,7 +14,8 @@ from datumaro import Dataset as DmDataset
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.utils.mask_util import polygon_to_bitmap
-from otx.data import TorchDataItem
+from otx.data.numpy import NumpyDataItem
+from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset, Transforms
 
@@ -34,7 +35,7 @@ class OTXInstanceSegDataset(OTXDataset):
         super().__init__(dm_subset, transforms, **kwargs)
         self.include_polygons = include_polygons
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []

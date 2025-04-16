@@ -75,7 +75,7 @@ class OTXDataset(Dataset):
         image_color_channel: Color channel of images
         stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
         data_format: Source data format, which was originally passed to datumaro (could be arrow for instance).
-
+        collate_mode: Collate mode for the dataset. Can be either Torch or Numpy.
     """
 
     def __init__(

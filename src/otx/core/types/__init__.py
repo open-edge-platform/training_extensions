@@ -12,13 +12,14 @@ from typing_extensions import TypeAlias
 from .collate import CollateMode
 from .device import DeviceType
 from .image import ImageColorChannel
-from .label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
+from .label import AnomalyLabelInfo, HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from .task import OTXTaskType
 from .transformer_libs import TransformLibType
 
 __all__ = [
     "DeviceType",
     "ImageColorChannel",
+    "AnomalyLabelInfo",
     "LabelInfo",
     "HLabelInfo",
     "SegLabelInfo",

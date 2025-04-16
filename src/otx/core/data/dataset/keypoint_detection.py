@@ -9,16 +9,15 @@ from collections import defaultdict
 from typing import Callable, List, Union
 
 import numpy as np
-import torch
 from datumaro import AnnotationType, Bbox, Dataset, DatasetSubset, Image, Points
-from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.data.transform_libs.torchvision import Compose
+from otx.core.types.collate import CollateMode
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo
+from otx.data.numpy import NumpyDataItem
 from otx.data.torch import TorchDataItem
 
 from .base import OTXDataset
@@ -40,6 +39,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        collate_mode: CollateMode = CollateMode.Torch,
     ) -> None:
         super().__init__(
             dm_subset,
@@ -51,6 +51,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
             stack_images,
             to_tv_image,
             data_format,
+            collate_mode,
         )
 
         self.dm_subset = self._get_single_bbox_dataset(dm_subset)
@@ -88,7 +89,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
             raise ValueError(msg)
         return Dataset.from_iterable(dm_items, categories=self.dm_subset.categories())
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -115,23 +116,19 @@ class OTXKeypointDetectionDataset(OTXDataset):
             else np.minimum(1, keypoints)[..., 0]
         )
         keypoints = np.hstack((keypoints, keypoints_visible.reshape(-1, 1)))
-
-        entity = TorchDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-            ),
-            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
-            keypoints=torch.as_tensor(keypoints, dtype=torch.float32),
+        label = [ann.label for ann in bbox_anns]
+        img_info = ImageInfo(
+            img_idx=index,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+            image_color_channel=self.image_color_channel,
+            ignored_labels=ignored_labels,
         )
 
-        return self._apply_transforms(entity)  # type: ignore[return-value]
+        return self.postprocess(
+            image=img_data,
+            label=label,
+            bboxes=bboxes,
+            keypoints=keypoints,
+            img_info=img_info,
+        )

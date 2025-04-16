@@ -22,7 +22,7 @@ overrides:
     - data.test_subset.transforms
 
   data:
-    stack_images: false
+    collate_mode: Numpy
     train_subset:
       to_tv_image: true
       transforms:

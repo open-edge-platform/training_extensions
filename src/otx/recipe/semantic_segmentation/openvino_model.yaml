@@ -21,6 +21,7 @@ overrides:
     - data.test_subset.transforms
 
   data:
+    collate_mode: Numpy
     train_subset:
       batch_size: 1
       num_workers: 2
