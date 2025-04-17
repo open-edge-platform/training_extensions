@@ -9,7 +9,7 @@ import numpy as np
 from datumaro import Bbox, Image
 
 from otx.core.data.entity.base import ImageInfo
-from otx.data import TorchDataItem
+from otx.data import NumpyDataItem, TorchDataItem
 
 from .base import OTXDataset
 
@@ -17,7 +17,7 @@ from .base import OTXDataset
 class OTXDetectionDataset(OTXDataset):
     """OTXDataset class for detection task."""
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item

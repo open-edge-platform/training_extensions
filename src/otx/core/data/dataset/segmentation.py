@@ -176,9 +176,9 @@ class OTXSegmentationDataset(OTXDataset):
             mem_cache_img_max_size,
             max_refetch,
             image_color_channel,
-            to_tv_image,
-            data_format,
-            collate_mode,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+            collate_mode=collate_mode,
         )
         if self.has_polygons:
             # insert background class at index 0 since polygons represent only objects

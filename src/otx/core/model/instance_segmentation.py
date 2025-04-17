@@ -320,12 +320,11 @@ class OTXInstanceSegModel(OTXModel):
         """
         pred_info = []
         target_info = []
-        for bboxes, masks, scores, labels in zip(
-            preds.bboxes,
-            preds.masks,
-            preds.scores,
-            preds.labels,
-        ):
+        for i in range(len(preds.imgs_info)):  # type: ignore[arg-type]
+            bboxes = preds.bboxes[i] if preds.bboxes is not None else None
+            masks = preds.masks[i] if preds.masks is not None else None
+            scores = preds.scores[i] if preds.scores is not None else None
+            labels = preds.labels[i] if preds.labels is not None else None
             pred_info.append(
                 {
                     "boxes": bboxes.data,
@@ -335,17 +334,16 @@ class OTXInstanceSegModel(OTXModel):
                 },
             )
 
-        for imgs_info, bboxes, masks, polygons, labels in zip(
-            inputs.imgs_info,
-            inputs.bboxes,
-            inputs.masks,
-            inputs.polygons,
-            inputs.labels,
-        ):
+        for i in range(len(inputs.imgs_info)):  # type: ignore[arg-type]
+            imgs_info = inputs.imgs_info[i] if inputs.imgs_info is not None else None
+            bboxes = inputs.bboxes[i] if inputs.bboxes is not None else None
+            masks = inputs.masks[i] if inputs.masks is not None else None
+            polygons = inputs.polygons[i] if inputs.polygons is not None else None
+            labels = inputs.labels[i] if inputs.labels is not None else None
             rles = (
                 [encode_rle(mask) for mask in masks.data]
                 if len(masks)
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)
+                else polygon_to_rle(polygons, *imgs_info.ori_shape)  # type: ignore[arg-type, union-attr]
             )
             target_info.append(
                 {

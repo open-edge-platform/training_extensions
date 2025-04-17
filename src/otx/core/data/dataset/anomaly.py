@@ -19,7 +19,7 @@ from otx.core.data.dataset.base import OTXDataset, Transforms
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types import AnomalyLabelInfo, CollateMode, ImageColorChannel, OTXTaskType
-from otx.data import TorchDataItem
+from otx.data import NumpyDataItem, TorchDataItem
 
 
 class AnomalyLabel(Enum):
@@ -64,7 +64,7 @@ class AnomalyDataset(OTXDataset):
     def _get_item_impl(
         self,
         index: int,
-    ) -> TorchDataItem:
+    ) -> TorchDataItem | NumpyDataItem:
         datumaro_item = self.dm_subset[index]
         img = datumaro_item.media_as(Image)
         # returns image in RGB format if self.image_color_channel is RGB

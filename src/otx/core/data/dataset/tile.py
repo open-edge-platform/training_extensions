@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
     from otx.core.data.dataset.segmentation import OTXSegmentationDataset
     from otx.core.data.entity.base import OTXDataEntity
+    from otx.data.numpy import NumpyDataItem
 
 # ruff: noqa: SLF001
 # NOTE: Disable private-member-access (SLF001).
@@ -316,7 +317,7 @@ class OTXTileDataset(OTXDataset):
         """Collate function from the original dataset."""
         return self._dataset.collate_fn
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         """Get item implementation from the original dataset."""
         return self._dataset._get_item_impl(index)
 

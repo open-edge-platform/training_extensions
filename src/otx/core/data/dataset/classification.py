@@ -194,7 +194,7 @@ class OTXHlabelClsDataset(OTXDataset):
                     )
         label_anns.extend(ancestor_dm_labels)
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> TorchDataItem | NumpyDataItem:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item

@@ -44,7 +44,7 @@ class NumpyDataItem(ValidateItemMixin):
             Batched NumpyDataItems with stacked tensors
         """
         # Implement the collate function for NumpyDataItem
-        if all(item.image.shape == items[0].image.shape for item in items):
+        if all(item.image.shape == items[0].image.shape for item in items):  # type: ignore[union-attr]
             images = np.stack([item.image for item in items])
         else:
             # we need this only in case of OV inference, where no resize

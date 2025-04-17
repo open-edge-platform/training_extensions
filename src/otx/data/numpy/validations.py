@@ -179,7 +179,7 @@ class ValidateBatchMixin:
                 msg = f"Validation for field {field.name} is not implemented"
                 raise NotImplementedError(msg)
             if (value := getattr(self, field.name)) is not None:
-                validators[field.name](value)
+                validators[field.name](value)  # type: ignore[operator]
 
     @staticmethod
     def _images_validator(image_batch: np.ndarray | list[np.ndarray]) -> np.ndarray | list[np.ndarray]:

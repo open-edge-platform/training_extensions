@@ -60,7 +60,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
             Batched TorchDataItems with stacked tensors
         """
         # Check if all images have the same size. TODO(kprokofi): remove this check once OV IR models are moved.
-        if all(item.image.shape == items[0].image.shape for item in items):
+        if all(item.image.shape == items[0].image.shape for item in items):  # type: ignore[union-attr]
             images = torch.stack([item.image for item in items])
         else:
             # we need this only in case of OV inference, where no resize

@@ -115,7 +115,7 @@ class OTXDataset(Dataset):
     def _sample_another_idx(self) -> int:
         return np.random.default_rng().integers(0, len(self))
 
-    def _apply_transforms(self, entity: T_OTXDataEntity | TorchDataItem) -> T_OTXDataEntity | TorchDataItem | None:
+    def _apply_transforms(self, entity: T_OTXDataEntity | TorchDataItem) -> T_OTXDataEntity | TorchDataItem:
         if isinstance(self.transforms, Compose):
             if not isinstance(entity, TorchDataItem) and self.to_tv_image:
                 entity = entity.to_tv_image()
@@ -259,7 +259,7 @@ class OTXDataset(Dataset):
         return resized_img
 
     @abstractmethod
-    def _get_item_impl(self, idx: int) -> TorchDataItem | None:
+    def _get_item_impl(self, idx: int) -> TorchDataItem | NumpyDataItem:
         pass
 
     @property
