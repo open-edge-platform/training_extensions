@@ -43,7 +43,7 @@ jobs:
 
       - name: Print current branch
         run: echo "$(git branch)"
-      
+
       - name: Install Python
         uses: actions/setup-python@v5
         with:
