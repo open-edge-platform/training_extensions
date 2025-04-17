@@ -22,8 +22,7 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install uv
-        run: |
-          pip install uv
+        uses: astral-sh/setup-uv@v5
       - name: Install tox
         run: |
           uv pip install -r .ci/requirements.txt
