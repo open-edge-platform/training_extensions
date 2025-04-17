@@ -23,7 +23,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import NumpyDataBatch, TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -253,7 +253,7 @@ class OVHlabelClassificationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> TorchPredBatch:
         all_pred_labels = []
         all_pred_scores = []
@@ -291,7 +291,6 @@ class OVHlabelClassificationModel(OVModel):
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return TorchPredBatch(
                 batch_size=len(outputs),
-                images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=all_pred_scores,
                 labels=all_pred_labels,
@@ -301,7 +300,6 @@ class OVHlabelClassificationModel(OVModel):
 
         return TorchPredBatch(
             batch_size=len(outputs),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=all_pred_scores,
             labels=all_pred_labels,
@@ -310,7 +308,7 @@ class OVHlabelClassificationModel(OVModel):
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> MetricInput:
         cls_heads_info = self.model.hierarchical_info["cls_heads_info"]
         num_multilabel_classes = cls_heads_info["num_multilabel_classes"]
@@ -323,7 +321,7 @@ class OVHlabelClassificationModel(OVModel):
             pred_result = torch.stack(preds.labels)
         return {
             "preds": pred_result,
-            "target": torch.stack(inputs.labels),
+            "target": torch.stack(torch.from_numpy(inputs.labels)),
         }
 
     def _create_label_info_from_ov_ir(self) -> HLabelInfo:

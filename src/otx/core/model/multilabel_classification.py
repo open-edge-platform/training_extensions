@@ -20,7 +20,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import NumpyDataBatch, TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -203,7 +203,7 @@ class OVMultilabelClassificationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> TorchPredBatch:
         pred_scores = [
             torch.tensor([top_label.confidence for top_label in out.top_labels], device=self.device) for out in outputs
@@ -217,7 +217,6 @@ class OVMultilabelClassificationModel(OVModel):
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return TorchPredBatch(
                 batch_size=len(outputs),
-                images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=pred_scores,
                 labels=[],
@@ -227,7 +226,6 @@ class OVMultilabelClassificationModel(OVModel):
 
         return TorchPredBatch(
             batch_size=len(outputs),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=pred_scores,
             labels=[],
@@ -236,9 +234,9 @@ class OVMultilabelClassificationModel(OVModel):
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> MetricInput:
         return {
             "preds": torch.stack(preds.scores),
-            "target": torch.stack(inputs.labels),
+            "target": torch.stack(torch.from_numpy(inputs.labels)),
         }

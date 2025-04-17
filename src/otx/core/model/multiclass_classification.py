@@ -20,7 +20,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import NumpyDataBatch, TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -214,7 +214,7 @@ class OVMulticlassClassificationModel(
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> TorchPredBatch:
         pred_labels = [torch.tensor(out.top_labels[0].id, dtype=torch.long, device=self.device) for out in outputs]
         pred_scores = [torch.tensor(out.top_labels[0].confidence, device=self.device) for out in outputs]
@@ -227,7 +227,6 @@ class OVMulticlassClassificationModel(
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return TorchPredBatch(
                 batch_size=len(outputs),
-                images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=pred_scores,
                 labels=pred_labels,
@@ -237,7 +236,6 @@ class OVMulticlassClassificationModel(
 
         return TorchPredBatch(
             batch_size=len(outputs),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=pred_scores,
             labels=pred_labels,
@@ -246,10 +244,10 @@ class OVMulticlassClassificationModel(
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels)
-        target = torch.tensor(inputs.labels)
+        target = torch.from_numpy(inputs.labels)
         return {
             "preds": pred,
             "target": target,

@@ -31,7 +31,7 @@ from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
 from otx.core.utils.tile_merge import SegmentationTileMerge
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import NumpyDataBatch, TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -335,7 +335,7 @@ class OVSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ImageResultWithSoftPrediction],
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> TorchPredBatch | OTXBatchLossEntity:
         masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0), device=self.device) for mask in outputs]
         predicted_f_vectors = (
@@ -343,7 +343,6 @@ class OVSegmentationModel(OVModel):
         )
         return TorchPredBatch(
             batch_size=len(outputs),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
             masks=masks,
@@ -353,13 +352,13 @@ class OVSegmentationModel(OVModel):
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: TorchPredBatch,  # type: ignore[override]
-        inputs: TorchDataBatch,  # type: ignore[override]
+        inputs: NumpyDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
             preds (TorchPredBatch): The predicted segmentation batch entity containing predicted masks.
-            inputs (TorchDataBatch): The input segmentation batch entity containing ground truth masks.
+            inputs (NumpyDataBatch): The input segmentation batch entity containing ground truth masks.
 
         Returns:
             MetricInput: A list of dictionaries where each dictionary contains 'preds' and 'target' keys
@@ -376,7 +375,7 @@ class OVSegmentationModel(OVModel):
         return [
             {
                 "preds": pred_mask,
-                "target": target_mask,
+                "target": torch.from_numpy(target_mask),
             }
             for pred_mask, target_mask in zip(preds.masks, inputs.masks)
         ]

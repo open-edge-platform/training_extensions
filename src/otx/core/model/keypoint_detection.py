@@ -18,7 +18,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import NumpyDataBatch, TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -237,7 +237,7 @@ class OVKeypointDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectedKeypoints],
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> TorchPredBatch | OTXBatchLossEntity:
         keypoints = []
         scores = []
@@ -252,7 +252,6 @@ class OVKeypointDetectionModel(OVModel):
 
         return TorchPredBatch(
             batch_size=len(outputs),
-            images=inputs.images,
             imgs_info=inputs.imgs_info,
             keypoints=keypoints,
             scores=scores,
@@ -268,7 +267,7 @@ class OVKeypointDetectionModel(OVModel):
     def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
         preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        inputs: NumpyDataBatch,
     ) -> MetricInput:
         if inputs.keypoints is None:
             msg = "The input ground truth keypoints are not provided."
@@ -292,8 +291,8 @@ class OVKeypointDetectionModel(OVModel):
             ],
             "target": [
                 {
-                    "keypoints": kpt[:, :2],
-                    "keypoints_visible": kpt[:, 2],
+                    "keypoints": torch.from_numpy(kpt[:, :2]),
+                    "keypoints_visible": torch.from_numpy(kpt[:, 2]),
                 }
                 for kpt in inputs.keypoints
             ],

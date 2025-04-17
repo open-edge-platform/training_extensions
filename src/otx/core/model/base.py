@@ -373,7 +373,7 @@ class OTXModel(LightningModule):
     def _convert_pred_entity_to_compute_metric(
         self,
         preds: T_OTXBatchPredEntity | TorchPredBatch,
-        inputs: T_OTXBatchDataEntity | TorchDataBatch,
+        inputs: T_OTXBatchDataEntity,
     ) -> MetricInput:
         """Convert given inputs to a Python dictionary for the metric computation."""
         raise NotImplementedError
