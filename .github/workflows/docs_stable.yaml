@@ -21,12 +21,12 @@ jobs:
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.10"
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
       - name: Install tox
         run: |
-          uv pip install -r .ci/requirements.txt
-          uv pip install --extra=ci_tox pyproject.toml
+          python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
+          pip-compile --generate-hashes --output-file=/tmp/requirements.txt --extra=ci_tox pyproject.toml
+          python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
+          rm /tmp/requirements.txt
       - name: Build-Docs
         run: tox -e build-doc
       - name: Create gh-pages branch
