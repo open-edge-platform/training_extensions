@@ -48,18 +48,18 @@ The development team is continuously extending this [Auto-configuration](https:/
 OpenVINO™ Training Extensions supports the following computer vision tasks:
 
 - **Classification**, including multi-class, multi-label and hierarchical image classification tasks.
-- **Object detection** including rotated bounding box support
+- **Object detection** including rotated bounding box and tiling support
 - **Semantic segmentation** including tiling algorithm support
 - **Instance segmentation** including tiling algorithm support
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
 
 OpenVINO™ Training Extensions provides the following usability features:
 
+- Native **Intel GPUs (XPU) support**. OpenVINO™ Training Extensions can be installed with XPU support to use Intel GPUs for training and testing.
 - [Auto-configuration](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html). OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model to provide the best accuracy/speed trade-off.
 - [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) data frontend: OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
 - **Distributed training** to accelerate the training process when you have multiple GPUs
 - **Mixed-precision training** to save GPUs memory and use larger batch sizes
-- Native **Intel GPUs (XPU) support**. OpenVINO™ Training Extensions can be installed with XPU support to use Intel GPUs for training and testing.
 - **Class incremental learning** to add new classes to the existing model
 ---
 
