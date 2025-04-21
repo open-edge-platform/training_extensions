@@ -30,7 +30,7 @@ Key Features
 OpenVINO™ Training Extensions supports the following computer vision tasks:
 
 - **Classification**, including multi-class, multi-label and hierarchical image classification tasks.
-- **Object detection** including rotated bounding box support
+- **Object detection** including rotated bounding box and tiling support
 - **Semantic segmentation** including tiling algorithm support
 - **Instance segmentation** including tiling algorithm support
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
