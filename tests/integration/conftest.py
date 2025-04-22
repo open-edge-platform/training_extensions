@@ -54,8 +54,8 @@ def get_task_list(task: str) -> list[OTXTaskType]:
         tasks = [OTXTaskType.H_LABEL_CLS]
     elif task == "classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
-    elif task == "anomaly":
-        tasks = [OTXTaskType.ANOMALY]
+    elif task == "anomaly_classification":
+        tasks = [OTXTaskType.ANOMALY_CLASSIFICATION]
     elif task == "keypoint_detection":
         tasks = [OTXTaskType.KEYPOINT_DETECTION]
     else:
@@ -63,7 +63,7 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     return tasks
 
 
-def get_model_category_list(task) -> list[str]:
+def get_model_category_list(task: str, default_model_only: bool = False) -> list[str]:
     """
     Retrieve the list of model categories from `otx/tools/templates`.
 
@@ -73,6 +73,7 @@ def get_model_category_list(task) -> list[str]:
 
     Args:
         task (str): The task for which to retrieve model categories.
+        default_model_only (bool): If True, only include default models. Defaults to False.
 
     Raises:
         FileNotFoundError: If no recipe is found for the specified task.
@@ -93,14 +94,23 @@ def get_model_category_list(task) -> list[str]:
 
     # Extract model categories from templates
     for template_path in template_paths:
-        with Path.open(template_path) as file:
+        with template_path.open() as file:
             template = yaml.safe_load(file)
 
-        if "model_category" in template and "model_template_id" in template:
-            model_id = template["model_template_id"]
-            model_name = TEMPLATE_ID_DICT[model_id]["model_name"]
-            model_task = TEMPLATE_ID_DICT[model_id]["task"]
-            template_dict[model_task].append(model_name)
+        if default_model_only and not template.get("is_default_for_task", False):
+            continue
+
+        model_id = template.get("model_template_id")
+        if not model_id or "model_category" not in template:
+            continue
+
+        model_info = TEMPLATE_ID_DICT.get(model_id)
+        if not model_info:
+            continue
+
+        model_name = model_info["model_name"]
+        model_task = model_info["task"]
+        template_dict[model_task].append(model_name)
 
     # Extend classification categories
     template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
@@ -170,6 +180,7 @@ def pytest_configure(config):
     pytest.TASK_LIST = task_list
     pytest.RECIPE_LIST = target_recipe_list
     pytest.RECIPE_OV_LIST = target_ov_recipe_list
+    pytest.DEFAULT_RECIPE_LIST = get_model_category_list(task, default_model_only=True)
     pytest.TILE_RECIPE_LIST = tile_recipe_list
 
 

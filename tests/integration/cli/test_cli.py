@@ -15,7 +15,7 @@ from tests.utils import ExportCase2Test, run_main
 
 
 @pytest.fixture(
-    params=pytest.RECIPE_LIST,
+    params=pytest.DEFAULT_RECIPE_LIST,
     ids=lambda x: "/".join(Path(x).parts[-2:]),
 )
 def fxt_trained_model(
@@ -25,6 +25,17 @@ def fxt_trained_model(
     request: pytest.FixtureRequest,
     tmp_path,
 ):
+    """This fixture is used to train only balance models.
+
+    It will be used to test the CLI commands.
+
+    Args:
+        fxt_accelerator (str): The accelerator to use for training.
+        fxt_target_dataset_per_task (dict): The target dataset for each task.
+        fxt_open_subprocess (bool): Whether to open a subprocess for the command.
+        request (pytest.FixtureRequest): The request object.
+        tmp_path (Path): The temporary path for storing the training outputs.
+    """
     recipe = request.param
     recipe_split = recipe.split("/")
     model_name = recipe_split[-1].split(".")[0]
