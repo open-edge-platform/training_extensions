@@ -146,7 +146,7 @@ class TestOTXModel:
 class TestOVModel:
     @pytest.fixture()
     def input_batch(self) -> OTXBatchDataEntity:
-        image = [torch.rand(3, 10, 10) for _ in range(3)]
+        image = [np.random.rand(10, 10, 3) for _ in range(3)]
         return OTXBatchDataEntity(3, image, [])
 
     @pytest.fixture()
@@ -162,7 +162,7 @@ class TestOVModel:
         inputs = model._customize_inputs(input_batch)
         assert isinstance(inputs, dict)
         assert "inputs" in inputs
-        assert inputs["inputs"][1].shape == np.transpose(input_batch.images[1].numpy(), (1, 2, 0)).shape
+        assert inputs["inputs"][1].shape == input_batch.images[1].shape
 
     def test_forward(self, model, input_batch, mocker: MockerFixture) -> None:
         model._customize_outputs = lambda x, _: x

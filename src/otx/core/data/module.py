@@ -324,7 +324,7 @@ class OTXDataModule(LightningDataModule):
             shuffle=False,
             num_workers=config.num_workers,
             pin_memory=True,
-            collate_fn=dataset.get_collate_fn(),
+            collate_fn=dataset.collate_fn,
             persistent_workers=config.num_workers > 0,
         )
 
