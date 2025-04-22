@@ -24,7 +24,11 @@ engine:
   task: MULTI_CLASS_CLS
   device: auto
 callback_monitor: val/accuracy
+
+
 data: ../../_base_/data/classification.yaml
+
+
 overrides:
   max_epochs: 90
   callbacks:
