@@ -45,6 +45,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "uv",
     "tox==4.24.2",
     "pre-commit==4.2.0",
     "pylint",
