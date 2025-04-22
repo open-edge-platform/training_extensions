@@ -3,6 +3,7 @@ model:
   init_args:
     model_name: mobilenetv3_large
     label_info: 1000
+    freeze_backbone: False
 
     optimizer:
       class_path: torch.optim.SGD

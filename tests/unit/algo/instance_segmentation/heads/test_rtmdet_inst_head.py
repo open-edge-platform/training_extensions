@@ -9,6 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 import torch
+from datumaro import Polygon
 from torch import nn
 
 from otx.algo.common.utils.assigners import DynamicSoftLabelAssigner
@@ -18,7 +19,7 @@ from otx.algo.common.utils.samplers import PseudoSampler
 from otx.algo.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
 from otx.algo.modules.norm import build_norm_layer
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+from otx.data import TorchDataBatch
 
 
 def set_mock_sampling_results_list(batch_size: int) -> list[Mock]:
@@ -123,9 +124,9 @@ class TestRTMDetInsHead:
         mocker.patch.object(rtmdet_ins_head, "_mask_predict_by_feat_single", return_value=torch.randn(4, 80, 80))
 
         x = (torch.randn(2, 96, 80, 80), torch.randn(2, 96, 40, 40), torch.randn(2, 96, 20, 20))
-        entity = InstanceSegBatchDataEntity(
+        entity = TorchDataBatch(
             batch_size=2,
-            images=[torch.randn(640, 640, 3), torch.randn(640, 640, 3)],
+            images=[torch.randn(3, 640, 640), torch.randn(3, 640, 640)],
             imgs_info=[
                 ImageInfo(0, img_shape=(640, 640), ori_shape=(640, 640)),
                 ImageInfo(1, img_shape=(640, 640), ori_shape=(640, 640)),
@@ -133,7 +134,7 @@ class TestRTMDetInsHead:
             bboxes=[torch.randn(2, 4), torch.randn(3, 4)],
             labels=[torch.randint(0, 3, (2,)), torch.randint(0, 3, (3,))],
             masks=[torch.zeros(2, 640, 640), torch.zeros(3, 640, 640)],
-            polygons=[[[[0, 0], [0, 1], [1, 1], [1, 0]]], [[[0, 0], [0, 1], [1, 1], [1, 0]]]],
+            polygons=[[Polygon(points=[0, 0, 0, 1, 1, 1, 1, 0])], [Polygon(points=[0, 0, 0, 1, 1, 1, 1, 0])]],
         )
 
         results = rtmdet_ins_head.prepare_loss_inputs(x, entity)

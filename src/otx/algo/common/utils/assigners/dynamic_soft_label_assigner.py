@@ -27,7 +27,7 @@ BYTES_PER_FLOAT = 4
 GPU_MEM_LIMIT = 1024**3  # 1 GB memory limit
 
 if TYPE_CHECKING:
-    from otx.algo.utils.mmengine_utils import InstanceData
+    from otx.algo.utils.utils import InstanceData
 
 
 def center_of_mass(masks: Tensor, eps: float = 1e-7) -> Tensor:

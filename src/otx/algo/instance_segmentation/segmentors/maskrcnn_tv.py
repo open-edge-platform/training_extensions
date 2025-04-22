@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Torchvision MaskRCNN model with forward method accepting InstanceSegBatchDataEntity."""
+"""Torchvision MaskRCNN model with forward method accepting TorchDataBatch."""
 
 from __future__ import annotations
 
@@ -25,26 +25,25 @@ from torchvision.models.detection.roi_heads import paste_masks_in_image
 from torchvision.models.resnet import resnet50
 
 if TYPE_CHECKING:
-    from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
+    from otx.data import TorchDataBatch
 
 
 class MaskRCNN(_MaskRCNN):
-    """Torchvision MaskRCNN model with forward method accepting InstanceSegBatchDataEntity."""
+    """Torchvision MaskRCNN model with forward method accepting TorchDataBatch."""
 
-    def forward(self, entity: InstanceSegBatchDataEntity) -> dict[str, Tensor] | list[dict[str, Tensor]]:
-        """Overwrite GeneralizedRCNN forward method to accept InstanceSegBatchDataEntity."""
-        ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]
-        img_shapes = [img_info.img_shape for img_info in entity.imgs_info]
+    def forward(self, entity: TorchDataBatch) -> dict[str, Tensor] | list[dict[str, Tensor]]:
+        """Overwrite GeneralizedRCNN forward method to accept TorchDataBatch."""
+        ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
+        img_shapes = [img_info.img_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
 
         image_list = ImageList(entity.images, img_shapes)
         targets = []
         if self.training:
-            for bboxes, labels, masks, polygons in zip(
-                entity.bboxes,
-                entity.labels,
-                entity.masks,
-                entity.polygons,
-            ):
+            for i in range(len(entity.imgs_info)):  # type: ignore[arg-type]
+                bboxes = entity.bboxes[i] if entity.bboxes is not None else None
+                labels = entity.labels[i] if entity.labels is not None else None
+                masks = entity.masks[i] if entity.masks is not None else None
+                polygons = entity.polygons[i] if entity.polygons is not None else None
                 # NOTE: shift labels by 1 as 0 is reserved for background
                 _labels = labels + 1 if len(labels) else labels
                 targets.append(
@@ -75,7 +74,8 @@ class MaskRCNN(_MaskRCNN):
         if self.training:
             return losses
         scale_factors = [
-            img_meta.scale_factor if img_meta.scale_factor else (1.0, 1.0) for img_meta in entity.imgs_info
+            img_meta.scale_factor if img_meta.scale_factor else (1.0, 1.0)  # type: ignore[union-attr]
+            for img_meta in entity.imgs_info  # type: ignore[union-attr]
         ]
 
         return self.postprocess(detections, ori_shapes, scale_factors)

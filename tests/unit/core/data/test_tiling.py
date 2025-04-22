@@ -27,15 +27,13 @@ from otx.core.config.data import (
     TileConfig,
 )
 from otx.core.data.dataset.tile import OTXTileTransform
-from otx.core.data.entity.detection import DetBatchDataEntity, DetBatchPredEntity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
 from otx.core.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import DataInputParams
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
-from otx.data import TorchDataBatch
+from otx.data import TorchDataBatch, TorchPredBatch
 from tests.test_helpers import generate_random_bboxes
 
 
@@ -121,8 +119,7 @@ class TestOTXTiling:
             },
         }
 
-    @pytest.mark.intense()
-    def det_dummy_forward(self, x: DetBatchDataEntity) -> DetBatchPredEntity:
+    def det_dummy_forward(self, x: TorchDataBatch) -> TorchPredBatch:
         """Dummy detection forward function for testing.
 
         This function creates random bounding boxes for each image in the batch.
@@ -159,10 +156,10 @@ class TestOTXTiling:
                 torch.rand(len(img_bboxes), dtype=torch.float64),
             )
             if self.explain_mode:
-                saliency_maps.append(np.zeros((3, 7, 7)))
-                feature_vectors.append(np.zeros((1, 32)))
+                saliency_maps.append(torch.zeros((3, 7, 7)))
+                feature_vectors.append(torch.zeros((1, 32)))
 
-        pred_entity = DetBatchPredEntity(
+        pred_entity = TorchPredBatch(
             batch_size=x.batch_size,
             images=x.images,
             imgs_info=x.imgs_info,
@@ -176,16 +173,15 @@ class TestOTXTiling:
 
         return pred_entity
 
-    @pytest.mark.intense()
-    def inst_seg_dummy_forward(self, x: InstanceSegBatchDataEntity) -> InstanceSegBatchPredEntity:
+    def inst_seg_dummy_forward(self, x: TorchDataBatch) -> TorchPredBatch:
         """Dummy instance segmantation forward function for testing.
 
         This function creates random bounding boxes/masks for each image in the batch.
         Args:
-            x (InstanceSegBatchDataEntity): Input batch data entity.
+            x (TorchDataBatch): Input batch data entity.
 
         Returns:
-            InstanceSegBatchPredEntity: Output batch prediction entity.
+            TorchPredBatch: Output batch prediction entity.
         """
         bboxes = []
         labels = []
@@ -221,9 +217,9 @@ class TestOTXTiling:
                 ),
             )
             if self.explain_mode:
-                feature_vectors.append(np.zeros((1, 32)))
+                feature_vectors.append(torch.zeros((1, 32)))
 
-        pred_entity = InstanceSegBatchPredEntity(
+        pred_entity = TorchPredBatch(
             batch_size=x.batch_size,
             images=x.images,
             imgs_info=x.imgs_info,
@@ -239,7 +235,6 @@ class TestOTXTiling:
 
         return pred_entity
 
-    @pytest.mark.intense()
     @pytest.mark.parametrize(
         "task",
         [OTXTaskType.DETECTION, OTXTaskType.INSTANCE_SEGMENTATION, OTXTaskType.SEMANTIC_SEGMENTATION],
@@ -374,18 +369,17 @@ class TestOTXTiling:
             count = 0
             for batch in tile_datamodule.train_dataloader():
                 count += batch.batch_size
-                if task is OTXTaskType.DETECTION:
-                    assert isinstance(batch, DetBatchDataEntity)
-                elif task is OTXTaskType.INSTANCE_SEGMENTATION:
-                    assert isinstance(batch, InstanceSegBatchDataEntity)
-                elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
+                if task in (
+                    OTXTaskType.DETECTION,
+                    OTXTaskType.INSTANCE_SEGMENTATION,
+                    OTXTaskType.SEMANTIC_SEGMENTATION,
+                ):
                     assert isinstance(batch, TorchDataBatch)
                 else:
                     pytest.skip("Task not supported")
 
             assert sampled_count == count, "Sampled count should be equal to the count of the dataloader batch size"
 
-    @pytest.mark.intense()
     def test_train_dataloader(self, fxt_data_config) -> None:
         for task, data_config in fxt_data_config.items():
             # Enable tile adapter
@@ -397,16 +391,15 @@ class TestOTXTiling:
             )
             tile_datamodule.prepare_data()
             for batch in tile_datamodule.train_dataloader():
-                if task is OTXTaskType.DETECTION:
-                    assert isinstance(batch, DetBatchDataEntity)
-                elif task is OTXTaskType.INSTANCE_SEGMENTATION:
-                    assert isinstance(batch, InstanceSegBatchDataEntity)
-                elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
+                if task in (
+                    OTXTaskType.DETECTION,
+                    OTXTaskType.INSTANCE_SEGMENTATION,
+                    OTXTaskType.SEMANTIC_SEGMENTATION,
+                ):
                     assert isinstance(batch, TorchDataBatch)
                 else:
                     pytest.skip("Task not supported")
 
-    @pytest.mark.intense()
     def test_val_dataloader(self, fxt_data_config) -> None:
         for task, data_config in fxt_data_config.items():
             # Enable tile adapter
@@ -427,7 +420,6 @@ class TestOTXTiling:
                 else:
                     pytest.skip("Task not supported")
 
-    @pytest.mark.intense()
     def test_det_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.DETECTION]
         model = ATSS(
@@ -452,7 +444,6 @@ class TestOTXTiling:
         for batch in tile_datamodule.val_dataloader():
             model.forward_tiles(batch)
 
-    @pytest.mark.intense()
     def test_explain_det_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.DETECTION]
         model = ATSS(
@@ -479,7 +470,6 @@ class TestOTXTiling:
             assert prediction.saliency_map[0].ndim == 3
         self.explain_mode = False
 
-    @pytest.mark.intense()
     def test_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
         model = MaskRCNN(
@@ -504,7 +494,6 @@ class TestOTXTiling:
         for batch in tile_datamodule.val_dataloader():
             model.forward_tiles(batch)
 
-    @pytest.mark.intense()
     def test_explain_instseg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.INSTANCE_SEGMENTATION]
         model = MaskRCNN(
@@ -531,7 +520,6 @@ class TestOTXTiling:
             assert prediction.saliency_map[0].ndim == 3
         self.explain_mode = False
 
-    @pytest.mark.intense()
     def test_seg_tile_merge(self, fxt_data_config):
         data_config = fxt_data_config[OTXTaskType.SEMANTIC_SEGMENTATION]
         model = LiteHRNet(
@@ -555,7 +543,6 @@ class TestOTXTiling:
         for batch in tile_datamodule.val_dataloader():
             model.forward_tiles(batch)
 
-    @pytest.mark.intense()
     def test_seg_tiler(self, mocker):
         rng = np.random.default_rng()
         rnd_tile_size = rng.integers(low=100, high=500)

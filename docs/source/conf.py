@@ -101,7 +101,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/openvinotoolkit/training_extensions",
+            "url": "https://github.com/open-edge-platform/training_extensions",
             "icon": "fab fa-github",
             "type": "fontawesome",
         },
@@ -113,7 +113,7 @@ html_theme_options = {
 }
 
 html_context = {
-    "github_user": "openvinotoolkit",
+    "github_user": "open-edge-platform",
     "github_repo": "training_extensions",
     "github_version": "master",
     "doc_path": "docs/source/",

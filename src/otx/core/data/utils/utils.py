@@ -163,7 +163,7 @@ def compute_robust_dataset_statistics(
     stat["annotation"]["num_per_image"] = compute_robust_statistics(np.array(num_per_images))
 
     target_ann_type = TASK_ANNO_TYPE.get(task)
-    if not target_ann_type:
+    if target_ann_type not in size_of_shapes:
         msg = (
             f"Task type {task} is not supported for computing annotation statistics. "
             "OTX will try to continue with annotation found in the dataset."

@@ -19,15 +19,29 @@ from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.tools.converter import ConfigConverter
+from tests.integration.api.geti_otx_config_utils import (
+    ExportFormat,
+    ExportParameter,
+    JobType,
+    OTXConfig,
+    PrecisionType,
+    load_hyper_parameters,
+)
 
 if TYPE_CHECKING:
     from otx.engine.engine import Engine
 
-TEST_PATH = Path(__file__).parent.parent.parent
+TEST_ARROW_PATH = Path(__file__).parent.parent.parent / "assets" / "geti_config_arrow"
 DEFAULT_GETI_CONFIG_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "multi_class_cls",
-    OTXTaskType.MULTI_LABEL_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "multi_label_cls",
-    OTXTaskType.H_LABEL_CLS: TEST_PATH / "assets" / "geti_config_arrow" / "classification" / "h_label_cls",
+    # OTXTaskType.KEYPOINT_DETECTION: Not supported yet as we can't import KP dataset to Geti
+    OTXTaskType.MULTI_CLASS_CLS: TEST_ARROW_PATH / "classification" / "multi_class_cls",
+    OTXTaskType.MULTI_LABEL_CLS: TEST_ARROW_PATH / "classification" / "multi_label_cls",
+    OTXTaskType.H_LABEL_CLS: TEST_ARROW_PATH / "classification" / "h_label_cls",
+    OTXTaskType.ROTATED_DETECTION: TEST_ARROW_PATH / "detection",
+    OTXTaskType.DETECTION: TEST_ARROW_PATH / "detection",
+    OTXTaskType.INSTANCE_SEGMENTATION: TEST_ARROW_PATH / "detection",
+    OTXTaskType.SEMANTIC_SEGMENTATION: TEST_ARROW_PATH / "semantic_segmentation",
+    OTXTaskType.ANOMALY_CLASSIFICATION: TEST_ARROW_PATH / "anomaly",
 }
 
 
@@ -53,25 +67,52 @@ def unzip_exportable_code(
 class TestEngineAPI:
     def __init__(
         self,
+        task_type: OTXTaskType,
         tmp_path: Path,
-        geti_config_path: Path,
+        geti_template_path: Path,
         arrow_file_path: Path,
         image_path: Path,
+        tiling: bool = False,
     ):
+        self.task_type = task_type
         self.tmp_path = tmp_path
-        self.geti_config_path = geti_config_path
+        self.geti_template_path = geti_template_path
         self.arrow_file_path = arrow_file_path
+        self.tiling = tiling  # In the future, we can pass the whole hyper_parameters
         self.otx_config = self._convert_config()
         self.engine, self.train_kwargs = self._instantiate_engine()
         self.image = cv2.imread(str(image_path))
 
-    def _convert_config(self) -> dict:
-        otx_config = ConfigConverter.convert(config_path=self.geti_config_path)
-        otx_config["data"]["data_format"] = "arrow"
-        otx_config["data"]["train_subset"]["subset_name"] = "TRAINING"
-        otx_config["data"]["val_subset"]["subset_name"] = "VALIDATION"
-        otx_config["data"]["test_subset"]["subset_name"] = "TESTING"
-        return otx_config
+    def _convert_config(
+        self,
+    ) -> dict:
+        model_template_id, hyper_parameters = load_hyper_parameters(self.geti_template_path)
+
+        if self.tiling:
+            hyper_parameters["tiling_parameters"]["enable_tiling"]["default_value"] = True
+            hyper_parameters["tiling_parameters"]["enable_tiling"]["value"] = True
+
+        sub_task_type = (
+            self.task_type
+            if self.task_type in [OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
+            else OTXTaskType.MULTI_CLASS_CLS
+        )
+
+        # Matching geti config.json style
+        otx_config = OTXConfig(
+            job_type=JobType.TRAIN,
+            model_template_id=model_template_id,
+            hyper_parameters=hyper_parameters,
+            export_parameters=[
+                ExportParameter(ExportFormat.OPENVINO, PrecisionType.FP32, with_xai=True),
+                ExportParameter(ExportFormat.OPENVINO, PrecisionType.FP32),
+                ExportParameter(ExportFormat.OPENVINO, PrecisionType.FP16),
+                ExportParameter(ExportFormat.ONNX, PrecisionType.FP32),
+            ],
+            optimization_type=None,
+            sub_task_type=sub_task_type,
+        )
+        return otx_config.to_otx_config(self.tmp_path)
 
     def _instantiate_engine(self) -> tuple[Engine, dict[str, Any]]:
         return ConfigConverter.instantiate(
@@ -187,17 +228,36 @@ class TestEngineAPI:
         assert predictions is not None
 
 
-@pytest.mark.parametrize("task", pytest.TASK_LIST)
-def test_engine_api(task: OTXTaskType, tmp_path: Path):
+def test_engine_api(
+    task_template: tuple[OTXTaskType, Path, bool],
+    tmp_path: Path,
+):
+    """Test the Engine API for Geti tasks.
+
+    Args:
+        fxt_engine_api (tuple): A tuple containing the task type, template path, and tiling flag.
+        tmp_path (Path): Temporary directory for testing.
+    """
+    # Unpack the fixture
+    task, template_path, tiling = task_template
+
     if task not in DEFAULT_GETI_CONFIG_PER_TASK:
         pytest.skip("Only the Geti Tasks are tested to reduce unnecessary resource waste.")
 
     config_arrow_path = DEFAULT_GETI_CONFIG_PER_TASK[task]
-    geti_config_path = config_arrow_path / "config.json"
-    arrow_file_path = config_arrow_path / "datum-0-of-1.arrow"
+    arrow_file_path = (
+        config_arrow_path / "tile-datum-0-of-1.arrow" if tiling else config_arrow_path / "datum-0-of-1.arrow"
+    )
     image_path = config_arrow_path / "image.jpg"
 
-    tester = TestEngineAPI(tmp_path, geti_config_path, arrow_file_path, image_path)
+    tester = TestEngineAPI(
+        task_type=task,
+        tmp_path=tmp_path,
+        geti_template_path=template_path,
+        arrow_file_path=arrow_file_path,
+        image_path=image_path,
+        tiling=tiling,
+    )
     tester.test_model_and_data_module()
     tester.test_training()
     tester.test_predictions()

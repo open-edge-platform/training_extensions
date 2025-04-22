@@ -16,10 +16,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - task: "multi_cls_classification"
-          - task: "multi_label_classification"
-          - task: "hlabel_classification"
-          - task: "anomaly"
+          - task: "multi_class_cls"
+          - task: "multi_label_cls"
+          - task: "h_label_cls"
+          - task: "anomaly_classification"
           - task: "keypoint_detection"
           - task: "detection"
           - task: "instance_segmentation"
@@ -42,4 +42,4 @@ jobs:
           python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
           rm /tmp/requirements.txt
       - name: Run Daily Integration Test
-        run: tox -vv -e daily-integration-test-${{ matrix.task }}
+        run: tox -vv -e daily-integration-test-${{ matrix.task }} -- --run-category-only=False

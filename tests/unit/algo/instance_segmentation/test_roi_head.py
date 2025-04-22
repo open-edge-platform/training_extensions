@@ -16,19 +16,18 @@ from otx.algo.instance_segmentation.losses import ROICriterion
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity
 from otx.core.model.base import DataInputParams
+from otx.data import TorchDataBatch
 
 
 @pytest.fixture()
-def fxt_inst_seg_batch_entity() -> InstanceSegBatchDataEntity:
-    return InstanceSegBatchDataEntity(
+def fxt_inst_seg_batch_entity() -> TorchDataBatch:
+    return TorchDataBatch(
         batch_size=1,
-        images=[torch.empty((1, 3, 480, 480))],
+        images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],
         labels=[torch.LongTensor([0, 1])],
         masks=[tv_tensors.Mask(torch.zeros((2, 480, 480)))],
-        polygons=[[], []],
         imgs_info=[
             ImageInfo(
                 img_idx=0,
@@ -41,14 +40,13 @@ def fxt_inst_seg_batch_entity() -> InstanceSegBatchDataEntity:
 
 
 @pytest.fixture()
-def fxt_inst_seg_batch_entity_with_ignored_label() -> InstanceSegBatchDataEntity:
-    return InstanceSegBatchDataEntity(
+def fxt_inst_seg_batch_entity_with_ignored_label() -> TorchDataBatch:
+    return TorchDataBatch(
         batch_size=1,
-        images=[torch.empty((1, 3, 480, 480))],
+        images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],
         labels=[torch.LongTensor([0, 1])],
         masks=[tv_tensors.Mask(torch.zeros((2, 480, 480)))],
-        polygons=[[], []],
         imgs_info=[
             ImageInfo(
                 img_idx=0,

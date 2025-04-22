@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     import numpy as np
     from torch import Tensor
 
-    from otx.algo.utils.mmengine_utils import InstanceData
+    from otx.algo.utils.utils import InstanceData
 
 HeadForwardFn = Callable[[FeatureMapType], torch.Tensor]
 ExplainerForwardFn = HeadForwardFn

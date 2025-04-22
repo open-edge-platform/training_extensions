@@ -1,4 +1,4 @@
-"""Dataclasses and utils for data."""
+"""Dataclasses for data entities."""
 
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0

@@ -3,7 +3,7 @@
 1. By executing the following commands, it will build two Docker images: `otx:${OTX_VERSION}-cuda` and `otx:${OTX_VERSION}-cuda-pretrained-ready`.
 
    ```console
-   git clone https://github.com/openvinotoolkit/training_extensions.git
+   git clone https://github.com/open-edge-platform/training_extensions.git
    cd docker
    ./build.sh
    ```
