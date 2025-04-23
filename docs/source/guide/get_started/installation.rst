@@ -11,6 +11,42 @@ The current version of OpenVINO™ Training Extensions was tested in the followi
 - Python >= 3.10
 - [`uv`](https://github.com/astral-sh/uv) for dependency and environment management
 
+***************
+Installing ``uv``
+***************
+
+To use OpenVINO™ Training Extensions with ``uv``, you first need to install the ``uv`` tool.
+
+You can install it in one of the following ways:
+
+.. tab-set::
+
+    .. tab-item:: Recommended (Standalone Binary)
+
+        .. code-block:: shell
+
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+
+        This method installs ``uv`` globally as a fast and portable binary.
+        After installation, make sure ``uv`` is available in your ``PATH``.
+
+    .. tab-item:: Via pip (Python-based)
+
+        .. code-block:: shell
+
+            pip install uv
+
+        This installs ``uv`` inside the currently active Python environment.
+
+    .. tab-item:: Verify Installation
+
+        After installation, confirm it works:
+
+        .. code-block:: shell
+
+            uv --version
+
+
 **********************************************************
 Install OpenVINO™ Training Extensions for users (CUDA/CPU)
 **********************************************************
@@ -25,7 +61,12 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
 
         .. code-block:: shell
 
-            uv pip install otx
+            # Create a virtual environment using uv
+            uv venv .otx --python 3.10 # or 3.11
+            source .otx/bin/activate
+
+            # Install from PyPI
+            uv pip install otx[base]
 
     .. tab-item:: Source
 
@@ -36,11 +77,14 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
             cd training_extensions
 
             # Create a virtual environment with uv
-            uv venv .otx
+            uv venv .otx --python 3.10 # or 3.11
             source .otx/bin/activate
 
             # Install the package in editable mode with base dependencies
             uv pip install -e .[base]
+
+            # Install OTX in development mode
+            uv pip install -e .[dev]
 
 2. Once the package is installed in the virtual environment, you can use the full
 OpenVINO™ Training Extensions command line functionality.
@@ -60,7 +104,7 @@ Install OpenVINO™ Training Extensions for users (Intel GPUs)
     git clone https://github.com/open-edge-platform/training_extensions.git
     cd training_extensions
 
-    uv venv .otx
+    uv venv .otx --python 3.10 # or 3.11
     source .otx/bin/activate
 
     uv pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
@@ -80,24 +124,27 @@ Install OpenVINO™ Training Extensions for users (Intel GPUs)
 Install OpenVINO™ Training Extensions for developers
 ****************************************************
 
-1. Create and activate a development virtual environment:
+1. Install ``tox`` with the ``tox-uv`` plugin using uv's tool system:
 
 .. code-block:: shell
 
-    # Create a virtual environment using uv
-    uv venv venv/otx
-    source venv/otx/bin/activate
+    uv tool install tox --with tox-uv
 
-2. Install tox and generate the development environment:
+2. Create a development environment using ``tox``:
 
 .. code-block:: shell
 
-    uv pip install tox
-    # Replace '310' with another Python version if needed
+    # Replace '310' with '311' if using Python 3.11
     tox devenv venv/otx -e unit-test-py310
     source venv/otx/bin/activate
 
-Now you can make code changes, and all modifications will be reflected live in the editable install.
+Now you're ready to develop, test, and make changes — all reflected live in the editable install.
+
+.. note::
+
+    By installing ``tox`` with ``uv tool``, you ensure it runs in a reproducible and isolated environment,
+    with ``uv`` used internally to manage dependencies for each test environment.
+
 
 *****************************************************
 Install OpenVINO™ Training Extensions by using Docker
@@ -144,7 +191,7 @@ To run integration tests using `tox`:
 
 .. code-block:: shell
 
-    uv pip install tox
+    uv tool install tox --with tox-uv
     tox -e integration-test-all
 
 .. note::
