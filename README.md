@@ -38,7 +38,6 @@ OpenVINO™ Training Extensions offers diverse combinations of model architectur
 
 OpenVINO™ Training Extensions provides a "recipe" for every supported task type, which consolidates necessary information to build a model.
 Model templates are validated on various datasets and serve one-stop shop for obtaining the best models in general.
-If you are an experienced user, you can configure your own model based on [torchvision](https://pytorch.org/vision/stable/index.html), [mmcv](https://github.com/open-mmlab/mmcv) and [OpenVINO Model Zoo (OMZ)](https://github.com/openvinotoolkit/open_model_zoo).
 
 Furthermore, OpenVINO™ Training Extensions provides automatic configuration for ease of use.
 The framework will analyze your dataset and identify the most suitable model and figure out the best input size setting and other hyper-parameters.
@@ -49,21 +48,19 @@ The development team is continuously extending this [Auto-configuration](https:/
 OpenVINO™ Training Extensions supports the following computer vision tasks:
 
 - **Classification**, including multi-class, multi-label and hierarchical image classification tasks.
-- **Object detection** including rotated bounding box support
-- **Semantic segmentation**
+- **Object detection** including rotated bounding box and tiling support
+- **Semantic segmentation** including tiling algorithm support
 - **Instance segmentation** including tiling algorithm support
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
 
-OpenVINO™ Training Extensions supports the [following learning methods](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/algorithms/index.html):
-
-- **Supervised**, incremental training, which includes class incremental scenario.
-
 OpenVINO™ Training Extensions provides the following usability features:
 
+- Native **Intel GPUs (XPU) support**. OpenVINO™ Training Extensions can be installed with XPU support to utilize Intel GPUs for training and testing.
 - [Auto-configuration](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html). OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model to provide the best accuracy/speed trade-off.
 - [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) data frontend: OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
 - **Distributed training** to accelerate the training process when you have multiple GPUs
 - **Mixed-precision training** to save GPUs memory and use larger batch sizes
+- **Class incremental learning** to add new classes to the existing model
 
 ---
 
@@ -80,10 +77,10 @@ Installing the library with pip is the easiest way to get started with otx.
 pip install otx[base]
 ```
 
-Alternatively, for zsh users:
+For Intel GPUs users:
 
 ```bash
-pip install 'otx[base]'
+pip install otx[base] --extra-index-url https://download.pytorch.org/whl/test/xpu
 ```
 
 </details>
@@ -104,7 +101,7 @@ conda activate otx_env
 # Clone the repository and install in editable mode
 git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions
-pip install -e .[base]  # for zsh: pip install -e '.[base]'
+pip install -e .[base]  # to run otx on Intel GPUs: pip install -e .[base] --extra-index-url https://download.pytorch.org/whl/test/xpu
 ```
 
 </details>
