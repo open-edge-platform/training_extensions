@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.4.2\]
+
+### Bug fixes
+
+- Fix torchmetrics to 1.6.0
+
 ## \[2.4.1\]
 
 ### Bug fixes
