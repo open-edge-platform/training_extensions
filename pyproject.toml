@@ -75,7 +75,7 @@ docs = [
 ]
 
 base = [
-    "torch==2.5.1",
+    "torch==2.7.0",
     "lightning==2.4.0",
     "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
