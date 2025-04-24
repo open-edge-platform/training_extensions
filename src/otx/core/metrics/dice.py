@@ -7,8 +7,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from torchmetrics import JaccardIndex
+from torchmetrics.classification.dice import Dice
 from torchmetrics.collections import MetricCollection
-from torchmetrics.segmentation import DiceScore
 
 from otx.core.types.label import SegLabelInfo
 
@@ -29,21 +29,30 @@ def _segm_callable(label_info: SegLabelInfo) -> MetricCollection:
     )
 
 
-class OTXDice(DiceScore):
+class OTXDice(Dice):
     """Dice metric used for the OTX semantic segmentation task."""
 
     def __init__(
         self,
         zero_division: int = 0,
         num_classes: int | None = None,
+        threshold: float = 0.5,
         average: Literal["micro", "macro", "none"] = "micro",
+        mdmc_average: str = "global",
         ignore_index: int | None = None,
+        top_k: int | None = None,
+        multiclass: bool | None = None,
         **kwargs,
     ) -> None:
         super().__init__(
             zero_division=zero_division,
             num_classes=num_classes,
+            threshold=threshold,
             average=average,
+            mdmc_average=mdmc_average,
+            ignore_index=None,
+            top_k=top_k,
+            multiclass=multiclass,
             **kwargs,
         )
         # workaround to use ignore index > num_classes or < 0
