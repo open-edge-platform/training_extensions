@@ -43,3 +43,12 @@ jobs:
           rm /tmp/requirements.txt
       - name: Run Daily Integration Test
         run: tox -vv -e daily-integration-test-${{ matrix.task }}
+
+      - name: Create Issue if Tests Fail
+        if: steps.run_tests.outputs.exit_code != '0'
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: "🔴 Integration test failed - ${{ github.run_id }}"
+          content-filepath: test_output.log
+          labels: bug, test-failure
+          assignees: eugene123tw, kprokofi, sovrasov, daankrol, ashwinvaidya17, rajeshgangireddy, atwinand
