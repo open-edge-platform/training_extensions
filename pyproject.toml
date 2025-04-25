@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "datumaro==1.10.0rc0",
+    "datumaro==1.10.0",
     "omegaconf==2.3.0",
     "rich==14.0.0",
     "jsonargparse==4.30.0",
@@ -46,7 +46,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "uv",
-    "tox==4.24.2",
+    "tox==4.25.0",
     "pre-commit==4.2.0",
     "pylint",
     "pytest",
@@ -55,7 +55,7 @@ dev = [
     "pytest-mock",
     "pytest-csv",
     "pytest-cov",
-    "onnxruntime==1.21.0",
+    "onnxruntime==1.21.1",
 ]
 
 docs = [
@@ -89,7 +89,7 @@ base = [
 ]
 
 ci_tox = [
-    "tox==4.24.2",
+    "tox==4.25.0",
 ]
 
 ci_publish = [
@@ -103,7 +103,7 @@ ci_benchmark = [
     "ipython==9.0.2",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
-    "mlflow==2.20.4",
+    "mlflow==2.21.3",
     "py-cpuinfo==9.0.0",
 ]
 
