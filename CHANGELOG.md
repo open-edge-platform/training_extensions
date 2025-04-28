@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Align KP detection validation with ModelAPI post processing
   (<https://github.com/openvinotoolkit/training_extensions/pull/4300>)
 - Fix missing mAP score reporting for instance segmentation
+  (<https://github.com/open-edge-platform/training_extensions/pull/4364>)
 
 ### Removed
 
