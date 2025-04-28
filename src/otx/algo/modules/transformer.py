@@ -11,7 +11,7 @@ from functools import partial
 from typing import Callable, Sequence
 
 import torch
-from timm.models.layers import to_2tuple
+from timm.layers import to_2tuple
 from torch import nn
 
 from otx.algo.modules.base_module import BaseModule, Sequential
