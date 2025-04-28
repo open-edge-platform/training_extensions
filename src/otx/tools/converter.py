@@ -14,13 +14,13 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
+from otx.backend.native.engine import OTXEngine
+from otx.backend.native.utils.auto_configurator import AutoConfigurator
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types import PathLike
 from otx.core.types.task import OTXTaskType
-from otx.engine import Engine
-from otx.engine.utils.auto_configurator import AutoConfigurator
 
 TEMPLATE_ID_DICT = {
     # MULTI_CLASS_CLS
@@ -429,7 +429,7 @@ class ConfigConverter:
         work_dir: PathLike | None = None,
         data_root: PathLike | None = None,
         **kwargs,
-    ) -> tuple[Engine, dict[str, Any]]:
+    ) -> tuple[OTXEngine, dict[str, Any]]:
         """Instantiate an object from the configuration dictionary.
 
         Args:
@@ -476,7 +476,7 @@ class ConfigConverter:
         # Instantiate Engine
         config_work_dir = config.pop("work_dir", config["engine"].pop("work_dir", None))
         config["engine"]["work_dir"] = work_dir if work_dir is not None else config_work_dir
-        engine = Engine(
+        engine = OTXEngine(
             model=model,
             datamodule=datamodule,
             **config.pop("engine"),
@@ -485,7 +485,7 @@ class ConfigConverter:
         # Instantiate Engine.train Arguments
         engine_parser = ArgumentParser()
         train_arguments = engine_parser.add_method_arguments(
-            Engine,
+            OTXEngine,
             "train",
             skip={"accelerator", "devices"},
             fail_untyped=False,

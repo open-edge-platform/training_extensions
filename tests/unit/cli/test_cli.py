@@ -113,9 +113,9 @@ class TestOTXCLI:
 
         assert isinstance(cli.datamodule, OTXDataModule)
 
-        from otx.engine import Engine
+        from otx.backend.native.engine import OTXEngine
 
-        assert isinstance(cli.engine, Engine)
+        assert isinstance(cli.engine, OTXEngine)
 
         assert cli.datamodule == cli.engine.datamodule
         assert cli.model == cli.engine.model
