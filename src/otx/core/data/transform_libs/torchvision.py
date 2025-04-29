@@ -145,7 +145,8 @@ class PadtoSquare(tvt_v2.Transform):
         super().__init__()
         self.pad_val = pad_val
 
-    def _get_params(self, flat_inputs: list[Any]) -> dict[str, Any]:
+    def make_params(self, flat_inputs: list[Any]) -> dict[str, Any]:
+        """Generates parameters for internal torchvision transform kernel."""
         height, width = tvt_v2._utils.query_size(flat_inputs)  # noqa: SLF001
         max_dim = max(width, height)
         pad_w = max_dim - width
@@ -153,7 +154,8 @@ class PadtoSquare(tvt_v2.Transform):
         padding = (0, 0, pad_w, pad_h)
         return {"padding": padding}
 
-    def _transform(self, inpt: Any, params: dict[str, Any]) -> Any:  # noqa: ANN401
+    def transform(self, inpt: Any, params: dict[str, Any]) -> Any:  # noqa: ANN401
+        """Applies transform to the input image."""
         return self._call_kernel(F.pad, inpt, padding=params["padding"], fill=self.pad_val, padding_mode="constant")
 
 
@@ -172,12 +174,14 @@ class ResizetoLongestEdge(tvt_v2.Transform):
         self.interpolation = F._geometry._check_interpolation(interpolation)  # noqa: SLF001
         self.antialias = antialias
 
-    def _get_params(self, flat_inputs: list[Any]) -> dict[str, Any]:
+    def make_params(self, flat_inputs: list[Any]) -> dict[str, Any]:
+        """Generates parameters for internal torchvision transform kernel."""
         height, width = tvt_v2._utils.query_size(flat_inputs)  # noqa: SLF001
         target_size = self._get_preprocess_shape(height, width, self.size)
         return {"target_size": target_size}
 
-    def _transform(self, inpt: Any, params: dict[str, Any]) -> Any:  # noqa: ANN401
+    def transform(self, inpt: Any, params: dict[str, Any]) -> Any:  # noqa: ANN401
+        """Applies transform to the input image."""
         return self._call_kernel(
             F.resize,
             inpt,
