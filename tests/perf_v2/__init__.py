@@ -3,7 +3,6 @@
 
 """OTX performance benchmark tests."""
 
-
 from otx.core.types.task import OTXTaskType
 
 from .tasks import (
@@ -13,7 +12,6 @@ from .tasks import (
     instance_segmentation,
     keypoint_detection,
     semantic_segmentation,
-    visual_prompting,
 )
 
 CRITERIA_COLLECTIONS = {
@@ -24,7 +22,6 @@ CRITERIA_COLLECTIONS = {
     OTXTaskType.MULTI_CLASS_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
     OTXTaskType.MULTI_LABEL_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
     OTXTaskType.H_LABEL_CLS: classification.CLASSIFICATION_BENCHMARK_CRITERIA,
-    OTXTaskType.VISUAL_PROMPTING: visual_prompting.BENCHMARK_CRITERIA,
     OTXTaskType.KEYPOINT_DETECTION: keypoint_detection.BENCHMARK_CRITERIA,
 }
 
@@ -36,7 +33,6 @@ MODEL_COLLECTIONS = {
     OTXTaskType.MULTI_CLASS_CLS: classification.MULTI_CLASS_MODEL_TEST_CASES,
     OTXTaskType.MULTI_LABEL_CLS: classification.MULTI_LABEL_MODEL_TEST_CASES,
     OTXTaskType.H_LABEL_CLS: classification.H_LABEL_CLS_MODEL_TEST_CASES,
-    OTXTaskType.VISUAL_PROMPTING: visual_prompting.MODEL_TEST_CASES,
     OTXTaskType.KEYPOINT_DETECTION: keypoint_detection.MODEL_TEST_CASES,
 }
 
@@ -48,6 +44,5 @@ DATASET_COLLECTIONS = {
     OTXTaskType.MULTI_CLASS_CLS: classification.MULTI_CLASS_DATASET_TEST_CASES,
     OTXTaskType.MULTI_LABEL_CLS: classification.MULTI_LABEL_DATASET_TEST_CASES,
     OTXTaskType.H_LABEL_CLS: classification.H_LABEL_CLS_DATASET_TEST_CASES,
-    OTXTaskType.VISUAL_PROMPTING: visual_prompting.DATASET_TEST_CASES,
     OTXTaskType.KEYPOINT_DETECTION: keypoint_detection.DATASET_TEST_CASES,
 }
