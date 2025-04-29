@@ -31,7 +31,7 @@ DATASET_TEST_CASES = (
     [
         DatasetInfo(
             name=f"blueberry_tiny_{idx}",
-            path=Path("instance_seg/blueberry_tiny") / f"{idx}",
+            path=Path("instance_seg/blueberry_tiny_coco") / f"{idx}",
             group="tiny",
             extra_overrides={
                 "test": {
