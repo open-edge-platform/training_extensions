@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 from typing import TYPE_CHECKING, Any
 
 from torch import nn
@@ -104,8 +105,12 @@ class OptimizerCallableSupportAdaptiveBS:
         optimizer = func(dummy_params)
 
         param_group = next(iter(optimizer.param_groups))
+        init_signature_params = inspect.signature(optimizer.__class__.__init__).parameters
+        valid_param_names = init_signature_params.keys()
 
         return OptimizerCallableSupportAdaptiveBS(
             optimizer_cls=optimizer.__class__,
-            optimizer_kwargs={key: value for key, value in param_group.items() if key != "params"},
+            optimizer_kwargs={
+                key: value for key, value in param_group.items() if key != "params" and key in valid_param_names
+            },
         )

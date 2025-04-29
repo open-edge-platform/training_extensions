@@ -482,7 +482,7 @@ def test_otx_configurable_input_size_e2e(
 
     best_ckpt_files = list(tmp_path_cfg_ipt_size.rglob("best_checkpoint.ckpt"))
     assert len(best_ckpt_files) != 0
-    best_ckpt = torch.load(best_ckpt_files[0])
+    best_ckpt = torch.load(best_ckpt_files[0], weights_only=False)
     assert best_ckpt["hyper_parameters"]["data_input_params"].input_size == (448, 448)
     for param_name in best_ckpt["datamodule_hyper_parameters"]:
         if "subset" in param_name:
