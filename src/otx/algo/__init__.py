@@ -21,7 +21,6 @@ __all__ = [
     "samplers",
     "segmentation",
     "strategies",
-    "strategies",
     "utils",
     "visual_prompting",
 ]
