@@ -277,7 +277,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--num-epoch",
         type=int,
-        default=200,
+        default=-1,
         help=(
             "Overrides default per-model number of epoch setting. Defaults to 200 (per-model epoch & early-stopping)."
         ),
