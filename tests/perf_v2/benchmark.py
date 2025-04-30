@@ -321,6 +321,7 @@ class Benchmark:
 
         engine = Engine(
             model=model_info.name,
+            task=model_info.task,
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,
