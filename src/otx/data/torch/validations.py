@@ -51,8 +51,8 @@ class ValidateItemMixin:
         if image.shape[0] not in [1, 3]:
             msg = "Image must have 1 or 3 channels"
             raise ValueError(msg)
-        if image.dtype != torch.float32:
-            msg = "Image must have dtype float32"
+        if image.dtype not in (torch.uint8, torch.float32):
+            msg = "Image must have dtype float32 or uint8"
             raise ValueError(msg)
         return image
 

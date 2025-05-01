@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
+from torchvision.transforms.v2.functional import to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.data import TorchDataItem
@@ -35,7 +35,7 @@ class OTXDetectionDataset(OTXDataset):
         )
 
         entity = TorchDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
+            image=to_image(img_data),
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
