@@ -65,12 +65,7 @@ class OTXDatasetFactory:
             "to_tv_image": cfg_subset.to_tv_image,
         }
 
-        if task in (
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_DETECTION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-        ):
+        if task == OTXTaskType.ANOMALY:
             from .dataset.anomaly import AnomalyDataset
 
             return AnomalyDataset(task_type=task, **common_kwargs)

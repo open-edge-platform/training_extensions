@@ -147,9 +147,6 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         (OTXInstanceSegDataset, TorchDataItem, {"include_polygons": True}),
         (OTXSegmentationDataset, TorchDataItem, {}),
         (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY}),
-        (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
-        (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),
-        (AnomalyDataset, TorchDataItem, {"task_type": OTXTaskType.ANOMALY_SEGMENTATION}),
     ],
     ids=[
         "hlabel_cls",
@@ -159,9 +156,6 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         "instance_seg",
         "semantic_seg",
         "anomaly",
-        "anomaly_cls",
-        "anomaly_det",
-        "anomaly_seg",
     ],
 )
 def fxt_dataset_and_data_entity_cls(

@@ -174,40 +174,8 @@ TEMPLATE_ID_DICT = {
         "model_name": "stfpm",
     },
     "ote_anomaly_uflow": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
+        "task": OTXTaskType.ANOMALY,
         "model_name": "uflow",
-    },
-    # ANOMALY CLASSIFICATION
-    "ote_anomaly_classification_padim": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "padim",
-    },
-    "ote_anomaly_classification_stfpm": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "stfpm",
-    },
-    # ANOMALY_DETECTION
-    "ote_anomaly_detection_padim": {
-        "task": OTXTaskType.ANOMALY_DETECTION,
-        "model_name": "padim",
-    },
-    "ote_anomaly_detection_stfpm": {
-        "task": OTXTaskType.ANOMALY_DETECTION,
-        "model_name": "stfpm",
-    },
-    # ANOMALY_SEGMENTATION
-    "ote_anomaly_segmentation_padim": {
-        "task": OTXTaskType.ANOMALY_SEGMENTATION,
-        "model_name": "padim",
-    },
-    "ote_anomaly_segmentation_stfpm": {
-        "task": OTXTaskType.ANOMALY_SEGMENTATION,
-        "model_name": "stfpm",
-    },
-    # KEYPOINT_DETECTION
-    "Keypoint_Detection_RTMPose_Tiny": {
-        "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny",
     },
 }
 

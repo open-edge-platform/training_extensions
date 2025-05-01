@@ -41,9 +41,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
     OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
     OTXTaskType.ANOMALY: RECIPE_PATH / "anomaly" / "padim.yaml",
-    OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification" / "padim.yaml",
-    OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
-    OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection" / "padim.yaml",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
@@ -62,12 +59,7 @@ TASK_PER_DATA_FORMAT = {
         OTXTaskType.INSTANCE_SEGMENTATION,
     ],
     "common_semantic_segmentation_with_subset_dirs": [OTXTaskType.SEMANTIC_SEGMENTATION],
-    "mvtec_classification": [
-        OTXTaskType.ANOMALY,
-        OTXTaskType.ANOMALY_CLASSIFICATION,
-        OTXTaskType.ANOMALY_DETECTION,
-        OTXTaskType.ANOMALY_SEGMENTATION,
-    ],
+    "mvtec_classification": [OTXTaskType.ANOMALY],
 }
 
 OVMODEL_PER_TASK = {
@@ -79,9 +71,6 @@ OVMODEL_PER_TASK = {
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.core.model.instance_segmentation.OVInstanceSegmentationModel",
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.core.model.segmentation.OVSegmentationModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.ANOMALY_SEGMENTATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.KEYPOINT_DETECTION: "otx.core.model.keypoint_detection.OVKeypointDetectionModel",
 }
 

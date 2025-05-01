@@ -161,12 +161,7 @@ class TestAutoConfigurator:
         assert model.data_input_params.input_size == (300, 300)
 
     def test_get_optimizer(self, fxt_task: OTXTaskType) -> None:
-        if fxt_task in {
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-            OTXTaskType.ANOMALY_DETECTION,
-        }:
+        if fxt_task == OTXTaskType.ANOMALY:
             pytest.xfail(reason="Not working")
 
         auto_configurator = AutoConfigurator(task=fxt_task)
@@ -178,12 +173,7 @@ class TestAutoConfigurator:
             assert callable(optimizer)
 
     def test_get_scheduler(self, fxt_task: OTXTaskType) -> None:
-        if fxt_task in {
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-            OTXTaskType.ANOMALY_DETECTION,
-        }:
+        if fxt_task == OTXTaskType.ANOMALY:
             pytest.xfail(reason="Not working")
 
         auto_configurator = AutoConfigurator(task=fxt_task)

@@ -38,6 +38,14 @@ overrides:
         max_interval: 5
         decay: -0.025
         min_lrschedule_patience: 3
+    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      init_args:
+      mode: max
+      patience: 10
+      check_on_train_epoch_end: false
+      min_delta: 0.001
+      warmup_iters: 30
+      warmup_epochs: 3
 
   data:
     train_subset:

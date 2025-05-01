@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 from warnings import warn
 
-import yaml
 from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, namespace_to_dict
 from rich.console import Console
 
@@ -23,7 +22,6 @@ from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from otx.cli.utils.workspace import Workspace
 from otx.core.model.base import DataInputParams
 from otx.core.types.task import OTXTaskType
-from otx.core.utils.imports import get_otx_root_path
 
 if TYPE_CHECKING:
     from jsonargparse._actions import _ActionSubCommands
@@ -132,7 +130,8 @@ class OTXCLI:
         )
         parser.add_argument(
             "--callback_monitor",
-            type=str,
+            # TODO(ashwinvaidya17): None is temporary and should be removed when Anomalib Engine is ready.
+            type=str | None,
             help="The metric to monitor the model performance during training callbacks.",
         )
         parser.add_argument(
@@ -198,13 +197,6 @@ class OTXCLI:
         ):
             # This is code for an OVModel that uses checkpoint in model.model_name.
             parser.link_arguments("checkpoint", "model.init_args.model_name")
-
-        # Load default subcommand config file
-        default_config_file = get_otx_root_path() / "recipe" / "_base_" / f"{subcommand}.yaml"
-        if default_config_file.exists():
-            with Path(default_config_file).open() as f:
-                default_config = yaml.safe_load(f)
-            parser.set_defaults(**default_config)
 
         return parser, added_arguments
 

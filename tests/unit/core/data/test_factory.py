@@ -50,9 +50,6 @@ class TestOTXDatasetFactory:
             (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset),
             (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset),
             (OTXTaskType.ANOMALY, AnomalyDataset),
-            (OTXTaskType.ANOMALY_CLASSIFICATION, AnomalyDataset),
-            (OTXTaskType.ANOMALY_DETECTION, AnomalyDataset),
-            (OTXTaskType.ANOMALY_SEGMENTATION, AnomalyDataset),
         ],
     )
     def test_create(

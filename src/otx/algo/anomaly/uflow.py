@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from anomalib.models.image import Uflow as AnomalibUflow
 
@@ -29,9 +29,7 @@ class Uflow(AnomalyMixin, AnomalibUflow, OTXAnomaly):
         affine_clamp (float, optional): Affine clamp. Defaults to 2.0.
         affine_subnet_channels_ratio (float, optional): Affine subnet channels ratio. Defaults to 1.0.
         permute_soft (bool, optional): Whether to use soft permutation. Defaults to False.
-        task (Literal[
-                OTXTaskType.ANOMALY_CLASSIFICATION, OTXTaskType.ANOMALY_DETECTION, OTXTaskType.ANOMALY_SEGMENTATION
-            ], optional): Task type of Anomaly Task. Defaults to OTXTaskType.ANOMALY_CLASSIFICATION.
+        task (OTXTaskType, optional): Task type of Anomaly Task. Defaults to OTXTaskType.ANOMALY.
         input_size (tuple[int, int], optional):
             Model input size in the order of height and width. Defaults to (256, 256)
     """
@@ -45,12 +43,7 @@ class Uflow(AnomalyMixin, AnomalibUflow, OTXAnomaly):
         affine_clamp: float = 2.0,
         affine_subnet_channels_ratio: float = 1.0,
         permute_soft: bool = False,
-        task: Literal[
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_DETECTION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-        ] = OTXTaskType.ANOMALY_CLASSIFICATION,
+        task: OTXTaskType = OTXTaskType.ANOMALY,
     ) -> None:
         self.data_input_params = data_input_params
         self.input_size = data_input_params.input_size
