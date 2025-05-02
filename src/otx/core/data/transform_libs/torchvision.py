@@ -407,13 +407,8 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
             else:
                 img = cv2.resize(img, scale[::-1], interpolation=CV2_INTERP_CODES[self.interpolation])
 
-            inputs.image = to_tensor_image(img)
-
-            if isinstance(inputs, TorchDataItem):
-                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
-            else:
-                inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
-
+            inputs.image = img
+            inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
             scale_factor = (scale[0] / img_shape[0], scale[1] / img_shape[1])
         return inputs, scale_factor
 
@@ -1221,7 +1216,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         warp_matrix = self._get_random_homography_matrix(height, width)
 
         img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
-        inputs.image = to_tensor_image(img)
+        inputs.image = img
         inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
         bboxes = inputs.bboxes
@@ -1475,7 +1470,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         mosaic_bboxes = mosaic_bboxes[inside_inds]
         mosaic_bboxes_labels = mosaic_bboxes_labels[inside_inds]
 
-        inputs.image = to_tensor_image(mosaic_img)
+        inputs.image = mosaic_img
         inputs.img_info = _resized_crop_image_info(
             inputs.img_info,
             mosaic_img.shape[:2],
@@ -1776,7 +1771,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         mixup_gt_bboxes = mixup_gt_bboxes[inside_inds]
         mixup_gt_bboxes_labels = mixup_gt_bboxes_labels[inside_inds]
 
-        inputs.image = to_tensor_image(mixup_img)
+        inputs.image = mixup_img.astype(np.uint8)
         inputs.img_info = _resized_crop_image_info(
             inputs.img_info,
             mixup_img.shape[:2],
@@ -1910,7 +1905,7 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
         img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_gains[1], 0, 255)
         img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_gains[2], 0, 255)
         img = cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR)
-        inputs.image = to_tensor_image(img)
+        inputs.image = img
         return self.convert(inputs)
 
     def __repr__(self):
@@ -2038,7 +2033,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
             self.border_type[self.padding_mode],
             value=pad_val,
         )
-        inputs.image = to_tensor_image(padded_img)
+        inputs.image = padded_img
         inputs.img_info = _pad_image_info(inputs.img_info, padding)
         return inputs
 

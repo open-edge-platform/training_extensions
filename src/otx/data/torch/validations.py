@@ -42,18 +42,18 @@ class ValidateItemMixin:
     @staticmethod
     def _image_validator(image: torch.Tensor) -> torch.Tensor:
         """Validate the image."""
-        if not isinstance(image, torch.Tensor):
+        if not isinstance(image, (torch.Tensor, np.ndarray)):
             msg = f"Image must be a torch tensor. Got {type(image)}"
             raise TypeError(msg)
         if image.ndim != 3:
             msg = "Image must have 3 dimensions"
             raise ValueError(msg)
-        if image.shape[0] not in [1, 3]:
-            msg = "Image must have 1 or 3 channels"
-            raise ValueError(msg)
-        if image.dtype not in (torch.uint8, torch.float32):
-            msg = "Image must have dtype float32 or uint8"
-            raise ValueError(msg)
+        # if image.shape[0] not in [1, 3]:
+        #     msg = "Image must have 1 or 3 channels"
+        #     raise ValueError(msg)
+        # if image.dtype not in (torch.uint8, torch.float32):
+        #     msg = "Image must have dtype float32 or uint8"
+        #     raise ValueError(msg)
         return image
 
     @staticmethod

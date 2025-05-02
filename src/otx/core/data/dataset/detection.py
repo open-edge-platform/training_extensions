@@ -35,7 +35,7 @@ class OTXDetectionDataset(OTXDataset):
         )
 
         entity = TorchDataItem(
-            image=to_image(img_data),
+            image=img_data,
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,

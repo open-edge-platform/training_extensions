@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, asdict
 from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
@@ -17,6 +17,8 @@ from .validations import (
     ValidateBatchMixin,
     ValidateItemMixin,
 )
+
+from torchvision import tv_tensors
 
 if TYPE_CHECKING:
     from datumaro import Polygon
@@ -100,6 +102,33 @@ class TorchDataBatch(ValidateBatchMixin):
     keypoints: list[torch.Tensor] | None = None
     polygons: list[list[Polygon]] | None = None
     imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+
+    def pin_memory(self):
+        """Pin memory for member tensor variables."""
+        # TODO(vinnamki): Keep track this issue
+        # https://github.com/pytorch/pytorch/issues/116403
+
+        return self.wrap(
+            images=(
+                [tv_tensors.wrap(image.pin_memory(), like=image) for image in self.images]
+                if isinstance(self.images, list)
+                else tv_tensors.wrap(self.images.pin_memory(), like=self.images)
+            ),
+            bboxes=[tv_tensors.wrap(bbox.pin_memory(), like=bbox) for bbox in self.bboxes],
+            labels=[label.pin_memory() for label in self.labels],
+        )
+    
+    def wrap(self, **kwargs):
+        """Wrap this dataclass with the given keyword arguments.
+
+        Args:
+            **kwargs: Keyword arguments to be overwritten on top of this dataclass
+        Returns:
+            Updated dataclass
+        """
+        updated_kwargs = asdict(self)
+        updated_kwargs.update(**kwargs)
+        return self.__class__(**updated_kwargs)
 
 
 @dataclass
