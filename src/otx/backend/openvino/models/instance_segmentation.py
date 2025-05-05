@@ -26,7 +26,7 @@ from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.algo.utils.utils import InstanceData, load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.data.entity.instance_segmentation import InstanceSegBatchDataEntity, InstanceSegBatchPredEntity
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.data.entity.utils import stack_batch
 from otx.core.metrics import MetricInput
