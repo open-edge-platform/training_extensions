@@ -11,23 +11,21 @@ from math import sqrt
 from typing import TYPE_CHECKING, Any
 
 from lightning import Callback
-from lightning.pytorch.loggers.logger import DummyLogger
 from torch.cuda import is_available as is_cuda_available
 
+from otx.backend.native.callbacks import BatchSizeFinder
 from otx.utils.device import is_xpu_available
 
-from .bs_search_algo import BsSearchAlgo
+from .algorithm import BsSearchAlgo
 
 if TYPE_CHECKING:
-    from lightning import LightningModule, Trainer
-
-    from otx.engine.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
 logger = logging.getLogger(__name__)
 
 
 def adapt_batch_size(
-    engine: Engine,
+    engine: OTXEngine,
     not_increase: bool = True,
     callbacks: list[Callback] | Callback | None = None,
     **train_args,
@@ -38,7 +36,7 @@ def adapt_batch_size(
     If not_increase is False, increase batch size to use most of GPU memory.
 
     Args:
-        engine (Engine): engine instnace.
+        engine (OTXEngine): engine instnace.
         not_increase (bool) : Whether adapting batch size to larger value than default value or not.
         callbacks (list[Callback] | Callback | None, optional): callbacks used during training. Defaults to None.
     """
@@ -89,7 +87,7 @@ def _adjust_train_args(train_args: dict[str, Any]) -> dict[str, Any]:
     return train_args
 
 
-def _train_model(bs: int, engine: Engine, callbacks: list[Callback] | Callback | None = None, **train_args) -> None:
+def _train_model(bs: int, engine: OTXEngine, callbacks: list[Callback] | Callback | None = None, **train_args) -> None:
     if bs <= 0:
         msg = f"Batch size should be greater than 0, but {bs} is given."
         raise ValueError(msg)
@@ -109,60 +107,7 @@ def _register_callback(callbacks: list[Callback] | Callback | None = None) -> li
     return callbacks
 
 
-class BatchSizeFinder(Callback):
-    """This callback makes trainer run specified iteration and exit.
-
-    Args:
-        steps_per_trial: number of steps to run with a given batch size.
-            Ideally 1 should be enough to test if an OOM error occurs, however in practice a few are needed.
-    """
-
-    def __init__(
-        self,
-        steps_per_trial: int = 3,
-    ) -> None:
-        self._steps_per_trial = steps_per_trial
-
-    def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str | None = None) -> None:
-        """Check current stage is fit."""
-        if stage != "fit":
-            msg = "Adaptive batch size supports only training."
-            raise RuntimeError(msg)
-
-    def on_fit_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        """Run steps_per_trial iterations and exit."""
-        _scale_batch_reset_params(trainer, self._steps_per_trial)
-        _try_loop_run(trainer)
-
-
-def _try_loop_run(trainer: Trainer) -> None:
-    loop = trainer._active_loop  # noqa: SLF001
-    if loop is None:
-        msg = "There is no active loop."
-        raise RuntimeError(msg)
-    loop.restarting = False
-    loop.run()
-
-
-def _scale_batch_reset_params(trainer: Trainer, steps_per_trial: int) -> None:
-    trainer.logger = DummyLogger() if trainer.logger is not None else None
-    trainer.callbacks = []
-
-    loop = trainer._active_loop  # noqa: SLF001
-    if loop is None:
-        msg = "There is no active loop."
-        raise RuntimeError(msg)
-    if trainer.fit_loop.epoch_loop.max_steps == -1:  # epoch based loop
-        trainer.fit_loop.max_epochs = 1
-        trainer.limit_train_batches = steps_per_trial
-    else:  # iter based loop
-        trainer.fit_loop.epoch_loop.max_steps = steps_per_trial
-        trainer.limit_train_batches = 1.0
-    if trainer.limit_val_batches != 0:
-        trainer.limit_val_batches = steps_per_trial
-
-
-def _apply_new_batch_size(engine: Engine, new_batch_size: int) -> None:
+def _apply_new_batch_size(engine: OTXEngine, new_batch_size: int) -> None:
     origin_bs = engine.datamodule.train_subset.batch_size
     if new_batch_size == origin_bs:
         return

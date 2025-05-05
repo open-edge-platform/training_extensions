@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
+from otx.backend.native.engine import OTXEngine
+from otx.backend.native.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType
-from otx.engine import Engine
-from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK
 
 
 @pytest.mark.parametrize("task", pytest.TASK_LIST)
@@ -38,7 +38,7 @@ def test_auto_configuration(
 
     tmp_path_train = tmp_path / f"auto_train_{task}"
     data_root = fxt_target_dataset_per_task[task.lower()]
-    engine = Engine(data_root=data_root, task=task, work_dir=tmp_path_train, device=fxt_accelerator)
+    engine = OTXEngine(data_root=data_root, task=task, work_dir=tmp_path_train, device=fxt_accelerator)
 
     # Check OTXModel & OTXDataModule
     assert isinstance(engine.model, OTXModel)

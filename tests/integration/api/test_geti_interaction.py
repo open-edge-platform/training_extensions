@@ -29,7 +29,7 @@ from tests.integration.api.geti_otx_config_utils import (
 )
 
 if TYPE_CHECKING:
-    from otx.engine.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
 TEST_ARROW_PATH = Path(__file__).parent.parent.parent / "assets" / "geti_config_arrow"
 DEFAULT_GETI_CONFIG_PER_TASK = {
@@ -114,7 +114,7 @@ class TestEngineAPI:
         )
         return otx_config.to_otx_config(self.tmp_path)
 
-    def _instantiate_engine(self) -> tuple[Engine, dict[str, Any]]:
+    def _instantiate_engine(self) -> tuple[OTXEngine, dict[str, Any]]:
         return ConfigConverter.instantiate(
             config=self.otx_config,
             work_dir=self.tmp_path,
