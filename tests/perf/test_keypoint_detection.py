@@ -14,7 +14,7 @@ from .conftest import PerfTestBase
 
 
 class TestPerfKeypointDetection(PerfTestBase):
-    """Benchmark visual prompting."""
+    """Benchmark Keypoint detection."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
         Benchmark.Model(task="keypoint_detection", name="rtmpose_tiny", category="speed"),
@@ -87,7 +87,7 @@ class TestPerfKeypointDetection(PerfTestBase):
 
 
 class TestPerfKeypointDetectionSingleObj(PerfTestBase):
-    """Benchmark visual prompting."""
+    """Benchmark keypoint detection."""
 
     MODEL_TEST_CASES = [  # noqa: RUF012
         Benchmark.Model(task="keypoint_detection", name="rtmpose_tiny_single_obj", category="speed"),
