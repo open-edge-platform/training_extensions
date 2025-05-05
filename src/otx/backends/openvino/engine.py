@@ -194,7 +194,7 @@ class OVEngine:
 
         for data_batch in datamodule.test_dataloader():
             preds = self.model(data_batch)
-            metric_inputs = self.prepare_metric_inputs(preds, data_batch)
+            metric_inputs = self.model.prepare_metric_inputs(preds, data_batch)
             metric.update(**metric_inputs)
 
         return self.model.compute_metric(metric)

@@ -161,10 +161,9 @@ class OVModel:
     def forward(self, inputs: T_OTXBatchDataEntity, async_inference: bool = True) -> T_OTXBatchPredEntity:
         """Model forward function."""
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
-        if self.async_inference:
-            outputs = self.model.infer_batch(numpy_inputs)
-        else:
-            outputs = [self.model(im) for im in numpy_inputs]
+        outputs = (self.model.infer_batch(numpy_inputs)
+                   if async_inference
+                   else [self.model(im) for im in numpy_inputs])
 
         customized_outputs = self._customize_outputs(outputs, inputs)
 

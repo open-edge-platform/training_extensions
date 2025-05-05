@@ -378,6 +378,7 @@ class AutoConfigurator:
         Raises:
             NotImplementedError: If the OVModel for the given task is not supported.
         """
+
         class_path = OVMODEL_PER_TASK.get(self.task, None)
         if class_path is None:
             msg = f"{self.task} doesn't support OVModel."

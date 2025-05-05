@@ -16,7 +16,7 @@ from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
     MultiClassClsMetricCallable,
 )
-from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
+from otx.backends.openvino.models.base import OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
@@ -88,7 +88,7 @@ class OVMulticlassClassificationModel(
             labels=pred_labels,
         )
 
-    def _convert_pred_entity_to_compute_metric(
+    def prepare_metric_inputs(
         self,
         preds: TorchPredBatch,
         inputs: TorchDataBatch,
