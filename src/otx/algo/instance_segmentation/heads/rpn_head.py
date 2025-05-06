@@ -23,7 +23,7 @@ from otx.algo.instance_segmentation.utils.utils import unpack_inst_seg_entity
 from otx.algo.modules import build_activation_layer
 from otx.algo.modules.conv_module import Conv2dModule
 from otx.algo.utils.utils import InstanceData
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 if TYPE_CHECKING:
     from otx.algo.common.utils.assigners import MaxIoUAssigner
@@ -162,7 +162,7 @@ class RPNHeadModule(AnchorHead):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: TorchDataBatch,  # type: ignore[override]
+        entity: OTXDataBatch,  # type: ignore[override]
     ) -> tuple:
         """Perform forward propagation and prepare outputs for loss calculation.
 
@@ -202,7 +202,7 @@ class RPNHeadModule(AnchorHead):
     def predict(
         self,
         x: tuple[Tensor, ...],
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Forward-prop of the detection head and predict detection results on the features of the upstream network.

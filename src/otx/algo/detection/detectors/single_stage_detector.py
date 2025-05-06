@@ -16,7 +16,7 @@ import torch
 from otx.algo.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstSepBNHead
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.utils import InstanceData
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 if TYPE_CHECKING:
     from torch import Tensor, nn
@@ -89,7 +89,7 @@ class SingleStageDetector(BaseModule):
 
     def forward(
         self,
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor] | list[InstanceData] | tuple[torch.Tensor] | torch.Tensor:
         """The unified entry for a forward process in both training and test.
@@ -133,7 +133,7 @@ class SingleStageDetector(BaseModule):
 
     def loss(
         self,
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
     ) -> dict:
         """Calculate losses from a batch of inputs and data samples.
 
@@ -155,7 +155,7 @@ class SingleStageDetector(BaseModule):
 
     def predict(
         self,
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
         rescale: bool = True,
     ) -> list[InstanceData]:
         """Predict results from a batch of inputs and data samples with post-processing.

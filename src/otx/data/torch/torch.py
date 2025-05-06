@@ -21,6 +21,7 @@ from .validations import (
 )
 
 if TYPE_CHECKING:
+    import numpy as np
     from datumaro import Polygon
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
@@ -31,11 +32,11 @@ if TYPE_CHECKING:
 # TODO(ashwinvaidya17): Remove this once custom transforms are removed
 @register_pytree_node
 @dataclass
-class TorchDataItem(ValidateItemMixin, Mapping):
-    """Torch data item implementation.
+class OTXDataItem(ValidateItemMixin, Mapping):
+    """OTX data item implementation.
 
     Attributes:
-        image (torch.Tensor): The image tensor.
+        image (torch.Tensor | np.ndarray ): The image tensor
         label (torch.Tensor | None): The label tensor, optional.
         masks (Mask | None): The masks, optional.
         bboxes (BoundingBoxes | None): The bounding boxes, optional.
@@ -44,7 +45,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
         img_info (ImageInfo | None): Additional image information, optional.
     """
 
-    image: torch.Tensor
+    image: torch.Tensor | np.ndarray
     label: torch.Tensor | None = None
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
@@ -53,7 +54,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
     img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod
-    def collate_fn(items: list[TorchDataItem]) -> TorchDataBatch:
+    def collate_fn(items: list[OTXDataItem]) -> OTXDataBatch:
         """Collate TorchDataItems into a batch.
 
         Args:
@@ -68,7 +69,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
             # we need this only in case of OV inference, where no resize
             images = [item.image for item in items]
 
-        return TorchDataBatch(
+        return OTXDataBatch(
             batch_size=len(items),
             images=images,
             labels=[item.label for item in items],
@@ -89,7 +90,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
     def __len__(self) -> int:
         return len(fields(self))
 
-    def to_tv_image(self):
+    def to_tv_image(self) -> OTXDataItem:
         """Return a new instance with the `image` attribute converted to a TorchVision Image if it is a NumPy array.
 
         Returns:
@@ -101,7 +102,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
 
         return self.wrap(image=F.to_image(self.image))
 
-    def wrap(self, **kwargs):
+    def wrap(self, **kwargs) -> OTXDataItem:
         """Wrap this dataclass with the given keyword arguments.
 
         Args:
@@ -115,7 +116,7 @@ class TorchDataItem(ValidateItemMixin, Mapping):
 
 
 @dataclass
-class TorchDataBatch(ValidateBatchMixin):
+class OTXDataBatch(ValidateBatchMixin):
     """Torch data item batch implementation."""
 
     batch_size: int  # TODO(ashwinvaidya17): Remove this
@@ -127,19 +128,19 @@ class TorchDataBatch(ValidateBatchMixin):
     polygons: list[list[Polygon]] | None = None
     imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
-    def pin_memory(self):
+    def pin_memory(self) -> OTXDataBatch:
         """Pin memory for member tensor variables."""
         # TODO(vinnamki): Keep track this issue
         # https://github.com/pytorch/pytorch/issues/116403
 
         kwargs = {}
 
-        def maybe_pin(x):
+        def maybe_pin(x: Any) -> Any:  # noqa: ANN401
             if isinstance(x, torch.Tensor):
                 return x.pin_memory()
             return x
 
-        def maybe_wrap_tv(x):
+        def maybe_wrap_tv(x: Any) -> Any:  # noqa: ANN401
             if isinstance(x, tv_tensors.TVTensor):
                 return tv_tensors.wrap(x.pin_memory(), like=x)
             return maybe_pin(x)
@@ -159,7 +160,7 @@ class TorchDataBatch(ValidateBatchMixin):
 
         return self.wrap(**kwargs)
 
-    def wrap(self, **kwargs):
+    def wrap(self, **kwargs) -> OTXDataBatch:
         """Wrap this dataclass with the given keyword arguments.
 
         Args:
@@ -173,7 +174,7 @@ class TorchDataBatch(ValidateBatchMixin):
 
 
 @dataclass
-class TorchPredItem(TorchDataItem):
+class OTXPredItem(OTXDataItem):
     """Torch prediction data item implementation."""
 
     scores: torch.Tensor | None = None
@@ -182,7 +183,7 @@ class TorchPredItem(TorchDataItem):
 
 
 @dataclass
-class TorchPredBatch(TorchDataBatch):
+class OTXPredBatch(OTXDataBatch):
     """Torch prediction data item batch implementation."""
 
     scores: list[torch.Tensor] | None = None

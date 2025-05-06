@@ -11,7 +11,7 @@ from datumaro import Bbox, Image
 from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
-from otx.data import TorchDataItem
+from otx.data import OTXDataItem
 
 from .base import OTXDataset
 
@@ -19,7 +19,7 @@ from .base import OTXDataset
 class OTXDetectionDataset(OTXDataset):
     """OTXDataset class for detection task."""
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -33,7 +33,7 @@ class OTXDetectionDataset(OTXDataset):
             else np.zeros((0, 4), dtype=np.float32)
         )
 
-        entity = TorchDataItem(
+        entity = OTXDataItem(
             image=img_data,
             img_info=ImageInfo(
                 img_idx=index,

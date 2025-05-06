@@ -8,11 +8,11 @@ import torch
 from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 
 @pytest.fixture()
-def fxt_keypoint_det_batch_data_entity() -> TorchDataBatch:
+def fxt_keypoint_det_batch_data_entity() -> OTXDataBatch:
     batch_size = 2
     random_tensor = torch.randn((batch_size, 3, 192, 256))
     tv_tensor = tv_tensors.Image(data=random_tensor)
@@ -28,7 +28,7 @@ def fxt_keypoint_det_batch_data_entity() -> TorchDataBatch:
     keypoints = torch.cat([keypoints, keypoints_visible.unsqueeze(-1)], dim=-1)
     labels = torch.ones(batch_size, dtype=torch.long)
 
-    return TorchDataBatch(
+    return OTXDataBatch(
         batch_size=2,
         images=tv_tensor,
         imgs_info=img_infos,

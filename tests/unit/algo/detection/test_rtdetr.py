@@ -12,7 +12,7 @@ from otx.algo.detection.rtdetr import RTDETR
 from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.core.model.base import DataInputParams
 from otx.core.types import LabelInfo
-from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 
 class TestRTDETR:
@@ -31,7 +31,7 @@ class TestRTDETR:
             "loss_vfl": torch.tensor(0.3),
             "loss_giou": torch.tensor(0.2),
         }
-        inputs = TorchDataBatch(
+        inputs = OTXDataBatch(
             batch_size=2,
             imgs_info=[
                 ImageInfo(img_idx=0, img_shape=(640, 640), ori_shape=(640, 640)),
@@ -71,7 +71,7 @@ class TestRTDETR:
         )
         result = model._customize_outputs(outputs, inputs)
 
-        assert isinstance(result, TorchPredBatch)
+        assert isinstance(result, OTXPredBatch)
         assert isinstance(result.scores, torch.Tensor)
         assert isinstance(result.bboxes, torch.Tensor)
         assert isinstance(result.labels, torch.Tensor)

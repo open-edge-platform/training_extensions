@@ -31,7 +31,7 @@ from otx.algo.modules.norm import build_norm_layer, is_norm
 from otx.algo.modules.scale import Scale
 from otx.algo.utils.utils import InstanceData
 from otx.algo.utils.weight_init import bias_init_with_prob, constant_init, normal_init
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 
 class RTMDetHead(ATSSHeadModule):
@@ -161,7 +161,7 @@ class RTMDetHead(ATSSHeadModule):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 

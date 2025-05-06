@@ -31,7 +31,7 @@ from otx.core.data.transform_libs.torchvision import (
     YOLOXHSVRandomAug,
 )
 from otx.core.data.transform_libs.utils import overlap_bboxes
-from otx.data import TorchDataBatch, TorchDataItem
+from otx.data import OTXDataBatch, OTXDataItem
 
 
 class MockFrame:
@@ -49,8 +49,8 @@ class MockVideo:
 
 
 @pytest.fixture()
-def det_data_entity() -> TorchDataItem:
-    return TorchDataItem(
+def det_data_entity() -> OTXDataItem:
+    return OTXDataItem(
         image=tv_tensors.Image(torch.randn(size=(3, 112, 224), dtype=torch.float32)),
         img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
         bboxes=tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(112, 224)),
@@ -63,7 +63,7 @@ class TestMinIoURandomCrop:
     def min_iou_random_crop(self) -> MinIoURandomCrop:
         return MinIoURandomCrop()
 
-    def test_forward(self, min_iou_random_crop: MinIoURandomCrop, det_data_entity: TorchDataItem) -> None:
+    def test_forward(self, min_iou_random_crop: MinIoURandomCrop, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
         results = min_iou_random_crop(deepcopy(det_data_entity))
 
@@ -92,7 +92,7 @@ class TestResize:
     def test_forward_only_image(
         self,
         resize: Resize,
-        fxt_det_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_det_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
         keep_ratio: bool,
         expected_shape: tuple,
         expected_scale_factor: tuple,
@@ -127,7 +127,7 @@ class TestResize:
     def test_forward_bboxes_masks_polygons(
         self,
         resize: Resize,
-        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
         keep_ratio: bool,
         expected_shape: tuple,
     ) -> None:
@@ -165,7 +165,7 @@ class TestRandomFlip:
     def test_forward(
         self,
         random_flip: RandomFlip,
-        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -201,7 +201,7 @@ class TestPhotoMetricDistortion:
     def photo_metric_distortion(self) -> PhotoMetricDistortion:
         return PhotoMetricDistortion()
 
-    def test_forward(self, photo_metric_distortion: PhotoMetricDistortion, det_data_entity: TorchDataItem) -> None:
+    def test_forward(self, photo_metric_distortion: PhotoMetricDistortion, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
         results = photo_metric_distortion(deepcopy(det_data_entity))
 
@@ -225,7 +225,7 @@ class TestRandomAffine:
         with pytest.raises(AssertionError):
             RandomAffine(scaling_ratio_range=(0, 0.5))
 
-    def test_forward(self, random_affine: RandomAffine, det_data_entity: TorchDataItem) -> None:
+    def test_forward(self, random_affine: RandomAffine, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
         results = random_affine(deepcopy(det_data_entity))
 
@@ -252,7 +252,7 @@ class TestCachedMosaic:
     def test_forward_pop_small_cache(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mosaic.max_cached_images = 4
@@ -271,7 +271,7 @@ class TestCachedMosaic:
     def test_forward(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -304,7 +304,7 @@ class TestCachedMixUp:
     def test_forward_pop_small_cache(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mixup.max_cached_images = 1  # force to set to 1 for this test
@@ -323,7 +323,7 @@ class TestCachedMixUp:
     def test_forward(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -346,7 +346,7 @@ class TestYOLOXHSVRandomAug:
     def yolox_hsv_random_aug(self) -> YOLOXHSVRandomAug:
         return YOLOXHSVRandomAug()
 
-    def test_forward(self, yolox_hsv_random_aug: YOLOXHSVRandomAug, det_data_entity: TorchDataItem) -> None:
+    def test_forward(self, yolox_hsv_random_aug: YOLOXHSVRandomAug, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
         results = yolox_hsv_random_aug(deepcopy(det_data_entity))
 
@@ -359,7 +359,7 @@ class TestYOLOXHSVRandomAug:
 class TestPad:
     def test_forward(
         self,
-        fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
     ) -> None:
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
@@ -411,7 +411,7 @@ class TestRandomResize:
         transform_str = str(transform)
         assert isinstance(transform_str, str)
 
-    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, TorchDataItem, TorchDataBatch]):
+    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch]):
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
         # choose target scale from init when override is True
@@ -467,15 +467,15 @@ class TestRandomResize:
 
 class TestRandomCrop:
     @pytest.fixture()
-    def entity(self) -> TorchDataItem:
-        return TorchDataItem(
+    def entity(self) -> OTXDataItem:
+        return OTXDataItem(
             image=torch.randn((3, 24, 32), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(24, 32), ori_shape=(24, 32)),
         )
 
     @pytest.fixture()
-    def det_entity(self) -> TorchDataItem:
-        return TorchDataItem(
+    def det_entity(self) -> OTXDataItem:
+        return OTXDataItem(
             image=torch.randn((3, 10, 10), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
@@ -487,8 +487,8 @@ class TestRandomCrop:
         )
 
     @pytest.fixture()
-    def iseg_entity(self) -> TorchDataItem:
-        return TorchDataItem(
+    def iseg_entity(self) -> OTXDataItem:
+        return OTXDataItem(
             image=torch.randn((3, 10, 10), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
@@ -664,8 +664,8 @@ class TestRandomCrop:
 
 class TestTopdownAffine:
     @pytest.fixture()
-    def keypoint_det_entity(self) -> TorchDataItem:
-        return TorchDataItem(
+    def keypoint_det_entity(self) -> OTXDataItem:
+        return OTXDataItem(
             image=torch.randint(0, 255, size=(3, 10, 10), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
             bboxes=tv_tensors.BoundingBoxes(
