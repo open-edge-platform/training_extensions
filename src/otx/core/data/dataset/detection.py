@@ -9,7 +9,6 @@ import numpy as np
 import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.data import TorchDataItem

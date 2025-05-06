@@ -6,10 +6,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, fields, asdict
+from dataclasses import asdict, dataclass, fields
 from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
+import torchvision.transforms.v2.functional as F  # noqa: N812
+from torchvision import tv_tensors
 
 from otx.core.data.entity.utils import register_pytree_node
 
@@ -17,8 +19,6 @@ from .validations import (
     ValidateBatchMixin,
     ValidateItemMixin,
 )
-
-from torchvision import tv_tensors
 
 if TYPE_CHECKING:
     from datumaro import Polygon
@@ -89,6 +89,30 @@ class TorchDataItem(ValidateItemMixin, Mapping):
     def __len__(self) -> int:
         return len(fields(self))
 
+    def to_tv_image(self):
+        """Return a new instance with the `image` attribute converted to a TorchVision Image if it is a NumPy array.
+
+        Returns:
+            A new instance with the `image` attribute converted to a TorchVision Image, if applicable.
+            Otherwise, return this instance as is.
+        """
+        if isinstance(self.image, tv_tensors.Image):
+            return self
+
+        return self.wrap(image=F.to_image(self.image))
+
+    def wrap(self, **kwargs):
+        """Wrap this dataclass with the given keyword arguments.
+
+        Args:
+            **kwargs: Keyword arguments to be overwritten on top of this dataclass
+        Returns:
+            Updated dataclass
+        """
+        updated_kwargs = asdict(self)
+        updated_kwargs.update(**kwargs)
+        return self.__class__(**updated_kwargs)
+
 
 @dataclass
 class TorchDataBatch(ValidateBatchMixin):
@@ -108,16 +132,33 @@ class TorchDataBatch(ValidateBatchMixin):
         # TODO(vinnamki): Keep track this issue
         # https://github.com/pytorch/pytorch/issues/116403
 
-        return self.wrap(
-            images=(
-                [tv_tensors.wrap(image.pin_memory(), like=image) for image in self.images]
-                if isinstance(self.images, list)
-                else tv_tensors.wrap(self.images.pin_memory(), like=self.images)
-            ),
-            bboxes=[tv_tensors.wrap(bbox.pin_memory(), like=bbox) for bbox in self.bboxes],
-            labels=[label.pin_memory() for label in self.labels],
-        )
-    
+        kwargs = {}
+
+        def maybe_pin(x):
+            if isinstance(x, torch.Tensor):
+                return x.pin_memory()
+            return x
+
+        def maybe_wrap_tv(x):
+            if isinstance(x, tv_tensors.TVTensor):
+                return tv_tensors.wrap(x.pin_memory(), like=x)
+            return maybe_pin(x)
+
+        # Handle images separately because of tv_tensors wrapping
+        if self.images is not None:
+            if isinstance(self.images, list):
+                kwargs["images"] = [maybe_wrap_tv(img) for img in self.images]
+            else:
+                kwargs["images"] = maybe_wrap_tv(self.images)
+
+        # Generic handler for all other fields
+        for field in ["labels", "bboxes", "keypoints", "masks"]:
+            value = getattr(self, field)
+            if value is not None:
+                kwargs[field] = [maybe_wrap_tv(v) if v is not None else None for v in value]
+
+        return self.wrap(**kwargs)
+
     def wrap(self, **kwargs):
         """Wrap this dataclass with the given keyword arguments.
 

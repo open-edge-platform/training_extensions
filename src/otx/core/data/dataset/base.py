@@ -112,7 +112,7 @@ class OTXDataset(Dataset):
 
     def _apply_transforms(self, entity: T_OTXDataEntity | TorchDataItem) -> T_OTXDataEntity | TorchDataItem | None:
         if isinstance(self.transforms, Compose):
-            if not isinstance(entity, TorchDataItem) and self.to_tv_image:
+            if self.to_tv_image:
                 entity = entity.to_tv_image()
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):

@@ -58,7 +58,6 @@ from otx.core.data.transform_libs.utils import (
     rescale_polygons,
     scale_size,
     to_np_image,
-    to_tensor_image,
     translate_bboxes,
     translate_masks,
     translate_polygons,
@@ -301,7 +300,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
                 # adjust the img no matter whether the gt is empty before crop
                 img = img[patch[1] : patch[3], patch[0] : patch[2]]
-                inputs.image = to_tensor_image(img)
+                inputs.image = img
                 inputs.img_info = _crop_image_info(inputs.img_info, *img.shape[:2])
                 return self.convert(inputs)
 
@@ -702,7 +701,7 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 dst=None,
                 interpolation=CV2_INTERP_CODES[self.interpolation],
             )
-            inputs.image = to_tensor_image(img)
+            inputs.image = img
             inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
             if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None:
@@ -951,7 +950,7 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
             img = flip_image(img, direction=cur_dir)
             # copy is required as flip_image might return a view which is non-contiguous, and thus cannot be converted
             # to tensor directly
-            inputs.image = to_tensor_image(img.copy())
+            inputs.image = img
             img_shape = get_image_shape(img)
 
             # flip bboxes
@@ -1112,7 +1111,7 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
             if swap_flag:
                 img = img[..., swap_value]
 
-            inputs.image = to_tensor_image(img)
+            inputs.image = img
         return self.convert(inputs)
 
     def __repr__(self) -> str:
@@ -2304,7 +2303,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         img = img[crop_y1:crop_y2, crop_x1:crop_x2, ...]
         cropped_img_shape = img.shape[:2]
 
-        inputs.image = to_tensor_image(img)
+        inputs.image = img
         inputs.img_info = _crop_image_info(inputs.img_info, *cropped_img_shape)
 
         valid_inds: np.ndarray = np.array([1])  # for semantic segmentation
