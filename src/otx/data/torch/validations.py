@@ -211,7 +211,7 @@ class ValidateBatchMixin:
             msg = f"Image batch must be a torch tensor or list of tensors. Got {type(image_batch)}"
             raise TypeError(msg)
         if isinstance(image_batch, torch.Tensor):
-            if image_batch.dtype != torch.float32 or image_batch.dtype != torch.uint8:
+            if image_batch.dtype not in (torch.float32, torch.uint8):
                 msg = f"Image batch must have dtype float32 or uint8. Found {image_batch.dtype}"
                 raise ValueError(msg)
             if image_batch.ndim != 4:
@@ -224,11 +224,13 @@ class ValidateBatchMixin:
             if not all(isinstance(image, torch.Tensor) for image in image_batch):
                 msg = "Image batch must be a list of torch tensors"
                 raise TypeError(msg)
-            if not all(image.dtype == torch.float32 for image in image_batch) and not all(
-                image.dtype == torch.uint8 for image in image_batch
-            ):
+            dtype = image_batch[0].dtype
+            if dtype not in (torch.float32, torch.uint8):
                 msg = "Image batch must have dtype float32 or uint8"
                 raise ValueError(msg)
+            if not all(image.dtype == dtype for image in image_batch):
+                msg = f"Not all tensors have the same dtype: expected {dtype}"
+                raise TypeError(msg)
             if not all(image.ndim == 3 for image in image_batch):
                 msg = "Image batch must have 3 dimensions"
                 raise ValueError(msg)

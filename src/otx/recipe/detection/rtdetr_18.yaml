@@ -74,7 +74,11 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
-            scale: true
+            scale: false
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [255.0, 255.0, 255.0]
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
         - class_path: torchvision.transforms.v2.GaussianNoise
           enable: false
@@ -92,7 +96,11 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
-            scale: true
+            scale: false
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [255.0, 255.0, 255.0]
 
     test_subset:
       batch_size: 8
@@ -105,4 +113,8 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
-            scale: true
+            scale: false
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [255.0, 255.0, 255.0]
