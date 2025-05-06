@@ -24,10 +24,10 @@ jobs:
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.10"
-      - name: Install dependencies
-        run: python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
       - name: Freeze dependencies
-        run: pip-compile --extra=docs,base,mmlab,anomaly,transformers -o requirements.txt pyproject.toml
+        run: |
+          pip install '.[docs,base,mmlab,anomaly,transformers]'
+          pip freeze > requirements.txt
       - name: Run Trivy Scan (vuln)
         uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
         with:
@@ -111,10 +111,7 @@ jobs:
           python-version: "3.10"
       - name: Install tox
         run: |
-          python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
-          pip-compile --generate-hashes --output-file=/tmp/requirements.txt --extra=ci_tox pyproject.toml
-          python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
-          rm /tmp/requirements.txt
+          pip install '.[ci_tox]'
       - name: Bandit Scanning
         run: tox -e bandit-scan
 
