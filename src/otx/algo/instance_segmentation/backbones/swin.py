@@ -17,7 +17,7 @@ from typing import Callable
 import torch
 import torch.nn.functional
 import torch.utils.checkpoint as cp
-from timm.models.layers import DropPath, to_2tuple
+from timm.layers import DropPath, to_2tuple
 from torch import Tensor, nn
 
 from otx.algo.modules.base_module import BaseModule, ModuleList

@@ -661,7 +661,7 @@ class OVInstanceSegmentationModel(
         for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
             rles = (
                 [encode_rle(mask) for mask in _masks[idx].data]
-                if _masks is not None and _masks[idx] is not None
+                if _masks is not None and len(_masks[idx]) > 0
                 else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
             )
             target_info.append(

@@ -9,14 +9,49 @@ The current version of OpenVINO™ Training Extensions was tested in the followi
 
 - Ubuntu 20.04
 - Python >= 3.10
+- [`uv`](https://github.com/astral-sh/uv) for dependency and environment management
+
+***************
+Installing ``uv``
+***************
+
+To use OpenVINO™ Training Extensions with ``uv``, you first need to install the ``uv`` tool.
+
+You can install it in one of the following ways:
+
+.. tab-set::
+
+    .. tab-item:: Recommended (Standalone Binary)
+
+        .. code-block:: shell
+
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+
+        This method installs ``uv`` globally as a fast and portable binary.
+        After installation, make sure ``uv`` is available in your ``PATH``.
+
+    .. tab-item:: Via pip (Python-based)
+
+        .. code-block:: shell
+
+            pip install uv
+
+        This installs ``uv`` inside the currently active Python environment.
+
+    .. tab-item:: Verify Installation
+
+        After installation, confirm it works:
+
+        .. code-block:: shell
+
+            uv --version
 
 
 **********************************************************
 Install OpenVINO™ Training Extensions for users (CUDA/CPU)
 **********************************************************
 
-1. Install OpenVINO™ Training Extensions
-package:
+1. Install OpenVINO™ Training Extensions package:
 
 * A local source in development mode
 
@@ -26,23 +61,32 @@ package:
 
         .. code-block:: shell
 
-            pip install otx
+            # Create a virtual environment using uv
+            uv venv .otx --python 3.10 # or 3.11
+            source .otx/bin/activate
+
+            # Install from PyPI
+            uv pip install otx[base]
 
     .. tab-item:: Source
 
         .. code-block:: shell
 
-            # Clone the training_extensions repository with the following command:
+            # Clone the training_extensions repository:
             git clone https://github.com/open-edge-platform/training_extensions.git
             cd training_extensions
 
-            # Set up a virtual environment.
-            python -m venv .otx
+            # Create a virtual environment with uv
+            uv venv .otx --python 3.10 # or 3.11
             source .otx/bin/activate
 
-            pip install -e .[base]
+            # Install the package in editable mode with base dependencies
+            uv pip install -e .[base]
 
-2. Once the package is installed in the virtual environment, you can use full
+            # Install OTX in development mode
+            uv pip install -e .[dev]
+
+2. Once the package is installed in the virtual environment, you can use the full
 OpenVINO™ Training Extensions command line functionality.
 
 .. code-block:: shell
@@ -53,24 +97,24 @@ OpenVINO™ Training Extensions command line functionality.
 Install OpenVINO™ Training Extensions for users (Intel GPUs)
 *************************************************************
 
-1. Install OpenVINO™ Training Extensions
-from source to use XPU functionality.
+1. Install OpenVINO™ Training Extensions from source to use Intel XPU functionality:
 
 .. code-block:: shell
 
-    # Clone the training_extensions repository with the following command:
     git clone https://github.com/open-edge-platform/training_extensions.git
     cd training_extensions
 
-    pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
+    uv venv .otx --python 3.10 # or 3.11
+    source .otx/bin/activate
+
+    uv pip install -e '.[base]' --extra-index-url https://download.pytorch.org/whl/test/xpu
 
 .. note::
 
-    Please, refer to the `PyTorch official documentation guide <https://pytorch.org/docs/stable/notes/get_start_xpu.html>`_
-    to install prerequisites and resolve possible issues.
+    Please refer to the `PyTorch XPU installation guide <https://pytorch.org/docs/stable/notes/get_start_xpu.html>`_
+    to install prerequisites and resolve any potential issues.
 
-2. Once the package is installed in the virtual environment, you can use full
-OpenVINO™ Training Extensions command line functionality.
+2. Once installed, use the command-line interface:
 
 .. code-block:: shell
 
@@ -80,16 +124,27 @@ OpenVINO™ Training Extensions command line functionality.
 Install OpenVINO™ Training Extensions for developers
 ****************************************************
 
-Install ``tox`` and create a development environment:
+1. Install ``tox`` with the ``tox-uv`` plugin using uv's tool system:
 
 .. code-block:: shell
 
-    pip install tox
-    # -- need to replace '310' below if another python version needed
+    uv tool install tox --with tox-uv
+
+2. Create a development environment using ``tox``:
+
+.. code-block:: shell
+
+    # Replace '310' with '311' if using Python 3.11
     tox devenv venv/otx -e unit-test-py310
     source venv/otx/bin/activate
 
-Then you may change code, and all fixes will be directly applied to the editable package.
+Now you're ready to develop, test, and make changes — all reflected live in the editable install.
+
+.. note::
+
+    By installing ``tox`` with ``uv tool``, you ensure it runs in a reproducible and isolated environment,
+    with ``uv`` used internally to manage dependencies for each test environment.
+
 
 *****************************************************
 Install OpenVINO™ Training Extensions by using Docker
@@ -111,67 +166,67 @@ images are built correctly such as
 
     docker image ls | grep otx
 
-Example:
+Example output:
 
 .. code-block:: shell
 
-    otx                                           2.0.0-cuda-pretrained-ready                    4f3b5f98f97c   3 minutes ago   14.5GB
-    otx                                           2.0.0-cuda                                     8d14caccb29a   8 minutes ago   10.4GB
+    otx                                           2.0.0-cuda-pretrained-ready   4f3b5f98f97c   3 minutes ago   14.5GB
+    otx                                           2.0.0-cuda                    8d14caccb29a   8 minutes ago   10.4GB
 
-
-``otx:${OTX_VERSION}-cuda`` is a minimal Docker image where OTX is installed with CUDA supports. On the other hand, ``otx:${OTX_VERSION}-cuda-pretrained-ready`` includes all the model pre-trained weights that OTX provides in addition to ``otx:${OTX_VERSION}-cuda``.
+``otx:${OTX_VERSION}-cuda`` is a minimal Docker image with CUDA support.
+``otx:${OTX_VERSION}-cuda-pretrained-ready`` includes pre-trained models on top of the base image.
 
 *********
 Run tests
 *********
 
-To run some tests, need to have development environment on your host. The development requirements file (requirements/dev.txt)
-would be used to setup them.
+To run tests locally, install development dependencies:
 
 .. code-block:: shell
 
-    $ pip install -e '.[dev]'
-    $ pytest tests/
+    uv pip install -e '.[dev]'
+    pytest tests/
 
-Another option to run the tests is using the testing automation tool `tox <https://tox.wiki/en/latest/index.html>`_. Following commands will install
-the tool ``tox`` to your host and run all test codes inside of ``tests/integration`` folder.
+To run integration tests using `tox`:
 
-.. code-block::
+.. code-block:: shell
 
-    $ pip install tox
-    $ tox -e integration-test-all
+    uv tool install tox --with tox-uv
+    tox -e integration-test-all
 
 .. note::
 
-    When running the ``tox`` command above first time, it will create virtual env by installing all dependencies of this project into
-    the newly created environment for your testing before running the actual testing. So, it is expected to wait more than 10 minutes
-    before to see the actual testing results.
+    The first time `tox` is run, it will create virtual environments and install all required dependencies.
+    This may take several minutes before the actual tests begin.
 
 ***************
 Troubleshooting
 ***************
 
-1. If you have problems when you try to use ``pip install`` command,
-please update pip version by following command:
+1. If you encounter issues with `uv pip`, update uv:
 
 .. code-block:: shell
 
-    python -m pip install --upgrade pip
+    pip install --upgrade uv
 
-2. If you're facing a problem with ``torch`` or ``mmcv`` installation, please check that your CUDA version is compatible with torch version.
-Consider updating CUDA and CUDA drivers if needed.
-Check the `command example <https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=runfile_local>`_ to install CUDA 11.8 with drivers on Ubuntu 20.04.
+2. If you're having issues installing `torch` or `mmcv`, check CUDA compatibility with your PyTorch version.
+Update your CUDA toolkit and drivers if needed. See `CUDA 11.8 Installer <https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=runfile_local>`_.
 
-3. If you have access to the Internet through the proxy server only,
-please use pip with proxy call as demonstrated by command below:
+3. If you're behind a proxy server, set your proxy environment variable:
 
 .. code-block:: shell
 
-    python -m pip install --proxy http://<usr_name>:<password>@<proxyserver_name>:<port#> <pkg_name>
+    export HTTP_PROXY=http://<user>:<password>@<proxy>:<port>
+    uv pip install <package>
 
-4. If you're facing a problem with CLI side of the OTX, please check the help message of the command by using ``--help`` option.
-If you still want to see more ``jsonargparse``-related messages, you can set the environment variables like below.
+4. For CLI-related issues, check the help message:
 
 .. code-block:: shell
 
-    export JSONARGPARSE_DEBUG=1 # 0: Off, 1: On
+    otx --help
+
+To see additional messages from `jsonargparse`, enable debug output:
+
+.. code-block:: shell
+
+    export JSONARGPARSE_DEBUG=1  # 0: Off, 1: On
