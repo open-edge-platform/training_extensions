@@ -177,6 +177,11 @@ TEMPLATE_ID_DICT = {
         "task": OTXTaskType.ANOMALY,
         "model_name": "uflow",
     },
+    # KEYPOINT_DETECTION
+    "Keypoint_Detection_RTMPose_Tiny": {
+        "task": OTXTaskType.KEYPOINT_DETECTION,
+        "model_name": "rtmpose_tiny",
+    },
 }
 
 
