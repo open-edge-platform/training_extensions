@@ -23,7 +23,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - Remove Visual Prompting
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>,<https://github.com/open-edge-platform/training_extensions/pull/4370>)
 
 ## \[2.4.0\]
 
