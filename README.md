@@ -74,13 +74,13 @@ If you want to make changes to the library, then a local installation is recomme
 Installing the library with pip is the easiest way to get started with otx.
 
 ```bash
-pip install otx[base]
+uv pip install otx
 ```
 
 For Intel GPUs users:
 
 ```bash
-pip install otx[base] --extra-index-url https://download.pytorch.org/whl/test/xpu
+uv pip install otx --extra-index-url https://download.pytorch.org/whl/test/xpu
 ```
 
 </details>
@@ -92,7 +92,7 @@ To install from source, you need to clone the repository and install the library
 ```bash
 # Use of virtual environment is highy recommended
 # Using conda
-yes | conda create -n otx_env python=3.10
+yes | conda create -n otx_env python=3.11
 conda activate otx_env
 
 # Or using your favorite virtual environment
