@@ -28,7 +28,6 @@ from datumaro.plugins.tiling.util import (
     x1y1x2y2_to_xywh,
 )
 from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
@@ -496,7 +495,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
             ori_shape=tile_shape,
         )
         return OTXDataItem(
-            image=to_dtype(to_image(tile_img), torch.float32),
+            image=tile_img,
             img_info=img_info,
         )
 
@@ -620,7 +619,7 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             ori_shape=tile_shape,
         )
         return OTXDataItem(
-            image=to_dtype(to_image(tile_img), torch.float32),
+            image=tile_img,
             img_info=img_info,
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),
         )
@@ -689,7 +688,7 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             ori_shape=tile_shape,
         )
         return OTXDataItem(
-            image=to_dtype(to_image(tile_img), torch.float32),
+            image=tile_img,
             img_info=img_info,
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),
         )

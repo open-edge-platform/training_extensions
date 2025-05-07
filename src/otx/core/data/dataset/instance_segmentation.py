@@ -13,7 +13,6 @@ import torch
 from datumaro import Bbox, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
 from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.utils.mask_util import polygon_to_bitmap
@@ -91,7 +90,7 @@ class OTXInstanceSegDataset(OTXDataset):
         labels = np.array(gt_labels, dtype=np.int64)
 
         entity = OTXDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
+            image=img_data,
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,
