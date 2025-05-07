@@ -135,7 +135,6 @@ class OTXEngine(Engine):
             task=datamodule.task if datamodule is not None else task,
             model_name=None if isinstance(model, OTXModel) else model,
         )
-
         self._datamodule: OTXDataModule | None = (
             datamodule if datamodule is not None else self._auto_configurator.get_datamodule()
         )

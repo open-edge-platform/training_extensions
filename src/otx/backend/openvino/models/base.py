@@ -10,63 +10,36 @@ import contextlib
 import inspect
 import json
 import logging
-import warnings
-from abc import abstractmethod
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
-from model_api.adapters import OpenvinoAdapter, create_core
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import openvino
 import torch
-from datumaro import LabelCategories
 from jsonargparse import ArgumentParser
-from lightning import LightningModule, Trainer
+from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
 from model_api.tilers import Tiler
-from torch import Tensor, nn
-from torch.optim.lr_scheduler import ConstantLR
-from torch.optim.sgd import SGD
-from torchmetrics import Metric, MetricCollection
+from torch import Tensor
+from torchmetrics import Metric
 
-from otx import __version__
-from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import (
     ImageInfo,
     OTXBatchDataEntity,
-    OTXBatchLossEntity,
-    T_OTXBatchDataEntity,
-    T_OTXBatchPredEntity,
 )
-from otx.core.data.entity.tile import OTXTileBatchDataEntity
 from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.metrics import MetricInput, NullMetricCallable
-from otx.core.optimizer.callable import OptimizerCallableSupportAdaptiveBS
-from otx.core.schedulers import (
-    LinearWarmupScheduler,
-    LinearWarmupSchedulerCallable,
-    LRSchedulerListCallable,
-    SchedulerCallableSupportAdaptiveBS,
-)
-from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
-from otx.core.types.label import LabelInfo, LabelInfoTypes, NullLabelInfo
+from otx.core.metrics import NullMetricCallable
+from otx.core.types.export import OTXExportFormatType
+from otx.core.types.label import LabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.utils.build import get_default_num_async_infer_requests
-from otx.core.utils.miscellaneous import ensure_callable
-from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
 from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from lightning.pytorch.utilities.types import LRSchedulerTypeUnion, OptimizerLRScheduler
     from model_api.adapters import OpenvinoAdapter
-    from torch.optim.lr_scheduler import LRScheduler
-    from torch.optim.optimizer import Optimizer, params_t
 
     from otx.core.data.module import OTXDataModule
-    from otx.core.exporter.base import OTXModelExporter
     from otx.core.metrics import MetricCallable
 
 logger = logging.getLogger()
@@ -87,7 +60,7 @@ class OVModel:
 
     def __init__(
         self,
-        model_name: str,
+        model_path: str,
         model_type: str,
         async_inference: bool = True,
         force_cpu: bool = True,
@@ -95,15 +68,17 @@ class OVModel:
         use_throughput_mode: bool = True,
         model_api_configuration: dict[str, Any] | None = None,
         metric: MetricCallable = NullMetricCallable,
-        **kwargs,
     ) -> None:
-        self.model_name = model_name
         self.model_type = model_type
+        self.model_path = model_path
         self.force_cpu = force_cpu
         self.async_inference = async_inference
         self.num_requests = max_num_requests if max_num_requests is not None else get_default_num_async_infer_requests()
         self.use_throughput_mode = use_throughput_mode
         self.model_api_configuration = model_api_configuration if model_api_configuration is not None else {}
+        self.model = self._create_model()
+        self.metric_callable = metric
+        self._label_info = self._create_label_info_from_ov_ir()
 
         tile_enabled = False
         with contextlib.suppress(RuntimeError):
@@ -142,7 +117,7 @@ class OVModel:
 
         model_adapter = OpenvinoAdapter(
             ie,
-            self.model_name,
+            self.model_path,
             device=ov_device,
             max_num_requests=self.num_requests,
             plugin_config=plugin_config,
@@ -153,18 +128,15 @@ class OVModel:
 
         return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
 
-    def _customize_inputs(self, entity: T_OTXBatchDataEntity) -> dict[str, Any]:
+    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
         # restore original numpy image
         images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
         return {"inputs": images}
 
-    def forward(self, inputs: T_OTXBatchDataEntity, async_inference: bool = True) -> T_OTXBatchPredEntity:
+    def forward(self, inputs: TorchDataBatch, async_inference: bool = True) -> TorchPredBatch:
         """Model forward function."""
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
-        outputs = (self.model.infer_batch(numpy_inputs)
-                   if async_inference
-                   else [self.model(im) for im in numpy_inputs])
-
+        outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
         customized_outputs = self._customize_outputs(outputs, inputs)
 
         return customized_outputs
@@ -257,7 +229,7 @@ class OVModel:
 
         return exported_path
 
-    def transform_fn(self, data_batch: T_OTXBatchDataEntity) -> np.array:
+    def transform_fn(self, data_batch: TorchDataBatch) -> np.array:
         """Data transform function for PTQ."""
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
@@ -336,6 +308,11 @@ class OVModel:
         """Model parameters for export."""
         return {}
 
+    @property
+    def label_info(self) -> LabelInfo:
+        """Get this model label information."""
+        return self._label_info
+
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
         ov_model = self.model.get_model()
 
@@ -372,3 +349,7 @@ class OVModel:
                 ),
             )
         return OTXBatchDataEntity(batch_size=batch_size, images=images, imgs_info=infos)
+
+    def __call__(self, *args, **kwds):
+        """Call the model."""
+        return self.forward(*args, **kwds)

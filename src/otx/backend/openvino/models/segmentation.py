@@ -7,39 +7,25 @@
 
 from __future__ import annotations
 
-import copy
 import json
 import logging as log
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import torch
-import torch.nn.functional as f
 from model_api.tilers import SemanticSegmentationTiler
 from torchvision import tv_tensors
 
-from otx.core.config.data import TileConfig
-from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.data.entity.tile import OTXTileBatchDataEntity
-from otx.core.exporter.base import OTXModelExporter
-from otx.core.exporter.native import OTXNativeModelExporter
+from otx.backend.openvino.models.base import OVModel
+from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricInput
 from otx.core.metrics.dice import SegmCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
-from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
-from otx.core.utils.tile_merge import SegmentationTileMerge
+from otx.core.types.label import SegLabelInfo
 from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import ImageResultWithSoftPrediction
-    from torch import Tensor
 
     from otx.core.metrics import MetricCallable
-    from otx.core.model.base import DataInputParams
 
 
 class OVSegmentationModel(OVModel):

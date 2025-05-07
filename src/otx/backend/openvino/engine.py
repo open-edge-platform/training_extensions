@@ -5,63 +5,24 @@
 
 from __future__ import annotations
 
-import copy
-import csv
-import inspect
-import logging
 import tempfile
-import time
-from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
+from typing import TYPE_CHECKING, Any
 from warnings import warn
+import xml.etree.ElementTree as ET
 
-import torch
-from lightning import Trainer, seed_everything
-from lightning.pytorch.plugins.precision import MixedPrecision
+import numpy as np
+from rich.progress import Progress
 
-from otx.core.config.device import DeviceConfig
+from otx.backend.native.utils.auto_configurator import AutoConfigurator
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel, OVModel
+from otx.core.model.base import OVModel
 from otx.core.types import PathLike
-from otx.core.types.device import DeviceType
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.precision import OTXPrecisionType
-from otx.core.types.task import OTXTaskType
-from otx.core.utils.cache import TrainerArgumentsCache
-from otx.utils.device import is_xpu_available
-from otx.utils.utils import measure_flops
-
-from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
+from otx.engine import Engine
 
 if TYPE_CHECKING:
-    from lightning import Callback
-    from lightning.pytorch.loggers import Logger
-    from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
-    from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
-
     from otx.core.metrics import MetricCallable
-
-
-@contextmanager
-def override_metric_callable(model: OTXModel, new_metric_callable: MetricCallable | None) -> Iterator[OTXModel]:
-    """Override `OTXModel.metric_callable` to change the evaluation metric.
-
-    Args:
-        model: Model to override its metric callable
-        new_metric_callable: If not None, override the model's one with this. Otherwise, do not override.
-    """
-    if new_metric_callable is None:
-        yield model
-        return
-
-    orig_metric_callable = model.metric_callable
-    try:
-        model.metric_callable = new_metric_callable
-        yield model
-    finally:
-        model.metric_callable = orig_metric_callable
 
 
 class OVEngine:
@@ -69,7 +30,6 @@ class OVEngine:
 
     This class defines the Engine for OTX, which governs each step of the OTX workflow.
     """
-
 
     def __init__(
         self,
@@ -87,33 +47,84 @@ class OVEngine:
             datamodule (OTXDataModule | None, optional): The data module for the engine. Defaults to None.
             model (OTXModel | str | None, optional): The model for the engine. Defaults to None.
             checkpoint (PathLike | None, optional): Path to the checkpoint file. Defaults to None.
-            device (DeviceType, optional): The device type to use. Defaults to DeviceType.auto.
-            num_devices (int, optional): The number of devices to use. If it is 2 or more, it will behave as multi-gpu.
-            **kwargs: Additional keyword arguments for pl.Trainer.
         """
         self.work_dir = work_dir
+        if isinstance(model, str) and model.endswith(".xml"):
+            task = self._derive_task_from_ir(model)
+        elif isinstance(model, OVModel):
+            task = model.task
+        else:
+            msg = "Model should be either a valid XML path or an instance of OVModel."
+            raise ValueError(msg)
+        if datamodule is not None:
+            if data_root is not None:
+                msg = "Please provide either `data_root` or `datamodule`, not both."
+                raise ValueError(msg)
+            if datamodule.task != task:
+                msg = (
+                    "The task of the provided datamodule does not match the task derived from the model. "
+                    f"datamodule.task={datamodule.task}, model.task={task}"
+                )
+                raise ValueError(msg)
+
+        self.task = task
         self._auto_configurator = AutoConfigurator(
             data_root=data_root,
-            task=datamodule.task if datamodule is not None else None,
-            model_name=None if isinstance(model, OVModel) else model,
+            task=task
         )
 
         self._datamodule: OTXDataModule | None = (
             datamodule if datamodule is not None else self._auto_configurator.get_datamodule()
         )
-        self._model: OVModel = (
-            model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
-        )
-        self.task = self._auto_configurator.task
+        self._model: OVModel = model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
 
-    # ------------------------------------------------------------------------ #
-    # General Engine Entry Points
-    # ------------------------------------------------------------------------ #
+    def _derive_task_from_ir(self, ir_xml: str) -> str:
+        """Derives the task from the IR model.
+
+        Args:
+            model (str): Path to the IR model.
+
+        Returns:
+            str: The derived task.
+        """
+        tree = ET.parse(ir_xml)
+        root = tree.getroot()
+        # Find <rt_info>
+        rt_info = root.find("rt_info")
+        if rt_info is None:
+            msg = "No <rt_info> found in the IR model XML file. Please check the model file."
+            raise ValueError(msg)
+
+        # Extract values
+        task_type = rt_info.find(".//task_type").attrib.get("value")
+        multilabel = rt_info.find(".//multilabel").attrib.get("value") == "True"
+        hierarchical = rt_info.find(".//hierarchical").attrib.get("value") == "True"
+        # Derive task name
+        if task_type == "classification":
+            if hierarchical:
+                task_name = "H_LABEL_CLS"
+            elif multilabel:
+                task_name = "MULTI_LABEL_CLS"
+            else:
+                task_name = "MULTI_CLASS_CLS"
+        elif task_type == "segmentation":
+            task_name = "SEMANTIC_SEGMENTATION"
+        elif task_type == "detection":
+            task_name = "DETECTION"
+        elif task_type == "instance_segmentation":
+            task_name = "INSTANCE_SEGMENTATION"
+        elif task_type == "keypoint_detection":
+            task_name = "KEYPOINT_DETECTION"
+        else:
+            msg = f"Unsupported task type: {task_type}. Please check the model file."
+            raise ValueError(msg)
+
+        return task_name
 
     def test(
         self,
         checkpoint: PathLike | None = None,
-        datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
+        datamodule: OTXDataModule | None = None,
         metric: MetricCallable | None = None,
     ) -> dict:
         r"""Run the testing phase of the engine.
@@ -121,7 +132,7 @@ class OVEngine:
         Args:
             checkpoint (PathLike | None, optional): Path to the checkpoint file to load the model from.
                 Defaults to None.
-            datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module containing the test data.
+            datamodule (OTXDataModule | None, optional): The data module containing the test data.
             metric (MetricCallable | None): If not None, it will override `OTXModel.metric_callable` with the given
                 metric callable. It will temporarilly change the evaluation metric for the validation and test.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
@@ -156,10 +167,8 @@ class OVEngine:
                 >>> otx test --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str>
                 ```
         """
-        model = self.model
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         datamodule = datamodule if datamodule is not None else self.datamodule
-        metric = metric if metric is not None else model.metric_callable
+        metric = metric if metric is not None else self.model.metric_callable(label_info=datamodule.label_info)
 
         if datamodule is None:
             msg = "Please provide the `data_root` or `datamodule` when creating the Engine, or pass a `datamodule` in OVEngine.test()."
@@ -168,7 +177,7 @@ class OVEngine:
             msg = "Please provide a `metric` in OVEngine or pass it in OVEngine.test()."
             raise RuntimeError(msg)
 
-        if checkpoint is None and model is None:
+        if checkpoint is None and self.model is None:
             msg = "Please provide either a model or a checkpoint path."
             raise ValueError(msg)
         elif checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml", ".onnx"]:
@@ -176,11 +185,8 @@ class OVEngine:
             raise RuntimeError(msg)
         elif checkpoint is not None:
             model = self._auto_configurator.get_ov_model(model_name=str(checkpoint), label_info=datamodule.label_info)
-
-        if self.device.accelerator != "cpu":
-            msg = "IR model supports inference only on CPU device. The device is changed automatic."
-            warn(msg, stacklevel=1)
-            self.device = DeviceType.cpu  # type: ignore[assignment]
+        else:
+            model = self.model
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -192,12 +198,16 @@ class OVEngine:
             )
             raise ValueError(msg)
 
-        for data_batch in datamodule.test_dataloader():
-            preds = self.model(data_batch)
-            metric_inputs = self.model.prepare_metric_inputs(preds, data_batch)
-            metric.update(**metric_inputs)
+        with Progress() as progress:
+            dataloader = datamodule.test_dataloader()
+            task = progress.add_task("Testing", total=len(dataloader))
+            for data_batch in dataloader:
+                preds = self.model(data_batch)
+                metric_inputs = self.model.prepare_metric_inputs(preds, data_batch)
+                metric.update(**metric_inputs)
+                progress.update(task, advance=1)
 
-        return self.model.compute_metric(metric)
+        return self.model.compute_metrics(metric)
 
     def predict(
         self,
@@ -211,7 +221,7 @@ class OVEngine:
 
         Args:
             checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
-            datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.
+            datamodule (OTXDataModule | None, optional): The data module to use for predictions.
             return_predictions (bool | None, optional): Whether to return the predictions or not.
             explain (bool, optional): Whether to dump "saliency_map" and "feature_vector" or not.
             explain_config (ExplainConfig | None, optional): Explain configuration used for saliency map post-processing
@@ -276,7 +286,6 @@ class OVEngine:
             )
             raise ValueError(msg)
 
-
         curr_explain_mode = model.explain_mode
         try:
             model.explain_mode = explain
@@ -296,7 +305,7 @@ class OVEngine:
     def optimize(
         self,
         checkpoint: PathLike | None = None,
-        datamodule: TRAIN_DATALOADERS | OTXDataModule | None = None,
+        datamodule: OTXDataModule | None = None,
         max_data_subset_size: int | None = None,
         export_demo_package: bool = False,
     ) -> Path:
@@ -380,7 +389,7 @@ class OVEngine:
     def explain(
         self,
         checkpoint: PathLike | None = None,
-        datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
+        datamodule: OTXDataModule | None = None,
         explain_config: ExplainConfig | None = None,
         **kwargs,
     ) -> list | None:
@@ -388,7 +397,7 @@ class OVEngine:
 
         Args:
             checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
-            datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.
+            datamodule (OTXDataModule | None, optional): The data module to use for predictions.
             explain_config (ExplainConfig | None, optional): Config used to handle saliency maps.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
@@ -469,88 +478,6 @@ class OVEngine:
         model.explain_mode = False
         return predict_result
 
-    @classmethod
-    def from_config(
-        cls,
-        config_path: PathLike,
-        data_root: PathLike | None = None,
-        work_dir: PathLike | None = None,
-        **kwargs,
-    ) -> Engine:
-        """Builds the engine from a configuration file.
-
-        Args:
-            config_path (PathLike): The configuration file path.
-            data_root (PathLike | None): Root directory for the data.
-                Defaults to None. If data_root is None, use the data_root from the configuration file.
-            work_dir (PathLike | None, optional): Working directory for the engine.
-                Defaults to None. If work_dir is None, use the work_dir from the configuration file.
-            kwargs: Arguments that can override the engine's arguments.
-
-        Returns:
-            Engine: An instance of the Engine class.
-
-        Example:
-            >>> engine = Engine.from_config(
-            ...     config="config.yaml",
-            ... )
-        """
-        from otx.cli.utils.jsonargparse import get_instantiated_classes
-
-        # For the Engine argument, prepend 'engine.' for CLI parser
-        filter_kwargs = ["device", "checkpoint", "task"]
-        for key in filter_kwargs:
-            if key in kwargs:
-                kwargs[f"engine.{key}"] = kwargs.pop(key)
-        instantiated_config, train_kwargs = get_instantiated_classes(
-            config=config_path,
-            data_root=data_root,
-            work_dir=work_dir,
-            **kwargs,
-        )
-        engine_kwargs = {**instantiated_config.get("engine", {}), **train_kwargs}
-
-        # Remove any input that is not currently available in Engine and print a warning message.
-        set_valid_args = TrainerArgumentsCache.get_trainer_constructor_args().union(
-            set(inspect.signature(Engine.__init__).parameters.keys()),
-        )
-        removed_args = []
-        for engine_key in list(engine_kwargs.keys()):
-            if engine_key not in set_valid_args:
-                engine_kwargs.pop(engine_key)
-                removed_args.append(engine_key)
-        if removed_args:
-            msg = (
-                f"Warning: {removed_args} -> not available in Engine constructor. "
-                "It will be ignored. Use what need in the right places."
-            )
-            warn(msg, stacklevel=1)
-
-        if (datamodule := instantiated_config.get("data")) is None:
-            msg = "Cannot instantiate datamodule from config."
-            raise ValueError(msg)
-        if not isinstance(datamodule, OTXDataModule):
-            raise TypeError(datamodule)
-
-        if (model := instantiated_config.get("model")) is None:
-            msg = "Cannot instantiate model from config."
-            raise ValueError(msg)
-        if not isinstance(model, OTXModel):
-            raise TypeError(model)
-
-        model.label_info = datamodule.label_info
-
-        return cls(
-            work_dir=instantiated_config.get("work_dir", work_dir),
-            datamodule=datamodule,
-            model=model,
-            **engine_kwargs,
-        )
-
-    # ------------------------------------------------------------------------ #
-    # Property and setter functions provided by Engine.
-    # ------------------------------------------------------------------------ #
-
     @property
     def work_dir(self) -> PathLike:
         """Work directory."""
@@ -559,37 +486,22 @@ class OVEngine:
     @work_dir.setter
     def work_dir(self, work_dir: PathLike) -> None:
         self._work_dir = work_dir
-        self._cache.update(default_root_dir=work_dir)
-        self._cache.is_trainer_args_identical = False
 
     @property
-    def device(self) -> DeviceConfig:
-        """Device engine uses."""
-        return self._device
-
-    @device.setter
-    def device(self, device: DeviceType) -> None:
-        if is_xpu_available() and device == DeviceType.auto:
-            device = DeviceType.xpu
-        self._device = DeviceConfig(accelerator=device)
-        self._cache.update(accelerator=self._device.accelerator, devices=self._device.devices)
-        self._cache.is_trainer_args_identical = False
-
-    @property
-    def model(self) -> OTXModel:
+    def model(self) -> OVModel:
         """Returns the model object associated with the engine.
 
         Returns:
-            OTXModel: The OTXModel object.
+            OVModel: The OVModel object.
         """
         return self._model
 
     @model.setter
-    def model(self, model: OTXModel | str) -> None:
+    def model(self, model: OVModel | str) -> None:
         """Sets the model for the engine.
 
         Args:
-            model (OTXModel | str): The model to be set.
+            model (OVModel | str): The model to be set.
 
         Returns:
             None

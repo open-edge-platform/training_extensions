@@ -7,36 +7,22 @@
 from __future__ import annotations
 
 import logging as log
-import types
-from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from model_api.tilers import DetectionTiler
-from torchmetrics import Metric, MetricCollection
+from torchmetrics import Metric
 from torchvision import tv_tensors
 
-from otx.algo.explain.explain_algo import feature_vector_fn
-from otx.algo.utils.utils import InstanceData
-from otx.core.config.data import TileConfig
-from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.data.entity.tile import OTXTileBatchDataEntity
-from otx.core.data.entity.utils import stack_batch
+from otx.backend.openvino.models.base import OVModel
+from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
-from otx.core.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
-from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfoTypes
-from otx.core.utils.tile_merge import DetectionTileMerge
+from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
-
-    from otx.algo.detection.detectors import SingleStageDetector
 
 
 class OVDetectionModel(OVModel):

@@ -6,47 +6,27 @@
 
 from __future__ import annotations
 
-import copy
 import logging as log
-import types
-from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-import numpy as np
 import torch
 from model_api.tilers import InstanceSegmentationTiler
-from torch import Tensor
-from torchmetrics import Metric, MetricCollection
+from torchmetrics import Metric
 from torchvision import tv_tensors
-from torchvision.models.detection.image_list import ImageList
 
-from otx.algo.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
-from otx.algo.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
-from otx.algo.instance_segmentation.segmentors.two_stage import TwoStageDetector
-from otx.algo.utils.utils import InstanceData, load_checkpoint
-from otx.core.config.data import TileConfig
-from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.data.torch import TorchDataBatch, TorchPredBatch
-from otx.core.data.entity.tile import OTXTileBatchDataEntity
-from otx.core.data.entity.utils import stack_batch
+from otx.backend.openvino.models.base import OVModel
+from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricInput
-from otx.core.metrics.fmeasure import FMeasure
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
-from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
-from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfo
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
-from otx.core.utils.tile_merge import InstanceSegTileMerge
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import InstanceSegmentationResult
-    from torch import nn
 
     from otx.core.metrics import MetricCallable
-    from otx.core.model.base import DataInputParams
 
 
 class OVInstanceSegmentationModel(
@@ -112,8 +92,8 @@ class OVInstanceSegmentationModel(
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: InstanceSegBatchDataEntity,
-    ) -> InstanceSegBatchPredEntity | OTXBatchLossEntity:
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch | OTXBatchLossEntity:
         # add label index
         bboxes = []
         scores = []
@@ -124,99 +104,96 @@ class OVInstanceSegmentationModel(
                 tv_tensors.BoundingBoxes(
                     data=output.bboxes,
                     format="XYXY",
-                    canvas_size=inputs.imgs_info[-1].img_shape,
+                    canvas_size=inputs.imgs_info[-1].img_shape,  # type: ignore[union-attr,index]
                     device=self.device,
+                    dtype=torch.float32,
                 ),
             )
             # NOTE: OTX 1.5 filter predictions with result_based_confidence_threshold,
             # but OTX 2.0 doesn't have it in configuration.
             scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
             masks.append(torch.tensor(output.masks, device=self.device))
-            labels.append(torch.tensor(output.labels.reshape(-1) - 1, device=self.device))
+            labels.append(torch.tensor(output.labels.reshape(-1) - 1, device=self.device, dtype=torch.long))
 
         if outputs and outputs[0].saliency_map:
             predicted_s_maps = []
             for out in outputs:
-                image_map = np.array([s_map for s_map in out.saliency_map if s_map.ndim > 1])
+                image_map = torch.tensor(
+                    [s_map for s_map in out.saliency_map if s_map.size > 0],
+                    dtype=torch.float32,
+                    device=self.device,
+                )
                 predicted_s_maps.append(image_map)
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return InstanceSegBatchPredEntity(
+            return TorchPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
                 bboxes=bboxes,
-                masks=masks,
-                polygons=[],
+                masks=masks if any(mask.numel() > 0 for mask in masks) else None,
                 labels=labels,
                 saliency_map=predicted_s_maps,
                 feature_vector=predicted_f_vectors,
             )
 
-        return InstanceSegBatchPredEntity(
+        return TorchPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
             bboxes=bboxes,
-            masks=masks,
-            polygons=[],
+            masks=masks if any(mask.numel() > 0 for mask in masks) else None,
             labels=labels,
         )
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: InstanceSegBatchPredEntity,  # type: ignore[override]
-        inputs: InstanceSegBatchDataEntity,  # type: ignore[override]
+        preds: TorchPredBatch,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
         This function will convert mask to RLE format and cache the ground truth for the current batch.
 
         Args:
-            preds (InstanceSegBatchPredEntity): Current batch predictions.
-            inputs (InstanceSegBatchDataEntity): Current batch ground-truth inputs.
+            preds (TorchPredBatch): Current batch predictions.
+            inputs (TorchDataBatch): Current batch ground-truth inputs.
 
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
         """
-        pred_info = []
         target_info = []
 
-        for bboxes, masks, scores, labels in zip(
-            preds.bboxes,
-            preds.masks,
-            preds.scores,
-            preds.labels,
-        ):
-            pred_info.append(
-                {
-                    "boxes": bboxes.data,
-                    "masks": [encode_rle(mask) for mask in masks.data],
-                    "scores": scores,
-                    "labels": labels,
-                },
-            )
+        _bboxes = preds.bboxes if preds.bboxes is not None else None
+        _masks = preds.masks if preds.masks is not None else None
+        pred_info = [
+            {
+                "boxes": _bboxes[idx].data if _bboxes is not None else torch.empty((0, 4)),
+                "masks": [encode_rle(mask) for mask in _masks[idx].data]
+                if _masks is not None and len(_masks)
+                else torch.empty((0,)),
+                "scores": preds.scores[idx],  # type: ignore[index]
+                "labels": preds.labels[idx],  # type: ignore[index]
+            }
+            for idx in range(len(preds.labels))  # type: ignore[arg-type]
+        ]
 
-        for imgs_info, bboxes, masks, polygons, labels in zip(
-            inputs.imgs_info,
-            inputs.bboxes,
-            inputs.masks,
-            inputs.polygons,
-            inputs.labels,
-        ):
+        _bboxes = inputs.bboxes if inputs.bboxes is not None else None
+        _masks = inputs.masks if inputs.masks is not None else None
+        for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
             rles = (
-                [encode_rle(mask) for mask in masks.data]
-                if len(masks)
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)
+                [encode_rle(mask) for mask in _masks[idx].data]
+                if _masks is not None and _masks[idx] is not None
+                else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
             )
             target_info.append(
                 {
-                    "boxes": bboxes.data,
+                    "boxes": _bboxes[idx].data if _bboxes is not None else torch.empty((0, 4)),
                     "masks": rles,
-                    "labels": labels,
+                    "labels": inputs.labels[idx],  # type: ignore[index]
                 },
             )
         return {"preds": pred_info, "target": target_info}

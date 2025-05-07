@@ -11,17 +11,13 @@ from typing import TYPE_CHECKING, Any
 
 import torch
 
-from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
+from otx.backend.openvino.models.base import OVModel
+from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
-from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
-from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfoTypes
 from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import DetectedKeypoints
 
 

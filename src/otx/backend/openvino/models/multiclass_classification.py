@@ -7,23 +7,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import torch
-from torch import Tensor
 
-from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.exporter.base import OTXModelExporter
-from otx.core.exporter.native import OTXNativeModelExporter
+from otx.backend.openvino.models.base import OVModel
 from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
     MultiClassClsMetricCallable,
 )
-from otx.backends.openvino.models.base import OVModel
-from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfoTypes
 from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import ClassificationResult
 
     from otx.core.metrics import MetricCallable
@@ -40,6 +32,7 @@ class OVMulticlassClassificationModel(
 
     def __init__(
         self,
+        model_path: str,
         model_type: str = "Classification",
         async_inference: bool = True,
         max_num_requests: int | None = None,
@@ -48,6 +41,7 @@ class OVMulticlassClassificationModel(
         metric: MetricCallable = MultiClassClsMetricCallable,
     ) -> None:
         super().__init__(
+            model_path=model_path,
             model_type=model_type,
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -61,8 +55,8 @@ class OVMulticlassClassificationModel(
         outputs: list[ClassificationResult],
         inputs: TorchDataBatch,
     ) -> TorchPredBatch:
-        pred_labels = [torch.tensor(out.top_labels[0].id, dtype=torch.long, device=self.device) for out in outputs]
-        pred_scores = [torch.tensor(out.top_labels[0].confidence, device=self.device) for out in outputs]
+        pred_labels = [torch.tensor(out.top_labels[0].id, dtype=torch.long) for out in outputs]
+        pred_scores = [torch.tensor(out.top_labels[0].confidence) for out in outputs]
 
         if outputs and outputs[0].saliency_map.size != 0:
             # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)

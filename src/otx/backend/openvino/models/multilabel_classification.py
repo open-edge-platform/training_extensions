@@ -7,23 +7,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import torch
-from torch import Tensor
 
-from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.exporter.base import OTXModelExporter
-from otx.core.exporter.native import OTXNativeModelExporter
+from otx.backend.openvino.models.base import OVModel
 from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
     MultiLabelClsMetricCallable,
 )
-from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
-from otx.core.schedulers import LRSchedulerListCallable
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfoTypes
 from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from model_api.models.utils import ClassificationResult
 
     from otx.core.metrics import MetricCallable
