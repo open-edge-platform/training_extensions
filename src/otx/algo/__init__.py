@@ -23,5 +23,4 @@ __all__ = [
     "strategies",
     "strategies",
     "utils",
-    "visual_prompting",
 ]

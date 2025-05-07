@@ -41,7 +41,7 @@ dependencies = [
     "typeguard>=4.3,<4.5",
     # TODO(ashwinvaidya17): https://github.com/openvinotoolkit/anomalib/issues/2126
     "setuptools<70",
-    "torch==2.5.1",
+    "torch==2.7.0",
     "lightning==2.4.0",
     "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
@@ -57,7 +57,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "uv",
-    "tox==4.24.2",
+    "tox==4.25.0",
     "pre-commit==4.2.0",
     "pylint",
     "pytest",
@@ -66,7 +66,7 @@ dev = [
     "pytest-mock",
     "pytest-csv",
     "pytest-cov",
-    "onnxruntime==1.21.0",
+    "onnxruntime==1.21.1",
 ]
 
 docs = [
@@ -86,7 +86,7 @@ docs = [
 ]
 
 ci_tox = [
-    "tox==4.24.2",
+    "tox==4.25.0",
 ]
 
 ci_publish = [
@@ -100,7 +100,7 @@ ci_benchmark = [
     "ipython==9.0.2",
     "ipykernel==6.29.5",
     "openpyxl==3.1.5",
-    "mlflow==2.20.4",
+    "mlflow==2.21.3",
     "py-cpuinfo==9.0.0",
 ]
 
