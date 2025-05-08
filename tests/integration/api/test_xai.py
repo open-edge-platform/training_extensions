@@ -8,7 +8,7 @@ import openvino.runtime as ov
 import pytest
 
 from otx.core.data.entity.base import OTXBatchPredEntity
-from otx.data.torch import TorchPredBatch
+from otx.data.torch import OTXPredBatch
 from otx.engine import Engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
@@ -69,11 +69,11 @@ def test_forward_explain(
     )
 
     predict_result = engine.predict()
-    assert isinstance(predict_result[0], (OTXBatchPredEntity, TorchPredBatch))
+    assert isinstance(predict_result[0], (OTXBatchPredEntity, OTXPredBatch))
     assert not predict_result[0].has_xai_outputs
 
     predict_result_explain = engine.predict(explain=True)
-    assert isinstance(predict_result_explain[0], (OTXBatchPredEntity, TorchPredBatch))
+    assert isinstance(predict_result_explain[0], (OTXBatchPredEntity, OTXPredBatch))
     assert predict_result_explain[0].has_xai_outputs
 
     batch_size = len(predict_result[0].scores)
@@ -136,7 +136,7 @@ def test_predict_with_explain(
 
     # Predict with explain torch & process maps
     predict_result_explain_torch = engine.predict(explain=True)
-    assert isinstance(predict_result_explain_torch[0], (OTXBatchPredEntity, TorchPredBatch))
+    assert isinstance(predict_result_explain_torch[0], (OTXBatchPredEntity, OTXPredBatch))
     assert predict_result_explain_torch[0].has_xai_outputs
     assert predict_result_explain_torch[0].saliency_map is not None
     assert isinstance(predict_result_explain_torch[0].saliency_map[0], dict)
@@ -165,7 +165,7 @@ def test_predict_with_explain(
 
     # Predict OV model with xai & process maps
     predict_result_explain_ov = engine.predict(checkpoint=exported_model_path, explain=True)
-    assert isinstance(predict_result_explain_ov[0], (OTXBatchPredEntity, TorchPredBatch))
+    assert isinstance(predict_result_explain_ov[0], (OTXBatchPredEntity, OTXPredBatch))
     assert predict_result_explain_ov[0].has_xai_outputs
     assert predict_result_explain_ov[0].saliency_map is not None
     assert isinstance(predict_result_explain_ov[0].saliency_map[0], dict)

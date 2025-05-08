@@ -12,10 +12,10 @@ from torch import Tensor
 
 from otx.algo.common.utils.utils import sample_point
 from otx.algo.utils.utils import InstanceData
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 
-def unpack_inst_seg_entity(entity: TorchDataBatch) -> tuple:
+def unpack_inst_seg_entity(entity: OTXDataBatch) -> tuple:
     """Unpack gt_instances, gt_instances_ignore and img_metas based on batch_data_samples.
 
     Args:

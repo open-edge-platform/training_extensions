@@ -15,7 +15,7 @@ from torchvision import tv_tensors
 
 from otx.core.data.entity.utils import stack_batch
 from otx.core.types.task import OTXTaskType
-from otx.data import TorchDataBatch, TorchDataItem
+from otx.data import OTXDataBatch, OTXDataItem
 
 from .base import ImageInfo, T_OTXBatchDataEntity, T_OTXDataEntity
 
@@ -103,7 +103,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
     bboxes: list[tv_tensors.BoundingBoxes]
     labels: list[LongTensor]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, TorchDataBatch]]:
+    def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
         """Unbind batch data entity for detection task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
         tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
@@ -120,7 +120,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
                 tile_infos[i : i + self.batch_size],
             )
             batch_data_entities.append(
-                TorchDataBatch(
+                OTXDataBatch(
                     batch_size=self.batch_size,
                     images=stacked_images,
                     imgs_info=updated_img_info,  # type: ignore[arg-type]
@@ -137,7 +137,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
 
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
-                if not isinstance(entity, TorchDataItem):
+                if not isinstance(entity, OTXDataItem):
                     msg = "All entities should be TorchDataItem before collate_fn()"
                     raise TypeError(msg)
 
@@ -192,7 +192,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
     masks: list[tv_tensors.Mask]
     polygons: list[list[Polygon]]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, TorchDataBatch]]:
+    def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
         """Unbind batch data entity for instance segmentation task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
         tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
@@ -202,7 +202,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
             tile_attr_list[i : i + self.batch_size] for i in range(0, len(tile_attr_list), self.batch_size)
         ]
         batch_data_entities = [
-            TorchDataBatch(
+            OTXDataBatch(
                 batch_size=self.batch_size,
                 images=tiles[i : i + self.batch_size],
                 imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
@@ -220,7 +220,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
 
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
-                if not isinstance(entity, TorchDataItem):
+                if not isinstance(entity, OTXDataItem):
                     msg = "All entities should be TorchDataItem before collate_fn()"
                     raise TypeError(msg)
 
@@ -265,7 +265,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
 
     masks: list[tv_tensors.Mask]
 
-    def unbind(self) -> list[tuple[list[dict[str, int | str]], TorchDataBatch]]:
+    def unbind(self) -> list[tuple[list[dict[str, int | str]], OTXDataBatch]]:
         """Unbind batch data entity for semantic segmentation task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
         tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
@@ -275,7 +275,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             tile_attr_list[i : i + self.batch_size] for i in range(0, len(tile_attr_list), self.batch_size)
         ]
         batch_data_entities = [
-            TorchDataBatch(
+            OTXDataBatch(
                 batch_size=self.batch_size,
                 images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
                 imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
@@ -294,7 +294,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
 
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
-                if not isinstance(entity, TorchDataItem):
+                if not isinstance(entity, OTXDataItem):
                     msg = "All entities should be TorchDataItem before collate_fn()"
                     raise TypeError(msg)
 

@@ -12,7 +12,7 @@ from otx.algo.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
 from otx.algo.detection.rtmdet import RTMDet
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.model.base import DataInputParams
-from otx.data import TorchPredBatch
+from otx.data import OTXPredBatch
 
 
 class TestRTMDet:
@@ -69,7 +69,7 @@ class TestRTMDet:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)
-        assert isinstance(output, TorchPredBatch)
+        assert isinstance(output, OTXPredBatch)
 
     @pytest.mark.parametrize(
         "model",

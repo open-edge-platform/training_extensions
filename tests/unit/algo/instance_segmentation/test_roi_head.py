@@ -17,12 +17,12 @@ from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.algo.utils.utils import InstanceData
 from otx.core.data.entity.base import ImageInfo
 from otx.core.model.base import DataInputParams
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 
 @pytest.fixture()
-def fxt_inst_seg_batch_entity() -> TorchDataBatch:
-    return TorchDataBatch(
+def fxt_inst_seg_batch_entity() -> OTXDataBatch:
+    return OTXDataBatch(
         batch_size=1,
         images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],
@@ -40,8 +40,8 @@ def fxt_inst_seg_batch_entity() -> TorchDataBatch:
 
 
 @pytest.fixture()
-def fxt_inst_seg_batch_entity_with_ignored_label() -> TorchDataBatch:
-    return TorchDataBatch(
+def fxt_inst_seg_batch_entity_with_ignored_label() -> OTXDataBatch:
+    return OTXDataBatch(
         batch_size=1,
         images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],

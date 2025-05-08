@@ -33,7 +33,7 @@ from otx.core.model.base import DataInputParams
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.task import OTXTaskType
 from otx.core.types.transformer_libs import TransformLibType
-from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 from tests.test_helpers import generate_random_bboxes
 
 
@@ -119,7 +119,7 @@ class TestOTXTiling:
             },
         }
 
-    def det_dummy_forward(self, x: TorchDataBatch) -> TorchPredBatch:
+    def det_dummy_forward(self, x: OTXDataBatch) -> OTXPredBatch:
         """Dummy detection forward function for testing.
 
         This function creates random bounding boxes for each image in the batch.
@@ -159,7 +159,7 @@ class TestOTXTiling:
                 saliency_maps.append(torch.zeros((3, 7, 7)))
                 feature_vectors.append(torch.zeros((1, 32)))
 
-        pred_entity = TorchPredBatch(
+        pred_entity = OTXPredBatch(
             batch_size=x.batch_size,
             images=x.images,
             imgs_info=x.imgs_info,
@@ -173,7 +173,7 @@ class TestOTXTiling:
 
         return pred_entity
 
-    def inst_seg_dummy_forward(self, x: TorchDataBatch) -> TorchPredBatch:
+    def inst_seg_dummy_forward(self, x: OTXDataBatch) -> OTXPredBatch:
         """Dummy instance segmantation forward function for testing.
 
         This function creates random bounding boxes/masks for each image in the batch.
@@ -219,7 +219,7 @@ class TestOTXTiling:
             if self.explain_mode:
                 feature_vectors.append(torch.zeros((1, 32)))
 
-        pred_entity = TorchPredBatch(
+        pred_entity = OTXPredBatch(
             batch_size=x.batch_size,
             images=x.images,
             imgs_info=x.imgs_info,
@@ -374,7 +374,7 @@ class TestOTXTiling:
                     OTXTaskType.INSTANCE_SEGMENTATION,
                     OTXTaskType.SEMANTIC_SEGMENTATION,
                 ):
-                    assert isinstance(batch, TorchDataBatch)
+                    assert isinstance(batch, OTXDataBatch)
                 else:
                     pytest.skip("Task not supported")
 
@@ -396,7 +396,7 @@ class TestOTXTiling:
                     OTXTaskType.INSTANCE_SEGMENTATION,
                     OTXTaskType.SEMANTIC_SEGMENTATION,
                 ):
-                    assert isinstance(batch, TorchDataBatch)
+                    assert isinstance(batch, OTXDataBatch)
                 else:
                     pytest.skip("Task not supported")
 

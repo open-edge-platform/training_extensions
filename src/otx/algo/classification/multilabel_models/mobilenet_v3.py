@@ -22,7 +22,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.model.multilabel_classification import OTXMultilabelClsModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import LabelInfoTypes
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -84,7 +84,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_cls_mobilenet_v3_ckpt(state_dict, "multilabel", add_prefix)
 
-    def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -102,8 +102,8 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -111,7 +111,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
         logits = outputs if isinstance(outputs, torch.Tensor) else outputs["logits"]
         scores = torch.unbind(logits, 0)
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,

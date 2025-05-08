@@ -19,7 +19,7 @@ from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo
-from otx.data.torch import TorchDataItem
+from otx.data.torch import OTXDataItem
 
 from .base import OTXDataset
 
@@ -88,7 +88,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
             raise ValueError(msg)
         return Dataset.from_iterable(dm_items, categories=self.dm_subset.categories())
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -116,7 +116,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         )
         keypoints = np.hstack((keypoints, keypoints_visible.reshape(-1, 1)))
 
-        entity = TorchDataItem(
+        entity = OTXDataItem(
             image=to_dtype(to_image(img_data), torch.float32),
             img_info=ImageInfo(
                 img_idx=index,

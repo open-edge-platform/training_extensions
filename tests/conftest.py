@@ -18,7 +18,7 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchDataBatch, TorchDataItem, TorchPredBatch, TorchPredItem
+from otx.data.torch import OTXDataBatch, OTXDataItem, OTXPredBatch, OTXPredItem
 from otx.tools.converter import TEMPLATE_ID_DICT
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
@@ -151,21 +151,21 @@ def pytest_addoption(parser: pytest.Parser):
 
 
 @pytest.fixture(scope="session")
-def fxt_multi_class_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchDataBatch]:
+def fxt_multi_class_cls_data_entity() -> tuple[OTXDataItem, OTXDataBatch, OTXDataBatch]:
     img_size = (64, 64)
     fake_images = torch.zeros(size=(1, 3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_labels = LongTensor([0])
     fake_score = torch.Tensor([0.6])
     # define data entity
-    single_data_entity = TorchDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
-    batch_data_entity = TorchDataBatch(
+    single_data_entity = OTXDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
+    batch_data_entity = OTXDataBatch(
         batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = TorchPredBatch(
+    batch_pred_data_entity = OTXPredBatch(
         batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
@@ -177,21 +177,21 @@ def fxt_multi_class_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, To
 
 
 @pytest.fixture(scope="session")
-def fxt_multi_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchDataBatch]:
+def fxt_multi_label_cls_data_entity() -> tuple[OTXDataItem, OTXDataBatch, OTXDataBatch]:
     img_size = (64, 64)
     fake_images = torch.zeros(size=(1, 3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_labels = LongTensor([0])
     fake_score = torch.Tensor([0.6])
     # define data entity
-    single_data_entity = TorchDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
-    batch_data_entity = TorchDataBatch(
+    single_data_entity = OTXDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
+    batch_data_entity = OTXDataBatch(
         batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = TorchPredBatch(
+    batch_pred_data_entity = OTXPredBatch(
         batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
@@ -203,21 +203,21 @@ def fxt_multi_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, To
 
 
 @pytest.fixture(scope="session")
-def fxt_h_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchPredItem]:
+def fxt_h_label_cls_data_entity() -> tuple[OTXDataItem, OTXDataBatch, OTXPredItem]:
     img_size = (64, 64)
     fake_images = torch.zeros(size=(1, 3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_labels = LongTensor([0])
     fake_score = torch.Tensor([0.6])
     # define data entity
-    single_data_entity = TorchDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
-    batch_data_entity = TorchDataBatch(
+    single_data_entity = OTXDataItem(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
+    batch_data_entity = OTXDataBatch(
         batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = TorchPredBatch(
+    batch_pred_data_entity = OTXPredBatch(
         batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
@@ -229,27 +229,27 @@ def fxt_h_label_cls_data_entity() -> tuple[TorchDataItem, TorchDataBatch, TorchP
 
 
 @pytest.fixture(scope="session")
-def fxt_det_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
+def fxt_det_data_entity() -> tuple[tuple, OTXDataItem, OTXDataBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     # define data entity
-    single_data_entity = TorchDataItem(
+    single_data_entity = OTXDataItem(
         image=fake_image,
         img_info=fake_image_info,
         bboxes=fake_bboxes,
         label=fake_labels,
     )
-    batch_data_entity = TorchDataBatch(
+    batch_data_entity = OTXDataBatch(
         batch_size=1,
         images=[Image(fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
     )
-    batch_pred_data_entity = TorchPredBatch(
+    batch_pred_data_entity = OTXPredBatch(
         batch_size=1,
         images=[Image(fake_image)],
         imgs_info=[fake_image_info],
@@ -262,7 +262,7 @@ def fxt_det_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
 
 
 @pytest.fixture(scope="session")
-def fxt_inst_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
+def fxt_inst_seg_data_entity() -> tuple[tuple, OTXDataItem, OTXDataBatch]:
     img_size = (64, 64)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.float32)
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
@@ -271,7 +271,7 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
     fake_masks = Mask(torch.randint(low=0, high=255, size=(1, *img_size), dtype=torch.uint8))
     fake_polygons = [Polygon(points=[1, 1, 2, 2, 3, 3, 4, 4])]
     # define data entity
-    single_data_entity = TorchDataItem(
+    single_data_entity = OTXDataItem(
         image=fake_image,
         img_info=fake_image_info,
         bboxes=fake_bboxes,
@@ -279,7 +279,7 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
         label=fake_labels,
         polygons=fake_polygons,
     )
-    batch_data_entity = TorchDataBatch(
+    batch_data_entity = OTXDataBatch(
         batch_size=1,
         images=[Image(data=fake_image)],
         imgs_info=[fake_image_info],
@@ -288,7 +288,7 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
         masks=[fake_masks],
         polygons=[fake_polygons],
     )
-    batch_pred_data_entity = TorchPredBatch(
+    batch_pred_data_entity = OTXPredBatch(
         batch_size=1,
         images=[Image(data=fake_image)],
         imgs_info=[fake_image_info],
@@ -302,24 +302,24 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
 
 
 @pytest.fixture(scope="session")
-def fxt_seg_data_entity() -> tuple[tuple, TorchDataItem, TorchDataBatch]:
+def fxt_seg_data_entity() -> tuple[tuple, OTXDataItem, OTXDataBatch]:
     img_size = (32, 32)
     fake_image = torch.zeros(size=(3, *img_size), dtype=torch.uint8).numpy()
     fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
     fake_masks = Mask(torch.randint(low=0, high=2, size=img_size, dtype=torch.uint8))
     # define data entity
-    single_data_entity = TorchDataItem(
+    single_data_entity = OTXDataItem(
         image=fake_image,
         img_info=fake_image_info,
         masks=fake_masks,
     )
-    batch_data_entity = TorchDataBatch(
+    batch_data_entity = OTXDataBatch(
         batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],
         masks=[fake_masks],
     )
-    batch_pred_data_entity = TorchPredItem(
+    batch_pred_data_entity = OTXPredItem(
         batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],
