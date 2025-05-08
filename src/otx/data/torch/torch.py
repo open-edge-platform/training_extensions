@@ -130,7 +130,6 @@ class OTXDataBatch(ValidateBatchMixin):
 
     def pin_memory(self) -> OTXDataBatch:
         """Pin memory for member tensor variables."""
-        # TODO(vinnamki): Keep track this issue
         # https://github.com/pytorch/pytorch/issues/116403
 
         kwargs = {}
