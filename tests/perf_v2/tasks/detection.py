@@ -35,8 +35,28 @@ MODEL_TEST_CASES = [
 
 DATASET_TEST_CASES = [
     DatasetInfo(
-        name="pothole_small_1",
-        path=Path("detection/pothole_small/1"),
+        name="pothole_tiny_1",
+        path=Path("detection/pothole_coco_tiny/1"),
+        group="tiny",
+        extra_overrides={
+            "test": {
+                "metric": FMeasureCallable,
+            },
+        },
+    ),
+    DatasetInfo(
+        name="blueberry_tiny_1",
+        path=Path("detection/blueberry_tiny_coco/1"),
+        group="tiny",
+        extra_overrides={
+            "test": {
+                "metric": FMeasureCallable,
+            },
+        },
+    ),
+    DatasetInfo(
+        name="wgisd_small",
+        path=Path("detection/wgisd_merged_coco_small"),
         group="small",
         extra_overrides={
             "test": {
@@ -45,9 +65,39 @@ DATASET_TEST_CASES = [
         },
     ),
     DatasetInfo(
-        name="pothole_small_2",
-        path=Path("detection/pothole_small/2"),
+        name="skindetect",
+        path=Path("detection/skindetect-roboflow"),
         group="small",
+        extra_overrides={
+            "test": {
+                "metric": FMeasureCallable,
+            },
+        },
+    ),
+    DatasetInfo(
+        name="diopsis",
+        path=Path("detection/diopsis_coco"),
+        group="medium",
+        extra_overrides={
+            "test": {
+                "metric": FMeasureCallable,
+            },
+        },
+    ),
+    DatasetInfo(
+        name="bdd_medium",
+        path=Path("detection/bdd_medium"),
+        group="medium",
+        extra_overrides={
+            "test": {
+                "metric": FMeasureCallable,
+            },
+        },
+    ),
+    DatasetInfo(
+        name="visdrone",
+        path=Path("detection/visdrone_coco_custom_split"),
+        group="large",
         extra_overrides={
             "test": {
                 "metric": FMeasureCallable,
