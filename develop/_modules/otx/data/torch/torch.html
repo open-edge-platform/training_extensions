@@ -261,10 +261,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">fields</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">fields</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms.v2.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>  <span class="c1"># noqa: N812</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.entity.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pytree_node</span>
 
@@ -274,6 +276,7 @@
 <span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Polygon</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.tv_tensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundingBoxes</span><span class="p">,</span> <span class="n">Mask</span>
 
@@ -282,15 +285,15 @@
 
 <span class="c1"># NOTE: register_pytree_node and Mapping are required for torchvision.transforms.v2 to work with OTXDataEntity</span>
 <span class="c1"># TODO(ashwinvaidya17): Remove this once custom transforms are removed</span>
-<div class="viewcode-block" id="TorchDataItem">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem">[docs]</a>
+<div class="viewcode-block" id="OTXDataItem">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataItem">[docs]</a>
 <span class="nd">@register_pytree_node</span>
 <span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">TorchDataItem</span><span class="p">(</span><span class="n">ValidateItemMixin</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Torch data item implementation.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXDataItem</span><span class="p">(</span><span class="n">ValidateItemMixin</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX data item implementation.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        image (torch.Tensor): The image tensor.</span>
+<span class="sd">        image (torch.Tensor | np.ndarray ): The image tensor</span>
 <span class="sd">        label (torch.Tensor | None): The label tensor, optional.</span>
 <span class="sd">        masks (Mask | None): The masks, optional.</span>
 <span class="sd">        bboxes (BoundingBoxes | None): The bounding boxes, optional.</span>
@@ -299,7 +302,7 @@
 <span class="sd">        img_info (ImageInfo | None): Additional image information, optional.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="n">label</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">masks</span><span class="p">:</span> <span class="n">Mask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">bboxes</span><span class="p">:</span> <span class="n">BoundingBoxes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -307,10 +310,10 @@
     <span class="n">polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">img_info</span><span class="p">:</span> <span class="n">ImageInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># TODO(ashwinvaidya17): revisit and try to remove this</span>
 
-<div class="viewcode-block" id="TorchDataItem.collate_fn">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.TorchDataItem.collate_fn">[docs]</a>
+<div class="viewcode-block" id="OTXDataItem.collate_fn">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataItem.collate_fn">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">collate_fn</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TorchDataItem</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TorchDataBatch</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">collate_fn</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OTXDataItem</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">OTXDataBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Collate TorchDataItems into a batch.</span>
 
 <span class="sd">        Args:</span>
@@ -325,7 +328,7 @@
             <span class="c1"># we need this only in case of OV inference, where no resize</span>
             <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">TorchDataBatch</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">OTXDataBatch</span><span class="p">(</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span>
             <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">],</span>
@@ -345,14 +348,44 @@
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+<div class="viewcode-block" id="OTXDataItem.to_tv_image">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataItem.to_tv_image">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_tv_image</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new instance with the `image` attribute converted to a TorchVision Image if it is a NumPy array.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A new instance with the `image` attribute converted to a TorchVision Image, if applicable.</span>
+<span class="sd">            Otherwise, return this instance as is.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">F</span><span class="o">.</span><span class="n">to_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="OTXDataItem.wrap">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataItem.wrap">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap this dataclass with the given keyword arguments.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs: Keyword arguments to be overwritten on top of this dataclass</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Updated dataclass</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">updated_kwargs</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">updated_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="o">**</span><span class="n">updated_kwargs</span><span class="p">)</span></div>
+</div>
 
 
 
-<div class="viewcode-block" id="TorchDataBatch">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.TorchDataBatch">[docs]</a>
+<div class="viewcode-block" id="OTXDataBatch">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataBatch">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">TorchDataBatch</span><span class="p">(</span><span class="n">ValidateBatchMixin</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXDataBatch</span><span class="p">(</span><span class="n">ValidateBatchMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Torch data item batch implementation.&quot;&quot;&quot;</span>
 
     <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># TODO(ashwinvaidya17): Remove this</span>
@@ -362,14 +395,63 @@
     <span class="n">bboxes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">BoundingBoxes</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">keypoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">imgs_info</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ImageInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># TODO(ashwinvaidya17): revisit</span></div>
+    <span class="n">imgs_info</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ImageInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># TODO(ashwinvaidya17): revisit</span>
+
+<div class="viewcode-block" id="OTXDataBatch.pin_memory">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataBatch.pin_memory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pin_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataBatch</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pin memory for member tensor variables.&quot;&quot;&quot;</span>
+        <span class="c1"># https://github.com/pytorch/pytorch/issues/116403</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">maybe_pin</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">pin_memory</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">x</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">maybe_wrap_tv</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">TVTensor</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">pin_memory</span><span class="p">(),</span> <span class="n">like</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">maybe_pin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Handle images separately because of tv_tensors wrapping</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">maybe_wrap_tv</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">maybe_wrap_tv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
+
+        <span class="c1"># Generic handler for all other fields</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;keypoints&quot;</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">]:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">maybe_wrap_tv</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OTXDataBatch.wrap">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataBatch.wrap">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataBatch</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap this dataclass with the given keyword arguments.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs: Keyword arguments to be overwritten on top of this dataclass</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Updated dataclass</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">updated_kwargs</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">updated_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="o">**</span><span class="n">updated_kwargs</span><span class="p">)</span></div>
+</div>
 
 
 
-<div class="viewcode-block" id="TorchPredItem">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.TorchPredItem">[docs]</a>
+<div class="viewcode-block" id="OTXPredItem">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXPredItem">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">TorchPredItem</span><span class="p">(</span><span class="n">TorchDataItem</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXPredItem</span><span class="p">(</span><span class="n">OTXDataItem</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Torch prediction data item implementation.&quot;&quot;&quot;</span>
 
     <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -378,10 +460,10 @@
 
 
 
-<div class="viewcode-block" id="TorchPredBatch">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.TorchPredBatch">[docs]</a>
+<div class="viewcode-block" id="OTXPredBatch">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXPredBatch">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">TorchPredBatch</span><span class="p">(</span><span class="n">TorchDataBatch</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXPredBatch</span><span class="p">(</span><span class="n">OTXDataBatch</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Torch prediction data item batch implementation.&quot;&quot;&quot;</span>
 
     <span class="n">scores</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>

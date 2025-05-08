@@ -17,10 +17,10 @@ otx.data
 
    .. autosummary::
    
-      TorchDataBatch
-      TorchDataItem
-      TorchPredBatch
-      TorchPredItem
+      OTXDataBatch
+      OTXDataItem
+      OTXPredBatch
+      OTXPredItem
    
    
 
