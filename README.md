@@ -72,37 +72,37 @@ If you want to make changes to the library, then a local installation is recomme
 
 <details>
 <summary>Install from PyPI</summary>
-Installing the library with pip is the easiest way to get started with otx.
+Installing the library with uv tool is the easiest way to get started with otx.
 
 ```bash
-pip install otx[base]
+uv pip install otx
 ```
 
 For Intel GPUs users:
 
 ```bash
-pip install otx[base] --extra-index-url https://download.pytorch.org/whl/test/xpu
+uv pip install otx --extra-index-url https://download.pytorch.org/whl/test/xpu
 ```
 
 </details>
 
 <details>
 <summary>Install from source</summary>
-To install from source, you need to clone the repository and install the library using pip via editable mode.
+To install from source, you need to clone the repository and install the library using uv pip via editable mode.
 
 ```bash
-# Use of virtual environment is highy recommended
-# Using conda
-yes | conda create -n otx_env python=3.10
-conda activate otx_env
+# Create a new virtual environment using uv (Python 3.11)
+uv venv .otx --python 3.11
+source .otx/bin/activate
 
-# Or using your favorite virtual environment
-# ...
-
-# Clone the repository and install in editable mode
+# Clone the repository
 git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions
-pip install -e .[base]  # to run otx on Intel GPUs: pip install -e .[base] --extra-index-url https://download.pytorch.org/whl/test/xpu
+
+# Install in editable mode
+uv pip install -e .
+# For Intel GPUs users
+uv pip install -e . --extra-index-url https://download.pytorch.org/whl/test/xpu
 ```
 
 </details>

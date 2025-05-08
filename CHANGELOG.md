@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
+- Fix otx install by moving base dependencies
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4285>)
 - Fix DataInputParams Serialization
   (<https://github.com/openvinotoolkit/training_extensions/pull/4293>)
 - Align KP detection validation with ModelAPI post processing
