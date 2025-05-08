@@ -46,7 +46,7 @@ DATASET_TEST_CASES = [
     ),
     DatasetInfo(
         name="blueberry_tiny_1",
-        path=Path("detection/blueberry_tiny_coco/1"),
+        path=Path("detection/blueberry_tiny/1"),
         group="tiny",
         extra_overrides={
             "test": {
