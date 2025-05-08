@@ -61,6 +61,7 @@ OpenVINO™ Training Extensions provides the following usability features:
 - **Distributed training** to accelerate the training process when you have multiple GPUs
 - **Mixed-precision training** to save GPUs memory and use larger batch sizes
 - **Class incremental learning** to add new classes to the existing model
+- **Model deployment** to OpenVINO™ IR and ONNX formats and inference with [OpenVINO™ ModelAPI](https://github.com/open-edge-platform/model_api)
 
 ---
 
