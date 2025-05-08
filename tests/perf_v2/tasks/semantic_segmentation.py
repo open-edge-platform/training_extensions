@@ -29,22 +29,44 @@ MODEL_TEST_CASES = [
 
 DATASET_TEST_CASES = [
     DatasetInfo(
-        name=f"kvasir_small_{idx}",
-        path=Path("semantic_seg/kvasir_small") / f"{idx}",
+        name="tiny_human_railway_animal",
+        path=Path("semantic_seg/tiny_human_railway_animal_6_6_6"),
+        group="tiny",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="tiny_cell_labels",
+        path=Path("semantic_seg/tiny_cell_labels_6_6_6"),
+        group="tiny",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="small_satellite_buildings",
+        path=Path("semantic_seg/small_satellite_buildings_20_8_12"),
         group="small",
         extra_overrides={},
-    )
-    for idx in (1, 2, 3)
-] + [
+    ),
     DatasetInfo(
-        name="cityscapes_185_70_medium",
-        path=Path("semantic_seg/cityscapes_185_70_medium"),
+        name="small_aerial",
+        path=Path("semantic_seg/small_aerial_50_20_30"),
+        group="small",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="medium_kitti",
+        path=Path("semantic_seg/medium_kitti_150_50_50"),
         group="medium",
         extra_overrides={},
     ),
     DatasetInfo(
-        name="voc_2012_cut_large",
-        path=Path("semantic_seg/voc_2012_cut_large"),
+        name="medium_voc_otx_cut",
+        path=Path("semantic_seg/medium_voc_otx_cut_662_300_300"),
+        group="medium",
+        extra_overrides={},
+    ),
+    DatasetInfo(
+        name="large_idd20k",
+        path=Path("semantic_seg/large_idd20k_lite_1122_204_281"),
         group="large",
         extra_overrides={},
     ),

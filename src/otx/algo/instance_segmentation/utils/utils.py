@@ -52,7 +52,7 @@ def unpack_inst_seg_entity(entity: TorchDataBatch) -> tuple:
         }
         batch_img_metas.append(metainfo)
 
-        gt_masks = mask if mask is not None else polygon
+        gt_masks = mask if len(mask) else polygon
 
         batch_gt_instances.append(
             InstanceData(
