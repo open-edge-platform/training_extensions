@@ -100,8 +100,8 @@ cd training_extensions
 
 # Install in editable mode
 uv pip install -e .
-# Optional: For Intel GPUs
-# uv pip install -e . --extra-index-url https://download.pytorch.org/whl/test/xpu
+# For Intel GPUs users
+uv pip install -e . --extra-index-url https://download.pytorch.org/whl/test/xpu
 ```
 
 </details>
