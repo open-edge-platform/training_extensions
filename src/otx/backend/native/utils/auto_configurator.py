@@ -210,15 +210,21 @@ class AutoConfigurator:
 
         return get_configuration(config_file)
 
-    def get_datamodule(self) -> OTXDataModule | None:
+    def get_datamodule(self, data_root: PathLike | None = None) -> OTXDataModule | None:
         """Returns an instance of OTXDataModule with the configured data root.
 
         Returns:
             OTXDataModule | None: An instance of OTXDataModule.
         """
-        if self.data_root is None:
+        if data_root is None and self.data_root is None:
+            logger.warning("No data root provided. Returning None.")
             return None
-        self.config["data"]["data_root"] = self.data_root
+        if data_root is not None and not isinstance(data_root, PathLike):
+            msg = f"data_root should be of type PathLike, but got {type(data_root)}"
+            raise TypeError(msg)
+
+        data_root = data_root if data_root is not None else self.data_root
+        self.config["data"]["data_root"] = data_root
         data_config: dict = deepcopy(self.config["data"])
         train_config = data_config.pop("train_subset")
         val_config = data_config.pop("val_subset")

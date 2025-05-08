@@ -19,6 +19,7 @@ from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.data import TorchDataBatch, TorchPredBatch
+from otx.core.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
@@ -52,6 +53,7 @@ class OVDetectionModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
+        self._task = OTXTaskType.DETECTION
 
     def _setup_tiler(self) -> None:
         """Setup tiler for tile task."""

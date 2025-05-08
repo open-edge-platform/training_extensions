@@ -20,6 +20,7 @@ from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricInput
 from otx.core.metrics.dice import SegmCallable
 from otx.core.types.label import SegLabelInfo
+from otx.core.types.task import OTXTaskType
 from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
@@ -55,6 +56,7 @@ class OVSegmentationModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
+        self._task = OTXTaskType.SEMANTIC_SEGMENTATION
 
     def _setup_tiler(self) -> None:
         """Setup tiler for tile task."""

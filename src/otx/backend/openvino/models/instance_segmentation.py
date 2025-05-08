@@ -21,6 +21,7 @@ from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.types.label import LabelInfo
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
 from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.core.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
@@ -58,6 +59,7 @@ class OVInstanceSegmentationModel(
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
+        self._task = OTXTaskType.INSTANCE_SEGMENTATION
 
     def _setup_tiler(self) -> None:
         """Setup tiler for tile task."""

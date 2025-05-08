@@ -29,6 +29,7 @@ from otx.core.data.entity.base import (
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import NullMetricCallable
 from otx.core.types.export import OTXExportFormatType
+from otx.core.types.task import OTXTaskType
 from otx.core.types.label import LabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.utils.build import get_default_num_async_infer_requests
@@ -79,7 +80,7 @@ class OVModel:
         self.model = self._create_model()
         self.metric_callable = metric
         self._label_info = self._create_label_info_from_ov_ir()
-
+        self._task = None
         tile_enabled = False
         with contextlib.suppress(RuntimeError):
             if isinstance(self.model, Model):
@@ -135,6 +136,7 @@ class OVModel:
 
     def forward(self, inputs: TorchDataBatch, async_inference: bool = True) -> TorchPredBatch:
         """Model forward function."""
+        async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
         customized_outputs = self._customize_outputs(outputs, inputs)
@@ -312,6 +314,11 @@ class OVModel:
     def label_info(self) -> LabelInfo:
         """Get this model label information."""
         return self._label_info
+
+    @property
+    def task(self) -> OTXTaskType | None:
+        """Get task of the model."""
+        return self._task
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
         ov_model = self.model.get_model()

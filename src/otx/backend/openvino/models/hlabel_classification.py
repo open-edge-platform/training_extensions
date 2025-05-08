@@ -16,6 +16,7 @@ from otx.core.metrics.accuracy import (
 )
 from otx.core.types.label import HLabelInfo
 from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.core.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult
@@ -52,6 +53,7 @@ class OVHlabelClassificationModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
+        self._task = OTXTaskType.H_LABEL_CLS
 
     def _customize_outputs(
         self,

@@ -16,6 +16,7 @@ from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
 from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.core.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.models.utils import DetectedKeypoints
@@ -48,6 +49,7 @@ class OVKeypointDetectionModel(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
+        self._task = OTXTaskType.KEYPOINT_DETECTION
 
     def _customize_outputs(
         self,
