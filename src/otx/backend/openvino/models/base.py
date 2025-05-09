@@ -29,9 +29,9 @@ from otx.core.data.entity.base import (
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import NullMetricCallable
 from otx.core.types.export import OTXExportFormatType
-from otx.core.types.task import OTXTaskType
 from otx.core.types.label import LabelInfo
 from otx.core.types.precision import OTXPrecisionType
+from otx.core.types.task import OTXTaskType
 from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.data.torch import TorchDataBatch, TorchPredBatch
 

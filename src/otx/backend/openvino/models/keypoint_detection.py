@@ -15,8 +15,8 @@ from otx.backend.openvino.models.base import OVModel
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
-from otx.data.torch import TorchDataBatch, TorchPredBatch
 from otx.core.types.task import OTXTaskType
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from model_api.models.utils import DetectedKeypoints

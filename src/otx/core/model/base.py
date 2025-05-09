@@ -6,23 +6,16 @@
 
 from __future__ import annotations
 
-import contextlib
 import inspect
-import json
 import logging
 import warnings
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
-import numpy as np
-import openvino
 import torch
 from datumaro import LabelCategories
-from jsonargparse import ArgumentParser
 from lightning import LightningModule, Trainer
-from model_api.models import Model
-from model_api.tilers import Tiler
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ConstantLR
 from torch.optim.sgd import SGD
@@ -31,13 +24,11 @@ from torchmetrics import Metric, MetricCollection
 from otx import __version__
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import (
-    ImageInfo,
     OTXBatchLossEntity,
     T_OTXBatchDataEntity,
     T_OTXBatchPredEntity,
 )
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
-from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import MetricInput, NullMetricCallable
 from otx.core.optimizer.callable import OptimizerCallableSupportAdaptiveBS
 from otx.core.schedulers import (
@@ -47,9 +38,8 @@ from otx.core.schedulers import (
     SchedulerCallableSupportAdaptiveBS,
 )
 from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
-from otx.core.types.label import LabelInfo, LabelInfoTypes, NullLabelInfo
+from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.types.precision import OTXPrecisionType
-from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
 from otx.data.torch import TorchDataBatch, TorchPredBatch
@@ -59,7 +49,6 @@ if TYPE_CHECKING:
 
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from lightning.pytorch.utilities.types import LRSchedulerTypeUnion, OptimizerLRScheduler
-    from model_api.adapters import OpenvinoAdapter
     from torch.optim.lr_scheduler import LRScheduler
     from torch.optim.optimizer import Optimizer, params_t
 

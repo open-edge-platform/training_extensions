@@ -12,7 +12,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 
 import torch
-from model_api.tilers import DetectionTiler
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 
@@ -33,8 +32,6 @@ from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from model_api.adapters import OpenvinoAdapter
-    from model_api.models.utils import DetectionResult
 
     from otx.algo.detection.detectors import SingleStageDetector
 

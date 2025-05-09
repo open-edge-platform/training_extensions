@@ -18,8 +18,8 @@ from otx.backend.openvino.models.base import OVModel
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.data import TorchDataBatch, TorchPredBatch
 from otx.core.types.task import OTXTaskType
+from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter

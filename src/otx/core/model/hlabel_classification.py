@@ -8,7 +8,6 @@ from abc import abstractmethod
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import torch
 from torch import Tensor
 
@@ -27,7 +26,6 @@ from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from model_api.models.utils import ClassificationResult
     from torch import nn
 
     from otx.core.metrics import MetricCallable

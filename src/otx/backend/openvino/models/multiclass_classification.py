@@ -13,8 +13,8 @@ from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
     MultiClassClsMetricCallable,
 )
-from otx.data.torch import TorchDataBatch, TorchPredBatch
 from otx.core.types.task import OTXTaskType
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult

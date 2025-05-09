@@ -24,7 +24,6 @@ from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from model_api.models.utils import ClassificationResult
 
     from otx.core.metrics import MetricCallable
 

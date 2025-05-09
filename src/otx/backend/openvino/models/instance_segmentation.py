@@ -19,9 +19,9 @@ from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricInput
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.types.label import LabelInfo
+from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
 from otx.data.torch import TorchDataBatch, TorchPredBatch
-from otx.core.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter

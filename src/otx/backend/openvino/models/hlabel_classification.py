@@ -15,8 +15,8 @@ from otx.core.metrics.accuracy import (
     HLabelClsMetricCallable,
 )
 from otx.core.types.label import HLabelInfo
-from otx.data.torch import TorchDataBatch, TorchPredBatch
 from otx.core.types.task import OTXTaskType
+from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult

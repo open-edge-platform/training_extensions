@@ -5,22 +5,20 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-from warnings import warn
-import defusedxml.ElementTree as ET
-import torch
+from typing import TYPE_CHECKING
 
+import defusedxml.ElementTree as ET
 import numpy as np
+import torch
 from rich.progress import Progress
 
 from otx.backend.native.utils.auto_configurator import AutoConfigurator
+from otx.backend.openvino.models import OVModel
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
-from otx.data.torch import TorchDataBatch
-from otx.backend.openvino.models import OVModel
 from otx.core.types import PathLike
+from otx.data.torch import TorchDataBatch
 
 if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
@@ -34,7 +32,7 @@ class OVEngine:
 
     def __init__(
         self,
-        datamodule: OTXDataModule| PathLike | None = None,
+        datamodule: OTXDataModule | PathLike | None = None,
         model: OVModel | PathLike | None = None,
         work_dir: PathLike = "./otx-workspace",
     ):
@@ -66,8 +64,7 @@ class OVEngine:
 
         self._auto_configurator = AutoConfigurator(
             data_root=datamodule if isinstance(datamodule, PathLike) else None,
-            task=task
-
+            task=task,
         )
 
         self._datamodule: OTXDataModule | None = (
@@ -166,6 +163,7 @@ class OVEngine:
         """
         datamodule = datamodule if datamodule is not None else self.datamodule
         metric = metric if metric is not None else self.model.metric_callable(label_info=datamodule.label_info)
+        model = self._update_checkpoint(checkpoint)
 
         if datamodule is None:
             msg = "Please provide the `data_root` or `datamodule` when creating the Engine, or pass a `datamodule` in OVEngine.test()."
@@ -173,17 +171,6 @@ class OVEngine:
         if metric is None:
             msg = "Please provide a `metric` in OVEngine or pass it in OVEngine.test()."
             raise RuntimeError(msg)
-
-        if checkpoint is None and self.model is None:
-            msg = "Please provide either a model or a checkpoint path."
-            raise ValueError(msg)
-        elif checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml", ".onnx"]:
-            msg = "OV Engine supports only OV IR or ONNX checkpoints"
-            raise RuntimeError(msg)
-        elif checkpoint is not None:
-            model = self._auto_configurator.get_ov_model(model_name=str(checkpoint))
-        else:
-            model = self.model
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -208,7 +195,7 @@ class OVEngine:
 
     def predict(
         self,
-        data: OTXDataModule | list[np.array],
+        data: OTXDataModule | PathLike | list[np.array],
         checkpoint: PathLike | None = None,
         explain: bool = False,
         explain_config: ExplainConfig | None = None,
@@ -226,8 +213,11 @@ class OVEngine:
         """
         from otx.algo.utils.xai_utils import process_saliency_maps_in_pred_entity, set_crop_padded_map_flag
 
-        datamodule = self._auto_configurator.get_datamodule(data_root=data) if data is not None else self.datamodule
-        model = self._auto_configurator.get_ov_model(model_name=checkpoint) if checkpoint is not None else self.model
+        model = self._update_checkpoint(checkpoint)
+        if isinstance(data, PathLike):
+            data = self._auto_configurator.get_datamodule(data_root=data)
+
+        datamodule = data if isinstance(data, OTXDataModule) else self.datamodule
 
         if model.label_info != datamodule.label_info:
             msg = (
@@ -253,8 +243,8 @@ class OVEngine:
                 raise ValueError(msg)
             customized_inputs = TorchDataBatch(
                 batch_size=len(data),
-                images=[torch.tensor(im) for im in data], # TODO(@kprokofi): remove torch after numpy support
-                imgs_info=[{"img_shape": img.shape} for img in data]
+                images=[torch.tensor(im) for im in data],  # TODO(@kprokofi): remove torch after numpy support
+                imgs_info=[{"img_shape": img.shape} for img in data],
             )
             predict_result.append(model(customized_inputs))
 
@@ -272,7 +262,6 @@ class OVEngine:
         checkpoint: PathLike | None = None,
         datamodule: OTXDataModule | None = None,
         max_data_subset_size: int | None = None,
-        export_demo_package: bool = False,
     ) -> Path:
         r"""Applies NNCF.PTQ to the underlying models (now works only for OV models).
 
@@ -285,162 +274,48 @@ class OVEngine:
             max_data_subset_size (int | None): The maximum size of the train subset from `datamodule` that would be
             used for model optimization. If not set, NNCF.PTQ will select subset size according to it's
             default settings.
-            export_demo_package (bool): Whether to export demo package with optimized models.
-            It outputs zip archive with stand-alone demo package.
 
         Returns:
             Path: path to the optimized model.
-
-        Example:
-            >>> engine.optimize(
-            ...     checkpoint=<checkpoint/path>,
-            ...     datamodule=OTXDataModule(),
-            ...     checkpoint=<checkpoint/path>,
-            ... )
-
-        CLI Usage:
-            1. To optimize a model with IR Model, run
-                ```shell
-                >>> otx optimize \
-                ...     --work_dir <WORK_DIR_PATH, str> \
-                ...     --checkpoint <IR_MODEL_WEIGHT_PATH, str>
-                ```
-            2. To optimize a specific OVModel class with XML, run
-                ```shell
-                >>> otx optimize \
-                ...     --data_root <DATASET_PATH, str> \
-                ...     --checkpoint <IR_MODEL_WEIGHT_PATH, str> \
-                ...     --model <CONFIG | CLASS_PATH_OR_NAME, OVModel> \
-                ...     --model.model_name=<PATH_TO_IR_XML, str>
-                ```
         """
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         optimize_datamodule = datamodule if datamodule is not None else self.datamodule
-
-        is_ir_ckpt = checkpoint is not None and Path(checkpoint).suffix in [".xml", ".onnx"]
-        if not is_ir_ckpt:
-            msg = "Engine.optimize() supports only OV IR or ONNX checkpoints"
-            raise RuntimeError(msg)
-
-        model = self.model
-        if not isinstance(model, OVModel):
-            optimize_datamodule = self._auto_configurator.update_ov_subset_pipeline(
-                datamodule=optimize_datamodule,
-                subset="train",
-            )
-            model = self._auto_configurator.get_ov_model(
-                model_name=str(checkpoint),
-            )
+        model = self._update_checkpoint(checkpoint)
+        optimize_datamodule = self._auto_configurator.update_ov_subset_pipeline(
+            datamodule=optimize_datamodule,
+            subset="train",
+        )
 
         ptq_config = {}
         if max_data_subset_size is not None:
             ptq_config["subset_size"] = max_data_subset_size
 
-        if not export_demo_package:
-            return model.optimize(
-                Path(self.work_dir),
-                optimize_datamodule,
-                ptq_config,
-            )
+        return model.optimize(
+            Path(self.work_dir),
+            optimize_datamodule,
+            ptq_config,
+        )
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_model_path = model.optimize(Path(tmp_dir), optimize_datamodule, ptq_config)
-            return self.export(
-                checkpoint=tmp_model_path,
-                export_demo_package=True,
-            )
-
-    def explain(
-        self,
-        checkpoint: PathLike | None = None,
-        datamodule: OTXDataModule | None = None,
-        explain_config: ExplainConfig | None = None,
-        **kwargs,
-    ) -> list | None:
-        r"""Run XAI using the specified model and data (test subset).
+    def _update_checkpoint(self, checkpoint: PathLike) -> OVModel:
+        """Update the OVModel with the given checkpoint path.
 
         Args:
-            checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
-            datamodule (OTXDataModule | None, optional): The data module to use for predictions.
-            explain_config (ExplainConfig | None, optional): Config used to handle saliency maps.
-            **kwargs: Additional keyword arguments for pl.Trainer configuration.
+            checkpoint (PathLike): The new IR XML file path.
 
         Returns:
-            list: Saliency maps.
-
-        Example:
-            >>> engine.explain(
-            ...     datamodule=OTXDataModule(),
-            ...     checkpoint=<checkpoint/path>,
-            ...     explain_config=ExplainConfig(),
-            ... )
-
-        CLI Usage:
-            1. To run XAI with the torch model in work_dir, run
-                ```shell
-                >>> otx explain \
-                ...     --work_dir <WORK_DIR_PATH, str>
-                ```
-            2. To run XAI using the specified model (torch or IR), run
-                ```shell
-                >>> otx explain \
-                ...     --work_dir <WORK_DIR_PATH, str> \
-                ...     --checkpoint <CKPT_PATH, str>
-                ```
-            3. To run XAI using the configuration, run
-                ```shell
-                >>> otx explain \
-                ...     --config <CONFIG_PATH> --data_root <DATASET_PATH, str> \
-                ...     --checkpoint <CKPT_PATH, str>
-                ```
+            None
         """
-        from otx.algo.utils.xai_utils import (
-            process_saliency_maps_in_pred_entity,
-            set_crop_padded_map_flag,
-        )
-
-        model = self.model
-
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-        datamodule = datamodule if datamodule is not None else self.datamodule
-
-        is_ir_ckpt = checkpoint is not None and Path(checkpoint).suffix in [".xml", ".onnx"]
-        if is_ir_ckpt and not isinstance(model, OVModel):
-            datamodule = self._auto_configurator.update_ov_subset_pipeline(datamodule=datamodule, subset="test")
-            model = self._auto_configurator.get_ov_model(model_name=str(checkpoint))
-
-        if checkpoint is not None and not is_ir_ckpt:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
-
-        if model.label_info != self.datamodule.label_info:
-            msg = (
-                "To launch a explain pipeline, the label information should be same "
-                "between the training and testing datasets. "
-                "Please check whether you use the same dataset: "
-                f"model.label_info={model.label_info}, "
-                f"datamodule.label_info={self.datamodule.label_info}"
-            )
+        if checkpoint is None and self.model is None:
+            msg = "Please provide either a model or a checkpoint path."
             raise ValueError(msg)
+        elif checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml", ".onnx"]:
+            msg = "OV Engine supports only OV IR or ONNX checkpoints"
+            raise RuntimeError(msg)
+        elif checkpoint is not None:
+            model = self._auto_configurator.get_ov_model(model_name=str(checkpoint))
+        else:
+            model = self.model
 
-        model.explain_mode = True
-
-        self._build_trainer(**kwargs)
-
-        predict_result = self.trainer.predict(
-            model=model,
-            datamodule=datamodule,
-        )
-
-        if explain_config is None:
-            explain_config = ExplainConfig()
-        explain_config = set_crop_padded_map_flag(explain_config, datamodule)
-
-        predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
-        model.explain_mode = False
-        return predict_result
+        return model
 
     @property
     def work_dir(self) -> PathLike:
@@ -471,6 +346,9 @@ class OVEngine:
             None
         """
         if isinstance(model, PathLike):
+            if not str(model).endswith(".xml"):
+                msg = f"Model should be a valid XML path. But got: {model}"
+                raise ValueError(msg)
             task = self._derive_task_from_ir(model)
             self._auto_configurator.task = task
             model = self._auto_configurator.get_ov_model(model)

@@ -7,13 +7,11 @@
 from __future__ import annotations
 
 import copy
-import logging as log
 import types
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
 
 import torch
-from model_api.tilers import InstanceSegmentationTiler
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
@@ -33,15 +31,13 @@ from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfoTypes
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
 from otx.core.utils.tile_merge import InstanceSegTileMerge
 from otx.data import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from model_api.adapters import OpenvinoAdapter
-    from model_api.models.utils import InstanceSegmentationResult
     from torch import nn
 
     from otx.core.metrics import MetricCallable
