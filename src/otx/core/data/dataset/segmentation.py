@@ -18,7 +18,7 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import SegLabelInfo
-from otx.data.torch import TorchDataItem
+from otx.data.torch import OTXDataItem
 
 from .base import OTXDataset
 
@@ -200,7 +200,7 @@ class OTXSegmentationDataset(OTXDataset):
             return True
         return False
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
@@ -212,7 +212,7 @@ class OTXSegmentationDataset(OTXDataset):
             extracted_mask = extracted_mask[roi_meta["y1"] : roi_meta["y2"], roi_meta["x1"] : roi_meta["x2"]]
 
         masks = tv_tensors.Mask(extracted_mask[None], dtype=torch.long)
-        entity = TorchDataItem(
+        entity = OTXDataItem(
             image=to_dtype(to_image(img_data), dtype=torch.float32),
             img_info=ImageInfo(
                 img_idx=index,

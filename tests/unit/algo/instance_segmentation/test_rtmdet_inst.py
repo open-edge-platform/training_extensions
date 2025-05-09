@@ -6,7 +6,7 @@ import torch
 
 from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInst
 from otx.core.model.base import DataInputParams
-from otx.data import TorchPredBatch
+from otx.data import OTXPredBatch
 
 
 class TestRTMDetInst:
@@ -35,7 +35,7 @@ class TestRTMDetInst:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)
-        assert isinstance(output, TorchPredBatch)
+        assert isinstance(output, OTXPredBatch)
 
     def test_export(self):
         model = RTMDetInst(

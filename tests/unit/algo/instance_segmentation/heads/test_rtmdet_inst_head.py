@@ -19,7 +19,7 @@ from otx.algo.common.utils.samplers import PseudoSampler
 from otx.algo.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
 from otx.algo.modules.norm import build_norm_layer
 from otx.core.data.entity.base import ImageInfo
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 
 def set_mock_sampling_results_list(batch_size: int) -> list[Mock]:
@@ -124,7 +124,7 @@ class TestRTMDetInsHead:
         mocker.patch.object(rtmdet_ins_head, "_mask_predict_by_feat_single", return_value=torch.randn(4, 80, 80))
 
         x = (torch.randn(2, 96, 80, 80), torch.randn(2, 96, 40, 40), torch.randn(2, 96, 20, 20))
-        entity = TorchDataBatch(
+        entity = OTXDataBatch(
             batch_size=2,
             images=[torch.randn(3, 640, 640), torch.randn(3, 640, 640)],
             imgs_info=[

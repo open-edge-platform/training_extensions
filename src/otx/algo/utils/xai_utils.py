@@ -20,7 +20,7 @@ import torch
 from otx.core.config.explain import ExplainConfig
 from otx.core.types.explain import TargetExplainGroup
 from otx.core.types.label import HLabelInfo, LabelInfoTypes
-from otx.data.torch import TorchPredBatch
+from otx.data.torch import OTXPredBatch
 
 if TYPE_CHECKING:
     from torch import LongTensor, Tensor
@@ -31,16 +31,16 @@ ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
 
 
 def process_saliency_maps_in_pred_entity(
-    predict_result: list[TorchPredBatch],
+    predict_result: list[OTXPredBatch],
     explain_config: ExplainConfig,
     label_info: LabelInfoTypes,
-) -> list[TorchPredBatch]:
+) -> list[OTXPredBatch]:
     """Process saliency maps in PredEntity."""
 
     def _process(
-        predict_result_per_batch: TorchPredBatch,
+        predict_result_per_batch: OTXPredBatch,
         label_info: LabelInfoTypes,
-    ) -> TorchPredBatch:
+    ) -> OTXPredBatch:
         if predict_result_per_batch.saliency_map is None:  # skip empty saliency maps
             return predict_result_per_batch
 

@@ -12,7 +12,7 @@ from otx.algo.detection.necks.yolox_pafpn import YOLOXPAFPNModule
 from otx.algo.detection.yolox import YOLOX
 from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.model.base import DataInputParams
-from otx.data import TorchPredBatch
+from otx.data import OTXPredBatch
 
 
 class TestYOLOX:
@@ -123,7 +123,7 @@ class TestYOLOX:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)
-        assert isinstance(output, TorchPredBatch)
+        assert isinstance(output, OTXPredBatch)
 
     @pytest.mark.parametrize(
         "model",

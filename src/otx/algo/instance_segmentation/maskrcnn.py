@@ -36,7 +36,7 @@ from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
-from otx.data import TorchPredBatch
+from otx.data import OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -397,7 +397,7 @@ class MaskRCNN(OTXInstanceSegModel):
 class RotatedMaskRCNNModel(MaskRCNN):
     """Base class for the rotated detection models used in OTX."""
 
-    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> TorchPredBatch:
+    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredBatch:
         """Predict step for rotated detection task.
 
         Note: This method is overridden to convert masks to rotated bounding boxes.
@@ -462,7 +462,7 @@ class RotatedMaskRCNNModel(MaskRCNN):
             batch_polygons.append(polygons)
             batch_masks.append(masks)
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=preds.batch_size,
             images=preds.images,
             imgs_info=preds.imgs_info,

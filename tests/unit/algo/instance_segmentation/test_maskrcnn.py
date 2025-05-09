@@ -10,7 +10,7 @@ from otx.algo.instance_segmentation.maskrcnn_tv import MaskRCNNTV
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
 from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
-from otx.data import TorchPredBatch
+from otx.data import OTXPredBatch
 
 
 class TestMaskRCNN:
@@ -99,7 +99,7 @@ class TestMaskRCNN:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)
-        assert isinstance(output, TorchPredBatch)
+        assert isinstance(output, OTXPredBatch)
 
     @pytest.mark.parametrize(
         "model",

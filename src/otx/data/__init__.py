@@ -4,15 +4,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .torch import (
-    TorchDataBatch,
-    TorchDataItem,
-    TorchPredBatch,
-    TorchPredItem,
+    OTXDataBatch,
+    OTXDataItem,
+    OTXPredBatch,
+    OTXPredItem,
 )
 
 __all__ = [
-    "TorchDataBatch",
-    "TorchDataItem",
-    "TorchPredBatch",
-    "TorchPredItem",
+    "OTXDataBatch",
+    "OTXDataItem",
+    "OTXPredBatch",
+    "OTXPredItem",
 ]

@@ -22,5 +22,4 @@ __all__ = [
     "segmentation",
     "strategies",
     "utils",
-    "visual_prompting",
 ]

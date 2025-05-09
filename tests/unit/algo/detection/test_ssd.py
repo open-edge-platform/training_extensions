@@ -13,7 +13,7 @@ from otx.algo.detection.ssd import SSD
 from otx.core.exporter.native import OTXModelExporter
 from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
-from otx.data import TorchPredBatch
+from otx.data import OTXPredBatch
 
 
 class TestSSD:
@@ -86,7 +86,7 @@ class TestSSD:
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         fxt_model.eval()
         output = fxt_model(data)
-        assert isinstance(output, TorchPredBatch)
+        assert isinstance(output, OTXPredBatch)
 
     def test_export(self, fxt_model):
         fxt_model.eval()
