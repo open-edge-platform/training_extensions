@@ -538,9 +538,9 @@ def pytest_generate_tests(metafunc):
     """
     Dynamically generates parameterized test cases for each available task template.
 
-    If the test function requires the 'task_template' fixture, this hook loads model templates 
-    based on the specified --task and --run-category-only command-line options. It then creates 
-    combinations of (task_enum, template_path, tiling_flag) and registers them as individual 
+    If the test function requires the 'task_template' fixture, this hook loads model templates
+    based on the specified --task and --run-category-only command-line options. It then creates
+    combinations of (task_enum, template_path, tiling_flag) and registers them as individual
     test cases using pytest's parametrize mechanism, with readable test IDs for clarity.
     """
     if "task_template" in metafunc.fixturenames:
