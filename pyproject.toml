@@ -93,10 +93,6 @@ ci_tox = [
     "tox==4.25.0",
 ]
 
-ci_publish = [
-    "build==1.2.2.post1",
-]
-
 ci_benchmark = [
     "pandas<2.3",       # To avoid conflict with nncf==2.9.0
     "matplotlib==3.10.1",
