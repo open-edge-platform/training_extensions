@@ -31,8 +31,8 @@ engine:
 callback_monitor: val/Dice
 
 data: ../_base_/data/semantic_segmentation_tile.yaml
-overrides:
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
-        warmup_iters: 100
+
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      warmup_iters: 100

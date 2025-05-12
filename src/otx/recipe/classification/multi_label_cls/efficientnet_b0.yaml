@@ -30,17 +30,17 @@ engine:
 callback_monitor: val/accuracy
 
 data: ../../_base_/data/classification.yaml
+
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      patience: 5
+
 overrides:
   reset:
     - data.train_subset.transforms
 
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
-        patience: 5
-
   max_epochs: 200
-
   data:
     task: MULTI_LABEL_CLS
     data_format: datumaro

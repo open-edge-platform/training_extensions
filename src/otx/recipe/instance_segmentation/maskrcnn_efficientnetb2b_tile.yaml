@@ -30,17 +30,19 @@ engine:
 callback_monitor: val/map_50
 
 data: ../_base_/data/instance_segmentation.yaml
-overrides:
-  max_epochs: 100
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
+
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
       mode: max
       patience: 10
       check_on_train_epoch_end: false
       min_delta: 0.001
       warmup_iters: 30
       warmup_epochs: 3
+
+overrides:
+  max_epochs: 100
   data:
     input_size:
       - 512
@@ -66,7 +68,6 @@ overrides:
             std: [1.0, 1.0, 1.0]
       sampler:
         class_path: otx.algo.samplers.balanced_sampler.BalancedSampler
-
     val_subset:
       num_workers: 4
       transforms:

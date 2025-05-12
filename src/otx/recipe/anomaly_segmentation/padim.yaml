@@ -14,13 +14,15 @@ engine:
 callback_monitor: image_F1Score # this has no effect as Padim does not need to be trained
 
 data: ../_base_/data/anomaly.yaml
+
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    init_args:
+      max_interval: 1
+
 overrides:
   precision: 32
   max_epochs: 1
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
-      init_args:
-        max_interval: 1
 
   data:
     task: ANOMALY_SEGMENTATION

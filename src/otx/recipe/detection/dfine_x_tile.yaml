@@ -31,14 +31,10 @@ engine:
 callback_monitor: val/map_50
 
 data: ../_base_/data/detection_tile.yaml
-overrides:
-  reset:
-    - data.train_subset.transforms
-    - data.val_subset.transforms
-    - data.test_subset.transforms
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
+
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
       mode: max
       patience: 10
       check_on_train_epoch_end: false
@@ -46,6 +42,11 @@ overrides:
       warmup_iters: 30
       warmup_epochs: 3
 
+overrides:
+  reset:
+    - data.train_subset.transforms
+    - data.val_subset.transforms
+    - data.test_subset.transforms
   data:
     input_size:
       - 640

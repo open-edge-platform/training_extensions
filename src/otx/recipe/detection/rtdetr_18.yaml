@@ -29,17 +29,18 @@ engine:
 callback_monitor: val/map_50
 
 data: ../_base_/data/torchvision_base.yaml
-overrides:
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
-      init_args:
-        max_interval: 1
-        min_lrschedule_patience: 3
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
-        warmup_iters: 100
-        warmup_epochs: 7
 
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    init_args:
+      max_interval: 1
+      min_lrschedule_patience: 3
+  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      warmup_iters: 100
+      warmup_epochs: 7
+
+overrides:
   data:
     input_size:
       - 640
