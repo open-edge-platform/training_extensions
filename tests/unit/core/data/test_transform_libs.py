@@ -55,7 +55,7 @@ class TestPadtoSquare:
 
         # height > width
         inpt = tv_tensors.Image(torch.ones((1, 5, 3)))
-        results = transform(inpt, transform._get_params([inpt]))
+        results = transform(inpt, transform.make_params([inpt]))
 
         assert isinstance(results, tuple)
         assert results[0].shape == torch.Size((1, 5, 5))
@@ -63,7 +63,7 @@ class TestPadtoSquare:
 
         # height < width
         inpt = tv_tensors.Image(torch.ones((1, 3, 5)))
-        results = transform(inpt, transform._get_params([inpt]))
+        results = transform(inpt, transform.make_params([inpt]))
 
         assert isinstance(results, tuple)
         assert results[0].shape == torch.Size((1, 5, 5))
@@ -76,7 +76,7 @@ class TestPadtoSquare:
             canvas_size=(5, 3),
             dtype=torch.float32,
         )
-        results = transform(inpt.clone(), transform._get_params([inpt]))
+        results = transform(inpt.clone(), transform.make_params([inpt]))
 
         assert torch.all(results[0] == inpt)
 
@@ -85,7 +85,7 @@ class TestPadtoSquare:
             canvas_size=(5, 3),
             dtype=torch.float32,
         )
-        results = transform(inpt.clone(), transform._get_params([inpt]))
+        results = transform(inpt.clone(), transform.make_params([inpt]))
 
         assert torch.all(results[0] == inpt)
 
@@ -96,7 +96,7 @@ class TestResizetoLongestEdge:
 
         # height > width
         inpt = tv_tensors.Image(torch.ones((1, 5, 3)))
-        results = transform(inpt, transform._get_params([inpt]))
+        results = transform(inpt, transform.make_params([inpt]))
 
         assert isinstance(results, tuple)
         assert results[0].shape == torch.Size((1, 10, 6))
@@ -104,7 +104,7 @@ class TestResizetoLongestEdge:
 
         # height < width
         inpt = tv_tensors.Image(torch.ones((1, 3, 5)))
-        results = transform(inpt, transform._get_params([inpt]))
+        results = transform(inpt, transform.make_params([inpt]))
 
         assert isinstance(results, tuple)
         assert results[0].shape == torch.Size((1, 6, 10))
@@ -112,7 +112,7 @@ class TestResizetoLongestEdge:
 
         # square
         inpt = tv_tensors.Image(torch.ones((1, 5, 5)))
-        results = transform(inpt, transform._get_params([inpt]))
+        results = transform(inpt, transform.make_params([inpt]))
 
         assert isinstance(results, tuple)
         assert results[0].shape == torch.Size((1, 10, 10))

@@ -1,0 +1,55 @@
+name: Pull Request Comment Triggered Integration Test
+
+on:
+  issue_comment:
+    types: [created]
+
+env:
+  COMMENT_BODY: ${{ github.event.comment.body }}
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  pr-triggered-integration-test:
+    if: |
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/run ')
+    runs-on: [self-hosted, linux, x64, dev, dmount]
+    name: PR-Comment-Integration-Tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install tox
+        run: |
+          python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
+          pip-compile --generate-hashes --output-file=/tmp/requirements.txt --extra=ci_tox pyproject.toml
+          python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
+          rm /tmp/requirements.txt
+
+      - name: Extract, Validate, and Run Integration Test
+        run: |
+          ALLOWED_TASKS=("all detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly" "keypoint_detection")
+
+          # Ensure comment starts with "/run " and extract task name
+          if [[ "$COMMENT_BODY" =~ ^/run\ ([a-zA-Z0-9_-]+)$ ]]; then
+            TASK_NAME="${BASH_REMATCH[1]}"
+          else
+            echo "❌ Invalid format. Use '/run <task_name>'"
+            exit 1
+          fi
+
+          # Validate the extracted task name
+          if [[ ! " ${ALLOWED_TASKS[@]} " =~ " ${TASK_NAME} " ]]; then
+            echo "❌ Invalid task: $TASK_NAME. Allowed tasks: ${ALLOWED_TASKS[*]}"
+            exit 1
+          fi
+
+          echo "✅ Running integration test for: $TASK_NAME"
+          tox -vv -e "integration-test-${TASK_NAME}"

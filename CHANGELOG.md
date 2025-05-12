@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.4.3\]
+
+### Enhancements
+
+- Bump torch to 2.7.0
+
 ## \[2.4.2\]
 
 ### Bug fixes
