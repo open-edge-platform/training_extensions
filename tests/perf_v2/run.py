@@ -96,6 +96,10 @@ if __name__ == "__main__":
         for model in models:
             for dataset in datasets:
                 for seed in range(args.num_repeat):
+                    if (output_root / model.name / dataset.name / str(seed)).exists():
+                        logger.info(f"Skipping existing job for {model.name} on {dataset.name} with seed {seed}")
+                        continue
+
                     cmd = [
                         "python",
                         "-m",
