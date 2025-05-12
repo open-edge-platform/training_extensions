@@ -13,7 +13,7 @@ from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.model.base import DataInputParams
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchPredBatch
+from otx.data.torch import OTXPredBatch
 
 
 @pytest.fixture()
@@ -91,7 +91,7 @@ class TestOTXTVModel:
 
         tv_model.training = False
         preds = tv_model._customize_outputs(outputs, data_entity)
-        assert isinstance(preds, TorchPredBatch)
+        assert isinstance(preds, OTXPredBatch)
 
     def test_export_parameters(self, fxt_tv_model):
         export_parameters = fxt_tv_model._export_parameters
@@ -105,7 +105,7 @@ class TestOTXTVModel:
         fxt_tv_model.explain_mode = explain_mode
         outputs = fxt_tv_model.predict_step(batch=fxt_multiclass_cls_batch_data_entity, batch_idx=0)
 
-        assert isinstance(outputs, TorchPredBatch)
+        assert isinstance(outputs, OTXPredBatch)
         assert outputs.has_xai_outputs == explain_mode
         if explain_mode:
             assert outputs.feature_vector[0].ndim == 2

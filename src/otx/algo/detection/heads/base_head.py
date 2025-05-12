@@ -18,7 +18,7 @@ from otx.algo.common.utils.utils import dynamic_topk, filter_scores_and_topk, ga
 from otx.algo.detection.utils.utils import unpack_det_entity
 from otx.algo.modules.base_module import BaseModule
 from otx.algo.utils.utils import InstanceData
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 
 class BaseDenseHead(BaseModule):
@@ -62,7 +62,7 @@ class BaseDenseHead(BaseModule):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 
@@ -83,7 +83,7 @@ class BaseDenseHead(BaseModule):
     def predict(
         self,
         x: tuple[Tensor],
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Perform forward propagation of the detection head and predict detection results.

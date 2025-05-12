@@ -13,7 +13,7 @@ from otx.core.metrics.dice import SegmCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.segmentation import OTXSegmentationModel
 from otx.core.types.label import SegLabelInfo
-from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 
 class TestOTXSegmentationModel:
@@ -31,7 +31,7 @@ class TestOTXSegmentationModel:
 
     @pytest.fixture()
     def batch_data_entity(self):
-        return TorchDataBatch(
+        return OTXDataBatch(
             batch_size=2,
             images=torch.randn(2, 3, 224, 224),
             imgs_info=[],
@@ -113,7 +113,7 @@ class TestOTXSegmentationModel:
         model.training = False
         outputs = torch.randn(2, 10, 224, 224)
         customized_outputs = model._customize_outputs(outputs, batch_data_entity)
-        assert isinstance(customized_outputs, TorchPredBatch)
+        assert isinstance(customized_outputs, OTXPredBatch)
         assert len(customized_outputs.scores) == 0
         assert customized_outputs.images.shape == (2, 3, 224, 224)
         assert customized_outputs.imgs_info == []

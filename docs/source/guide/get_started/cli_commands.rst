@@ -208,8 +208,8 @@ Find
     (otx) ...$ otx find --help
     ╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
     │ Usage: otx [options] find [-h]                                                                                                                                                            │
-    │                           [--task --task {ANOMALY,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,DETECTION,ROTATED_DETECTION,KEYPOINT_DETECTION,INSTANCE_SEGMENTATION,SEMANTIC_SEGMENTATION, │
-    │                           VISUAL_PROMPTING}                                                                                                                                               │
+    │                           [--task --task {ANOMALY,ANOMALY_CLASSIFICATION,ANOMALY_DETECTION,ANOMALY_SEGMENTATION,MULTI_CLASS_CLS,MULTI_LABEL_CLS,H_LABEL_CLS,                              │
+    │                                            DETECTION,ROTATED_DETECTION,KEYPOINT_DETECTION,INSTANCE_SEGMENTATION,SEMANTIC_SEGMENTATION}                                   │
     │                           [--pattern PATTERN]                                                                                                                                             │
     │                                                                                                                                                                                           │
     │                                                                                                                                                                                           │

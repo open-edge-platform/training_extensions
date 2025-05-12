@@ -25,13 +25,13 @@ from torchvision.models.detection.roi_heads import paste_masks_in_image
 from torchvision.models.resnet import resnet50
 
 if TYPE_CHECKING:
-    from otx.data import TorchDataBatch
+    from otx.data import OTXDataBatch
 
 
 class MaskRCNN(_MaskRCNN):
     """Torchvision MaskRCNN model with forward method accepting TorchDataBatch."""
 
-    def forward(self, entity: TorchDataBatch) -> dict[str, Tensor] | list[dict[str, Tensor]]:
+    def forward(self, entity: OTXDataBatch) -> dict[str, Tensor] | list[dict[str, Tensor]]:
         """Overwrite GeneralizedRCNN forward method to accept TorchDataBatch."""
         ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
         img_shapes = [img_info.img_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]

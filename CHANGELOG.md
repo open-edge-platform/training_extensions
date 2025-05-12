@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
+- Fix otx install by moving base dependencies
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4285>)
 - Fix DataInputParams Serialization
   (<https://github.com/openvinotoolkit/training_extensions/pull/4293>)
 - Align KP detection validation with ModelAPI post processing
@@ -23,7 +25,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 - Remove Visual Prompting
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>)
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>,<https://github.com/open-edge-platform/training_extensions/pull/4370>)
 
 ## \[2.4.0\]
 
