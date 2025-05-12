@@ -1,7 +1,7 @@
 # Description.
 model_template_id: ote_anomaly_uflow
 name: U-FLOW
-task_type: ANOMALY
+task_type: ANOMALY_CLASSIFICATION
 task_family: VISION
 instantiation: "CLASS"
 summary: This model generally achieves high accuracy across a wide range of tasks, but it is slower than other models.

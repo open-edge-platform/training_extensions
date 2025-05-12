@@ -28,7 +28,9 @@ class Padim(AnomalyMixin, AnomalibPadim, OTXAnomaly):
         layers (list[str], optional): Feature extractor layers. Defaults to ["layer1", "layer2", "layer3"].
         pre_trained (bool, optional): Pretrained backbone. Defaults to True.
         n_features (int | None, optional): Number of features. Defaults to None.
-        task (OTXTaskType, optional): Task type of Anomaly Task. Defaults to OTXTaskType.ANOMALY.
+        task (Literal[
+                OTXTaskType.ANOMALY_CLASSIFICATION, OTXTaskType.ANOMALY_DETECTION, OTXTaskType.ANOMALY_SEGMENTATION
+            ], optional): Task type of Anomaly Task. Defaults to OTXTaskType.ANOMALY_CLASSIFICATION.
         input_size (tuple[int, int], optional):
             Model input size in the order of height and width. Defaults to (256, 256)
     """
@@ -46,7 +48,7 @@ class Padim(AnomalyMixin, AnomalibPadim, OTXAnomaly):
             OTXTaskType.ANOMALY_CLASSIFICATION,
             OTXTaskType.ANOMALY_DETECTION,
             OTXTaskType.ANOMALY_SEGMENTATION,
-        ] = OTXTaskType.ANOMALY,
+        ] = OTXTaskType.ANOMALY_CLASSIFICATION,
     ) -> None:
         self.data_input_params = data_input_params
         self.input_size = data_input_params.input_size

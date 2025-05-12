@@ -26,7 +26,9 @@ class Stfpm(AnomalyMixin, AnomalibStfpm, OTXAnomaly):
     Args:
         layers (Sequence[str]): Feature extractor layers.
         backbone (str, optional): Feature extractor backbone. Defaults to "resnet18".
-        task (OTXTaskType, optional): Task type of Anomaly Task. Defaults to OTXTaskType.ANOMALY.
+        task (Literal[
+                OTXTaskType.ANOMALY_CLASSIFICATION, OTXTaskType.ANOMALY_DETECTION, OTXTaskType.ANOMALY_SEGMENTATION
+            ], optional): Task type of Anomaly Task. Defaults to OTXTaskType.ANOMALY_CLASSIFICATION.
         input_size (tuple[int, int], optional):
             Model input size in the order of height and width. Defaults to (256, 256)
     """
@@ -42,7 +44,7 @@ class Stfpm(AnomalyMixin, AnomalibStfpm, OTXAnomaly):
             OTXTaskType.ANOMALY_CLASSIFICATION,
             OTXTaskType.ANOMALY_DETECTION,
             OTXTaskType.ANOMALY_SEGMENTATION,
-        ] = OTXTaskType.ANOMALY,
+        ] = OTXTaskType.ANOMALY_CLASSIFICATION,
         **kwargs,
     ) -> None:
         self.data_input_params = data_input_params
