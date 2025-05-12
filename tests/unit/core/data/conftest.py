@@ -159,6 +159,9 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         "instance_seg",
         "semantic_seg",
         "anomaly",
+        "anomaly_cls",
+        "anomaly_det",
+        "anomaly_seg",
     ],
 )
 def fxt_dataset_and_data_entity_cls(

@@ -41,7 +41,7 @@ DEFAULT_GETI_CONFIG_PER_TASK = {
     OTXTaskType.DETECTION: TEST_ARROW_PATH / "detection",
     OTXTaskType.INSTANCE_SEGMENTATION: TEST_ARROW_PATH / "detection",
     OTXTaskType.SEMANTIC_SEGMENTATION: TEST_ARROW_PATH / "semantic_segmentation",
-    OTXTaskType.ANOMALY: TEST_ARROW_PATH / "anomaly",
+    OTXTaskType.ANOMALY_CLASSIFICATION: TEST_ARROW_PATH / "anomaly",
 }
 
 

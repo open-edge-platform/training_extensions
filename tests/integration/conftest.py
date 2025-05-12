@@ -54,8 +54,8 @@ def get_task_list(task: str) -> list[OTXTaskType]:
         tasks = [OTXTaskType.H_LABEL_CLS]
     elif task == "classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
-    elif task == "anomaly":
-        tasks = [OTXTaskType.ANOMALY]
+    elif task == "anomaly_classification":
+        tasks = [OTXTaskType.ANOMALY_CLASSIFICATION]
     elif task == "keypoint_detection":
         tasks = [OTXTaskType.KEYPOINT_DETECTION]
     else:
@@ -201,6 +201,9 @@ def fxt_target_dataset_per_task() -> dict:
         "instance_segmentation": "tests/assets/car_tree_bug",
         "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset",
         "anomaly": "tests/assets/anomaly_hazelnut",
+        "anomaly_classification": "tests/assets/anomaly_hazelnut",
+        "anomaly_detection": "tests/assets/anomaly_hazelnut",
+        "anomaly_segmentation": "tests/assets/anomaly_hazelnut",
         "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
         "tiling_detection": "tests/assets/tiling_small_objects",
     }

@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from anomalib.models.image import Padim as AnomalibPadim
 
@@ -41,7 +41,12 @@ class Padim(AnomalyMixin, AnomalibPadim, OTXAnomaly):
         layers: list[str] = ["layer1", "layer2", "layer3"],  # noqa: B006
         pre_trained: bool = True,
         n_features: int | None = None,
-        task: OTXTaskType = OTXTaskType.ANOMALY,
+        task: Literal[
+            OTXTaskType.ANOMALY,
+            OTXTaskType.ANOMALY_CLASSIFICATION,
+            OTXTaskType.ANOMALY_DETECTION,
+            OTXTaskType.ANOMALY_SEGMENTATION,
+        ] = OTXTaskType.ANOMALY,
     ) -> None:
         self.data_input_params = data_input_params
         self.input_size = data_input_params.input_size

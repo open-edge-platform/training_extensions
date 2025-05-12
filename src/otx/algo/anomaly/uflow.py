@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from anomalib.models.image import Uflow as AnomalibUflow
 
@@ -43,7 +43,12 @@ class Uflow(AnomalyMixin, AnomalibUflow, OTXAnomaly):
         affine_clamp: float = 2.0,
         affine_subnet_channels_ratio: float = 1.0,
         permute_soft: bool = False,
-        task: OTXTaskType = OTXTaskType.ANOMALY,
+        task: Literal[
+            OTXTaskType.ANOMALY,
+            OTXTaskType.ANOMALY_CLASSIFICATION,
+            OTXTaskType.ANOMALY_DETECTION,
+            OTXTaskType.ANOMALY_SEGMENTATION,
+        ] = OTXTaskType.ANOMALY,
     ) -> None:
         self.data_input_params = data_input_params
         self.input_size = data_input_params.input_size

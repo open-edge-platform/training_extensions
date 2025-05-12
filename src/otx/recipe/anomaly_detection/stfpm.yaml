@@ -1,0 +1,36 @@
+model:
+  class_path: otx.algo.anomaly.stfpm.Stfpm
+  init_args:
+    layers: ["layer1", "layer2", "layer3"]
+    backbone: "resnet18"
+    task: ANOMALY_DETECTION
+
+engine:
+  task: ANOMALY_DETECTION
+  device: auto
+
+callback_monitor: pixel_F1Score
+
+data: ../_base_/data/anomaly.yaml
+overrides:
+  reset:
+    - data.train_subset.transforms
+    - data.val_subset.transforms
+    - data.test_subset.transforms
+
+  precision: 32
+  max_epochs: 100
+  callbacks:
+    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      init_args:
+        patience: 5
+        mode: max
+        monitor: pixel_F1Score
+    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+      init_args:
+        max_interval: 1
+  gradient_clip_val: 0
+  num_sanity_val_steps: 0
+
+  data:
+    task: ANOMALY_DETECTION

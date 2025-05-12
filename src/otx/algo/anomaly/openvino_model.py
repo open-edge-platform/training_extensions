@@ -11,7 +11,7 @@ All anomaly models use the same AnomalyDetection model from ModelAPI.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any, Literal, Sequence
 
 import numpy as np
 import openvino
@@ -102,7 +102,12 @@ class AnomalyOpenVINO(OVModel):
         use_throughput_mode: bool = True,
         model_api_configuration: dict[str, Any] | None = None,
         metric: MetricCallable = NullMetricCallable,  # Metrics is computed using Anomalib's metric
-        task: OTXTaskType = OTXTaskType.ANOMALY,
+        task: Literal[
+            OTXTaskType.ANOMALY,
+            OTXTaskType.ANOMALY_CLASSIFICATION,
+            OTXTaskType.ANOMALY_DETECTION,
+            OTXTaskType.ANOMALY_SEGMENTATION,
+        ] = OTXTaskType.ANOMALY,
         **kwargs,
     ) -> None:
         super().__init__(

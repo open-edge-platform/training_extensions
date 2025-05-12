@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Literal, Sequence
 
 from anomalib.models.image.stfpm import Stfpm as AnomalibStfpm
 
@@ -37,7 +37,12 @@ class Stfpm(AnomalyMixin, AnomalibStfpm, OTXAnomaly):
         label_info: LabelInfoTypes = AnomalyLabelInfo(),
         layers: Sequence[str] = ["layer1", "layer2", "layer3"],
         backbone: str = "resnet18",
-        task: OTXTaskType = OTXTaskType.ANOMALY,
+        task: Literal[
+            OTXTaskType.ANOMALY,
+            OTXTaskType.ANOMALY_CLASSIFICATION,
+            OTXTaskType.ANOMALY_DETECTION,
+            OTXTaskType.ANOMALY_SEGMENTATION,
+        ] = OTXTaskType.ANOMALY,
         **kwargs,
     ) -> None:
         self.data_input_params = data_input_params

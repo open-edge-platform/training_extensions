@@ -91,8 +91,12 @@ class OTXAnomaly(OTXModel):
 
     @task.setter
     def task(self, value: OTXTaskType) -> None:
-        if value == OTXTaskType.ANOMALY:
+        if value in (OTXTaskType.ANOMALY, OTXTaskType.ANOMALY_CLASSIFICATION):
             self._task_type = AnomalibTaskType.CLASSIFICATION
+        elif value == OTXTaskType.ANOMALY_DETECTION:
+            self._task_type = AnomalibTaskType.DETECTION
+        elif value == OTXTaskType.ANOMALY_SEGMENTATION:
+            self._task_type = AnomalibTaskType.SEGMENTATION
         else:
             msg = f"Unexpected task type: {value}"
             raise ValueError(msg)
