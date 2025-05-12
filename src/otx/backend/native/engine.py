@@ -1180,4 +1180,4 @@ class OTXEngine(Engine):
     @staticmethod
     def is_supported(model: MODEL, data: DATA) -> bool:
         """Check if the engine is supported for the given model and data."""
-        return bool(isinstance(model, OTXModel) and isinstance(data, OTXDataModule))
+        return isinstance(model, OTXModel) and isinstance(data, OTXDataModule)
