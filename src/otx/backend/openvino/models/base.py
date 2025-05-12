@@ -148,18 +148,19 @@ class OVModel:
         output_dir: Path,
         data_module: OTXDataModule,
         ptq_config: dict[str, Any] | None = None,
+        optimized_model_name: str = "optimized_model",
     ) -> Path:
         """Runs NNCF quantization."""
         import nncf
 
-        output_model_path = output_dir / (self._OPTIMIZED_MODEL_BASE_NAME + ".xml")
+        output_model_path = output_dir / (optimized_model_name + ".xml")
 
         def check_if_quantized(model: openvino.Model) -> bool:
             """Checks if OpenVINO model is already quantized."""
             nodes = model.get_ops()
             return any(op.get_type_name() == "FakeQuantize" for op in nodes)
 
-        ov_model = openvino.Core().read_model(self.model_name)
+        ov_model = openvino.Core().read_model(self.model_path)
 
         if check_if_quantized(ov_model):
             msg = "Model is already optimized by PTQ"

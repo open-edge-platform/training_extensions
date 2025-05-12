@@ -54,23 +54,27 @@ class OVEngine:
             msg = "Model should be either a valid XML path or an instance of OVModel."
             raise ValueError(msg)
 
-        if datamodule is not None and isinstance(datamodule, OTXDataModule):
+        self._auto_configurator = AutoConfigurator(
+            data_root=datamodule if isinstance(datamodule, PathLike) else None,
+            task=task,
+        )
+
+        if isinstance(datamodule, OTXDataModule):
             if datamodule.task != task:
                 msg = (
                     "The task of the provided datamodule does not match the task derived from the model. "
                     f"datamodule.task={datamodule.task}, model.task={task}"
                 )
                 raise ValueError(msg)
-
-        self._auto_configurator = AutoConfigurator(
-            data_root=datamodule if isinstance(datamodule, PathLike) else None,
-            task=task,
-        )
-
-        self._datamodule: OTXDataModule | None = (
-            datamodule if datamodule is not None else self._auto_configurator.get_datamodule()
-        )
-        self._model: OVModel = model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
+            self._datamodule: OTXDataModule | None = datamodule
+        else:
+            self._datamodule: OTXDataModule | None = (
+                self._auto_configurator.get_datamodule() if datamodule is not None else None
+            )
+        if model is not None:
+            self._model: OVModel = model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
+        else:
+            self._model = None
 
     def _derive_task_from_ir(self, ir_xml: PathLike) -> str:
         """Derives the task from the IR model.
@@ -117,62 +121,39 @@ class OVEngine:
 
     def test(
         self,
+        data: OTXDataModule | PathLike | None = None,
         checkpoint: PathLike | None = None,
-        datamodule: OTXDataModule | None = None,
         metric: MetricCallable | None = None,
     ) -> dict:
         r"""Run the testing phase of the engine.
 
         Args:
+            data (OTXDataModule | None, optional): The data to test on. It can be a data module or a path to the data root.
+                If a path is provided, the engine will automatically create a datamodule based on the data root and model.
             checkpoint (PathLike | None, optional): Path to the checkpoint file to load the model from.
                 Defaults to None.
-            datamodule (OTXDataModule | None, optional): The data module containing the test data.
             metric (MetricCallable | None): If not None, it will override `OTXModel.metric_callable` with the given
                 metric callable. It will temporarilly change the evaluation metric for the validation and test.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
-            dict: Dictionary containing the callback metrics from the trainer.
+            dict: Dictionary containing the metrics after testing.
 
-        Example:
-            >>> engine.test(
-            ...     datamodule=OTXDataModule(),
-            ...     checkpoint=<checkpoint/path>,
-            ... )
-
-        CLI Usage:
-            1. To eval model by specifying the work_dir where did the training, run
-                ```shell
-                >>> otx test --work_dir <WORK_DIR_PATH, str>
-                ```
-            2. To eval model a specific checkpoint, run
-                ```shell
-                >>> otx test --work_dir <WORK_DIR_PATH, str> --checkpoint <CKPT_PATH, str>
-                ```
-            3. Can pick a model.
-                ```shell
-                >>> otx test \
-                ...     --model <CONFIG | CLASS_PATH_OR_NAME> \
-                ...     --data_root <DATASET_PATH, str> \
-                ...     --checkpoint <CKPT_PATH, str>
-                ```
-            4. To eval with configuration file, run
-                ```shell
-                >>> otx test --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str>
-                ```
         """
-        datamodule = datamodule if datamodule is not None else self.datamodule
-        metric = metric if metric is not None else self.model.metric_callable(label_info=datamodule.label_info)
+        datamodule = data if data is not None else self.datamodule
+        if isinstance(datamodule, PathLike):
+            datamodule = self._auto_configurator.get_datamodule(data_root=datamodule)
         model = self._update_checkpoint(checkpoint)
+        metric = metric if metric is not None else self.model.metric_callable(label_info=datamodule.label_info)
 
         if datamodule is None:
-            msg = "Please provide the `data_root` or `datamodule` when creating the Engine, or pass a `datamodule` in OVEngine.test()."
+            msg = "Please provide the `data` when creating the Engine, or pass it in OVEngine.test()."
             raise RuntimeError(msg)
         if metric is None:
-            msg = "Please provide a `metric` in OVEngine or pass it in OVEngine.test()."
+            msg = "Please provide a `metric` when creating a OVModel or pass it in OVEngine.test()."
             raise RuntimeError(msg)
 
-        if model.label_info != self.datamodule.label_info:
+        if model.label_info != datamodule.label_info:
             msg = (
                 "To launch a test pipeline, the label information should be same "
                 "between the training and testing datasets. "
@@ -195,7 +176,7 @@ class OVEngine:
 
     def predict(
         self,
-        data: OTXDataModule | PathLike | list[np.array],
+        data: OTXDataModule | PathLike | list[np.array] | None = None,
         checkpoint: PathLike | None = None,
         explain: bool = False,
         explain_config: ExplainConfig | None = None,
@@ -217,36 +198,45 @@ class OVEngine:
         if isinstance(data, PathLike):
             data = self._auto_configurator.get_datamodule(data_root=data)
 
-        datamodule = data if isinstance(data, OTXDataModule) else self.datamodule
-
-        if model.label_info != datamodule.label_info:
-            msg = (
-                "To launch a predict pipeline, the label information should be same "
-                "between the training and testing datasets. "
-                "Please check whether you use the same dataset: "
-                f"model.label_info={model.label_info}, "
-                f"datamodule.label_info={self.datamodule.label_info}"
-            )
-            raise ValueError(msg)
+        datamodule = data if data is not None else self.datamodule
 
         predict_result = []
-        if isinstance(data, OTXDataModule):
-            dataloader = data.test_dataloader()
-            for data_batch in dataloader:
-                predict_result.append(model(data_batch))
-        elif isinstance(data, list):
-            if len(data) == 0:
-                msg = "The input data is empty."
+        with Progress() as progress:
+            if isinstance(datamodule, OTXDataModule):
+                if model.label_info != datamodule.label_info:
+                    msg = (
+                        "To launch a predict pipeline, the label information should be same "
+                        "between the training and testing datasets. "
+                        "Please check whether you use the same dataset: "
+                        f"model.label_info={model.label_info}, "
+                        f"datamodule.label_info={self.datamodule.label_info}"
+                    )
+                    raise ValueError(msg)
+                dataloader = datamodule.test_dataloader()
+                task = progress.add_task("Predicting", total=len(dataloader))
+                for data_batch in dataloader:
+                    predict_result.append(model(data_batch))
+                    progress.update(task, advance=1)
+
+            elif isinstance(datamodule, list):
+                # list of numpy images will be considered as 1 batch
+                task = progress.add_task("Predicting", total=1)
+                if len(datamodule) == 0:
+                    msg = "The input data is empty."
+                    raise ValueError(msg)
+                if not isinstance(data[0], np.ndarray):
+                    msg = "The input data should be a list of numpy arrays."
+                    raise ValueError(msg)
+                customized_inputs = TorchDataBatch(
+                    batch_size=len(datamodule),
+                    images=[torch.tensor(im) for im in data],  # TODO(@kprokofi): remove torch after numpy support
+                    imgs_info=[{"img_shape": img.shape} for img in datamodule],
+                )
+                predict_result.append(model(customized_inputs))
+                progress.update(task, advance=1)
+            else:
+                msg = "The input data should be either a datamodule, valid path to data root or a list of numpy arrays."
                 raise ValueError(msg)
-            if not isinstance(data[0], np.ndarray):
-                msg = "The input data should be a list of numpy arrays."
-                raise ValueError(msg)
-            customized_inputs = TorchDataBatch(
-                batch_size=len(data),
-                images=[torch.tensor(im) for im in data],  # TODO(@kprokofi): remove torch after numpy support
-                imgs_info=[{"img_shape": img.shape} for img in data],
-            )
-            predict_result.append(model(customized_inputs))
 
         if explain:
             if explain_config is None:
@@ -327,7 +317,7 @@ class OVEngine:
         self._work_dir = work_dir
 
     @property
-    def model(self) -> OVModel:
+    def model(self) -> OVModel | None:
         """Returns the model object associated with the engine.
 
         Returns:

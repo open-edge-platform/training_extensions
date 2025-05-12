@@ -33,13 +33,13 @@ if TYPE_CHECKING:
 
 
 _ENGINE_AVAILABLE = True
-try:
-    from otx.backend.native.engine import OTXEngine
-    from otx.core.config import register_configs
+# try:
+from otx.backend.native.engine import OTXEngine
+from otx.core.config import register_configs
 
-    register_configs()
-except ImportError:
-    _ENGINE_AVAILABLE = False
+register_configs()
+# except ImportError:
+#     _ENGINE_AVAILABLE = False
 
 
 class OTXCLI:
@@ -153,10 +153,11 @@ class OTXCLI:
             skip=engine_skip,
         )
         # Model Settings
+        from otx.backend.openvino.models import OVModel
         from otx.core.model.base import OTXModel
 
         parser.add_subclass_arguments(
-            OTXModel,
+            (OTXModel, OVModel),
             "model",
             required=False,
             fail_untyped=False,

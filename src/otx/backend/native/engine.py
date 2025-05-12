@@ -9,7 +9,6 @@ import copy
 import csv
 import inspect
 import logging
-import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -24,7 +23,7 @@ from otx.backend.native.utils import adapt_batch_size
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types import PathLike
 from otx.core.types.device import DeviceType
 from otx.core.types.export import OTXExportFormatType
@@ -40,7 +39,7 @@ from .utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 if TYPE_CHECKING:
     from lightning import Callback
     from lightning.pytorch.loggers import Logger
-    from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
+    from lightning.pytorch.utilities.types import EVAL_DATALOADERS
     from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
     from otx.core.metrics import MetricCallable
@@ -345,21 +344,12 @@ class OTXEngine(Engine):
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         datamodule = datamodule if datamodule is not None else self.datamodule
 
-        is_ir_ckpt = Path(str(checkpoint)).suffix in [".xml", ".onnx"]
-        if is_ir_ckpt and not isinstance(model, OVModel):
-            model = self._auto_configurator.get_ov_model(model_name=str(checkpoint), label_info=datamodule.label_info)
-            if self.device.accelerator != "cpu":
-                msg = "IR model supports inference only on CPU device. The device is changed automatic."
-                warn(msg, stacklevel=1)
-                self.device = DeviceType.cpu  # type: ignore[assignment]
-
-        # NOTE: Re-initiate datamodule without tiling as model API supports its own tiling mechanism
-        if isinstance(model, OVModel):
-            datamodule = self._auto_configurator.update_ov_subset_pipeline(datamodule=datamodule, subset="test")
+        if Path(str(checkpoint)).suffix in [".xml", ".onnx"]:
+            msg = "OTXEngine doesn't support validation of exported models. Please, use OVEnging instead."
 
         # NOTE, trainer.test takes only lightning based checkpoint.
         # So, it can't take the OTX1.x checkpoint.
-        if checkpoint is not None and not is_ir_ckpt:
+        if checkpoint is not None:
             kwargs_user_input: dict[str, Any] = {}
 
             model_cls = model.__class__
@@ -448,15 +438,7 @@ class OTXEngine(Engine):
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         datamodule = datamodule if datamodule is not None else self.datamodule
 
-        is_ir_ckpt = checkpoint is not None and Path(checkpoint).suffix in [".xml", ".onnx"]
-        if is_ir_ckpt and not isinstance(model, OVModel):
-            model = self._auto_configurator.get_ov_model(model_name=str(checkpoint), label_info=datamodule.label_info)
-
-        # NOTE: Re-initiate datamodule for OVModel as model API supports its own data pipeline.
-        if isinstance(model, OVModel):
-            datamodule = self._auto_configurator.update_ov_subset_pipeline(datamodule=datamodule, subset="test")
-
-        if checkpoint is not None and not is_ir_ckpt:
+        if checkpoint is not None:
             kwargs_user_input: dict[str, Any] = {}
 
             model_cls = model.__class__
@@ -550,7 +532,6 @@ class OTXEngine(Engine):
         if checkpoint is None:
             msg = "To make export, checkpoint must be specified."
             raise RuntimeError(msg)
-        is_ir_ckpt = Path(checkpoint).suffix in [".xml"]
         if export_demo_package and export_format == OTXExportFormatType.ONNX:
             msg = (
                 "ONNX export is not supported in exportable code mode. "
@@ -559,34 +540,21 @@ class OTXEngine(Engine):
             warn(msg, stacklevel=1)
             export_demo_package = False
 
-        if is_ir_ckpt and not export_demo_package:
-            msg = "IR model is passed as a checkpoint, export automatically switched to exportable code."
-            warn(msg, stacklevel=1)
-            export_demo_package = True
+        kwargs_user_input: dict[str, Any] = {}
 
-        if is_ir_ckpt and not isinstance(self.model, OVModel):
-            # create OVModel
-            self.model = self._auto_configurator.get_ov_model(
-                model_name=str(checkpoint),
-                label_info=self.datamodule.label_info,
-            )
+        model_cls = self.model.__class__
+        if hasattr(self.model, "model_name"):
+            # NOTE: This is a solution to fix backward compatibility issue.
+            # If the model has `model_name` attribute, it will be passed to the `load_from_checkpoint` method,
+            # making sure previous model trained without model_name can be loaded.
+            kwargs_user_input["model_name"] = self.model.model_name
 
-        if not is_ir_ckpt:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = self.model.__class__
-            if hasattr(self.model, "model_name"):
-                # NOTE: This is a solution to fix backward compatibility issue.
-                # If the model has `model_name` attribute, it will be passed to the `load_from_checkpoint` method,
-                # making sure previous model trained without model_name can be loaded.
-                kwargs_user_input["model_name"] = self.model.model_name
-
-            self.model = model_cls.load_from_checkpoint(
-                checkpoint_path=checkpoint,
-                map_location="cpu",
-                **kwargs_user_input,
-            )
-            self.model.eval()
+        self.model = model_cls.load_from_checkpoint(
+            checkpoint_path=checkpoint,
+            map_location="cpu",
+            **kwargs_user_input,
+        )
+        self.model.eval()
 
         self.model.explain_mode = explain
         exported_model_path = self.model.export(
@@ -599,91 +567,6 @@ class OTXEngine(Engine):
 
         self.model.explain_mode = False
         return exported_model_path
-
-    def optimize(
-        self,
-        checkpoint: PathLike | None = None,
-        datamodule: TRAIN_DATALOADERS | OTXDataModule | None = None,
-        max_data_subset_size: int | None = None,
-        export_demo_package: bool = False,
-        **kwargs,
-    ) -> Path:
-        r"""Applies NNCF.PTQ to the underlying models (now works only for OV models).
-
-        PTQ performs int-8 quantization on the input model, so the resulting model
-        comes in mixed precision (some operations, however, remain in FP32).
-
-        Args:
-            checkpoint (str | Path | None, optional): Checkpoint to optimize. Defaults to None.
-            datamodule (TRAIN_DATALOADERS | OTXDataModule | None, optional): The data module to use for optimization.
-            max_data_subset_size (int | None): The maximum size of the train subset from `datamodule` that would be
-            used for model optimization. If not set, NNCF.PTQ will select subset size according to it's
-            default settings.
-            export_demo_package (bool): Whether to export demo package with optimized models.
-            It outputs zip archive with stand-alone demo package.
-
-        Returns:
-            Path: path to the optimized model.
-
-        Example:
-            >>> engine.optimize(
-            ...     checkpoint=<checkpoint/path>,
-            ...     datamodule=OTXDataModule(),
-            ...     checkpoint=<checkpoint/path>,
-            ... )
-
-        CLI Usage:
-            1. To optimize a model with IR Model, run
-                ```shell
-                >>> otx optimize \
-                ...     --work_dir <WORK_DIR_PATH, str> \
-                ...     --checkpoint <IR_MODEL_WEIGHT_PATH, str>
-                ```
-            2. To optimize a specific OVModel class with XML, run
-                ```shell
-                >>> otx optimize \
-                ...     --data_root <DATASET_PATH, str> \
-                ...     --checkpoint <IR_MODEL_WEIGHT_PATH, str> \
-                ...     --model <CONFIG | CLASS_PATH_OR_NAME, OVModel> \
-                ...     --model.model_name=<PATH_TO_IR_XML, str>
-                ```
-        """
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-        optimize_datamodule = datamodule if datamodule is not None else self.datamodule
-
-        is_ir_ckpt = checkpoint is not None and Path(checkpoint).suffix in [".xml", ".onnx"]
-        if not is_ir_ckpt:
-            msg = "Engine.optimize() supports only OV IR or ONNX checkpoints"
-            raise RuntimeError(msg)
-
-        model = self.model
-        if not isinstance(model, OVModel):
-            optimize_datamodule = self._auto_configurator.update_ov_subset_pipeline(
-                datamodule=optimize_datamodule,
-                subset="train",
-            )
-            model = self._auto_configurator.get_ov_model(
-                model_name=str(checkpoint),
-                label_info=optimize_datamodule.label_info,
-            )
-
-        ptq_config = {}
-        if max_data_subset_size is not None:
-            ptq_config["subset_size"] = max_data_subset_size
-
-        if not export_demo_package:
-            return model.optimize(
-                Path(self.work_dir),
-                optimize_datamodule,
-                ptq_config,
-            )
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_model_path = model.optimize(Path(tmp_dir), optimize_datamodule, ptq_config)
-            return self.export(
-                checkpoint=tmp_model_path,
-                export_demo_package=True,
-            )
 
     def explain(
         self,
@@ -739,12 +622,7 @@ class OTXEngine(Engine):
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
         datamodule = datamodule if datamodule is not None else self.datamodule
 
-        is_ir_ckpt = checkpoint is not None and Path(checkpoint).suffix in [".xml", ".onnx"]
-        if is_ir_ckpt and not isinstance(model, OVModel):
-            datamodule = self._auto_configurator.update_ov_subset_pipeline(datamodule=datamodule, subset="test")
-            model = self._auto_configurator.get_ov_model(model_name=str(checkpoint), label_info=datamodule.label_info)
-
-        if checkpoint is not None and not is_ir_ckpt:
+        if checkpoint is not None:
             kwargs_user_input: dict[str, Any] = {}
 
             model_cls = model.__class__
@@ -834,27 +712,14 @@ class OTXEngine(Engine):
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
 
         if checkpoint is not None:
-            is_ir_ckpt = Path(checkpoint).suffix in [".xml"]
-            if is_ir_ckpt and not isinstance(self.model, OVModel):
-                # create OVModel
-                self.model = self._auto_configurator.get_ov_model(
-                    model_name=str(checkpoint),
-                    label_info=self.datamodule.label_info,
-                )
+            kwargs_user_input: dict[str, Any] = {}
 
-            if not is_ir_ckpt:
-                kwargs_user_input: dict[str, Any] = {}
-
-                model_cls = self.model.__class__
-                self.model = model_cls.load_from_checkpoint(
-                    checkpoint_path=checkpoint,
-                    map_location="cpu",
-                    **kwargs_user_input,
-                )
-        elif isinstance(self.model, OVModel):
-            msg = "To run benchmark on OV model, checkpoint must be specified."
-            raise RuntimeError(msg)
-
+            model_cls = self.model.__class__
+            self.model = model_cls.load_from_checkpoint(
+                checkpoint_path=checkpoint,
+                map_location="cpu",
+                **kwargs_user_input,
+            )
         self.model.eval()
 
         def dummy_infer(model: OTXModel, batch_size: int = 1) -> float:
@@ -876,18 +741,17 @@ class OTXEngine(Engine):
 
         final_stats = {"latency": f"{latency:.3f} s", "throughput": f"{(fps):.3f} FPS"}
 
-        if not isinstance(self.model, OVModel):
-            try:
-                from torch.utils.flop_counter import convert_num_with_suffix, get_suffix_str
+        try:
+            from torch.utils.flop_counter import convert_num_with_suffix, get_suffix_str
 
-                input_batch = self.model.get_dummy_input(1)
-                model_fwd = lambda: self.model.forward(input_batch)
-                depth = 3 if extended_stats else 0
-                fwd_flops = measure_flops(model_fwd, print_stats_depth=depth)
-                flops_str = convert_num_with_suffix(fwd_flops, get_suffix_str(fwd_flops * 10**3))
-                final_stats["complexity"] = flops_str + " MACs"
-            except Exception as e:
-                logging.warning(f"Failed to complete complexity estimation: {e}")
+            input_batch = self.model.get_dummy_input(1)
+            model_fwd = lambda: self.model.forward(input_batch)
+            depth = 3 if extended_stats else 0
+            fwd_flops = measure_flops(model_fwd, print_stats_depth=depth)
+            flops_str = convert_num_with_suffix(fwd_flops, get_suffix_str(fwd_flops * 10**3))
+            final_stats["complexity"] = flops_str + " MACs"
+        except Exception as e:
+            logging.warning(f"Failed to complete complexity estimation: {e}")
 
             params_num = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
             params_num_str = convert_num_with_suffix(params_num, get_suffix_str(params_num * 100))

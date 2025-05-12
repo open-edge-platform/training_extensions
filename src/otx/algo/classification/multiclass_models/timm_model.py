@@ -61,7 +61,7 @@ class TimmModelMulticlassCls(OTXMulticlassClsModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str,
+        model_name: Literal = [],
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
