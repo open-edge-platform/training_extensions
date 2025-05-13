@@ -11,7 +11,7 @@ engine:
   task: ANOMALY_DETECTION
   device: auto
 
-callback_monitor: None
+callback_monitor: image_F1Score # this has no effect as Padim does not need to be trained
 
 data: ../_base_/data/anomaly.yaml
 

@@ -130,8 +130,7 @@ class OTXCLI:
         )
         parser.add_argument(
             "--callback_monitor",
-            # TODO(ashwinvaidya17): None is temporary and should be removed when Anomalib Engine is ready.
-            type=str | None,
+            type=str,
             help="The metric to monitor the model performance during training callbacks.",
         )
         parser.add_argument(
