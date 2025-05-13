@@ -43,7 +43,6 @@ class TestEngine:
         # init with xml path, test automatic model creation
         mock_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
         engine = OVEngine(work_dir=tmp_path, data_root=data_root, model="path/to/model.xml")
-        assert mock_ov_model.called_once()
         assert engine.model == mock_ov_model
 
     @pytest.fixture()
@@ -61,10 +60,9 @@ class TestEngine:
 
     def test_model_setter(self, fxt_engine, mocker) -> None:
         assert isinstance(fxt_engine.model, OVModel)
-        mock_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
+        mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
         mocker.patch_object(fxt_engine, "_derive_task_from_ir", return_value="MULTI_CLASS_CLS")
         fxt_engine.model = "path/to/model.xml"
-        assert mock_ov_model.called_once()
         assert fxt_engine._auto_configurator.task == "MULTI_CLASS_CLS"
 
     def test_test(self, fxt_engine, mocker: MockerFixture) -> None:

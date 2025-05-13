@@ -73,18 +73,18 @@ TASK_PER_DATA_FORMAT = {
 }
 
 OVMODEL_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: "otx.backend.openvino.models.multiclass_classification.OVMulticlassClassificationModel",
-    OTXTaskType.MULTI_LABEL_CLS: "otx.backend.openvino.models.multilabel_classification.OVMultilabelClassificationModel",
-    OTXTaskType.H_LABEL_CLS: "otx.backend.openvino.models.hlabel_classification.OVHlabelClassificationModel",
-    OTXTaskType.DETECTION: "otx.backend.openvino.models.detection.OVDetectionModel",
-    OTXTaskType.ROTATED_DETECTION: "otx.backend.openvino.models.rotated_detection.OVRotatedDetectionModel",
-    OTXTaskType.INSTANCE_SEGMENTATION: "otx.backend.openvino.models.instance_segmentation.OVInstanceSegmentationModel",
-    OTXTaskType.SEMANTIC_SEGMENTATION: "otx.backend.openvino.models.segmentation.OVSegmentationModel",
+    OTXTaskType.MULTI_CLASS_CLS: "otx.backend.openvino.models.OVMulticlassClassificationModel",
+    OTXTaskType.MULTI_LABEL_CLS: "otx.backend.openvino.models.OVMultilabelClassificationModel",
+    OTXTaskType.H_LABEL_CLS: "otx.backend.openvino.models.OVHlabelClassificationModel",
+    OTXTaskType.DETECTION: "otx.backend.openvino.models.OVDetectionModel",
+    OTXTaskType.ROTATED_DETECTION: "otx.backend.openvino.models.OVRotatedDetectionModel",
+    OTXTaskType.INSTANCE_SEGMENTATION: "otx.backend.openvino.models.OVInstanceSegmentationModel",
+    OTXTaskType.SEMANTIC_SEGMENTATION: "otx.backend.openvino.models.OVSegmentationModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_SEGMENTATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.keypoint_detection.OVKeypointDetectionModel",
+    OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.OVKeypointDetectionModel",
 }
 
 
@@ -184,6 +184,11 @@ class AutoConfigurator:
         if self._config is None:
             self._config = self._load_default_config(self.model_name)
         return self._config
+
+    @config.setter
+    def config(self, config: dict | None) -> None:
+        """Sets the configuration for the auto configurator."""
+        self._config = config
 
     def _load_default_config(self, model_name: str | None = None) -> dict:
         """Load the default configuration for the specified model.

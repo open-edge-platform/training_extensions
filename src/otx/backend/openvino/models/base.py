@@ -20,7 +20,6 @@ from model_api.adapters import OpenvinoAdapter, create_core
 from model_api.models import Model
 from model_api.tilers import Tiler
 from torch import Tensor
-from torchmetrics import Metric
 
 from otx.core.data.entity.base import (
     ImageInfo,
@@ -38,10 +37,10 @@ from otx.data.torch import TorchDataBatch, TorchPredBatch
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from model_api.adapters import OpenvinoAdapter
+    from torchmetrics import Metric
 
     from otx.core.data.module import OTXDataModule
-    from otx.core.metrics import MetricCallable
+    from otx.core.metrics import MetricCallable, MetricInput
 
 logger = logging.getLogger()
 
@@ -134,14 +133,33 @@ class OVModel:
         images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
         return {"inputs": images}
 
+    def _customize_outputs(
+        self,
+        outputs: list,
+        inputs: TorchDataBatch,
+    ) -> TorchPredBatch:
+        """Customize the model outputs to OTX format.
+
+        Args:
+            outputs (list): The model outputs.
+            inputs (TorchDataBatch): The input batch entity.
+
+        Returns:
+            TorchPredBatch: The customized prediction batch entity.
+        """
+        return TorchPredBatch(
+            batch_size=len(outputs),
+            images=inputs.images,
+            imgs_info=inputs.imgs_info,
+        )
+
     def forward(self, inputs: TorchDataBatch, async_inference: bool = True) -> TorchPredBatch:
         """Model forward function."""
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
-        customized_outputs = self._customize_outputs(outputs, inputs)
 
-        return customized_outputs
+        return self._customize_outputs(outputs, inputs)
 
     def optimize(
         self,
@@ -278,7 +296,25 @@ class OVModel:
 
         return argparser.instantiate_classes(initial_ptq_config).as_dict()
 
+    def prepare_metric_inputs(
+        self,
+        preds: TorchPredBatch,  # type: ignore[override]
+        inputs: TorchDataBatch,  # type: ignore[override]
+    ) -> MetricInput:
+        """Convert prediction and input entities to a format suitable for metric computation.
+
+        Args:
+            preds (TorchPredBatch): The predicted batch entity containing predicted labels.
+            inputs (TorchDataBatch): The input batch entity containing ground truth labels.
+
+        Returns:
+            MetricInput: A dictionary contains 'preds' and 'target' keys
+            corresponding to the predicted and target labels for metric evaluation.
+        """
+        raise NotImplementedError
+
     def compute_metrics(self, meter: Metric) -> dict:
+        """Compute metrics using the provided torchvision Metric."""
         return self._compute_metrics(meter)
 
     def _compute_metrics(self, meter: Metric, **compute_kwargs) -> dict:

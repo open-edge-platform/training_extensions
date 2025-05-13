@@ -82,11 +82,21 @@ class OVKeypointDetectionModel(OVModel):
         super().configure_metric()
         self._metric.input_size = (self.model.h, self.model.w)
 
-    def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
+    def prepare_metric_inputs(  # type: ignore[override]
         self,
         preds: TorchPredBatch,
         inputs: TorchDataBatch,
     ) -> MetricInput:
+        """Convert prediction and input entities to a format suitable for metric computation.
+
+        Args:
+            preds (TorchPredBatch): The predicted batch entity containing predicted keypoints.
+            inputs (TorchDataBatch): The input batch entity containing ground truth keypoints.
+
+        Returns:
+            MetricInput: A dictionary contains 'preds' and 'target' keys
+            corresponding to the predicted and target keypoints for metric evaluation.
+        """
         if inputs.keypoints is None:
             msg = "The input ground truth keypoints are not provided."
             raise ValueError(msg)

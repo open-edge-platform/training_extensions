@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from model_api.tilers import InstanceSegmentationTiler
-from torchmetrics import Metric
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
@@ -26,6 +25,7 @@ from otx.data.torch import TorchDataBatch, TorchPredBatch
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import InstanceSegmentationResult
+    from torchmetrics import Metric
 
     from otx.core.metrics import MetricCallable
 
@@ -151,7 +151,7 @@ class OVInstanceSegmentationModel(
             labels=labels,
         )
 
-    def _convert_pred_entity_to_compute_metric(
+    def prepare_metric_inputs(
         self,
         preds: TorchPredBatch,  # type: ignore[override]
         inputs: TorchDataBatch,  # type: ignore[override]

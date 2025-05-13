@@ -87,7 +87,7 @@ class OVSegmentationModel(OVModel):
             feature_vector=predicted_f_vectors,
         )
 
-    def _convert_pred_entity_to_compute_metric(
+    def prepare_metric_inputs(
         self,
         preds: TorchPredBatch,  # type: ignore[override]
         inputs: TorchDataBatch,  # type: ignore[override]

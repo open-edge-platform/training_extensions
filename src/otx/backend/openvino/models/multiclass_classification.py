@@ -89,6 +89,16 @@ class OVMulticlassClassificationModel(
         preds: TorchPredBatch,
         inputs: TorchDataBatch,
     ) -> MetricInput:
+        """Convert prediction and input entities to a format suitable for metric computation.
+
+        Args:
+            preds (TorchPredBatch): The predicted batch entity containing predicted labels.
+            inputs (TorchDataBatch): The input batch entity containing ground truth labels.
+
+        Returns:
+            MetricInput: A dictionary contains 'preds' and 'target' keys
+            corresponding to the predicted and target labels for metric evaluation.
+        """
         pred = torch.tensor(preds.labels)
         target = torch.tensor(inputs.labels)
         return {

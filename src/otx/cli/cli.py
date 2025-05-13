@@ -33,13 +33,13 @@ if TYPE_CHECKING:
 
 
 _ENGINE_AVAILABLE = True
-# try:
-from otx.backend.native.engine import OTXEngine
-from otx.core.config import register_configs
+try:
+    from otx.backend.native.engine import OTXEngine
+    from otx.core.config import register_configs
 
-register_configs()
-# except ImportError:
-#     _ENGINE_AVAILABLE = False
+    register_configs()
+except ImportError:
+    _ENGINE_AVAILABLE = False
 
 
 class OTXCLI:

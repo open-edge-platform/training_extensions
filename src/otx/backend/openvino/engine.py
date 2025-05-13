@@ -1,14 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Module for OTX engine components."""
+"""OpenVINO engine."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import defusedxml.ElementTree as ET
+import defusedxml.ElementTree as Elet
 import numpy as np
 import torch
 from rich.progress import Progress
@@ -32,17 +32,17 @@ class OVEngine:
 
     def __init__(
         self,
-        datamodule: OTXDataModule | PathLike | None = None,
+        data: OTXDataModule | PathLike | None = None,
         model: OVModel | PathLike | None = None,
         work_dir: PathLike = "./otx-workspace",
     ):
         """Initializes the OTX Engine.
 
         Args:
-            datamodule (OTXDataModule | PathLike | None, optional): The data module or path to the data root.
+            data (OTXDataModule | PathLike | None, optional): The data module or path to the data root.
                 If path is provided, Engine will automatically create a datamodule based on the data root and model.
-            model (OTXModel | str | None, optional): The OV model for the engine. PathLike object to OpenVINO IR XML file can be provided.
-                Defaults to None.
+            model (OTXModel | str | None, optional): The OV model for the engine.
+                PathLike object to OpenVINO IR XML file can be provided. Defaults to None.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
         """
         self._work_dir = work_dir
@@ -55,21 +55,21 @@ class OVEngine:
             raise ValueError(msg)
 
         self._auto_configurator = AutoConfigurator(
-            data_root=datamodule if isinstance(datamodule, PathLike) else None,
+            data_root=data if isinstance(data, PathLike) else None,
             task=task,
         )
 
-        if isinstance(datamodule, OTXDataModule):
-            if datamodule.task != task:
+        if isinstance(data, OTXDataModule):
+            if data.task != task:
                 msg = (
                     "The task of the provided datamodule does not match the task derived from the model. "
-                    f"datamodule.task={datamodule.task}, model.task={task}"
+                    f"datamodule.task={data.task}, model.task={task}"
                 )
                 raise ValueError(msg)
-            self._datamodule: OTXDataModule | None = datamodule
+            self._datamodule: OTXDataModule | None = data
         else:
             self._datamodule: OTXDataModule | None = (
-                self._auto_configurator.get_datamodule() if datamodule is not None else None
+                self._auto_configurator.get_datamodule() if data is not None else None
             )
         if model is not None:
             self._model: OVModel = model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
@@ -85,7 +85,7 @@ class OVEngine:
         Returns:
             str: The derived task.
         """
-        tree = ET.parse(ir_xml)
+        tree = Elet.parse(ir_xml)
         root = tree.getroot()
         # Find <rt_info>
         rt_info = root.find("rt_info")
@@ -128,8 +128,9 @@ class OVEngine:
         r"""Run the testing phase of the engine.
 
         Args:
-            data (OTXDataModule | None, optional): The data to test on. It can be a data module or a path to the data root.
-                If a path is provided, the engine will automatically create a datamodule based on the data root and model.
+            data (OTXDataModule | None, optional): The data to test on. It can be a data module
+                or a path to the data root. If a path is provided, the engine will automatically
+                create a datamodule based on the data root and model.
             checkpoint (PathLike | None, optional): Path to the checkpoint file to load the model from.
                 Defaults to None.
             metric (MetricCallable | None): If not None, it will override `OTXModel.metric_callable` with the given
@@ -226,7 +227,7 @@ class OVEngine:
                     raise ValueError(msg)
                 if not isinstance(data[0], np.ndarray):
                     msg = "The input data should be a list of numpy arrays."
-                    raise ValueError(msg)
+                    raise TypeError(msg)
                 customized_inputs = TorchDataBatch(
                     batch_size=len(datamodule),
                     images=[torch.tensor(im) for im in data],  # TODO(@kprokofi): remove torch after numpy support
@@ -236,7 +237,7 @@ class OVEngine:
                 progress.update(task, advance=1)
             else:
                 msg = "The input data should be either a datamodule, valid path to data root or a list of numpy arrays."
-                raise ValueError(msg)
+                raise TypeError(msg)
 
         if explain:
             if explain_config is None:
@@ -297,10 +298,10 @@ class OVEngine:
         if checkpoint is None and self.model is None:
             msg = "Please provide either a model or a checkpoint path."
             raise ValueError(msg)
-        elif checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml", ".onnx"]:
+        if checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml", ".onnx"]:
             msg = "OV Engine supports only OV IR or ONNX checkpoints"
             raise RuntimeError(msg)
-        elif checkpoint is not None:
+        if checkpoint is not None:
             model = self._auto_configurator.get_ov_model(model_name=str(checkpoint))
         else:
             model = self.model
@@ -345,7 +346,7 @@ class OVEngine:
 
         self._model = model
         self._auto_configurator.task = model.task
-        self._auto_configurator._config = None
+        self._auto_configurator.config = None
 
     @property
     def datamodule(self) -> OTXDataModule:

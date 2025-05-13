@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests of the OpenVINO base model."""
+
 import tempfile
 
 import numpy as np

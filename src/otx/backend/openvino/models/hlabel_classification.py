@@ -112,11 +112,21 @@ class OVHlabelClassificationModel(OVModel):
             labels=all_pred_labels,
         )
 
-    def _convert_pred_entity_to_compute_metric(
+    def prepare_metric_inputs(
         self,
         preds: TorchPredBatch,
         inputs: TorchDataBatch,
     ) -> MetricInput:
+        """Convert prediction and input entities to a format suitable for metric computation.
+
+        Args:
+            preds (TorchPredBatch): The predicted batch entity containing predicted labels.
+            inputs (TorchDataBatch): The input batch entity containing ground truth labels.
+
+        Returns:
+            MetricInput: A dictionary contains 'preds' and 'target' keys
+            corresponding to the predicted and target labels for metric evaluation.
+        """
         cls_heads_info = self.model.hierarchical_info["cls_heads_info"]
         num_multilabel_classes = cls_heads_info["num_multilabel_classes"]
         num_multiclass_heads = cls_heads_info["num_multiclass_heads"]

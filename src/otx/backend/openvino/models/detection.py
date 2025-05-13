@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from model_api.tilers import DetectionTiler
-from torchmetrics import Metric
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
@@ -24,6 +23,7 @@ from otx.data import TorchDataBatch, TorchPredBatch
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
+    from torchmetrics import Metric
 
 
 class OVDetectionModel(OVModel):
@@ -145,11 +145,21 @@ class OVDetectionModel(OVModel):
             labels=labels,
         )
 
-    def _convert_pred_entity_to_compute_metric(
+    def prepare_metric_inputs(
         self,
         preds: TorchPredBatch,  # type: ignore[override]
         inputs: TorchDataBatch,  # type: ignore[override]
     ) -> MetricInput:
+        """Convert prediction and input entities to a format suitable for metric computation.
+
+        Args:
+            preds (TorchPredBatch): The predicted batch entity containing predicted bboxes.
+            inputs (TorchDataBatch): The input batch entity containing ground truth bboxes.
+
+        Returns:
+            MetricInput: A dictionary contains 'preds' and 'target' keys
+            corresponding to the predicted and target bboxes for metric evaluation.
+        """
         return {
             "preds": [
                 {
@@ -169,6 +179,7 @@ class OVDetectionModel(OVModel):
         }
 
     def compute_metrics(self, meter: Metric, key: Literal["val", "test"]) -> None:
+        """Compute metrics for the model."""
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
         return super()._compute_metrics(meter, key, **compute_kwargs)
