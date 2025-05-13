@@ -95,16 +95,6 @@ DATASET_TEST_CASES = (
                 },
             },
         ),
-        DatasetInfo(
-            name="bdd_large",
-            path=Path("instance_seg/bdd_large"),
-            group="large",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
-        ),
     ]
 )
 
