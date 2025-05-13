@@ -18,7 +18,7 @@ from warnings import warn
 
 import torch
 from lightning import Trainer, seed_everything
-from lightning.pytorch.callbacks import LearningRateMonitor, RichModelSummary, RichProgressBar
+from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, RichModelSummary, RichProgressBar
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
 
@@ -1120,11 +1120,11 @@ class Engine:
             self._cache.update(**kwargs)
 
             # set up xpu device
-            self._setup_accelerator()
+            self.configure_accelerator()
             # setup default loggers
-            logger = self._setup_loggers(logger)
+            logger = self.configure_loggers(logger)
             # set up default callbacks
-            self._setup_otx_callbacks()
+            self.configure_callbacks()
 
             kwargs = self._cache.args
             self._trainer = Trainer(logger=logger, **kwargs)
@@ -1132,7 +1132,7 @@ class Engine:
             self._trainer.task = self.task
             self.work_dir = self._trainer.default_root_dir
 
-    def _setup_accelerator(self) -> None:
+    def configure_accelerator(self) -> None:
         """Updates the cache arguments based on the device type."""
         if self._device.accelerator == DeviceType.xpu:
             self._cache.update(strategy="xpu_single")
@@ -1148,7 +1148,7 @@ class Engine:
                 )
                 self._cache.args["precision"] = None
 
-    def _setup_loggers(self, logger: Logger | Iterable[Logger] | bool | None = None) -> Logger | Iterable[Logger]:
+    def configure_loggers(self, logger: Logger | Iterable[Logger] | bool | None = None) -> Logger | Iterable[Logger]:
         """Sets up the loggers for the trainer.
 
         If no logger is provided, it will use the default loggers.
@@ -1166,7 +1166,7 @@ class Engine:
             ]
         return logger
 
-    def _setup_otx_callbacks(self) -> None:
+    def configure_callbacks(self) -> None:
         """Sets up the OTX callbacks for the trainer."""
         callbacks: list[Callback] = []
         config_callbacks = self._cache.args.get("callbacks", [])
@@ -1182,6 +1182,16 @@ class Engine:
             callbacks.append(IterationTimer(prog_bar=True, on_step=False, on_epoch=True))
         if not has_callback(LearningRateMonitor):
             callbacks.append(LearningRateMonitor(logging_interval="epoch", log_momentum=True))
+        if not has_callback(ModelCheckpoint):
+            callbacks.append(
+                ModelCheckpoint(
+                    dirpath=self.work_dir,
+                    save_top_k=1,
+                    save_last=True,
+                    filename="checkpoints/epoch_{epoch:03d}",
+                    auto_insert_metric_name=False,
+                ),
+            )
         if not has_callback(AdaptiveTrainScheduling):
             callbacks.append(
                 AdaptiveTrainScheduling(
