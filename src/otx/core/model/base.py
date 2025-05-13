@@ -211,7 +211,7 @@ class OTXModel(LightningModule):
 
         raise TypeError(train_loss)
 
-    def validation_step(self, batch: T_OTXBatchDataEntity, batch_idx: int) -> None:
+    def validation_step(self, batch: T_OTXBatchDataEntity, batch_idx: int) -> T_OTXBatchPredEntity:
         """Perform a single validation step on a batch of data from the validation set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
@@ -227,16 +227,16 @@ class OTXModel(LightningModule):
 
         if isinstance(metric_inputs, dict):
             self.metric.update(**metric_inputs)
-            return
+            return preds
 
         if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
             for inp in metric_inputs:
                 self.metric.update(**inp)
-            return
+            return preds
 
         raise TypeError(metric_inputs)
 
-    def test_step(self, batch: T_OTXBatchDataEntity, batch_idx: int) -> None:
+    def test_step(self, batch: T_OTXBatchDataEntity, batch_idx: int) -> T_OTXBatchPredEntity:
         """Perform a single test step on a batch of data from the test set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
@@ -252,12 +252,12 @@ class OTXModel(LightningModule):
 
         if isinstance(metric_inputs, dict):
             self.metric.update(**metric_inputs)
-            return
+            return preds
 
         if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
             for inp in metric_inputs:
                 self.metric.update(**inp)
-            return
+            return preds
 
         raise TypeError(metric_inputs)
 
