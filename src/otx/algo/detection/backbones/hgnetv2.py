@@ -626,6 +626,13 @@ class HGNetv2:
             "freeze_norm": True,
             "freeze_stem_only": True,
         },
+        "deim_dfine_hgnetv2_x": {
+            "name": "B5",
+            "return_idx": [1, 2, 3],
+            "freeze_at": -1,
+            "freeze_norm": False,
+            "freeze_stem_only": True,
+        },
     }
 
     def __new__(cls, model_name: str) -> HGNetv2Module:

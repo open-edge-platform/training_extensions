@@ -428,6 +428,10 @@ class HybridEncoder:
             "hidden_dim": 384,
             "dim_feedforward": 2048,
         },
+        "deim_dfine_hgnetv2_x": {
+            "hidden_dim": 384,
+            "dim_feedforward": 2048,
+        },
     }
 
     def __new__(cls, model_name: str) -> HybridEncoderModule:

@@ -56,7 +56,7 @@ class DETR(BaseModule):
         if multi_scale is not None:
             self.multi_scale = multi_scale
         else:
-            self.multi_scale = [input_size - i * 32 for i in range(-5, 6)] + [input_size] * 2
+            self.multi_scale = self.generate_scales(input_size)
 
         self.num_classes = num_classes
         self.num_top_queries = num_top_queries
@@ -71,6 +71,14 @@ class DETR(BaseModule):
             )
         )
         self.optimizer_configuration = optimizer_configuration
+
+    def generate_scales(self, input_size: int, base_size_repeat: int = 3) -> list[int]:
+        """Generates scales for multi-scale training."""
+        scale_repeat = (input_size - int(input_size * 0.75 / 32) * 32) // 32
+        scales = [int(input_size * 0.75 / 32) * 32 + i * 32 for i in range(scale_repeat)]
+        scales += [input_size] * base_size_repeat
+        scales += [int(input_size * 1.25 / 32) * 32 - i * 32 for i in range(scale_repeat)]
+        return scales
 
     def _forward_features(self, images: Tensor, targets: dict[str, Any] | None = None) -> dict[str, Tensor]:
         images = self.backbone(images)
