@@ -494,11 +494,12 @@ class ConfigConverter:
         for callback in config["callbacks"]:
             if "init_args" in callback and "dirpath" in callback["init_args"]:
                 callback["init_args"]["dirpath"] = engine.work_dir
-        for logger in config["logger"]:
-            if "save_dir" in logger["init_args"]:
-                logger["init_args"]["save_dir"] = engine.work_dir
-            if "log_dir" in logger["init_args"]:
-                logger["init_args"]["log_dir"] = engine.work_dir
+        if "logger" in config and config["logger"] is not None:
+            for logger in config["logger"]:
+                if "save_dir" in logger["init_args"]:
+                    logger["init_args"]["save_dir"] = engine.work_dir
+                if "log_dir" in logger["init_args"]:
+                    logger["init_args"]["log_dir"] = engine.work_dir
         instantiated_kwargs = engine_parser.instantiate_classes(Namespace(**config))
 
         train_kwargs = {k: v for k, v in instantiated_kwargs.items() if k in train_arguments}
