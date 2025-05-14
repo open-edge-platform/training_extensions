@@ -18,7 +18,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -60,7 +60,7 @@ class OTXKeypointDetectionModel(OTXModel):
             torch_compile=torch_compile,
         )
 
-    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
         """Convert TorchDataBatch into Topdown model's input."""
         inputs: dict[str, Any] = {}
 
@@ -72,8 +72,8 @@ class OTXKeypointDetectionModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -114,7 +114,7 @@ class OTXKeypointDetectionModel(OTXModel):
             keypoints.append(visible_keypoints)
             scores.append(score)
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -131,8 +131,8 @@ class OTXKeypointDetectionModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
-        preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         if inputs.keypoints is None:
             msg = "The input ground truth keypoints are not provided."
@@ -167,7 +167,7 @@ class OTXKeypointDetectionModel(OTXModel):
         """Model forward function used for the model tracing during model exportation."""
         return self.model.forward(inputs=image, mode="tensor")
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
+    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
         """Generates a dummy input, suitable for launching forward() on it.
 
         Args:
@@ -187,7 +187,7 @@ class OTXKeypointDetectionModel(OTXModel):
                 ),
             )
 
-        return TorchDataBatch(
+        return OTXDataBatch(
             batch_size,
             images,
             labels=[],
@@ -237,8 +237,8 @@ class OVKeypointDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectedKeypoints],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch | OTXBatchLossEntity:
         keypoints = []
         scores = []
         # default visibility threshold
@@ -250,7 +250,7 @@ class OVKeypointDetectionModel(OVModel):
             keypoints.append(visible_keypoints)
             scores.append(score)
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -267,8 +267,8 @@ class OVKeypointDetectionModel(OVModel):
 
     def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
-        preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         if inputs.keypoints is None:
             msg = "The input ground truth keypoints are not provided."

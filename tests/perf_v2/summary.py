@@ -35,7 +35,6 @@ TASK_METRIC_MAP = {
     OTXTaskType.DETECTION: "f1-score",
     OTXTaskType.INSTANCE_SEGMENTATION: "f1-score",
     OTXTaskType.SEMANTIC_SEGMENTATION: "dice",
-    OTXTaskType.VISUAL_PROMPTING: "dice",
     OTXTaskType.KEYPOINT_DETECTION: "accuracy",
 }
 

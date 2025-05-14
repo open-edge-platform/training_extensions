@@ -24,7 +24,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.model.detection import OTXDetectionModel
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -127,7 +127,7 @@ class YOLOX(OTXDetectionModel):
 
     def _customize_inputs(
         self,
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 114,  # YOLOX uses 114 as pad_value
     ) -> dict[str, Any]:

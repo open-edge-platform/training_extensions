@@ -38,7 +38,7 @@ from otx.algo.modules.norm import build_norm_layer, is_norm
 from otx.algo.utils.utils import InstanceData
 from otx.algo.utils.weight_init import bias_init_with_prob, constant_init, normal_init
 from otx.core.utils.mask_util import polygon_to_bitmap
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 from .utils import sigmoid_geometric_mean
 
@@ -617,7 +617,7 @@ class RTMDetInstHead(RTMDetHead):
             "num_pos": num_pos,
         }
 
-    def prepare_loss_inputs(self, x: tuple[Tensor], entity: TorchDataBatch) -> dict:
+    def prepare_loss_inputs(self, x: tuple[Tensor], entity: OTXDataBatch) -> dict:
         """Perform forward propagation and prepare outputs for loss calculation.
 
         Args:
