@@ -7,14 +7,13 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import torch
 from model_api.tilers import DetectionTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.types.task import OTXTaskType
@@ -24,6 +23,8 @@ if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
     from torchmetrics import Metric
+
+    from otx.core.types import PathLike
 
 
 class OVDetectionModel(OVModel):
@@ -35,7 +36,7 @@ class OVDetectionModel(OVModel):
 
     def __init__(
         self,
-        model_name: str,
+        model_path: PathLike,
         model_type: str = "SSD",
         async_inference: bool = True,
         max_num_requests: int | None = None,
@@ -45,7 +46,7 @@ class OVDetectionModel(OVModel):
         **kwargs,
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type=model_type,
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -89,7 +90,7 @@ class OVDetectionModel(OVModel):
         self,
         outputs: list[DetectionResult],
         inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+    ) -> TorchPredBatch:
         # add label index
         bboxes = []
         scores = []
@@ -112,12 +113,11 @@ class OVDetectionModel(OVModel):
                     data=output.bboxes,
                     format="XYXY",
                     canvas_size=inputs.imgs_info[i].img_shape,  # type: ignore[union-attr, index]
-                    device=self.device,
                     dtype=torch.float32,
                 ),
             )
-            scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
-            labels.append(torch.tensor(output.labels.reshape(-1) - label_shift, device=self.device, dtype=torch.long))
+            scores.append(torch.tensor(output.scores.reshape(-1)))
+            labels.append(torch.tensor(output.labels.reshape(-1) - label_shift, dtype=torch.long))
 
         if outputs and outputs[0].saliency_map.size > 1:
             # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)
@@ -178,8 +178,8 @@ class OVDetectionModel(OVModel):
             ],
         }
 
-    def compute_metrics(self, meter: Metric, key: Literal["val", "test"]) -> None:
+    def compute_metrics(self, meter: Metric) -> dict:
         """Compute metrics for the model."""
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
-        return super()._compute_metrics(meter, key, **compute_kwargs)
+        return super()._compute_metrics(meter, **compute_kwargs)

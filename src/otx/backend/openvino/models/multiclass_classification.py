@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult
 
     from otx.core.metrics import MetricCallable
+    from otx.core.types import PathLike
 
 
 class OVMulticlassClassificationModel(
@@ -33,7 +34,7 @@ class OVMulticlassClassificationModel(
 
     def __init__(
         self,
-        model_path: str,
+        model_path: PathLike,
         model_type: str = "Classification",
         async_inference: bool = True,
         max_num_requests: int | None = None,

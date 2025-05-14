@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -16,8 +17,9 @@ from rich.progress import Progress
 from otx.backend.native.utils.auto_configurator import AutoConfigurator
 from otx.backend.openvino.models import OVModel
 from otx.core.config.explain import ExplainConfig
+from otx.core.data.entity.base import ImageInfo
 from otx.core.data.module import OTXDataModule
-from otx.core.types import PathLike
+from otx.core.types import OTXTaskType, PathLike
 from otx.data.torch import TorchDataBatch
 
 if TYPE_CHECKING:
@@ -47,15 +49,15 @@ class OVEngine:
         """
         self._work_dir = work_dir
         if isinstance(model, str) and model.endswith(".xml"):
-            task = self._derive_task_from_ir(model)
+            task: OTXTaskType = self._derive_task_from_ir(model)
         elif isinstance(model, OVModel):
-            task = model.task
+            task = model.task  # type: ignore[assignment]
         else:
             msg = "Model should be either a valid XML path or an instance of OVModel."
             raise ValueError(msg)
 
         self._auto_configurator = AutoConfigurator(
-            data_root=data if isinstance(data, PathLike) else None,
+            data_root=data if isinstance(data, (str, os.PathLike)) else None,
             task=task,
         )
 
@@ -68,15 +70,13 @@ class OVEngine:
                 raise ValueError(msg)
             self._datamodule: OTXDataModule | None = data
         else:
-            self._datamodule: OTXDataModule | None = (
-                self._auto_configurator.get_datamodule() if data is not None else None
-            )
+            self._datamodule = self._auto_configurator.get_datamodule() if data is not None else None
         if model is not None:
             self._model: OVModel = model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
         else:
             self._model = None
 
-    def _derive_task_from_ir(self, ir_xml: PathLike) -> str:
+    def _derive_task_from_ir(self, ir_xml: PathLike) -> OTXTaskType:
         """Derives the task from the IR model.
 
         Args:
@@ -117,7 +117,7 @@ class OVEngine:
             msg = f"Unsupported task type: {task_type}. Please check the model file."
             raise ValueError(msg)
 
-        return task_name
+        return OTXTaskType(task_name)
 
     def test(
         self,
@@ -141,15 +141,20 @@ class OVEngine:
             dict: Dictionary containing the metrics after testing.
 
         """
-        datamodule = data if data is not None else self.datamodule
-        if isinstance(datamodule, PathLike):
-            datamodule = self._auto_configurator.get_datamodule(data_root=datamodule)
-        model = self._update_checkpoint(checkpoint)
-        metric = metric if metric is not None else self.model.metric_callable(label_info=datamodule.label_info)
+        if isinstance(data, (str, os.PathLike)):
+            datamodule = self._auto_configurator.get_datamodule(data_root=data)
+        elif isinstance(data, OTXDataModule):
+            datamodule = data
+        else:
+            datamodule = self.datamodule
 
         if datamodule is None:
             msg = "Please provide the `data` when creating the Engine, or pass it in OVEngine.test()."
             raise RuntimeError(msg)
+
+        model = self._update_checkpoint(checkpoint)
+        metric = metric if metric is not None else model.metric_callable
+
         if metric is None:
             msg = "Please provide a `metric` when creating a OVModel or pass it in OVEngine.test()."
             raise RuntimeError(msg)
@@ -164,16 +169,17 @@ class OVEngine:
             )
             raise ValueError(msg)
 
+        metric_callable = metric(datamodule.label_info)
         with Progress() as progress:
             dataloader = datamodule.test_dataloader()
             task = progress.add_task("Testing", total=len(dataloader))
             for data_batch in dataloader:
-                preds = self.model(data_batch)
-                metric_inputs = self.model.prepare_metric_inputs(preds, data_batch)
-                metric.update(**metric_inputs)
+                preds = model(data_batch)
+                metric_inputs = model.prepare_metric_inputs(preds, data_batch)
+                metric_callable.update(**metric_inputs)
                 progress.update(task, advance=1)
 
-        return self.model.compute_metrics(metric)
+        return model.compute_metrics(metric_callable)
 
     def predict(
         self,
@@ -196,7 +202,7 @@ class OVEngine:
         from otx.algo.utils.xai_utils import process_saliency_maps_in_pred_entity, set_crop_padded_map_flag
 
         model = self._update_checkpoint(checkpoint)
-        if isinstance(data, PathLike):
+        if isinstance(data, (str, os.PathLike)):
             data = self._auto_configurator.get_datamodule(data_root=data)
 
         datamodule = data if data is not None else self.datamodule
@@ -225,13 +231,18 @@ class OVEngine:
                 if len(datamodule) == 0:
                     msg = "The input data is empty."
                     raise ValueError(msg)
-                if not isinstance(data[0], np.ndarray):
+                if not isinstance(datamodule[0], np.ndarray):
                     msg = "The input data should be a list of numpy arrays."
                     raise TypeError(msg)
                 customized_inputs = TorchDataBatch(
                     batch_size=len(datamodule),
-                    images=[torch.tensor(im) for im in data],  # TODO(@kprokofi): remove torch after numpy support
-                    imgs_info=[{"img_shape": img.shape} for img in datamodule],
+                    images=[
+                        torch.tensor(img) for img in datamodule
+                    ],  # TODO(@kprokofi): remove torch after numpy support
+                    imgs_info=[
+                        ImageInfo(img_idx=i, ori_shape=img.shape, img_shape=img.shape)
+                        for i, img in enumerate(datamodule)
+                    ],
                 )
                 predict_result.append(model(customized_inputs))
                 progress.update(task, advance=1)
@@ -239,11 +250,10 @@ class OVEngine:
                 msg = "The input data should be either a datamodule, valid path to data root or a list of numpy arrays."
                 raise TypeError(msg)
 
-        if explain:
+        if explain and isinstance(datamodule, OTXDataModule):
             if explain_config is None:
                 explain_config = ExplainConfig()
             explain_config = set_crop_padded_map_flag(explain_config, datamodule)
-
             predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
 
         return predict_result
@@ -286,7 +296,7 @@ class OVEngine:
             ptq_config,
         )
 
-    def _update_checkpoint(self, checkpoint: PathLike) -> OVModel:
+    def _update_checkpoint(self, checkpoint: PathLike | None) -> OVModel:
         """Update the OVModel with the given checkpoint path.
 
         Args:
@@ -302,11 +312,9 @@ class OVEngine:
             msg = "OV Engine supports only OV IR or ONNX checkpoints"
             raise RuntimeError(msg)
         if checkpoint is not None:
-            model = self._auto_configurator.get_ov_model(model_name=str(checkpoint))
-        else:
-            model = self.model
+            return self._auto_configurator.get_ov_model(model_name=str(checkpoint))
 
-        return model
+        return self.model  # type: ignore[return-value]
 
     @property
     def work_dir(self) -> PathLike:
@@ -336,17 +344,17 @@ class OVEngine:
         Returns:
             None
         """
-        if isinstance(model, PathLike):
+        if isinstance(model, (str, os.PathLike)):
             if not str(model).endswith(".xml"):
                 msg = f"Model should be a valid XML path. But got: {model}"
                 raise ValueError(msg)
             task = self._derive_task_from_ir(model)
-            self._auto_configurator.task = task
-            model = self._auto_configurator.get_ov_model(model)
-
-        self._model = model
-        self._auto_configurator.task = model.task
-        self._auto_configurator.config = None
+            self._model = self._auto_configurator.get_ov_model(model, task)
+        elif isinstance(model, OVModel):
+            self._model = model
+        else:
+            msg = "Model should be either a valid XML path or an instance of OVModel."
+            raise TypeError(msg)
 
     @property
     def datamodule(self) -> OTXDataModule:
@@ -376,6 +384,10 @@ class OVEngine:
                 f"datamodule.task={datamodule.task}, model.task={self._model.task}"
             )
             raise ValueError(msg)
-        if isinstance(datamodule, PathLike):
-            datamodule = self._auto_configurator.get_datamodule(data_root=datamodule)
-        self._datamodule = datamodule
+        if isinstance(datamodule, (str, os.PathLike)):
+            self._datamodule = self._auto_configurator.get_datamodule(data_root=datamodule)
+        elif isinstance(datamodule, OTXDataModule):
+            self._datamodule = datamodule
+        else:
+            msg = "Datamodule should be either a valid path to data root or an instance of OTXDataModule."
+            raise TypeError(msg)

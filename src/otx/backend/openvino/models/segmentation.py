@@ -16,7 +16,6 @@ from model_api.tilers import SemanticSegmentationTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricInput
 from otx.core.metrics.dice import SegmCallable
 from otx.core.types.label import SegLabelInfo
@@ -27,6 +26,7 @@ if TYPE_CHECKING:
     from model_api.models.utils import ImageResultWithSoftPrediction
 
     from otx.core.metrics import MetricCallable
+    from otx.core.types import PathLike
 
 
 class OVSegmentationModel(OVModel):
@@ -38,7 +38,7 @@ class OVSegmentationModel(OVModel):
 
     def __init__(
         self,
-        model_name: str,
+        model_path: PathLike,
         model_type: str = "Segmentation",
         async_inference: bool = True,
         max_num_requests: int | None = None,
@@ -48,7 +48,7 @@ class OVSegmentationModel(OVModel):
         **kwargs,
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type=model_type,
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -73,8 +73,8 @@ class OVSegmentationModel(OVModel):
         self,
         outputs: list[ImageResultWithSoftPrediction],
         inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
-        masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0), device=self.device) for mask in outputs]
+    ) -> TorchPredBatch:
+        masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0)) for mask in outputs]
         predicted_f_vectors = (
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
         )

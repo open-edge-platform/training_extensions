@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
 from otx.core.types.task import OTXTaskType
@@ -20,6 +19,9 @@ from otx.data.torch import TorchDataBatch, TorchPredBatch
 
 if TYPE_CHECKING:
     from model_api.models.utils import DetectedKeypoints
+    from torchmetrics import Metric
+
+    from otx.core.types import PathLike
 
 
 class OVKeypointDetectionModel(OVModel):
@@ -31,7 +33,7 @@ class OVKeypointDetectionModel(OVModel):
 
     def __init__(
         self,
-        model_name: str,
+        model_path: PathLike,
         model_type: str = "keypoint_detection",
         async_inference: bool = True,
         max_num_requests: int | None = None,
@@ -41,7 +43,7 @@ class OVKeypointDetectionModel(OVModel):
         **kwargs,
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type=model_type,
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -55,14 +57,14 @@ class OVKeypointDetectionModel(OVModel):
         self,
         outputs: list[DetectedKeypoints],
         inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+    ) -> TorchPredBatch:
         keypoints = []
         scores = []
         # default visibility threshold
         visibility_threshold = 0.5
         for output in outputs:
-            kps = torch.as_tensor(output.keypoints, device=self.device)
-            score = torch.as_tensor(output.scores, device=self.device)
+            kps = torch.as_tensor(output.keypoints)
+            score = torch.as_tensor(output.scores)
             visible_keypoints = torch.cat([kps, score.unsqueeze(1) > visibility_threshold], dim=1)
             keypoints.append(visible_keypoints)
             scores.append(score)
@@ -77,10 +79,10 @@ class OVKeypointDetectionModel(OVModel):
             labels=[],
         )
 
-    def configure_metric(self) -> None:
-        """Configure the metric."""
-        super().configure_metric()
-        self._metric.input_size = (self.model.h, self.model.w)
+    def compute_metrics(self, meter: Metric) -> dict:
+        """Compute metrics for the model."""
+        meter.input_size = (self.model.h, self.model.w)
+        return super()._compute_metrics(meter)
 
     def prepare_metric_inputs(  # type: ignore[override]
         self,

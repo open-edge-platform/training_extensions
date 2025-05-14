@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -161,7 +162,7 @@ class AutoConfigurator:
             RuntimeError: If there are no ready tasks.
 
         Returns:
-            OTXTaskType: The current task.
+            OTXTaskType | str: The current task.
         """
         if self._task is not None:
             return self._task
@@ -184,11 +185,6 @@ class AutoConfigurator:
         if self._config is None:
             self._config = self._load_default_config(self.model_name)
         return self._config
-
-    @config.setter
-    def config(self, config: dict | None) -> None:
-        """Sets the configuration for the auto configurator."""
-        self._config = config
 
     def _load_default_config(self, model_name: str | None = None) -> dict:
         """Load the default configuration for the specified model.
@@ -224,7 +220,7 @@ class AutoConfigurator:
         if data_root is None and self.data_root is None:
             logger.warning("No data root provided. Returning None.")
             return None
-        if data_root is not None and not isinstance(data_root, PathLike):
+        if data_root is not None and not isinstance(data_root, (str, os.PathLike)):
             msg = f"data_root should be of type PathLike, but got {type(data_root)}"
             raise TypeError(msg)
 
@@ -377,7 +373,7 @@ class AutoConfigurator:
 
         return None
 
-    def get_ov_model(self, model_name: str) -> OVModel:
+    def get_ov_model(self, model_name: PathLike, task: str | OTXTaskType | None = None) -> OVModel:
         """Retrieves the OVModel instance based on the given model name and label information.
 
         Args:
@@ -390,6 +386,7 @@ class AutoConfigurator:
         Raises:
             NotImplementedError: If the OVModel for the given task is not supported.
         """
+        task = task if task is not None else self.task
         class_path = OVMODEL_PER_TASK.get(self.task, None)
         if class_path is None:
             msg = f"{self.task} doesn't support OVModel."

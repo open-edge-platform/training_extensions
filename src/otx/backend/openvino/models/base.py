@@ -25,11 +25,8 @@ from otx.core.data.entity.base import (
     ImageInfo,
     OTXBatchDataEntity,
 )
-from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import NullMetricCallable
-from otx.core.types.export import OTXExportFormatType
 from otx.core.types.label import LabelInfo
-from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.data.torch import TorchDataBatch, TorchPredBatch
@@ -41,6 +38,7 @@ if TYPE_CHECKING:
 
     from otx.core.data.module import OTXDataModule
     from otx.core.metrics import MetricCallable, MetricInput
+    from otx.core.types import PathLike
 
 logger = logging.getLogger()
 
@@ -60,7 +58,7 @@ class OVModel:
 
     def __init__(
         self,
-        model_path: str,
+        model_path: PathLike,
         model_type: str,
         async_inference: bool = True,
         force_cpu: bool = True,
@@ -79,7 +77,8 @@ class OVModel:
         self.model = self._create_model()
         self.metric_callable = metric
         self._label_info = self._create_label_info_from_ov_ir()
-        self._task = None
+        self._task: OTXTaskType | None = None
+        self.hparams: dict[str, Any] = {}
         tile_enabled = False
         with contextlib.suppress(RuntimeError):
             if isinstance(self.model, Model):
@@ -205,51 +204,6 @@ class OVModel:
 
         return output_model_path
 
-    def export(
-        self,
-        output_dir: Path,
-        base_name: str,
-        export_format: OTXExportFormatType,
-        precision: OTXPrecisionType = OTXPrecisionType.FP32,
-        to_exportable_code: bool = True,
-    ) -> Path:
-        """Export this model to the specified output directory.
-
-        Args:
-            output_dir (Path): directory for saving the exported model
-            base_name: (str): base name for the exported model file. Extension is defined by the target export format
-            export_format (OTXExportFormatType): format of the output model
-            precision (OTXExportPrecisionType): precision of the output model
-            to_exportable_code (bool): whether to generate exportable code with demo package.
-                OpenVINO model supports only exportable code option.
-
-        Returns:
-            Path: path to the exported model.
-        """
-        if not to_exportable_code:
-            msg = "OpenVINO model can be exported only as exportable code with demo package."
-            raise RuntimeError(msg)
-
-        # Temporarily unwrap Tiler model if applicable
-        original_model = self.model
-        if isinstance(original_model, Tiler):
-            self.model = original_model.model
-
-        try:
-            exported_path = self._exporter.export(
-                self.model,
-                output_dir,
-                base_name,
-                export_format,
-                precision,
-                to_exportable_code,
-            )
-        finally:
-            # Restore the original model
-            self.model = original_model
-
-        return exported_path
-
     def transform_fn(self, data_batch: TorchDataBatch) -> np.array:
         """Data transform function for PTQ."""
         np_data = self._customize_inputs(data_batch)
@@ -333,14 +287,6 @@ class OVModel:
             msg = f"{meter} has no data to compute metric or there is an error computing metric"
             raise RuntimeError(msg)
         return results
-
-    @property
-    def _exporter(self) -> OTXNativeModelExporter:
-        """Exporter of the OVModel for exportable code."""
-        return OTXNativeModelExporter(
-            task_level_export_parameters=self._export_parameters,
-            data_input_params=self.data_input_params,
-        )
 
     @property
     def model_adapter_parameters(self) -> dict:

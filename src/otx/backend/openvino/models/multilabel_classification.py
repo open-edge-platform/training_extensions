@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult
 
     from otx.core.metrics import MetricCallable
+    from otx.core.types import PathLike
 
 
 class OVMultilabelClassificationModel(OVModel):
@@ -31,7 +32,7 @@ class OVMultilabelClassificationModel(OVModel):
 
     def __init__(
         self,
-        model_name: str,
+        model_path: PathLike,
         model_type: str = "Classification",
         async_inference: bool = True,
         max_num_requests: int | None = None,
@@ -43,7 +44,7 @@ class OVMultilabelClassificationModel(OVModel):
         model_api_configuration = model_api_configuration if model_api_configuration else {}
         model_api_configuration.update({"multilabel": True, "confidence_threshold": 0.0})
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type=model_type,
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -58,9 +59,7 @@ class OVMultilabelClassificationModel(OVModel):
         outputs: list[ClassificationResult],
         inputs: TorchDataBatch,
     ) -> TorchPredBatch:
-        pred_scores = [
-            torch.tensor([top_label.confidence for top_label in out.top_labels], device=self.device) for out in outputs
-        ]
+        pred_scores = [torch.tensor([top_label.confidence for top_label in out.top_labels]) for out in outputs]
 
         if outputs and outputs[0].saliency_map.size != 0:
             # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)

@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult
 
     from otx.core.metrics import MetricCallable
+    from otx.core.types import PathLike
 
 
 class OVHlabelClassificationModel(OVModel):
@@ -33,7 +34,7 @@ class OVHlabelClassificationModel(OVModel):
 
     def __init__(
         self,
-        model_name: str,
+        model_path: PathLike,
         model_type: str = "Classification",
         async_inference: bool = True,
         max_num_requests: int | None = None,
@@ -45,7 +46,7 @@ class OVHlabelClassificationModel(OVModel):
         model_api_configuration = model_api_configuration if model_api_configuration else {}
         model_api_configuration.update({"hierarchical": True, "output_raw_scores": True})
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type=model_type,
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -85,8 +86,8 @@ class OVHlabelClassificationModel(OVModel):
                     else:
                         predicted_labels.append(0)
 
-            all_pred_labels.append(torch.tensor(predicted_labels, dtype=torch.long, device=self.device))
-            all_pred_scores.append(torch.tensor(predicted_scores, device=self.device))
+            all_pred_labels.append(torch.tensor(predicted_labels, dtype=torch.long))
+            all_pred_scores.append(torch.tensor(predicted_scores))
 
         if outputs and outputs[0].saliency_map.size != 0:
             # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)

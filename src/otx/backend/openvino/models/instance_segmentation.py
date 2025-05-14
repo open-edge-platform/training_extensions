@@ -7,14 +7,13 @@
 from __future__ import annotations
 
 import logging as log
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import torch
 from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.metrics import MetricInput
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.types.label import LabelInfo
@@ -28,6 +27,7 @@ if TYPE_CHECKING:
     from torchmetrics import Metric
 
     from otx.core.metrics import MetricCallable
+    from otx.core.types import PathLike
 
 
 class OVInstanceSegmentationModel(
@@ -41,7 +41,7 @@ class OVInstanceSegmentationModel(
 
     def __init__(
         self,
-        model_name: str,
+        model_path: PathLike,
         model_type: str = "MaskRCNN",
         async_inference: bool = True,
         max_num_requests: int | None = None,
@@ -51,7 +51,7 @@ class OVInstanceSegmentationModel(
         **kwargs,
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type=model_type,
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -95,7 +95,7 @@ class OVInstanceSegmentationModel(
         self,
         outputs: list[InstanceSegmentationResult],
         inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+    ) -> TorchPredBatch:
         # add label index
         bboxes = []
         scores = []
@@ -107,15 +107,14 @@ class OVInstanceSegmentationModel(
                     data=output.bboxes,
                     format="XYXY",
                     canvas_size=inputs.imgs_info[-1].img_shape,  # type: ignore[union-attr,index]
-                    device=self.device,
                     dtype=torch.float32,
                 ),
             )
             # NOTE: OTX 1.5 filter predictions with result_based_confidence_threshold,
             # but OTX 2.0 doesn't have it in configuration.
-            scores.append(torch.tensor(output.scores.reshape(-1), device=self.device))
-            masks.append(torch.tensor(output.masks, device=self.device))
-            labels.append(torch.tensor(output.labels.reshape(-1) - 1, device=self.device, dtype=torch.long))
+            scores.append(torch.tensor(output.scores.reshape(-1)))
+            masks.append(torch.tensor(output.masks))
+            labels.append(torch.tensor(output.labels.reshape(-1) - 1, dtype=torch.long))
 
         if outputs and outputs[0].saliency_map:
             predicted_s_maps = []
@@ -123,7 +122,6 @@ class OVInstanceSegmentationModel(
                 image_map = torch.tensor(
                     [s_map for s_map in out.saliency_map if s_map.size > 0],
                     dtype=torch.float32,
-                    device=self.device,
                 )
                 predicted_s_maps.append(image_map)
 
@@ -200,10 +198,11 @@ class OVInstanceSegmentationModel(
             )
         return {"preds": pred_info, "target": target_info}
 
-    def _log_metrics(self, meter: Metric, key: Literal["val", "test"], **compute_kwargs) -> None:
+    def compute_metrics(self, meter: Metric) -> dict:
+        """Compute metrics for the model."""
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
-        return super()._log_metrics(meter, key, **compute_kwargs)
+        return super()._compute_metrics(meter, **compute_kwargs)
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
         ov_model = self.model.get_model()
