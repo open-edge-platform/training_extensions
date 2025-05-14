@@ -127,8 +127,8 @@ class OTXDataModule(LightningDataModule):
                 self.task,
                 input_size_multiplier,
             )
-        elif not isinstance(input_size, tuple):
-            msg = f"input_size should be tuple of ints or 'auto', but got {input_size}"
+        elif not isinstance(input_size, (tuple, list)):
+            msg = f"input_size should be tuple/list of ints or 'auto', but got {input_size}"
             raise ValueError(msg)
 
         for subset_cfg in [train_subset, val_subset, test_subset]:
