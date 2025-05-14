@@ -80,7 +80,7 @@ class OTXDetectionModel(OTXModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> None:
+    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
         """Perform a single test step on a batch of data from the test set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
@@ -96,12 +96,12 @@ class OTXDetectionModel(OTXModel):
 
         if isinstance(metric_inputs, dict):
             self.metric.update(**metric_inputs)
-            return
+            return preds
 
         if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
             for inp in metric_inputs:
                 self.metric.update(**inp)
-            return
+            return preds
 
         raise TypeError(metric_inputs)
 
