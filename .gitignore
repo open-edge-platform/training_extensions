@@ -3,6 +3,7 @@ __pycache__
 .idea/
 .vscode/
 *.iml
+*.DS_Store
 
 *venv*/
 env

@@ -34,7 +34,7 @@ from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.instance_segmentation import OTXInstanceSegModel
-from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -149,7 +149,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
         return model
 
-    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
         if isinstance(entity.images, list):
             entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)  # type: ignore[arg-type,assignment]
         return {"entity": entity}
@@ -157,8 +157,8 @@ class MaskRCNNTV(OTXInstanceSegModel):
     def _customize_outputs(
         self,
         outputs: dict | list[dict],  # type: ignore[override]
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -212,7 +212,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -224,7 +224,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
                 feature_vector=list(feature_vector),
             )
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,

@@ -7,7 +7,7 @@ from torch import LongTensor
 from torchvision import tv_tensors
 
 from otx.core.data.entity.base import ImageInfo
-from otx.data import TorchDataItem
+from otx.data import OTXDataItem
 
 # TODO(ashwinvaidya17): Have a single entity test for TorchDataItem and TorchDataBatch
 
@@ -15,7 +15,7 @@ from otx.data import TorchDataItem
 class TestDetBatchDataEntity:
     def test_collate_fn(self) -> None:
         data_entities = [
-            TorchDataItem(
+            OTXDataItem(
                 image=tv_tensors.Image(torch.randn(3, 224, 224)),
                 img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
                 bboxes=tv_tensors.BoundingBoxes(
@@ -25,7 +25,7 @@ class TestDetBatchDataEntity:
                 ),
                 label=LongTensor([1]),
             ),
-            TorchDataItem(
+            OTXDataItem(
                 image=tv_tensors.Image(torch.randn(3, 224, 224)),
                 img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
                 bboxes=tv_tensors.BoundingBoxes(
@@ -35,7 +35,7 @@ class TestDetBatchDataEntity:
                 ),
                 label=LongTensor([1]),
             ),
-            TorchDataItem(
+            OTXDataItem(
                 image=tv_tensors.Image(torch.randn(3, 224, 224)),
                 img_info=ImageInfo(img_idx=0, img_shape=(224, 224), ori_shape=(224, 224)),
                 bboxes=tv_tensors.BoundingBoxes(
@@ -47,5 +47,5 @@ class TestDetBatchDataEntity:
             ),
         ]
 
-        data_batch = TorchDataItem.collate_fn(data_entities)
+        data_batch = OTXDataItem.collate_fn(data_entities)
         assert len(data_batch.imgs_info) == len(data_batch.images)

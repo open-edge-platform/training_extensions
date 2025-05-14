@@ -23,7 +23,7 @@ from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.utils import remove_state_dict_prefix
-from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     import types
@@ -163,7 +163,7 @@ class OTXAnomaly(OTXModel):
     def on_predict_batch_end(
         self,
         outputs: dict,
-        batch: TorchDataBatch,
+        batch: OTXDataBatch,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
@@ -180,7 +180,7 @@ class OTXAnomaly(OTXModel):
 
     def _customize_inputs(
         self,
-        inputs: TorchDataBatch,
+        inputs: OTXDataBatch,
     ) -> dict[str, Any]:
         """Customize inputs for the model."""
         return_dict = {"image": inputs.images, "label": torch.vstack(inputs.labels).squeeze()}
@@ -194,9 +194,9 @@ class OTXAnomaly(OTXModel):
     def _customize_outputs(
         self,
         outputs: dict,
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
-        return TorchPredBatch(
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -261,7 +261,7 @@ class OTXAnomaly(OTXModel):
             to_exportable_code=to_exportable_code,
         )
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
         """Returns a dummy input for anomaly model."""
         images = torch.rand(batch_size, 3, *self.data_input_params.input_size)
         infos = []
@@ -273,7 +273,7 @@ class OTXAnomaly(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return TorchDataBatch(
+        return OTXDataBatch(
             batch_size=batch_size,
             images=images,
             imgs_info=infos,
@@ -299,7 +299,7 @@ class AnomalyMixin:
 
     def training_step(
         self,
-        inputs: TorchDataBatch,
+        inputs: OTXDataBatch,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call training step of the anomalib model."""
@@ -309,7 +309,7 @@ class AnomalyMixin:
 
     def validation_step(
         self,
-        inputs: TorchDataBatch,
+        inputs: OTXDataBatch,
         batch_idx: int = 0,
     ) -> STEP_OUTPUT:
         """Call validation step of the anomalib model."""
@@ -319,7 +319,7 @@ class AnomalyMixin:
 
     def test_step(
         self,
-        inputs: TorchDataBatch,
+        inputs: OTXDataBatch,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -330,7 +330,7 @@ class AnomalyMixin:
 
     def predict_step(
         self,
-        inputs: TorchDataBatch,
+        inputs: OTXDataBatch,
         batch_idx: int = 0,
         **kwargs,
     ) -> STEP_OUTPUT:
@@ -341,8 +341,8 @@ class AnomalyMixin:
 
     def forward(
         self,
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         """Wrap forward method of the Anomalib model."""
         outputs = self.validation_step(inputs)
         # TODO(Ashwin): update forward implementation to comply with other OTX models

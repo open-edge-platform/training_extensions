@@ -27,7 +27,7 @@ from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.detection import OTXDetectionModel
-from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -157,7 +157,7 @@ class DFine(OTXDetectionModel):
 
     def _customize_inputs(
         self,
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
@@ -187,8 +187,8 @@ class DFine(OTXDetectionModel):
     def _customize_outputs(
         self,
         outputs: list[torch.Tensor] | dict,  # type: ignore[override]
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -220,7 +220,7 @@ class DFine(OTXDetectionModel):
                 msg = "No saliency maps in the model output."
                 raise ValueError(msg)
 
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -231,7 +231,7 @@ class DFine(OTXDetectionModel):
                 saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             )
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -350,7 +350,7 @@ class DFine(OTXDetectionModel):
     @staticmethod
     def _forward_explain_detection(
         self,  # noqa: ANN001
-        entity: TorchDataBatch,
+        entity: OTXDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:
         """Forward function for explainable detection model."""

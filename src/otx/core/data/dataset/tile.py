@@ -28,7 +28,6 @@ from datumaro.plugins.tiling.util import (
     x1y1x2y2_to_xywh,
 )
 from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.dataset.segmentation import _extract_class_mask
 from otx.core.data.entity.base import ImageInfo
@@ -42,7 +41,7 @@ from otx.core.data.entity.tile import (
 )
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import polygon_to_bitmap
-from otx.data import TorchDataItem
+from otx.data import OTXDataItem
 
 from .base import OTXDataset
 
@@ -316,7 +315,7 @@ class OTXTileDataset(OTXDataset):
         """Collate function from the original dataset."""
         return self._dataset.collate_fn
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         """Get item implementation from the original dataset."""
         return self._dataset._get_item_impl(index)
 
@@ -347,7 +346,7 @@ class OTXTileDataset(OTXDataset):
         image: np.ndarray,
         item: DatasetItem,
         parent_idx: int,
-    ) -> tuple[list[OTXDataEntity | TorchDataItem], list[dict]]:
+    ) -> tuple[list[OTXDataEntity | OTXDataItem], list[dict]]:
         """Retrieves tiles from the given image and dataset item.
 
         Args:
@@ -379,7 +378,7 @@ class OTXTileDataset(OTXDataset):
                     with_full_img=True,
                 )
 
-        tile_entities: list[OTXDataEntity | TorchDataItem] = []
+        tile_entities: list[OTXDataEntity | OTXDataItem] = []
         tile_attrs: list[dict] = []
         for tile in tile_ds:
             tile_entity = self._convert_entity(image, tile, parent_idx)
@@ -485,7 +484,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
             ori_labels=labels,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:  # type: ignore[override]
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> OTXDataItem:  # type: ignore[override]
         """Convert a tile datumaro dataset item to TorchDataItem."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
@@ -495,8 +494,8 @@ class OTXTileDetTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return TorchDataItem(
-            image=to_dtype(to_image(tile_img), torch.float32),
+        return OTXDataItem(
+            image=tile_img,
             img_info=img_info,
         )
 
@@ -609,7 +608,7 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             ori_polygons=gt_polygons,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:  # type: ignore[override]
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> OTXDataItem:  # type: ignore[override]
         """Convert a tile dataset item to TorchDataItem."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
@@ -619,8 +618,8 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return TorchDataItem(
-            image=to_dtype(to_image(tile_img), torch.float32),
+        return OTXDataItem(
+            image=tile_img,
             img_info=img_info,
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),
         )
@@ -678,7 +677,7 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             ori_masks=masks,
         )
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> TorchDataItem:  # type: ignore[override]
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> OTXDataItem:  # type: ignore[override]
         """Convert a tile datumaro dataset item to SegDataEntity."""
         x1, y1, w, h = dataset_item.attributes["roi"]
         tile_img = image[y1 : y1 + h, x1 : x1 + w]
@@ -688,8 +687,8 @@ class OTXTileSemanticSegTestDataset(OTXTileDataset):
             img_shape=tile_shape,
             ori_shape=tile_shape,
         )
-        return TorchDataItem(
-            image=to_dtype(to_image(tile_img), torch.float32),
+        return OTXDataItem(
+            image=tile_img,
             img_info=img_info,
             masks=tv_tensors.Mask(np.zeros((0, *tile_shape), dtype=bool)),
         )

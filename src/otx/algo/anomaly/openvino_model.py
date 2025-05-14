@@ -25,7 +25,7 @@ from otx.core.metrics.types import MetricCallable, NullMetricCallable
 from otx.core.model.base import OVModel
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
-from otx.data import TorchDataBatch
+from otx.data import OTXDataBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -48,7 +48,7 @@ class _OVMetricCallback(Callback):
         trainer: Trainer,
         pl_module: AnomalyOpenVINO,
         outputs: list[AnomalyResult],
-        batch: TorchDataBatch,
+        batch: OTXDataBatch,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
@@ -197,15 +197,15 @@ class AnomalyOpenVINO(OVModel):
         """Return the metric callback."""
         return _OVMetricCallback()
 
-    def test_step(self, inputs: TorchDataBatch, batch_idx: int) -> list[AnomalyResult]:
+    def test_step(self, inputs: OTXDataBatch, batch_idx: int) -> list[AnomalyResult]:
         """Return outputs from the OpenVINO model."""
         return self.forward(inputs)  # type: ignore[return-value]
 
-    def predict_step(self, inputs: TorchDataBatch, batch_idx: int) -> list[AnomalyResult]:
+    def predict_step(self, inputs: OTXDataBatch, batch_idx: int) -> list[AnomalyResult]:
         """Return outputs from the OpenVINO model."""
         return self.forward(inputs)  # type: ignore[return-value]
 
-    def _customize_outputs(self, outputs: list[AnomalyResult], inputs: TorchDataBatch) -> list[AnomalyResult]:
+    def _customize_outputs(self, outputs: list[AnomalyResult], inputs: OTXDataBatch) -> list[AnomalyResult]:
         """Return outputs from the OpenVINO model as is."""
         return outputs
 

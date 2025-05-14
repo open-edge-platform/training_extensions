@@ -23,7 +23,7 @@ from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo, NullLabelInfo
-from otx.data.torch import TorchDataItem
+from otx.data.torch import OTXDataItem
 
 if TYPE_CHECKING:
     from datumaro import DatasetSubset, Image
@@ -110,9 +110,9 @@ class OTXDataset(Dataset):
     def _sample_another_idx(self) -> int:
         return np.random.default_rng().integers(0, len(self))
 
-    def _apply_transforms(self, entity: T_OTXDataEntity | TorchDataItem) -> T_OTXDataEntity | TorchDataItem | None:
+    def _apply_transforms(self, entity: T_OTXDataEntity | OTXDataItem) -> T_OTXDataEntity | OTXDataItem | None:
         if isinstance(self.transforms, Compose):
-            if not isinstance(entity, TorchDataItem) and self.to_tv_image:
+            if self.to_tv_image:
                 entity = entity.to_tv_image()
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):
@@ -122,7 +122,7 @@ class OTXDataset(Dataset):
 
         raise TypeError(self.transforms)
 
-    def _iterable_transforms(self, item: T_OTXDataEntity | TorchDataItem) -> T_OTXDataEntity | TorchDataItem | None:
+    def _iterable_transforms(self, item: T_OTXDataEntity | OTXDataItem) -> T_OTXDataEntity | OTXDataItem | None:
         if not isinstance(self.transforms, list):
             raise TypeError(item)
 
@@ -136,7 +136,7 @@ class OTXDataset(Dataset):
 
         return results
 
-    def __getitem__(self, index: int) -> T_OTXDataEntity | TorchDataItem:
+    def __getitem__(self, index: int) -> T_OTXDataEntity | OTXDataItem:
         for _ in range(self.max_refetch):
             results = self._get_item_impl(index)
 
@@ -254,10 +254,10 @@ class OTXDataset(Dataset):
         return resized_img
 
     @abstractmethod
-    def _get_item_impl(self, idx: int) -> TorchDataItem | None:
+    def _get_item_impl(self, idx: int) -> OTXDataItem | None:
         pass
 
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn
+        return OTXDataItem.collate_fn

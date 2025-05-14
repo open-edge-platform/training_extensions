@@ -18,7 +18,7 @@ from otx.algo.keypoint_detection.utils.simcc_label import SimCCLabel
 from otx.algo.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
-    from otx.data import TorchDataBatch
+    from otx.data import OTXDataBatch
 
 
 class RTMCCHead(BaseModule):
@@ -149,7 +149,7 @@ class RTMCCHead(BaseModule):
             preds.append((keypoints, scores))
         return preds
 
-    def loss(self, x: tuple[Tensor], entity: TorchDataBatch) -> dict:
+    def loss(self, x: tuple[Tensor], entity: OTXDataBatch) -> dict:
         """Perform forward propagation and loss calculation of the detection head.
 
         Args:

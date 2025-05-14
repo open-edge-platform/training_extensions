@@ -20,7 +20,7 @@ from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, Defau
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import LabelInfoTypes
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -69,7 +69,7 @@ class OTXMulticlassClsModel(OTXModel):
             for name, param in self.named_parameters():
                 param.requires_grad = name in classification_layers
 
-    def _customize_inputs(self, inputs: TorchDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -87,13 +87,13 @@ class OTXMulticlassClsModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch | OTXBatchLossEntity:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
         if self.explain_mode:
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=inputs.batch_size,
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -108,7 +108,7 @@ class OTXMulticlassClsModel(OTXModel):
         scores = torch.unbind(logits, 0)
         preds = logits.argmax(-1, keepdim=True).unbind(0)
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -143,8 +143,8 @@ class OTXMulticlassClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels, device=self.device)
         target = torch.tensor(inputs.labels, device=self.device)
@@ -156,21 +156,21 @@ class OTXMulticlassClsModel(OTXModel):
     def _reset_prediction_layer(self, num_classes: int) -> None:
         return
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:  # type: ignore[override]
+    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
         """Returns a dummy input for classification model."""
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
-        return TorchDataBatch(batch_size=batch_size, images=images, labels=labels)
+        return OTXDataBatch(batch_size=batch_size, images=images, labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
         return self.model(images=image)
 
-    def forward_explain(self, inputs: TorchDataBatch) -> TorchPredBatch:
+    def forward_explain(self, inputs: OTXDataBatch) -> OTXPredBatch:
         """Model forward explain function."""
         outputs = self.model(images=inputs.images, mode="explain")
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -214,8 +214,8 @@ class OVMulticlassClassificationModel(
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         pred_labels = [torch.tensor(out.top_labels[0].id, dtype=torch.long, device=self.device) for out in outputs]
         pred_scores = [torch.tensor(out.top_labels[0].confidence, device=self.device) for out in outputs]
 
@@ -225,7 +225,7 @@ class OVMulticlassClassificationModel(
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -235,7 +235,7 @@ class OVMulticlassClassificationModel(
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -245,8 +245,8 @@ class OVMulticlassClassificationModel(
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels)
         target = torch.tensor(inputs.labels)
