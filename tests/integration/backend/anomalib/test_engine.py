@@ -14,13 +14,33 @@ from typing import TYPE_CHECKING
 import pytest
 from anomalib.data import AnomalibDataModule, Folder
 from anomalib.models import Padim
+from lightning.pytorch import LightningDataModule, LightningModule
 
 from otx.backend.anomalib.engine import AnomalyEngine
 from otx.data import OTXDataItem
 
 if TYPE_CHECKING:
     from anomalib.models.components import AnomalyModule
-    from lightning.pytorch import LightningDataModule, LightningModule
+
+
+class TestIncorrectModel(LightningModule):
+    """Unsupported model."""
+
+
+class TestIncorrectData(LightningDataModule):
+    """Unsupported data."""
+
+
+@pytest.fixture(scope="module")
+def incorrect_model():
+    """Fixture for the incorrect model."""
+    return TestIncorrectModel()
+
+
+@pytest.fixture(scope="module")
+def incorrect_data():
+    """Fixture for the incorrect data."""
+    return TestIncorrectData()
 
 
 @pytest.fixture(scope="module")
@@ -76,18 +96,18 @@ class TestAnomalibEngine:
         self,
         model: AnomalyModule,
         data: AnomalibDataModule,
-        other_model: LightningModule,
-        other_data: LightningDataModule,
+        incorrect_model: LightningModule,
+        incorrect_data: LightningDataModule,
     ):
         """Test is supported."""
         # Test with AnomalibModel and AnomalibDataModule
         assert AnomalyEngine.is_supported(model, data)
 
         # Test with non-AnomalibModel
-        assert not AnomalyEngine.is_supported(other_model, data)
+        assert not AnomalyEngine.is_supported(incorrect_model, data)
 
         # Test with non-AnomalibDataModule
-        assert not AnomalyEngine.is_supported(model, other_data)
+        assert not AnomalyEngine.is_supported(model, incorrect_data)
 
         # Test with non-AnomalibModel and non-AnomalibDataModule
-        assert not AnomalyEngine.is_supported(other_model, other_data)
+        assert not AnomalyEngine.is_supported(incorrect_model, incorrect_data)
