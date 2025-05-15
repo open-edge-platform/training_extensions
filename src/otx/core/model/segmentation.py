@@ -285,4 +285,4 @@ class OTXSegmentationModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return TorchDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
+        return OTXDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]

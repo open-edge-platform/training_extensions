@@ -29,11 +29,12 @@ from otx.core.metrics import NullMetricCallable
 from otx.core.types.label import LabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.build import get_default_num_async_infer_requests
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from model_api.models.result import Result
     from torchmetrics import Metric
 
     from otx.core.data.module import OTXDataModule
@@ -127,32 +128,32 @@ class OVModel:
 
         return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
 
-    def _customize_inputs(self, entity: TorchDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
         # restore original numpy image
         images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
         return {"inputs": images}
 
     def _customize_outputs(
         self,
-        outputs: list,
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        outputs: list[Result],
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         """Customize the model outputs to OTX format.
 
         Args:
             outputs (list): The model outputs.
-            inputs (TorchDataBatch): The input batch entity.
+            inputs (OTXDataBatch): The input batch entity.
 
         Returns:
-            TorchPredBatch: The customized prediction batch entity.
+            OTXPredBatch: The customized prediction batch entity.
         """
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
         )
 
-    def forward(self, inputs: TorchDataBatch, async_inference: bool = True) -> TorchPredBatch:
+    def forward(self, inputs: OTXDataBatch, async_inference: bool = True) -> OTXPredBatch:
         """Model forward function."""
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
@@ -204,7 +205,7 @@ class OVModel:
 
         return output_model_path
 
-    def transform_fn(self, data_batch: TorchDataBatch) -> np.array:
+    def transform_fn(self, data_batch: OTXDataBatch) -> np.array:
         """Data transform function for PTQ."""
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
@@ -252,14 +253,14 @@ class OVModel:
 
     def prepare_metric_inputs(
         self,
-        preds: TorchPredBatch,  # type: ignore[override]
-        inputs: TorchDataBatch,  # type: ignore[override]
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (TorchPredBatch): The predicted batch entity containing predicted labels.
-            inputs (TorchDataBatch): The input batch entity containing ground truth labels.
+            preds (OTXPredBatch): The predicted batch entity containing predicted labels.
+            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
 
         Returns:
             MetricInput: A dictionary contains 'preds' and 'target' keys

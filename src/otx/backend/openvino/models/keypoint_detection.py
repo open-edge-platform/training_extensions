@@ -15,10 +15,10 @@ from otx.backend.openvino.models.base import OVModel
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.pck import PCKMeasureCallable
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
-    from model_api.models.utils import DetectedKeypoints
+    from model_api.models.result import DetectedKeypoints
     from torchmetrics import Metric
 
     from otx.core.types import PathLike
@@ -56,8 +56,8 @@ class OVKeypointDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectedKeypoints],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         keypoints = []
         scores = []
         # default visibility threshold
@@ -69,7 +69,7 @@ class OVKeypointDetectionModel(OVModel):
             keypoints.append(visible_keypoints)
             scores.append(score)
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -86,14 +86,14 @@ class OVKeypointDetectionModel(OVModel):
 
     def prepare_metric_inputs(  # type: ignore[override]
         self,
-        preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (TorchPredBatch): The predicted batch entity containing predicted keypoints.
-            inputs (TorchDataBatch): The input batch entity containing ground truth keypoints.
+            preds (OTXPredBatch): The predicted batch entity containing predicted keypoints.
+            inputs (OTXDataBatch): The input batch entity containing ground truth keypoints.
 
         Returns:
             MetricInput: A dictionary contains 'preds' and 'target' keys

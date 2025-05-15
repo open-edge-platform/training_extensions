@@ -14,10 +14,10 @@ from otx.core.metrics.accuracy import (
     MultiClassClsMetricCallable,
 )
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
-    from model_api.models.utils import ClassificationResult
+    from model_api.models.result import ClassificationResult
 
     from otx.core.metrics import MetricCallable
     from otx.core.types import PathLike
@@ -56,8 +56,8 @@ class OVMulticlassClassificationModel(
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         pred_labels = [torch.tensor(out.top_labels[0].id, dtype=torch.long) for out in outputs]
         pred_scores = [torch.tensor(out.top_labels[0].confidence) for out in outputs]
 
@@ -67,7 +67,7 @@ class OVMulticlassClassificationModel(
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -77,7 +77,7 @@ class OVMulticlassClassificationModel(
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -87,14 +87,14 @@ class OVMulticlassClassificationModel(
 
     def prepare_metric_inputs(
         self,
-        preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (TorchPredBatch): The predicted batch entity containing predicted labels.
-            inputs (TorchDataBatch): The input batch entity containing ground truth labels.
+            preds (OTXPredBatch ): The predicted batch entity containing predicted labels.
+            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
 
         Returns:
             MetricInput: A dictionary contains 'preds' and 'target' keys

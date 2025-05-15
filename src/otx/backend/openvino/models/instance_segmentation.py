@@ -19,7 +19,7 @@ from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.core.types.label import LabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.mask_util import encode_rle, polygon_to_rle
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
@@ -94,8 +94,8 @@ class OVInstanceSegmentationModel(
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         # add label index
         bboxes = []
         scores = []
@@ -127,7 +127,7 @@ class OVInstanceSegmentationModel(
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -139,7 +139,7 @@ class OVInstanceSegmentationModel(
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -151,16 +151,16 @@ class OVInstanceSegmentationModel(
 
     def prepare_metric_inputs(
         self,
-        preds: TorchPredBatch,  # type: ignore[override]
-        inputs: TorchDataBatch,  # type: ignore[override]
+        preds: OTXPredBatch,  # type: ignore[override]
+        inputs: OTXDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
         This function will convert mask to RLE format and cache the ground truth for the current batch.
 
         Args:
-            preds (TorchPredBatch): Current batch predictions.
-            inputs (TorchDataBatch): Current batch ground-truth inputs.
+            preds (OTXPredBatch): Current batch predictions.
+            inputs (OTXDataBatch): Current batch ground-truth inputs.
 
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.

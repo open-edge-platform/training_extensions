@@ -20,7 +20,7 @@ from otx.core.config.explain import ExplainConfig
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.module import OTXDataModule
 from otx.core.types import OTXTaskType, PathLike
-from otx.data.torch import TorchDataBatch
+from otx.data.torch import OTXDataBatch
 
 if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
@@ -234,7 +234,7 @@ class OVEngine:
                 if not isinstance(datamodule[0], np.ndarray):
                     msg = "The input data should be a list of numpy arrays."
                     raise TypeError(msg)
-                customized_inputs = TorchDataBatch(
+                customized_inputs = OTXDataBatch(
                     batch_size=len(datamodule),
                     images=[
                         torch.tensor(img) for img in datamodule

@@ -20,10 +20,10 @@ from otx.core.metrics import MetricInput
 from otx.core.metrics.dice import SegmCallable
 from otx.core.types.label import SegLabelInfo
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
-    from model_api.models.utils import ImageResultWithSoftPrediction
+    from model_api.models.result import ImageResultWithSoftPrediction
 
     from otx.core.metrics import MetricCallable
     from otx.core.types import PathLike
@@ -72,13 +72,13 @@ class OVSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ImageResultWithSoftPrediction],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0)) for mask in outputs]
         predicted_f_vectors = (
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
         )
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -89,14 +89,14 @@ class OVSegmentationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: TorchPredBatch,  # type: ignore[override]
-        inputs: TorchDataBatch,  # type: ignore[override]
+        preds: OTXPredBatch,  # type: ignore[override]
+        inputs: OTXDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (TorchPredBatch): The predicted segmentation batch entity containing predicted masks.
-            inputs (TorchDataBatch): The input segmentation batch entity containing ground truth masks.
+            preds (OTXPredBatch): The predicted segmentation batch entity containing predicted masks.
+            inputs (OTXDataBatch): The input segmentation batch entity containing ground truth masks.
 
         Returns:
             MetricInput: A list of dictionaries where each dictionary contains 'preds' and 'target' keys

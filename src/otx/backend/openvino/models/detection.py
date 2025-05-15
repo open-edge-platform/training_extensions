@@ -17,7 +17,7 @@ from otx.backend.openvino.models.base import OVModel
 from otx.core.metrics import MetricCallable, MetricInput
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.types.task import OTXTaskType
-from otx.data import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
@@ -89,8 +89,8 @@ class OVDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectionResult],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         # add label index
         bboxes = []
         scores = []
@@ -125,7 +125,7 @@ class OVDetectionModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -136,7 +136,7 @@ class OVDetectionModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -147,14 +147,14 @@ class OVDetectionModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: TorchPredBatch,  # type: ignore[override]
-        inputs: TorchDataBatch,  # type: ignore[override]
+        preds: OTXPredBatch,  # type: ignore[override]
+        inputs: OTXDataBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (TorchPredBatch): The predicted batch entity containing predicted bboxes.
-            inputs (TorchDataBatch): The input batch entity containing ground truth bboxes.
+            preds (OTXPredBatch): The predicted batch entity containing predicted bboxes.
+            inputs (OTXDataBatch): The input batch entity containing ground truth bboxes.
 
         Returns:
             MetricInput: A dictionary contains 'preds' and 'target' keys

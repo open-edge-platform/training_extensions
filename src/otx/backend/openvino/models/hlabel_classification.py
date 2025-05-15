@@ -16,7 +16,7 @@ from otx.core.metrics.accuracy import (
 )
 from otx.core.types.label import HLabelInfo
 from otx.core.types.task import OTXTaskType
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from model_api.models.utils import ClassificationResult
@@ -59,8 +59,8 @@ class OVHlabelClassificationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: TorchDataBatch,
-    ) -> TorchPredBatch:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         all_pred_labels = []
         all_pred_scores = []
         for output in outputs:
@@ -95,7 +95,7 @@ class OVHlabelClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return TorchPredBatch(
+            return OTXPredBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -105,7 +105,7 @@ class OVHlabelClassificationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return TorchPredBatch(
+        return OTXPredBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -115,14 +115,14 @@ class OVHlabelClassificationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: TorchPredBatch,
-        inputs: TorchDataBatch,
+        preds: OTXPredBatch,
+        inputs: OTXDataBatch,
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (TorchPredBatch): The predicted batch entity containing predicted labels.
-            inputs (TorchDataBatch): The input batch entity containing ground truth labels.
+            preds (OTXPredBatch): The predicted batch entity containing predicted labels.
+            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
 
         Returns:
             MetricInput: A dictionary contains 'preds' and 'target' keys
