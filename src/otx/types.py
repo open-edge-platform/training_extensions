@@ -7,9 +7,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from otx.core.model.base import OTXModel
+from otx.data.torch.torch import OTXPredItem
 
-METRICS = Any  # TODO(ashwinvaidya17): Temporary till metrics is properly defined
-ANNOTATIONS = Any  # TODO(ashwinvaidya17): Temporary till annotations is properly defined
-MODEL = OTXModel  # TODO(ashwinvaidya17): Temporary till model is properly defined
+METRICS = list[dict[str, float]]
+ANNOTATIONS = list[OTXPredItem]
+MODEL = Any  # TODO(ashwinvaidya17): Temporary till model is properly defined
 DATA = Any  # TODO(ashwinvaidya17): Temporary till data is properly defined

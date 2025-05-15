@@ -17,13 +17,13 @@ if TYPE_CHECKING:
 class Engine(ABC):
     """Engine base class."""
 
-    def __init__(self, model: MODEL, data: DATA, **kwargs):
+    def __init__(self, model: MODEL, data: DATA, work_dir: Path | str, **kwargs):
         """Initialize the engine.
-        
+
         This ensures that all the engines have the same interface.
         """
         raise NotImplementedError
-    
+
     @abstractmethod
     def train(self, **kwargs) -> METRICS:
         """Train the model."""
