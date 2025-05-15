@@ -11,7 +11,7 @@ from otx.core.data.dataset.classification import (
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.data.torch import TorchDataItem
+from otx.data.torch import OTXDataItem
 
 
 class TestOTXMulticlassClsDataset:
@@ -25,7 +25,7 @@ class TestOTXMulticlassClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], TorchDataItem)
+        assert isinstance(dataset[0], OTXDataItem)
 
     def test_get_item_from_bbox_dataset(
         self,
@@ -37,7 +37,7 @@ class TestOTXMulticlassClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], TorchDataItem)
+        assert isinstance(dataset[0], OTXDataItem)
 
 
 class TestOTXMultilabelClsDataset:
@@ -51,7 +51,7 @@ class TestOTXMultilabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], TorchDataItem)
+        assert isinstance(dataset[0], OTXDataItem)
 
     def test_get_item_from_bbox_dataset(
         self,
@@ -63,7 +63,7 @@ class TestOTXMultilabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], TorchDataItem)
+        assert isinstance(dataset[0], OTXDataItem)
 
 
 class TestOTXHlabelClsDataset:
@@ -92,7 +92,7 @@ class TestOTXHlabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], TorchDataItem)
+        assert isinstance(dataset[0], OTXDataItem)
 
     def test_get_item_from_bbox_dataset(
         self,
@@ -107,4 +107,4 @@ class TestOTXHlabelClsDataset:
             mem_cache_img_max_size=None,
             max_refetch=3,
         )
-        assert isinstance(dataset[0], TorchDataItem)
+        assert isinstance(dataset[0], OTXDataItem)

@@ -13,11 +13,10 @@ import torch
 from datumaro import Bbox, Ellipse, Image, Polygon
 from datumaro import Dataset as DmDataset
 from torchvision import tv_tensors
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.utils.mask_util import polygon_to_bitmap
-from otx.data import TorchDataItem
+from otx.data import OTXDataItem
 
 from .base import OTXDataset, Transforms
 
@@ -37,7 +36,7 @@ class OTXInstanceSegDataset(OTXDataset):
         super().__init__(dm_subset, transforms, **kwargs)
         self.include_polygons = include_polygons
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
@@ -90,8 +89,8 @@ class OTXInstanceSegDataset(OTXDataset):
 
         labels = np.array(gt_labels, dtype=np.int64)
 
-        entity = TorchDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
+        entity = OTXDataItem(
+            image=img_data,
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,

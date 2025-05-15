@@ -16,7 +16,7 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.core.data.dataset.base import OTXDataset
 from otx.core.data.entity.base import ImageInfo
 from otx.core.types.label import HLabelInfo
-from otx.data.torch import TorchDataItem
+from otx.data.torch import OTXDataItem
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 class OTXMulticlassClsDataset(OTXDataset):
     """OTXDataset class for multi-class classification task."""
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         roi = item.attributes.get("roi", None)
@@ -48,7 +48,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             msg = f"Multi-class Classification can't use the multi-label, currently len(labels) = {len(label_anns)}"
             raise ValueError(msg)
 
-        entity = TorchDataItem(
+        entity = OTXDataItem(
             image=image,
             label=torch.as_tensor(label_anns, dtype=torch.long),
             img_info=ImageInfo(
@@ -63,7 +63,7 @@ class OTXMulticlassClsDataset(OTXDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect MulticlassClsDataEntity into MulticlassClsBatchDataEntity in data loader."""
-        return TorchDataItem.collate_fn
+        return OTXDataItem.collate_fn
 
 
 class OTXMultilabelClsDataset(OTXDataset):
@@ -73,7 +73,7 @@ class OTXMultilabelClsDataset(OTXDataset):
         super().__init__(**kwargs)
         self.num_classes = len(self.dm_subset.categories()[AnnotationType.label])
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -96,7 +96,7 @@ class OTXMultilabelClsDataset(OTXDataset):
                 label_ids.add(label.label)
         labels = torch.as_tensor(list(label_ids))
 
-        entity = TorchDataItem(
+        entity = OTXDataItem(
             image=img_data,
             label=self._convert_to_onehot(labels, ignored_labels),
             img_info=ImageInfo(
@@ -202,7 +202,7 @@ class OTXHlabelClsDataset(OTXDataset):
                     )
         label_anns.extend(ancestor_dm_labels)
 
-    def _get_item_impl(self, index: int) -> TorchDataItem | None:
+    def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -226,7 +226,7 @@ class OTXHlabelClsDataset(OTXDataset):
 
         hlabel_labels = self._convert_label_to_hlabel_format([Label(label=idx) for idx in label_ids], ignored_labels)
 
-        entity = TorchDataItem(
+        entity = OTXDataItem(
             image=img_data,
             label=torch.as_tensor(hlabel_labels),
             img_info=ImageInfo(

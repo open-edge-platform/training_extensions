@@ -9,7 +9,7 @@ from otx.algo.utils.xai_utils import process_saliency_maps, process_saliency_map
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.entity.base import ImageInfo
 from otx.core.types.explain import TargetExplainGroup
-from otx.data.torch import TorchPredBatch
+from otx.data.torch import OTXPredBatch
 
 NUM_CLASSES = 6
 BATCH_SIZE = 3
@@ -136,8 +136,8 @@ def test_process_image(postprocess) -> None:
         assert all(s_map_dict["map_per_image"].shape == (RAW_SIZE, RAW_SIZE) for s_map_dict in processed_saliency_maps)
 
 
-def _get_pred_result_multiclass(pred_labels, pred_scores) -> TorchPredBatch:
-    return TorchPredBatch(
+def _get_pred_result_multiclass(pred_labels, pred_scores) -> OTXPredBatch:
+    return OTXPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
         imgs_info=IMGS_INFO,
@@ -148,8 +148,8 @@ def _get_pred_result_multiclass(pred_labels, pred_scores) -> TorchPredBatch:
     )
 
 
-def _get_pred_result_multilabel(pred_labels, pred_scores) -> TorchPredBatch:
-    return TorchPredBatch(
+def _get_pred_result_multilabel(pred_labels, pred_scores) -> OTXPredBatch:
+    return OTXPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
         imgs_info=IMGS_INFO,
@@ -160,8 +160,8 @@ def _get_pred_result_multilabel(pred_labels, pred_scores) -> TorchPredBatch:
     )
 
 
-def _get_pred_result_hcls(pred_labels, pred_scores) -> TorchPredBatch:
-    return TorchPredBatch(
+def _get_pred_result_hcls(pred_labels, pred_scores) -> OTXPredBatch:
+    return OTXPredBatch(
         batch_size=BATCH_SIZE,
         images=None,
         imgs_info=IMGS_INFO,

@@ -42,7 +42,7 @@ from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.types.precision import OTXPrecisionType
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
-from otx.data.torch import TorchDataBatch, TorchPredBatch
+from otx.data.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -361,8 +361,8 @@ class OTXModel(LightningModule):
     @abstractmethod
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: T_OTXBatchPredEntity | TorchPredBatch,
-        inputs: T_OTXBatchDataEntity | TorchDataBatch,
+        preds: T_OTXBatchPredEntity | OTXPredBatch,
+        inputs: T_OTXBatchDataEntity | OTXDataBatch,
     ) -> MetricInput:
         """Convert given inputs to a Python dictionary for the metric computation."""
         raise NotImplementedError
@@ -844,7 +844,7 @@ class OTXModel(LightningModule):
 
         self._tile_config = tile_config
 
-    def get_dummy_input(self, batch_size: int = 1) -> TorchDataBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
         """Generates a dummy input, suitable for launching forward() on it.
 
         Args:
