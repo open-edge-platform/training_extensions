@@ -61,3 +61,4 @@ precision: 16
 check_val_every_n_epoch: 1
 gradient_clip_val: null
 num_sanity_val_steps: 0
+data_aug_switch: null

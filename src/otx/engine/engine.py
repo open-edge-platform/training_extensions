@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import copy
 import csv
+import ctypes
 import inspect
 import logging
 import tempfile
 import time
 from contextlib import contextmanager
+from multiprocessing import Value
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
@@ -20,6 +22,7 @@ import torch
 from lightning import Trainer, seed_everything
 from lightning.pytorch.plugins.precision import MixedPrecision
 
+from otx.algo.callbacks.aug_scheduler import AugmentationSchedulerCallback, DataAugSwitch
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
@@ -171,6 +174,7 @@ class Engine:
         metric: MetricCallable | None = None,
         checkpoint: PathLike | None = None,
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
+        data_aug_switch: DataAugSwitch | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         r"""Trains the model using the provided LightningModule and OTXDataModule.
@@ -240,6 +244,14 @@ class Engine:
 
         if seed is not None:
             seed_everything(seed, workers=True)
+
+        if data_aug_switch is not None:
+            shared_epoch = Value(ctypes.c_int, 0)
+            data_aug_switch.set_shared_epoch(shared_epoch)
+            self.datamodule.subsets["train"].set_data_aug_switch(data_aug_switch)
+            for callback in callbacks or []:
+                if isinstance(callback, AugmentationSchedulerCallback):
+                    callback.set_data_aug_switch(data_aug_switch)
 
         self._build_trainer(
             logger=logger,

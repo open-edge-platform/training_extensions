@@ -10,6 +10,7 @@ import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
 
+from otx.algo.callbacks.aug_scheduler import DataAugSwitch
 from otx.core.data.entity.base import ImageInfo
 from otx.data import OTXDataItem
 
@@ -51,4 +52,11 @@ class OTXDetectionDataset(OTXDataset):
             label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
         )
 
+        if hasattr(self, "data_aug_switch") and isinstance(self.data_aug_switch, DataAugSwitch):
+            # Set the shared epoch for data augmentation
+            self.to_tv_image, self.transforms = self.data_aug_switch.current_transforms
         return self._apply_transforms(entity)
+
+    def set_data_aug_switch(self, data_aug_switch: DataAugSwitch) -> None:
+        """Set data augmentation switch."""
+        self.data_aug_switch = data_aug_switch
