@@ -266,7 +266,7 @@ class Engine:
             # load the model state from the checkpoint incrementally.
             # This means only the model weights are loaded. If there is a mismatch in label_info,
             # perform incremental weight loading for the model's classification layer.
-            ckpt = torch.load(checkpoint)
+            ckpt = torch.load(checkpoint, weights_only=False)
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
