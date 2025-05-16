@@ -22,7 +22,7 @@ from torchvision.transforms.functional import resize
 
 from otx.core.data.module import OTXDataModule
 from otx.core.metrics.types import MetricCallable, NullMetricCallable
-from otx.core.model.base import OVModel
+from otx.backend.openvino.models import OVModel
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.data import OTXDataBatch
@@ -96,7 +96,7 @@ class AnomalyOpenVINO(OVModel):
 
     def __init__(
         self,
-        model_name: str,
+        model_path: str,
         async_inference: bool = True,
         max_num_requests: int | None = None,
         use_throughput_mode: bool = True,
@@ -111,7 +111,7 @@ class AnomalyOpenVINO(OVModel):
         **kwargs,
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type="AnomalyDetection",
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -134,7 +134,7 @@ class AnomalyOpenVINO(OVModel):
 
         model_adapter = OpenvinoAdapter(
             create_core(),
-            self.model_name,
+            self.model_path,
             max_num_requests=self.num_requests,
             plugin_config=plugin_config,
         )
