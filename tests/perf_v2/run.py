@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import subprocess
 from pathlib import Path
+import sys
 
 from otx.core.types.task import OTXTaskType
 from tests.perf_v2 import DATASET_COLLECTIONS, MODEL_COLLECTIONS
@@ -41,7 +42,7 @@ if __name__ == "__main__":
             for seed in range(args.num_repeat):
                 subprocess.run(
                     [  # noqa: S603, S607
-                        "python",
+                        sys.executable,
                         "-m",
                         "tests.perf_v2.benchmark",
                         "--task",
