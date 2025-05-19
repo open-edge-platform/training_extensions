@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.4.4\]
+
+### Bug fixes
+
+- Fix torch.load() to be able to load all OTX custom snapshots
+  (<https://github.com/open-edge-platform/training_extensions/pull/4392>)
+
 ## \[2.4.3\]
 
 ### Enhancements
