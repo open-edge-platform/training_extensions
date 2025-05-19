@@ -13,6 +13,7 @@ import cv2
 import pytest
 from model_api.models import Model
 
+from otx.backend.openvino.engine import OVEngine
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.export import OTXExportFormatType
@@ -206,7 +207,13 @@ class TestEngineAPI:
             exported_path=exported_path,
             dst_dir=fp32_export_dir,
         )
-        optimized_path = self.engine.optimize(
+        # instantiate the OpenVINO engine
+        ov_engine = OVEngine(
+            model=fp32_export_dir / "exported_model.xml",
+            data=self.engine.datamodule,
+            work_dir=self.tmp_path,
+        )
+        optimized_path = ov_engine.optimize(
             checkpoint=fp32_export_dir / "exported_model.xml",
             export_demo_package=True,
         )

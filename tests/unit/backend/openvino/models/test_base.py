@@ -12,21 +12,21 @@ from model_api.models.result import ClassificationResult
 from pytest_mock import MockerFixture
 
 from otx.backend.openvino.models import OVModel
-from otx.data.torch import TorchDataBatch
+from otx.data import OTXDataBatch
 from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
 
 class TestOVModel:
     @pytest.fixture()
-    def input_batch(self) -> TorchDataBatch:
+    def input_batch(self) -> OTXDataBatch:
         image = [torch.rand(3, 10, 10) for _ in range(3)]
-        return TorchDataBatch(3, image, [])
+        return OTXDataBatch(3, image, [])
 
     @pytest.fixture()
     def model(self) -> OVModel:
         with tempfile.TemporaryDirectory() as tmp_dir:
             ov.save_model(get_dummy_ov_cls_model(), f"{tmp_dir}/model.xml")
-            return OVModel(model_name=f"{tmp_dir}/model.xml", model_type="Classification")
+            return OVModel(model_path=f"{tmp_dir}/model.xml", model_type="Classification")
 
     def test_create_model(self, model) -> None:
         pass

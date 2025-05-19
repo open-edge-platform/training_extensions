@@ -20,9 +20,9 @@ from anomalib.metrics import create_metric_collection
 from lightning import Callback, Trainer
 from torchvision.transforms.functional import resize
 
+from otx.backend.openvino.models import OVModel
 from otx.core.data.module import OTXDataModule
 from otx.core.metrics.types import MetricCallable, NullMetricCallable
-from otx.backend.openvino.models import OVModel
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.data import OTXDataBatch
@@ -122,7 +122,7 @@ class AnomalyOpenVINO(OVModel):
         metric_names = ["AUROC", "F1Score"]
         self.image_metrics: AnomalibMetricCollection = create_metric_collection(metric_names, prefix="image_")
         self.pixel_metrics: AnomalibMetricCollection = create_metric_collection(metric_names, prefix="pixel_")
-        self.task = task
+        self._task = task
 
     def _create_model(self) -> Model:
         from model_api.adapters import OpenvinoAdapter, create_core, get_user_config
