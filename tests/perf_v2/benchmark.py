@@ -392,6 +392,9 @@ class Benchmark:
 
             # Run training if not in resume operation
             if "train" not in copied_ops_dir:
+                if sub_work_dir.exists():
+                    shutil.rmtree(sub_work_dir)
+
                 e2e_train_time = self.train(
                     model_info=model_info,
                     dataset_info=dataset_info,

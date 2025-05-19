@@ -125,7 +125,7 @@ def current_date_str() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
-def setup_output_root(config: Namespace, current_date: str, task: OTXTaskType) -> Path:
+def setup_output_root(config: Namespace, task: OTXTaskType) -> Path:
     """Setup output root directory.
 
     Args:
@@ -141,7 +141,7 @@ def setup_output_root(config: Namespace, current_date: str, task: OTXTaskType) -
         # Use a temporary directory if output_root not provided
         temp_dir = tempfile.TemporaryDirectory()
         output_root = Path(temp_dir.name)
-    output_root = Path(output_root) / current_date / task.value
+    output_root = Path(output_root) / task.value
     logger.info(f"output_root = {output_root}")
     output_root.mkdir(parents=True, exist_ok=True)
     return output_root
