@@ -26,7 +26,7 @@ pd.set_option("display.width", None)
 logger = logging.getLogger(__name__)
 
 TASK_METRIC_MAP = {
-    OTXTaskType.ANOMALY: "f1-score",  # perf v2 uses single anomaly task
+    OTXTaskType.ANOMALY: "image_F1Score",  # perf v2 uses single anomaly task
     OTXTaskType.MULTI_CLASS_CLS: "accuracy",
     OTXTaskType.MULTI_LABEL_CLS: "accuracy",
     OTXTaskType.H_LABEL_CLS: "accuracy",
