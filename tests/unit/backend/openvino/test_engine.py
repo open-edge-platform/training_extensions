@@ -87,7 +87,10 @@ class TestEngine:
     @pytest.mark.parametrize("explain", [True, False])
     def test_predict(self, fxt_engine, tmp_path, explain, mocker: MockerFixture) -> None:
         checkpoint = f"{tmp_path}/model.xml"
-        _ = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline")
+        _ = mocker.patch(
+            "otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
+            return_value=fxt_engine.datamodule,
+        )
         mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
         mock_get_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
@@ -109,7 +112,7 @@ class TestEngine:
             fxt_engine.predict(checkpoint=checkpoint)
 
     def test_optimizing_model(self, fxt_engine, mocker) -> None:
-        with pytest.raises(RuntimeError, match="supports only OV IR or ONNX checkpoints"):
+        with pytest.raises(RuntimeError, match="supports only OV IR checkpoints"):
             fxt_engine.optimize(checkpoint="path/to/model.pth")
 
         mocker.patch(
@@ -119,6 +122,7 @@ class TestEngine:
         mock_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
         mock_model = MagicMock()
         mock_ov_model.return_value = mock_model
+        fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
 
         # Fetch Checkpoint
         fxt_engine.optimize(checkpoint="path/to/exported_model.xml")

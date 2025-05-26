@@ -1,16 +1,3 @@
-model:
-  class_path: otx.core.model.multilabel_classification.OVMultilabelClassificationModel
-  init_args:
-    label_info: 1000
-    model_name: openvino.xml
-    async_inference: true
-    use_throughput_mode: false
-    model_type: Classification
-
-engine:
-  task: MULTI_LABEL_CLS
-  device: cpu
-
 callback_monitor: val/accuracy
 
 data: ../../_base_/data/torchvision_base.yaml

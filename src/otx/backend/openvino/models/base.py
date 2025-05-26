@@ -85,11 +85,11 @@ class OVModel:
         self.num_requests = max_num_requests or get_default_num_async_infer_requests()
         self.use_throughput_mode = use_throughput_mode
         self.model_api_configuration = model_api_configuration or {}
+        self.hparams: dict[str, Any] = {}
         self.model = self._create_model()
         self.metric_callable = metric
         self._label_info = self._create_label_info_from_ov_ir()
         self._task: OTXTaskType | None = None
-        self.hparams: dict[str, Any] = {}
         tile_enabled = False
         with contextlib.suppress(RuntimeError):
             if isinstance(self.model, Model):

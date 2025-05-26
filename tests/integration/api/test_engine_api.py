@@ -110,16 +110,10 @@ def test_engine_from_config(
     assert exported_model_with_explain.exists()
 
     # Infer IR Model with explain: predict
-    predictions = engine.predict(explain=True, checkpoint=exported_model_with_explain, accelerator="cpu")
+    predictions = ov_engine.predict(explain=True, checkpoint=exported_model_with_explain)
     assert len(predictions) > 0
     sal_maps_from_prediction = predictions[0].saliency_map
     assert len(sal_maps_from_prediction) > 0
-
-    # Infer IR Model with explain: explain
-    explain_results = engine.explain(checkpoint=exported_model_with_explain, accelerator="cpu")
-    assert len(explain_results[0].saliency_map) > 0
-    sal_maps_from_explain = explain_results[0].saliency_map
-    assert (sal_maps_from_prediction[0][0] == sal_maps_from_explain[0][0]).all()
 
 
 @pytest.mark.parametrize("recipe", pytest.TILE_RECIPE_LIST)
@@ -153,7 +147,10 @@ def test_engine_from_tile_recipe(
     engine.train(max_epochs=1)
     exported_model_path = engine.export()
     assert exported_model_path.exists()
-    metric = engine.test(exported_model_path, accelerator="cpu")
+
+    # Check OVEngine with tiling
+    ov_engine = OVEngine(data=engine.datamodule, model=exported_model_path)
+    metric = ov_engine.test()
     assert len(metric) > 0
 
     # Check OVModel & OVTiler is set correctly

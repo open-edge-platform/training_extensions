@@ -373,7 +373,7 @@ class AutoConfigurator:
 
         return None
 
-    def get_ov_model(self, model_name: PathLike, task: str | OTXTaskType | None = None) -> OVModel:
+    def get_ov_model(self, model_name: PathLike, task: OTXTaskType | None = None) -> OVModel:
         """Retrieves the OVModel instance based on the given model name and label information.
 
         Args:
@@ -387,9 +387,9 @@ class AutoConfigurator:
             NotImplementedError: If the OVModel for the given task is not supported.
         """
         task = task if task is not None else self.task
-        class_path = OVMODEL_PER_TASK.get(self.task, None)
+        class_path = OVMODEL_PER_TASK.get(task, None)
         if class_path is None:
-            msg = f"{self.task} doesn't support OVModel."
+            msg = f"{task} doesn't support OVModel."
             raise NotImplementedError(msg)
         class_module, class_name = class_path.rsplit(".", 1)
         module = __import__(class_module, fromlist=[class_name])

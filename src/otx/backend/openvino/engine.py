@@ -51,13 +51,12 @@ class OVEngine(Engine):
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
         """
         self._work_dir = work_dir
-        if isinstance(model, str) and model.endswith(".xml"):
-            task: OTXTaskType = self._derive_task_from_ir(model)
+        if isinstance(model, (str, os.PathLike)) and Path(model).suffix in [".xml"]:
+            task: OTXTaskType | None = self._derive_task_from_ir(model)
         elif isinstance(model, OVModel):
             task = model.task  # type: ignore[assignment]
         else:
-            msg = "Model should be either a valid XML path or an instance of OVModel."
-            raise ValueError(msg)
+            task = None
 
         self._auto_configurator = AutoConfigurator(
             data_root=data if isinstance(data, (str, os.PathLike)) else None,
@@ -65,7 +64,7 @@ class OVEngine(Engine):
         )
 
         if isinstance(data, OTXDataModule):
-            if data.task != task:
+            if task is not None and data.task != task:
                 msg = (
                     "The task of the provided datamodule does not match the task derived from the model. "
                     f"datamodule.task={data.task}, model.task={task}"
@@ -75,7 +74,9 @@ class OVEngine(Engine):
         else:
             self._datamodule = self._auto_configurator.get_datamodule()
         if model is not None:
-            self._model: OVModel = model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
+            self._model: OVModel | None = (
+                model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
+            )
         else:
             self._model = None
 
@@ -99,13 +100,11 @@ class OVEngine(Engine):
             raise ValueError(msg)
 
         task_type = rt_info.find(".//task_type").attrib.get("value")
-        multilabel = rt_info.find(".//multilabel").attrib.get("value") == "True"
-        hierarchical = rt_info.find(".//hierarchical").attrib.get("value") == "True"
 
         if task_type == "classification":
-            if hierarchical:
+            if rt_info.find(".//hierarchical").attrib.get("value") == "True":
                 task_name = "H_LABEL_CLS"
-            elif multilabel:
+            elif rt_info.find(".//multilabel").attrib.get("value") == "True":
                 task_name = "MULTI_LABEL_CLS"
             else:
                 task_name = "MULTI_CLASS_CLS"
@@ -125,7 +124,12 @@ class OVEngine(Engine):
 
     def train(self, *args, **kwargs) -> METRICS:
         """Train method is not supported for OVEngine."""
-        msg = "OVEngine does not support training. Use test or predict methods to evaluate IR/ONNX model."
+        msg = "OVEngine does not support training. Use test or predict methods to evaluate IR model."
+        raise NotImplementedError(msg)
+
+    def export(self, *args, **kwargs) -> METRICS:
+        """Export method is not supported for OVEngine."""
+        msg = "OVEngine does not support export."
         raise NotImplementedError(msg)
 
     def test(
@@ -165,6 +169,10 @@ class OVEngine(Engine):
             msg = "Please provide the `data` when creating the Engine, or pass it in OVEngine.test()."
             raise RuntimeError(msg)
 
+        datamodule = self._auto_configurator.update_ov_subset_pipeline(
+            datamodule=datamodule,
+            subset="test",
+        )
         model = self._update_checkpoint(checkpoint)
         metric = metric or model.metric_callable
 
@@ -189,7 +197,11 @@ class OVEngine(Engine):
             for data_batch in dataloader:
                 preds = model(data_batch)
                 metric_inputs = model.prepare_metric_inputs(preds, data_batch)
-                metric_callable.update(**metric_inputs)
+                if isinstance(metric_inputs, list):
+                    for metric_input in metric_inputs:
+                        metric_callable.update(**metric_input)
+                else:
+                    metric_callable.update(**metric_inputs)
                 progress.update(task, advance=1)
 
         return model.compute_metrics(metric_callable)
@@ -239,6 +251,10 @@ class OVEngine(Engine):
                         f"datamodule.label_info={self.datamodule.label_info}"
                     )
                     raise ValueError(msg)
+                datamodule = self._auto_configurator.update_ov_subset_pipeline(
+                    datamodule=datamodule,
+                    subset="test",
+                )
                 dataloader = datamodule.test_dataloader()
                 task = progress.add_task("Predicting", total=len(dataloader))
                 for data_batch in dataloader:
@@ -320,7 +336,7 @@ class OVEngine(Engine):
             check_model = True
         elif isinstance(model, (str, os.PathLike)):
             model_path = Path(model)
-            check_model = model_path.suffix in [".xml", ".onnx"]
+            check_model = model_path.suffix in [".xml"]
         if isinstance(data, OTXDataModule):
             check_data = True
         elif isinstance(data, (str, os.PathLike)):
@@ -333,7 +349,7 @@ class OVEngine(Engine):
         """Update the OVModel with the given checkpoint path.
 
         Args:
-            checkpoint (PathLike | None): The new IR XML or ONNX file path.
+            checkpoint (PathLike | None): The new IR XML file path.
 
         Returns:
             OVModel: The updated OVModel instance.
@@ -345,11 +361,12 @@ class OVEngine(Engine):
         if checkpoint is None and self.model is None:
             msg = "Please provide either a model or a checkpoint path."
             raise ValueError(msg)
-        if checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml", ".onnx"]:
-            msg = "OV Engine supports only OV IR or ONNX checkpoints"
+        if checkpoint is not None and Path(str(checkpoint)).suffix not in [".xml"]:
+            msg = "OV Engine supports only OV IR checkpoints"
             raise RuntimeError(msg)
         if checkpoint is not None:
-            return self._auto_configurator.get_ov_model(model_name=str(checkpoint))
+            task = self._derive_task_from_ir(checkpoint)
+            return self._auto_configurator.get_ov_model(model_name=str(checkpoint), task=task)
 
         return self.model  # type: ignore[return-value]
 
@@ -429,7 +446,7 @@ class OVEngine(Engine):
             ValueError: If the datamodule task does not match the model task.
             TypeError: If the datamodule type is unsupported.
         """
-        if isinstance(datamodule, OTXDataModule) and datamodule.task != self._model.task:
+        if isinstance(datamodule, OTXDataModule) and self._model is not None and datamodule.task != self._model.task:
             msg = (
                 "The task of the provided datamodule does not match the task derived from the model. "
                 f"datamodule.task={datamodule.task}, model.task={self._model.task}"
