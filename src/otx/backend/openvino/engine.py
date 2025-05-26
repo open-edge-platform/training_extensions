@@ -21,12 +21,14 @@ from otx.core.data.entity.base import ImageInfo
 from otx.core.data.module import OTXDataModule
 from otx.core.types import OTXTaskType, PathLike
 from otx.data.torch import OTXDataBatch
+from otx.engine import Engine
 
 if TYPE_CHECKING:
     from otx.core.metrics import MetricCallable
+    from otx.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 
-class OVEngine:
+class OVEngine(Engine):
     """OV Engine.
 
     This class defines the OV Engine for OTX, which governs each step of the OpenVINO validation workflow.
@@ -38,13 +40,14 @@ class OVEngine:
         model: OVModel | PathLike | None = None,
         work_dir: PathLike = "./otx-workspace",
     ):
-        """Initializes the OTX Engine.
+        """Initialize the OVEngine.
 
         Args:
             data (OTXDataModule | PathLike | None, optional): The data module or path to the data root.
-                If path is provided, Engine will automatically create a datamodule based on the data root and model.
-            model (OTXModel | str | None, optional): The OV model for the engine.
-                PathLike object to OpenVINO IR XML file can be provided. Defaults to None.
+                If a path is provided, the engine will automatically create a datamodule
+                based on the data root and model.
+            model (OVModel | PathLike | None, optional): The OV model for the engine.
+                A PathLike object to an OpenVINO IR XML file can also be provided. Defaults to None.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
         """
         self._work_dir = work_dir
@@ -77,27 +80,28 @@ class OVEngine:
             self._model = None
 
     def _derive_task_from_ir(self, ir_xml: PathLike) -> OTXTaskType:
-        """Derives the task from the IR model.
+        """Derive the task type from the IR model XML file.
 
         Args:
-            model (PathLike): Path to the IR model.
+            ir_xml (PathLike): Path to the IR model XML file.
 
         Returns:
-            str: The derived task.
+            OTXTaskType: The derived task type.
+
+        Raises:
+            ValueError: If the task type is unsupported or the XML file is invalid.
         """
         tree = Elet.parse(ir_xml)
         root = tree.getroot()
-        # Find <rt_info>
         rt_info = root.find("rt_info")
         if rt_info is None:
             msg = "No <rt_info> found in the IR model XML file. Please check the model file."
             raise ValueError(msg)
 
-        # Extract values
         task_type = rt_info.find(".//task_type").attrib.get("value")
         multilabel = rt_info.find(".//multilabel").attrib.get("value") == "True"
         hierarchical = rt_info.find(".//hierarchical").attrib.get("value") == "True"
-        # Derive task name
+
         if task_type == "classification":
             if hierarchical:
                 task_name = "H_LABEL_CLS"
@@ -119,27 +123,36 @@ class OVEngine:
 
         return OTXTaskType(task_name)
 
+    def train(self, *args, **kwargs) -> METRICS:
+        """Train method is not supported for OVEngine."""
+        msg = "OVEngine does not support training. Use test or predict methods to evaluate IR/ONNX model."
+        raise NotImplementedError(msg)
+
     def test(
         self,
         data: OTXDataModule | PathLike | None = None,
         checkpoint: PathLike | None = None,
         metric: MetricCallable | None = None,
-    ) -> dict:
-        r"""Run the testing phase of the engine.
+        **kwargs,
+    ) -> METRICS:
+        """Run the testing phase of the engine.
 
         Args:
-            data (OTXDataModule | None, optional): The data to test on. It can be a data module
+            data (OTXDataModule | PathLike | None, optional): The data to test on. It can be a data module
                 or a path to the data root. If a path is provided, the engine will automatically
                 create a datamodule based on the data root and model.
             checkpoint (PathLike | None, optional): Path to the checkpoint file to load the model from.
                 Defaults to None.
-            metric (MetricCallable | None): If not None, it will override `OTXModel.metric_callable` with the given
-                metric callable. It will temporarilly change the evaluation metric for the validation and test.
-            **kwargs: Additional keyword arguments for pl.Trainer configuration.
+            metric (MetricCallable | None, optional): If provided, overrides `OTXModel.metric_callable` with the given
+                metric callable for evaluation.
 
         Returns:
-            dict: Dictionary containing the metrics after testing.
+            METRICS: The computed metrics after testing the model on the provided data.
+                (dictionary of metric names and values)
 
+        Raises:
+            RuntimeError: If required data or metric is not provided.
+            ValueError: If label information between model and datamodule does not match.
         """
         if isinstance(data, (str, os.PathLike)):
             datamodule = self._auto_configurator.get_datamodule(data_root=data)
@@ -187,17 +200,24 @@ class OVEngine:
         checkpoint: PathLike | None = None,
         explain: bool = False,
         explain_config: ExplainConfig | None = None,
-    ) -> list | None:
-        r"""Run predictions using the specified model and data.
+        **kwargs,
+    ) -> ANNOTATIONS:
+        """Run predictions using the specified model and data.
 
         Args:
-            data (OTXDataModule | np.array): The data module or an numpy image to use for predictions.
+            data (OTXDataModule | PathLike | list[np.array] | None, optional): The data module, path to data root,
+                or a list of numpy images to use for predictions.
             checkpoint (PathLike | None, optional): The path to the IR XML file to load the model from.
-            explain (bool, optional): Whether to dump "saliency_map" and "feature_vector" or not.
-            explain_config (ExplainConfig | None, optional): Explain configuration used for saliency map post-processing
+            explain (bool, optional): Whether to generate "saliency_map" and "feature_vector". Defaults to False.
+            explain_config (ExplainConfig | None, optional): Configuration for saliency map post-processing.
 
         Returns:
-            list: The predictions.
+            ANNOTATIONS: The predictions made by the model on the provided data.
+                (list of OTXPredEntity)
+
+        Raises:
+            ValueError: If input data is invalid or label information does not match.
+            TypeError: If input data type is unsupported.
         """
         from otx.algo.utils.xai_utils import process_saliency_maps_in_pred_entity, set_crop_padded_map_flag
 
@@ -226,7 +246,6 @@ class OVEngine:
                     progress.update(task, advance=1)
 
             elif isinstance(datamodule, list):
-                # list of numpy images will be considered as 1 batch
                 task = progress.add_task("Predicting", total=1)
                 if len(datamodule) == 0:
                     msg = "The input data is empty."
@@ -236,9 +255,7 @@ class OVEngine:
                     raise TypeError(msg)
                 customized_inputs = OTXDataBatch(
                     batch_size=len(datamodule),
-                    images=[
-                        torch.tensor(img) for img in datamodule
-                    ],  # TODO(@kprokofi): remove torch after numpy support
+                    images=[torch.tensor(img) for img in datamodule],
                     imgs_info=[
                         ImageInfo(img_idx=i, ori_shape=img.shape, img_shape=img.shape)
                         for i, img in enumerate(datamodule)
@@ -264,20 +281,18 @@ class OVEngine:
         datamodule: OTXDataModule | None = None,
         max_data_subset_size: int | None = None,
     ) -> Path:
-        r"""Applies NNCF.PTQ to the underlying models (now works only for OV models).
+        """Apply Post-Training Quantization (PTQ) to optimize the model.
 
-        PTQ performs int-8 quantization on the input model, so the resulting model
-        comes in mixed precision (some operations, however, remain in FP32).
+        PTQ performs int-8 quantization on the input model, resulting in mixed precision.
 
         Args:
-            checkpoint (str | Path | None, optional): Checkpoint to optimize. Defaults to None.
-            datamodule (TRAIN_DATALOADERS | OTXDataModule | None, optional): The data module to use for optimization.
-            max_data_subset_size (int | None): The maximum size of the train subset from `datamodule` that would be
-            used for model optimization. If not set, NNCF.PTQ will select subset size according to it's
-            default settings.
+            checkpoint (PathLike | None, optional): Checkpoint to optimize. Defaults to None.
+            datamodule (OTXDataModule | None, optional): The data module to use for optimization.
+            max_data_subset_size (int | None, optional): Maximum size of the train subset used for optimization.
+                Defaults to None.
 
         Returns:
-            Path: path to the optimized model.
+            Path: Path to the optimized model.
         """
         optimize_datamodule = datamodule if datamodule is not None else self.datamodule
         model = self._update_checkpoint(checkpoint)
@@ -296,14 +311,36 @@ class OVEngine:
             ptq_config,
         )
 
+    @staticmethod
+    def is_supported(model: MODEL, data: DATA) -> bool:
+        """Check if the engine is supported for the given model and data."""
+        check_model = False
+        check_data = False
+        if isinstance(model, OVModel):
+            check_model = True
+        elif isinstance(model, (str, os.PathLike)):
+            model_path = Path(model)
+            check_model = model_path.suffix in [".xml", ".onnx"]
+        if isinstance(data, OTXDataModule):
+            check_data = True
+        elif isinstance(data, (str, os.PathLike)):
+            data_path = Path(data)
+            check_data = data_path.is_dir()
+
+        return check_model and check_data
+
     def _update_checkpoint(self, checkpoint: PathLike | None) -> OVModel:
         """Update the OVModel with the given checkpoint path.
 
         Args:
-            checkpoint (PathLike): The new IR XML file path.
+            checkpoint (PathLike | None): The new IR XML or ONNX file path.
 
         Returns:
-            None
+            OVModel: The updated OVModel instance.
+
+        Raises:
+            ValueError: If no model or checkpoint is provided.
+            RuntimeError: If the checkpoint file format is unsupported.
         """
         if checkpoint is None and self.model is None:
             msg = "Please provide either a model or a checkpoint path."
@@ -318,31 +355,41 @@ class OVEngine:
 
     @property
     def work_dir(self) -> PathLike:
-        """Work directory."""
+        """Get the working directory.
+
+        Returns:
+            PathLike: The working directory path.
+        """
         return self._work_dir
 
     @work_dir.setter
     def work_dir(self, work_dir: PathLike) -> None:
+        """Set the working directory.
+
+        Args:
+            work_dir (PathLike): The new working directory path.
+        """
         self._work_dir = work_dir
 
     @property
     def model(self) -> OVModel | None:
-        """Returns the model object associated with the engine.
+        """Get the model associated with the engine.
 
         Returns:
-            OVModel: The OVModel object.
+            OVModel | None: The OVModel object or None if not set.
         """
         return self._model
 
     @model.setter
     def model(self, model: OVModel | PathLike) -> None:
-        """Sets the model for the engine.
+        """Set the model for the engine.
 
         Args:
             model (OVModel | PathLike): The model to be set.
 
-        Returns:
-            None
+        Raises:
+            ValueError: If the model path is invalid.
+            TypeError: If the model type is unsupported.
         """
         if isinstance(model, (str, os.PathLike)):
             if not str(model).endswith(".xml"):
@@ -358,10 +405,13 @@ class OVEngine:
 
     @property
     def datamodule(self) -> OTXDataModule:
-        """Returns the datamodule object associated with the engine.
+        """Get the datamodule associated with the engine.
 
         Returns:
             OTXDataModule: The OTXDataModule object.
+
+        Raises:
+            RuntimeError: If the datamodule is not set.
         """
         if self._datamodule is None:
             msg = "Please include the `data_root` or `datamodule` when creating the Engine."
@@ -370,13 +420,14 @@ class OVEngine:
 
     @datamodule.setter
     def datamodule(self, datamodule: OTXDataModule | PathLike) -> None:
-        """Sets the datamodule for the engine.
+        """Set the datamodule for the engine.
 
         Args:
             datamodule (OTXDataModule | PathLike): The datamodule to be set.
 
-        Returns:
-            None
+        Raises:
+            ValueError: If the datamodule task does not match the model task.
+            TypeError: If the datamodule type is unsupported.
         """
         if isinstance(datamodule, OTXDataModule) and datamodule.task != self._model.task:
             msg = (

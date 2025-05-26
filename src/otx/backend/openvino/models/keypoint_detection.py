@@ -3,8 +3,6 @@
 #
 """Class definition for keypoint detection model entity used in OTX."""
 
-# type: ignore[override]
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

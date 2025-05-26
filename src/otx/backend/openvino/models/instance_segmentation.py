@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for instance segmentation model entity used in OTX."""
 
-# type: ignore[override]
-
 from __future__ import annotations
 
 import logging as log
