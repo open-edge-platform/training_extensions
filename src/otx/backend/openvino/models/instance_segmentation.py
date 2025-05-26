@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for instance segmentation model entity used in OTX."""
 
@@ -30,9 +30,7 @@ if TYPE_CHECKING:
     from otx.core.types import PathLike
 
 
-class OVInstanceSegmentationModel(
-    OVModel,
-):
+class OVInstanceSegmentationModel(OVModel):
     """Instance segmentation model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
@@ -50,6 +48,18 @@ class OVInstanceSegmentationModel(
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
         **kwargs,
     ) -> None:
+        """Initialize the instance segmentation model.
+
+        Args:
+            model_path (PathLike): Path to the OpenVINO IR model.
+            model_type (str): Type of the model (default: "MaskRCNN").
+            async_inference (bool): Whether to use asynchronous inference (default: True).
+            max_num_requests (int | None): Maximum number of inference requests (default: None).
+            use_throughput_mode (bool): Whether to use throughput mode (default: True).
+            model_api_configuration (dict[str, Any] | None): Model API configuration (default: None).
+            metric (MetricCallable): Metric callable for evaluation (default: MaskRLEMeanAPFMeasureCallable).
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             model_path=model_path,
             model_type=model_type,
@@ -62,10 +72,13 @@ class OVInstanceSegmentationModel(
         self._task = OTXTaskType.INSTANCE_SEGMENTATION
 
     def _setup_tiler(self) -> None:
-        """Setup tiler for tile task."""
+        """Set up the tiler for tiled inference.
+
+        This method configures the tiler for the instance segmentation task,
+        enabling tiled inference with specified tile size and overlap.
+        """
         execution_mode = "async" if self.async_inference else "sync"
-        # Note: Disable async_inference as tiling has its own sync/async implementation
-        self.async_inference = False
+        self.async_inference = False  # Disable async_inference as tiling has its own implementation
         self.model = InstanceSegmentationTiler(self.model, execution_mode=execution_mode)
         log.info(
             f"Enable tiler with tile size: {self.model.tile_size} \
@@ -73,10 +86,13 @@ class OVInstanceSegmentationModel(
         )
 
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
-        """Reads model configuration from ModelAPI OpenVINO adapter.
+        """Retrieve hyperparameters from the OpenVINO adapter.
 
         Args:
-            model_adapter (OpenvinoAdapter): target adapter to read the config
+            model_adapter (OpenvinoAdapter): The OpenVINO adapter to read the configuration from.
+
+        This method reads the confidence threshold from the model's runtime information
+        and updates the hyperparameters accordingly.
         """
         if model_adapter.model.has_rt_info(["model_info", "confidence_threshold"]):
             best_confidence_threshold = model_adapter.model.get_rt_info(["model_info", "confidence_threshold"]).value
@@ -96,7 +112,15 @@ class OVInstanceSegmentationModel(
         outputs: list[InstanceSegmentationResult],
         inputs: OTXDataBatch,
     ) -> OTXPredBatch:
-        # add label index
+        """Customize the model outputs for OTX compatibility.
+
+        Args:
+            outputs (list[InstanceSegmentationResult]): Model outputs.
+            inputs (OTXDataBatch): Input data batch.
+
+        Returns:
+            OTXPredBatch: Customized predictions batch.
+        """
         bboxes = []
         scores = []
         labels = []
@@ -110,8 +134,6 @@ class OVInstanceSegmentationModel(
                     dtype=torch.float32,
                 ),
             )
-            # NOTE: OTX 1.5 filter predictions with result_based_confidence_threshold,
-            # but OTX 2.0 doesn't have it in configuration.
             scores.append(torch.tensor(output.scores.reshape(-1)))
             masks.append(torch.tensor(output.masks))
             labels.append(torch.tensor(output.labels.reshape(-1) - 1, dtype=torch.long))
@@ -125,7 +147,6 @@ class OVInstanceSegmentationModel(
                 )
                 predicted_s_maps.append(image_map)
 
-            # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return OTXPredBatch(
                 batch_size=len(outputs),
@@ -154,26 +175,25 @@ class OVInstanceSegmentationModel(
         preds: OTXPredBatch,  # type: ignore[override]
         inputs: OTXDataBatch,  # type: ignore[override]
     ) -> MetricInput:
-        """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
+        """Prepare inputs for metric computation.
 
-        This function will convert mask to RLE format and cache the ground truth for the current batch.
+        Converts predictions and ground truth to the format required by the metric
+        and caches the ground truth for the current batch.
 
         Args:
             preds (OTXPredBatch): Current batch predictions.
             inputs (OTXDataBatch): Current batch ground-truth inputs.
 
         Returns:
-            dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
+            MetricInput: Dictionary containing predictions and ground truth.
         """
         target_info = []
 
-        _bboxes = preds.bboxes if preds.bboxes is not None else None
-        _masks = preds.masks if preds.masks is not None else None
         pred_info = [
             {
-                "boxes": _bboxes[idx].data if _bboxes is not None else torch.empty((0, 4)),
-                "masks": [encode_rle(mask) for mask in _masks[idx].data]
-                if _masks is not None and len(_masks)
+                "boxes": preds.bboxes[idx].data if preds.bboxes is not None else torch.empty((0, 4)),
+                "masks": [encode_rle(mask) for mask in preds.masks[idx].data]
+                if preds.masks is not None and len(preds.masks)
                 else torch.empty((0,)),
                 "scores": preds.scores[idx],  # type: ignore[index]
                 "labels": preds.labels[idx],  # type: ignore[index]
@@ -181,36 +201,48 @@ class OVInstanceSegmentationModel(
             for idx in range(len(preds.labels))  # type: ignore[arg-type]
         ]
 
-        _bboxes = inputs.bboxes if inputs.bboxes is not None else None
-        _masks = inputs.masks if inputs.masks is not None else None
         for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
             rles = (
-                [encode_rle(mask) for mask in _masks[idx].data]
-                if _masks is not None and len(_masks[idx]) > 0
+                [encode_rle(mask) for mask in inputs.masks[idx].data]
+                if inputs.masks is not None and len(inputs.masks[idx]) > 0
                 else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
             )
             target_info.append(
                 {
-                    "boxes": _bboxes[idx].data if _bboxes is not None else torch.empty((0, 4)),
+                    "boxes": inputs.bboxes[idx].data if inputs.bboxes is not None else torch.empty((0, 4)),
                     "masks": rles,
                     "labels": inputs.labels[idx],  # type: ignore[index]
                 },
             )
         return {"preds": pred_info, "target": target_info}
 
-    def compute_metrics(self, meter: Metric) -> dict:
-        """Compute metrics for the model."""
+    def compute_metrics(self, metric: Metric) -> dict:
+        """Compute evaluation metrics for the model.
+
+        Args:
+            metric (Metric): Metric object to compute the evaluation metrics.
+
+        Returns:
+            dict: Computed metrics.
+        """
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
-        return super()._compute_metrics(meter, **compute_kwargs)
+        return super()._compute_metrics(metric, **compute_kwargs)
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
+        """Create label information from the OpenVINO IR model.
+
+        Reads label information from the OpenVINO IR model's runtime information
+        and constructs a LabelInfo object.
+
+        Returns:
+            LabelInfo: Label information extracted from the OpenVINO IR model.
+        """
         ov_model = self.model.get_model()
 
         if ov_model.has_rt_info(["model_info", "label_info"]):
             serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
             ir_label_info = LabelInfo.from_json(serialized)
-            # workaround to hide extra otx_empty_lbl
             if ir_label_info.label_names[0] == "otx_empty_lbl":
                 ir_label_info.label_names.pop(0)
                 ir_label_info.label_ids.pop(0)

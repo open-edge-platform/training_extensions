@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for classification model entity used in OTX."""
 
@@ -41,6 +41,18 @@ class OVMultilabelClassificationModel(OVModel):
         metric: MetricCallable = MultiLabelClsMetricCallable,
         **kwargs,
     ) -> None:
+        """Initialize the multilabel classification model.
+
+        Args:
+            model_path (PathLike): Path to the OpenVINO IR model or model name from Intel OMZ.
+            model_type (str): Type of the model. Defaults to "Classification".
+            async_inference (bool): Whether to use asynchronous inference. Defaults to True.
+            max_num_requests (int | None): Maximum number of inference requests. Defaults to None.
+            use_throughput_mode (bool): Whether to use throughput mode. Defaults to True.
+            model_api_configuration (dict[str, Any] | None): Configuration for the model API. Defaults to None.
+            metric (MetricCallable): Metric callable for evaluation. Defaults to MultiLabelClsMetricCallable.
+            **kwargs: Additional keyword arguments.
+        """
         model_api_configuration = model_api_configuration if model_api_configuration else {}
         model_api_configuration.update({"multilabel": True, "confidence_threshold": 0.0})
         super().__init__(
@@ -59,6 +71,15 @@ class OVMultilabelClassificationModel(OVModel):
         outputs: list[ClassificationResult],
         inputs: OTXDataBatch,
     ) -> OTXPredBatch:
+        """Customize the outputs of the model for OTX compatibility.
+
+        Args:
+            outputs (list[ClassificationResult]): List of classification results from the model.
+            inputs (OTXDataBatch): Input batch containing images and metadata.
+
+        Returns:
+            OTXPredBatch: Customized prediction batch containing scores, saliency maps, and feature vectors.
+        """
         pred_scores = [torch.tensor([top_label.confidence for top_label in out.top_labels]) for out in outputs]
 
         if outputs and outputs[0].saliency_map.size != 0:
@@ -90,14 +111,16 @@ class OVMultilabelClassificationModel(OVModel):
         preds: OTXPredBatch,
         inputs: OTXDataBatch,
     ) -> MetricInput:
-        """Convert prediction and input entities to a format suitable for metric computation.
+        """Prepare inputs for metric computation.
+
+        Converts prediction and input entities to a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredBatch ): The predicted batch entity containing predicted labels.
-            inputs (OTXDataBatch ): The input batch entity containing ground truth labels.
+            preds (OTXPredBatch): The predicted batch entity containing predicted labels and scores.
+            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
 
         Returns:
-            MetricInput: A dictionary contains 'preds' and 'target' keys
+            MetricInput: A dictionary containing 'preds' and 'target' keys
             corresponding to the predicted and target labels for metric evaluation.
         """
         return {

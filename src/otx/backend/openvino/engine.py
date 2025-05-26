@@ -70,7 +70,7 @@ class OVEngine:
                 raise ValueError(msg)
             self._datamodule: OTXDataModule | None = data
         else:
-            self._datamodule = self._auto_configurator.get_datamodule() if data is not None else None
+            self._datamodule = self._auto_configurator.get_datamodule()
         if model is not None:
             self._model: OVModel = model if isinstance(model, OVModel) else self._auto_configurator.get_ov_model(model)
         else:
@@ -153,7 +153,7 @@ class OVEngine:
             raise RuntimeError(msg)
 
         model = self._update_checkpoint(checkpoint)
-        metric = metric if metric is not None else model.metric_callable
+        metric = metric or model.metric_callable
 
         if metric is None:
             msg = "Please provide a `metric` when creating a OVModel or pass it in OVEngine.test()."
@@ -205,7 +205,7 @@ class OVEngine:
         if isinstance(data, (str, os.PathLike)):
             data = self._auto_configurator.get_datamodule(data_root=data)
 
-        datamodule = data if data is not None else self.datamodule
+        datamodule = data or self.datamodule
 
         predict_result = []
         with Progress() as progress:

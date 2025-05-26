@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for detection model entity used in OTX."""
 
@@ -28,10 +28,61 @@ if TYPE_CHECKING:
 
 
 class OVDetectionModel(OVModel):
-    """Object detection model compatible for OpenVINO IR inference.
+    """OVDetectionModel: Object detection model compatible for OpenVINO IR inference.
 
-    It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX detection model compatible for OTX testing pipeline.
+    This class is designed to work with OpenVINO IR models or models from the Intel OMZ repository.
+    It provides compatibility with the OTX testing pipeline for object detection tasks.
+
+        Initialize the OVDetectionModel.
+
+            model_path (PathLike): Path to the OpenVINO IR model.
+            model_type (str): Type of the model (default: "SSD").
+            async_inference (bool): Whether to use asynchronous inference (default: True).
+            max_num_requests (int | None): Maximum number of inference requests (default: None).
+            use_throughput_mode (bool): Whether to use throughput mode (default: True).
+            model_api_configuration (dict[str, Any] | None): Configuration for the model API (default: None).
+            metric (MetricCallable): Metric callable for evaluation (default: MeanAveragePrecisionFMeasureCallable).
+            **kwargs: Additional keyword arguments.
+        ...
+
+        Setup the tiler for handling tiled inference tasks.
+
+        This method configures the tiler with the appropriate execution mode
+        and disables asynchronous inference as tiling has its own sync/async implementation.
+        ...
+
+        Extract hyperparameters from the OpenVINO model adapter.
+
+            model_adapter (OpenvinoAdapter): The adapter to extract model configuration from.
+
+        This method reads the confidence threshold from the model's runtime information (rt_info).
+        If unavailable, it logs a warning and sets the confidence threshold to None.
+        ...
+
+        Customize the outputs of the model to match the expected format.
+
+            outputs (list[DetectionResult]): List of detection results from the model.
+            inputs (OTXDataBatch): Input batch containing image and metadata.
+
+            OTXPredBatch: A batch of predictions including bounding boxes, scores, labels,
+            and optionally saliency maps and feature vectors.
+        ...
+
+        Prepare inputs for metric computation.
+
+            preds (OTXPredBatch): Predicted batch containing bounding boxes, scores, and labels.
+            inputs (OTXDataBatch): Input batch containing ground truth bounding boxes and labels.
+
+            MetricInput: A dictionary with 'preds' and 'target' keys containing
+            the predicted and ground truth bounding boxes and labels.
+        ...
+
+        Compute evaluation metrics for the model.
+
+            metric (Metric): Metric object used for evaluation.
+
+            dict: A dictionary containing computed metric values.
+        ...
     """
 
     def __init__(
@@ -91,6 +142,22 @@ class OVDetectionModel(OVModel):
         outputs: list[DetectionResult],
         inputs: OTXDataBatch,
     ) -> OTXPredBatch:
+        """Customize the outputs of the detection model.
+
+        Args:
+            outputs (list[DetectionResult]): A list of detection results containing bounding boxes,
+                scores, labels, saliency maps, and feature vectors.
+            inputs (OTXDataBatch): A batch of input data containing images and their metadata.
+
+        Returns:
+            OTXPredBatch: A batch of predictions containing processed bounding boxes, scores, labels,
+            and optionally saliency maps and feature vectors.
+
+        Notes:
+            - Adjusts label indices based on whether the first label is "background".
+            - Converts bounding boxes to the "XYXY" format and aligns them with the input image shape.
+            - Handles optional saliency maps and feature vectors if present in the outputs.
+        """
         # add label index
         bboxes = []
         scores = []
@@ -178,8 +245,8 @@ class OVDetectionModel(OVModel):
             ],
         }
 
-    def compute_metrics(self, meter: Metric) -> dict:
+    def compute_metrics(self, metric: Metric) -> dict:
         """Compute metrics for the model."""
         best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
         compute_kwargs = {"best_confidence_threshold": best_confidence_threshold}
-        return super()._compute_metrics(meter, **compute_kwargs)
+        return super()._compute_metrics(metric, **compute_kwargs)

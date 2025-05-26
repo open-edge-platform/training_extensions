@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for classification model entity used in OTX."""
 
@@ -43,6 +43,18 @@ class OVHlabelClassificationModel(OVModel):
         metric: MetricCallable = HLabelClsMetricCallable,
         **kwargs,
     ) -> None:
+        """Initialize the hierarchical classification model.
+
+        Args:
+            model_path (PathLike): Path to the OpenVINO IR model.
+            model_type (str): Type of the model (default: "Classification").
+            async_inference (bool): Whether to enable asynchronous inference (default: True).
+            max_num_requests (int | None): Maximum number of inference requests (default: None).
+            use_throughput_mode (bool): Whether to use throughput mode (default: True).
+            model_api_configuration (dict[str, Any] | None): Configuration for the model API (default: None).
+            metric (MetricCallable): Metric callable for evaluation (default: HLabelClsMetricCallable).
+            **kwargs: Additional keyword arguments.
+        """
         model_api_configuration = model_api_configuration if model_api_configuration else {}
         model_api_configuration.update({"hierarchical": True, "output_raw_scores": True})
         super().__init__(
@@ -61,6 +73,15 @@ class OVHlabelClassificationModel(OVModel):
         outputs: list[ClassificationResult],
         inputs: OTXDataBatch,
     ) -> OTXPredBatch:
+        """Customize the outputs of the model for hierarchical classification.
+
+        Args:
+            outputs (list[ClassificationResult]): List of classification results from the model.
+            inputs (OTXDataBatch): Input data batch.
+
+        Returns:
+            OTXPredBatch: Customized prediction batch containing labels, scores, and optional saliency maps.
+        """
         all_pred_labels = []
         all_pred_scores = []
         for output in outputs:
@@ -118,15 +139,16 @@ class OVHlabelClassificationModel(OVModel):
         preds: OTXPredBatch,
         inputs: OTXDataBatch,
     ) -> MetricInput:
-        """Convert prediction and input entities to a format suitable for metric computation.
+        """Prepare inputs for metric computation.
+
+        Converts predictions and ground truth inputs into a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredBatch): The predicted batch entity containing predicted labels.
-            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
+            preds (OTXPredBatch): Predicted batch containing labels and scores.
+            inputs (OTXDataBatch): Input batch containing ground truth labels.
 
         Returns:
-            MetricInput: A dictionary contains 'preds' and 'target' keys
-            corresponding to the predicted and target labels for metric evaluation.
+            MetricInput: A dictionary with 'preds' and 'target' keys for metric evaluation.
         """
         cls_heads_info = self.model.hierarchical_info["cls_heads_info"]
         num_multilabel_classes = cls_heads_info["num_multilabel_classes"]
@@ -143,6 +165,16 @@ class OVHlabelClassificationModel(OVModel):
         }
 
     def _create_label_info_from_ov_ir(self) -> HLabelInfo:
+        """Create hierarchical label information from OpenVINO IR.
+
+        Extracts label information from the OpenVINO IR model if available.
+
+        Returns:
+            HLabelInfo: Hierarchical label information.
+
+        Raises:
+            ValueError: If label information cannot be constructed from the OpenVINO IR.
+        """
         ov_model = self.model.get_model()
 
         if ov_model.has_rt_info(["model_info", "label_info"]):

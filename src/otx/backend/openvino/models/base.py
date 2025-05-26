@@ -1,8 +1,6 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for base model entity used in OTX."""
-
-# mypy: disable-error-code="arg-type"
 
 from __future__ import annotations
 
@@ -68,13 +66,25 @@ class OVModel:
         model_api_configuration: dict[str, Any] | None = None,
         metric: MetricCallable = NullMetricCallable,
     ) -> None:
+        """Initialize the OVModel instance.
+
+        Args:
+            model_path (PathLike): Path to the model file.
+            model_type (str): Type of the model.
+            async_inference (bool): Whether to enable asynchronous inference.
+            force_cpu (bool): Whether to force the use of CPU.
+            max_num_requests (int | None): Maximum number of inference requests.
+            use_throughput_mode (bool): Whether to use throughput mode.
+            model_api_configuration (dict[str, Any] | None): Configuration for the Model API.
+            metric (MetricCallable): Metric callable for evaluation.
+        """
         self.model_type = model_type
         self.model_path = model_path
         self.force_cpu = force_cpu
         self.async_inference = async_inference
-        self.num_requests = max_num_requests if max_num_requests is not None else get_default_num_async_infer_requests()
+        self.num_requests = max_num_requests or get_default_num_async_infer_requests()
         self.use_throughput_mode = use_throughput_mode
-        self.model_api_configuration = model_api_configuration if model_api_configuration is not None else {}
+        self.model_api_configuration = model_api_configuration or {}
         self.model = self._create_model()
         self.metric_callable = metric
         self._label_info = self._create_label_info_from_ov_ir()
@@ -89,18 +99,22 @@ class OVModel:
             self._setup_tiler()
 
     def _setup_tiler(self) -> None:
-        """Setup tiler for tile task."""
+        """Set up the tiler for tile-based tasks."""
         raise NotImplementedError
 
     def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
-        """Reads model configuration from ModelAPI OpenVINO adapter.
+        """Read model configuration from the ModelAPI OpenVINO adapter.
 
         Args:
-            model_adapter (OpenvinoAdapter): target adapter to read the config
+            model_adapter (OpenvinoAdapter): Target adapter to read the configuration.
         """
 
     def _create_model(self) -> Model:
-        """Create a OV model with help of Model API."""
+        """Create an OpenVINO model using the Model API.
+
+        Returns:
+            Model: The created OpenVINO model.
+        """
         ov_device = "CPU"
         ie = create_core()
         if not self.force_cpu:
@@ -129,7 +143,14 @@ class OVModel:
         return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
 
     def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
-        # restore original numpy image
+        """Customize the input data for the model.
+
+        Args:
+            entity (OTXDataBatch): Input data batch.
+
+        Returns:
+            dict[str, Any]: Customized input data.
+        """
         images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
         return {"inputs": images}
 
@@ -141,7 +162,7 @@ class OVModel:
         """Customize the model outputs to OTX format.
 
         Args:
-            outputs (list): The model outputs.
+            outputs (list[Result]): The model outputs.
             inputs (OTXDataBatch): The input batch entity.
 
         Returns:
@@ -154,7 +175,15 @@ class OVModel:
         )
 
     def forward(self, inputs: OTXDataBatch, async_inference: bool = True) -> OTXPredBatch:
-        """Model forward function."""
+        """Perform forward pass of the model.
+
+        Args:
+            inputs (OTXDataBatch): Input data batch.
+            async_inference (bool): Whether to use asynchronous inference.
+
+        Returns:
+            OTXPredBatch: Model predictions.
+        """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
         outputs = self.model.infer_batch(numpy_inputs) if async_inference else [self.model(im) for im in numpy_inputs]
@@ -168,13 +197,30 @@ class OVModel:
         ptq_config: dict[str, Any] | None = None,
         optimized_model_name: str = "optimized_model",
     ) -> Path:
-        """Runs NNCF quantization."""
+        """Optimize the model using NNCF quantization.
+
+        Args:
+            output_dir (Path): Directory to save the optimized model.
+            data_module (OTXDataModule): Data module for training data.
+            ptq_config (dict[str, Any] | None): PTQ configuration.
+            optimized_model_name (str): Name of the optimized model.
+
+        Returns:
+            Path: Path to the optimized model.
+        """
         import nncf
 
         output_model_path = output_dir / (optimized_model_name + ".xml")
 
         def check_if_quantized(model: openvino.Model) -> bool:
-            """Checks if OpenVINO model is already quantized."""
+            """Check if the OpenVINO model is already quantized.
+
+            Args:
+                model (openvino.Model): OpenVINO model.
+
+            Returns:
+                bool: True if the model is quantized, False otherwise.
+            """
             nodes = model.get_ops()
             return any(op.get_type_name() == "FakeQuantize" for op in nodes)
 
@@ -206,23 +252,29 @@ class OVModel:
         return output_model_path
 
     def transform_fn(self, data_batch: OTXDataBatch) -> np.array:
-        """Data transform function for PTQ."""
+        """Transform data for PTQ.
+
+        Args:
+            data_batch (OTXDataBatch): Input data batch.
+
+        Returns:
+            np.array: Transformed data.
+        """
         np_data = self._customize_inputs(data_batch)
         image = np_data["inputs"][0]
-        # NOTE: Tiler wraps the model, so we need to unwrap it to get the model
         model = self.model.model if isinstance(self.model, Tiler) else self.model
         resized_image = model.resize(image, (model.w, model.h))
         resized_image = model.input_transform(resized_image)
         return model._change_layout(resized_image)  # noqa: SLF001
 
     def _read_ptq_config_from_ir(self, ov_model: Model) -> dict[str, Any]:
-        """Generates the PTQ (Post-Training Quantization) configuration from the meta data of the given OpenVINO model.
+        """Generate PTQ configuration from the OpenVINO model metadata.
 
         Args:
-            ov_model (Model): The OpenVINO model in which the PTQ configuration is embedded.
+            ov_model (Model): OpenVINO model.
 
         Returns:
-            dict: The PTQ configuration as a dictionary.
+            dict[str, Any]: PTQ configuration.
         """
         from nncf import IgnoredScope  # type: ignore[attr-defined]
         from nncf.common.quantization.structs import QuantizationPreset  # type: ignore[attr-defined]
@@ -256,55 +308,90 @@ class OVModel:
         preds: OTXPredBatch,
         inputs: OTXDataBatch,
     ) -> MetricInput:
-        """Convert prediction and input entities to a format suitable for metric computation.
+        """Prepare inputs for metric computation.
 
         Args:
-            preds (OTXPredBatch): The predicted batch entity containing predicted labels.
-            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
+            preds (OTXPredBatch): Predicted batch entity.
+            inputs (OTXDataBatch): Input batch entity.
 
         Returns:
-            MetricInput: A dictionary contains 'preds' and 'target' keys
-            corresponding to the predicted and target labels for metric evaluation.
+            MetricInput: Dictionary containing predictions and targets.
         """
         raise NotImplementedError
 
-    def compute_metrics(self, meter: Metric) -> dict:
-        """Compute metrics using the provided torchvision Metric."""
-        return self._compute_metrics(meter)
+    def compute_metrics(self, metric: Metric) -> dict:
+        """Compute metrics using the provided metric object.
 
-    def _compute_metrics(self, meter: Metric, **compute_kwargs) -> dict:
-        sig = inspect.signature(meter.compute)
+        Args:
+            metric (Metric): Metric object.
+
+        Returns:
+            dict: Computed metrics.
+        """
+        return self._compute_metrics(metric)
+
+    def _compute_metrics(self, metric: Metric, **compute_kwargs) -> dict:
+        """Compute metrics with additional arguments.
+
+        Args:
+            metric (Metric): Metric object.
+            **compute_kwargs: Additional arguments for metric computation.
+
+        Returns:
+            dict: Computed metrics.
+        """
+        sig = inspect.signature(metric.compute)
         filtered_kwargs = {key: value for key, value in compute_kwargs.items() if key in sig.parameters}
         if removed_kwargs := set(compute_kwargs.keys()).difference(filtered_kwargs.keys()):
             msg = f"These keyword arguments are removed since they are not in the function signature: {removed_kwargs}"
             logger.debug(msg)
 
-        results: dict[str, Tensor] = meter.compute(**filtered_kwargs)
+        results: dict[str, Tensor] = metric.compute(**filtered_kwargs)
 
         if not isinstance(results, dict):
             raise TypeError(results)
 
         if not results:
-            msg = f"{meter} has no data to compute metric or there is an error computing metric"
+            msg = f"{metric} has no data to compute metric or there is an error computing metric"
             raise RuntimeError(msg)
         return results
 
     @property
     def model_adapter_parameters(self) -> dict:
-        """Model parameters for export."""
+        """Get model parameters for export.
+
+        Returns:
+            dict: Model parameters.
+        """
         return {}
 
     @property
     def label_info(self) -> LabelInfo:
-        """Get this model label information."""
+        """Get label information of the model.
+
+        Returns:
+            LabelInfo: Label information.
+        """
         return self._label_info
 
     @property
     def task(self) -> OTXTaskType | None:
-        """Get task of the model."""
+        """Get the task type of the model.
+
+        Returns:
+            OTXTaskType | None: Task type.
+        """
         return self._task
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
+        """Create label information from the OpenVINO IR.
+
+        Returns:
+            LabelInfo: Label information.
+
+        Raises:
+            ValueError: If label information cannot be constructed.
+        """
         ov_model = self.model.get_model()
 
         if ov_model.has_rt_info(["model_info", "label_info"]):
@@ -327,8 +414,14 @@ class OVModel:
         raise ValueError(msg)
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXBatchDataEntity:
-        """Returns a dummy input for base OV model."""
-        # Resize is embedded to the OV model, which means we don't need to know the actual size
+        """Generate a dummy input for the model.
+
+        Args:
+            batch_size (int): Batch size for the dummy input.
+
+        Returns:
+            OTXBatchDataEntity: Dummy input data.
+        """
         images = [torch.rand(3, 224, 224) for _ in range(batch_size)]
         infos = []
         for i, img in enumerate(images):
@@ -342,5 +435,13 @@ class OVModel:
         return OTXBatchDataEntity(batch_size=batch_size, images=images, imgs_info=infos)
 
     def __call__(self, *args, **kwds):
-        """Call the model."""
+        """Call the model for inference.
+
+        Args:
+            *args: Positional arguments.
+            **kwds: Keyword arguments.
+
+        Returns:
+            Any: Model output.
+        """
         return self.forward(*args, **kwds)

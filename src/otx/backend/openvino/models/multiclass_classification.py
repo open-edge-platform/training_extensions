@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for classification model entity used in OTX."""
 
@@ -23,9 +23,7 @@ if TYPE_CHECKING:
     from otx.core.types import PathLike
 
 
-class OVMulticlassClassificationModel(
-    OVModel,
-):
+class OVMulticlassClassificationModel(OVModel):
     """Classification model compatible for OpenVINO IR inference.
 
     It can consume OpenVINO IR model path or model name from Intel OMZ repository
@@ -42,6 +40,17 @@ class OVMulticlassClassificationModel(
         model_api_configuration: dict[str, Any] | None = None,
         metric: MetricCallable = MultiClassClsMetricCallable,
     ) -> None:
+        """Initialize the OVMulticlassClassificationModel.
+
+        Args:
+            model_path (PathLike): Path to the OpenVINO IR model or model name from Intel OMZ.
+            model_type (str): Type of the model. Defaults to "Classification".
+            async_inference (bool): Whether to enable asynchronous inference. Defaults to True.
+            max_num_requests (int | None): Maximum number of inference requests. Defaults to None.
+            use_throughput_mode (bool): Whether to use throughput mode. Defaults to False.
+            model_api_configuration (dict[str, Any] | None): Configuration for the model API. Defaults to None.
+            metric (MetricCallable): Metric callable for evaluation. Defaults to MultiClassClsMetricCallable.
+        """
         super().__init__(
             model_path=model_path,
             model_type=model_type,
@@ -58,6 +67,16 @@ class OVMulticlassClassificationModel(
         outputs: list[ClassificationResult],
         inputs: OTXDataBatch,
     ) -> OTXPredBatch:
+        """Customize the outputs of the model for OTX pipeline compatibility.
+
+        Args:
+            outputs (list[ClassificationResult]): List of classification results from the model.
+            inputs (OTXDataBatch): Input batch containing images and metadata.
+
+        Returns:
+            OTXPredBatch: A batch of predictions containing scores, labels,
+                and optionally saliency maps and feature vectors.
+        """
         pred_labels = [torch.tensor(out.top_labels[0].id, dtype=torch.long) for out in outputs]
         pred_scores = [torch.tensor(out.top_labels[0].confidence) for out in outputs]
 
@@ -90,15 +109,16 @@ class OVMulticlassClassificationModel(
         preds: OTXPredBatch,
         inputs: OTXDataBatch,
     ) -> MetricInput:
-        """Convert prediction and input entities to a format suitable for metric computation.
+        """Prepare inputs for metric computation.
+
+        Converts prediction and input entities into a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredBatch ): The predicted batch entity containing predicted labels.
-            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
+            preds (OTXPredBatch): Predicted batch containing predicted labels and other metadata.
+            inputs (OTXDataBatch): Input batch containing ground truth labels and other metadata.
 
         Returns:
-            MetricInput: A dictionary contains 'preds' and 'target' keys
-            corresponding to the predicted and target labels for metric evaluation.
+            MetricInput: A dictionary containing 'preds' and 'target' keys corresponding to predicted and target labels.
         """
         pred = torch.tensor(preds.labels)
         target = torch.tensor(inputs.labels)

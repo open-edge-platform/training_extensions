@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Class definition for detection model entity used in OTX."""
@@ -47,6 +47,18 @@ class OVSegmentationModel(OVModel):
         metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
         **kwargs,
     ) -> None:
+        """Initialize the OVSegmentationModel.
+
+        Args:
+            model_path (PathLike): Path to the OpenVINO IR model.
+            model_type (str): Type of the model (default: "Segmentation").
+            async_inference (bool): Whether to enable asynchronous inference (default: True).
+            max_num_requests (int | None): Maximum number of inference requests (default: None).
+            use_throughput_mode (bool): Whether to use throughput mode (default: True).
+            model_api_configuration (dict[str, Any] | None): Configuration for the model API (default: None).
+            metric (MetricCallable): Metric callable for evaluation (default: SegmCallable).
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             model_path=model_path,
             model_type=model_type,
@@ -59,7 +71,11 @@ class OVSegmentationModel(OVModel):
         self._task = OTXTaskType.SEMANTIC_SEGMENTATION
 
     def _setup_tiler(self) -> None:
-        """Setup tiler for tile task."""
+        """Set up the tiler for tile-based inference.
+
+        This method configures the tiler for semantic segmentation tasks, enabling
+        tiled inference with specified tile size and overlap.
+        """
         execution_mode = "async" if self.async_inference else "sync"
         # Note: Disable async_inference as tiling has its own sync/async implementation
         self.async_inference = False
@@ -74,6 +90,15 @@ class OVSegmentationModel(OVModel):
         outputs: list[ImageResultWithSoftPrediction],
         inputs: OTXDataBatch,
     ) -> OTXPredBatch:
+        """Customize the outputs of the model for OTX pipeline.
+
+        Args:
+            outputs (list[ImageResultWithSoftPrediction]): List of model outputs with soft predictions.
+            inputs (OTXDataBatch): Input batch containing images and metadata.
+
+        Returns:
+            OTXPredBatch: Customized prediction batch containing masks and feature vectors.
+        """
         masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0)) for mask in outputs]
         predicted_f_vectors = (
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
@@ -92,15 +117,19 @@ class OVSegmentationModel(OVModel):
         preds: OTXPredBatch,  # type: ignore[override]
         inputs: OTXDataBatch,  # type: ignore[override]
     ) -> MetricInput:
-        """Convert prediction and input entities to a format suitable for metric computation.
+        """Prepare inputs for metric computation.
+
+        Converts predictions and ground truth inputs into a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredBatch): The predicted segmentation batch entity containing predicted masks.
-            inputs (OTXDataBatch): The input segmentation batch entity containing ground truth masks.
+            preds (OTXPredBatch): Predicted segmentation batch containing masks.
+            inputs (OTXDataBatch): Input batch containing ground truth masks.
 
         Returns:
-            MetricInput: A list of dictionaries where each dictionary contains 'preds' and 'target' keys
-            corresponding to the predicted and target masks for metric evaluation.
+            MetricInput: A list of dictionaries with 'preds' and 'target' keys for metric evaluation.
+
+        Raises:
+            ValueError: If predicted or ground truth masks are not provided.
         """
         if preds.masks is None:
             msg = "The predicted masks are not provided."
@@ -119,6 +148,16 @@ class OVSegmentationModel(OVModel):
         ]
 
     def _create_label_info_from_ov_ir(self) -> SegLabelInfo:
+        """Create label information from OpenVINO IR.
+
+        Extracts label information from the OpenVINO IR model if available.
+
+        Returns:
+            SegLabelInfo: Label information extracted from the model.
+
+        Raises:
+            ValueError: If label information cannot be constructed from the OpenVINO IR model.
+        """
         ov_model = self.model.get_model()
 
         if ov_model.has_rt_info(["model_info", "label_info"]):
