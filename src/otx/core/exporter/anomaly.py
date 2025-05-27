@@ -88,5 +88,6 @@ class OTXAnomalyModelExporter(OTXNativeModelExporter):
             ("model_info", "image_shape"): (self.orig_height, self.orig_width),
             ("model_info", "labels"): "Normal Anomaly",
             ("model_info", "model_type"): "AnomalyDetection",
+            ("model_info", "task_type"): "anomaly",
             ("model_info", "task"): self.task.value,
         }

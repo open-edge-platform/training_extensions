@@ -186,7 +186,7 @@ class AutoConfigurator:
             self._config = self._load_default_config(self.model_name)
         return self._config
 
-    def _load_default_config(self, model_name: str | None = None) -> dict:
+    def _load_default_config(self, model_name: str | None = None, task: OTXTaskType | None = None) -> dict:
         """Load the default configuration for the specified model.
 
         Args:
@@ -199,9 +199,10 @@ class AutoConfigurator:
         Raises:
             ValueError: If the task doesn't supported for auto-configuration.
         """
-        config_file = DEFAULT_CONFIG_PER_TASK.get(self.task, None)
+        task = task or self.task
+        config_file = DEFAULT_CONFIG_PER_TASK.get(task, None)
         if config_file is None:
-            msg = f"{self.task} doesn't support Auto-Configuration."
+            msg = f"{task} doesn't support Auto-Configuration."
             raise ValueError(msg)
         if model_name is not None:
             model_path = str(config_file).split("/")
@@ -398,7 +399,12 @@ class AutoConfigurator:
             model_path=model_name,
         )
 
-    def update_ov_subset_pipeline(self, datamodule: OTXDataModule, subset: str = "test") -> OTXDataModule:
+    def update_ov_subset_pipeline(
+        self,
+        datamodule: OTXDataModule,
+        subset: str = "test",
+        task: OTXTaskType | None = None,
+    ) -> OTXDataModule:
         """Returns an OTXDataModule object with OpenVINO subset transforms applied.
 
         Args:
@@ -408,7 +414,7 @@ class AutoConfigurator:
         Returns:
             OTXDataModule: The modified OTXDataModule object with OpenVINO subset transforms applied.
         """
-        ov_config = self._load_default_config(model_name="openvino_model")["data"]
+        ov_config = self._load_default_config(model_name="openvino_model", task=task)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
         subset_config.batch_size = ov_config[f"{subset}_subset"]["batch_size"]
         subset_config.transform_lib_type = ov_config[f"{subset}_subset"]["transform_lib_type"]

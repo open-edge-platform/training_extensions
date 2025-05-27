@@ -92,6 +92,19 @@ class OVEngine(Engine):
         Raises:
             ValueError: If the task type is unsupported or the XML file is invalid.
         """
+        task_map = {
+            "classification_hcl": OTXTaskType.H_LABEL_CLS,
+            "classification_mlc": OTXTaskType.MULTI_LABEL_CLS,
+            "classification_mc": OTXTaskType.MULTI_CLASS_CLS,
+            "segmentation": OTXTaskType.SEMANTIC_SEGMENTATION,
+            "detection": OTXTaskType.DETECTION,
+            "instance_segmentation": OTXTaskType.INSTANCE_SEGMENTATION,
+            "keypoint_detection": OTXTaskType.KEYPOINT_DETECTION,
+            "anomaly_classification": OTXTaskType.ANOMALY_CLASSIFICATION,
+            "anomaly_detection": OTXTaskType.ANOMALY_DETECTION,
+            "anomaly_segmentation": OTXTaskType.ANOMALY_SEGMENTATION,
+        }
+
         tree = Elet.parse(ir_xml)
         root = tree.getroot()
         rt_info = root.find("rt_info")
@@ -99,28 +112,33 @@ class OVEngine(Engine):
             msg = "No <rt_info> found in the IR model XML file. Please check the model file."
             raise ValueError(msg)
 
-        task_type = rt_info.find(".//task_type").attrib.get("value")
-
-        if task_type == "classification":
-            if rt_info.find(".//hierarchical").attrib.get("value") == "True":
-                task_name = "H_LABEL_CLS"
-            elif rt_info.find(".//multilabel").attrib.get("value") == "True":
-                task_name = "MULTI_LABEL_CLS"
-            else:
-                task_name = "MULTI_CLASS_CLS"
-        elif task_type == "segmentation":
-            task_name = "SEMANTIC_SEGMENTATION"
-        elif task_type == "detection":
-            task_name = "DETECTION"
-        elif task_type == "instance_segmentation":
-            task_name = "INSTANCE_SEGMENTATION"
-        elif task_type == "keypoint_detection":
-            task_name = "KEYPOINT_DETECTION"
-        else:
-            msg = f"Unsupported task type: {task_type}. Please check the model file."
+        task_type = rt_info.find(".//task_type")
+        if task_type is None:
+            msg = (
+                "No <task_type> found in the IR model XML file. Please check the model file."
+                "Task cannot be derived from the model."
+            )
             raise ValueError(msg)
 
-        return OTXTaskType(task_name)
+        task_type = task_type.attrib.get("value")
+        if task_type == "classification":
+            if rt_info.find(".//hierarchical").attrib.get("value") == "True":
+                otx_task_name = task_type + "_hcl"
+            elif rt_info.find(".//multilabel").attrib.get("value") == "True":
+                otx_task_name = task_type + "_mlc"
+            else:
+                otx_task_name = task_type + "_mc"
+        elif task_type == "anomaly":
+            sub_type = rt_info.find(".//task").attrib.get("value")
+            otx_task_name = task_type + f"_{sub_type}"
+        else:
+            otx_task_name = task_type
+
+        if otx_task_name not in task_map:
+            msg = f"Unsupported task type '{otx_task_name}' derived from the IR model XML file."
+            raise ValueError(msg)
+
+        return task_map[otx_task_name]
 
     def train(self, *args, **kwargs) -> METRICS:
         """Train method is not supported for OVEngine."""
@@ -169,12 +187,14 @@ class OVEngine(Engine):
             msg = "Please provide the `data` when creating the Engine, or pass it in OVEngine.test()."
             raise RuntimeError(msg)
 
+        model = self._update_checkpoint(checkpoint)
+        metric = metric or model.metric_callable
+
         datamodule = self._auto_configurator.update_ov_subset_pipeline(
             datamodule=datamodule,
             subset="test",
+            task=model.task,
         )
-        model = self._update_checkpoint(checkpoint)
-        metric = metric or model.metric_callable
 
         if metric is None:
             msg = "Please provide a `metric` when creating a OVModel or pass it in OVEngine.test()."
@@ -254,6 +274,7 @@ class OVEngine(Engine):
                 datamodule = self._auto_configurator.update_ov_subset_pipeline(
                     datamodule=datamodule,
                     subset="test",
+                    task=model.task,
                 )
                 dataloader = datamodule.test_dataloader()
                 task = progress.add_task("Predicting", total=len(dataloader))
