@@ -65,6 +65,10 @@ class TestEngine:
         assert fxt_engine.model.model_type == "Classification"
 
     def test_test(self, fxt_engine, mocker: MockerFixture) -> None:
+        mocker.patch(
+            "otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
+            return_value=fxt_engine.datamodule,
+        )
         mock_get_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
         mock_model = MagicMock()
@@ -92,10 +96,8 @@ class TestEngine:
             return_value=fxt_engine.datamodule,
         )
         mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
-        mock_get_ov_model = mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model")
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
-        mock_model = MagicMock()
-        mock_get_ov_model.return_value = mock_model
+        mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=MagicMock())
         fxt_engine.model = "model.xml"
 
         # Correct label_info from the checkpoint
