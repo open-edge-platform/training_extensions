@@ -21,6 +21,5 @@ __all__ = [
     "samplers",
     "segmentation",
     "strategies",
-    "strategies",
     "utils",
 ]
