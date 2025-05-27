@@ -76,8 +76,8 @@ DATASET_TEST_CASES = (
             },
         ),
         DatasetInfo(
-            name="cityscapes_cut",
-            path=Path("instance_seg/cityscapes_cut"),
+            name="Vitens-Aeromonas",
+            path=Path("instance_seg/Vitens-Aeromonas-coco"),
             group="medium",
             extra_overrides={
                 "test": {
@@ -86,9 +86,19 @@ DATASET_TEST_CASES = (
             },
         ),
         DatasetInfo(
-            name="Vitens-Aeromonas",
-            path=Path("instance_seg/Vitens-Aeromonas-coco"),
+            name="Chicken",
+            path=Path("instance_seg/Chicken-Real-Time-coco-roboflow"),
             group="medium",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
+            },
+        ),
+        DatasetInfo(
+            name="cityscapes",
+            path=Path("instance_seg/cityscapes_coco_reduced"),
+            group="large",
             extra_overrides={
                 "test": {
                     "metric": FMeasureCallable,
