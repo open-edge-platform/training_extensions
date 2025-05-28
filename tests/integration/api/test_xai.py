@@ -8,6 +8,7 @@ import openvino.runtime as ov
 import pytest
 
 from otx.backend.native.engine import OTXEngine
+from otx.backend.openvino.engine import OVEngine
 from otx.core.data.entity.base import OTXBatchPredEntity
 from otx.data.torch import OTXPredBatch
 
@@ -164,7 +165,8 @@ def test_predict_with_explain(
     assert len(feature_vector_output.get_shape()) == 2
 
     # Predict OV model with xai & process maps
-    predict_result_explain_ov = engine.predict(checkpoint=exported_model_path, explain=True)
+    ov_engine = OVEngine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
+    predict_result_explain_ov = ov_engine.predict(checkpoint=exported_model_path, explain=True)
     assert isinstance(predict_result_explain_ov[0], (OTXBatchPredEntity, OTXPredBatch))
     assert predict_result_explain_ov[0].has_xai_outputs
     assert predict_result_explain_ov[0].saliency_map is not None

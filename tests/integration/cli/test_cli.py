@@ -171,39 +171,7 @@ def test_otx_e2e(
         assert latest_dir.exists()
         assert (latest_dir / export_case.expected_output).exists()
 
-    # 4) infer of the exported models
-    ov_output_dir = tmp_path_test / "outputs" / "OPENVINO"
-    ov_files = list(ov_output_dir.rglob("exported*.xml"))
-    if not ov_files:
-        msg = "There is no OV IR."
-        raise RuntimeError(msg)
-    exported_model_path = str(ov_files[0])
-
-    command_cfg = [
-        "otx",
-        "test",
-        "--config",
-        recipe,
-        "--data_root",
-        fxt_target_dataset_per_task[task],
-        "--work_dir",
-        str(tmp_path_test / "outputs"),
-        "--engine.device",
-        fxt_accelerator,
-        "--checkpoint",
-        exported_model_path,
-    ]
-
-    run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
-
-    outputs_dir = tmp_path_test / "outputs"
-    latest_dir = max(
-        (p for p in outputs_dir.iterdir() if p.is_dir() and p.name != ".latest"),
-        key=lambda p: p.stat().st_mtime,
-    )
-    assert latest_dir.exists()
-
-    # 5) otx export with XAI
+    # 4) otx export with XAI
     if "instance_segmentation/rtmdet_inst_tiny" in recipe:
         return
     if ("_cls" not in task) and (task not in ["detection", "instance_segmentation", "semantic_segmentation"]):
@@ -316,73 +284,6 @@ def test_otx_explain_e2e(
         key=lambda p: p.stat().st_mtime,
     )
     assert (latest_dir).exists()
-
-
-# @pytest.mark.skipif(len(pytest.RECIPE_OV_LIST) < 1, reason="No OV recipe found.")
-@pytest.mark.parametrize(
-    "ov_recipe",
-    pytest.RECIPE_OV_LIST,
-)
-def test_otx_ov_test(
-    ov_recipe: str,
-    tmp_path: Path,
-    fxt_target_dataset_per_task: dict,
-    fxt_open_subprocess: bool,
-) -> None:
-    """
-    Test OTX CLI e2e commands.
-
-    - 'otx test' with OV model
-
-    Args:
-        recipe (str): The OV recipe to use for testing. (eg. 'classification/openvino_model.yaml')
-        tmp_path (Path): The temporary path for storing the testing outputs.
-
-    Returns:
-        None
-    """
-    task = ov_recipe.split("/")[-2]
-    model_name = ov_recipe.split("/")[-1].split(".")[0]
-
-    if task in [
-        "multi_label_cls",
-        "instance_segmentation",
-        "h_label_cls",
-        "anomaly",
-    ]:
-        # OMZ doesn't have proper model for Pytorch MaskRCNN interface
-        # TODO(Kirill):  Need to change this test when export enabled
-        pytest.skip("OMZ doesn't have proper model for these types of tasks.")
-
-    pytest.xfail("See ticket no. 135955")
-
-    # otx test
-    tmp_path_test = tmp_path / f"otx_test_{task}_{model_name}"
-    command_cfg = [
-        "otx",
-        "test",
-        "--config",
-        ov_recipe,
-        "--data_root",
-        fxt_target_dataset_per_task[task],
-        "--work_dir",
-        str(tmp_path_test / "outputs"),
-        "--engine.device",
-        "cpu",
-        "--disable-infer-num-classes",
-    ]
-
-    run_main(command_cfg=command_cfg, open_subprocess=fxt_open_subprocess)
-
-    outputs_dir = tmp_path_test / "outputs"
-    latest_dir = max(
-        (p for p in outputs_dir.iterdir() if p.is_dir() and p.name != ".latest"),
-        key=lambda p: p.stat().st_mtime,
-    )
-    assert latest_dir.exists()
-    assert (latest_dir / "csv").exists()
-    metric_result = list((latest_dir / "csv").glob(pattern="**/metrics.csv"))
-    assert len(metric_result) > 0
 
 
 @pytest.mark.parametrize("task", pytest.TASK_LIST)

@@ -8,7 +8,6 @@ from abc import abstractmethod
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import torch
 from torch import Tensor
 
@@ -19,7 +18,7 @@ from otx.core.metrics import MetricInput
 from otx.core.metrics.accuracy import (
     HLabelClsMetricCallable,
 )
-from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
+from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
 from otx.core.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
@@ -27,7 +26,6 @@ from otx.data.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from model_api.models.utils import ClassificationResult
     from torch import nn
 
     from otx.core.metrics import MetricCallable
@@ -218,120 +216,3 @@ class OTXHlabelClsModel(OTXModel):
             return self.model(images=image, mode="explain")
 
         return self.model(images=image, mode="tensor")
-
-
-class OVHlabelClassificationModel(OVModel):
-    """Hierarchical classification model compatible for OpenVINO IR inference.
-
-    It can consume OpenVINO IR model path or model name from Intel OMZ repository
-    and create the OTX classification model compatible for OTX testing pipeline.
-    """
-
-    def __init__(
-        self,
-        model_name: str,
-        model_type: str = "Classification",
-        async_inference: bool = True,
-        max_num_requests: int | None = None,
-        use_throughput_mode: bool = True,
-        model_api_configuration: dict[str, Any] | None = None,
-        metric: MetricCallable = HLabelClsMetricCallable,
-        **kwargs,
-    ) -> None:
-        model_api_configuration = model_api_configuration if model_api_configuration else {}
-        model_api_configuration.update({"hierarchical": True, "output_raw_scores": True})
-        super().__init__(
-            model_name=model_name,
-            model_type=model_type,
-            async_inference=async_inference,
-            max_num_requests=max_num_requests,
-            use_throughput_mode=use_throughput_mode,
-            model_api_configuration=model_api_configuration,
-            metric=metric,
-        )
-
-    def _customize_outputs(
-        self,
-        outputs: list[ClassificationResult],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
-        all_pred_labels = []
-        all_pred_scores = []
-        for output in outputs:
-            logits = output.raw_scores
-            predicted_labels = []
-            predicted_scores = []
-            cls_heads_info = self.model.hierarchical_info["cls_heads_info"]
-            for i in range(cls_heads_info["num_multiclass_heads"]):
-                logits_begin, logits_end = cls_heads_info["head_idx_to_logits_range"][str(i)]
-                head_logits = logits[logits_begin:logits_end]
-                j = np.argmax(head_logits)
-                predicted_labels.append(j)
-                predicted_scores.append(head_logits[j])
-
-            if cls_heads_info["num_multilabel_classes"]:
-                logits_begin = cls_heads_info["num_single_label_classes"]
-                head_logits = logits[logits_begin:]
-
-                for i in range(head_logits.shape[0]):
-                    predicted_scores.append(head_logits[i])
-                    if head_logits[i] > self.model.confidence_threshold:
-                        predicted_labels.append(1)
-                    else:
-                        predicted_labels.append(0)
-
-            all_pred_labels.append(torch.tensor(predicted_labels, dtype=torch.long, device=self.device))
-            all_pred_scores.append(torch.tensor(predicted_scores, device=self.device))
-
-        if outputs and outputs[0].saliency_map.size != 0:
-            # Squeeze dim 4D => 3D, (1, num_classes, H, W) => (num_classes, H, W)
-            predicted_s_maps = [out.saliency_map[0] for out in outputs]
-
-            # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
-            predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredBatch(
-                batch_size=len(outputs),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                scores=all_pred_scores,
-                labels=all_pred_labels,
-                saliency_map=predicted_s_maps,
-                feature_vector=predicted_f_vectors,
-            )
-
-        return OTXPredBatch(
-            batch_size=len(outputs),
-            images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            scores=all_pred_scores,
-            labels=all_pred_labels,
-        )
-
-    def _convert_pred_entity_to_compute_metric(
-        self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
-    ) -> MetricInput:
-        cls_heads_info = self.model.hierarchical_info["cls_heads_info"]
-        num_multilabel_classes = cls_heads_info["num_multilabel_classes"]
-        num_multiclass_heads = cls_heads_info["num_multiclass_heads"]
-        if num_multilabel_classes > 0:
-            preds_multiclass = torch.stack(preds.labels)[:, :num_multiclass_heads]
-            preds_multilabel = torch.stack(preds.scores)[:, num_multiclass_heads:]
-            pred_result = torch.cat([preds_multiclass, preds_multilabel], dim=1)
-        else:
-            pred_result = torch.stack(preds.labels)
-        return {
-            "preds": pred_result,
-            "target": torch.stack(inputs.labels),
-        }
-
-    def _create_label_info_from_ov_ir(self) -> HLabelInfo:
-        ov_model = self.model.get_model()
-
-        if ov_model.has_rt_info(["model_info", "label_info"]):
-            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
-            return HLabelInfo.from_json(serialized)
-
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
-        raise ValueError(msg)

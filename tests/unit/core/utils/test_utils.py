@@ -53,6 +53,7 @@ def get_dummy_ov_cls_model():
         model_type="Classification",
         task_type="classification",
         multilabel=True,
+        hierarchical=False,
         label_info=LabelInfo(["car", "truck"], ["0", "1"], [["car"], ["truck"]]),
         optimization_config={},
     )
