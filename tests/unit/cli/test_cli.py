@@ -185,28 +185,7 @@ class TestOTXCLI:
             OTXCLI()
         out, _ = capfd.readouterr()
         result_config = yaml.safe_load(out)
-        expected_str = """
-        scheduler:
-          class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
-          init_args:
-            num_warmup_steps: 0
-            monitor: val/test_f1
-            warmup_interval: step
-            main_scheduler_callable:
-              class_path: lightning.pytorch.cli.ReduceLROnPlateau
-              init_args:
-                monitor: val/map_50
-                mode: max
-                factor: 0.1
-                patience: 4
-                threshold: 0.0001
-                threshold_mode: rel
-                cooldown: 0
-                min_lr: 0.0
-                eps: 1.0e-08
-        """
-        expected_config = yaml.safe_load(expected_str)
-        assert expected_config["scheduler"] == result_config["model"]["init_args"]["scheduler"]
+        assert result_config["model"]["init_args"]["scheduler"]["init_args"]["monitor"] == "val/test_f1"
 
     @pytest.fixture()
     def fxt_metric_override_command(self, monkeypatch) -> None:

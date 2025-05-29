@@ -37,11 +37,6 @@ class Engine(ABC):
         """Export the model."""
         raise NotImplementedError
 
-    @abstractmethod
-    def optimize(self, **kwargs) -> Path:
-        """Optimize the model."""
-        raise NotImplementedError
-
     @staticmethod
     @abstractmethod
     def is_supported(model: MODEL, data: DATA) -> bool:

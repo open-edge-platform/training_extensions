@@ -153,10 +153,11 @@ class OTXCLI:
             skip=engine_skip,
         )
         # Model Settings
+        from otx.backend.openvino.models import OVModel
         from otx.core.model.base import OTXModel
 
         parser.add_subclass_arguments(
-            OTXModel,
+            (OTXModel, OVModel),
             "model",
             required=False,
             fail_untyped=False,
@@ -223,7 +224,6 @@ class OTXCLI:
             "test": {"datamodule"}.union(device_kwargs),
             "predict": {"datamodule"}.union(device_kwargs),
             "export": device_kwargs,
-            "optimize": {"datamodule"}.union(device_kwargs),
             "explain": {"datamodule"}.union(device_kwargs),
             "benchmark": device_kwargs,
         }
@@ -562,7 +562,7 @@ class OTXCLI:
                     row = row.item() if row.numel() == 1 else row.tolist()  # noqa: PLW2901
                 table.add_row(*[metric, f"{row}"])
             self.console.print(table)
-        elif self.subcommand in ("export", "optimize"):
+        elif self.subcommand == "export":
             # Print output model path
             self.console.print(f"{self.subcommand} output: {outputs}")
         self.console.print(f"Work Directory: {self.engine.work_dir}")

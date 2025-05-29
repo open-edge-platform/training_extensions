@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -15,11 +16,12 @@ from warnings import warn
 import datumaro
 from jsonargparse import ArgumentParser, Namespace
 
+from otx.backend.openvino.models.base import OVModel
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel, OVModel
+from otx.core.model.base import DataInputParams, OTXModel
 from otx.core.types import PathLike
-from otx.core.types.label import LabelInfo, LabelInfoTypes
+from otx.core.types.label import LabelInfoTypes
 from otx.core.types.task import OTXTaskType
 from otx.core.utils.imports import get_otx_root_path
 from otx.core.utils.instantiators import partial_instantiate_class
@@ -72,18 +74,18 @@ TASK_PER_DATA_FORMAT = {
 }
 
 OVMODEL_PER_TASK = {
-    OTXTaskType.MULTI_CLASS_CLS: "otx.core.model.multiclass_classification.OVMulticlassClassificationModel",
-    OTXTaskType.MULTI_LABEL_CLS: "otx.core.model.multilabel_classification.OVMultilabelClassificationModel",
-    OTXTaskType.H_LABEL_CLS: "otx.core.model.hlabel_classification.OVHlabelClassificationModel",
-    OTXTaskType.DETECTION: "otx.core.model.detection.OVDetectionModel",
-    OTXTaskType.ROTATED_DETECTION: "otx.core.model.rotated_detection.OVRotatedDetectionModel",
-    OTXTaskType.INSTANCE_SEGMENTATION: "otx.core.model.instance_segmentation.OVInstanceSegmentationModel",
-    OTXTaskType.SEMANTIC_SEGMENTATION: "otx.core.model.segmentation.OVSegmentationModel",
+    OTXTaskType.MULTI_CLASS_CLS: "otx.backend.openvino.models.OVMulticlassClassificationModel",
+    OTXTaskType.MULTI_LABEL_CLS: "otx.backend.openvino.models.OVMultilabelClassificationModel",
+    OTXTaskType.H_LABEL_CLS: "otx.backend.openvino.models.OVHlabelClassificationModel",
+    OTXTaskType.DETECTION: "otx.backend.openvino.models.OVDetectionModel",
+    OTXTaskType.ROTATED_DETECTION: "otx.backend.openvino.models.OVRotatedDetectionModel",
+    OTXTaskType.INSTANCE_SEGMENTATION: "otx.backend.openvino.models.OVInstanceSegmentationModel",
+    OTXTaskType.SEMANTIC_SEGMENTATION: "otx.backend.openvino.models.OVSegmentationModel",
     OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.ANOMALY_SEGMENTATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.KEYPOINT_DETECTION: "otx.core.model.keypoint_detection.OVKeypointDetectionModel",
+    OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.OVKeypointDetectionModel",
 }
 
 
@@ -160,7 +162,7 @@ class AutoConfigurator:
             RuntimeError: If there are no ready tasks.
 
         Returns:
-            OTXTaskType: The current task.
+            OTXTaskType | str: The current task.
         """
         if self._task is not None:
             return self._task
@@ -184,7 +186,7 @@ class AutoConfigurator:
             self._config = self._load_default_config(self.model_name)
         return self._config
 
-    def _load_default_config(self, model_name: str | None = None) -> dict:
+    def _load_default_config(self, model_name: str | None = None, task: OTXTaskType | None = None) -> dict:
         """Load the default configuration for the specified model.
 
         Args:
@@ -197,9 +199,10 @@ class AutoConfigurator:
         Raises:
             ValueError: If the task doesn't supported for auto-configuration.
         """
-        config_file = DEFAULT_CONFIG_PER_TASK.get(self.task, None)
+        task = task or self.task
+        config_file = DEFAULT_CONFIG_PER_TASK.get(task, None)
         if config_file is None:
-            msg = f"{self.task} doesn't support Auto-Configuration."
+            msg = f"{task} doesn't support Auto-Configuration."
             raise ValueError(msg)
         if model_name is not None:
             model_path = str(config_file).split("/")
@@ -209,15 +212,21 @@ class AutoConfigurator:
 
         return get_configuration(config_file)
 
-    def get_datamodule(self) -> OTXDataModule | None:
+    def get_datamodule(self, data_root: PathLike | None = None) -> OTXDataModule | None:
         """Returns an instance of OTXDataModule with the configured data root.
 
         Returns:
             OTXDataModule | None: An instance of OTXDataModule.
         """
-        if self.data_root is None:
+        if data_root is None and self.data_root is None:
+            logger.warning("No data root provided. Returning None.")
             return None
-        self.config["data"]["data_root"] = self.data_root
+        if data_root is not None and not isinstance(data_root, (str, os.PathLike)):
+            msg = f"data_root should be of type PathLike, but got {type(data_root)}"
+            raise TypeError(msg)
+
+        data_root = data_root if data_root is not None else self.data_root
+        self.config["data"]["data_root"] = data_root
         data_config: dict = deepcopy(self.config["data"])
         train_config = data_config.pop("train_subset")
         val_config = data_config.pop("val_subset")
@@ -365,7 +374,7 @@ class AutoConfigurator:
 
         return None
 
-    def get_ov_model(self, model_name: str, label_info: LabelInfo) -> OVModel:
+    def get_ov_model(self, model_name: PathLike, task: OTXTaskType | None = None) -> OVModel:
         """Retrieves the OVModel instance based on the given model name and label information.
 
         Args:
@@ -378,19 +387,24 @@ class AutoConfigurator:
         Raises:
             NotImplementedError: If the OVModel for the given task is not supported.
         """
-        class_path = OVMODEL_PER_TASK.get(self.task, None)
+        task = task if task is not None else self.task
+        class_path = OVMODEL_PER_TASK.get(task, None)
         if class_path is None:
-            msg = f"{self.task} doesn't support OVModel."
+            msg = f"{task} doesn't support OVModel."
             raise NotImplementedError(msg)
         class_module, class_name = class_path.rsplit(".", 1)
         module = __import__(class_module, fromlist=[class_name])
         ov_model = getattr(module, class_name)
         return ov_model(
-            model_name=model_name,
-            num_classes=label_info.num_classes,
+            model_path=model_name,
         )
 
-    def update_ov_subset_pipeline(self, datamodule: OTXDataModule, subset: str = "test") -> OTXDataModule:
+    def update_ov_subset_pipeline(
+        self,
+        datamodule: OTXDataModule,
+        subset: str = "test",
+        task: OTXTaskType | None = None,
+    ) -> OTXDataModule:
         """Returns an OTXDataModule object with OpenVINO subset transforms applied.
 
         Args:
@@ -400,7 +414,7 @@ class AutoConfigurator:
         Returns:
             OTXDataModule: The modified OTXDataModule object with OpenVINO subset transforms applied.
         """
-        ov_config = self._load_default_config(model_name="openvino_model")["data"]
+        ov_config = self._load_default_config(model_name="openvino_model", task=task)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
         subset_config.batch_size = ov_config[f"{subset}_subset"]["batch_size"]
         subset_config.transform_lib_type = ov_config[f"{subset}_subset"]["transform_lib_type"]

@@ -57,5 +57,5 @@ class TestAnomalyOpenVINO:
                 base_name="exported_model",
                 export_format=OTXExportFormatType.OPENVINO,
             )
-            ov_model = AnomalyOpenVINO(model_name=exported_model)
+            ov_model = AnomalyOpenVINO(model_path=exported_model)
             assert isinstance(ov_model.label_info, AnomalyLabelInfo)
