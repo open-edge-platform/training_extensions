@@ -12,9 +12,10 @@ from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
 from warnings import warn
+from omegaconf import OmegaConf
 
 import datumaro
-from jsonargparse import ArgumentParser, Namespace
+from jsonargparse import ActionConfigFile, ArgumentParser, Namespace
 
 from otx.backend.openvino.models.base import OVModel
 from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
@@ -88,6 +89,45 @@ OVMODEL_PER_TASK = {
     OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.OVKeypointDetectionModel",
 }
 
+
+def load_and_process_config(config_path):
+    def deep_update(d, u):
+        for k, v in u.items():
+            if isinstance(v, dict):
+                d[k] = deep_update(d.get(k, {}), v)
+            else:
+                d[k] = v
+        return d
+
+    def reset_fields(cfg: dict, reset_list):
+        for path in reset_list:
+            keys = path.split(".")
+            d = cfg
+            for k in keys[:-1]:
+                d = d.get(k, {})
+            if isinstance(d, dict):
+                d.pop(keys[-1], None)
+
+    # Load main config
+    cfg = OmegaConf.load(config_path)
+
+    # Resolve and load `data` if it is a path string
+    if isinstance(cfg.get("data"), str):
+        base_path = Path(config_path).parent
+        data_path = (base_path / cfg["data"]).resolve()
+        data_cfg = OmegaConf.load(data_path)
+        cfg["data"] = data_cfg
+
+    # Apply resets if any
+    overrides = cfg.get("overrides", {})
+    reset_list = overrides.get("reset", [])
+    if reset_list:
+        reset_fields(cfg, reset_list)
+
+    overrides.pop("reset", None)
+    # Simple deep update helper
+    deep_update(cfg, overrides)
+    return OmegaConf.to_container(cfg, resolve=True)
 
 def configure_task(data_root: PathLike) -> OTXTaskType:
     """Configures the task based on the given data root.
@@ -208,9 +248,8 @@ class AutoConfigurator:
             model_path = str(config_file).split("/")
             model_path[-1] = f"{model_name}.yaml"
             config_file = Path("/".join(model_path))
-        from otx.cli.utils.jsonargparse import get_configuration
 
-        return get_configuration(config_file)
+        return load_and_process_config(config_file)
 
     def get_datamodule(self, data_root: PathLike | None = None) -> OTXDataModule | None:
         """Returns an instance of OTXDataModule with the configured data root.
@@ -241,9 +280,9 @@ class AutoConfigurator:
             data_config["input_size_multiplier"] = model_cls.input_size_multiplier
 
         return OTXDataModule(
-            train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
-            val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
-            test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
+            train_subset=SubsetConfig(subset_name = "train", sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
+            val_subset=SubsetConfig(subset_name = "val", sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
+            test_subset=SubsetConfig(subset_name = "test", sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
             tile_config=TileConfig(**tile_config),
             **data_config,
         )

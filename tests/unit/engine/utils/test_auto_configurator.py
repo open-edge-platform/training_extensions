@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 import torch
+from omegaconf import OmegaConf
 
 from otx.backend.native.utils import auto_configurator as target_file
 from otx.backend.native.utils.auto_configurator import (
@@ -76,11 +77,13 @@ class TestAutoConfigurator:
         # Default Config
         default_config = auto_configurator._load_default_config()
         target_config = DEFAULT_CONFIG_PER_TASK[task].resolve()
+        target_config = OmegaConf.load(target_config)
         assert isinstance(default_config, dict)
         assert len(default_config) > 0
+        breakpoint()
         assert "config" in default_config
-        assert len(default_config["config"]) > 0
-        assert default_config["config"][0] == target_config
+        assert len(default_config) > 0
+        assert default_config["model"] == target_config["model"]
 
         # OTX-Mobilenet-v2
         # new_config

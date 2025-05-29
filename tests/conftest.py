@@ -13,6 +13,7 @@ from omegaconf import OmegaConf
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
+from collections import namedtuple
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.mem_cache import MemCacheHandlerSingleton
@@ -21,8 +22,8 @@ from otx.core.types.task import OTXTaskType
 from otx.data.torch import OTXDataBatch, OTXDataItem, OTXPredBatch, OTXPredItem
 from otx.tools.converter import TEMPLATE_ID_DICT
 from otx.utils.device import is_xpu_available
-from tests.utils import ExportCase2Test
 
+ExportCase2Test = namedtuple("ExportCase2Test", ["export_format", "export_demo_package", "expected_output"])
 
 def pytest_addoption(parser: pytest.Parser):
     """Add custom options for perf tests."""
