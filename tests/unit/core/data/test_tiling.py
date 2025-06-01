@@ -429,7 +429,6 @@ class TestOTXTiling:
         )  # updated from OTXDetectionModel to avoid NotImplementedError in _build_model
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
-        data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.DETECTION,
@@ -453,7 +452,6 @@ class TestOTXTiling:
         )  # updated from OTXDetectionModel to avoid NotImplementedError in _build_model
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True, enable_adaptive_tiling=False)
-        data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.DETECTION,
@@ -479,7 +477,6 @@ class TestOTXTiling:
         )
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
-        data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.INSTANCE_SEGMENTATION,
@@ -503,7 +500,6 @@ class TestOTXTiling:
         )
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True, enable_adaptive_tiling=False)
-        data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.INSTANCE_SEGMENTATION,
@@ -529,7 +525,6 @@ class TestOTXTiling:
         )
         # Enable tile adapter
         data_config["tile_config"] = TileConfig(enable_tiler=True)
-        data_config["mem_cache_size"] = "0"
         data_config["val_subset"].batch_size = 1
         tile_datamodule = OTXDataModule(
             task=OTXTaskType.SEMANTIC_SEGMENTATION,

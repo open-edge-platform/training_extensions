@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from datumaro import Dataset as DmDataset
 
     from otx.core.config.data import SubsetConfig
-    from otx.core.data.mem_cache import MemCacheHandlerBase
 
 
 __all__ = ["TransformLibFactory", "OTXDatasetFactory"]
@@ -46,9 +45,7 @@ class OTXDatasetFactory:
         task: OTXTaskType,
         dm_subset: DmDataset,
         cfg_subset: SubsetConfig,
-        mem_cache_handler: MemCacheHandlerBase,
         data_format: str,
-        mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         include_polygons: bool = False,
         ignore_index: int = 255,
@@ -59,8 +56,6 @@ class OTXDatasetFactory:
             "dm_subset": dm_subset,
             "transforms": transforms,
             "data_format": data_format,
-            "mem_cache_handler": mem_cache_handler,
-            "mem_cache_img_max_size": mem_cache_img_max_size,
             "image_color_channel": image_color_channel,
             "to_tv_image": cfg_subset.to_tv_image,
         }
