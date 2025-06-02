@@ -80,10 +80,10 @@ class TestAutoConfigurator:
         target_config = OmegaConf.load(target_config)
         assert isinstance(default_config, dict)
         assert len(default_config) > 0
-        breakpoint()
         assert "config" in default_config
         assert len(default_config) > 0
         assert default_config["model"] == target_config["model"]
+
 
         # OTX-Mobilenet-v2
         # new_config
