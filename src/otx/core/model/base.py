@@ -6,23 +6,16 @@
 
 from __future__ import annotations
 
-import contextlib
 import inspect
-import json
 import logging
 import warnings
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
-import numpy as np
-import openvino
 import torch
 from datumaro import LabelCategories
-from jsonargparse import ArgumentParser
 from lightning import LightningModule, Trainer
-from model_api.models import Model
-from model_api.tilers import Tiler
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ConstantLR
 from torch.optim.sgd import SGD
@@ -31,13 +24,11 @@ from torchmetrics import Metric, MetricCollection
 from otx import __version__
 from otx.core.config.data import TileConfig
 from otx.core.data.entity.base import (
-    ImageInfo,
     OTXBatchLossEntity,
     T_OTXBatchDataEntity,
     T_OTXBatchPredEntity,
 )
 from otx.core.data.entity.tile import OTXTileBatchDataEntity
-from otx.core.exporter.native import OTXNativeModelExporter
 from otx.core.metrics import MetricInput, NullMetricCallable
 from otx.core.optimizer.callable import OptimizerCallableSupportAdaptiveBS
 from otx.core.schedulers import (
@@ -47,9 +38,8 @@ from otx.core.schedulers import (
     SchedulerCallableSupportAdaptiveBS,
 )
 from otx.core.types.export import OTXExportFormatType, TaskLevelExportParameters
-from otx.core.types.label import LabelInfo, LabelInfoTypes, NullLabelInfo
+from otx.core.types.label import LabelInfo, LabelInfoTypes
 from otx.core.types.precision import OTXPrecisionType
-from otx.core.utils.build import get_default_num_async_infer_requests
 from otx.core.utils.miscellaneous import ensure_callable
 from otx.core.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
 from otx.data.torch import OTXDataBatch, OTXPredBatch
@@ -59,7 +49,6 @@ if TYPE_CHECKING:
 
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from lightning.pytorch.utilities.types import LRSchedulerTypeUnion, OptimizerLRScheduler
-    from model_api.adapters import OpenvinoAdapter
     from torch.optim.lr_scheduler import LRScheduler
     from torch.optim.optimizer import Optimizer, params_t
 
@@ -910,321 +899,3 @@ class OTXModel(LightningModule):
         ):
             msg = f"Input size should be a multiple of {self.input_size_multiplier}, but got {input_size} instead."
             raise ValueError(msg)
-
-
-class OVModel(OTXModel):
-    """Base class for the OpenVINO model.
-
-    This is a base class representing interface for interacting with OpenVINO
-    Intermediate Representation (IR) models. OVModel can create and validate
-    OpenVINO IR model directly from provided path locally or from
-    OpenVINO OMZ repository. (Only PyTorch models are supported).
-    OVModel supports synchronous as well as asynchronous inference type.
-
-    Args:
-        num_classes: Number of classes this model can predict.
-    """
-
-    def __init__(
-        self,
-        model_name: str,
-        model_type: str,
-        async_inference: bool = True,
-        force_cpu: bool = True,
-        max_num_requests: int | None = None,
-        use_throughput_mode: bool = True,
-        model_api_configuration: dict[str, Any] | None = None,
-        metric: MetricCallable = NullMetricCallable,
-        **kwargs,
-    ) -> None:
-        self.model_name = model_name
-        self.model_type = model_type
-        self.force_cpu = force_cpu
-        self.async_inference = async_inference
-        self.num_requests = max_num_requests if max_num_requests is not None else get_default_num_async_infer_requests()
-        self.use_throughput_mode = use_throughput_mode
-        self.model_api_configuration = model_api_configuration if model_api_configuration is not None else {}
-        # data_input_params placeholder. No need for OVModel
-        self.data_input_params = DataInputParams(input_size=(224, 224), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
-        # NOTE: num_classes and label_info comes from the IR metadata
-        super().__init__(
-            label_info=NullLabelInfo(),
-            metric=metric,
-            data_input_params=self.data_input_params,
-            model_name=model_name,
-        )
-        self._label_info = self._create_label_info_from_ov_ir()
-
-        tile_enabled = False
-        with contextlib.suppress(RuntimeError):
-            if isinstance(self.model, Model):
-                tile_enabled = "tile_size" in self.model.inference_adapter.get_rt_info(["model_info"]).astype(dict)
-
-        if tile_enabled:
-            self._setup_tiler()
-
-    def _setup_tiler(self) -> None:
-        """Setup tiler for tile task."""
-        raise NotImplementedError
-
-    def _get_hparams_from_adapter(self, model_adapter: OpenvinoAdapter) -> None:
-        """Reads model configuration from ModelAPI OpenVINO adapter.
-
-        Args:
-            model_adapter (OpenvinoAdapter): target adapter to read the config
-        """
-
-    def _create_model(self, num_classes: int | None = None) -> Model:
-        """Create a OV model with help of Model API."""
-        from model_api.adapters import OpenvinoAdapter, create_core
-
-        if self.device.type != "cpu":
-            msg = (
-                f"Device {self.device.type} is set for Lightning module, but the actual inference "
-                "device is selected by OpenVINO."
-            )
-            logger.warning(msg)
-
-        ov_device = "CPU"
-        ie = create_core()
-        if not self.force_cpu:
-            devices = ie.available_devices
-            for device in devices:
-                device_name = ie.get_property(device_name=device, property="FULL_DEVICE_NAME")
-                if "dGPU" in device_name and "Intel" in device_name:
-                    ov_device = device
-                    break
-
-        plugin_config = {}
-        if self.use_throughput_mode:
-            plugin_config["PERFORMANCE_HINT"] = "THROUGHPUT"
-
-        model_adapter = OpenvinoAdapter(
-            ie,
-            self.model_name,
-            device=ov_device,
-            max_num_requests=self.num_requests,
-            plugin_config=plugin_config,
-            model_parameters=self.model_adapter_parameters,
-        )
-
-        self._get_hparams_from_adapter(model_adapter)
-
-        return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
-
-    def _customize_inputs(self, entity: T_OTXBatchDataEntity) -> dict[str, Any]:
-        # restore original numpy image
-        images = [np.transpose(im.cpu().numpy(), (1, 2, 0)) for im in entity.images]
-        return {"inputs": images}
-
-    def _forward(self, inputs: T_OTXBatchDataEntity) -> T_OTXBatchPredEntity:
-        """Model forward function."""
-        numpy_inputs = self._customize_inputs(inputs)["inputs"]
-        if self.async_inference:
-            outputs = self.model.infer_batch(numpy_inputs)
-        else:
-            outputs = [self.model(im) for im in numpy_inputs]
-
-        customized_outputs = self._customize_outputs(outputs, inputs)
-
-        if isinstance(customized_outputs, OTXBatchLossEntity):
-            raise TypeError(customized_outputs)
-
-        return customized_outputs
-
-    def forward(self, inputs: T_OTXBatchDataEntity) -> T_OTXBatchPredEntity:
-        """Model forward function."""
-        return self._forward(inputs=inputs)  # type: ignore[return-value]
-
-    def forward_explain(self, inputs: T_OTXBatchDataEntity) -> T_OTXBatchPredEntity:
-        """Model forward explain function."""
-        return self._forward(inputs=inputs)  # type: ignore[return-value]
-
-    def optimize(
-        self,
-        output_dir: Path,
-        data_module: OTXDataModule,
-        ptq_config: dict[str, Any] | None = None,
-    ) -> Path:
-        """Runs NNCF quantization."""
-        import nncf
-
-        output_model_path = output_dir / (self._OPTIMIZED_MODEL_BASE_NAME + ".xml")
-
-        def check_if_quantized(model: openvino.Model) -> bool:
-            """Checks if OpenVINO model is already quantized."""
-            nodes = model.get_ops()
-            return any(op.get_type_name() == "FakeQuantize" for op in nodes)
-
-        ov_model = openvino.Core().read_model(self.model_name)
-
-        if check_if_quantized(ov_model):
-            msg = "Model is already optimized by PTQ"
-            raise RuntimeError(msg)
-
-        train_dataset = data_module.train_dataloader()
-
-        ptq_config_from_ir = self._read_ptq_config_from_ir(ov_model)
-        if ptq_config is not None:
-            ptq_config_from_ir.update(ptq_config)
-            ptq_config = ptq_config_from_ir
-        else:
-            ptq_config = ptq_config_from_ir
-
-        quantization_dataset = nncf.Dataset(train_dataset, self.transform_fn)  # type: ignore[attr-defined]
-
-        compressed_model = nncf.quantize(  # type: ignore[attr-defined]
-            ov_model,
-            quantization_dataset,
-            **ptq_config,
-        )
-
-        openvino.save_model(compressed_model, output_model_path)
-
-        return output_model_path
-
-    def export(
-        self,
-        output_dir: Path,
-        base_name: str,
-        export_format: OTXExportFormatType,
-        precision: OTXPrecisionType = OTXPrecisionType.FP32,
-        to_exportable_code: bool = True,
-    ) -> Path:
-        """Export this model to the specified output directory.
-
-        Args:
-            output_dir (Path): directory for saving the exported model
-            base_name: (str): base name for the exported model file. Extension is defined by the target export format
-            export_format (OTXExportFormatType): format of the output model
-            precision (OTXExportPrecisionType): precision of the output model
-            to_exportable_code (bool): whether to generate exportable code with demo package.
-                OpenVINO model supports only exportable code option.
-
-        Returns:
-            Path: path to the exported model.
-        """
-        if not to_exportable_code:
-            msg = "OpenVINO model can be exported only as exportable code with demo package."
-            raise RuntimeError(msg)
-
-        # Temporarily unwrap Tiler model if applicable
-        original_model = self.model
-        if isinstance(original_model, Tiler):
-            self.model = original_model.model
-
-        try:
-            exported_path = self._exporter.export(
-                self.model,
-                output_dir,
-                base_name,
-                export_format,
-                precision,
-                to_exportable_code,
-            )
-        finally:
-            # Restore the original model
-            self.model = original_model
-
-        return exported_path
-
-    def transform_fn(self, data_batch: T_OTXBatchDataEntity) -> np.array:
-        """Data transform function for PTQ."""
-        np_data = self._customize_inputs(data_batch)
-        image = np_data["inputs"][0]
-        # NOTE: Tiler wraps the model, so we need to unwrap it to get the model
-        model = self.model.model if isinstance(self.model, Tiler) else self.model
-        resized_image = model.resize(image, (model.w, model.h))
-        resized_image = model.input_transform(resized_image)
-        return model._change_layout(resized_image)  # noqa: SLF001
-
-    def _read_ptq_config_from_ir(self, ov_model: Model) -> dict[str, Any]:
-        """Generates the PTQ (Post-Training Quantization) configuration from the meta data of the given OpenVINO model.
-
-        Args:
-            ov_model (Model): The OpenVINO model in which the PTQ configuration is embedded.
-
-        Returns:
-            dict: The PTQ configuration as a dictionary.
-        """
-        from nncf import IgnoredScope  # type: ignore[attr-defined]
-        from nncf.common.quantization.structs import QuantizationPreset  # type: ignore[attr-defined]
-        from nncf.parameters import ModelType
-        from nncf.quantization.advanced_parameters import AdvancedQuantizationParameters
-
-        if "optimization_config" not in ov_model.rt_info["model_info"]:
-            return {}
-
-        initial_ptq_config = json.loads(ov_model.rt_info["model_info"]["optimization_config"].value)
-        if not initial_ptq_config:
-            return {}
-        argparser = ArgumentParser()
-        if "advanced_parameters" in initial_ptq_config:
-            argparser.add_class_arguments(AdvancedQuantizationParameters, "advanced_parameters")
-        if "preset" in initial_ptq_config:
-            initial_ptq_config["preset"] = QuantizationPreset(initial_ptq_config["preset"])
-            argparser.add_argument("--preset", type=QuantizationPreset)
-        if "model_type" in initial_ptq_config:
-            initial_ptq_config["model_type"] = ModelType(initial_ptq_config["model_type"])
-            argparser.add_argument("--model_type", type=ModelType)
-        if "ignored_scope" in initial_ptq_config:
-            argparser.add_class_arguments(IgnoredScope, "ignored_scope", as_positional=True)
-
-        initial_ptq_config = argparser.parse_object(initial_ptq_config)
-
-        return argparser.instantiate_classes(initial_ptq_config).as_dict()
-
-    @property
-    def _exporter(self) -> OTXNativeModelExporter:
-        """Exporter of the OVModel for exportable code."""
-        return OTXNativeModelExporter(
-            task_level_export_parameters=self._export_parameters,
-            data_input_params=self.data_input_params,
-        )
-
-    @property
-    def model_adapter_parameters(self) -> dict:
-        """Model parameters for export."""
-        return {}
-
-    def _set_label_info(self, label_info: LabelInfoTypes) -> None:
-        """Set this model label information."""
-        new_label_info = self._dispatch_label_info(label_info)
-        self._label_info = new_label_info
-
-    def _create_label_info_from_ov_ir(self) -> LabelInfo:
-        ov_model = self.model.get_model()
-
-        if ov_model.has_rt_info(["model_info", "label_info"]):
-            serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
-            return LabelInfo.from_json(serialized)
-
-        mapi_model: Model = self.model
-
-        if label_names := getattr(mapi_model, "labels", None):
-            msg = (
-                'Cannot find "label_info" from OpenVINO IR. '
-                "However, we found labels attributes from ModelAPI. "
-                "Construct LabelInfo from it."
-            )
-
-            logger.warning(msg)
-            return LabelInfo(label_names=label_names, label_groups=[label_names], label_ids=[])
-
-        msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
-        raise ValueError(msg)
-
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
-        """Returns a dummy input for base OV model."""
-        # Resize is embedded to the OV model, which means we don't need to know the actual size
-        images = [torch.rand(3, 224, 224) for _ in range(batch_size)]
-        infos = []
-        for i, img in enumerate(images):
-            infos.append(
-                ImageInfo(
-                    img_idx=i,
-                    img_shape=img.shape,
-                    ori_shape=img.shape,
-                ),
-            )
-        return OTXDataBatch(batch_size=batch_size, images=images, imgs_info=infos)

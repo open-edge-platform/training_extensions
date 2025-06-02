@@ -20,9 +20,9 @@ from anomalib.metrics import create_metric_collection
 from lightning import Callback, Trainer
 from torchvision.transforms.functional import resize
 
+from otx.backend.openvino.models import OVModel
 from otx.core.data.module import OTXDataModule
 from otx.core.metrics.types import MetricCallable, NullMetricCallable
-from otx.core.model.base import OVModel
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.data import OTXDataBatch
@@ -96,7 +96,7 @@ class AnomalyOpenVINO(OVModel):
 
     def __init__(
         self,
-        model_name: str,
+        model_path: str,
         async_inference: bool = True,
         max_num_requests: int | None = None,
         use_throughput_mode: bool = True,
@@ -111,7 +111,7 @@ class AnomalyOpenVINO(OVModel):
         **kwargs,
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_path=model_path,
             model_type="AnomalyDetection",
             async_inference=async_inference,
             max_num_requests=max_num_requests,
@@ -122,7 +122,7 @@ class AnomalyOpenVINO(OVModel):
         metric_names = ["AUROC", "F1Score"]
         self.image_metrics: AnomalibMetricCollection = create_metric_collection(metric_names, prefix="image_")
         self.pixel_metrics: AnomalibMetricCollection = create_metric_collection(metric_names, prefix="pixel_")
-        self.task = task
+        self._task = task
 
     def _create_model(self) -> Model:
         from model_api.adapters import OpenvinoAdapter, create_core, get_user_config
@@ -134,7 +134,7 @@ class AnomalyOpenVINO(OVModel):
 
         model_adapter = OpenvinoAdapter(
             create_core(),
-            self.model_name,
+            self.model_path,
             max_num_requests=self.num_requests,
             plugin_config=plugin_config,
         )
@@ -149,6 +149,7 @@ class AnomalyOpenVINO(OVModel):
         output_dir: Path,
         data_module: OTXDataModule,
         ptq_config: dict[str, Any] | None = None,
+        optimized_model_name: str = "optimized_model",
     ) -> Path:
         """Runs NNCF quantization.
 
@@ -159,14 +160,14 @@ class AnomalyOpenVINO(OVModel):
         """
         import nncf
 
-        output_model_path = output_dir / (self._OPTIMIZED_MODEL_BASE_NAME + ".xml")
+        output_model_path = output_dir / (optimized_model_name + ".xml")
 
         def check_if_quantized(model: openvino.Model) -> bool:
             """Checks if OpenVINO model is already quantized."""
             nodes = model.get_ops()
             return any(op.get_type_name() == "FakeQuantize" for op in nodes)
 
-        ov_model = openvino.Core().read_model(self.model_name)
+        ov_model = openvino.Core().read_model(self.model_path)
 
         if check_if_quantized(ov_model):
             msg = "Model is already optimized by PTQ"

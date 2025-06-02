@@ -11,6 +11,7 @@ from model_api.tilers import Tiler
 
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
+from otx.backend.openvino.engine import OVEngine
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel
 from otx.core.types.task import OTXTaskType
@@ -83,9 +84,10 @@ def test_engine_from_config(
     else:
         AssertionError(f"Exported model path is not a Path or a dictionary of Paths: {exported_model_path}")
 
-    # Test with IR Model
+    # Test with IR Model and OVEngine
+    ov_engine = OVEngine(data=engine.datamodule)
     if task in OVMODEL_PER_TASK:
-        test_metric_from_ov_model = engine.test(checkpoint=exported_model_path, accelerator="cpu")
+        test_metric_from_ov_model = ov_engine.test(checkpoint=exported_model_path)
         assert len(test_metric_from_ov_model) > 0
 
     # List of models with explain supported.
@@ -108,16 +110,10 @@ def test_engine_from_config(
     assert exported_model_with_explain.exists()
 
     # Infer IR Model with explain: predict
-    predictions = engine.predict(explain=True, checkpoint=exported_model_with_explain, accelerator="cpu")
+    predictions = ov_engine.predict(explain=True, checkpoint=exported_model_with_explain)
     assert len(predictions) > 0
     sal_maps_from_prediction = predictions[0].saliency_map
     assert len(sal_maps_from_prediction) > 0
-
-    # Infer IR Model with explain: explain
-    explain_results = engine.explain(checkpoint=exported_model_with_explain, accelerator="cpu")
-    assert len(explain_results[0].saliency_map) > 0
-    sal_maps_from_explain = explain_results[0].saliency_map
-    assert (sal_maps_from_prediction[0][0] == sal_maps_from_explain[0][0]).all()
 
 
 @pytest.mark.parametrize("recipe", pytest.TILE_RECIPE_LIST)
@@ -151,13 +147,15 @@ def test_engine_from_tile_recipe(
     engine.train(max_epochs=1)
     exported_model_path = engine.export()
     assert exported_model_path.exists()
-    metric = engine.test(exported_model_path, accelerator="cpu")
+
+    # Check OVEngine with tiling
+    ov_engine = OVEngine(data=engine.datamodule, model=exported_model_path)
+    metric = ov_engine.test()
     assert len(metric) > 0
 
     # Check OVModel & OVTiler is set correctly
     ov_model = engine._auto_configurator.get_ov_model(
         model_name=exported_model_path,
-        label_info=engine.datamodule.label_info,
     )
     assert isinstance(ov_model.model, Tiler), "Model should be an instance of Tiler"
     assert engine.datamodule.tile_config.tile_size[0] == ov_model.model.tile_size
