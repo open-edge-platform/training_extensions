@@ -60,7 +60,7 @@ class AnomalyEngine(Engine):
         engine = self._create_anomalib_engine(**kwargs)
         engine.train(model=self.model, datamodule=self.data)
         # TODO(ashwinvaidya17): return metrics
-        return [{}]
+        return {}
 
     def test(self, **kwargs) -> METRICS:
         """Test the model.
@@ -70,7 +70,7 @@ class AnomalyEngine(Engine):
         """
         engine = self._create_anomalib_engine(**kwargs)
         results = engine.test(model=self.model, datamodule=self.data)
-        return [{key: value} for key, value in results[0].items()]
+        return results[0]
 
     def predict(self, **kwargs) -> ANNOTATIONS:
         """Predict the model.

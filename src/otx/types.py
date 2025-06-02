@@ -9,7 +9,7 @@ from typing import Any
 
 from otx.data.torch.torch import OTXPredItem
 
-METRICS = list[dict[str, float]]
+METRICS = dict[str, float]
 ANNOTATIONS = list[OTXPredItem]
 MODEL = Any  # TODO(ashwinvaidya17): Temporary till model is properly defined
 DATA = Any  # TODO(ashwinvaidya17): Temporary till data is properly defined

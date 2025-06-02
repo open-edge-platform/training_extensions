@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
     from otx.core.metrics import MetricCallable
-    from otx.types import DATA, MODEL
+    from otx.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 
 @contextmanager
@@ -299,7 +299,7 @@ class OTXEngine(Engine):
         datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
         metric: MetricCallable | None = None,
         **kwargs,
-    ) -> dict:
+    ) -> METRICS:
         r"""Run the testing phase of the engine.
 
         Args:
@@ -391,7 +391,7 @@ class OTXEngine(Engine):
         explain: bool = False,
         explain_config: ExplainConfig | None = None,
         **kwargs,
-    ) -> list | None:
+    ) -> ANNOTATIONS:
         r"""Run predictions using the specified model and data.
 
         Args:
@@ -403,7 +403,7 @@ class OTXEngine(Engine):
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
-            list | None: The predictions if `return_predictions` is True, otherwise None.
+            ANNOTATIONS: The predictions if `return_predictions` is True, otherwise None.
 
         Example:
             >>> engine.predict(
