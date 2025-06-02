@@ -180,7 +180,6 @@ def pytest_configure(config):
     pytest.TASK_LIST = task_list
     pytest.RECIPE_LIST = target_recipe_list
     pytest.RECIPE_OV_LIST = target_ov_recipe_list
-    pytest.DEFAULT_RECIPE_LIST = get_model_category_list(task, default_model_only=True)
     pytest.TILE_RECIPE_LIST = tile_recipe_list
 
 
