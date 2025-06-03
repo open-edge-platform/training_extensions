@@ -65,6 +65,7 @@ class OTXAnomalyModelExporter(OTXNativeModelExporter):
             task_level_export_parameters=TaskLevelExportParameters(
                 model_type="anomaly",
                 task_type="anomaly",
+                model_name="anomaly",
                 label_info=NullLabelInfo(),
                 optimization_config={},
             ),

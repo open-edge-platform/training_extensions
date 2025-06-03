@@ -774,6 +774,7 @@ class OTXModel(LightningModule):
         return TaskLevelExportParameters(
             model_type="null",
             task_type="null",
+            model_name=self.model_name,
             label_info=self.label_info,
             optimization_config=self._optimization_config,
         )
