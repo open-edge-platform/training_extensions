@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import copy
 import csv
-import inspect
 import logging
 import time
 from contextlib import contextmanager
@@ -34,7 +33,7 @@ from otx.engine.engine import Engine
 from otx.utils.device import is_xpu_available
 from otx.utils.utils import measure_flops
 
-from .utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
+from .utils.auto_configurator import AutoConfigurator
 
 if TYPE_CHECKING:
     from lightning import Callback
@@ -776,146 +775,6 @@ class OTXEngine(Engine):
             writer.writerow(list(final_stats.values()))
 
         return final_stats
-
-    @classmethod
-    def from_config(
-        cls,
-        config_path: PathLike,
-        data_root: PathLike | None = None,
-        work_dir: PathLike | None = None,
-        **kwargs,
-    ) -> Engine:
-        """Builds the engine from a configuration file.
-
-        Args:
-            config_path (PathLike): The configuration file path.
-            data_root (PathLike | None): Root directory for the data.
-                Defaults to None. If data_root is None, use the data_root from the configuration file.
-            work_dir (PathLike | None, optional): Working directory for the engine.
-                Defaults to None. If work_dir is None, use the work_dir from the configuration file.
-            kwargs: Arguments that can override the engine's arguments.
-
-        Returns:
-            Engine: An instance of the Engine class.
-
-        Example:
-            >>> engine = OTXEngine.from_config(
-            ...     config="config.yaml",
-            ... )
-        """
-        from otx.cli.utils.jsonargparse import get_instantiated_classes
-
-        # For the Engine argument, prepend 'engine.' for CLI parser
-        filter_kwargs = ["device", "checkpoint", "task"]
-        for key in filter_kwargs:
-            if key in kwargs:
-                kwargs[f"engine.{key}"] = kwargs.pop(key)
-        instantiated_config, train_kwargs = get_instantiated_classes(
-            config=config_path,
-            data_root=data_root,
-            work_dir=work_dir,
-            **kwargs,
-        )
-        engine_kwargs = {**instantiated_config.get("engine", {}), **train_kwargs}
-
-        # Remove any input that is not currently available in Engine and print a warning message.
-        set_valid_args = TrainerArgumentsCache.get_trainer_constructor_args().union(
-            set(inspect.signature(OTXEngine.__init__).parameters.keys()),
-        )
-        removed_args = []
-        for engine_key in list(engine_kwargs.keys()):
-            if engine_key not in set_valid_args:
-                engine_kwargs.pop(engine_key)
-                removed_args.append(engine_key)
-        if removed_args:
-            msg = (
-                f"Warning: {removed_args} -> not available in Engine constructor. "
-                "It will be ignored. Use what need in the right places."
-            )
-            warn(msg, stacklevel=1)
-
-        if (datamodule := instantiated_config.get("data")) is None:
-            msg = "Cannot instantiate datamodule from config."
-            raise ValueError(msg)
-        if not isinstance(datamodule, OTXDataModule):
-            raise TypeError(datamodule)
-
-        if (model := instantiated_config.get("model")) is None:
-            msg = "Cannot instantiate model from config."
-            raise ValueError(msg)
-        if not isinstance(model, OTXModel):
-            raise TypeError(model)
-
-        model.label_info = datamodule.label_info
-
-        return cls(
-            work_dir=instantiated_config.get("work_dir", work_dir),
-            datamodule=datamodule,
-            model=model,
-            **engine_kwargs,
-        )
-
-    @classmethod
-    def from_model_name(
-        cls,
-        model_name: str,
-        task: OTXTaskType,
-        data_root: PathLike | None = None,
-        work_dir: PathLike | None = None,
-        **kwargs,
-    ) -> Engine:
-        """Builds the engine from a model name.
-
-        Args:
-            model_name (str): The model name.
-            task (OTXTaskType): The type of OTX task.
-            data_root (PathLike | None): Root directory for the data.
-                Defaults to None. If data_root is None, use the data_root from the configuration file.
-            work_dir (PathLike | None, optional): Working directory for the engine.
-                Defaults to None. If work_dir is None, use the work_dir from the configuration file.
-            kwargs: Arguments that can override the engine's arguments.
-
-        Returns:
-            Engine: An instance of the Engine class.
-
-        Example:
-            >>> engine = OTXEngine.from_model_name(
-            ...     model_name="atss_mobilenetv2",
-            ...     task="DETECTION",
-            ...     data_root=<dataset/path>,
-            ... )
-
-            If you want to override configuration from default config:
-                >>> overriding = {
-                ...     "data.train_subset.batch_size": 2,
-                ...     "data.test_subset.subset_name": "TESTING",
-                ... }
-                >>> engine = OTXEngine(
-                ...     model_name="atss_mobilenetv2",
-                ...     task="DETECTION",
-                ...     data_root=<dataset/path>,
-                ...     **overriding,
-                ... )
-        """
-        default_config = DEFAULT_CONFIG_PER_TASK.get(task)
-        model_path = str(default_config).split("/")
-        model_path[-1] = f"{model_name}.yaml"
-        config = Path("/".join(model_path))
-        if not config.exists():
-            candidate_list = [model.stem for model in config.parent.glob("*")]
-            msg = (
-                f"Model config file not found: {config}, please check the model name. "
-                f"Available models for {task} task are {candidate_list}"
-            )
-            raise FileNotFoundError(msg)
-
-        return cls.from_config(
-            config_path=config,
-            data_root=data_root,
-            work_dir=work_dir,
-            task=task,
-            **kwargs,
-        )
 
     # ------------------------------------------------------------------------ #
     # Property and setter functions provided by Engine.

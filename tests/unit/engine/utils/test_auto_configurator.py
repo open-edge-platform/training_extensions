@@ -84,7 +84,6 @@ class TestAutoConfigurator:
         assert len(default_config) > 0
         assert default_config["model"] == target_config["model"]
 
-
         # OTX-Mobilenet-v2
         # new_config
         model_name = "deit_tiny"
