@@ -167,7 +167,6 @@ class OTXDataModule(LightningDataModule):
                     )
                     subset_config.num_workers = num_workers
 
-
         label_infos: list[LabelInfo] = []
 
         for name, dm_subset in dataset.subsets().items():
