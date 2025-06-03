@@ -153,7 +153,7 @@ class Benchmark:
 
         self._rename_raw_data(
             work_dir=Path(engine.work_dir),
-            replaces={"train_": "train/", "{pre}": "training:"},
+            replace_map={"train_": "train/", "{pre}": "training:"},
         )
         del engine
         return total_time
@@ -195,12 +195,6 @@ class Benchmark:
             subcommand=SubCommand.TEST,
         )
 
-        replace_map = {
-            RunTestType.TORCH: {"test_": "test/", "{pre}": f"{test_type}:"},
-            RunTestType.EXPORT: {"test_": "test/", "{pre}": f"{test_type}:"},
-            RunTestType.OPTIMIZE: {"test_": "test/", "{pre}": f"{test_type}:"},
-        }
-
         extra_kwargs = {}
         for key, value in dataset_info.extra_overrides.get("test", {}).items():
             extra_kwargs[key] = value
@@ -226,7 +220,7 @@ class Benchmark:
 
         self._rename_raw_data(
             work_dir=Path(engine.work_dir),
-            replaces=replace_map[what2test],
+            replace_map={"test_": "test/", "{pre}": f"{test_type}:", "image_F1Score": "test/image_F1Score"},
         )
         self._log_metrics(
             work_dir=Path(engine.work_dir),
@@ -602,16 +596,16 @@ class Benchmark:
             metrics[k] = v
         metrics.to_csv(work_dir / "benchmark.raw.csv", index=False)
 
-    def _rename_raw_data(self, work_dir: Path, replaces: dict[str, str]) -> None:
+    def _rename_raw_data(self, work_dir: Path, replace_map: dict[str, str]) -> None:
         """Rename columns in the metrics.csv files based on the provided replacements.
 
         Args:
             work_dir (Path): work directory
-            replaces (dict[str, str]): Replacement map
+            replace_map (dict[str, str]): Replacement map
         """
 
         def _rename_col(col_name: str) -> str:
-            for src_str, dst_str in replaces.items():
+            for src_str, dst_str in replace_map.items():
                 if src_str == "{pre}":
                     if not col_name.startswith(dst_str):
                         col_name = dst_str + col_name
@@ -626,7 +620,7 @@ class Benchmark:
         for csv_file in csv_files:
             data = pd.read_csv(csv_file)
             data = data.rename(columns=_rename_col)  # Column names
-            data = data.replace(replaces)  # Values
+            data = data.replace(replace_map)  # Values
             data.to_csv(csv_file, index=False)
 
     def check(self, result: pd.DataFrame, criteria: list[Criterion]):
