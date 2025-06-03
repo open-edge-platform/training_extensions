@@ -28,9 +28,9 @@ otx.algo
    :recursive:
 
    otx.algo.accelerators
+   otx.algo.callbacks
    otx.algo.strategies
    otx.algo.anomaly
-   otx.algo.callbacks
    otx.algo.classification
    otx.algo.detection
    otx.algo.modules
