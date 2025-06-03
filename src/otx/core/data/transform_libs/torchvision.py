@@ -117,6 +117,7 @@ class NumpytoTVTensorMixin:
                 inputs.masks = tv_tensors.Mask(masks)  # type: ignore[union-attr]
         return inputs
 
+
 class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
     """Implementation of mmdet.datasets.transforms.MinIoURandomCrop with torchvision format.
 
