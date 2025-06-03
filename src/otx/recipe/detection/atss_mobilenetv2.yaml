@@ -30,14 +30,33 @@ engine:
 callback_monitor: val/map_50
 
 data: ../_base_/data/detection.yaml
+
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    init_args:
+      max_interval: 5
+      decay: -0.025
+      min_lrschedule_patience: 3
+  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      mode: max
+      patience: 10
+      check_on_train_epoch_end: false
+      min_delta: 0.001
+      warmup_iters: 30
+      warmup_epochs: 3
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: "" # use engine.work_dir
+      monitor: val/map_50
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"
+
 overrides:
   gradient_clip_val: 35.0
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
-      init_args:
-        max_interval: 5
-        decay: -0.025
-        min_lrschedule_patience: 3
 
   data:
     train_subset:
