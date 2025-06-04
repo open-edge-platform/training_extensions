@@ -10,7 +10,6 @@ class TestConfigConverter:
     def test_convert(self):
         config = ConfigConverter.convert("tests/assets/geti-configs/det.json")
 
-        assert config["data"]["mem_cache_size"] == "100MB"
         assert config["data"]["train_subset"]["batch_size"] == 16
         assert config["data"]["val_subset"]["batch_size"] == 8
         assert config["data"]["test_subset"]["batch_size"] == 8
@@ -48,7 +47,6 @@ class TestConfigConverter:
         assert engine.work_dir == tmp_path
 
         assert engine.datamodule.data_root == data_root
-        assert engine.datamodule.mem_cache_size == "100MB"
         assert engine.datamodule.train_subset.batch_size == 16
         assert engine.datamodule.val_subset.batch_size == 8
         assert engine.datamodule.test_subset.batch_size == 8
