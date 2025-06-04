@@ -253,7 +253,7 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for otx.core.model.base</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2023-2024 Intel Corporation</span>
+<span></span><span class="c1"># Copyright (C) 2023-2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 <span class="sd">&quot;&quot;&quot;Class definition for base model entity used in OTX.&quot;&quot;&quot;</span>
 
@@ -1127,6 +1127,7 @@
         <span class="k">return</span> <span class="n">TaskLevelExportParameters</span><span class="p">(</span>
             <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;null&quot;</span><span class="p">,</span>
             <span class="n">task_type</span><span class="o">=</span><span class="s2">&quot;null&quot;</span><span class="p">,</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
             <span class="n">label_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="p">,</span>
             <span class="n">optimization_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimization_config</span><span class="p">,</span>
         <span class="p">)</span>
