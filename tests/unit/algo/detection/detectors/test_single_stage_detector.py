@@ -8,8 +8,8 @@ import torch
 from torch import nn
 
 from otx.backend.native.models.detection.detectors.single_stage_detector import SingleStageDetector
-from otx.data.entity.torch import OTXPredBatch
 from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXPredBatch
 
 
 class TestSingleStageDetector:

@@ -16,15 +16,15 @@ from warnings import warn
 import datumaro
 from jsonargparse import ArgumentParser, Namespace
 
+from otx.backend.native.cli.utils import get_otx_root_path
+from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.utils.instantiators import partial_instantiate_class
 from otx.backend.openvino.models.base import OVModel
 from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.data.module import OTXDataModule
-from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.types import PathLike
 from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
-from otx.backend.native.cli.utils import get_otx_root_path
-from otx.backend.native.utils.instantiators import partial_instantiate_class
 from otx.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
 if TYPE_CHECKING:

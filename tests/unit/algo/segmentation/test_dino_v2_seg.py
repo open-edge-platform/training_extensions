@@ -6,9 +6,9 @@ import pytest
 import torch
 from torch._dynamo.testing import CompileCounter
 
+from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
-from otx.backend.native.exporter.base import OTXModelExporter
 
 
 class TestDinoV2Seg:

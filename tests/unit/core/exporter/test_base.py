@@ -7,8 +7,8 @@ import pytest
 from onnx import ModelProto
 from onnxconverter_common import float16
 
-from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType, ZipFile
+from otx.backend.native.models.base import DataInputParams
 from otx.types.export import TaskLevelExportParameters
 
 

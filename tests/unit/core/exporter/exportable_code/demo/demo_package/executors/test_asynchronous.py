@@ -15,7 +15,9 @@ def fxt_import_module():
     global target_file  # noqa: PLW0603
     global AsyncExecutor  # noqa: PLW0603
     from otx.backend.native.exporter.exportable_code.demo.demo_package.executors import asynchronous
-    from otx.backend.native.exporter.exportable_code.demo.demo_package.executors.asynchronous import AsyncExecutor as Cls1
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.executors.asynchronous import (
+        AsyncExecutor as Cls1,
+    )
 
     target_file = asynchronous
     AsyncExecutor = Cls1

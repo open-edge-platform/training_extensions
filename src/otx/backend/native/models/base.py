@@ -22,14 +22,6 @@ from torch.optim.sgd import SGD
 from torchmetrics import Metric, MetricCollection
 
 from otx import __version__
-from otx.config.data import TileConfig
-from otx.data.entity.base import (
-    OTXBatchLossEntity,
-    T_OTXBatchDataEntity,
-    T_OTXBatchPredEntity,
-)
-from otx.data.entity.tile import OTXTileBatchDataEntity
-from otx.metrics import MetricInput, NullMetricCallable
 from otx.backend.native.optimizers.callable import OptimizerCallableSupportAdaptiveBS
 from otx.backend.native.schedulers import (
     LinearWarmupScheduler,
@@ -37,12 +29,24 @@ from otx.backend.native.schedulers import (
     LRSchedulerListCallable,
     SchedulerCallableSupportAdaptiveBS,
 )
+from otx.backend.native.utils.utils import (
+    ensure_callable,
+    is_ckpt_for_finetuning,
+    is_ckpt_from_otx_v1,
+    remove_state_dict_prefix,
+)
+from otx.config.data import TileConfig
+from otx.data.entity.base import (
+    OTXBatchLossEntity,
+    T_OTXBatchDataEntity,
+    T_OTXBatchPredEntity,
+)
+from otx.data.entity.tile import OTXTileBatchDataEntity
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.metrics import MetricInput, NullMetricCallable
 from otx.types.export import OTXExportFormatType, TaskLevelExportParameters
 from otx.types.label import LabelInfo, LabelInfoTypes
 from otx.types.precision import OTXPrecisionType
-from otx.backend.native.utils.utils import ensure_callable
-from otx.backend.native.utils.utils import is_ckpt_for_finetuning, is_ckpt_from_otx_v1, remove_state_dict_prefix
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -52,8 +56,8 @@ if TYPE_CHECKING:
     from torch.optim.lr_scheduler import LRScheduler
     from torch.optim.optimizer import Optimizer, params_t
 
-    from otx.data.module import OTXDataModule
     from otx.backend.native.exporter.base import OTXModelExporter
+    from otx.data.module import OTXDataModule
     from otx.metrics import MetricCallable
 
 logger = logging.getLogger()

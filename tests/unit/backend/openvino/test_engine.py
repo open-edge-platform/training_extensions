@@ -95,7 +95,9 @@ class TestEngine:
             "otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
             return_value=fxt_engine.datamodule,
         )
-        mock_process_saliency_maps = mocker.patch("otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity")
+        mock_process_saliency_maps = mocker.patch(
+            "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+        )
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
         mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=MagicMock())
         fxt_engine.model = "model.xml"

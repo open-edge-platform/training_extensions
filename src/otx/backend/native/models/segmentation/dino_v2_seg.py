@@ -12,21 +12,21 @@ from urllib.parse import urlparse
 
 from torch.hub import download_url_to_file
 
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformer
+from otx.backend.native.models.segmentation.base import OTXSegmentationModel
 from otx.backend.native.models.segmentation.heads import FCNHead
 from otx.backend.native.models.segmentation.losses import CrossEntropyLossWithIgnore
 from otx.backend.native.models.segmentation.segmentors import BaseSegmentationModel
 from otx.config.data import TileConfig
 from otx.metrics.dice import SegmCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.segmentation.segmentation import OTXSegmentationModel
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
-    from otx.metrics import MetricCallable
     from otx.backend.native.schedulers import LRSchedulerListCallable
+    from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
 
 

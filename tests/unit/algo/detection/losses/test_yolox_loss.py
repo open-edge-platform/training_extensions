@@ -30,7 +30,10 @@ class TestYOLOXCriterion:
         # background
         gt_instances = InstanceData(bboxes=torch.empty((0, 4)), labels=torch.LongTensor([]))
 
-        mocker.patch("otx.backend.native.models.detection.heads.base_head.unpack_det_entity", return_value=([gt_instances], img_metas))
+        mocker.patch(
+            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            return_value=([gt_instances], img_metas),
+        )
         raw_dict = head.prepare_loss_inputs(feat, mocker.MagicMock())
 
         empty_gt_losses = criterion(**raw_dict)
@@ -53,7 +56,10 @@ class TestYOLOXCriterion:
             labels=torch.LongTensor([2]),
         )
 
-        mocker.patch("otx.backend.native.models.detection.heads.base_head.unpack_det_entity", return_value=([gt_instances], img_metas))
+        mocker.patch(
+            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            return_value=([gt_instances], img_metas),
+        )
         raw_dict = head.prepare_loss_inputs(feat, mocker.MagicMock())
         one_gt_losses = criterion(**raw_dict)
         onegt_cls_loss = one_gt_losses["loss_cls"].sum()
@@ -71,7 +77,10 @@ class TestYOLOXCriterion:
             labels=torch.LongTensor([2]),
         )
 
-        mocker.patch("otx.backend.native.models.detection.heads.base_head.unpack_det_entity", return_value=([gt_instances], img_metas))
+        mocker.patch(
+            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            return_value=([gt_instances], img_metas),
+        )
         raw_dict = head.prepare_loss_inputs(feat, mocker.MagicMock())
         empty_gt_losses = criterion(**raw_dict)
         # When gt_bboxes out of bound, the assign results should be empty,

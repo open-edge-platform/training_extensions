@@ -14,6 +14,8 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 from torchvision.transforms.v2 import Normalize
 
+from otx.backend.native.utils.instantiators import instantiate_sampler
+from otx.backend.native.utils.utils import get_adaptive_num_workers
 from otx.config.data import TileConfig
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
@@ -21,14 +23,12 @@ from otx.data.mem_cache import (
     MemCacheHandlerSingleton,
     parse_mem_cache_size_to_int,
 )
-from otx.data.utils.pre_filtering import pre_filtering
 from otx.data.utils import adapt_input_size_to_dataset, adapt_tile_config
+from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType
 from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo
 from otx.types.task import OTXTaskType
-from otx.backend.native.utils.instantiators import instantiate_sampler
-from otx.backend.native.utils.utils import get_adaptive_num_workers
 
 if TYPE_CHECKING:
     from lightning.pytorch.utilities.parsing import AttributeDict

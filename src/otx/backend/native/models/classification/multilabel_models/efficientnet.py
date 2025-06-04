@@ -7,16 +7,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.classification.backbones.efficientnet import EfficientNetBackbone
 from otx.backend.native.models.classification.classifier import ImageClassifier
 from otx.backend.native.models.classification.heads import MultiLabelLinearClsHead
-from otx.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import AsymmetricAngularLossWithIgnore
+from otx.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
+    AsymmetricAngularLossWithIgnore,
+)
+from otx.backend.native.models.classification.multilabel_models.base import OTXMultilabelClsModel
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
 from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
-from otx.metrics.accuracy import MultiLabelClsMetricCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.classification.multilabel_models.base import OTXMultilabelClsModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
+from otx.metrics.accuracy import MultiLabelClsMetricCallable
 from otx.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:

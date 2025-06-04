@@ -6,12 +6,12 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from functools import partial
 from typing import TYPE_CHECKING
-import logging
 
-from lightning.pytorch.utilities import rank_zero_only
 from lightning.pytorch.cli import instantiate_class
+from lightning.pytorch.utilities import rank_zero_only
 
 if TYPE_CHECKING:
     from lightning import Callback

@@ -27,6 +27,7 @@ from torchvision import tv_tensors
 from torchvision._utils import sequence_to_str
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
+from otx.backend.native.utils.utils import import_object_from_module
 from otx.data.entity.base import (
     OTXDataEntity,
     Points,
@@ -35,6 +36,7 @@ from otx.data.entity.base import (
     _resize_image_info,
     _resized_crop_image_info,
 )
+from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.utils import (
     CV2_INTERP_CODES,
     cache_randomness,
@@ -62,8 +64,6 @@ from otx.data.transform_libs.utils import (
     translate_masks,
     translate_polygons,
 )
-from otx.backend.native.utils.utils import import_object_from_module
-from otx.data.entity.torch import OTXDataItem
 
 if TYPE_CHECKING:
     from otx.config.data import SubsetConfig

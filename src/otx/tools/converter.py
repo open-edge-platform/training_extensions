@@ -339,7 +339,10 @@ class ConfigConverter:
 
         def update_early_stop_patience(param_value: int) -> None:
             for callback in config["callbacks"]:
-                if callback["class_path"] == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup":
+                if (
+                    callback["class_path"]
+                    == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+                ):
                     callback["init_args"]["patience"] = param_value
                     break
 

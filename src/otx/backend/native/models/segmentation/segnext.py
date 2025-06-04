@@ -7,22 +7,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.segmentation.backbones import MSCAN
+from otx.backend.native.models.segmentation.base import OTXSegmentationModel
 from otx.backend.native.models.segmentation.heads import LightHamHead
 from otx.backend.native.models.segmentation.losses import CrossEntropyLossWithIgnore
 from otx.backend.native.models.segmentation.segmentors import BaseSegmentationModel
 from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.config.data import TileConfig
 from otx.metrics.dice import SegmCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.segmentation.segmentation import OTXSegmentationModel
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
-    from otx.metrics import MetricCallable
     from otx.backend.native.schedulers import LRSchedulerListCallable
+    from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
 
 

@@ -13,18 +13,18 @@ from urllib.parse import urlparse
 from torch import nn
 from torch.hub import download_url_to_file
 
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformer
 from otx.backend.native.models.classification.classifier import HLabelClassifier
 from otx.backend.native.models.classification.heads import (
     HierarchicalLinearClsHead,
 )
+from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
 from otx.backend.native.models.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.backend.native.models.classification.multiclass_models.vit import ForwardExplainMixInForViT
 from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
-from otx.metrics.accuracy import HLabelClsMetricCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
+from otx.metrics.accuracy import HLabelClsMetricCallable
 from otx.types.label import HLabelInfo
 
 if TYPE_CHECKING:

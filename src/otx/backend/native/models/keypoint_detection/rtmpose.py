@@ -7,23 +7,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
+from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.common.backbones import CSPNeXt
+from otx.backend.native.models.keypoint_detection.base import OTXKeypointDetectionModel
 from otx.backend.native.models.keypoint_detection.detectors.topdown import TopdownPoseEstimator
 from otx.backend.native.models.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from otx.backend.native.models.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
 from otx.backend.native.models.utils.utils import load_checkpoint
-from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.metrics.pck import PCKMeasureCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.keypoint_detection.base import OTXKeypointDetectionModel
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
     from otx.backend.native.exporter.base import OTXModelExporter
-    from otx.metrics import MetricCallable
     from otx.backend.native.schedulers import LRSchedulerListCallable
+    from otx.metrics import MetricCallable
     from otx.types.export import TaskLevelExportParameters
     from otx.types.label import LabelInfoTypes
 

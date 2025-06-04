@@ -58,7 +58,10 @@ class TestYOLOXHeadModule:
         # Test that empty ground truth encourages the network to predict
         # background
         gt_instances = [InstanceData(bboxes=torch.empty((0, 4)), labels=torch.LongTensor([]))]
-        mocker.patch("otx.backend.native.models.detection.heads.base_head.unpack_det_entity", return_value=(gt_instances, img_metas))
+        mocker.patch(
+            "otx.backend.native.models.detection.heads.base_head.unpack_det_entity",
+            return_value=(gt_instances, img_metas),
+        )
 
         raw_dict = head.prepare_loss_inputs(x=feat, entity=mocker.MagicMock())
         for key in [

@@ -9,9 +9,9 @@ import torch
 from lightning import Trainer
 from torch._dynamo.testing import CompileCounter
 
+from otx.backend.native.exporter.native import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.ssd import SSD
-from otx.backend.native.exporter.native import OTXModelExporter
 from otx.data.entity.torch import OTXPredBatch
 from otx.types.export import TaskLevelExportParameters
 

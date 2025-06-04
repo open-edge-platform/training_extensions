@@ -19,8 +19,8 @@ import torch
 
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
 from otx.backend.native.models.classification.utils.ignored_labels import get_valid_label_mask
-from otx.backend.native.tools.explain.explain_algo import ReciproCAM
 from otx.backend.native.models.modules.base_module import BaseModule
+from otx.backend.native.tools.explain.explain_algo import ReciproCAM
 
 if TYPE_CHECKING:
     from torch import nn

@@ -6,12 +6,12 @@ import pytest
 import torch
 from torch._dynamo.testing import CompileCounter
 
+from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.common.backbones.cspnext import CSPNeXtModule
 from otx.backend.native.models.detection.heads.rtmdet_head import RTMDetSepBNHeadModule
 from otx.backend.native.models.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
 from otx.backend.native.models.detection.rtmdet import RTMDet
-from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.data.entity.torch import OTXPredBatch
 
 

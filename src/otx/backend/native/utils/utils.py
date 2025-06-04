@@ -25,7 +25,6 @@ _T = TypeVar("_T")
 _V = TypeVar("_V")
 
 
-
 def is_ckpt_from_otx_v1(ckpt: dict) -> bool:
     """Check the checkpoint where it comes from.
 

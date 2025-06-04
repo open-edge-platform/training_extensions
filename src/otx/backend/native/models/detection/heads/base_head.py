@@ -14,7 +14,12 @@ import torch
 from torch import Tensor
 
 from otx.backend.native.models.common.utils.nms import batched_nms, multiclass_nms
-from otx.backend.native.models.common.utils.utils import dynamic_topk, filter_scores_and_topk, gather_topk, select_single_mlvl
+from otx.backend.native.models.common.utils.utils import (
+    dynamic_topk,
+    filter_scores_and_topk,
+    gather_topk,
+    select_single_mlvl,
+)
 from otx.backend.native.models.detection.utils.utils import unpack_det_entity
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.utils.utils import InstanceData

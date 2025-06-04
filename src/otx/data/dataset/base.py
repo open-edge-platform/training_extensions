@@ -19,11 +19,11 @@ from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
 from torch.utils.data import Dataset
 
 from otx.data.entity.base import T_OTXDataEntity
+from otx.data.entity.torch import OTXDataItem
 from otx.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.data.transform_libs.torchvision import Compose
 from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo, NullLabelInfo
-from otx.data.entity.torch import OTXDataItem
 
 if TYPE_CHECKING:
     from datumaro import DatasetSubset, Image

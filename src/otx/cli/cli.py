@@ -17,12 +17,12 @@ from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, namespace_
 from rich.console import Console
 
 from otx import OTX_LOGO, __version__
+from otx.backend.native.cli.utils import get_otx_root_path
 from otx.backend.native.models.base import DataInputParams
 from otx.cli.utils import absolute_path
 from otx.cli.utils.help_formatter import CustomHelpFormatter
 from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from otx.cli.utils.workspace import Workspace
-from otx.backend.native.cli.utils import get_otx_root_path
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:

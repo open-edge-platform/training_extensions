@@ -18,6 +18,10 @@ from torchvision.models.detection.mask_rcnn import (
     MaskRCNNPredictor,
 )
 
+from otx.backend.native.exporter.base import OTXModelExporter
+from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.backend.native.models.instance_segmentation.heads import TVRoIHeads
 from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import (
     FastRCNNConvFCHead,
@@ -28,20 +32,16 @@ from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv impo
 )
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.utils import stack_batch
-from otx.backend.native.exporter.base import OTXModelExporter
-from otx.backend.native.exporter.native import OTXNativeModelExporter
-from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
-from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.utils import stack_batch
+from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-    from otx.metrics import MetricCallable
     from otx.backend.native.models.base import DataInputParams
     from otx.backend.native.schedulers import LRSchedulerListCallable
+    from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
 
 

@@ -142,7 +142,9 @@ class TestEngine:
         mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
         _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-        mock_process_saliency_maps = mocker.patch("otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity")
+        mock_process_saliency_maps = mocker.patch(
+            "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+        )
 
         mock_model = mocker.create_autospec(OTXModel)
         mock_load_from_checkpoint.return_value = mock_model
@@ -225,7 +227,9 @@ class TestEngine:
         mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
         _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-        mock_process_saliency_maps = mocker.patch("otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity")
+        mock_process_saliency_maps = mocker.patch(
+            "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+        )
 
         mock_model = mocker.create_autospec(OTXModel)
         mock_load_from_checkpoint.return_value = mock_model

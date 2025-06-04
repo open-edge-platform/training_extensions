@@ -145,7 +145,7 @@ class OVEngine(Engine):
         msg = "OVEngine does not support training. Use test or predict methods to evaluate IR model."
         raise NotImplementedError(msg)
 
-    def export(self, *args, **kwargs) -> METRICS:
+    def export(self, *args, **kwargs) -> Path:
         """Export method is not supported for OVEngine."""
         msg = "OVEngine does not support export."
         raise NotImplementedError(msg)

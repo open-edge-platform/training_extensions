@@ -15,15 +15,15 @@ from anomalib.callbacks.thresholding import _ThresholdCallback
 from torch import nn
 
 from otx import __version__
-from otx.data.entity.base import ImageInfo
 from otx.backend.native.exporter.anomaly import OTXAnomalyModelExporter
 from otx.backend.native.models.base import OTXModel
+from otx.backend.native.utils.utils import remove_state_dict_prefix
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.types.export import OTXExportFormatType
 from otx.types.label import AnomalyLabelInfo
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
-from otx.backend.native.utils.utils import remove_state_dict_prefix
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     import types

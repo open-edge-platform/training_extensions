@@ -21,11 +21,11 @@ from lightning import Callback, Trainer
 from torchvision.transforms.functional import resize
 
 from otx.backend.openvino.models import OVModel
+from otx.data.entity.torch import OTXDataBatch
 from otx.data.module import OTXDataModule
 from otx.metrics.types import MetricCallable, NullMetricCallable
 from otx.types.label import AnomalyLabelInfo
 from otx.types.task import OTXTaskType
-from otx.data.entity.torch import OTXDataBatch
 
 if TYPE_CHECKING:
     from pathlib import Path

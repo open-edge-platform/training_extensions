@@ -10,17 +10,17 @@ from typing import TYPE_CHECKING
 import torch
 from torch import nn
 
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.classification.backbones.timm import TimmBackbone
 from otx.backend.native.models.classification.classifier import ImageClassifier
 from otx.backend.native.models.classification.heads import LinearClsHead
-from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
-from otx.metrics.accuracy import MultiClassClsMetricCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.classification.multiclass_models.base import (
     OTXMulticlassClsModel,
 )
+from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
+from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.schedulers import LRSchedulerListCallable
+from otx.metrics.accuracy import MultiClassClsMetricCallable
 from otx.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:

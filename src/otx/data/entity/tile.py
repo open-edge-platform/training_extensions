@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, Sequence
 import torch
 from torchvision import tv_tensors
 
+from otx.data.entity.torch import OTXDataBatch, OTXDataItem
 from otx.data.entity.utils import stack_batch
 from otx.types.task import OTXTaskType
-from otx.data.entity.torch import OTXDataBatch, OTXDataItem
 
 from .base import ImageInfo, T_OTXBatchDataEntity, T_OTXDataEntity
 

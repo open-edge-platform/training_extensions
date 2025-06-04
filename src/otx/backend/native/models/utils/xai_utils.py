@@ -18,9 +18,9 @@ import numpy as np
 import torch
 
 from otx.config.explain import ExplainConfig
+from otx.data.entity.torch import OTXPredBatch
 from otx.types.explain import TargetExplainGroup
 from otx.types.label import HLabelInfo, LabelInfoTypes
-from otx.data.entity.torch import  OTXPredBatch
 
 if TYPE_CHECKING:
     from torch import LongTensor, Tensor

@@ -15,20 +15,20 @@ import torch
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 
-from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.utils.utils import InstanceData
+from otx.backend.native.schedulers import LRSchedulerListCallable
+from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
+from otx.backend.native.tools.tile_merge import DetectionTileMerge
 from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.tile import OTXTileBatchDataEntity
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.entity.utils import stack_batch
 from otx.metrics import MetricCallable, MetricInput
 from otx.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
-from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
-from otx.backend.native.tools.tile_merge import DetectionTileMerge
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

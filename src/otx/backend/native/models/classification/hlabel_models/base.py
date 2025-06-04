@@ -11,18 +11,18 @@ from typing import TYPE_CHECKING, Any
 import torch
 from torch import Tensor
 
-from otx.data.entity.base import OTXBatchLossEntity
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
+from otx.backend.native.schedulers import LRSchedulerListCallable
+from otx.data.entity.base import OTXBatchLossEntity
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.metrics import MetricInput
 from otx.metrics.accuracy import (
     HLabelClsMetricCallable,
 )
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
-from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import HLabelInfo, LabelInfo, LabelInfoTypes
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

@@ -7,8 +7,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
+from otx.backend.native.exporter.base import OTXModelExporter
+from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.common.losses import CrossEntropyLoss, IoULoss, L1Loss
 from otx.backend.native.models.detection.backbones import CSPDarknet
+from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.backend.native.models.detection.detectors import SingleStageDetector
 from otx.backend.native.models.detection.heads import YOLOXHead
 from otx.backend.native.models.detection.losses import YOLOXCriterion
@@ -17,22 +21,18 @@ from otx.backend.native.models.detection.utils.assigners import SimOTAAssigner
 from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
-from otx.backend.native.exporter.base import OTXModelExporter
-from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.data.entity.torch import OTXDataBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
-from otx.data.entity.torch import OTXDataBatch
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-    from otx.metrics import MetricCallable
     from otx.backend.native.schedulers import LRSchedulerListCallable
+    from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
 
 

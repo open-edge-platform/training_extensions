@@ -15,10 +15,10 @@ from torchvision import tv_tensors
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataItem
 from otx.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.types.image import ImageColorChannel
 from otx.types.label import SegLabelInfo
-from otx.data.entity.torch import OTXDataItem
 
 from .base import OTXDataset
 

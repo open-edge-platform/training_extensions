@@ -21,11 +21,11 @@ from torchvision.tv_tensors import Mask
 
 from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataItem
 from otx.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.types.image import ImageColorChannel
 from otx.types.label import AnomalyLabelInfo
 from otx.types.task import OTXTaskType
-from otx.data.entity.torch import OTXDataItem
 
 
 class AnomalyLabel(Enum):

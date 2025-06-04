@@ -15,8 +15,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 import numpy as np
 from datumaro.components.annotation import Bbox
 
+from otx.backend.native.exporter.base import OTXModelExporter
+from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.common.utils.assigners import MaxIoUAssigner
 from otx.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
+from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.backend.native.models.detection.detectors import SingleStageDetector
 from otx.backend.native.models.detection.heads import SSDHead
 from otx.backend.native.models.detection.losses import SSDCriterion
@@ -24,20 +28,16 @@ from otx.backend.native.models.detection.utils.prior_generators import SSDAnchor
 from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
-from otx.backend.native.exporter.base import OTXModelExporter
-from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.base import OTXDetectionModel
 
 if TYPE_CHECKING:
     import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
+    from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.data.dataset.base import OTXDataset
     from otx.metrics import MetricCallable
-    from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.types.label import LabelInfoTypes
 
 

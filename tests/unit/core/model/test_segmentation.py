@@ -9,7 +9,7 @@ import pytest
 import torch
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.segmentation.segmentation import OTXSegmentationModel
+from otx.backend.native.models.segmentation.base import OTXSegmentationModel
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.metrics.dice import SegmCallable
