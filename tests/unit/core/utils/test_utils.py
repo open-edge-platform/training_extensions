@@ -52,6 +52,7 @@ def get_dummy_ov_cls_model():
     model_params = TaskLevelExportParameters(
         model_type="Classification",
         task_type="classification",
+        model_name="dummy_model",
         multilabel=True,
         label_info=LabelInfo(["car", "truck"], ["0", "1"], [["car"], ["truck"]]),
         optimization_config={},
