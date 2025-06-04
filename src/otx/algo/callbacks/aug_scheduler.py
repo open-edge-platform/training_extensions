@@ -3,12 +3,11 @@
 #
 from __future__ import annotations
 
-from ast import Sub
-from typing import TYPE_CHECKING, Any
 import random
-from lightning.pytorch.callbacks.callback import Callback
-
 from multiprocessing import Value
+from typing import Any
+
+from lightning.pytorch.callbacks.callback import Callback
 
 from otx.core.config.data import SubsetConfig
 from otx.core.data.transform_libs.torchvision import Compose, TorchVisionTransformLib
@@ -23,22 +22,22 @@ class DataAugSwitch:
         if len(policy_epochs) != 3:
             msg = "Expected 3 policy epochs for 4-stage scheduler (e.g., [4, 29, 50])"
             raise ValueError(msg)
-        
+
         self.policy_epochs = policy_epochs
         self.policies = policies
         self._shared_epoch = None
-        
+
         # Compose transforms for each policy
         for name, config in policies.items():
             self.policies[name] = {
                 "to_tv_image": config.get("to_tv_image", True),
                 "transforms": TorchVisionTransformLib.generate(
-                        config = SubsetConfig(
-                            transforms=config["transforms"],
-                            batch_size=1,
-                            subset_name=name,
-                        )
-                ) ,
+                    config=SubsetConfig(
+                        transforms=config["transforms"],
+                        batch_size=1,
+                        subset_name=name,
+                    ),
+                ),
             }
 
     def set_shared_epoch(self, shared_epoch: Value) -> None:
@@ -75,12 +74,10 @@ class DataAugSwitch:
         policy = self.policies.get(name)
         return policy["to_tv_image"], policy["transforms"]
 
-    
 
 class AugmentationSchedulerCallback(Callback):
-    
     def on_train_epoch_start(self, trainer, pl_module):
-        self.data_aug_switch.epoch = trainer.current_epoch    
+        self.data_aug_switch.epoch = trainer.current_epoch
 
     def set_data_aug_switch(self, data_aug_switch: DataAugSwitch) -> None:
         """Set data augmentation switch."""
