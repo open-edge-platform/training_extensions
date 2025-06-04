@@ -15,13 +15,13 @@ model:
     scheduler:
       class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
       init_args:
-        num_warmup_steps: 100
+        num_warmup_steps: 10
         main_scheduler_callable:
           class_path: lightning.pytorch.cli.ReduceLROnPlateau
           init_args:
             mode: max
             factor: 0.1
-            patience: 6
+            patience: 4
             monitor: val/map_50
 engine:
   task: DETECTION
@@ -30,15 +30,14 @@ engine:
 callback_monitor: val/map_50
 
 callbacks:
-  - class_path: otx.algo.callbacks.aug_scheduler.AugmentationSchedulerCallback
   - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
       min_lrschedule_patience: 3
   - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
-      warmup_iters: 100
-      warmup_epochs: 7
+      warmup_iters: 30
+      warmup_epochs: 3
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: "" # use engine.work_dir
@@ -48,6 +47,7 @@ callbacks:
       save_last: true
       auto_insert_metric_name: false
       filename: "checkpoints/epoch_{epoch:03d}"
+  - class_path: otx.algo.callbacks.aug_scheduler.AugmentationSchedulerCallback
 
 data_aug_switch:
   class_path: otx.algo.callbacks.aug_scheduler.DataAugSwitch
