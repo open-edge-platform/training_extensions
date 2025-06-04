@@ -491,11 +491,7 @@ class Benchmark:
         return result.set_index(["task", "model", "data_group", "data"])
 
     def _prepare_resume(self, work_dir: Path) -> list[str]:
-        copied_ops_dir = []
-        for subcommand in ["train", "export", "optimize"]:
-            if work_dir.exists() and (work_dir / subcommand).exists():
-                copied_ops_dir.append(subcommand)
-        return copied_ops_dir
+        return [subcommand for subcommand in ("train", "export", "optimize") if (work_dir / subcommand).exists()]
 
     def _find_resume_directory(self, tags: dict[str, str]) -> Path | None:
         for csv_file in self.resume_from.rglob("benchmark.raw.csv"):
