@@ -4,18 +4,21 @@
 """DEIM criterion implementations. Modified from https://github.com/ShihuaHuang95/DEIM."""
 
 from __future__ import annotations
-from torchvision.ops import box_convert
-import torch
+
 from typing import Callable
-from otx.algo.detection.losses.dfine_loss import DFINECriterion
-from torch import Tensor
-from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
+
+import torch
 import torch.nn.functional as f
+from torch import Tensor
+from torchvision.ops import box_convert
+
+from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
+from otx.algo.detection.losses.dfine_loss import DFINECriterion
 
 
 class DEIMCriterion(DFINECriterion):
     def loss_labels_mal(
-        self, 
+        self,
         outputs: dict[str, Tensor],
         targets: list[dict[str, Tensor]],
         indices: list[tuple[int, int]],
@@ -31,19 +34,18 @@ class DEIMCriterion(DFINECriterion):
 
         Returns:
             dict[str, Tensor]: The loss dictionary.
-        """    
-
+        """
         idx = self._get_src_permutation_idx(indices)
-        
-        src_boxes = outputs['pred_boxes'][idx]
-        target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
+
+        src_boxes = outputs["pred_boxes"][idx]
+        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
         ious = bbox_overlaps(
             box_convert(src_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
             box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
         )
         ious = torch.diag(ious).detach()
 
-        src_logits = outputs['pred_logits']
+        src_logits = outputs["pred_logits"]
         target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
         target_classes = torch.full(src_logits.shape[:2], self.num_classes, dtype=torch.int64, device=src_logits.device)
         target_classes[idx] = target_classes_o
@@ -54,15 +56,14 @@ class DEIMCriterion(DFINECriterion):
         target_score = target_score_o.unsqueeze(-1) * target
 
         pred_score = f.sigmoid(src_logits).detach()
-        
+
         # MAL loss
         target_score = target_score.pow(self.gamma)
         weight = pred_score.pow(self.gamma) * (1 - target) + target
 
-        loss = f.binary_cross_entropy_with_logits(src_logits, target_score, weight=weight, reduction='none')
+        loss = f.binary_cross_entropy_with_logits(src_logits, target_score, weight=weight, reduction="none")
         loss = loss.mean(1).sum() * src_logits.shape[1] / num_boxes
-        return {'loss_mal': loss}
-
+        return {"loss_mal": loss}
 
     @property
     def _available_losses(self) -> tuple[Callable]:
