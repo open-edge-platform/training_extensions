@@ -56,8 +56,8 @@ jobs:
           - task: multi_class_cls
           - task: multi_label_cls
           - task: h_label_cls
-          # - task: INSTANCE_SEGMENTATION
-          # - task: SEMANTIC_SEGMENTATION
+          - task: instance_segmentation
+          - task: semantic_segmentation
 
     name: Perf-Benchmark-${{ matrix.task }}
     runs-on: [self-hosted, Linux, X64, dev, dmount]

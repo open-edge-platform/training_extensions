@@ -3,7 +3,6 @@
 
 """OTX performance benchmark tests."""
 
-
 from otx.core.types.task import OTXTaskType
 
 from .tasks import (
