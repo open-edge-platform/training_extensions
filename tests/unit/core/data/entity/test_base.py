@@ -6,7 +6,7 @@ import pytest
 import torch
 import torchvision.transforms.v2 as tvt
 
-from otx.core.data.entity.base import ImageType, OTXBatchDataEntity, OTXDataEntity
+from otx.data.entity.base import ImageType, OTXBatchDataEntity, OTXDataEntity
 
 
 class TestOTXDataEntity:

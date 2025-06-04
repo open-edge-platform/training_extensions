@@ -4,7 +4,7 @@
 
 import torch
 
-from otx.algo.keypoint_detection.utils.rtmcc_block import RTMCCBlock
+from otx.backend.native.models.keypoint_detection.utils.rtmcc_block import RTMCCBlock
 
 
 class TestRTMCCBlock:

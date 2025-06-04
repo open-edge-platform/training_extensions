@@ -12,11 +12,11 @@ from lightning.pytorch.cli import ReduceLROnPlateau
 from torch import nn
 from torch.optim import Optimizer
 
-from otx.core.model.base import DataInputParams
-from otx.core.model.hlabel_classification import OTXHlabelClsModel
-from otx.core.model.multiclass_classification import OTXMulticlassClsModel
-from otx.core.model.multilabel_classification import OTXMultilabelClsModel
-from otx.core.types.export import TaskLevelExportParameters
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
+from otx.backend.native.models.classification.multiclass_models.base import OTXMulticlassClsModel
+from otx.backend.native.models.classification.multilabel_models.base import OTXMultilabelClsModel
+from otx.types.export import TaskLevelExportParameters
 
 
 class MockClsModel(nn.Module):

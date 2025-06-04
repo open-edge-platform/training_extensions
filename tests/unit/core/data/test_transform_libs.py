@@ -13,17 +13,17 @@ from omegaconf import OmegaConf
 from torchvision import tv_tensors
 from torchvision.transforms import v2
 
-from otx.core.config.data import SubsetConfig
-from otx.core.data.dataset.classification import HLabelInfo
-from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.core.data.entity.base import Points
-from otx.core.data.transform_libs.torchvision import (
+from otx.config.data import SubsetConfig
+from otx.data.dataset.classification import HLabelInfo
+from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
+from otx.data.entity.base import Points
+from otx.data.transform_libs.torchvision import (
     PadtoSquare,
     PerturbBoundingBoxes,
     ResizetoLongestEdge,
     TorchVisionTransformLib,
 )
-from otx.core.types.image import ImageColorChannel
+from otx.types.image import ImageColorChannel
 
 
 class TestPerturbBoundingBoxes:
@@ -232,16 +232,16 @@ class TestTorchVisionTransformLib:
         - 300
         - 200
         transforms:
-          - class_path: otx.core.data.transform_libs.torchvision.ResizetoLongestEdge
+          - class_path: otx.data.transform_libs.torchvision.ResizetoLongestEdge
             init_args:
                 size: $(input_size) * 2
-          - class_path: otx.core.data.transform_libs.torchvision.RandomResize
+          - class_path: otx.data.transform_libs.torchvision.RandomResize
             init_args:
                 scale: $(input_size) * 0.5
-          - class_path: otx.core.data.transform_libs.torchvision.RandomCrop
+          - class_path: otx.data.transform_libs.torchvision.RandomCrop
             init_args:
                 crop_size: $(input_size)
-          - class_path: otx.core.data.transform_libs.torchvision.RandomResize
+          - class_path: otx.data.transform_libs.torchvision.RandomResize
             init_args:
                 scale: $(input_size) * 1.1
         """

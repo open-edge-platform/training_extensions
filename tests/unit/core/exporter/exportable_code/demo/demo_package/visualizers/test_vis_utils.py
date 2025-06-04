@@ -13,13 +13,13 @@ from numpy.random import PCG64, Generator
 @pytest.fixture(scope="module", autouse=True)
 def fxt_import_module():
     global ColorPalette, get_actmap, dump_frames  # noqa: PLW0603
-    from otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils import (
         ColorPalette as _ColorPalette,
     )
-    from otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils import (
         dump_frames as _dump_frames,
     )
-    from otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils import (
         get_actmap as _get_actmap,
     )
 
@@ -45,9 +45,9 @@ def test_no_saved_frames():
     assert not Path(output).exists()
 
 
-@patch("otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.VideoWriter_fourcc")
-@patch("otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.VideoWriter")
-@patch("otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.get_input_names_list")
+@patch("otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.VideoWriter_fourcc")
+@patch("otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.VideoWriter")
+@patch("otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.get_input_names_list")
 def test_video_input(mock_get_input_names_list, mock_video_writer, mock_video_writer_fourcc, tmp_path):
     output = str(tmp_path / "output")
     input_path = "input"
@@ -63,9 +63,9 @@ def test_video_input(mock_get_input_names_list, mock_video_writer, mock_video_wr
     mock_video_writer.assert_called_once()
 
 
-@patch("otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.imwrite")
-@patch("otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.get_input_names_list")
-@patch("otx.core.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.cvtColor")
+@patch("otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.imwrite")
+@patch("otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.get_input_names_list")
+@patch("otx.backend.native.exporter.exportable_code.demo.demo_package.visualizers.vis_utils.cv2.cvtColor")
 def test_image_input(mock_imwrite, mock_get_input_names_list, mock_cvtcolor, tmp_path):
     output = str(tmp_path / "output")
     input_path = "input"

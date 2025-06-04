@@ -15,8 +15,9 @@ from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.core.data.entity.base import ImageInfo
-from otx.core.data.transform_libs.torchvision import (
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataBatch, OTXDataItem
+from otx.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
     Compose,
@@ -31,8 +32,7 @@ from otx.core.data.transform_libs.torchvision import (
     TopdownAffine,
     YOLOXHSVRandomAug,
 )
-from otx.core.data.transform_libs.utils import overlap_bboxes
-from otx.data import OTXDataBatch, OTXDataItem
+from otx.data.transform_libs.utils import overlap_bboxes
 
 
 class MockFrame:

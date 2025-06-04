@@ -4,9 +4,9 @@
 import pytest
 from torchvision.transforms.v2 import Resize
 
-from otx.core.config.data import SubsetConfig
-from otx.core.data.module import OTXDataModule
-from otx.core.types.task import OTXTaskType
+from otx.config.data import SubsetConfig
+from otx.data.module import OTXDataModule
+from otx.types.task import OTXTaskType
 
 
 @pytest.fixture()

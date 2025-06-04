@@ -5,7 +5,7 @@ from __future__ import annotations
 from datumaro import LabelCategories
 from datumaro.components.annotation import GroupType
 
-from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
+from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 
 
 def test_as_json(fxt_label_info):

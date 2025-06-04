@@ -3,8 +3,8 @@
 
 """Unit tests of classification datasets."""
 
-from otx.core.data.dataset.segmentation import OTXSegmentationDataset
-from otx.data import OTXDataItem
+from otx.data.dataset.segmentation import OTXSegmentationDataset
+from otx.data.entity.torch import OTXDataItem
 
 
 class TestOTXSegmentationDataset:

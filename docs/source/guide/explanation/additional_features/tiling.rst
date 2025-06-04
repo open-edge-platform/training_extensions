@@ -9,7 +9,7 @@ However, it's important to consider the trade-off associated with image tiling. 
 
 By leveraging image tiling, the OpenVINO Training Extensions empowers detection and instance segmentation algorithms to effectively detect and localize small and crowded objects in large-resolution images, ultimately leading to improved overall performance and accuracy.
 
-Tiling Strategies 
+Tiling Strategies
 =================
 Below we provided an example of tiling used on one of the image from `DOTA <https://captain-whu.github.io/DOTA/dataset.html>`_.
 
@@ -26,14 +26,14 @@ During testing, each tile is processed and predicted separately. The tiles are t
 
 The tiling strategy is implemented in the OpenVINO Training Extensions through the following steps:
 
-.. note:: 
+.. note::
 
     * Training: Create an ImageTilingDataset with annotated tiles -> Train with annotated tile images -> Evaluate on annotated tiles
     * Testing: Create an ImageTilingDataset including all tiles -> Test with all tile images -> Stitching -> Merge tile-level predictions -> Full Image Prediction
 
 .. note::
 
-    While running `ote test` on models trained with tiling enabled, the evaluation will be performed on all tiles, this process includes merging all the tile-level prediction. 
+    While running `ote test` on models trained with tiling enabled, the evaluation will be performed on all tiles, this process includes merging all the tile-level prediction.
     The below context will be provided during evaluation:
 
     .. code-block:: shell
@@ -42,7 +42,7 @@ The tiling strategy is implemented in the OpenVINO Training Extensions through t
         ==== merge: 7.326097726821899 sec ====
 
 
-Enable Tiling via OTX Training 
+Enable Tiling via OTX Training
 ==================================
 
 Currently, tiling is supported for both detection and instance segmentation models. Please refer to :doc:`../algorithms/object_detection/object_detection` and :doc:`../algorithms/segmentation/instance_segmentation` for more details.
@@ -55,8 +55,8 @@ To enable tiling in OTX training, set ``data.tile_config.enable_tiler`` paramete
 
         .. code-block:: python
 
-            from otx.core.config.data import TileConfig
-            from otx.core.data.module import OTXDataModule
+            from otx.config.data import TileConfig
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(..., tile_config=TileConfig(enable_tiler=True))
 
@@ -75,7 +75,7 @@ To strike a balance between patch size and computational efficiency, the OpenVIN
 
 Adaptive tiling parameter optimization works by finding the average object size in the training dataset and using that to determine the tile size. Currently, the average object size to tile size ratio is set to 3%. For example, if the average object size is 100x100 pixels, the tile size will be around 577x577 pixels.
 
-This computation is performed by dividing the average object size by the desired object size ratio (default: 3%) and then taking the square root. This ensures that the objects are large enough to be detected by the model. The object size to tile size ratio can also be configured with ``tiling_parameters.object_tile_ratio`` parameter. 
+This computation is performed by dividing the average object size by the desired object size ratio (default: 3%) and then taking the square root. This ensures that the objects are large enough to be detected by the model. The object size to tile size ratio can also be configured with ``tiling_parameters.object_tile_ratio`` parameter.
 
 Here's an example of setting the object size ratio to 5%:
 
@@ -85,8 +85,8 @@ Here's an example of setting the object size ratio to 5%:
 
         .. code-block:: python
 
-            from otx.core.config.data import TileConfig
-            from otx.core.data.module import OTXDataModule
+            from otx.config.data import TileConfig
+            from otx.data.module import OTXDataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=True, object_tile_ratio=0.05)
             datamodule = OTXDataModule(..., tile_config=tile_config)
@@ -100,7 +100,7 @@ Here's an example of setting the object size ratio to 5%:
                                      --data.tile_config.object_tile_ratio 0.05          # set the object size ratio to 5%
 
 
-After determining the tile size, the tile overlap is computed by dividing the largest object size in the training dataset by the adaptive tile size. 
+After determining the tile size, the tile overlap is computed by dividing the largest object size in the training dataset by the adaptive tile size.
 This calculation ensures that the largest object on the border of a tile is not split into two tiles and is covered by adjacent tiles.
 
 You can also manually configure the tile overlap using ``tiling_parameters.tile_overlap parameter`` parameter. For more details, please refer to the section on `Manual Tiling Parameter Configuration`_ .
@@ -108,7 +108,7 @@ You can also manually configure the tile overlap using ``tiling_parameters.tile_
 
 Tiling Sampling Strategy
 ------------------------
-To accelerate the training process, the OpenVINO Training Extensions introduces a tile sampling strategy. This strategy involves randomly sampling a percentage of tile images from the dataset to be used for training. 
+To accelerate the training process, the OpenVINO Training Extensions introduces a tile sampling strategy. This strategy involves randomly sampling a percentage of tile images from the dataset to be used for training.
 
 Since training and validation on all tiles from a high-resolution image dataset can be time-consuming, sampling the tile dataset can significantly reduce the training and validation time.
 
@@ -122,8 +122,8 @@ This can be configured with ``data.tile_config.enable_adaptive_tiling`` paramete
 
         .. code-block:: python
 
-            from otx.core.config.data import TileConfig
-            from otx.core.data.module import OTXDataModule
+            from otx.config.data import TileConfig
+            from otx.data.module import OTXDataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=True, sampling_ratio=0.5)
             datamodule = OTXDataModule(..., tile_config=tile_config)
@@ -148,8 +148,8 @@ Users can disable adaptive tiling and customize the tiling process by setting th
 
         .. code-block:: python
 
-            from otx.core.config.data import TileConfig
-            from otx.core.data.module import OTXDataModule
+            from otx.config.data import TileConfig
+            from otx.data.module import OTXDataModule
 
             tile_config = TileConfig(enable_tiler=True, enable_adaptive_tiling=False, tile_size=(512,512), tile_overlap=0.2)
             datamodule = OTXDataModule(..., tile_config=tile_config)
@@ -211,7 +211,7 @@ After exporting the model, you can run inference on the exported model using the
             (otx) ...$ otx test ... --checkpoint <checkpoint-tiling-IR-model>
 
 .. warning::
-    When tiling is enabled, there is a trade-off between speed and accuracy as it increases the number of images to be processed. 
-    As a result, longer training and inference times are expected. If you encounter GPU out of memory errors, 
-    you can mitigate the issue by reducing the number of batches through the command-line interface (CLI) or 
+    When tiling is enabled, there is a trade-off between speed and accuracy as it increases the number of images to be processed.
+    As a result, longer training and inference times are expected. If you encounter GPU out of memory errors,
+    you can mitigate the issue by reducing the number of batches through the command-line interface (CLI) or
     by adjusting the batch size value.

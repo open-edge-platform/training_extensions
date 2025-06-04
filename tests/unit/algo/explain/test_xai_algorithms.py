@@ -5,15 +5,15 @@ from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
 
-from otx.algo.explain.explain_algo import (
+from otx.backend.native.models.utils.utils import InstanceData
+from otx.backend.native.tools.explain.explain_algo import (
     ActivationMap,
     DetClassProbabilityMap,
     InstSegExplainAlgo,
     ReciproCAM,
     ViTReciproCAM,
 )
-from otx.algo.utils.utils import InstanceData
-from otx.core.data.entity.base import ImageInfo
+from otx.data.entity.base import ImageInfo
 
 
 def test_activationmap() -> None:

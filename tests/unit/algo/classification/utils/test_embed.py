@@ -3,7 +3,7 @@
 
 import torch
 
-from otx.algo.classification.utils.embed import resize_pos_embed
+from otx.backend.native.models.classification.utils.embed import resize_pos_embed
 
 
 def test_resize_pos_embed():

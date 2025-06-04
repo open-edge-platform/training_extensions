@@ -9,14 +9,14 @@ import pytest
 import torch
 import torchvision
 
-from otx.algo.detection.backbones.hgnetv2 import HGNetv2
-from otx.algo.detection.d_fine import DFine
-from otx.algo.detection.heads.dfine_decoder import DFINETransformer
-from otx.algo.detection.losses.dfine_loss import DFINECriterion
-from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
-from otx.algo.detection.rtdetr import DETR
-from otx.core.model.base import DataInputParams
-from otx.data import OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.detection.backbones.hgnetv2 import HGNetv2
+from otx.backend.native.models.detection.d_fine import DFine
+from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransformer
+from otx.backend.native.models.detection.losses.dfine_loss import DFINECriterion
+from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
+from otx.backend.native.models.detection.rtdetr import DETR
+from otx.data.entity.torch import OTXPredBatch
 
 
 class TestDFine:

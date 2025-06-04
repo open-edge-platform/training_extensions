@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from otx.core.config.data import SamplerConfig
-from otx.core.utils.instantiators import (
+from otx.config.data import SamplerConfig
+from otx.backend.native.utils.instantiators import (
     instantiate_callbacks,
     instantiate_loggers,
     instantiate_sampler,

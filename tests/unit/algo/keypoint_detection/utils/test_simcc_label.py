@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from otx.algo.keypoint_detection.utils.simcc_label import SimCCLabel
+from otx.backend.native.models.keypoint_detection.utils.simcc_label import SimCCLabel
 
 
 class TestSimCCLabel:

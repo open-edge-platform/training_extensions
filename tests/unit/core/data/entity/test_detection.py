@@ -6,8 +6,8 @@ import torch
 from torch import LongTensor
 from torchvision import tv_tensors
 
-from otx.core.data.entity.base import ImageInfo
-from otx.data import OTXDataItem
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataItem
 
 # TODO(ashwinvaidya17): Have a single entity test for TorchDataItem and TorchDataBatch
 

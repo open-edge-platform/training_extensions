@@ -4,48 +4,8 @@
 import os
 
 import pytest
-from omegaconf import DictConfig
 
-from otx.core.utils.build import get_default_num_async_infer_requests
-
-SKIP_MMLAB_TEST = False
-try:
-    from mmpretrain.registry import MODELS  # noqa: F401
-except ImportError:
-    SKIP_MMLAB_TEST = True
-
-
-@pytest.mark.skipif(SKIP_MMLAB_TEST, reason="MMLab is not installed")
-@pytest.fixture()
-def fxt_mm_config() -> DictConfig:
-    return DictConfig(
-        {
-            "backbone": {
-                "arch": "b0",
-                "type": "EfficientNet",
-            },
-            "head": {
-                "in_channels": 1280,
-                "loss": {
-                    "loss_weight": 1.0,
-                    "type": "CrossEntropyLoss",
-                },
-                "num_classes": 1000,
-                "topk": (1, 5),
-                "type": "LinearClsHead",
-            },
-            "neck": {
-                "type": "GlobalAveragePooling",
-            },
-            "data_preprocessor": {
-                "mean": [123.678, 116.28, 103.53],
-                "std": [58.395, 57.12, 57.375],
-                "to_rgb": False,
-                "type": "ClsDataPreprocessor",
-            },
-            "type": "ImageClassifier",
-        },
-    )
+from otx.backend.openvino.models.utils import get_default_num_async_infer_requests
 
 
 def test_get_default_num_async_infer_requests() -> None:

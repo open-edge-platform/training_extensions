@@ -6,7 +6,7 @@ from datumaro.components.annotation import AnnotationType, Bbox, Label, Polygon
 from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 
-from otx.core.data.pre_filtering import pre_filtering
+from otx.data.utils.pre_filtering import pre_filtering
 
 
 @pytest.fixture()

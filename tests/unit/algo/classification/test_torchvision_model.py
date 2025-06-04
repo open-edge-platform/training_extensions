@@ -4,16 +4,16 @@
 import pytest
 import torch
 
-from otx.algo.classification.classifier import ImageClassifier
-from otx.algo.classification.heads import LinearClsHead
-from otx.algo.classification.hlabel_models.torchvision_model import TVModelHLabelCls
-from otx.algo.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
-from otx.algo.classification.multilabel_models.torchvision_model import TVModelMultilabelCls
-from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.model.base import DataInputParams
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.task import OTXTaskType
-from otx.data.torch import OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.classification.classifier import ImageClassifier
+from otx.backend.native.models.classification.heads import LinearClsHead
+from otx.backend.native.models.classification.hlabel_models.torchvision_model import TVModelHLabelCls
+from otx.backend.native.models.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
+from otx.backend.native.models.classification.multilabel_models.torchvision_model import TVModelMultilabelCls
+from otx.data.entity.base import OTXBatchLossEntity
+from otx.data.entity.torch import OTXPredBatch
+from otx.types.export import TaskLevelExportParameters
+from otx.types.task import OTXTaskType
 
 
 @pytest.fixture()

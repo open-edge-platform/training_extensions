@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 import torch
 
-from otx.algo.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
-from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
+from otx.backend.native.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
+from otx.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
 
 
 def test_bbox_overlaps_2d(eps: float = 1e-7):

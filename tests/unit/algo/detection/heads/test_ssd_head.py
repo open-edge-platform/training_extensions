@@ -4,9 +4,9 @@
 
 from omegaconf import DictConfig
 
-from otx.algo.common.utils.coders import DeltaXYWHBBoxCoder
-from otx.algo.detection.heads.ssd_head import SSDHeadModule
-from otx.algo.detection.utils.prior_generators import SSDAnchorGeneratorClustered
+from otx.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
+from otx.backend.native.models.detection.heads.ssd_head import SSDHeadModule
+from otx.backend.native.models.detection.utils.prior_generators import SSDAnchorGeneratorClustered
 
 
 class TestSSDHead:

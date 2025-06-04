@@ -9,8 +9,8 @@ from datumaro import Dataset as DmDataset
 from torch import Tensor
 from torchvision.transforms.v2 import Identity, Transform
 
-from otx.core.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
-from otx.core.data.entity.base import ImageInfo
+from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
+from otx.data.entity.base import ImageInfo
 
 
 class TestOTXKeypointDetectionDataset:

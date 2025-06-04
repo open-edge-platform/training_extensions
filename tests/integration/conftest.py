@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT
+from otx.types.task import OTXTaskType
 
 
 @pytest.fixture(scope="module", autouse=True)

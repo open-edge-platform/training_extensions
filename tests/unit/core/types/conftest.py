@@ -3,7 +3,7 @@
 
 import pytest
 
-from otx.core.types.label import LabelInfo
+from otx.types.label import LabelInfo
 
 
 @pytest.fixture(

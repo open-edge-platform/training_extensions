@@ -7,9 +7,9 @@ from functools import partial
 
 import torch
 
-from otx.algo.detection.backbones.presnet import PResNetModule
-from otx.algo.modules import FrozenBatchNorm2d
-from otx.algo.modules.norm import build_norm_layer
+from otx.backend.native.models.detection.backbones.presnet import PResNetModule
+from otx.backend.native.models.modules import FrozenBatchNorm2d
+from otx.backend.native.models.modules.norm import build_norm_layer
 
 
 class TestPresnet:

@@ -5,7 +5,7 @@
 
 import torch
 
-from otx.algo.detection.necks.hybrid_encoder import HybridEncoderModule
+from otx.backend.native.models.detection.necks.hybrid_encoder import HybridEncoderModule
 
 
 def test_hybrid_encoder_forward():

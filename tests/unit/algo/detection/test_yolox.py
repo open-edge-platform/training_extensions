@@ -6,13 +6,13 @@ import pytest
 import torch
 from torch._dynamo.testing import CompileCounter
 
-from otx.algo.detection.backbones.csp_darknet import CSPDarknetModule
-from otx.algo.detection.heads.yolox_head import YOLOXHeadModule
-from otx.algo.detection.necks.yolox_pafpn import YOLOXPAFPNModule
-from otx.algo.detection.yolox import YOLOX
-from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.model.base import DataInputParams
-from otx.data import OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.detection.backbones.csp_darknet import CSPDarknetModule
+from otx.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
+from otx.backend.native.models.detection.necks.yolox_pafpn import YOLOXPAFPNModule
+from otx.backend.native.models.detection.yolox import YOLOX
+from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.data.entity.torch import OTXPredBatch
 
 
 class TestYOLOX:

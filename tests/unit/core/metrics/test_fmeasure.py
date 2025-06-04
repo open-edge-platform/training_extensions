@@ -8,8 +8,8 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.core.metrics.fmeasure import FMeasure
-from otx.core.types.label import LabelInfo
+from otx.metrics.fmeasure import FMeasure
+from otx.types.label import LabelInfo
 
 
 class TestFMeasure:

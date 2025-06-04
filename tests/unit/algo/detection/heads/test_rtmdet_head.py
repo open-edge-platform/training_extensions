@@ -9,11 +9,11 @@ import torch
 from omegaconf import DictConfig
 from torch import nn
 
-from otx.algo.common.utils.assigners import DynamicSoftLabelAssigner
-from otx.algo.common.utils.coders import DistancePointBBoxCoder
-from otx.algo.common.utils.prior_generators import MlvlPointGenerator
-from otx.algo.common.utils.samplers import PseudoSampler
-from otx.algo.detection.heads.rtmdet_head import RTMDetHead, RTMDetSepBNHeadModule
+from otx.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
+from otx.backend.native.models.common.utils.coders import DistancePointBBoxCoder
+from otx.backend.native.models.common.utils.prior_generators import MlvlPointGenerator
+from otx.backend.native.models.common.utils.samplers import PseudoSampler
+from otx.backend.native.models.detection.heads.rtmdet_head import RTMDetHead, RTMDetSepBNHeadModule
 
 
 @pytest.fixture()
@@ -76,7 +76,7 @@ class TestRTMDetHead:
         bbox_preds = [torch.rand(batch_size, num_priors * 4, 20, 20) for _ in range(3)]
         batch_img_metas = [{"img_shape": (320, 320, 3), "scale_factor": 1.0} for _ in range(2)]
         mocker_multiclass_nms = mocker.patch(
-            "otx.algo.detection.heads.rtmdet_head.multiclass_nms",
+            "otx.backend.native.models.detection.heads.rtmdet_head.multiclass_nms",
             return_value=(torch.rand(2, 300, 5), torch.randint(0, 80, (2, 300))),
         )
 

@@ -9,8 +9,8 @@ import pytest
 
 from otx.backend.native.engine import OTXEngine
 from otx.backend.openvino.engine import OVEngine
-from otx.core.data.entity.base import OTXBatchPredEntity
-from otx.data.torch import OTXPredBatch
+from otx.data.entity.base import OTXBatchPredEntity
+from otx.data.entity.torch import OTXPredBatch
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
 MULTI_CLASS_CLS = [recipe for recipe in RECIPE_LIST_ALL if "multi_class_cls" in recipe]

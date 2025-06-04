@@ -5,22 +5,22 @@
 
 import pytest
 
-from otx.core.config.data import SubsetConfig
-from otx.core.data.dataset.anomaly import AnomalyDataset
-from otx.core.data.dataset.classification import (
+from otx.config.data import SubsetConfig
+from otx.data.dataset.anomaly import AnomalyDataset
+from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.core.data.dataset.detection import OTXDetectionDataset
-from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.core.data.dataset.segmentation import OTXSegmentationDataset
-from otx.core.data.factory import OTXDatasetFactory, TransformLibFactory
-from otx.core.data.transform_libs.torchvision import TorchVisionTransformLib
-from otx.core.types.image import ImageColorChannel
-from otx.core.types.task import OTXTaskType
-from otx.core.types.transformer_libs import TransformLibType
+from otx.data.dataset.detection import OTXDetectionDataset
+from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
+from otx.data.dataset.segmentation import OTXSegmentationDataset
+from otx.data.factory import OTXDatasetFactory, TransformLibFactory
+from otx.data.transform_libs.torchvision import TorchVisionTransformLib
+from otx.types.image import ImageColorChannel
+from otx.types.task import OTXTaskType
+from otx.types.transformer_libs import TransformLibType
 
 lib_type_parameters = [(TransformLibType.TORCHVISION, TorchVisionTransformLib)]
 

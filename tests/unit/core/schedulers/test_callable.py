@@ -8,7 +8,7 @@ from torch import nn
 from torch.optim import SGD
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 
-from otx.core.schedulers import SchedulerCallableSupportAdaptiveBS
+from otx.backend.native.schedulers import SchedulerCallableSupportAdaptiveBS
 
 
 class TestSchedulerCallableSupportAdaptiveBS:

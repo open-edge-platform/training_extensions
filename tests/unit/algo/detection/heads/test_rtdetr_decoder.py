@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from otx.algo.detection.heads.rtdetr_decoder import RTDETRTransformerModule
+from otx.backend.native.models.detection.heads.rtdetr_decoder import RTDETRTransformerModule
 
 
 class TestRTDETRTransformer:

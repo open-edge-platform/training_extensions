@@ -6,7 +6,12 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from otx.algo.segmentation.backbones.litehrnet import LiteHRNetModule, NeighbourSupport, SpatialWeightingV2, Stem
+from otx.backend.native.models.segmentation.backbones.litehrnet import (
+    LiteHRNetModule,
+    NeighbourSupport,
+    SpatialWeightingV2,
+    Stem,
+)
 
 
 class TestSpatialWeightingV2:
@@ -80,15 +85,15 @@ class TestLiteHRNetModule:
 
     @pytest.fixture()
     def mock_torch_load(self, mocker) -> MagicMock:
-        return mocker.patch("otx.algo.segmentation.backbones.litehrnet.torch.load")
+        return mocker.patch("otx.backend.native.models.segmentation.backbones.litehrnet.torch.load")
 
     @pytest.fixture()
     def mock_load_from_http(self, mocker) -> MagicMock:
-        return mocker.patch("otx.algo.segmentation.backbones.litehrnet.load_from_http")
+        return mocker.patch("otx.backend.native.models.segmentation.backbones.litehrnet.load_from_http")
 
     @pytest.fixture()
     def mock_load_checkpoint_to_model(self, mocker) -> MagicMock:
-        return mocker.patch("otx.algo.segmentation.backbones.litehrnet.load_checkpoint_to_model")
+        return mocker.patch("otx.backend.native.models.segmentation.backbones.litehrnet.load_checkpoint_to_model")
 
     @pytest.fixture()
     def pretrained_weight(self, tmp_path) -> str:

@@ -19,21 +19,21 @@ from model_api.tilers import SemanticSegmentationTiler
 from omegaconf import OmegaConf
 from torchvision import tv_tensors
 
-from otx.algo.detection.atss import ATSS
-from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
-from otx.algo.segmentation.litehrnet import LiteHRNet
-from otx.core.config.data import (
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.detection.atss import ATSS
+from otx.backend.native.models.detection.base import OTXDetectionModel
+from otx.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
+from otx.backend.native.models.segmentation.litehrnet import LiteHRNet
+from otx.config.data import (
     SubsetConfig,
     TileConfig,
 )
-from otx.core.data.dataset.tile import OTXTileTransform
-from otx.core.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams
-from otx.core.model.detection import OTXDetectionModel
-from otx.core.types.task import OTXTaskType
-from otx.core.types.transformer_libs import TransformLibType
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.data.dataset.tile import OTXTileTransform
+from otx.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.module import OTXDataModule
+from otx.types.task import OTXTaskType
+from otx.types.transformer_libs import TransformLibType
 from tests.test_helpers import generate_random_bboxes
 
 

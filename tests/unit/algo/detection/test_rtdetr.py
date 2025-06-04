@@ -8,17 +8,17 @@ import torch
 from torch import nn
 from torch._dynamo.testing import CompileCounter
 
-from otx.algo.detection.rtdetr import RTDETR
-from otx.core.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.core.model.base import DataInputParams
-from otx.core.types import LabelInfo
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.detection.rtdetr import RTDETR
+from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.types import LabelInfo
 
 
 class TestRTDETR:
     def test_customize_outputs(self, mocker):
         label_info = LabelInfo(["a", "b", "c"], ["0", "1", "2"], [["a", "b", "c"]])
-        mocker.patch("otx.algo.detection.rtdetr.RTDETR._create_model", return_value=mocker.MagicMock())
+        mocker.patch("otx.backend.native.models.detection.rtdetr.RTDETR._create_model", return_value=mocker.MagicMock())
         model = RTDETR(
             model_name="rtdetr_18",
             label_info=label_info,

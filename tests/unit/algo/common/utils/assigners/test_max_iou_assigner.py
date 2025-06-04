@@ -4,7 +4,7 @@
 
 import torch
 
-from otx.algo.common.utils.assigners.max_iou_assigner import perm_repeat_bboxes
+from otx.backend.native.models.common.utils.assigners.max_iou_assigner import perm_repeat_bboxes
 
 
 def test_perm_repeat_bboxes() -> None:

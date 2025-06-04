@@ -10,14 +10,14 @@ import torch
 from anomalib.metrics.min_max import MinMax
 from anomalib.metrics.threshold import ManualThreshold
 
-from otx.algo.anomaly.openvino_model import AnomalyOpenVINO
-from otx.algo.anomaly.padim import Padim
-from otx.algo.anomaly.stfpm import Stfpm
-from otx.algo.anomaly.uflow import Uflow
-from otx.core.model.base import DataInputParams
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.label import AnomalyLabelInfo
-from otx.core.types.task import OTXTaskType
+from otx.backend.native.models.anomaly.openvino_model import AnomalyOpenVINO
+from otx.backend.native.models.anomaly.padim import Padim
+from otx.backend.native.models.anomaly.stfpm import Stfpm
+from otx.backend.native.models.anomaly.uflow import Uflow
+from otx.backend.native.models.base import DataInputParams
+from otx.types.export import OTXExportFormatType
+from otx.types.label import AnomalyLabelInfo
+from otx.types.task import OTXTaskType
 
 
 class TestAnomalyOpenVINO:

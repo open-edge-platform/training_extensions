@@ -14,10 +14,10 @@ create_visualizer, get_model_path, get_parameters = None, None, None
 def fxt_import_module():
     global target_file  # noqa: PLW0603
     global create_visualizer, get_model_path, get_parameters
-    from otx.core.exporter.exportable_code.demo.demo_package import utils
-    from otx.core.exporter.exportable_code.demo.demo_package.utils import create_visualizer as func1
-    from otx.core.exporter.exportable_code.demo.demo_package.utils import get_model_path as func2
-    from otx.core.exporter.exportable_code.demo.demo_package.utils import get_parameters as func3
+    from otx.backend.native.exporter.exportable_code.demo.demo_package import utils
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.utils import create_visualizer as func1
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.utils import get_model_path as func2
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.utils import get_parameters as func3
 
     target_file = utils
     create_visualizer, get_model_path, get_parameters = func1, func2, func3

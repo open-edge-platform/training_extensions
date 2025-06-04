@@ -5,12 +5,12 @@
 
 import pytest
 
-from otx.algo.classification.hlabel_models.vit import VisionTransformerHLabelCls
-from otx.algo.classification.multiclass_models.vit import VisionTransformerMulticlassCls
-from otx.algo.classification.multilabel_models.vit import VisionTransformerMultilabelCls
-from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.model.base import DataInputParams
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.classification.hlabel_models.vit import VisionTransformerHLabelCls
+from otx.backend.native.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
+from otx.backend.native.models.classification.multilabel_models.vit import VisionTransformerMultilabelCls
+from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
+from otx.data.entity.base import OTXBatchLossEntity
 
 
 class TestDeitTiny:

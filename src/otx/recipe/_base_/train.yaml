@@ -1,7 +1,7 @@
 max_epochs: 200
 min_epochs: 1
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       monitor: null
       mode: max
@@ -23,12 +23,12 @@ callbacks:
       save_last: true
       auto_insert_metric_name: false
       filename: "checkpoints/epoch_{epoch:03d}"
-  - class_path: otx.algo.callbacks.iteration_timer.IterationTimer
+  - class_path: otx.backend.native.callbacks.iteration_timer.IterationTimer
     init_args:
       prog_bar: true
       on_step: false
       on_epoch: true
-  - class_path: otx.algo.callbacks.gpu_mem_monitor.GPUMemMonitor
+  - class_path: otx.backend.native.callbacks.gpu_mem_monitor.GPUMemMonitor
   - class_path: lightning.pytorch.callbacks.RichModelSummary
     init_args:
       max_depth: 1
@@ -36,7 +36,7 @@ callbacks:
     init_args:
       logging_interval: epoch
       log_momentum: true
-  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 5
       decay: -0.025

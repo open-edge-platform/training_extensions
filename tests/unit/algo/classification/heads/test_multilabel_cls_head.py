@@ -8,8 +8,8 @@ import pytest
 import torch
 from torch import nn
 
-from otx.algo.classification.heads import MultiLabelLinearClsHead, MultiLabelNonLinearClsHead
-from otx.core.data.entity.base import ImageInfo
+from otx.backend.native.models.classification.heads import MultiLabelLinearClsHead, MultiLabelNonLinearClsHead
+from otx.data.entity.base import ImageInfo
 
 
 @pytest.fixture()

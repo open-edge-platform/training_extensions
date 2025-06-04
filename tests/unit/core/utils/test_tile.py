@@ -12,7 +12,7 @@ from datumaro.plugins.tiling.util import xywh_to_x1y1x2y2
 from model_api.models import Model
 from model_api.tilers import Tiler
 
-from otx.core.data.dataset.tile import OTXTileTransform
+from otx.data.dataset.tile import OTXTileTransform
 
 
 def test_tile_transform_consistency(mocker):
@@ -33,7 +33,7 @@ def test_tile_transform_consistency(mocker):
     tiler.tile_size = rnd_tile_size
     tiler.tiles_overlap = rnd_tile_overlap
 
-    mocker.patch("otx.core.data.dataset.tile.OTXTileTransform.__init__", return_value=None)
+    mocker.patch("otx.data.dataset.tile.OTXTileTransform.__init__", return_value=None)
     tile_transform = OTXTileTransform()
     tile_transform._tile_size = (rnd_tile_size, rnd_tile_size)
     tile_transform._overlap = (rnd_tile_overlap, rnd_tile_overlap)

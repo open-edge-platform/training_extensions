@@ -16,7 +16,7 @@ from zipfile import ZipFile
 
 import pandas as pd
 
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)

@@ -4,7 +4,7 @@
 
 import torch
 
-from otx.algo.keypoint_detection.utils.scale_norm import ScaleNorm
+from otx.backend.native.models.keypoint_detection.utils.scale_norm import ScaleNorm
 
 
 class TestScaleNorm:

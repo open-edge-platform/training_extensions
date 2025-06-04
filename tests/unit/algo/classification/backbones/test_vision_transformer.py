@@ -8,8 +8,8 @@ from copy import deepcopy
 import pytest
 import torch
 
-from otx.algo.classification.backbones import VisionTransformer
-from otx.algo.utils.utils import load_checkpoint_to_model
+from otx.backend.native.models.classification.backbones import VisionTransformer
+from otx.backend.native.models.utils.utils import load_checkpoint_to_model
 
 
 class TestVisionTransformer:

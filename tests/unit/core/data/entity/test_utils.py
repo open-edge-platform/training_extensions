@@ -4,8 +4,8 @@
 
 import torch
 
-from otx.core.data.entity.base import ImageInfo, OTXBatchDataEntity
-from otx.core.data.entity.utils import stack_batch
+from otx.data.entity.base import ImageInfo, OTXBatchDataEntity
+from otx.data.entity.utils import stack_batch
 
 
 def test_stack_batch():

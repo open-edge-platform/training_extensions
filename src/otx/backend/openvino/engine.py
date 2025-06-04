@@ -14,18 +14,18 @@ import numpy as np
 import torch
 from rich.progress import Progress
 
-from otx.backend.native.utils.auto_configurator import AutoConfigurator
+from otx.backend.native.tools.auto_configurator import AutoConfigurator
 from otx.backend.openvino.models import OVModel
-from otx.core.config.explain import ExplainConfig
-from otx.core.data.entity.base import ImageInfo
-from otx.core.data.module import OTXDataModule
-from otx.core.types import OTXTaskType, PathLike
-from otx.data.torch import OTXDataBatch
+from otx.config.explain import ExplainConfig
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataBatch
+from otx.data.module import OTXDataModule
 from otx.engine import Engine
+from otx.types import OTXTaskType, PathLike
 
 if TYPE_CHECKING:
-    from otx.core.metrics import MetricCallable
-    from otx.types import ANNOTATIONS, DATA, METRICS, MODEL
+    from otx.metrics import MetricCallable
+    from otx.types.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 
 class OVEngine(Engine):
@@ -251,7 +251,10 @@ class OVEngine(Engine):
             ValueError: If input data is invalid or label information does not match.
             TypeError: If input data type is unsupported.
         """
-        from otx.algo.utils.xai_utils import process_saliency_maps_in_pred_entity, set_crop_padded_map_flag
+        from otx.backend.native.models.utils.xai_utils import (
+            process_saliency_maps_in_pred_entity,
+            set_crop_padded_map_flag,
+        )
 
         model = self._update_checkpoint(checkpoint)
         if isinstance(data, (str, os.PathLike)):

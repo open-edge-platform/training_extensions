@@ -5,7 +5,7 @@
 import pytest
 import torch
 
-from otx.algo.classification.losses.asymmetric_angular_loss_with_ignore import (
+from otx.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
     AsymmetricAngularLossWithIgnore,
     asymmetric_angular_loss_with_ignore,
 )

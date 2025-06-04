@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 import pytest
 from datumaro.components.annotation import Mask
 
-from otx.core.data.dataset.classification import HLabelInfo
-from otx.core.data.dataset.segmentation import OTXSegmentationDataset
+from otx.data.dataset.classification import HLabelInfo
+from otx.data.dataset.segmentation import OTXSegmentationDataset
 
 
 class TestDataset:

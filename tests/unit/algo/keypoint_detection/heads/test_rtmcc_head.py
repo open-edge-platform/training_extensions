@@ -6,10 +6,10 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.algo.keypoint_detection.heads.rtmcc_head import RTMCCHead
-from otx.algo.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
-from otx.core.data.entity.base import ImageInfo
-from otx.data import OTXDataBatch
+from otx.backend.native.models.keypoint_detection.heads.rtmcc_head import RTMCCHead
+from otx.backend.native.models.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataBatch
 
 
 class TestRTMCCHead:

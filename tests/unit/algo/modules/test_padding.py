@@ -4,7 +4,7 @@
 import pytest
 from torch import nn
 
-from otx.algo.modules.padding import build_padding_layer
+from otx.backend.native.models.modules.padding import build_padding_layer
 
 
 def test_build_padding_layer():

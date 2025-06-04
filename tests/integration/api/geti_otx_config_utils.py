@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 
 from omegaconf import OmegaConf
 
-from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT, ConfigConverter
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

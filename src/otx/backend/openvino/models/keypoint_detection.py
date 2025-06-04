@@ -10,16 +10,16 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.metrics import MetricCallable, MetricInput
-from otx.core.metrics.pck import PCKMeasureCallable
-from otx.core.types.task import OTXTaskType
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.metrics import MetricCallable, MetricInput
+from otx.metrics.pck import PCKMeasureCallable
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.models.result import DetectedKeypoints
     from torchmetrics import Metric
 
-    from otx.core.types import PathLike
+    from otx.types import PathLike
 
 
 class OVKeypointDetectionModel(OVModel):

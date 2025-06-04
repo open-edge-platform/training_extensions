@@ -21,20 +21,20 @@ get_streamer = None
 @pytest.fixture(scope="module", autouse=True)
 def fxt_import_module():
     global CameraStreamer, DirStreamer, ImageStreamer, ThreadedStreamer, VideoStreamer, get_streamer  # noqa: PLW0603
-    from otx.core.exporter.exportable_code.demo.demo_package.streamer.streamer import CameraStreamer as Cls1
-    from otx.core.exporter.exportable_code.demo.demo_package.streamer.streamer import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.streamer.streamer import CameraStreamer as Cls1
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.streamer.streamer import (
         DirStreamer as Cls2,
     )
-    from otx.core.exporter.exportable_code.demo.demo_package.streamer.streamer import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.streamer.streamer import (
         ImageStreamer as Cls3,
     )
-    from otx.core.exporter.exportable_code.demo.demo_package.streamer.streamer import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.streamer.streamer import (
         ThreadedStreamer as Cls4,
     )
-    from otx.core.exporter.exportable_code.demo.demo_package.streamer.streamer import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.streamer.streamer import (
         VideoStreamer as Cls5,
     )
-    from otx.core.exporter.exportable_code.demo.demo_package.streamer.streamer import (
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.streamer.streamer import (
         get_streamer as func1,
     )
 

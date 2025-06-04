@@ -7,9 +7,9 @@ import pytest
 import torch
 from torch import nn
 
-from otx.algo.detection.detectors.single_stage_detector import SingleStageDetector
-from otx.core.data.entity.base import ImageInfo
-from otx.data import OTXPredBatch
+from otx.backend.native.models.detection.detectors.single_stage_detector import SingleStageDetector
+from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.base import ImageInfo
 
 
 class TestSingleStageDetector:

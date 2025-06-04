@@ -7,14 +7,14 @@ import pytest
 import torch
 from torchmetrics.classification.accuracy import BinaryAccuracy, MulticlassAccuracy, MultilabelAccuracy
 
-from otx.core.metrics.accuracy import (
+from otx.metrics.accuracy import (
     HlabelAccuracy,
     MixedHLabelAccuracy,
     MulticlassAccuracywithLabelGroup,
     MultiClassClsMetricCallable,
     MultilabelAccuracywithLabelGroup,
 )
-from otx.core.types.label import HLabelInfo, LabelInfo
+from otx.types.label import HLabelInfo, LabelInfo
 
 
 class TestAccuracy:

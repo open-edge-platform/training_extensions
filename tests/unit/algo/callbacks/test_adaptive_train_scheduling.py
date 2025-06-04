@@ -10,7 +10,7 @@ from lightning.pytorch.cli import ReduceLROnPlateau
 from lightning.pytorch.utilities.types import LRSchedulerConfig
 from torch.utils.data import DataLoader
 
-from otx.algo.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+from otx.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
 
 
 class TestAdaptiveTrainScheduling:

@@ -7,13 +7,13 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from otx.algo.classification.multiclass_models import EfficientNetMulticlassCls
-from otx.algo.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
 from otx.backend.native.engine import OTXEngine
-from otx.core.model.base import DataInputParams, OTXModel
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.label import NullLabelInfo
-from otx.core.types.precision import OTXPrecisionType
+from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.models.classification.multiclass_models import EfficientNetMulticlassCls
+from otx.backend.native.models.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
+from otx.types.export import OTXExportFormatType
+from otx.types.label import NullLabelInfo
+from otx.types.precision import OTXPrecisionType
 
 
 @pytest.fixture()
@@ -62,7 +62,7 @@ class TestEngine:
         mock_datamodule.input_std = (1.0, 1.0, 1.0)
 
         return mocker.patch(
-            "otx.backend.native.utils.auto_configurator.AutoConfigurator.get_datamodule",
+            "otx.backend.native.tools.auto_configurator.AutoConfigurator.get_datamodule",
             return_value=mock_datamodule,
         )
 
@@ -142,7 +142,7 @@ class TestEngine:
         mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
         _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-        mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
+        mock_process_saliency_maps = mocker.patch("otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity")
 
         mock_model = mocker.create_autospec(OTXModel)
         mock_load_from_checkpoint.return_value = mock_model
@@ -225,7 +225,7 @@ class TestEngine:
         mock_predict = mocker.patch("otx.backend.native.engine.Trainer.predict")
         _ = mocker.patch("otx.backend.native.engine.AutoConfigurator.update_ov_subset_pipeline")
         mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-        mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
+        mock_process_saliency_maps = mocker.patch("otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity")
 
         mock_model = mocker.create_autospec(OTXModel)
         mock_load_from_checkpoint.return_value = mock_model

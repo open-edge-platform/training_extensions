@@ -4,9 +4,9 @@
 
 import torch
 
-from otx.algo.instance_segmentation.rtmdet_inst import RTMDetInst
-from otx.core.model.base import DataInputParams
-from otx.data import OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.instance_segmentation.rtmdet_inst import RTMDetInst
+from otx.data.entity.torch import OTXPredBatch
 
 
 class TestRTMDetInst:

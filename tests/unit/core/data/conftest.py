@@ -15,29 +15,29 @@ from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 from datumaro.components.media import Image
 
-from otx.core.data.dataset.anomaly import AnomalyDataset
-from otx.core.data.dataset.classification import (
+from otx.data.dataset.anomaly import AnomalyDataset
+from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.core.data.dataset.detection import (
+from otx.data.dataset.detection import (
     OTXDetectionDataset,
 )
-from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.core.data.dataset.segmentation import (
+from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
+from otx.data.dataset.segmentation import (
     OTXSegmentationDataset,
 )
-from otx.core.data.mem_cache import MemCacheHandlerSingleton
-from otx.core.types.task import OTXTaskType
-from otx.data.torch import OTXDataItem
+from otx.data.entity.torch import OTXDataItem
+from otx.data.mem_cache import MemCacheHandlerSingleton
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-    from otx.core.data.dataset.base import OTXDataset, T_OTXDataEntity
-    from otx.core.data.mem_cache import MemCacheHandlerBase
+    from otx.data.dataset.base import OTXDataset, T_OTXDataEntity
+    from otx.data.mem_cache import MemCacheHandlerBase
 
 _LABEL_NAMES = ["Non-Rigid", "Rigid", "Rectangle", "Triangle", "Circle", "Lion", "Panda"]
 

@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 
 from otx.backend.native.engine import OTXEngine
-from otx.backend.native.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel
-from otx.core.types.task import OTXTaskType
+from otx.backend.native.models.base import OTXModel
+from otx.backend.native.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK
+from otx.data.module import OTXDataModule
+from otx.types.task import OTXTaskType
 
 
 @pytest.mark.parametrize("task", pytest.TASK_LIST)

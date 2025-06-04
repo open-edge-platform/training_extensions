@@ -3,8 +3,8 @@
 
 import torch
 
-from otx.algo.classification.utils.ignored_labels import get_valid_label_mask
-from otx.core.data.entity.base import ImageInfo
+from otx.backend.native.models.classification.utils.ignored_labels import get_valid_label_mask
+from otx.data.entity.base import ImageInfo
 
 
 def test_get_valid_label_mask():

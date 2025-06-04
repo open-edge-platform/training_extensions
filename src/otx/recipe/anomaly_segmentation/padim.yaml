@@ -1,5 +1,5 @@
 model:
-  class_path: otx.algo.anomaly.padim.Padim
+  class_path: otx.backend.native.models.anomaly.padim.Padim
   init_args:
     layers: ["layer1", "layer2", "layer3"]
     backbone: "resnet18"
@@ -18,7 +18,7 @@ overrides:
   precision: 32
   max_epochs: 1
   callbacks:
-    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
       init_args:
         max_interval: 1
 

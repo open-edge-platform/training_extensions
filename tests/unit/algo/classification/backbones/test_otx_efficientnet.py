@@ -5,7 +5,7 @@
 import pytest
 import torch
 
-from otx.algo.classification.backbones.efficientnet import EfficientNetBackbone
+from otx.backend.native.models.classification.backbones.efficientnet import EfficientNetBackbone
 
 
 class TestOTXEfficientNet:

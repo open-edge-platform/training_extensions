@@ -12,14 +12,14 @@ import torch
 from datumaro import Polygon
 from torch import nn
 
-from otx.algo.common.utils.assigners import DynamicSoftLabelAssigner
-from otx.algo.common.utils.coders import DistancePointBBoxCoder
-from otx.algo.common.utils.prior_generators import MlvlPointGenerator
-from otx.algo.common.utils.samplers import PseudoSampler
-from otx.algo.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
-from otx.algo.modules.norm import build_norm_layer
-from otx.core.data.entity.base import ImageInfo
-from otx.data import OTXDataBatch
+from otx.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
+from otx.backend.native.models.common.utils.coders import DistancePointBBoxCoder
+from otx.backend.native.models.common.utils.prior_generators import MlvlPointGenerator
+from otx.backend.native.models.common.utils.samplers import PseudoSampler
+from otx.backend.native.models.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
+from otx.backend.native.models.modules.norm import build_norm_layer
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataBatch
 
 
 def set_mock_sampling_results_list(batch_size: int) -> list[Mock]:

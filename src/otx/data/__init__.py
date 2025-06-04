@@ -1,18 +1,9 @@
-"""Dataclasses for data entities."""
-
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+#
+"""Module for data related objects, such as OTXDataset, OTXDataModule, and Transforms."""
 
-from .torch import (
-    OTXDataBatch,
-    OTXDataItem,
-    OTXPredBatch,
-    OTXPredItem,
-)
+from .factory import OTXDatasetFactory, TransformLibFactory
+from .module import OTXDataModule
 
-__all__ = [
-    "OTXDataBatch",
-    "OTXDataItem",
-    "OTXPredBatch",
-    "OTXPredItem",
-]
+__all__ = ["OTXDataModule", "OTXDatasetFactory", "TransformLibFactory"]

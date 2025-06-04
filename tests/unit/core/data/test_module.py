@@ -11,12 +11,12 @@ from importlib_resources import files
 from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig, OmegaConf
 
-from otx.core.config.data import (
+from otx.config.data import (
     SubsetConfig,
     TileConfig,
 )
-from otx.core.data import module as target_file
-from otx.core.data.module import (
+from otx.data import module as target_file
+from otx.data.module import (
     OTXDataModule,
     OTXTaskType,
 )
@@ -69,11 +69,11 @@ class TestModule:
 
     @pytest.fixture()
     def mock_dm_dataset(self, mocker) -> MagicMock:
-        return mocker.patch("otx.core.data.module.DmDataset.import_from")
+        return mocker.patch("otx.data.module.DmDataset.import_from")
 
     @pytest.fixture()
     def mock_otx_dataset_factory(self, mocker) -> MagicMock:
-        return mocker.patch("otx.core.data.module.OTXDatasetFactory")
+        return mocker.patch("otx.data.module.OTXDatasetFactory")
 
     @pytest.fixture()
     def mock_data_filtering(self, mocker) -> MagicMock:
@@ -88,7 +88,7 @@ class TestModule:
             del ignore_index
             return dataset
 
-        return mocker.patch("otx.core.data.module.pre_filtering", side_effect=func)
+        return mocker.patch("otx.data.module.pre_filtering", side_effect=func)
 
     @pytest.mark.parametrize(
         "task",

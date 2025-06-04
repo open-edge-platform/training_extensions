@@ -9,11 +9,11 @@ import pytest
 import torch
 import torchvision
 
-from otx.algo.detection.backbones import PResNet
-from otx.algo.detection.heads import RTDETRTransformer
-from otx.algo.detection.losses import DetrCriterion
-from otx.algo.detection.necks import HybridEncoder
-from otx.algo.detection.rtdetr import DETR
+from otx.backend.native.models.detection.backbones import PResNet
+from otx.backend.native.models.detection.heads import RTDETRTransformer
+from otx.backend.native.models.detection.losses import DetrCriterion
+from otx.backend.native.models.detection.necks import HybridEncoder
+from otx.backend.native.models.detection.rtdetr import DETR
 
 
 class TestDETR:

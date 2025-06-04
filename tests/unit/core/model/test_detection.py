@@ -15,11 +15,11 @@ from lightning.pytorch.cli import ReduceLROnPlateau
 from omegaconf import OmegaConf
 from torch.optim import Optimizer
 
-from otx.algo.detection.atss import ATSS
-from otx.algo.explain.explain_algo import feature_vector_fn
-from otx.core.metrics.fmeasure import FMeasureCallable
-from otx.core.model.base import DataInputParams
-from otx.core.types.export import TaskLevelExportParameters
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.detection.atss import ATSS
+from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
+from otx.metrics.fmeasure import FMeasureCallable
+from otx.types.export import TaskLevelExportParameters
 
 if TYPE_CHECKING:
     from omegaconf.dictconfig import DictConfig

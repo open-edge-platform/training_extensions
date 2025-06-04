@@ -10,7 +10,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from otx.core.data.transform_libs.utils import get_image_shape, rescale_keypoints, rescale_size, to_np_image
+from otx.data.transform_libs.utils import get_image_shape, rescale_keypoints, rescale_size, to_np_image
 
 
 @pytest.mark.parametrize(("img", "expected_shape"), [(np.zeros((1, 2, 3)), (1, 2)), (torch.zeros((1, 2, 3)), (2, 3))])

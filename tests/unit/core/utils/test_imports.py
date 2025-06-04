@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import otx
-from otx.core.utils.imports import get_otx_root_path
+from otx.backend.native.cli.utils import get_otx_root_path
 
 
 def test_get_otx_root_path(mocker):

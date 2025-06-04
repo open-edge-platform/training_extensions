@@ -10,8 +10,8 @@ from unittest.mock import MagicMock
 import pytest
 from lightning.pytorch.loggers.logger import DummyLogger
 
-from otx.backend.native.utils.adaptive_bs import runner as target_file
-from otx.backend.native.utils.adaptive_bs.runner import (
+from otx.backend.native.tools.adaptive_bs import runner as target_file
+from otx.backend.native.tools.adaptive_bs.runner import (
     BatchSizeFinder,
     _adjust_train_args,
     _train_model,

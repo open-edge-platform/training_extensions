@@ -7,17 +7,17 @@ from pathlib import Path
 import pytest
 import torch
 
-from otx.backend.native.utils import auto_configurator as target_file
-from otx.backend.native.utils.auto_configurator import (
+from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.tools import auto_configurator as target_file
+from otx.backend.native.tools.auto_configurator import (
     DEFAULT_CONFIG_PER_TASK,
     AutoConfigurator,
     configure_task,
 )
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel
-from otx.core.types.label import LabelInfo, SegLabelInfo
-from otx.core.types.task import OTXTaskType
-from otx.core.types.transformer_libs import TransformLibType
+from otx.data.module import OTXDataModule
+from otx.types.label import LabelInfo, SegLabelInfo
+from otx.types.task import OTXTaskType
+from otx.types.transformer_libs import TransformLibType
 from otx.utils.utils import should_pass_label_info
 
 
@@ -201,7 +201,7 @@ class TestAutoConfigurator:
         datamodule = auto_configurator.get_datamodule()
         assert datamodule.test_subset.transforms == [
             {
-                "class_path": "otx.core.data.transform_libs.torchvision.Resize",
+                "class_path": "otx.data.transform_libs.torchvision.Resize",
                 "init_args": {
                     "scale": (800, 992),
                     "is_numpy_to_tvtensor": True,

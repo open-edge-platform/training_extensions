@@ -14,8 +14,8 @@ SyncExecutor = None
 def fxt_import_module():
     global target_file  # noqa: PLW0603
     global SyncExecutor  # noqa: PLW0603
-    from otx.core.exporter.exportable_code.demo.demo_package.executors import synchronous
-    from otx.core.exporter.exportable_code.demo.demo_package.executors.synchronous import SyncExecutor as Cls1
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.executors import synchronous
+    from otx.backend.native.exporter.exportable_code.demo.demo_package.executors.synchronous import SyncExecutor as Cls1
 
     target_file = synchronous
     SyncExecutor = Cls1

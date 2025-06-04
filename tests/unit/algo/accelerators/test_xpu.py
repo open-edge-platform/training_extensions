@@ -7,14 +7,14 @@
 import pytest
 import torch
 
-from otx.algo.accelerators import XPUAccelerator
+from otx.backend.native.lightning.accelerators import XPUAccelerator
 from otx.utils.device import is_xpu_available
 
 
 class TestXPUAccelerator:
     @pytest.fixture()
     def accelerator(self, mocker):
-        mock_torch = mocker.patch("otx.algo.accelerators.xpu.torch")
+        mock_torch = mocker.patch("otx.backend.native.lightning.accelerators.xpu.torch")
         return XPUAccelerator(), mock_torch
 
     def test_setup_device(self, accelerator):

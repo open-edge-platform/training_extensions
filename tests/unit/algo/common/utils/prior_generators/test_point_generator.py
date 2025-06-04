@@ -5,7 +5,7 @@
 import pytest
 import torch
 
-from otx.algo.common.utils.prior_generators import MlvlPointGenerator
+from otx.backend.native.models.common.utils.prior_generators import MlvlPointGenerator
 
 
 class TestMlvlPointGenerator:

@@ -8,8 +8,8 @@ from lightning import Trainer
 from lightning.pytorch.utilities.types import LRSchedulerConfig
 from pytest_mock import MockerFixture
 
-from otx.core.model.base import DataInputParams, OTXModel
-from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler
+from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler
 
 
 class MockNNModule(torch.nn.Module):

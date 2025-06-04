@@ -5,13 +5,13 @@
 
 from unittest.mock import MagicMock
 
-from otx.core.data.dataset.classification import (
+from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
     OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.data.torch import OTXDataItem
+from otx.data.entity.torch import OTXDataItem
 
 
 class TestOTXMulticlassClsDataset:

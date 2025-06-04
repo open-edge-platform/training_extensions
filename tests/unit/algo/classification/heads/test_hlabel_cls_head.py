@@ -11,14 +11,14 @@ import torch
 from torch import nn
 from torch.nn.modules.loss import CrossEntropyLoss
 
-from otx.algo.classification.heads import (
+from otx.backend.native.models.classification.heads import (
     HierarchicalCBAMClsHead,
     HierarchicalLinearClsHead,
     HierarchicalNonLinearClsHead,
 )
-from otx.algo.classification.heads.hlabel_cls_head import CBAM, ChannelAttention, SpatialAttention
-from otx.algo.classification.losses import AsymmetricAngularLossWithIgnore
-from otx.core.data.entity.base import ImageInfo
+from otx.backend.native.models.classification.heads.hlabel_cls_head import CBAM, ChannelAttention, SpatialAttention
+from otx.backend.native.models.classification.losses import AsymmetricAngularLossWithIgnore
+from otx.data.entity.base import ImageInfo
 
 
 @pytest.fixture()

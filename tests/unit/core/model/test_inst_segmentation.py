@@ -6,11 +6,11 @@
 import pytest
 import torch
 
-from otx.algo.explain.explain_algo import feature_vector_fn
-from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
-from otx.core.model.base import DataInputParams
-from otx.core.model.instance_segmentation import OTXInstanceSegModel
-from otx.core.types.export import TaskLevelExportParameters
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
+from otx.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
+from otx.backend.native.tools.explain.explain_algo import feature_vector_fn
+from otx.types.export import TaskLevelExportParameters
 
 
 class TestOTXInstanceSegModel:

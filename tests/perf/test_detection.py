@@ -53,7 +53,7 @@ class TestPerfObjectDetection(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         )
@@ -66,7 +66,7 @@ class TestPerfObjectDetection(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         ),
@@ -77,7 +77,7 @@ class TestPerfObjectDetection(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         ),

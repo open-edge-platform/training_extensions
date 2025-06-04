@@ -9,10 +9,8 @@ from datumaro.components.annotation import Label
 from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 
-from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfo
-from otx.core.utils import utils as target_file
-from otx.core.utils.utils import (
+from otx.backend.native.utils import utils as target_file
+from otx.backend.native.utils.utils import (
     get_adaptive_num_workers,
     get_idx_list_per_classes,
     import_object_from_module,
@@ -20,6 +18,8 @@ from otx.core.utils.utils import (
     is_ckpt_from_otx_v1,
     remove_state_dict_prefix,
 )
+from otx.types.export import TaskLevelExportParameters
+from otx.types.label import LabelInfo
 
 
 @pytest.mark.parametrize("num_dataloader", [1, 2, 4])
@@ -130,7 +130,7 @@ def test_get_idx_list_per_classes(fxt_dm_dataset):
 
 
 def test_import_object_from_module():
-    obj_path = "otx.core.utils.utils.get_idx_list_per_classes"
+    obj_path = "otx.backend.native.utils.utils.get_idx_list_per_classes"
     obj = import_object_from_module(obj_path)
     assert obj == get_idx_list_per_classes
 

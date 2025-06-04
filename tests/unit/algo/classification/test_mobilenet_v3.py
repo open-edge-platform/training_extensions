@@ -4,13 +4,13 @@
 import pytest
 import torch
 
-from otx.algo.classification.classifier import ImageClassifier
-from otx.algo.classification.hlabel_models.mobilenet_v3 import MobileNetV3HLabelCls
-from otx.algo.classification.multiclass_models.mobilenet_v3 import MobileNetV3MulticlassCls
-from otx.algo.classification.multilabel_models.mobilenet_v3 import MobileNetV3MultilabelCls
-from otx.core.data.entity.base import OTXBatchLossEntity
-from otx.core.model.base import DataInputParams
-from otx.data.torch import OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.classification.classifier import ImageClassifier
+from otx.backend.native.models.classification.hlabel_models.mobilenet_v3 import MobileNetV3HLabelCls
+from otx.backend.native.models.classification.multiclass_models.mobilenet_v3 import MobileNetV3MulticlassCls
+from otx.backend.native.models.classification.multilabel_models.mobilenet_v3 import MobileNetV3MultilabelCls
+from otx.data.entity.base import OTXBatchLossEntity
+from otx.data.entity.torch import OTXPredBatch
 
 
 @pytest.fixture()

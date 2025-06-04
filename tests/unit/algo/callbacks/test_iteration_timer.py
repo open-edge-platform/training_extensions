@@ -5,12 +5,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from otx.algo.callbacks.iteration_timer import IterationTimer
+from otx.backend.native.callbacks.iteration_timer import IterationTimer
 
 
 class TestIterationTimer:
     @pytest.mark.parametrize("phase", ["train", "validation", "test"])
-    @patch("otx.algo.callbacks.iteration_timer.time")
+    @patch("otx.backend.native.callbacks.iteration_timer.time")
     def test_all_phases(self, mock_time, phase) -> None:
         mock_trainer = MagicMock()
         mock_batch = MagicMock()

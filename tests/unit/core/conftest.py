@@ -9,7 +9,7 @@ from datumaro.components.annotation import AnnotationType, LabelCategories
 from datumaro.components.dataset import Dataset, DatasetItem
 from datumaro.components.media import Image
 
-from otx.core.config import register_configs
+from otx.config import register_configs
 
 
 @pytest.fixture(scope="session", autouse=True)

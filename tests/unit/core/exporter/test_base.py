@@ -7,9 +7,9 @@ import pytest
 from onnx import ModelProto
 from onnxconverter_common import float16
 
-from otx.core.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType, ZipFile
-from otx.core.model.base import DataInputParams
-from otx.core.types.export import TaskLevelExportParameters
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType, ZipFile
+from otx.types.export import TaskLevelExportParameters
 
 
 class MockModelExporter(OTXModelExporter):
@@ -28,7 +28,7 @@ def mock_model():
 @pytest.fixture()
 def exporter(mocker):
     ZipFile.write = MagicMock()
-    mocker.patch("otx.core.exporter.base.json")
+    mocker.patch("otx.backend.native.exporter.base.json")
     return MockModelExporter(
         task_level_export_parameters=MagicMock(TaskLevelExportParameters),
         data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
@@ -56,7 +56,7 @@ class TestOTXModelExporter:
             exporter.export(mock_model, tmp_path, export_format=export_format)
 
     def test_to_exportable_code(self, mock_model, exporter, tmp_path):
-        from otx.core.exporter.base import ZipFile
+        from otx.backend.native.exporter.base import ZipFile
 
         ZipFile.writestr = MagicMock()
 

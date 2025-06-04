@@ -5,12 +5,12 @@
 import pytest
 import torch
 
-from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
-from otx.algo.instance_segmentation.maskrcnn_tv import MaskRCNNTV
-from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.model.base import DataInputParams
-from otx.core.types.export import TaskLevelExportParameters
-from otx.data import OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
+from otx.backend.native.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
+from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
+from otx.data.entity.torch import OTXPredBatch
+from otx.types.export import TaskLevelExportParameters
 
 
 class TestMaskRCNN:

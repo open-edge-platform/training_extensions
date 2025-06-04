@@ -8,11 +8,11 @@ import itertools
 import pytest
 from datumaro import Dataset as DmDataset
 
-from otx.backend.native.utils.auto_configurator import AutoConfigurator
-from otx.core.config.data import SamplerConfig, SubsetConfig
-from otx.core.data.factory import OTXDatasetFactory
-from otx.core.data.mem_cache import MemCacheHandlerSingleton
-from otx.core.types.task import OTXTaskType
+from otx.backend.native.tools.auto_configurator import AutoConfigurator
+from otx.config.data import SamplerConfig, SubsetConfig
+from otx.data.factory import OTXDatasetFactory
+from otx.data.mem_cache import MemCacheHandlerSingleton
+from otx.types.task import OTXTaskType
 
 
 def _test_augmentation(

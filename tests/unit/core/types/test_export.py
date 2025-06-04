@@ -5,8 +5,8 @@ from copy import deepcopy
 
 import pytest
 
-from otx.core.config.data import TileConfig
-from otx.core.types.export import TaskLevelExportParameters
+from otx.config.data import TileConfig
+from otx.types.export import TaskLevelExportParameters
 
 
 @pytest.mark.parametrize("task_type", ["instance_segmentation", "classification"])

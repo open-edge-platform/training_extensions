@@ -5,7 +5,7 @@
 import pytest
 import torch
 
-from otx.algo.detection.utils.prior_generators import SSDAnchorGeneratorClustered
+from otx.backend.native.models.detection.utils.prior_generators import SSDAnchorGeneratorClustered
 
 
 class TestSSDAnchorGeneratorClustered:

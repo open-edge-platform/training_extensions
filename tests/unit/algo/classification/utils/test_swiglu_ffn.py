@@ -7,7 +7,7 @@
 import torch
 from torch import nn
 
-from otx.algo.classification.utils.swiglu_ffn import SwiGLUFFN, SwiGLUFFNFused
+from otx.backend.native.models.classification.utils.swiglu_ffn import SwiGLUFFN, SwiGLUFFNFused
 
 
 class TestSwiGLUFFN:

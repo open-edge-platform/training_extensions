@@ -6,13 +6,13 @@ import pytest
 import torch
 from torch._dynamo.testing import CompileCounter
 
-from otx.algo.common.backbones.cspnext import CSPNeXtModule
-from otx.algo.detection.heads.rtmdet_head import RTMDetSepBNHeadModule
-from otx.algo.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
-from otx.algo.detection.rtmdet import RTMDet
-from otx.core.exporter.native import OTXNativeModelExporter
-from otx.core.model.base import DataInputParams
-from otx.data import OTXPredBatch
+from otx.backend.native.models.base import DataInputParams
+from otx.backend.native.models.common.backbones.cspnext import CSPNeXtModule
+from otx.backend.native.models.detection.heads.rtmdet_head import RTMDetSepBNHeadModule
+from otx.backend.native.models.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
+from otx.backend.native.models.detection.rtmdet import RTMDet
+from otx.backend.native.exporter.native import OTXNativeModelExporter
+from otx.data.entity.torch import OTXPredBatch
 
 
 class TestRTMDet:

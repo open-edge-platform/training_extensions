@@ -3,7 +3,7 @@
 
 import torch
 
-from otx.algo.classification.backbones.mobilenet_v3 import MobileNetV3Backbone
+from otx.backend.native.models.classification.backbones.mobilenet_v3 import MobileNetV3Backbone
 
 
 class TestOTXMobileNetV3:

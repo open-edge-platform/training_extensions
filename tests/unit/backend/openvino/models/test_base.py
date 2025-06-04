@@ -12,7 +12,7 @@ from model_api.models.result import ClassificationResult
 from pytest_mock import MockerFixture
 
 from otx.backend.openvino.models import OVModel
-from otx.data import OTXDataBatch
+from otx.data.entity.torch import OTXDataBatch
 from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
 

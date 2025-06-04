@@ -4,7 +4,7 @@
 
 import torch
 
-from otx.algo.detection.layers.common_layer import AConv, ADown, Concat
+from otx.backend.native.models.detection.layers.common_layer import AConv, ADown, Concat
 
 
 class TestConcat:
