@@ -1,0 +1,3 @@
+openvino==2024.5.0
+openvino-model-api==0.2.5
+numpy==1.26.4
