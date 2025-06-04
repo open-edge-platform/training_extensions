@@ -24,8 +24,8 @@ from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, Ri
 from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
 
-from otx.algo.callbacks.aug_scheduler import AugmentationSchedulerCallback, DataAugSwitch
 from otx.algo.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+from otx.algo.callbacks.aug_scheduler import AugmentationSchedulerCallback, DataAugSwitch
 from otx.algo.callbacks.gpu_mem_monitor import GPUMemMonitor
 from otx.algo.callbacks.iteration_timer import IterationTimer
 from otx.core.config.device import DeviceConfig

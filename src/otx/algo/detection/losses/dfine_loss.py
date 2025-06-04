@@ -9,7 +9,6 @@ from __future__ import annotations
 from typing import Callable
 
 import torch
-import torch.distributed
 import torch.nn.functional as f
 from torch import Tensor, nn
 from torchvision.ops import box_convert

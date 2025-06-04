@@ -17,7 +17,7 @@ from torchvision.tv_tensors import BoundingBoxFormat
 from otx.algo.detection.backbones.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors import DETR
 from otx.algo.detection.heads.dfine_decoder import DFINETransformer
-from otx.algo.detection.losses.dfine_loss import DFINECriterion
+from otx.algo.detection.losses.deim_loss import DEIMCriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
@@ -38,6 +38,25 @@ if TYPE_CHECKING:
 
 
 class DEIMDFine(OTXDetectionModel):
+    """OTX Detection model class for DEIMDFine.
+
+    Attributes:
+        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+        input_size_multiplier (int): Multiplier for the input size.
+
+    Args:
+        label_info (LabelInfoTypes): Information about the labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (literal, optional): Name of the model to use. Defaults to "deim_dfine_hgnetv2_x".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to MeanAveragePrecisionFMeasureCallable.
+        multi_scale (bool, optional): Whether to use multi-scale training. Defaults to False.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+    """
+
     pretrained_weights: ClassVar[dict[str, str]] = {
         "deim_dfine_hgnetv2_n": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_n_coco_160e.pth",
         "deim_dfine_hgnetv2_s": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_s_coco_120e.pth",
@@ -85,16 +104,17 @@ class DEIMDFine(OTXDetectionModel):
             model_name=self.model_name,
             num_classes=num_classes,
         )
-        criterion = DFINECriterion(
+        criterion = DEIMCriterion(
             weight_dict={
                 "loss_vfl": 1,
                 "loss_bbox": 5,
                 "loss_giou": 2,
                 "loss_fgl": 0.15,
                 "loss_ddf": 1.5,
+                "loss_mal": 1.0,
             },
             alpha=0.75,
-            gamma=2.0,
+            gamma=1.5,
             reg_max=32,
             num_classes=num_classes,
         )
