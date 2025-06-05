@@ -71,9 +71,9 @@ class OTXDatasetFactory:
             OTXTaskType.ANOMALY_DETECTION,
             OTXTaskType.ANOMALY_SEGMENTATION,
         ):
-            from .dataset.anomaly import AnomalyDataset
+            from .dataset.anomaly import OTXAnomalyDataset
 
-            return AnomalyDataset(task_type=task, **common_kwargs)
+            return OTXAnomalyDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.MULTI_CLASS_CLS:
             from .dataset.classification import OTXMulticlassClsDataset

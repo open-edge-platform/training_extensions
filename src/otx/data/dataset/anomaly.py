@@ -35,7 +35,7 @@ class AnomalyLabel(Enum):
     ANOMALOUS = torch.tensor(1.0)
 
 
-class AnomalyDataset(OTXDataset):
+class OTXAnomalyDataset(OTXDataset):
     """OTXDataset class for anomaly classification task."""
 
     def __init__(
