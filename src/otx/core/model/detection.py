@@ -80,30 +80,23 @@ class OTXDetectionModel(OTXModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> None:
+    def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
+        """Perform a single validation step on a batch of data from the validation set.
+
+        :param batch: A batch of data (a tuple) containing the input tensor of images and target
+            labels.
+        :param batch_idx: The index of the current batch.
+        """
+        return self._filter_outputs_by_threshold(super().validation_step(batch, batch_idx))
+
+    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
         """Perform a single test step on a batch of data from the test set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
             labels.
         :param batch_idx: The index of the current batch.
         """
-        preds = self._filter_outputs_by_threshold(self.forward(inputs=batch))  # type: ignore[arg-type]
-
-        if isinstance(preds, OTXBatchLossEntity):
-            raise TypeError(preds)
-
-        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
-
-        if isinstance(metric_inputs, dict):
-            self.metric.update(**metric_inputs)
-            return
-
-        if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
-            for inp in metric_inputs:
-                self.metric.update(**inp)
-            return
-
-        raise TypeError(metric_inputs)
+        return self._filter_outputs_by_threshold(super().test_step(batch, batch_idx))
 
     def predict_step(
         self,
