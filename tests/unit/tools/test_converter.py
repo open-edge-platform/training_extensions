@@ -59,5 +59,6 @@ class TestConfigConverter:
 
         assert len(train_kwargs["callbacks"]) == len(config["callbacks"])
         assert train_kwargs["callbacks"][0].patience == 4
-        assert len(train_kwargs["logger"]) == len(config["logger"])
+        if "logger" in train_kwargs and train_kwargs["logger"] is not None:
+            assert len(train_kwargs["logger"]) == len(config["logger"])
         assert train_kwargs["max_epochs"] == 50

@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
   (https://github.com/open-edge-platform/training_extensions/pull/4334)
 - Bump torch to 2.7.0
   (https://github.com/open-edge-platform/training_extensions/pull/4361)
+- Add model arch name to exported model metadata
+  (https://github.com/open-edge-platform/training_extensions/pull/4407)
 
 ### Bug fixes
 

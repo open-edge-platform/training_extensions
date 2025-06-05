@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for base model entity used in OTX."""
 
@@ -774,6 +774,7 @@ class OTXModel(LightningModule):
         return TaskLevelExportParameters(
             model_type="null",
             task_type="null",
+            model_name=self.model_name,
             label_info=self.label_info,
             optimization_config=self._optimization_config,
         )

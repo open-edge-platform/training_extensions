@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX object detection performance benchmark."""
@@ -33,28 +33,96 @@ MODEL_TEST_CASES = [
     ModelInfo(task=TASK_TYPE.value, name="yolox_x", category="other"),
 ]
 
-DATASET_TEST_CASES = [
-    DatasetInfo(
-        name="pothole_small_1",
-        path=Path("detection/pothole_small/1"),
-        group="small",
-        extra_overrides={
-            "test": {
-                "metric": FMeasureCallable,
+DATASET_TEST_CASES = (
+    [
+        DatasetInfo(
+            name=f"pothole_tiny_{idx}",
+            path=Path("detection/pothole_coco_tiny") / f"{idx}",
+            group="tiny",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
             },
-        },
-    ),
-    DatasetInfo(
-        name="pothole_small_2",
-        path=Path("detection/pothole_small/2"),
-        group="small",
-        extra_overrides={
-            "test": {
-                "metric": FMeasureCallable,
+        )
+        for idx in (1, 2, 3)
+    ]
+    + [
+        DatasetInfo(
+            name=f"blueberry_tiny_{idx}",
+            path=Path("detection/blueberry_tiny_coco") / f"{idx}",
+            group="tiny",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
             },
-        },
-    ),
-]
+        )
+        for idx in (1, 2, 3)
+    ]
+    + [
+        DatasetInfo(
+            name="wgisd_small",
+            path=Path("detection/wgisd_merged_coco_small"),
+            group="small",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
+            },
+        ),
+        DatasetInfo(
+            name="skindetect",
+            path=Path("detection/skindetect-roboflow"),
+            group="small",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
+            },
+        ),
+        DatasetInfo(
+            name="diopsis",
+            path=Path("detection/diopsis_coco"),
+            group="medium",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
+            },
+        ),
+        DatasetInfo(
+            name="bdd_medium",
+            path=Path("detection/bdd_medium"),
+            group="medium",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
+            },
+        ),
+        DatasetInfo(
+            name="Vitens-Aeromonas",
+            path=Path("detection/Vitens-Aeromonas-coco"),
+            group="medium",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
+            },
+        ),
+        DatasetInfo(
+            name="visdrone",
+            path=Path("detection/visdrone_coco_custom_split"),
+            group="large",
+            extra_overrides={
+                "test": {
+                    "metric": FMeasureCallable,
+                },
+            },
+        ),
+    ]
+)
 
 BENCHMARK_CRITERIA = [
     Criterion(name="training:epoch", summary="max", compare="<", margin=0.1),

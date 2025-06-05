@@ -13,13 +13,18 @@ import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
 import torch
 from lightning import Trainer, seed_everything
+from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, RichModelSummary, RichProgressBar
+from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
 
+from otx.algo.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+from otx.algo.callbacks.gpu_mem_monitor import GPUMemMonitor
+from otx.algo.callbacks.iteration_timer import IterationTimer
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
@@ -160,10 +165,11 @@ class Engine:
 
     def train(
         self,
-        max_epochs: int = 10,
+        max_epochs: int = 200,
+        min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = "32",
+        precision: _PRECISION_INPUT | None = "16",
         val_check_interval: int | float | None = None,
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
@@ -171,6 +177,8 @@ class Engine:
         metric: MetricCallable | None = None,
         checkpoint: PathLike | None = None,
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
+        check_val_every_n_epoch: int | None = 1,
+        num_sanity_val_steps: int | None = 0,
         **kwargs,
     ) -> dict[str, Any]:
         r"""Trains the model using the provided LightningModule and OTXDataModule.
@@ -246,8 +254,11 @@ class Engine:
             callbacks=callbacks,
             precision=precision,
             max_epochs=max_epochs,
+            min_epochs=min_epochs,
             deterministic=deterministic,
             val_check_interval=val_check_interval,
+            check_val_every_n_epoch=check_val_every_n_epoch,
+            num_sanity_val_steps=num_sanity_val_steps,
             **kwargs,
         )
         fit_kwargs: dict[str, Any] = {}
@@ -551,8 +562,7 @@ class Engine:
         is_ir_ckpt = Path(checkpoint).suffix in [".xml"]
         if export_demo_package and export_format == OTXExportFormatType.ONNX:
             msg = (
-                "ONNX export is not supported in exportable code mode. "
-                "Exportable code parameter will be disregarded. "
+                "ONNX export is not supported in exportable code mode. Exportable code parameter will be disregarded. "
             )
             warn(msg, stacklevel=1)
             export_demo_package = False
@@ -1104,30 +1114,97 @@ class Engine:
             raise RuntimeError(msg)
         return self._trainer
 
-    def _build_trainer(self, **kwargs) -> None:
+    def _build_trainer(self, logger: Logger | Iterable[Logger] | bool | None = None, **kwargs) -> None:
         """Instantiate the trainer based on the model parameters."""
         if self._cache.requires_update(**kwargs) or self._trainer is None:
             self._cache.update(**kwargs)
+
             # set up xpu device
-            if self._device.accelerator == DeviceType.xpu:
-                self._cache.update(strategy="xpu_single")
-                # add plugin for Automatic Mixed Precision on XPU
-                if self._cache.args.get("precision", 32) == 16:
-                    self._cache.update(
-                        plugins=[
-                            MixedPrecision(
-                                precision="bf16-mixed",
-                                device="xpu",
-                            ),
-                        ],
-                    )
-                    self._cache.args["precision"] = None
+            self.configure_accelerator()
+            # setup default loggers
+            logger = self.configure_loggers(logger)
+            # set up default callbacks
+            self.configure_callbacks()
 
             kwargs = self._cache.args
-            self._trainer = Trainer(**kwargs)
+            self._trainer = Trainer(logger=logger, **kwargs)
             self._cache.is_trainer_args_identical = True
             self._trainer.task = self.task
             self.work_dir = self._trainer.default_root_dir
+
+    def configure_accelerator(self) -> None:
+        """Updates the cache arguments based on the device type."""
+        if self._device.accelerator == DeviceType.xpu:
+            self._cache.update(strategy="xpu_single")
+            # add plugin for Automatic Mixed Precision on XPU
+            if self._cache.args.get("precision", 32) == 16:
+                self._cache.update(
+                    plugins=[
+                        MixedPrecision(
+                            precision="bf16-mixed",
+                            device="xpu",
+                        ),
+                    ],
+                )
+                self._cache.args["precision"] = None
+
+    def configure_loggers(self, logger: Logger | Iterable[Logger] | bool | None = None) -> Logger | Iterable[Logger]:
+        """Sets up the loggers for the trainer.
+
+        If no logger is provided, it will use the default loggers.
+        """
+        if logger is None:
+            logger = [
+                CSVLogger(save_dir=self.work_dir, name="csv/", prefix=""),
+                TensorBoardLogger(
+                    save_dir=self.work_dir,
+                    name="tensorboard/",
+                    log_graph=False,
+                    default_hp_metric=True,
+                    prefix="",
+                ),
+            ]
+        return logger
+
+    def configure_callbacks(self) -> None:
+        """Sets up the OTX callbacks for the trainer."""
+        callbacks: list[Callback] = []
+        config_callbacks = self._cache.args.get("callbacks", [])
+        has_callback: Callable[[Callback], bool] = lambda callback: any(
+            isinstance(c, callback) for c in config_callbacks
+        )
+
+        if not has_callback(RichProgressBar):
+            callbacks.append(RichProgressBar(refresh_rate=1, leave=False))
+        if not has_callback(RichModelSummary):
+            callbacks.append(RichModelSummary(max_depth=1))
+        if not has_callback(IterationTimer):
+            callbacks.append(IterationTimer(prog_bar=True, on_step=False, on_epoch=True))
+        if not has_callback(LearningRateMonitor):
+            callbacks.append(LearningRateMonitor(logging_interval="epoch", log_momentum=True))
+        if not has_callback(ModelCheckpoint):
+            callbacks.append(
+                ModelCheckpoint(
+                    dirpath=self.work_dir,
+                    save_top_k=1,
+                    save_last=True,
+                    filename="checkpoints/epoch_{epoch:03d}",
+                    auto_insert_metric_name=False,
+                ),
+            )
+        if not has_callback(AdaptiveTrainScheduling):
+            callbacks.append(
+                AdaptiveTrainScheduling(
+                    max_interval=5,
+                    decay=-0.025,
+                    min_earlystop_patience=5,
+                    min_lrschedule_patience=3,
+                ),
+            )
+        if not has_callback(GPUMemMonitor):
+            callbacks.append(GPUMemMonitor())
+
+        self._cache.args["callbacks"] = callbacks + config_callbacks
 
     @property
     def trainer_params(self) -> dict:

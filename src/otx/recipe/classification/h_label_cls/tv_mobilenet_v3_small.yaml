@@ -28,17 +28,26 @@ engine:
 callback_monitor: val/accuracy
 
 data: ../../_base_/data/classification.yaml
+
+callbacks:
+  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      patience: 5
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: "" # use engine.work_dir
+      monitor: val/accuracy
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"
+
 overrides:
   reset:
     - data.train_subset.transforms
 
   max_epochs: 90
-
-  callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
-      init_args:
-        patience: 5
-
   data:
     task: H_LABEL_CLS
     data_format: datumaro
