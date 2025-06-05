@@ -56,7 +56,7 @@ callbacks:
 data_aug_switch:
   class_path: otx.algo.callbacks.aug_scheduler.DataAugSwitch
   init_args:
-    policy_epochs: [4, 29, 50]
+    policy_epochs: [4, 23, 34]
     policies:
       no_aug:
         to_tv_image: false
@@ -65,6 +65,9 @@ data_aug_switch:
             init_args:
               scale: [640, 640]
               keep_ratio: false
+          - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+            init_args:
+              prob: 0.5
               is_numpy_to_tvtensor: true
           - class_path: torchvision.transforms.v2.ToDtype
             init_args:
@@ -82,14 +85,14 @@ data_aug_switch:
           - class_path: torchvision.transforms.v2.RandomPhotometricDistort
             init_args:
               p: 0.5
-          - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
-            init_args:
-              prob: 0.5
           - class_path: otx.core.data.transform_libs.torchvision.Resize
             init_args:
               scale: [640, 640]
               transform_bbox: true
               keep_ratio: false
+          - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+            init_args:
+              prob: 0.5
               is_numpy_to_tvtensor: true
           - class_path: torchvision.transforms.v2.ToDtype
             init_args:
@@ -108,12 +111,6 @@ data_aug_switch:
               random_pop: false
               max_cached_images: 20
               img_scale: [640, 640]
-          - class_path: otx.core.data.transform_libs.torchvision.RandomAffine
-            init_args:
-              scaling_ratio_range:
-                - 0.1
-                - 2.0
-              border: [-320, -320]
           - class_path: otx.core.data.transform_libs.torchvision.CachedMixUp
             init_args:
               img_scale: [640, 640] # (H, W)
@@ -123,6 +120,9 @@ data_aug_switch:
               prob: 0.5
               random_pop: false
               max_cached_images: 10
+          - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+            init_args:
+              min_size: 50
           - class_path: otx.core.data.transform_libs.torchvision.Resize
             init_args:
               scale: [640, 640] # (H, W)
@@ -152,15 +152,28 @@ data_aug_switch:
           - class_path: torchvision.transforms.v2.RandomZoomOut # Can't be used when using CachedMosaic
             init_args:
               fill: 0
+              p: 0.5
           - class_path: otx.core.data.transform_libs.torchvision.RandomIoUCrop # Can't be used when using CachedMosaic
             init_args:
               p: 0.8
           - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
             init_args:
-              min_size: 1
+              min_size: 50
           - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
             init_args:
               prob: 0.5
+          - class_path: otx.core.data.transform_libs.torchvision.CachedMixUp
+            init_args:
+              img_scale: [640, 640] # (H, W)
+              ratio_range:
+                - 1.0
+                - 1.0
+              prob: 0.5
+              random_pop: false
+              max_cached_images: 10
+          - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+            init_args:
+              min_size: 50
           - class_path: otx.core.data.transform_libs.torchvision.Resize
             init_args:
               scale: [640, 640]
