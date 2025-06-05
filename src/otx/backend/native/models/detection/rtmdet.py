@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.backbones import CSPNeXt
 from otx.backend.native.models.common.losses import GIoULoss, QualityFocalLoss
 from otx.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
 from otx.backend.native.models.common.utils.coders import DistancePointBBoxCoder
 from otx.backend.native.models.common.utils.prior_generators import MlvlPointGenerator
 from otx.backend.native.models.common.utils.samplers import PseudoSampler
+from otx.backend.native.models.detection.backbones import CSPNeXt
 from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.backend.native.models.detection.detectors import SingleStageDetector
 from otx.backend.native.models.detection.heads import RTMDetSepBNHead

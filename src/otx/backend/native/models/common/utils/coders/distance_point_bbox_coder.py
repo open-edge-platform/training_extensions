@@ -10,8 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from otx.backend.native.models.common.utils.utils import bbox2distance, distance2bbox
-from otx.backend.native.models.common.utils.utils import distance2bbox_export
+from otx.backend.native.models.common.utils.utils import bbox2distance, distance2bbox, distance2bbox_export
 
 from .base_bbox_coder import BaseBBoxCoder
 
