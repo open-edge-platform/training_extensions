@@ -337,32 +337,28 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_vector_fn</span> <span class="o">=</span> <span class="n">feature_vector_fn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">explain_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_explain_fn</span><span class="p">()</span>
 
+<div class="viewcode-block" id="OTXDetectionModel.validation_step">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection.html#otx.core.model.detection.OTXDetectionModel.validation_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validation_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a single validation step on a batch of data from the validation set.</span>
+
+<span class="sd">        :param batch: A batch of data (a tuple) containing the input tensor of images and target</span>
+<span class="sd">            labels.</span>
+<span class="sd">        :param batch_idx: The index of the current batch.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_outputs_by_threshold</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">validation_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">))</span></div>
+
+
 <div class="viewcode-block" id="OTXDetectionModel.test_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.detection.html#otx.core.model.detection.OTXDetectionModel.test_step">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a single test step on a batch of data from the test set.</span>
 
 <span class="sd">        :param batch: A batch of data (a tuple) containing the input tensor of images and target</span>
 <span class="sd">            labels.</span>
 <span class="sd">        :param batch_idx: The index of the current batch.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_outputs_by_threshold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">batch</span><span class="p">))</span>  <span class="c1"># type: ignore[arg-type]</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">OTXBatchLossEntity</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
-
-        <span class="n">metric_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_pred_entity_to_compute_metric</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">metric_inputs</span><span class="p">)</span>
-            <span class="k">return</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">inp</span><span class="p">)</span>
-            <span class="k">return</span>
-
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_outputs_by_threshold</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">test_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="OTXDetectionModel.predict_step">

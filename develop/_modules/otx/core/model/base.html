@@ -482,7 +482,7 @@
 
 <div class="viewcode-block" id="OTXModel.validation_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.validation_step">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">validation_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validation_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a single validation step on a batch of data from the validation set.</span>
 
 <span class="sd">        :param batch: A batch of data (a tuple) containing the input tensor of images and target</span>
@@ -498,19 +498,19 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">metric_inputs</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="n">preds</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">inp</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="n">preds</span>
 
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OTXModel.test_step">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.core.model.base.html#otx.core.model.base.OTXModel.test_step">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">T_OTXBatchDataEntity</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_OTXBatchPredEntity</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a single test step on a batch of data from the test set.</span>
 
 <span class="sd">        :param batch: A batch of data (a tuple) containing the input tensor of images and target</span>
@@ -526,12 +526,12 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">metric_inputs</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="n">preds</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">inp</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="n">preds</span>
 
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">)</span></div>
 

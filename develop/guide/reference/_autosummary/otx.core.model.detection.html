@@ -577,8 +577,23 @@ the metric is FMeasure.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="otx.core.model.detection.OTXDetectionModel.test_step">
-<span class="sig-name descname"><span class="pre">test_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.data.html#otx.data.OTXDataBatch" title="otx.data.torch.torch.OTXDataBatch"><span class="pre">OTXDataBatch</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/core/model/detection.html#OTXDetectionModel.test_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.model.detection.OTXDetectionModel.test_step" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">test_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.data.html#otx.data.OTXDataBatch" title="otx.data.torch.torch.OTXDataBatch"><span class="pre">OTXDataBatch</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="otx.data.html#otx.data.OTXPredBatch" title="otx.data.torch.torch.OTXPredBatch"><span class="pre">OTXPredBatch</span></a></span></span><a class="reference internal" href="../../../_modules/otx/core/model/detection.html#OTXDetectionModel.test_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.model.detection.OTXDetectionModel.test_step" title="Link to this definition">#</a></dt>
 <dd><p>Perform a single test step on a batch of data from the test set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – A batch of data (a tuple) containing the input tensor of images and target
+labels.</p></li>
+<li><p><strong>batch_idx</strong> – The index of the current batch.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.core.model.detection.OTXDetectionModel.validation_step">
+<span class="sig-name descname"><span class="pre">validation_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.data.html#otx.data.OTXDataBatch" title="otx.data.torch.torch.OTXDataBatch"><span class="pre">OTXDataBatch</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="otx.data.html#otx.data.OTXPredBatch" title="otx.data.torch.torch.OTXPredBatch"><span class="pre">OTXPredBatch</span></a></span></span><a class="reference internal" href="../../../_modules/otx/core/model/detection.html#OTXDetectionModel.validation_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.core.model.detection.OTXDetectionModel.validation_step" title="Link to this definition">#</a></dt>
+<dd><p>Perform a single validation step on a batch of data from the validation set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -761,6 +776,15 @@ Defaults to DefaultSchedulerCallable.</p></li>
      <code class="docutils literal notranslate">
       <span class="pre">
        OTXDetectionModel.test_step()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.core.model.detection.OTXDetectionModel.validation_step">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDetectionModel.validation_step()
       </span>
      </code>
     </a>
