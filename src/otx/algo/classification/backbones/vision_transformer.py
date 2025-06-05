@@ -127,6 +127,7 @@ class VisionTransformer(BaseModule):
                 "num_heads": 6,
                 "reg_tokens": 4,
                 "no_embed_class": True,
+                "init_values": 1e-5,
             },
         ),
         **dict.fromkeys(
