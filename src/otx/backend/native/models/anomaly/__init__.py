@@ -5,5 +5,6 @@
 
 from .padim import Padim
 from .stfpm import Stfpm
+from .uflow import Uflow
 
-__all__ = ["Padim", "Stfpm"]
+__all__ = ["Padim", "Stfpm", "Uflow"]

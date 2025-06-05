@@ -3,6 +3,8 @@
 #
 """Module for OTX segmentation models, hooks, utils, etc."""
 
-from . import backbones, heads, losses, segmentors
+from .dino_v2_seg import DinoV2Seg
+from .litehrnet import LiteHRNet
+from .segnext import SegNext
 
-__all__ = ["backbones", "heads", "losses", "segmentors"]
+__all__ = ["DinoV2Seg", "LiteHRNet", "SegNext"]
