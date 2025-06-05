@@ -13,7 +13,7 @@ from torch import nn
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.common.backbones import CSPNeXt
+from otx.backend.native.models.detection.backbones import CSPNeXt
 from otx.backend.native.models.common.losses import GIoULoss, QualityFocalLoss
 from otx.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
 from otx.backend.native.models.common.utils.coders import DistancePointBBoxCoder

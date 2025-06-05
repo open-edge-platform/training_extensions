@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from otx.backend.native.models.detection.utils.utils import clip_bboxes
+from otx.backend.native.models.common.utils.utils import clip_bboxes
 
 from .base_bbox_coder import BaseBBoxCoder
 

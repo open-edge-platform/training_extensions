@@ -253,6 +253,80 @@ def bbox2distance(
     return torch.stack([left, top, right, bottom], -1)
 
 
+def distance2bbox_export(points: Tensor, distance: Tensor, max_shape: Tensor | None = None) -> Tensor:
+    """Decode distance prediction to bounding box for export.
+
+    Reference : https://github.com/open-mmlab/mmdeploy/blob/v1.3.1/mmdeploy/codebase/mmdet/structures/bbox/transforms.py#L11-L43
+    """
+    x1 = points[..., 0] - distance[..., 0]
+    y1 = points[..., 1] - distance[..., 1]
+    x2 = points[..., 0] + distance[..., 2]
+    y2 = points[..., 1] + distance[..., 3]
+
+    bboxes = torch.stack([x1, y1, x2, y2], -1)
+
+    if max_shape is not None:
+        # clip bboxes with dynamic `min` and `max`
+        x1, y1, x2, y2 = clip_bboxes(x1, y1, x2, y2, max_shape)
+        return torch.stack([x1, y1, x2, y2], dim=-1)
+
+    return bboxes
+
+
+def clip_bboxes(
+    x1: Tensor,
+    y1: Tensor,
+    x2: Tensor,
+    y2: Tensor,
+    max_shape: Tensor | tuple[int, ...],
+) -> tuple[Tensor, ...]:
+    """Clip bboxes for onnx.
+
+    Reference : https://github.com/open-mmlab/mmdeploy/blob/v1.3.1/mmdeploy/codebase/mmdet/deploy/utils.py#L31-L72
+
+    Since torch.clamp cannot have dynamic `min` and `max`, we scale the
+      boxes by 1/max_shape and clamp in the range [0, 1] if necessary.
+
+    Args:
+        x1 (Tensor): The x1 for bounding boxes.
+        y1 (Tensor): The y1 for bounding boxes.
+        x2 (Tensor): The x2 for bounding boxes.
+        y2 (Tensor): The y2 for bounding boxes.
+        max_shape (Tensor | Sequence[int]): The (H,W) of original image.
+
+    Returns:
+        tuple(Tensor): The clipped x1, y1, x2, y2.
+    """
+    if len(max_shape) != 2:
+        msg = "`max_shape` should be [h, w]."
+        raise ValueError(msg)
+
+    if isinstance(max_shape, Tensor):
+        # scale by 1/max_shape
+        x1 = x1 / max_shape[1]
+        y1 = y1 / max_shape[0]
+        x2 = x2 / max_shape[1]
+        y2 = y2 / max_shape[0]
+
+        # clamp [0, 1]
+        x1 = torch.clamp(x1, 0, 1)
+        y1 = torch.clamp(y1, 0, 1)
+        x2 = torch.clamp(x2, 0, 1)
+        y2 = torch.clamp(y2, 0, 1)
+
+        # scale back
+        x1 = x1 * max_shape[1]
+        y1 = y1 * max_shape[0]
+        x2 = x2 * max_shape[1]
+        y2 = y2 * max_shape[0]
+    else:
+        x1 = torch.clamp(x1, 0, max_shape[1])
+        y1 = torch.clamp(y1, 0, max_shape[0])
+        x2 = torch.clamp(x2, 0, max_shape[1])
+        y2 = torch.clamp(y2, 0, max_shape[0])
+    return x1, y1, x2, y2
+
+
 def inverse_sigmoid(x: Tensor, eps: float = 1e-5) -> Tensor:
     """Inverse function of sigmoid.
 

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.common.backbones import CSPNeXt
+from otx.backend.native.models.detection.backbones import CSPNeXt
 from otx.backend.native.models.keypoint_detection.base import OTXKeypointDetectionModel
 from otx.backend.native.models.keypoint_detection.detectors.topdown import TopdownPoseEstimator
 from otx.backend.native.models.keypoint_detection.heads.rtmcc_head import RTMCCHead
