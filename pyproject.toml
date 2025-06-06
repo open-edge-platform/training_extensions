@@ -67,8 +67,11 @@ dev = [
     "onnxruntime==1.21.1",
 ]
 
-cuda = ["torch==2.7.0+cu128"]
-xpu = ["torch==2.7.0+xpu"]
+cuda = ["torch==2.7.0"]
+xpu = [
+    "torch==2.7.0+xpu",
+    "pytorch-triton-xpu==3.3.0",
+]
 
 docs = [
     "furo",
@@ -114,6 +117,9 @@ torch = [
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
+pytorch-triton-xpu = [
+    { index = "torch-xpu", extra = "xpu"},
+]
 
 
 [[tool.uv.index]]
@@ -124,7 +130,8 @@ explicit = true
 [[tool.uv.index]]
 name = "torch-xpu"
 url = "https://download.pytorch.org/whl/xpu"
-explicit = false # we need to also fallback for pytorch-triton-xpu
+explicit = true
+
 
 [tool.setuptools.dynamic]
 version = {attr = "otx.__version__"}
