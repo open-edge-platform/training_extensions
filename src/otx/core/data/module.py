@@ -17,10 +17,6 @@ from torchvision.transforms.v2 import Normalize
 from otx.core.config.data import TileConfig
 from otx.core.data.dataset.tile import OTXTileDatasetFactory
 from otx.core.data.factory import OTXDatasetFactory
-from otx.core.data.mem_cache import (
-    MemCacheHandlerSingleton,
-    parse_mem_cache_size_to_int,
-)
 from otx.core.data.pre_filtering import pre_filtering
 from otx.core.data.utils import adapt_input_size_to_dataset, adapt_tile_config
 from otx.core.types.device import DeviceType
@@ -49,9 +45,6 @@ class OTXDataModule(LightningDataModule):
         test_subset (SubsetConfig): Configuration for the test subset.
         tile_config (TileConfig, optional): Configuration for tiling.
         Defaults to TileConfig(enable_tiler=False).
-        mem_cache_size (str, optional): Size of the memory cache. Defaults to "1GB".
-        mem_cache_img_max_size (tuple[int, int] | None, optional): Maximum size of images in the memory cache.
-        Defaults to None.
         image_color_channel (ImageColorChannel, optional): Color channel configuration for images.
         Defaults to ImageColorChannel.RGB.
         include_polygons (bool, optional): Whether to include polygons in the data. Defaults to False.
@@ -74,8 +67,6 @@ class OTXDataModule(LightningDataModule):
         val_subset: SubsetConfig,
         test_subset: SubsetConfig,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        mem_cache_size: str = "1GB",
-        mem_cache_img_max_size: tuple[int, int] | None = None,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         include_polygons: bool = False,
         ignore_index: int = 255,
@@ -96,9 +87,6 @@ class OTXDataModule(LightningDataModule):
         self.test_subset = test_subset
 
         self.tile_config = tile_config
-
-        self.mem_cache_size = mem_cache_size
-        self.mem_cache_img_max_size = mem_cache_img_max_size
 
         self.image_color_channel = image_color_channel
         self.include_polygons = include_polygons
@@ -179,17 +167,6 @@ class OTXDataModule(LightningDataModule):
                     )
                     subset_config.num_workers = num_workers
 
-        mem_size = parse_mem_cache_size_to_int(mem_cache_size)
-        mem_cache_mode = (
-            "singleprocessing"
-            if all(config.num_workers == 0 for config in config_mapping.values())
-            else "multiprocessing"
-        )
-        mem_cache_handler = MemCacheHandlerSingleton.create(
-            mode=mem_cache_mode,
-            mem_size=mem_size,
-        )
-
         label_infos: list[LabelInfo] = []
 
         for name, dm_subset in dataset.subsets().items():
@@ -201,9 +178,7 @@ class OTXDataModule(LightningDataModule):
                 task=self.task,
                 dm_subset=dm_subset.as_dataset(),
                 cfg_subset=config_mapping[name],
-                mem_cache_handler=mem_cache_handler,
                 data_format=self.data_format,
-                mem_cache_img_max_size=mem_cache_img_max_size,
                 image_color_channel=image_color_channel,
                 include_polygons=include_polygons,
                 ignore_index=ignore_index,
@@ -345,8 +320,6 @@ class OTXDataModule(LightningDataModule):
                 self.val_subset,
                 self.test_subset,
                 self.tile_config,
-                self.mem_cache_size,
-                self.mem_cache_img_max_size,
                 self.image_color_channel,
                 self.include_polygons,
                 self.ignore_index,
