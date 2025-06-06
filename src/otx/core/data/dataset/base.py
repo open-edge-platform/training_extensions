@@ -13,13 +13,11 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
 import cv2
 import numpy as np
 from datumaro.components.annotation import AnnotationType
-from datumaro.components.media import ImageFromFile
 from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
 from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
 from torch.utils.data import Dataset
 
 from otx.core.data.entity.base import T_OTXDataEntity
-from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER
 from otx.core.data.transform_libs.torchvision import Compose
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import LabelInfo, NullLabelInfo
@@ -28,7 +26,6 @@ from otx.data.torch import OTXDataItem
 if TYPE_CHECKING:
     from datumaro import DatasetSubset, Image
 
-    from otx.core.data.mem_cache import MemCacheHandlerBase
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
@@ -66,8 +63,6 @@ class OTXDataset(Dataset):
     Args:
         dm_subset: Datumaro subset of a dataset
         transforms: Transforms to apply on images
-        mem_cache_handler: Handler of the images cache
-        mem_cache_img_max_size: Max size of images to put in cache
         max_refetch: Maximum number of images to fetch in cache
         image_color_channel: Color channel of images
         stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
@@ -79,8 +74,6 @@ class OTXDataset(Dataset):
         self,
         dm_subset: DatasetSubset,
         transforms: Transforms,
-        mem_cache_handler: MemCacheHandlerBase = NULL_MEM_CACHE_HANDLER,
-        mem_cache_img_max_size: tuple[int, int] | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -89,8 +82,6 @@ class OTXDataset(Dataset):
     ) -> None:
         self.dm_subset = dm_subset
         self.transforms = transforms
-        self.mem_cache_handler = mem_cache_handler
-        self.mem_cache_img_max_size = mem_cache_img_max_size
         self.max_refetch = max_refetch
         self.image_color_channel = image_color_channel
         self.stack_images = stack_images
@@ -166,12 +157,7 @@ class OTXDataset(Dataset):
         Returns:
                 The image data, shape, and ROI meta information
         """
-        key = img.path if isinstance(img, ImageFromFile) else id(img)
         roi_meta = None
-        # check if the image is already in the cache
-        img_data, roi_meta = self.mem_cache_handler.get(key=key)
-        if img_data is not None:
-            return img_data, img_data.shape[:2], roi_meta
 
         with image_decode_context():
             img_data = (
@@ -201,57 +187,7 @@ class OTXDataset(Dataset):
             img_data = img_data[y1:y2, x1:x2]
             roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
 
-        img_data = self._cache_img(key=key, img_data=img_data.astype(np.uint8), meta=roi_meta)
-
         return img_data, img_data.shape[:2], roi_meta
-
-    def _cache_img(self, key: str | int, img_data: np.ndarray, meta: dict[str, Any] | None = None) -> np.ndarray:
-        """Cache an image after resizing.
-
-        If there is available space in the memory pool, the input image is cached.
-        Before caching, the input image is resized if it is larger than the maximum image size
-        specified by the memory caching handler.
-        Otherwise, the input image is directly cached.
-        After caching, the processed image data is returned.
-
-        Args:
-            key: The key associated with the image.
-            img_data: The image data to be cached.
-
-        Returns:
-            The resized image if it was resized. Otherwise, the original image.
-        """
-        if self.mem_cache_handler.frozen:
-            return img_data
-
-        if self.mem_cache_img_max_size is None:
-            self.mem_cache_handler.put(key=key, data=img_data, meta=meta)
-            return img_data
-
-        height, width = img_data.shape[:2]
-        max_height, max_width = self.mem_cache_img_max_size
-
-        if height <= max_height and width <= max_width:
-            self.mem_cache_handler.put(key=key, data=img_data, meta=meta)
-            return img_data
-
-        # Preserve the image size ratio and fit to max_height or max_width
-        # e.g. (1000 / 2000 = 0.5, 1000 / 1000 = 1.0) => 0.5
-        # h, w = 2000 * 0.5 => 1000, 1000 * 0.5 => 500, bounded by max_height
-        min_scale = min(max_height / height, max_width / width)
-        new_height, new_width = int(min_scale * height), int(min_scale * width)
-        resized_img = cv2.resize(
-            src=img_data,
-            dsize=(new_width, new_height),
-            interpolation=cv2.INTER_LINEAR,
-        )
-
-        self.mem_cache_handler.put(
-            key=key,
-            data=resized_img,
-            meta=meta,
-        )
-        return resized_img
 
     @abstractmethod
     def _get_item_impl(self, idx: int) -> OTXDataItem | None:

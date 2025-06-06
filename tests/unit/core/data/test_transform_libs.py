@@ -10,113 +10,15 @@ import pytest
 import torch
 from lightning.pytorch.cli import instantiate_class
 from omegaconf import OmegaConf
-from torchvision import tv_tensors
 from torchvision.transforms import v2
 
 from otx.core.config.data import SubsetConfig
 from otx.core.data.dataset.classification import HLabelInfo
 from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.core.data.entity.base import Points
 from otx.core.data.transform_libs.torchvision import (
-    PadtoSquare,
-    PerturbBoundingBoxes,
-    ResizetoLongestEdge,
     TorchVisionTransformLib,
 )
 from otx.core.types.image import ImageColorChannel
-
-
-class TestPerturbBoundingBoxes:
-    def test_transform(self) -> None:
-        transform = PerturbBoundingBoxes(offset=20)
-        inputs = tv_tensors.BoundingBoxes(
-            [
-                [100, 100, 200, 200],  # normal bbox
-                [0, 0, 299, 299],  # can be out of size
-                [0, 0, 100, 100],  # can be out of size
-                [100, 100, 299, 299],  # can be out of size
-            ],
-            format=tv_tensors.BoundingBoxFormat.XYXY,
-            canvas_size=(300, 300),
-            dtype=torch.float32,
-        )
-
-        results = transform._transform(inputs, None)
-
-        assert isinstance(results, tv_tensors.BoundingBoxes)
-        assert results.shape == inputs.shape
-        assert torch.all(results[:, :2] >= 0.0)
-        assert torch.all(results[:, 2:] <= 299.0)
-
-
-class TestPadtoSquare:
-    def test_transform(self) -> None:
-        transform = PadtoSquare()
-
-        # height > width
-        inpt = tv_tensors.Image(torch.ones((1, 5, 3)))
-        results = transform(inpt, transform.make_params([inpt]))
-
-        assert isinstance(results, tuple)
-        assert results[0].shape == torch.Size((1, 5, 5))
-        assert results[0][:, :, -2:].sum() == 0
-
-        # height < width
-        inpt = tv_tensors.Image(torch.ones((1, 3, 5)))
-        results = transform(inpt, transform.make_params([inpt]))
-
-        assert isinstance(results, tuple)
-        assert results[0].shape == torch.Size((1, 5, 5))
-        assert results[0][:, -2:, :].sum() == 0
-
-        # skip other formats
-        inpt = tv_tensors.BoundingBoxes(
-            [[1, 1, 3, 3]],
-            format=tv_tensors.BoundingBoxFormat.XYXY,
-            canvas_size=(5, 3),
-            dtype=torch.float32,
-        )
-        results = transform(inpt.clone(), transform.make_params([inpt]))
-
-        assert torch.all(results[0] == inpt)
-
-        inpt = Points(
-            [[1, 1], [3, 3]],
-            canvas_size=(5, 3),
-            dtype=torch.float32,
-        )
-        results = transform(inpt.clone(), transform.make_params([inpt]))
-
-        assert torch.all(results[0] == inpt)
-
-
-class TestResizetoLongestEdge:
-    def test_transform(self) -> None:
-        transform = ResizetoLongestEdge(size=10)
-
-        # height > width
-        inpt = tv_tensors.Image(torch.ones((1, 5, 3)))
-        results = transform(inpt, transform.make_params([inpt]))
-
-        assert isinstance(results, tuple)
-        assert results[0].shape == torch.Size((1, 10, 6))
-        assert results[1]["target_size"] == (10, 6)
-
-        # height < width
-        inpt = tv_tensors.Image(torch.ones((1, 3, 5)))
-        results = transform(inpt, transform.make_params([inpt]))
-
-        assert isinstance(results, tuple)
-        assert results[0].shape == torch.Size((1, 6, 10))
-        assert results[1]["target_size"] == (6, 10)
-
-        # square
-        inpt = tv_tensors.Image(torch.ones((1, 5, 5)))
-        results = transform(inpt, transform.make_params([inpt]))
-
-        assert isinstance(results, tuple)
-        assert results[0].shape == torch.Size((1, 10, 10))
-        assert results[1]["target_size"] == (10, 10)
 
 
 class TestTorchVisionTransformLib:
@@ -178,7 +80,6 @@ class TestTorchVisionTransformLib:
         dataset = dataset_cls(
             dm_subset=fxt_mock_dm_subset,
             transforms=transform,
-            mem_cache_img_max_size=None,
             **kwargs,
         )
         dataset.num_classes = 1
@@ -232,9 +133,6 @@ class TestTorchVisionTransformLib:
         - 300
         - 200
         transforms:
-          - class_path: otx.core.data.transform_libs.torchvision.ResizetoLongestEdge
-            init_args:
-                size: $(input_size) * 2
           - class_path: otx.core.data.transform_libs.torchvision.RandomResize
             init_args:
                 scale: $(input_size) * 0.5
@@ -250,10 +148,9 @@ class TestTorchVisionTransformLib:
     def test_configure_input_size(self, fxt_config_w_input_size):
         transform = TorchVisionTransformLib.generate(fxt_config_w_input_size)
         assert isinstance(transform, v2.Compose)
-        assert transform.transforms[0].size == 600  # ResizetoLongestEdge gets an integer
-        assert transform.transforms[1].scale == (150, 100)  # RandomResize gets sequence of integer
-        assert transform.transforms[2].crop_size == (300, 200)  # RandomCrop gets sequence of integer
-        assert transform.transforms[3].scale == (round(300 * 1.1), round(200 * 1.1))  # check round
+        assert transform.transforms[0].scale == (150, 100)  # RandomResize gets sequence of integer
+        assert transform.transforms[1].crop_size == (300, 200)  # RandomCrop gets sequence of integer
+        assert transform.transforms[2].scale == (round(300 * 1.1), round(200 * 1.1))  # check round
 
     def test_configure_input_size_none(self, fxt_config_w_input_size):
         """Check input size is None but transform has $(ipnput_size)."""
@@ -299,7 +196,6 @@ class TestTorchVisionTransformLib:
         dataset = dataset_cls(
             dm_subset=fxt_mock_dm_subset,
             transforms=transform,
-            mem_cache_img_max_size=None,
             image_color_channel=fxt_image_color_channel,
             **kwargs,
         )
