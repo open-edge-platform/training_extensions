@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 from __future__ import annotations
 
 import openvino as ov
@@ -5,6 +9,7 @@ import pytest
 
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfo
+
 
 @pytest.fixture(autouse=True)
 def get_dummy_ov_cls_model() -> ov.Model:

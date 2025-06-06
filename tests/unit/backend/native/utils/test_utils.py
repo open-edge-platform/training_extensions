@@ -19,7 +19,6 @@ from otx.backend.native.utils.utils import (
 )
 
 
-
 @pytest.mark.parametrize("num_dataloader", [1, 2, 4])
 def test_get_adaptive_num_workers(mocker, num_dataloader):
     num_gpu = 5
