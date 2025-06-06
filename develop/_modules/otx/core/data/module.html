@@ -272,10 +272,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.mem_cache</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">MemCacheHandlerSingleton</span><span class="p">,</span>
-    <span class="n">parse_mem_cache_size_to_int</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.pre_filtering</span><span class="w"> </span><span class="kn">import</span> <span class="n">pre_filtering</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_input_size_to_dataset</span><span class="p">,</span> <span class="n">adapt_tile_config</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
@@ -306,9 +302,6 @@
 <span class="sd">        test_subset (SubsetConfig): Configuration for the test subset.</span>
 <span class="sd">        tile_config (TileConfig, optional): Configuration for tiling.</span>
 <span class="sd">        Defaults to TileConfig(enable_tiler=False).</span>
-<span class="sd">        mem_cache_size (str, optional): Size of the memory cache. Defaults to &quot;1GB&quot;.</span>
-<span class="sd">        mem_cache_img_max_size (tuple[int, int] | None, optional): Maximum size of images in the memory cache.</span>
-<span class="sd">        Defaults to None.</span>
 <span class="sd">        image_color_channel (ImageColorChannel, optional): Color channel configuration for images.</span>
 <span class="sd">        Defaults to ImageColorChannel.RGB.</span>
 <span class="sd">        include_polygons (bool, optional): Whether to include polygons in the data. Defaults to False.</span>
@@ -331,8 +324,6 @@
         <span class="n">val_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span><span class="p">,</span>
         <span class="n">test_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span><span class="p">,</span>
         <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span> <span class="o">=</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-        <span class="n">mem_cache_size</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;1GB&quot;</span><span class="p">,</span>
-        <span class="n">mem_cache_img_max_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">image_color_channel</span><span class="p">:</span> <span class="n">ImageColorChannel</span> <span class="o">=</span> <span class="n">ImageColorChannel</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
         <span class="n">include_polygons</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">ignore_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">255</span><span class="p">,</span>
@@ -353,9 +344,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span> <span class="o">=</span> <span class="n">test_subset</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="n">tile_config</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">mem_cache_size</span> <span class="o">=</span> <span class="n">mem_cache_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mem_cache_img_max_size</span> <span class="o">=</span> <span class="n">mem_cache_img_max_size</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span> <span class="o">=</span> <span class="n">image_color_channel</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span> <span class="o">=</span> <span class="n">include_polygons</span>
@@ -436,17 +424,6 @@
                     <span class="p">)</span>
                     <span class="n">subset_config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">num_workers</span>
 
-        <span class="n">mem_size</span> <span class="o">=</span> <span class="n">parse_mem_cache_size_to_int</span><span class="p">(</span><span class="n">mem_cache_size</span><span class="p">)</span>
-        <span class="n">mem_cache_mode</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;singleprocessing&quot;</span>
-            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">config_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-            <span class="k">else</span> <span class="s2">&quot;multiprocessing&quot;</span>
-        <span class="p">)</span>
-        <span class="n">mem_cache_handler</span> <span class="o">=</span> <span class="n">MemCacheHandlerSingleton</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-            <span class="n">mode</span><span class="o">=</span><span class="n">mem_cache_mode</span><span class="p">,</span>
-            <span class="n">mem_size</span><span class="o">=</span><span class="n">mem_size</span><span class="p">,</span>
-        <span class="p">)</span>
-
         <span class="n">label_infos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LabelInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dm_subset</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">subsets</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -458,9 +435,7 @@
                 <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
                 <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">as_dataset</span><span class="p">(),</span>
                 <span class="n">cfg_subset</span><span class="o">=</span><span class="n">config_mapping</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
-                <span class="n">mem_cache_handler</span><span class="o">=</span><span class="n">mem_cache_handler</span><span class="p">,</span>
                 <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
-                <span class="n">mem_cache_img_max_size</span><span class="o">=</span><span class="n">mem_cache_img_max_size</span><span class="p">,</span>
                 <span class="n">image_color_channel</span><span class="o">=</span><span class="n">image_color_channel</span><span class="p">,</span>
                 <span class="n">include_polygons</span><span class="o">=</span><span class="n">include_polygons</span><span class="p">,</span>
                 <span class="n">ignore_index</span><span class="o">=</span><span class="n">ignore_index</span><span class="p">,</span>
@@ -620,8 +595,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">val_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mem_cache_size</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mem_cache_img_max_size</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span><span class="p">,</span>

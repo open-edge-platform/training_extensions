@@ -272,7 +272,6 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubsetConfig</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.mem_cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">MemCacheHandlerBase</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;TransformLibFactory&quot;</span><span class="p">,</span> <span class="s2">&quot;OTXDatasetFactory&quot;</span><span class="p">]</span>
@@ -311,9 +310,7 @@
         <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="p">,</span>
         <span class="n">dm_subset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">,</span>
         <span class="n">cfg_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span><span class="p">,</span>
-        <span class="n">mem_cache_handler</span><span class="p">:</span> <span class="n">MemCacheHandlerBase</span><span class="p">,</span>
         <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">mem_cache_img_max_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">image_color_channel</span><span class="p">:</span> <span class="n">ImageColorChannel</span> <span class="o">=</span> <span class="n">ImageColorChannel</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
         <span class="n">include_polygons</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">ignore_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">255</span><span class="p">,</span>
@@ -324,8 +321,6 @@
             <span class="s2">&quot;dm_subset&quot;</span><span class="p">:</span> <span class="n">dm_subset</span><span class="p">,</span>
             <span class="s2">&quot;transforms&quot;</span><span class="p">:</span> <span class="n">transforms</span><span class="p">,</span>
             <span class="s2">&quot;data_format&quot;</span><span class="p">:</span> <span class="n">data_format</span><span class="p">,</span>
-            <span class="s2">&quot;mem_cache_handler&quot;</span><span class="p">:</span> <span class="n">mem_cache_handler</span><span class="p">,</span>
-            <span class="s2">&quot;mem_cache_img_max_size&quot;</span><span class="p">:</span> <span class="n">mem_cache_img_max_size</span><span class="p">,</span>
             <span class="s2">&quot;image_color_channel&quot;</span><span class="p">:</span> <span class="n">image_color_channel</span><span class="p">,</span>
             <span class="s2">&quot;to_tv_image&quot;</span><span class="p">:</span> <span class="n">cfg_subset</span><span class="o">.</span><span class="n">to_tv_image</span><span class="p">,</span>
         <span class="p">}</span>

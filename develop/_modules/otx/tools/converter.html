@@ -553,9 +553,6 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update params of OTX recipe from Geit configurable params.&quot;&quot;&quot;</span>
         <span class="n">unused_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">param_dict</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_mem_cache_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;mem_cache_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">param_value</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000000</span><span class="p">)</span><span class="si">}</span><span class="s2">MB&quot;</span>
-
         <span class="k">def</span><span class="w"> </span><span class="nf">update_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
@@ -642,7 +639,6 @@
                     <span class="n">unused_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">tile_param</span><span class="p">)</span>
 
         <span class="n">param_update_funcs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;mem_cache_size&quot;</span><span class="p">:</span> <span class="n">update_mem_cache_size</span><span class="p">,</span>
             <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">update_batch_size</span><span class="p">,</span>
             <span class="s2">&quot;inference_batch_size&quot;</span><span class="p">:</span> <span class="n">update_inference_batch_size</span><span class="p">,</span>
             <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="n">update_learning_rate</span><span class="p">,</span>
