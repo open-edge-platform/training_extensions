@@ -108,6 +108,12 @@ otx = "otx.cli:main"
 Documentation = "https://open-edge-platform.github.io/training_extensions/"
 Repository = "https://github.com/open-edge-platform/training_extensions/"
 
+[[tool.uv.index]]
+name = "torch"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+
 [tool.setuptools.dynamic]
 version = {attr = "otx.__version__"}
 
