@@ -55,7 +55,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "uv",
-    "tox==4.25.0",
+    "tox-uv==1.26.0",
     "pre-commit==4.2.0",
     "pylint",
     "pytest",
@@ -115,16 +115,16 @@ torch = [
     { index = "torch-cuda", extra = "cuda"},
 ]
 
-[[tool.uv.index]]
-name = "torch-xpu"
-url = "https://download.pytorch.org/whl/xpu"
-explicit = false # we need to also fallback for torch-xpu-triton
 
 [[tool.uv.index]]
 name = "torch-cuda"
 url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
+[[tool.uv.index]]
+name = "torch-xpu"
+url = "https://download.pytorch.org/whl/xpu"
+explicit = false # we need to also fallback for pytorch-triton-xpu
 
 [tool.setuptools.dynamic]
 version = {attr = "otx.__version__"}
