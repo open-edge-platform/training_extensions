@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Instantiator functions for OTX engine components."""
@@ -24,9 +24,11 @@ if TYPE_CHECKING:
 def get_pylogger(name: str = __name__) -> logging.Logger:
     """Initializes a multi-GPU-friendly python command line logger.
 
-    :param name: The name of the logger, defaults to ``__name__``.
+    Args:
+        name: The name of the logger, defaults to ``__name__``.
 
-    :return: A logger object.
+    Returns:
+        A logger object.
     """
     logger = logging.getLogger(name)
 
