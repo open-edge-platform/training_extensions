@@ -952,6 +952,18 @@ class DFINETransformer:
             "eval_idx": -1,
             "eval_spatial_size": [640, 640],
         },
+        "deim_dfine_hgnetv2_n": {
+            "feat_channels": [128, 128],
+            "feat_strides": [16, 32],
+            "hidden_dim": 128,
+            "dim_feedforward": 512,
+            "num_levels": 2,
+            "num_decoder_layers": 3,
+            "eval_idx": -1,
+            "num_points_list": [6, 6],
+            "eval_spatial_size": [640, 640],
+            "activation": nn.SiLU,
+        },
         "deim_dfine_hgnetv2_x": {
             "feat_channels": [384, 384, 384],
             "reg_scale": 8.0,
