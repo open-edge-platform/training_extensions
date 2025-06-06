@@ -3,7 +3,6 @@
 
 from collections import defaultdict
 
-import openvino as ov
 import pytest
 from datumaro.components.annotation import Label
 from datumaro.components.dataset import Dataset as DmDataset
@@ -18,8 +17,7 @@ from otx.backend.native.utils.utils import (
     is_ckpt_from_otx_v1,
     remove_state_dict_prefix,
 )
-from otx.types.export import TaskLevelExportParameters
-from otx.types.label import LabelInfo
+
 
 
 @pytest.mark.parametrize("num_dataloader", [1, 2, 4])
@@ -43,24 +41,6 @@ def test_get_adaptive_num_workers_no_gpu(mocker):
     mocker.patch.object(target_file, "cpu_count", return_value=num_cpu)
 
     assert get_adaptive_num_workers() is None
-
-
-def get_dummy_ov_cls_model():
-    param_node = ov.op.Parameter(ov.Type.i32, ov.Shape([1, 3, 1, 1]))
-    ov_model = ov.Model(param_node, [param_node])
-    ov_model.outputs[0].tensor.set_names({"output"})
-    model_params = TaskLevelExportParameters(
-        model_type="Classification",
-        task_type="classification",
-        multilabel=True,
-        hierarchical=False,
-        label_info=LabelInfo(["car", "truck"], ["0", "1"], [["car"], ["truck"]]),
-        optimization_config={},
-    )
-    for k, data in model_params.to_metadata().items():
-        ov_model.set_rt_info(data, list(k))
-
-    return ov_model
 
 
 def test_is_ckpt_from_otx_v1():

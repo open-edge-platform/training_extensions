@@ -12,7 +12,7 @@ from otx.data.entity.torch import OTXDataItem
 # TODO(ashwinvaidya17): Have a single entity test for TorchDataItem and TorchDataBatch
 
 
-class TestDetBatchDataEntity:
+class TestOTXDataItem:
     def test_collate_fn(self) -> None:
         data_entities = [
             OTXDataItem(

@@ -10,12 +10,11 @@ from pytest_mock import MockerFixture
 from otx.backend.openvino.engine import OVEngine
 from otx.backend.openvino.models import OVModel
 from otx.types.label import NullLabelInfo
-from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
 
 @pytest.fixture()
-def fxt_ov_model(tmp_path) -> OVModel:
-    ov.save_model(get_dummy_ov_cls_model(), f"{tmp_path}/model.xml")
+def fxt_ov_model(tmp_path, get_dummy_ov_cls_model) -> OVModel:
+    ov.save_model(get_dummy_ov_cls_model, f"{tmp_path}/model.xml")
     return OVModel(model_path=f"{tmp_path}/model.xml", model_type="Classification")
 
 

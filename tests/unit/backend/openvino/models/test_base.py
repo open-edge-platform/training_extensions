@@ -13,7 +13,6 @@ from pytest_mock import MockerFixture
 
 from otx.backend.openvino.models import OVModel
 from otx.data.entity.torch import OTXDataBatch
-from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
 
 class TestOVModel:
@@ -23,9 +22,9 @@ class TestOVModel:
         return OTXDataBatch(3, image, [])
 
     @pytest.fixture()
-    def model(self) -> OVModel:
+    def model(self, get_dummy_ov_cls_model) -> OVModel:
         with tempfile.TemporaryDirectory() as tmp_dir:
-            ov.save_model(get_dummy_ov_cls_model(), f"{tmp_dir}/model.xml")
+            ov.save_model(get_dummy_ov_cls_model, f"{tmp_dir}/model.xml")
             return OVModel(model_path=f"{tmp_dir}/model.xml", model_type="Classification")
 
     def test_create_model(self, model) -> None:

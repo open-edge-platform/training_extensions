@@ -44,7 +44,7 @@ class TestOTXTiling:
 
     @pytest.fixture()
     def fxt_data_roots(self) -> dict[OTXTaskType, Path]:
-        parent_root = Path(__file__).parent.parent.parent.parent / "assets"
+        parent_root = Path(__file__).parent.parent.parent / "assets"
         return {
             OTXTaskType.DETECTION: parent_root / "car_tree_bug",
             OTXTaskType.INSTANCE_SEGMENTATION: parent_root / "car_tree_bug",
