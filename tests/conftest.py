@@ -15,7 +15,6 @@ from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
 
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.core.types.task import OTXTaskType
 from otx.data.torch import OTXDataBatch, OTXDataItem, OTXPredBatch, OTXPredItem
@@ -328,17 +327,6 @@ def fxt_seg_data_entity() -> tuple[tuple, OTXDataItem, OTXDataBatch]:
     )
 
     return single_data_entity, batch_pred_data_entity, batch_data_entity
-
-
-@pytest.fixture(autouse=True)
-def fxt_clean_up_mem_cache():
-    """Clean up the mem-cache instance at the end of the test.
-
-    It is required for everyone who tests model training pipeline.
-    See https://github.com/openvinotoolkit/training_extensions/actions/runs/7326689283/job/19952721142?pr=2749#step:5:3098
-    """
-    yield
-    MemCacheHandlerSingleton.delete()
 
 
 @pytest.fixture(scope="session")
