@@ -288,8 +288,6 @@ class OTXTileDataset(OTXDataset):
         super().__init__(
             dataset.dm_subset,
             dataset.transforms,
-            dataset.mem_cache_handler,
-            dataset.mem_cache_img_max_size,
             dataset.max_refetch,
             dataset.image_color_channel,
             dataset.stack_images,
