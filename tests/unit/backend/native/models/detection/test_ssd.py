@@ -77,6 +77,7 @@ class TestSSD:
     def test_loss(self, fxt_model, fxt_data_module):
         data = next(iter(fxt_data_module.train_dataloader()))
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
+        fxt_model.train()
         output = fxt_model(data)
         assert "loss_cls" in output
         assert "loss_bbox" in output

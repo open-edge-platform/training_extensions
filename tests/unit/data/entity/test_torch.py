@@ -7,9 +7,7 @@ from torch import LongTensor
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataItem
-
-# TODO(ashwinvaidya17): Have a single entity test for TorchDataItem and TorchDataBatch
+from otx.data.entity.torch import OTXDataBatch, OTXDataItem
 
 
 class TestOTXDataItem:
@@ -49,3 +47,6 @@ class TestOTXDataItem:
 
         data_batch = OTXDataItem.collate_fn(data_entities)
         assert len(data_batch.imgs_info) == len(data_batch.images)
+        assert data_batch.__class__ == OTXDataBatch
+        for field in OTXDataBatch.__dataclass_fields__:
+            assert hasattr(data_batch, field), f"Field {field} is missing in the collated batch"

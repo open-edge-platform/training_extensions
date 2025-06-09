@@ -483,9 +483,8 @@ class OTXInstanceSegModel(OTXModel):
         self.original_model_forward = self.model.forward
 
         func_type = types.MethodType
-        # Patch class method
-        model_class = type(self.model)
-        model_class.forward = func_type(forward_with_explain, self.model)
+        # Patch method
+        self.model.forward = func_type(forward_with_explain, self.model)
 
     def _restore_model_forward(self) -> None:
         if not self.explain_mode:

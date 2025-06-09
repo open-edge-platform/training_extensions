@@ -200,3 +200,55 @@ def fxt_mock_hlabelinfo():
         ],
         empty_multiclass_head_indices=[],
     )
+
+
+@pytest.fixture()
+def fxt_hlabel_dataset_subset() -> DmDataset:
+    return DmDataset.from_iterable(
+        [
+            DatasetItem(
+                id=0,
+                subset="train",
+                media=Image.from_numpy(np.zeros((3, 10, 10))),
+                annotations=[
+                    Label(
+                        label=2,
+                        id=0,
+                        group=1,
+                    ),
+                ],
+            ),
+            DatasetItem(
+                id=1,
+                subset="train",
+                media=Image.from_numpy(np.zeros((3, 10, 10))),
+                annotations=[
+                    Label(
+                        label=4,
+                        id=0,
+                        group=2,
+                    ),
+                ],
+            ),
+        ],
+        categories={
+            AnnotationType.label: LabelCategories(
+                items=[
+                    LabelCategories.Category(name="Heart", parent=""),
+                    LabelCategories.Category(name="Spade", parent=""),
+                    LabelCategories.Category(name="Heart_Queen", parent="Heart"),
+                    LabelCategories.Category(name="Heart_King", parent="Heart"),
+                    LabelCategories.Category(name="Spade_A", parent="Spade"),
+                    LabelCategories.Category(name="Spade_King", parent="Spade"),
+                    LabelCategories.Category(name="Black_Joker", parent=""),
+                    LabelCategories.Category(name="Red_Joker", parent=""),
+                    LabelCategories.Category(name="Extra_Joker", parent=""),
+                ],
+                label_groups=[
+                    LabelCategories.LabelGroup(name="Card", labels=["Heart", "Spade"]),
+                    LabelCategories.LabelGroup(name="Heart Group", labels=["Heart_Queen", "Heart_King"]),
+                    LabelCategories.LabelGroup(name="Spade Group", labels=["Spade_Queen", "Spade_King"]),
+                ],
+            ),
+        },
+    ).get_subset("train")
