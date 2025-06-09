@@ -14,14 +14,14 @@ from otx.data.torch import OTXDataItem
 @pytest.fixture()
 def fxt_numpy_data_entity() -> OTXDataItem:
     return OTXDataItem(
-        image = np.ndarray((10, 10, 3), dtype=np.float32),
-        img_info = ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
+        image=np.ndarray((10, 10, 3), dtype=np.float32),
+        img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
     )
 
 
 @pytest.fixture()
 def fxt_torchvision_data_entity() -> OTXDataItem:
     return OTXDataItem(
-        image = tv_tensors.Image(torch.randn(3, 10, 10), dtype=torch.float32),
-        img_info= ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
+        image=tv_tensors.Image(torch.randn(3, 10, 10), dtype=torch.float32),
+        img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
     )

@@ -2,12 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 """Unit tests of base data entity."""
 
+import numpy as np
 import pytest
 import torch
-import numpy as np
 import torchvision.transforms.v2 as tvt
 
 from otx.data.torch import OTXDataItem
+
 
 class TestOTXDataItem:
     def test_image_type(
