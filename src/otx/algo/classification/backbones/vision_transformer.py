@@ -768,15 +768,14 @@ class AttentionWithLoRA(torch.nn.Module):
 
     def __init__(self, qkv: Attention, rank: int, alpha: float):
         super().__init__()
+        self.qkv = qkv
         self.dim = qkv.in_features
         self.lora_q = LoRALayer(self.dim, self.dim, rank, alpha)
         self.lora_v = LoRALayer(self.dim, self.dim, rank, alpha)
-        self.weight = nn.Parameter(qkv.weight.data.detach().clone(), requires_grad=False)
-        self.bias = nn.Parameter(qkv.bias.data.detach().clone(), requires_grad=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the AttentionWithLoRA."""
-        qkv = x @ self.weight.T + self.bias
+        qkv = self.qkv(x)
         qkv[:, :, : self.dim] += self.lora_q(x)
         qkv[:, :, -self.dim :] += self.lora_v(x)
         return qkv
