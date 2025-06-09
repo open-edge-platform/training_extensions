@@ -159,11 +159,8 @@ class OTXDetectionModel(OTXModel):
         self,
         outputs: list[InstanceData] | dict | None,
         inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity | None:
+    ) -> OTXPredBatch | OTXBatchLossEntity:
         if self.training:
-            if outputs is None:
-                return outputs
-
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
 

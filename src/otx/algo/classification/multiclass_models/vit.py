@@ -22,7 +22,6 @@ from otx.algo.classification.heads import (
 )
 from otx.algo.explain.explain_algo import ViTReciproCAM, feature_vector_fn
 from otx.algo.utils.support_otx_v1 import OTXv1Helper
-from otx.core.data.entity.base import T_OTXBatchDataEntity, T_OTXBatchPredEntity
 from otx.core.metrics.accuracy import MultiClassClsMetricCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.core.model.multiclass_classification import (
@@ -30,6 +29,7 @@ from otx.core.model.multiclass_classification import (
 )
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.label import LabelInfoTypes
+from otx.data.torch import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -164,8 +164,8 @@ class ForwardExplainMixInForViT:
 
     def forward_explain(
         self,
-        inputs: T_OTXBatchDataEntity,
-    ) -> T_OTXBatchPredEntity:
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch:
         """Model forward function."""
         self._register()
         orig_model_forward = self.model.forward
@@ -173,7 +173,7 @@ class ForwardExplainMixInForViT:
         try:
             self.model.forward = types.MethodType(self._forward_explain_image_classifier, self.model)  # type: ignore[method-assign, assignment]
 
-            forward_func: Callable[[T_OTXBatchDataEntity], T_OTXBatchPredEntity] | None = getattr(self, "forward", None)
+            forward_func: Callable[[OTXDataBatch], OTXPredBatch] | None = getattr(self, "forward", None)
 
             if forward_func is None:
                 msg = (

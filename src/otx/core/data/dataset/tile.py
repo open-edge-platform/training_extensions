@@ -52,7 +52,6 @@ if TYPE_CHECKING:
     from otx.core.data.dataset.detection import OTXDetectionDataset
     from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
     from otx.core.data.dataset.segmentation import OTXSegmentationDataset
-    from otx.core.data.entity.base import OTXDataEntity
 
 # ruff: noqa: SLF001
 # NOTE: Disable private-member-access (SLF001).
@@ -319,8 +318,8 @@ class OTXTileDataset(OTXDataset):
         """Get item implementation from the original dataset."""
         return self._dataset._get_item_impl(index)
 
-    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> OTXDataEntity:
-        """Convert a tile dataset item to OTXDataEntity."""
+    def _convert_entity(self, image: np.ndarray, dataset_item: DatasetItem, parent_idx: int) -> OTXDataItem:
+        """Convert a tile dataset item to OTXDataItem."""
         msg = "Method _convert_entity is not implemented."
         raise NotImplementedError(msg)
 
@@ -346,7 +345,7 @@ class OTXTileDataset(OTXDataset):
         image: np.ndarray,
         item: DatasetItem,
         parent_idx: int,
-    ) -> tuple[list[OTXDataEntity | OTXDataItem], list[dict]]:
+    ) -> tuple[list[OTXDataItem | OTXDataItem], list[dict]]:
         """Retrieves tiles from the given image and dataset item.
 
         Args:
@@ -356,7 +355,7 @@ class OTXTileDataset(OTXDataset):
 
         Returns:
             A tuple containing two lists:
-            - tile_entities (list[OTXDataEntity]): List of tile entities.
+            - tile_entities (list[OTXDataItem]): List of tile entities.
             - tile_attrs (list[dict]): List of tile attributes.
         """
         tile_ds = self.transform_item(
@@ -378,7 +377,7 @@ class OTXTileDataset(OTXDataset):
                     with_full_img=True,
                 )
 
-        tile_entities: list[OTXDataEntity | OTXDataItem] = []
+        tile_entities: list[OTXDataItem | OTXDataItem] = []
         tile_attrs: list[dict] = []
         for tile in tile_ds:
             tile_entity = self._convert_entity(image, tile, parent_idx)
@@ -449,7 +448,7 @@ class OTXTileDetTestDataset(OTXTileDataset):
 
         Note:
             Ignoring [override] check is necessary here since OTXDataset._get_item_impl exclusively permits
-            the return of OTXDataEntity. Nevertheless, in instances involving tiling, it becomes
+            the return of OTXDataItem. Nevertheless, in instances involving tiling, it becomes
             imperative to encapsulate tiles within a unified entity, namely TileDetDataEntity.
         """
         item = self.dm_subset[index]
@@ -533,7 +532,7 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
 
         Note:
             Ignoring [override] check is necessary here since OTXDataset._get_item_impl exclusively permits
-            the return of OTXDataEntity. Nevertheless, in instances involving tiling, it becomes
+            the return of OTXDataItem. Nevertheless, in instances involving tiling, it becomes
             imperative to encapsulate tiles within a unified entity, namely TileInstSegDataEntity.
         """
         item = self.dm_subset[index]

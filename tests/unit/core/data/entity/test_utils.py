@@ -4,19 +4,20 @@
 
 import torch
 
-from otx.core.data.entity.base import ImageInfo, OTXBatchDataEntity
+from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.utils import stack_batch
+from otx.data.torch import OTXDataBatch
 
 
 def test_stack_batch():
     # Create a sample entity with tensor images
-    entity = OTXBatchDataEntity(
+    entity = OTXDataBatch(
         batch_size=3,
         images=[
-            torch.tensor([[[1, 2], [3, 4], [5, 6]]]),
-            torch.tensor([[[5, 6, 7], [8, 9, 10]]]),
-            torch.tensor([[[11, 12, 13, 14], [15, 16, 17, 18]]]),
-            torch.tensor([[[19, 20, 0], [0, 0, 0]]]),
+            torch.tensor([[[1, 2], [3, 4], [5, 6]]], dtype=torch.uint8),
+            torch.tensor([[[5, 6, 7], [8, 9, 10]]], dtype=torch.uint8),
+            torch.tensor([[[11, 12, 13, 14], [15, 16, 17, 18]]], dtype=torch.uint8),
+            torch.tensor([[[19, 20, 0], [0, 0, 0]]], dtype=torch.uint8),
         ],
         imgs_info=[
             ImageInfo(img_shape=(3, 2), img_idx=0, ori_shape=(2, 2)),

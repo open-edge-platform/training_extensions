@@ -18,7 +18,7 @@ from torchvision.ops import batched_nms
 
 from otx.algo.explain.explain_algo import InstSegExplainAlgo
 from otx.core.config.data import TileConfig
-from otx.core.data.entity.base import ImageInfo, T_OTXBatchPredEntity, T_OTXDataEntity
+from otx.core.data.entity.base import ImageInfo
 from otx.data import OTXPredBatch, OTXPredItem
 
 # Maximum number of elements 2**31 -1
@@ -83,27 +83,27 @@ class TileMerge:
     def _merge_entities(
         self,
         img_info: ImageInfo,
-        entities: list[T_OTXDataEntity],
+        entities: list[OTXPredItem],
         explain_mode: bool = False,
-    ) -> T_OTXDataEntity:
+    ) -> OTXPredItem:
         """Merge tile predictions to one single full-size prediction data entity.
 
         Args:
             img_info (ImageInfo): Image information about the original image before tiling.
-            entities (list[T_OTXDataEntity]): List of tile prediction entities.
+            entities (list[OTXPredItem]): List of tile prediction entities.
             explain_mode (bool): Whether or not tiles have explain features. Default: False.
 
         Returns:
-            T_OTXDataEntity: Merged prediction entity.
+            OTXPredItem: Merged prediction entity.
         """
         raise NotImplementedError
 
     @abstractmethod
     def merge(
         self,
-        batch_tile_preds: list[T_OTXBatchPredEntity],
+        batch_tile_preds: list[OTXPredBatch],
         batch_tile_attrs: list[list[dict]],
-    ) -> list[T_OTXDataEntity]:
+    ) -> list[OTXPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:

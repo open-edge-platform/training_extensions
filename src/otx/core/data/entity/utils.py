@@ -15,10 +15,11 @@ from torchvision import tv_tensors
 from torchvision.utils import _log_api_usage_once
 
 if TYPE_CHECKING:
-    from otx.core.data.entity.base import ImageInfo, Points, T_OTXDataEntity  # noqa: TCH004
+    from otx.core.data.entity.base import ImageInfo, Points  # noqa: TCH004
+    from otx.data.torch import OTXDataItem
 
 
-def register_pytree_node(cls: type[T_OTXDataEntity]) -> type[T_OTXDataEntity]:
+def register_pytree_node(cls: type[OTXDataItem]) -> type[OTXDataItem]:
     """Decorator to register an OTX data entity with PyTorch's PyTree.
 
     This decorator should be applied to every OTX data entity, as TorchVision V2 transforms

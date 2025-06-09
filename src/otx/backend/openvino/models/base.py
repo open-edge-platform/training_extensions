@@ -21,7 +21,6 @@ from torch import Tensor
 
 from otx.core.data.entity.base import (
     ImageInfo,
-    OTXBatchDataEntity,
 )
 from otx.core.metrics import NullMetricCallable
 from otx.core.types.label import LabelInfo
@@ -413,14 +412,14 @@ class OVModel:
         msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
         raise ValueError(msg)
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXBatchDataEntity:
+    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
         """Generate a dummy input for the model.
 
         Args:
             batch_size (int): Batch size for the dummy input.
 
         Returns:
-            OTXBatchDataEntity: Dummy input data.
+            OTXDataBatch: Dummy input data.
         """
         images = [torch.rand(3, 224, 224) for _ in range(batch_size)]
         infos = []
@@ -432,7 +431,7 @@ class OVModel:
                     ori_shape=img.shape,
                 ),
             )
-        return OTXBatchDataEntity(batch_size=batch_size, images=images, imgs_info=infos)
+        return OTXDataBatch(batch_size=batch_size, images=images, imgs_info=infos)
 
     def __call__(self, *args, **kwds):
         """Call the model for inference.

@@ -413,12 +413,20 @@ class RotatedMaskRCNNModel(MaskRCNN):
         batch_polygons: list[list[Polygon]] = []
         batch_masks: list[tv_tensors.Mask] = []
 
-        for img_info, pred_bboxes, pred_scores, pred_labels, pred_masks in zip(
-            preds.imgs_info,
-            preds.bboxes,
-            preds.scores,
-            preds.labels,
-            preds.masks,
+        for field_name, field in zip(
+            ["imgs_info", "bboxes", "scores", "labels", "masks"],
+            [preds.imgs_info, preds.bboxes, preds.scores, preds.labels, preds.masks],
+        ):
+            if field is None:
+                msg = f"Field '{field_name}' is None, which is not allowed."
+                raise ValueError(msg)
+
+        for img_info, pred_bboxes, pred_scores, pred_labels, pred_masks in zip(  # type: ignore[misc]
+            preds.imgs_info,  # type: ignore[arg-type]
+            preds.bboxes,  # type: ignore[arg-type]
+            preds.scores,  # type: ignore[arg-type]
+            preds.labels,  # type: ignore[arg-type]
+            preds.masks,  # type: ignore[arg-type]
         ):
             boxes = []
             scores = []
@@ -452,7 +460,7 @@ class RotatedMaskRCNNModel(MaskRCNN):
 
             if len(boxes):
                 scores = torch.stack(scores)
-                boxes = tv_tensors.BoundingBoxes(torch.stack(boxes), format="XYXY", canvas_size=img_info.ori_shape)
+                boxes = tv_tensors.BoundingBoxes(torch.stack(boxes), format="XYXY", canvas_size=img_info.ori_shape)  # type: ignore[union-attr]
                 labels = torch.stack(labels)
                 masks = torch.stack(masks)
 
