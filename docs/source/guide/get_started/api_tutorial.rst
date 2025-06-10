@@ -364,7 +364,7 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
 
             from otx.metrics.fmeasure import FMeasure
 
-            metric = FMeasue(label_info=5)
+            metric = FMeasure(label_info=5)
             engine.train(metric=metric)
 
     .. tab-item:: Set Callbacks & Logger

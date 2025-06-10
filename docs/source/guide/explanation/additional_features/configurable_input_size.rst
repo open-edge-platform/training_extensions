@@ -25,7 +25,6 @@ Usage example:
 
             from otx.backend.native.models.detection.yolox import YOLOXS
             from otx.data.module import OTXDataModule
-            from otx.backend.native.models.base import OTXDataModule
             from otx.engine import Engine
 
             input_size = (512, 512)
