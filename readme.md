@@ -18,6 +18,10 @@ We assume the user only has a single pipeline.
 
 The user can configure a single input source.
 
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/2c96f8d8-278d-4dce-a97e-51dd2f4be56c" alt="Input configuration" height="300" />
+</p>
+
 ```
 POST /api/pipeline/inputs
 
@@ -51,6 +55,19 @@ PUT /api/pipeline/inputs/{:input_id}
 ```
 
 #### Model
+
+<p align="center">
+    <table>
+        <tr>
+            <td>
+                <img src="https://github.com/user-attachments/assets/f1d2c882-32a4-41e1-a098-789871212116" alt="Model upload" height="300" />    
+            </td>
+            <td>
+                <img src="https://github.com/user-attachments/assets/526f7817-8ab8-4b44-8a0e-10ea64ef964b" alt="Model selection" height="300" />            
+            </td>
+        </tr>
+    </table>
+</p>
 
 A user can upload t heir model by simply importing a zip file containing the model's `.xml` and `.bin` files (e.g. the downloaded OpenVINO model from Geti). 
 Additionally the user can provide extra metadata such as the model name, version and original(?) model accuracy.
@@ -95,6 +112,10 @@ POST /api/pipeline/models/{:model_id}:activate
 
 #### Outputs
 
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/b867f943-d9e0-4e21-877d-293a7dd575df" alt="Output configuration" height="300" />
+</p>
+
 After configuring their input source and selected model they can add outputs.
 As an initial MVP I'd suggest to focus on either adding webhook or folder: folder is easy to test and verify while webhook allows us to implement the other destinations as an external service.
 
@@ -131,6 +152,10 @@ GET /api/pipeline/outputs/{:input_id}
 ```
 
 ### Live feed
+
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/7d42ca22-ac04-4967-bae1-0fc9364086f9" alt="Output configuration" height="300" />
+</p>
 
 Once the user has submitted their initial pipeline they can monitor it by opening Geti Edge's live feed.
 The live feed is similar to Geti's annotator view, but instead of an interactive editor the user sees a the feed of their activated input source along with inference and monitoring data.
