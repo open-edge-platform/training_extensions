@@ -43,7 +43,7 @@ overrides:
     train_subset:
       batch_size: 4
       sampler:
-        class_path: otx.backend.native.models.samplers.balanced_sampler.BalancedSampler
+        class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 4

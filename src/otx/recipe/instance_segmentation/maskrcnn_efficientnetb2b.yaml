@@ -44,7 +44,7 @@ overrides:
           init_args:
             std: [1.0, 1.0, 1.0]
       sampler:
-        class_path: otx.backend.native.models.samplers.balanced_sampler.BalancedSampler
+        class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       num_workers: 4

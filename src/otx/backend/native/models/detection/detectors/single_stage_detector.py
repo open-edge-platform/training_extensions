@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 
 import torch
 
-from otx.backend.native.models.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstSepBNHead
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.data.entity.torch import OTXDataBatch
@@ -218,7 +217,7 @@ class SingleStageDetector(BaseModule):
             backbone_feat = self.extract_feat(batch_inputs)
             bbox_head_feat = self.bbox_head.forward(backbone_feat)
             feature_vector = self.feature_vector_fn(backbone_feat)
-            if isinstance(self.bbox_head, RTMDetInstSepBNHead):
+            if hasattr(self.bbox_head, "mask_head") and self.bbox_head.mask_head is not None:
                 # create dummy saliency map as its implemented in ModelAPI
                 saliency_map = torch.zeros(1)
                 bboxes, labels, masks = self.bbox_head.export(backbone_feat, batch_img_metas, rescale=rescale)  # type: ignore[misc]
