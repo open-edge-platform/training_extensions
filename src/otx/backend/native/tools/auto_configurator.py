@@ -81,10 +81,10 @@ OVMODEL_PER_TASK = {
     OTXTaskType.ROTATED_DETECTION: "otx.backend.openvino.models.OVRotatedDetectionModel",
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.backend.openvino.models.OVInstanceSegmentationModel",
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.backend.openvino.models.OVSegmentationModel",
-    OTXTaskType.ANOMALY: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.ANOMALY_CLASSIFICATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.ANOMALY_DETECTION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
-    OTXTaskType.ANOMALY_SEGMENTATION: "otx.algo.anomaly.openvino_model.AnomalyOpenVINO",
+    OTXTaskType.ANOMALY: "otx.backend.native.models.anomaly.openvino_model.AnomalyOpenVINO",
+    OTXTaskType.ANOMALY_CLASSIFICATION: "otx.backend.native.models.anomaly.openvino_model.AnomalyOpenVINO",
+    OTXTaskType.ANOMALY_DETECTION: "otx.backend.native.models.anomaly.openvino_model.AnomalyOpenVINO",
+    OTXTaskType.ANOMALY_SEGMENTATION: "otx.backend.native.models.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.OVKeypointDetectionModel",
 }
 
