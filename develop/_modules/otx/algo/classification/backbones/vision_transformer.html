@@ -384,6 +384,7 @@
                 <span class="s2">&quot;num_heads&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
                 <span class="s2">&quot;reg_tokens&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
                 <span class="s2">&quot;no_embed_class&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;init_values&quot;</span><span class="p">:</span> <span class="mf">1e-5</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span>
@@ -608,7 +609,7 @@
             <span class="c1"># convert dinov2 pretrained weights</span>
             <span class="n">state_dict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span>
             <span class="n">state_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mask_token&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;reg_token&quot;</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;register_tokens&quot;</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="p">:</span>
                 <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;reg_token&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;register_tokens&quot;</span><span class="p">)</span>
             <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;cls_token&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cls_token&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;pos_embed&quot;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span>
 
