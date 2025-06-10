@@ -382,7 +382,7 @@ class Benchmark:
 
             # Check if operation was already done in previous run
             # If so, copy the previous operation directory
-            copied_ops_dir = self._prepare_resume(tags, sub_work_dir)
+            copied_ops_dir = self._prepare_resume(sub_work_dir)
 
             # Run training if not in resume operation
             if "train" not in copied_ops_dir:
@@ -403,6 +403,13 @@ class Benchmark:
                     extra_metrics={
                         "training:e2e_time": e2e_train_time,
                     },
+                )
+
+            if "train" in copied_ops_dir:
+                self._log_metrics(
+                    work_dir=sub_work_dir / SubCommand.TRAIN.value,
+                    tags=tags,
+                    criteria=criteria,
                 )
 
             self.test(
@@ -483,55 +490,10 @@ class Benchmark:
         result = summary.average(result, keys=["task", "model", "data_group", "data"])  # Average out seeds
         return result.set_index(["task", "model", "data_group", "data"])
 
-    def _prepare_resume(self, tags: dict[str, str], work_dir: Path) -> list[str]:
-        copied_ops_dir = []
-        if self.resume_from is None:
-            return copied_ops_dir
-        prev_work_dir = self._find_resume_directory(tags)
-        if prev_work_dir is None:
-            return copied_ops_dir
-
-        latest_dir = work_dir / ".latest"
-
-        if self.test_only is None:
-            copy_until = "train"
-        elif self.test_only == "all":
-            copy_until = "optimize"
-        else:
-            copy_until = self.test_only
-
-        for otx_cmd in ["train", "export", "optimize"]:
-            prev_symlink = prev_work_dir / ".latest" / otx_cmd
-            try:  # check symlink exists
-                prev_symlink.readlink()
-            except FileNotFoundError:
-                break
-            prev_cmd_dir_name = prev_symlink.resolve().name
-            prev_cmd_dir = prev_work_dir / prev_cmd_dir_name
-            if not prev_cmd_dir.exists():
-                break
-
-            if not latest_dir.exists():
-                latest_dir.mkdir(parents=True)
-
-            shutil.copytree(prev_cmd_dir, work_dir / prev_cmd_dir_name, ignore_dangling_symlinks=True)
-            (latest_dir / otx_cmd).symlink_to(Path("..") / (work_dir / prev_cmd_dir_name).relative_to(work_dir))
-
-            copied_ops_dir.append(otx_cmd)
-            if otx_cmd == copy_until:
-                break
-
-        if copy_until != otx_cmd:
-            logger.warning(
-                f"There is no {otx_cmd} directory for {work_dir} in resume directory. "
-                f"{work_dir} starts from {otx_cmd}.",
-            )
-
-        return copied_ops_dir
+    def _prepare_resume(self, work_dir: Path) -> list[str]:
+        return [subcommand for subcommand in ("train", "export", "optimize") if (work_dir / subcommand).exists()]
 
     def _find_resume_directory(self, tags: dict[str, str]) -> Path | None:
-        if self.resume_from is None:
-            return None
         for csv_file in self.resume_from.rglob("benchmark.raw.csv"):
             if csv_file.parent.name == ".latest":
                 continue
@@ -574,6 +536,8 @@ class Benchmark:
         metrics = []
         for criterion in criteria:
             if criterion.name not in raw_data:
+                value = 0.0
+                metrics.append(pd.Series([value], name=criterion.name))
                 continue
             column = raw_data[criterion.name].dropna()
             if len(column) == 0:
@@ -594,7 +558,19 @@ class Benchmark:
         # Write csv w/ tags
         for k, v in tags.items():
             metrics[k] = v
-        metrics.to_csv(work_dir / "benchmark.raw.csv", index=False)
+
+        if (work_dir / "benchmark.raw.csv").exists():
+            # If raw csv already exists, combine with existing metrics
+            existing_metrics = pd.read_csv(work_dir / "benchmark.raw.csv")
+            for col, val in metrics.items():
+                if col not in existing_metrics.columns:
+                    existing_metrics[col] = val
+                    print(f"Adding new column {col} to existing metrics.")
+
+            existing_metrics.to_csv(work_dir / "benchmark.raw.csv", index=False)
+        else:
+            # If raw csv does not exist, create new one
+            metrics.to_csv(work_dir / "benchmark.raw.csv", index=False)
 
     def _rename_raw_data(self, work_dir: Path, replace_map: dict[str, str]) -> None:
         """Rename columns in the metrics.csv files based on the provided replacements.
