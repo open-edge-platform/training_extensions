@@ -3,8 +3,6 @@
 #
 """Module for OTX tile data entities."""
 
-# type: ignore[override]
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -123,7 +121,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
                 OTXDataBatch(
                     batch_size=self.batch_size,
                     images=stacked_images,
-                    imgs_info=updated_img_info,  # type: ignore[arg-type]
+                    imgs_info=updated_img_info,
                 ),
             )
         return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))
@@ -209,7 +207,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
             OTXDataBatch(
                 batch_size=self.batch_size,
                 images=tiles[i : i + self.batch_size],
-                imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
+                imgs_info=tile_infos[i : i + self.batch_size],
             )
             for i in range(0, len(tiles), self.batch_size)
         ]
@@ -235,7 +233,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list]  # type: ignore[misc]
+                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
                 for tile_entity in batch_entities
             ],
             batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
@@ -286,7 +284,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             OTXDataBatch(
                 batch_size=self.batch_size,
                 images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
-                imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
+                imgs_info=tile_infos[i : i + self.batch_size],
                 masks=[torch.empty((1, 1, 1)) for _ in range(self.batch_size)],
             )
             for i in range(0, len(tiles), self.batch_size)
@@ -313,7 +311,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list]  # type: ignore[misc]
+                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
                 for tile_entity in batch_entities
             ],
             batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
