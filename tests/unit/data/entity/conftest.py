@@ -7,7 +7,7 @@ import pytest
 import torch
 from torchvision import tv_tensors
 
-from otx.data.entity import OTXDataItem, ImageInfo
+from otx.data.entity import ImageInfo, OTXDataItem
 
 
 @pytest.fixture()

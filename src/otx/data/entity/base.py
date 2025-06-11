@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 """Module for OTX base data entities."""
@@ -12,8 +12,8 @@ import torchvision.transforms.v2.functional as F  # noqa: N812
 from torch import Tensor
 from torch.utils._pytree import tree_flatten
 from torchvision import tv_tensors
+from torchvision.utils import _log_api_usage_once
 
-from otx.data.entity.utils import clamp_points
 from otx.types.image import ImageColorChannel, ImageType
 
 if TYPE_CHECKING:
@@ -43,9 +43,9 @@ def custom_wrap(wrappee: Tensor, *, like: tv_tensors.TVTensor, **kwargs) -> tv_t
     elif isinstance(like, Points):  # noqa: RET505
         return Points._wrap(wrappee, canvas_size=kwargs.get("canvas_size", like.canvas_size))  # noqa: SLF001
 
-    # TODO(Vlad): remove this after torch upgrade. This workaround prevents a failure when like is also a Tensor
-    if type(like) == type(wrappee):
-        return wrappee
+    # # TODO(Vlad): remove this after torch upgrade. This workaround prevents a failure when like is also a Tensor
+    # if type(like) == type(wrappee):
+    #     return wrappee
 
     return wrappee.as_subclass(type(like))
 
@@ -434,6 +434,34 @@ def _pad_points_dispatch(
 def get_size_points(point: Points) -> list[int]:
     """Get size of points."""
     return list(point.canvas_size)
+
+
+def _clamp_points(points: Tensor, canvas_size: tuple[int, int]) -> Tensor:
+    in_dtype = points.dtype
+    points = points.clone() if points.is_floating_point() else points.float()
+    points[..., 0].clamp_(min=0, max=canvas_size[1])
+    points[..., 1].clamp_(min=0, max=canvas_size[0])
+    return points.to(in_dtype)
+
+
+def clamp_points(inpt: Tensor, canvas_size: tuple[int, int] | None = None) -> Tensor:
+    """Clamp point range."""
+    if not torch.jit.is_scripting():
+        _log_api_usage_once(clamp_points)
+
+    if torch.jit.is_scripting() or F._utils.is_pure_tensor(inpt):  # noqa: SLF001
+        if canvas_size is None:
+            raise ValueError("For pure tensor inputs, `canvas_size` has to be passed.")  # noqa: EM101, TRY003
+        return _clamp_points(inpt, canvas_size=canvas_size)
+    elif isinstance(inpt, Points):  # noqa: RET505
+        if canvas_size is not None:
+            raise ValueError("For point tv_tensor inputs, `canvas_size` must not be passed.")  # noqa: EM101, TRY003
+        output = _clamp_points(inpt.as_subclass(Tensor), canvas_size=inpt.canvas_size)
+        return tv_tensors.wrap(output, like=inpt)
+    else:
+        raise TypeError(  # noqa: TRY003
+            f"Input can either be a plain tensor or a point tv_tensor, but got {type(inpt)} instead.",  # noqa: EM102
+        )
 
 
 class OTXBatchLossEntity(Dict[str, Tensor]):

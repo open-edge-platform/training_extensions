@@ -18,7 +18,7 @@ from torchvision.ops import batched_nms
 
 from otx.backend.native.tools.explain.explain_algo import InstSegExplainAlgo
 from otx.config.data import TileConfig
-from otx.data.entity import OTXPredBatch, OTXPredItem, ImageInfo
+from otx.data.entity import ImageInfo, OTXPredBatch, OTXPredItem
 
 # Maximum number of elements 2**31 -1
 MAX_ELEMENTS: int = np.iinfo(np.int32).max

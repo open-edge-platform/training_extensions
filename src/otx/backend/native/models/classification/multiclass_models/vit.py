@@ -27,9 +27,9 @@ from otx.backend.native.models.classification.multiclass_models.base import (
 from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.explain.explain_algo import ViTReciproCAM, feature_vector_fn
+from otx.data.entity import OTXDataBatch, OTXPredBatch
 from otx.metrics.accuracy import MultiClassClsMetricCallable
 from otx.types.label import LabelInfoTypes
-from otx.data.entity import OTXDataBatch, OTXPredBatch
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
