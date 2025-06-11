@@ -9,6 +9,7 @@ import copy
 import csv
 import inspect
 import logging
+import os
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -101,10 +102,9 @@ class OTXEngine(Engine):
     def __init__(
         self,
         *,
-        data_root: PathLike | None = None,
+        data: OTXDataModule | PathLike | None = None,
         task: OTXTaskType | None = None,
         work_dir: PathLike = "./otx-workspace",
-        datamodule: OTXDataModule | None = None,
         model: OTXModel | str | None = None,
         checkpoint: PathLike | None = None,
         device: DeviceType = DeviceType.auto,
@@ -130,12 +130,12 @@ class OTXEngine(Engine):
         self.device = device  # type: ignore[assignment]
         self.num_devices = num_devices
         self._auto_configurator = AutoConfigurator(
-            data_root=data_root,
-            task=datamodule.task if datamodule is not None else task,
+            data_root=data if isinstance(data, (str, os.PathLike)) else None,
+            task=data.task if isinstance(data, OTXDataModule) else task,
             model_name=None if isinstance(model, OTXModel) else model,
         )
         self._datamodule: OTXDataModule | None = (
-            datamodule if datamodule is not None else self._auto_configurator.get_datamodule()
+            data if isinstance(data, OTXDataModule) else self._auto_configurator.get_datamodule()
         )
         self.task = task if task is not None else self._auto_configurator.task
 
@@ -1040,6 +1040,28 @@ class OTXEngine(Engine):
             msg = "Please include the `data_root` or `datamodule` when creating the Engine."
             raise RuntimeError(msg)
         return self._datamodule
+
+    @datamodule.setter
+    def datamodule(self, data: OTXDataModule | PathLike) -> None:
+        """Sets the datamodule for the engine.
+
+        Args:
+            data (OTXDataModule): The datamodule to be set.
+
+        Returns:
+            None
+        """
+        if isinstance(data, (str, os.PathLike)):
+            datamodule = self._auto_configurator.get_datamodule(
+                data_root=data,
+            )
+        elif isinstance(data, OTXDataModule):
+            datamodule = data
+        else:
+            msg = f"Unsupported type for datamodule: {type(data)}. Expected OTXDataModule or PathLike."
+            raise TypeError(msg)
+
+        self._datamodule = datamodule
 
     @staticmethod
     def is_supported(model: MODEL, data: DATA) -> bool:

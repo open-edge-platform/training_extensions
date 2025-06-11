@@ -19,6 +19,7 @@ from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.backend.native.tools.auto_configurator import AutoConfigurator
 from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.data.module import OTXDataModule
+from otx.engine import Engine, create_engine
 from otx.types import PathLike
 from otx.types.task import OTXTaskType
 
@@ -432,7 +433,7 @@ class ConfigConverter:
         work_dir: PathLike | None = None,
         data_root: PathLike | None = None,
         **kwargs,
-    ) -> tuple[OTXEngine, dict[str, Any]]:
+    ) -> tuple[Engine, dict[str, Any]]:
         """Instantiate an object from the configuration dictionary.
 
         Args:
@@ -479,11 +480,7 @@ class ConfigConverter:
         # Instantiate Engine
         config_work_dir = config.pop("work_dir", config["engine"].pop("work_dir", None))
         config["engine"]["work_dir"] = work_dir if work_dir is not None else config_work_dir
-        engine = OTXEngine(
-            model=model,
-            datamodule=datamodule,
-            **config.pop("engine"),
-        )
+        engine = create_engine(model=model, datamodule=datamodule, **config["engine"])
 
         # Instantiate Engine.train Arguments
         engine_parser = ArgumentParser()

@@ -14,8 +14,8 @@ import pytest
 from model_api.models import Model
 
 from otx.backend.native.models.base import OTXModel
-from otx.backend.openvino.engine import OVEngine
 from otx.data.module import OTXDataModule
+from otx.engine import create_engine
 from otx.tools.converter import ConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -208,7 +208,7 @@ class TestEngineAPI:
             dst_dir=fp32_export_dir,
         )
         # instantiate the OpenVINO engine
-        ov_engine = OVEngine(
+        ov_engine = create_engine(
             model=fp32_export_dir / "exported_model.xml",
             data=self.engine.datamodule,
             work_dir=self.tmp_path,

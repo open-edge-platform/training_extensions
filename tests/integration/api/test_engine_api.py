@@ -12,8 +12,8 @@ from model_api.tilers import Tiler
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import OTXModel
 from otx.backend.native.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
-from otx.backend.openvino.engine import OVEngine
 from otx.data.module import OTXDataModule
+from otx.engine import create_engine
 from otx.types.task import OTXTaskType
 from tests.test_helpers import CommonSemanticSegmentationExporter
 
@@ -85,9 +85,9 @@ def test_engine_from_config(
         AssertionError(f"Exported model path is not a Path or a dictionary of Paths: {exported_model_path}")
 
     # Test with IR Model and OVEngine
-    ov_engine = OVEngine(data=engine.datamodule)
+    ov_engine = create_engine(data=engine.datamodule, model=exported_model_path)
     if task in OVMODEL_PER_TASK:
-        test_metric_from_ov_model = ov_engine.test(checkpoint=exported_model_path)
+        test_metric_from_ov_model = ov_engine.test()
         assert len(test_metric_from_ov_model) > 0
 
     # List of models with explain supported.
@@ -149,7 +149,7 @@ def test_engine_from_tile_recipe(
     assert exported_model_path.exists()
 
     # Check OVEngine with tiling
-    ov_engine = OVEngine(data=engine.datamodule, model=exported_model_path)
+    ov_engine = create_engine(data=engine.datamodule, model=exported_model_path)
     metric = ov_engine.test()
     assert len(metric) > 0
 

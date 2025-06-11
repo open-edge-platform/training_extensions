@@ -13,12 +13,13 @@ if TYPE_CHECKING:
     from otx.types.types import DATA, MODEL
 
 
-def create_engine(model: MODEL, data: DATA) -> Engine:
+def create_engine(model: MODEL, data: DATA, **kwargs) -> Engine:
     """Create an engine.
 
     Args:
         model: The model to use
         data: The data/datamodule to use
+        kwargs: Additional keyword arguments for engine initialization
 
     Returns:
         An instance of an Engine subclass that supports the model and data
@@ -32,7 +33,7 @@ def create_engine(model: MODEL, data: DATA) -> Engine:
     for engine_cls in engine_classes:
         if engine_cls.is_supported(model, data):
             # Type ignore since mypy can't verify the constructor signature of subclasses
-            return engine_cls(model=model, datamodule=data)  # type: ignore[call-arg]
+            return engine_cls(model=model, data=data, **kwargs)  # type: ignore[call-arg]
 
     msg = f"No engine found for model {model} and data {data}"
     raise ValueError(msg)
