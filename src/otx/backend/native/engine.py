@@ -19,22 +19,22 @@ import torch
 from lightning import Trainer, seed_everything
 from lightning.pytorch.plugins.precision import MixedPrecision
 
-from otx.backend.native.utils import adapt_batch_size
-from otx.core.config.device import DeviceConfig
-from otx.core.config.explain import ExplainConfig
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel
-from otx.core.types import PathLike
-from otx.core.types.device import DeviceType
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.precision import OTXPrecisionType
-from otx.core.types.task import OTXTaskType
-from otx.core.utils.cache import TrainerArgumentsCache
+from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.tools import adapt_batch_size
+from otx.backend.native.utils.cache import TrainerArgumentsCache
+from otx.config.device import DeviceConfig
+from otx.config.explain import ExplainConfig
+from otx.data.module import OTXDataModule
 from otx.engine.engine import Engine
+from otx.types import PathLike
+from otx.types.device import DeviceType
+from otx.types.export import OTXExportFormatType
+from otx.types.precision import OTXPrecisionType
+from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from otx.utils.utils import measure_flops
 
-from .utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
+from .tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
 if TYPE_CHECKING:
     from lightning import Callback
@@ -42,8 +42,8 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
     from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
-    from otx.core.metrics import MetricCallable
-    from otx.types import DATA, MODEL
+    from otx.metrics import MetricCallable
+    from otx.types.types import DATA, MODEL
 
 
 @contextmanager
@@ -387,17 +387,15 @@ class OTXEngine(Engine):
         self,
         checkpoint: PathLike | None = None,
         datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
-        return_predictions: bool | None = None,
         explain: bool = False,
         explain_config: ExplainConfig | None = None,
         **kwargs,
-    ) -> list | None:
+    ) -> list:
         r"""Run predictions using the specified model and data.
 
         Args:
             checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
             datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.
-            return_predictions (bool | None, optional): Whether to return the predictions or not.
             explain (bool, optional): Whether to dump "saliency_map" and "feature_vector" or not.
             explain_config (ExplainConfig | None, optional): Explain configuration used for saliency map post-processing
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
@@ -431,7 +429,10 @@ class OTXEngine(Engine):
                 ...     --checkpoint <CKPT_PATH, str>
                 ```
         """
-        from otx.algo.utils.xai_utils import process_saliency_maps_in_pred_entity, set_crop_padded_map_flag
+        from otx.backend.native.models.utils.xai_utils import (
+            process_saliency_maps_in_pred_entity,
+            set_crop_padded_map_flag,
+        )
 
         model = self.model
 
@@ -463,7 +464,7 @@ class OTXEngine(Engine):
             predict_result = self.trainer.predict(
                 model=model,
                 dataloaders=datamodule,
-                return_predictions=return_predictions,
+                return_predictions=True,
             )
         finally:
             model.explain_mode = curr_explain_mode
@@ -612,7 +613,7 @@ class OTXEngine(Engine):
                 ...     --checkpoint <CKPT_PATH, str>
                 ```
         """
-        from otx.algo.utils.xai_utils import (
+        from otx.backend.native.models.utils.xai_utils import (
             process_saliency_maps_in_pred_entity,
             set_crop_padded_map_flag,
         )

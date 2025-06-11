@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from .engine import Engine
 
 if TYPE_CHECKING:
-    from otx.types import DATA, MODEL
+    from otx.types.types import DATA, MODEL
 
 
 def create_engine(model: MODEL, data: DATA) -> Engine:

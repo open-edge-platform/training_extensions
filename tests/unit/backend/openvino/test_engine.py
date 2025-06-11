@@ -9,13 +9,12 @@ from pytest_mock import MockerFixture
 
 from otx.backend.openvino.engine import OVEngine
 from otx.backend.openvino.models import OVModel
-from otx.core.types.label import NullLabelInfo
-from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
+from otx.types.label import NullLabelInfo
 
 
 @pytest.fixture()
-def fxt_ov_model(tmp_path) -> OVModel:
-    ov.save_model(get_dummy_ov_cls_model(), f"{tmp_path}/model.xml")
+def fxt_ov_model(tmp_path, get_dummy_ov_cls_model) -> OVModel:
+    ov.save_model(get_dummy_ov_cls_model, f"{tmp_path}/model.xml")
     return OVModel(model_path=f"{tmp_path}/model.xml", model_type="Classification")
 
 
@@ -51,7 +50,7 @@ class TestEngine:
         mock_datamodule.input_std = (1.0, 1.0, 1.0)
 
         return mocker.patch(
-            "otx.backend.openvino.utils.auto_configurator.AutoConfigurator.get_datamodule",
+            "otx.backend.native.tools.auto_configurator.AutoConfigurator.get_datamodule",
             return_value=mock_datamodule,
         )
 
@@ -95,7 +94,9 @@ class TestEngine:
             "otx.backend.openvino.engine.AutoConfigurator.update_ov_subset_pipeline",
             return_value=fxt_engine.datamodule,
         )
-        mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
+        mock_process_saliency_maps = mocker.patch(
+            "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
+        )
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
         mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=MagicMock())
         fxt_engine.model = "model.xml"

@@ -14,17 +14,17 @@ from model_api.tilers import SemanticSegmentationTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.metrics import MetricInput
-from otx.core.metrics.dice import SegmCallable
-from otx.core.types.label import SegLabelInfo
-from otx.core.types.task import OTXTaskType
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.metrics import MetricInput
+from otx.metrics.dice import SegmCallable
+from otx.types.label import SegLabelInfo
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.models.result import ImageResultWithSoftPrediction
 
-    from otx.core.metrics import MetricCallable
-    from otx.core.types import PathLike
+    from otx.metrics import MetricCallable
+    from otx.types import PathLike
 
 
 class OVSegmentationModel(OVModel):

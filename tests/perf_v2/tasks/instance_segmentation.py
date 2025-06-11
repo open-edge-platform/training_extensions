@@ -13,8 +13,8 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from otx.core.metrics.fmeasure import FMeasureCallable
-from otx.core.types.task import OTXTaskType
+from otx.metrics.fmeasure import FMeasureCallable
+from otx.types.task import OTXTaskType
 
 TASK_TYPE = OTXTaskType.INSTANCE_SEGMENTATION
 

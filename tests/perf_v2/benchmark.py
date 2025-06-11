@@ -16,7 +16,7 @@ import pandas as pd
 from jsonargparse import ArgumentParser, Namespace
 
 from otx.backend.native.engine import OTXEngine
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 from tests.perf_v2 import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf_v2.utils import (
     Criterion,

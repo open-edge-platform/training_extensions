@@ -1,5 +1,5 @@
 model:
-  class_path: otx.algo.classification.multiclass_models.vit.VisionTransformerMulticlassCls
+  class_path: otx.backend.native.models.classification.multiclass_models.vit.VisionTransformerMulticlassCls
   init_args:
     label_info: 1000
     model_name: "dinov2-small"
@@ -11,7 +11,7 @@ model:
         weight_decay: 0.05
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 0
         main_scheduler_callable:
@@ -33,6 +33,6 @@ overrides:
   max_epochs: 90
 
   callbacks:
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
         patience: 5

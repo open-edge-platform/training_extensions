@@ -105,11 +105,11 @@ class TestOTXCLI:
         assert mock_run.call_count == 1
         cli.instantiate_classes()
 
-        from otx.core.model.base import OTXModel
+        from otx.backend.native.models.base import OTXModel
 
         assert isinstance(cli.model, OTXModel)
 
-        from otx.core.data.module import OTXDataModule
+        from otx.data.module import OTXDataModule
 
         assert isinstance(cli.datamodule, OTXDataModule)
 
@@ -148,7 +148,7 @@ class TestOTXCLI:
         mocker.patch("otx.utils.utils.get_model_cls_from_config", return_value=mock_model_cls)
         fxt_train_argv.extend(["--data.input_size", "auto"])
         monkeypatch.setattr("sys.argv", fxt_train_argv)
-        mock_data_module = mocker.patch("otx.core.data.module.adapt_input_size_to_dataset", return_value=(1024, 1024))
+        mock_data_module = mocker.patch("otx.data.module.adapt_input_size_to_dataset", return_value=(1024, 1024))
 
         cli = OTXCLI()
         cli.instantiate_classes()
@@ -197,7 +197,7 @@ class TestOTXCLI:
             "--data_root",
             "tests/assets/car_tree_bug",
             "--metric",
-            "otx.core.metrics.fmeasure.FMeasureCallable",
+            "otx.metrics.fmeasure.FMeasureCallable",
             "--print_config",
         ]
         monkeypatch.setattr("sys.argv", argv)
@@ -208,7 +208,7 @@ class TestOTXCLI:
             OTXCLI()
         out, _ = capfd.readouterr()
         result_config = yaml.safe_load(out)
-        assert result_config["metric"] == "otx.core.metrics.fmeasure._f_measure_callable"
+        assert result_config["metric"] == "otx.metrics.fmeasure._f_measure_callable"
 
     def test_print_results(self, mocker, capfd):
         mocker.patch("otx.cli.cli.OTXCLI.__init__", return_value=None)

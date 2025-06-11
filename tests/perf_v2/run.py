@@ -10,7 +10,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 from tests.perf_v2 import DATASET_COLLECTIONS, MODEL_COLLECTIONS
 from tests.perf_v2.summary import load, summarize_task, task_high_level_summary
 from tests.perf_v2.utils import (

@@ -17,25 +17,25 @@ from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, namespace_
 from rich.console import Console
 
 from otx import OTX_LOGO, __version__
+from otx.backend.native.cli.utils import get_otx_root_path
+from otx.backend.native.models.base import DataInputParams
 from otx.cli.utils import absolute_path
 from otx.cli.utils.help_formatter import CustomHelpFormatter
 from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from otx.cli.utils.workspace import Workspace
-from otx.core.model.base import DataInputParams
-from otx.core.types.task import OTXTaskType
-from otx.core.utils.imports import get_otx_root_path
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from jsonargparse._actions import _ActionSubCommands
 
-    from otx.core.data.module import OTXDataModule
-    from otx.core.model.base import OTXModel
+    from otx.backend.native.models.base import OTXModel
+    from otx.data.module import OTXDataModule
 
 
 _ENGINE_AVAILABLE = True
 try:
     from otx.backend.native.engine import OTXEngine
-    from otx.core.config import register_configs
+    from otx.config import register_configs
 
     register_configs()
 except ImportError:
@@ -153,8 +153,8 @@ class OTXCLI:
             skip=engine_skip,
         )
         # Model Settings
+        from otx.backend.native.models.base import OTXModel
         from otx.backend.openvino.models import OVModel
-        from otx.core.model.base import OTXModel
 
         parser.add_subclass_arguments(
             (OTXModel, OVModel),
@@ -163,7 +163,7 @@ class OTXCLI:
             fail_untyped=False,
         )
         # Datamodule Settings
-        from otx.core.data.module import OTXDataModule
+        from otx.data.module import OTXDataModule
 
         parser.add_class_arguments(
             OTXDataModule,
@@ -291,7 +291,7 @@ class OTXCLI:
             task = sys.argv[sys.argv.index("--task") + 1]
         enable_auto_config = data_root is not None and "--config" not in sys.argv
         if enable_auto_config:
-            from otx.backend.native.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
+            from otx.backend.native.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
             auto_configurator = AutoConfigurator(
                 data_root=data_root,
@@ -384,7 +384,7 @@ class OTXCLI:
         Returns:
             tuple: The model and optimizer and scheduler.
         """
-        from otx.core.model.base import OTXModel
+        from otx.backend.native.models.base import OTXModel
         from otx.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
         skip = set()

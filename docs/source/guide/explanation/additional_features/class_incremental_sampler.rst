@@ -10,7 +10,7 @@ For default setting, the square root of (number of old data/number of new data) 
 
         .. code-block:: python
 
-            from otx.algo.samplers.class_incremental_sampler import ClassIncrementalSampler
+            from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
             dataset = OTXDataset(...)
             class_incr_sampler = ClassIncrementalSampler(
@@ -43,7 +43,7 @@ It helps ensure balanced sampling by class based on the distribution of class la
 
         .. code-block:: python
 
-            from otx.algo.samplers.balanced_sampler import BalancedSampler
+            from otx.data.samplers.balanced_sampler import BalancedSampler
 
             dataset = OTXDataset(...)
             class_incr_sampler = BalancedSampler(

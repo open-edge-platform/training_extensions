@@ -24,7 +24,7 @@ from datumaro.util.definitions import DEFAULT_SUBSET_NAME
 from datumaro.util.image import save_image
 from datumaro.util.meta_file_util import save_meta_file
 
-from otx.core.utils.mask_util import polygon_to_bitmap
+from otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util import polygon_to_bitmap
 
 
 def generate_random_bboxes(

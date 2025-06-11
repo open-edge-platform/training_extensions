@@ -149,7 +149,7 @@ To use this feature, add the following parameter:
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(..., auto_num_workers=True)
 

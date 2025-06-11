@@ -1,5 +1,5 @@
 model:
-  class_path: otx.algo.anomaly.openvino_model.AnomalyOpenVINO
+  class_path: otx.backend.native.models.anomaly.openvino_model.AnomalyOpenVINO
   init_args:
     model_name: openvino.xml
     async_inference: True

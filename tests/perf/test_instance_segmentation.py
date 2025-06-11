@@ -32,12 +32,12 @@ class TestPerfInstanceSegmentation(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "train": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                     "callback_monitor": "val/f1-score",
                     "model.scheduler.monitor": "val/f1-score",
                 },
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         )
@@ -50,12 +50,12 @@ class TestPerfInstanceSegmentation(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "train": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                     "callback_monitor": "val/f1-score",
                     "model.scheduler.monitor": "val/f1-score",
                 },
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         ),
@@ -66,12 +66,12 @@ class TestPerfInstanceSegmentation(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "train": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                     "callback_monitor": "val/f1-score",
                     "model.scheduler.monitor": "val/f1-score",
                 },
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         ),
@@ -139,12 +139,12 @@ class TestPerfTilingInstanceSegmentation(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "train": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                     "callback_monitor": "val/f1-score",
                     "model.scheduler.monitor": "val/f1-score",
                 },
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         )
@@ -157,12 +157,12 @@ class TestPerfTilingInstanceSegmentation(PerfTestBase):
             num_repeat=5,
             extra_overrides={
                 "train": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                     "callback_monitor": "val/f1-score",
                     "model.scheduler.monitor": "val/f1-score",
                 },
                 "test": {
-                    "metric": "otx.core.metrics.fmeasure.FMeasureCallable",
+                    "metric": "otx.metrics.fmeasure.FMeasureCallable",
                 },
             },
         ),

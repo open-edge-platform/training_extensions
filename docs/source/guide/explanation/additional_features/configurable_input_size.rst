@@ -23,9 +23,8 @@ Usage example:
 
         .. code-block:: python
 
-            from otx.algo.detection.yolox import YOLOXS
-            from otx.core.data.module import OTXDataModule
-            from otx.core.model.base import OTXDataModule
+            from otx.backend.native.models.detection.yolox import YOLOXS
+            from otx.data.module import OTXDataModule
             from otx.engine import Engine
 
             input_size = (512, 512)
@@ -40,7 +39,7 @@ Usage example:
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
             from otx.engine import Engine
 
             datamodule = OTXDataModule(..., input_size=(512, 512))
@@ -73,8 +72,8 @@ To activate this feature, use the following command with the desired mode:
 
         .. code-block:: python
 
-            from otx.algo.detection.yolox import YOLOXS
-            from otx.core.data.module import OTXDataModule
+            from otx.backend.native.models.detection.yolox import YOLOXS
+            from otx.data.module import OTXDataModule
             from otx.engine import Engine
 
             datamodule = OTXDataModule(

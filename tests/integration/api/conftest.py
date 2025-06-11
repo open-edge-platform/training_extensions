@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 
-from otx.core.data.mem_cache import MemCacheHandlerSingleton
+from otx.data.mem_cache import MemCacheHandlerSingleton
 
 
 @pytest.fixture(autouse=True)

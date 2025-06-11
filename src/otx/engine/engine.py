@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from otx.types import ANNOTATIONS, DATA, METRICS, MODEL
+    from otx.types.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 
 class Engine(ABC):
