@@ -109,7 +109,7 @@ class OTXDataset(Dataset):
     def _sample_another_idx(self) -> int:
         return np.random.default_rng().integers(0, len(self))
 
-    def _apply_transforms(self, entity: OTXDataItem ) -> OTXDataItem  | None:
+    def _apply_transforms(self, entity: OTXDataItem) -> OTXDataItem | None:
         if isinstance(self.transforms, Compose):
             if self.to_tv_image:
                 entity = entity.to_tv_image()
@@ -121,7 +121,7 @@ class OTXDataset(Dataset):
 
         raise TypeError(self.transforms)
 
-    def _iterable_transforms(self, item: OTXDataItem ) -> OTXDataItem  | None:
+    def _iterable_transforms(self, item: OTXDataItem) -> OTXDataItem | None:
         if not isinstance(self.transforms, list):
             raise TypeError(item)
 
@@ -135,7 +135,7 @@ class OTXDataset(Dataset):
 
         return results
 
-    def __getitem__(self, index: int) -> OTXDataItem :
+    def __getitem__(self, index: int) -> OTXDataItem:
         for _ in range(self.max_refetch):
             results = self._get_item_impl(index)
 

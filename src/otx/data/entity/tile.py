@@ -148,7 +148,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list]  # type: ignore[misc]
+                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
                 for tile_entity in batch_entities
             ],
             batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
