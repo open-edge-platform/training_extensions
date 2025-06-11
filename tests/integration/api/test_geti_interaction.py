@@ -13,13 +13,13 @@ import cv2
 import pytest
 from model_api.models import Model
 
+from otx.backend.native.models.base import OTXModel
 from otx.backend.openvino.engine import OVEngine
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.precision import OTXPrecisionType
-from otx.core.types.task import OTXTaskType
+from otx.data.module import OTXDataModule
 from otx.tools.converter import ConfigConverter
+from otx.types.export import OTXExportFormatType
+from otx.types.precision import OTXPrecisionType
+from otx.types.task import OTXTaskType
 from tests.integration.api.geti_otx_config_utils import (
     ExportFormat,
     ExportParameter,

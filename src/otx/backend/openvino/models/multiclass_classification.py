@@ -9,18 +9,18 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.metrics import MetricInput
-from otx.core.metrics.accuracy import (
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.metrics import MetricInput
+from otx.metrics.accuracy import (
     MultiClassClsMetricCallable,
 )
-from otx.core.types.task import OTXTaskType
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.models.result import ClassificationResult
 
-    from otx.core.metrics import MetricCallable
-    from otx.core.types import PathLike
+    from otx.metrics import MetricCallable
+    from otx.types import PathLike
 
 
 class OVMulticlassClassificationModel(OVModel):

@@ -19,14 +19,15 @@ from model_api.models import Model
 from model_api.tilers import Tiler
 from torch import Tensor
 
-from otx.core.data.entity.base import (
+from otx.data.entity.base import (
     ImageInfo,
 )
-from otx.core.metrics import NullMetricCallable
-from otx.core.types.label import LabelInfo
-from otx.core.types.task import OTXTaskType
-from otx.core.utils.build import get_default_num_async_infer_requests
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.metrics import NullMetricCallable
+from otx.types.label import LabelInfo
+from otx.types.task import OTXTaskType
+
+from .utils import get_default_num_async_infer_requests
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -34,9 +35,9 @@ if TYPE_CHECKING:
     from model_api.models.result import Result
     from torchmetrics import Metric
 
-    from otx.core.data.module import OTXDataModule
-    from otx.core.metrics import MetricCallable, MetricInput
-    from otx.core.types import PathLike
+    from otx.data.module import OTXDataModule
+    from otx.metrics import MetricCallable, MetricInput
+    from otx.types import PathLike
 
 logger = logging.getLogger()
 

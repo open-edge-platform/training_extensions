@@ -10,7 +10,7 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
 .. code-block:: yaml
 
   model:
-    class_path: otx.algo.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
+    class_path: otx.backend.native.models.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
     init_args:
       model_name: mobilenetv3_large
       label_info: 1000
@@ -23,7 +23,7 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
           weight_decay: 0.0001
 
       scheduler:
-        class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+        class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
         init_args:
           num_warmup_steps: 10
           main_scheduler_callable:
@@ -45,7 +45,7 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
     max_epochs: 90
 
     callbacks:
-      - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
         init_args:
           patience: 5
 
@@ -115,13 +115,13 @@ To change them, you can just set the values in the overrides.
       data:
         train_subset:
           transforms:
-            - class_path: otx.core.data.transform_libs.torchvision.Resize
+            - class_path: otx.data.transform_libs.torchvision.Resize
               init_args:
                 size: # update `size` from 1024 to 512
                   - 512
                   - 512
             # Pad is used as is because it is not set here
-            - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+            - class_path: otx.data.transform_libs.torchvision.RandomFlip
               init_args:
                 prob: 0 # update `prob` from 0.5 to 0
             # ToDtype and Normalize are used as is because they are not set here

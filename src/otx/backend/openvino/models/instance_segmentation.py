@@ -11,21 +11,21 @@ import torch
 from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
+from otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
 from otx.backend.openvino.models.base import OVModel
-from otx.core.metrics import MetricInput
-from otx.core.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
-from otx.core.types.label import LabelInfo
-from otx.core.types.task import OTXTaskType
-from otx.core.utils.mask_util import encode_rle, polygon_to_rle
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.metrics import MetricInput
+from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.types.label import LabelInfo
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import InstanceSegmentationResult
     from torchmetrics import Metric
 
-    from otx.core.metrics import MetricCallable
-    from otx.core.types import PathLike
+    from otx.metrics import MetricCallable
+    from otx.types import PathLike
 
 
 class OVInstanceSegmentationModel(OVModel):

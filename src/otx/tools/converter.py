@@ -15,12 +15,12 @@ from warnings import warn
 from jsonargparse import ArgumentParser, Namespace
 
 from otx.backend.native.engine import OTXEngine
-from otx.backend.native.utils.auto_configurator import AutoConfigurator
-from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel
-from otx.core.types import PathLike
-from otx.core.types.task import OTXTaskType
+from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.tools.auto_configurator import AutoConfigurator
+from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
+from otx.data.module import OTXDataModule
+from otx.types import PathLike
+from otx.types.task import OTXTaskType
 
 TEMPLATE_ID_DICT = {
     # MULTI_CLASS_CLS
@@ -315,7 +315,7 @@ class ConfigConverter:
             if (
                 isinstance(scheduler, dict)
                 and "class_path" in scheduler
-                and scheduler["class_path"] == "otx.core.schedulers.LinearWarmupSchedulerCallable"
+                and scheduler["class_path"] == "otx.backend.native.schedulers.LinearWarmupSchedulerCallable"
             ):
                 scheduler["init_args"]["num_warmup_steps"] = param_value
             else:
@@ -332,21 +332,24 @@ class ConfigConverter:
         def update_enable_early_stopping(param_value: bool) -> None:
             idx = ConfigConverter._get_callback_idx(
                 config["callbacks"],
-                "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+                "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
             )
             if not param_value and idx > -1:
                 config["callbacks"].pop(idx)
 
         def update_early_stop_patience(param_value: int) -> None:
             for callback in config["callbacks"]:
-                if callback["class_path"] == "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup":
+                if (
+                    callback["class_path"]
+                    == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+                ):
                     callback["init_args"]["patience"] = param_value
                     break
 
         def update_use_adaptive_interval(param_value: bool) -> None:
             idx = ConfigConverter._get_callback_idx(
                 config["callbacks"],
-                "otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
+                "otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
             )
             if not param_value and idx > -1:
                 config["callbacks"].pop(idx)

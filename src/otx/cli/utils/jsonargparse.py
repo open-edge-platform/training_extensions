@@ -14,7 +14,7 @@ from typing import Any, Iterator, TypeVar, Union
 import docstring_parser
 from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, dict_to_namespace, namespace_to_dict
 
-from otx.core.types import PathLike
+from otx.types import PathLike
 
 logger = logging.getLogger()
 

@@ -13,7 +13,7 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 
 CLASSIFICATION_BENCHMARK_CRITERIA = [
     Criterion(name="training:epoch", summary="max", compare="<", margin=0.1),

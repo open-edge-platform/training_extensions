@@ -6,11 +6,30 @@
 from __future__ import annotations
 
 import fnmatch
+import importlib
+import inspect
 import textwrap
 from pathlib import Path
 
-from otx.core.types.task import OTXTaskType
-from otx.core.utils.imports import get_otx_root_path
+from otx.types.task import OTXTaskType
+
+
+def get_otx_root_path() -> Path:
+    """Return the root path of the otx module.
+
+    Returns:
+        str: The root path of the otx module.
+
+    Raises:
+        ModuleNotFoundError: If the otx module is not found.
+    """
+    otx_module = importlib.import_module("otx")
+    if otx_module:
+        file_path = inspect.getfile(otx_module)
+        return Path(file_path).parent
+    msg = "Cannot found otx."
+    raise ModuleNotFoundError(msg)
+
 
 RECIPE_PATH = get_otx_root_path() / "recipe"
 

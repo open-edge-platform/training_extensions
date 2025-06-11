@@ -1,5 +1,5 @@
 model:
-  class_path: otx.algo.anomaly.stfpm.Stfpm
+  class_path: otx.backend.native.models.anomaly.stfpm.Stfpm
   init_args:
     layers: ["layer1", "layer2", "layer3"]
     backbone: "resnet18"
@@ -19,6 +19,6 @@ overrides:
     - class_path: lightning.pytorch.callbacks.EarlyStopping
       init_args:
         patience: 5
-    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
       init_args:
         max_interval: 1

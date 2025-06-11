@@ -12,17 +12,17 @@ from model_api.tilers import DetectionTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.core.metrics import MetricCallable, MetricInput
-from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.types.task import OTXTaskType
-from otx.data import OTXDataBatch, OTXPredBatch
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.metrics import MetricCallable, MetricInput
+from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from model_api.adapters import OpenvinoAdapter
     from model_api.models.utils import DetectionResult
     from torchmetrics import Metric
 
-    from otx.core.types import PathLike
+    from otx.types import PathLike
 
 
 class OVDetectionModel(OVModel):
