@@ -143,7 +143,7 @@ class OTXCLI:
             "Setting this option to true will disable this behavior.",
             action="store_true",
         )
-        engine_skip = {"model", "datamodule", "work_dir"}
+        engine_skip = {"model", "data", "work_dir"}
         parser.add_class_arguments(
             OTXEngine,
             "engine",
@@ -175,7 +175,7 @@ class OTXCLI:
         parser.add_class_arguments(Workspace, "workspace")
         parser.link_arguments("work_dir", "workspace.work_dir")
 
-        parser.link_arguments("data_root", "engine.data_root")
+        parser.link_arguments("data_root", "engine.data")
         parser.link_arguments("data_root", "data.data_root")
         parser.link_arguments("engine.device", "data.device")
 
@@ -367,7 +367,7 @@ class OTXCLI:
         engine_kwargs = self.get_config_value(self.config_init, "engine")
         return OTXEngine(
             model=self.model,
-            datamodule=self.datamodule,
+            data=self.datamodule,
             work_dir=self.workspace.work_dir,
             **engine_kwargs,
         )
