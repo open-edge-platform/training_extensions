@@ -136,7 +136,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
                 if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be TorchDataItem before collate_fn()"
+                    msg = "All entities should be OTXDataItem before collate_fn()"
                     raise TypeError(msg)
                 if entity.img_info is None:
                     msg = "All entities should have img_info, but found None"
@@ -223,7 +223,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
                 if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be TorchDataItem before collate_fn()"
+                    msg = "All entities should be OTXDataItem before collate_fn()"
                     raise TypeError(msg)
                 if entity.img_info is None:
                     msg = "All entities should have img_info, but found None"
@@ -301,7 +301,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
                 if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be TorchDataItem before collate_fn()"
+                    msg = "All entities should be OTXDataItem before collate_fn()"
                     raise TypeError(msg)
                 if entity.img_info is None:
                     msg = "All entities should have img_info, but found None"
