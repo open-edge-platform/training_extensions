@@ -825,6 +825,8 @@ class DFINETransformerModule(nn.Module):
             attn_mask=attn_mask,
         )
 
+        out_bboxes = out_bboxes.clamp(min=1e-8)
+
         if self.training and dn_meta is not None:
             dn_pre_logits, pre_logits = torch.split(pre_logits, dn_meta["dn_num_split"], dim=1)
             dn_pre_bboxes, pre_bboxes = torch.split(pre_bboxes, dn_meta["dn_num_split"], dim=1)
