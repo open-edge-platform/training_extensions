@@ -29,6 +29,7 @@ from otx.utils.utils import can_pass_tile_config, get_model_cls_from_config, sho
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torchmetrics import Metric
+
     from otx.backend.openvino.models.base import OVModel
 
 
