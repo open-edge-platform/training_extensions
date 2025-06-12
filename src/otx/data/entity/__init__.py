@@ -3,6 +3,7 @@
 #
 """Module for OTX data entities."""
 
+from .base import ImageInfo, ImageType, Points
 from .tile import (
     TileBatchDetDataEntity,
     TileBatchInstSegDataEntity,
@@ -23,4 +24,7 @@ __all__ = [
     "TileBatchDetDataEntity",
     "TileBatchSegDataEntity",
     "TileBatchInstSegDataEntity",
+    "ImageType",
+    "ImageInfo",
+    "Points",
 ]

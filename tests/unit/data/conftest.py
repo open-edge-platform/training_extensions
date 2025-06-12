@@ -36,7 +36,7 @@ from otx.types.task import OTXTaskType
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-    from otx.data.dataset.base import OTXDataset, T_OTXDataEntity
+    from otx.data.dataset.base import OTXDataset
     from otx.data.mem_cache import MemCacheHandlerBase
 
 _LABEL_NAMES = ["Non-Rigid", "Rigid", "Rectangle", "Triangle", "Circle", "Lion", "Panda"]
@@ -166,7 +166,7 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
 )
 def fxt_dataset_and_data_entity_cls(
     request: pytest.FixtureRequest,
-) -> tuple[OTXDataset, T_OTXDataEntity]:
+) -> tuple[OTXDataset, OTXDataItem]:
     return request.param
 
 

@@ -3,8 +3,6 @@
 #
 """Module for OTX tile data entities."""
 
-# type: ignore[override]
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,7 +15,7 @@ from otx.data.entity.torch import OTXDataBatch, OTXDataItem
 from otx.data.entity.utils import stack_batch
 from otx.types.task import OTXTaskType
 
-from .base import ImageInfo, T_OTXBatchDataEntity, T_OTXDataEntity
+from .base import ImageInfo
 
 if TYPE_CHECKING:
     from datumaro import Polygon
@@ -36,7 +34,7 @@ class TileDataEntity:
     """
 
     num_tiles: int
-    entity_list: Sequence[T_OTXDataEntity]
+    entity_list: Sequence[OTXDataItem]
     tile_attr_list: list[dict[str, int | str]]
     ori_img_info: ImageInfo
 
@@ -86,7 +84,7 @@ class OTXTileBatchDataEntity:
     batch_tile_attr_list: list[TileAttrDictList]
     imgs_info: list[ImageInfo]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, T_OTXBatchDataEntity]]:
+    def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
         """Unbind batch data entity."""
         raise NotImplementedError
 
@@ -123,7 +121,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
                 OTXDataBatch(
                     batch_size=self.batch_size,
                     images=stacked_images,
-                    imgs_info=updated_img_info,  # type: ignore[arg-type]
+                    imgs_info=updated_img_info,
                 ),
             )
         return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))
@@ -138,14 +136,18 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
                 if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be TorchDataItem before collate_fn()"
+                    msg = "All entities should be OTXDataItem before collate_fn()"
                     raise TypeError(msg)
+                if entity.img_info is None:
+                    msg = "All entities should have img_info, but found None"
+                    raise ValueError(msg)
 
         return TileBatchDetDataEntity(
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list] for tile_entity in batch_entities
+                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
+                for tile_entity in batch_entities
             ],
             batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
             imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],
@@ -205,7 +207,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
             OTXDataBatch(
                 batch_size=self.batch_size,
                 images=tiles[i : i + self.batch_size],
-                imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
+                imgs_info=tile_infos[i : i + self.batch_size],
             )
             for i in range(0, len(tiles), self.batch_size)
         ]
@@ -221,14 +223,18 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
                 if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be TorchDataItem before collate_fn()"
+                    msg = "All entities should be OTXDataItem before collate_fn()"
                     raise TypeError(msg)
+                if entity.img_info is None:
+                    msg = "All entities should have img_info, but found None"
+                    raise ValueError(msg)
 
         return TileBatchInstSegDataEntity(
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list] for tile_entity in batch_entities
+                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
+                for tile_entity in batch_entities
             ],
             batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
             imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],
@@ -278,7 +284,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             OTXDataBatch(
                 batch_size=self.batch_size,
                 images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
-                imgs_info=tile_infos[i : i + self.batch_size],  # type: ignore[arg-type]
+                imgs_info=tile_infos[i : i + self.batch_size],
                 masks=[torch.empty((1, 1, 1)) for _ in range(self.batch_size)],
             )
             for i in range(0, len(tiles), self.batch_size)
@@ -295,14 +301,18 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
                 if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be TorchDataItem before collate_fn()"
+                    msg = "All entities should be OTXDataItem before collate_fn()"
                     raise TypeError(msg)
+                if entity.img_info is None:
+                    msg = "All entities should have img_info, but found None"
+                    raise ValueError(msg)
 
         return TileBatchSegDataEntity(
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list] for tile_entity in batch_entities
+                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
+                for tile_entity in batch_entities
             ],
             batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
             imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],

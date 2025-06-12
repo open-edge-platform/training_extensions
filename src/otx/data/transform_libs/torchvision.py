@@ -29,7 +29,6 @@ from torchvision.transforms.v2 import functional as F  # noqa: N812
 
 from otx.backend.native.utils.utils import import_object_from_module
 from otx.data.entity.base import (
-    OTXDataEntity,
     Points,
     _crop_image_info,
     _pad_image_info,
@@ -1633,7 +1632,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.pad_val = pad_val
         self.max_iters = max_iters
         self.bbox_clip_border = bbox_clip_border
-        self.results_cache: list[OTXDataEntity] = []
+        self.results_cache: list[OTXDataItem] = []
 
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop

@@ -8,7 +8,6 @@ import openvino.runtime as ov
 import pytest
 
 from otx.backend.native.engine import OTXEngine
-from otx.data.entity.base import OTXBatchPredEntity
 from otx.data.entity.torch import OTXPredBatch
 from otx.engine import create_engine
 
@@ -70,11 +69,11 @@ def test_forward_explain(
     )
 
     predict_result = engine.predict()
-    assert isinstance(predict_result[0], (OTXBatchPredEntity, OTXPredBatch))
+    assert isinstance(predict_result[0], OTXPredBatch)
     assert not predict_result[0].has_xai_outputs
 
     predict_result_explain = engine.predict(explain=True)
-    assert isinstance(predict_result_explain[0], (OTXBatchPredEntity, OTXPredBatch))
+    assert isinstance(predict_result_explain[0], OTXPredBatch)
     assert predict_result_explain[0].has_xai_outputs
 
     batch_size = len(predict_result[0].scores)
@@ -137,7 +136,7 @@ def test_predict_with_explain(
 
     # Predict with explain torch & process maps
     predict_result_explain_torch = engine.predict(explain=True)
-    assert isinstance(predict_result_explain_torch[0], (OTXBatchPredEntity, OTXPredBatch))
+    assert isinstance(predict_result_explain_torch[0], OTXPredBatch)
     assert predict_result_explain_torch[0].has_xai_outputs
     assert predict_result_explain_torch[0].saliency_map is not None
     assert isinstance(predict_result_explain_torch[0].saliency_map[0], dict)
@@ -167,7 +166,7 @@ def test_predict_with_explain(
     # Predict OV model with xai & process maps
     ov_engine = create_engine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
     predict_result_explain_ov = ov_engine.predict(checkpoint=exported_model_path, explain=True)
-    assert isinstance(predict_result_explain_ov[0], (OTXBatchPredEntity, OTXPredBatch))
+    assert isinstance(predict_result_explain_ov[0], OTXPredBatch)
     assert predict_result_explain_ov[0].has_xai_outputs
     assert predict_result_explain_ov[0].saliency_map is not None
     assert isinstance(predict_result_explain_ov[0].saliency_map[0], dict)
