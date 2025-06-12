@@ -2,35 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 """Unit tests of base data entity."""
 
+import numpy as np
 import pytest
 import torch
 import torchvision.transforms.v2 as tvt
 
-from otx.data.entity.base import ImageType, OTXBatchDataEntity, OTXDataEntity
+from otx.data.entity import OTXDataItem
 
 
-class TestOTXDataEntity:
+class TestOTXDataItem:
     def test_image_type(
         self,
         fxt_numpy_data_entity,
         fxt_torchvision_data_entity,
     ) -> None:
-        assert fxt_numpy_data_entity.image_type == ImageType.NUMPY
-        assert fxt_torchvision_data_entity.image_type == ImageType.TV_IMAGE
-
-
-class TestOTXBatchDataEntity:
-    def test_collate_fn(self, mocker, fxt_torchvision_data_entity) -> None:
-        mocker.patch.object(OTXDataEntity, "task", return_value="detection")
-        mocker.patch.object(OTXBatchDataEntity, "task", return_value="detection")
-        data_entities = [
-            fxt_torchvision_data_entity,
-            fxt_torchvision_data_entity,
-            fxt_torchvision_data_entity,
-        ]
-
-        data_batch = OTXBatchDataEntity.collate_fn(data_entities)
-        assert len(data_batch.imgs_info) == len(data_batch.images)
+        assert fxt_numpy_data_entity.image.dtype == np.float32
+        assert fxt_torchvision_data_entity.image.dtype == torch.float32
 
 
 class TestImageInfo:
@@ -49,7 +36,7 @@ class TestImageInfo:
     @pytest.mark.parametrize("fxt_transform", ["fxt_resize", "fxt_random_resize"])
     def test_resize(
         self,
-        fxt_torchvision_data_entity: OTXDataEntity,
+        fxt_torchvision_data_entity: OTXDataItem,
         fxt_transform: str,
         request: pytest.FixtureRequest,
     ) -> None:
@@ -83,7 +70,7 @@ class TestImageInfo:
     )
     def test_crop(
         self,
-        fxt_torchvision_data_entity: OTXDataEntity,
+        fxt_torchvision_data_entity: OTXDataItem,
         fxt_transform: str,
         request: pytest.FixtureRequest,
     ) -> None:
@@ -96,7 +83,7 @@ class TestImageInfo:
 
     def test_pad(
         self,
-        fxt_torchvision_data_entity: OTXDataEntity,
+        fxt_torchvision_data_entity: OTXDataItem,
     ) -> None:
         transform = tvt.Pad(padding=(1, 2, 3, 4))
         transformed = transform(fxt_torchvision_data_entity)
@@ -107,7 +94,7 @@ class TestImageInfo:
 
     def test_normalize(
         self,
-        fxt_torchvision_data_entity: OTXDataEntity,
+        fxt_torchvision_data_entity: OTXDataItem,
     ) -> None:
         mean = (100, 101, 102)
         std = (1, 2, 3)
@@ -121,7 +108,7 @@ class TestImageInfo:
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="Test only if CUDA is available.")
     def test_to_cuda(
         self,
-        fxt_torchvision_data_entity: OTXDataEntity,
+        fxt_torchvision_data_entity: OTXDataItem,
     ) -> None:
         cuda_img_info = fxt_torchvision_data_entity.img_info.to(device="cuda")
         # Do not lose its meta info although calling `Tensor.to(device="cuda")`

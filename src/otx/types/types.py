@@ -5,12 +5,11 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from otx.backend.native.models.base import OTXModel
-from otx.data.entity.torch import OTXDataItem
+from otx.data.entity import OTXDataItem
+from otx.data.module import OTXDataModule
 
 METRICS = dict[str, float]
 ANNOTATIONS = list[OTXDataItem]
-MODEL = OTXModel  # TODO(ashwinvaidya17): Temporary till model is properly defined
-DATA = Any  # TODO(ashwinvaidya17): Temporary till data is properly defined
+MODEL = OTXModel  # TODO(ashwinvaidya17, kprokofi): Temporary till model is properly defined
+DATA = OTXDataModule  # TODO(ashwinvaidya17, kprokofi): Temporary till data is properly defined
