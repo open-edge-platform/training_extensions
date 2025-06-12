@@ -15,7 +15,6 @@ class TestOTXSegmentationDataset:
         dataset = OTXSegmentationDataset(
             dm_subset=fxt_mock_dm_subset,
             transforms=[lambda x: x],
-            mem_cache_img_max_size=None,
             max_refetch=3,
         )
         assert isinstance(dataset[0], OTXDataItem)
@@ -28,7 +27,6 @@ class TestOTXSegmentationDataset:
         dataset = OTXSegmentationDataset(
             dm_subset=fxt_mock_det_dm_subset,
             transforms=[lambda x: x],
-            mem_cache_img_max_size=None,
             max_refetch=3,
         )
         assert isinstance(dataset[0], OTXDataItem)

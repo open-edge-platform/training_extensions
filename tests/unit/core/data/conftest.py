@@ -29,7 +29,6 @@ from otx.core.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.core.data.dataset.segmentation import (
     OTXSegmentationDataset,
 )
-from otx.core.data.mem_cache import MemCacheHandlerSingleton
 from otx.core.types.task import OTXTaskType
 from otx.data.torch import OTXDataItem
 
@@ -37,17 +36,8 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
     from otx.core.data.dataset.base import OTXDataset, T_OTXDataEntity
-    from otx.core.data.mem_cache import MemCacheHandlerBase
 
 _LABEL_NAMES = ["Non-Rigid", "Rigid", "Rectangle", "Triangle", "Circle", "Lion", "Panda"]
-
-
-@pytest.fixture()
-def fxt_mem_cache_handler(monkeypatch) -> MemCacheHandlerBase:
-    monkeypatch.setattr(MemCacheHandlerSingleton, "check_system_memory", lambda *_: True)
-    handler = MemCacheHandlerSingleton.create(mode="singleprocessing", mem_size=1024 * 1024)
-    yield handler
-    MemCacheHandlerSingleton.delete()
 
 
 @pytest.fixture(params=["bytes", "file"])

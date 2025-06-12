@@ -21,7 +21,6 @@ from torchvision.tv_tensors import Mask
 
 from otx.core.data.dataset.base import OTXDataset, Transforms
 from otx.core.data.entity.base import ImageInfo
-from otx.core.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.core.types.image import ImageColorChannel
 from otx.core.types.label import AnomalyLabelInfo
 from otx.core.types.task import OTXTaskType
@@ -43,8 +42,6 @@ class AnomalyDataset(OTXDataset):
         task_type: OTXTaskType,
         dm_subset: DmDataset,
         transforms: Transforms,
-        mem_cache_handler: MemCacheHandlerBase = NULL_MEM_CACHE_HANDLER,
-        mem_cache_img_max_size: tuple[int, int] | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -55,8 +52,6 @@ class AnomalyDataset(OTXDataset):
         super().__init__(
             dm_subset,
             transforms,
-            mem_cache_handler,
-            mem_cache_img_max_size,
             max_refetch,
             image_color_channel,
             stack_images,

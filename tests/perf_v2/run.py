@@ -128,7 +128,7 @@ if __name__ == "__main__":
                         failed_jobs.append(fail_result)
 
     if failed_jobs:
-        with (output_root / FAILED_JOBS_FILE).open() as f:
+        with (output_root / FAILED_JOBS_FILE).open("w") as f:
             json.dump(failed_jobs, f, indent=2)
         logger.warning(f"{len(failed_jobs)} jobs failed. Details saved to {output_root / FAILED_JOBS_FILE}")
 

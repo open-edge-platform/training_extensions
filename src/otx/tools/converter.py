@@ -293,9 +293,6 @@ class ConfigConverter:
         """Update params of OTX recipe from Geit configurable params."""
         unused_params = deepcopy(param_dict)
 
-        def update_mem_cache_size(param_value: int) -> None:
-            config["data"]["mem_cache_size"] = f"{int(param_value / 1000000)}MB"
-
         def update_batch_size(param_value: int) -> None:
             config["data"]["train_subset"]["batch_size"] = param_value
 
@@ -382,7 +379,6 @@ class ConfigConverter:
                     unused_params.pop(tile_param)
 
         param_update_funcs = {
-            "mem_cache_size": update_mem_cache_size,
             "batch_size": update_batch_size,
             "inference_batch_size": update_inference_batch_size,
             "learning_rate": update_learning_rate,

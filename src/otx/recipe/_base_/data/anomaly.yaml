@@ -1,8 +1,6 @@
 task: ANOMALY_CLASSIFICATION
 input_size: [256, 256]
 data_format: mvtec
-mem_cache_size: 1GB
-mem_cache_img_max_size: null
 image_color_channel: RGB
 unannotated_items_ratio: 0.0
 train_subset:
