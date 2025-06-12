@@ -27,6 +27,7 @@ from otx.config.device import DeviceConfig
 from otx.config.explain import ExplainConfig
 from otx.data.module import OTXDataModule
 from otx.engine.engine import Engine
+from otx.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 from otx.types import PathLike
 from otx.types.device import DeviceType
 from otx.types.export import OTXExportFormatType
@@ -34,8 +35,6 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from otx.utils.utils import measure_flops
-
-from .tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
 if TYPE_CHECKING:
     from lightning import Callback
@@ -101,7 +100,6 @@ class OTXEngine(Engine):
 
     def __init__(
         self,
-        *,
         data: OTXDataModule | PathLike | None = None,
         task: OTXTaskType | None = None,
         work_dir: PathLike = "./otx-workspace",
@@ -114,12 +112,12 @@ class OTXEngine(Engine):
         """Initializes the OTX Engine.
 
         Args:
-            data_root (PathLike | None, optional): Root directory for the data. Defaults to None.
+            data (OTXDataModule | PathLike | None, optional): The data module for the engine
+                or root directory for the data. Defaults to None.
             task (OTXTaskType | None, optional): The type of OTX task. Defaults to None.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
-            datamodule (OTXDataModule | None, optional): The data module for the engine. Defaults to None.
             model (OTXModel | str | None, optional): The model for the engine. Defaults to None.
-            checkpoint (PathLike | None, optional): Path to the checkpoint file. Defaults to None.
+            checkpoint (PathLike | None, optional): Path to the checkpoint file (model weights). Defaults to None.
             device (DeviceType, optional): The device type to use. Defaults to DeviceType.auto.
             num_devices (int, optional): The number of devices to use. If it is 2 or more, it will behave as multi-gpu.
             **kwargs: Additional keyword arguments for pl.Trainer.
@@ -153,6 +151,11 @@ class OTXEngine(Engine):
         self._model: OTXModel = (
             model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
         )
+        if self.checkpoint:
+            if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
+                msg = f"Checkpoint {self.checkpoint} does not exist."
+                raise FileNotFoundError(msg)
+            self.model.load_state_dict_incrementally(torch.load(self.checkpoint))
 
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points
@@ -233,8 +236,6 @@ class OTXEngine(Engine):
                 >>> otx train --work_dir <WORK_DIR_PATH, str>
                 ```
         """
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -851,7 +852,7 @@ class OTXEngine(Engine):
 
         return cls(
             work_dir=instantiated_config.get("work_dir", work_dir),
-            datamodule=datamodule,
+            data=datamodule,
             model=model,
             **engine_kwargs,
         )

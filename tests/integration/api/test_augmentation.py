@@ -8,10 +8,10 @@ import itertools
 import pytest
 from datumaro import Dataset as DmDataset
 
-from otx.backend.native.tools.auto_configurator import AutoConfigurator
 from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.factory import OTXDatasetFactory
 from otx.data.mem_cache import MemCacheHandlerSingleton
+from otx.tools.auto_configurator import AutoConfigurator
 from otx.types.task import OTXTaskType
 
 

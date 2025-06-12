@@ -438,7 +438,6 @@ def get_configuration(config_path: str | Path, subcommand: str = "train", **kwar
             parser.set_defaults(**kwargs)
 
         args = parser.parse_args(args=["--config", str(config_path)], _skip_check=True)
-
     config = namespace_to_dict(args)
     logger.info(f"{config_path} is loaded.")
 

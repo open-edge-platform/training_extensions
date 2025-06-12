@@ -326,7 +326,7 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
 
     .. code-block:: python
 
-        from otx.engine.utils.auto_configuration import AutoConfigurator
+        from otx.tools.auto_configuration import AutoConfigurator
 
         datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
 

@@ -16,10 +16,10 @@ from jsonargparse import ArgumentParser, Namespace
 
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.backend.native.tools.auto_configurator import AutoConfigurator
 from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.data.module import OTXDataModule
 from otx.engine import Engine, create_engine
+from otx.tools.auto_configurator import AutoConfigurator
 from otx.types import PathLike
 from otx.types.task import OTXTaskType
 
@@ -480,7 +480,7 @@ class ConfigConverter:
         # Instantiate Engine
         config_work_dir = config.pop("work_dir", config["engine"].pop("work_dir", None))
         config["engine"]["work_dir"] = work_dir if work_dir is not None else config_work_dir
-        engine = create_engine(model=model, datamodule=datamodule, **config["engine"])
+        engine = create_engine(model=model, data=datamodule, **config["engine"])
 
         # Instantiate Engine.train Arguments
         engine_parser = ArgumentParser()

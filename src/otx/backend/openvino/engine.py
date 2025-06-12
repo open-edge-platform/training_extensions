@@ -14,13 +14,13 @@ import numpy as np
 import torch
 from rich.progress import Progress
 
-from otx.backend.native.tools.auto_configurator import AutoConfigurator
 from otx.backend.openvino.models import OVModel
 from otx.config.explain import ExplainConfig
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataBatch
 from otx.data.module import OTXDataModule
 from otx.engine import Engine
+from otx.tools.auto_configurator import AutoConfigurator
 from otx.types import OTXTaskType, PathLike
 
 if TYPE_CHECKING:

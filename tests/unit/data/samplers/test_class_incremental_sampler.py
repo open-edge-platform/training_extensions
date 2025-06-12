@@ -1,14 +1,16 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+#
+"""Unit tests of incremental sampler."""
 
 import pytest
 from datumaro.components.annotation import Label
 from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 
-from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 from otx.backend.native.utils.utils import get_idx_list_per_classes
 from otx.data.dataset.base import OTXDataset
+from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
 
 @pytest.fixture()

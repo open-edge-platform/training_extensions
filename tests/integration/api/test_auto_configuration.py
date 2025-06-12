@@ -7,8 +7,8 @@ import pytest
 
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import OTXModel
-from otx.backend.native.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK
 from otx.data.module import OTXDataModule
+from otx.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK
 from otx.types.task import OTXTaskType
 
 

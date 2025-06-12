@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
@@ -18,15 +18,12 @@ from otx.types.precision import OTXPrecisionType
 
 @pytest.fixture()
 def fxt_engine(tmp_path) -> OTXEngine:
-    recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
-    data_root = "tests/assets/classification_dataset"
-    task_type = "MULTI_CLASS_CLS"
-
-    return OTXEngine.from_config(
-        config_path=recipe_path,
-        data_root=data_root,
-        task=task_type,
+    return OTXEngine(
+        data="tests/assets/classification_dataset",
+        task="MULTI_CLASS_CLS",
+        model="tv_mobilenet_v3_small",
         work_dir=tmp_path,
+        max_epochs=90,
     )
 
 
@@ -37,7 +34,7 @@ class TestEngine:
 
         # Check auto-configuration
         data_root = "tests/assets/classification_dataset"
-        engine = OTXEngine(work_dir=tmp_path, data_root=data_root)
+        engine = OTXEngine(work_dir=tmp_path, data=data_root)
         assert engine.task == "MULTI_CLASS_CLS"
         assert engine.datamodule.task == "MULTI_CLASS_CLS"
         assert isinstance(engine.model, EfficientNetMulticlassCls)
@@ -62,13 +59,13 @@ class TestEngine:
         mock_datamodule.input_std = (1.0, 1.0, 1.0)
 
         return mocker.patch(
-            "otx.backend.native.tools.auto_configurator.AutoConfigurator.get_datamodule",
+            "otx.tools.auto_configurator.AutoConfigurator.get_datamodule",
             return_value=mock_datamodule,
         )
 
     def test_model_init(self, tmp_path, mock_datamodule):
         data_root = "tests/assets/classification_dataset"
-        engine = OTXEngine(work_dir=tmp_path, data_root=data_root)
+        engine = OTXEngine(work_dir=tmp_path, data=data_root)
 
         assert engine._model.data_input_params == DataInputParams((1234, 1234), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
         assert engine._model.label_info.num_classes == 4321
@@ -323,6 +320,6 @@ class TestEngine:
         assert fxt_engine._cache.args.get("devices") == 2
 
         data_root = "tests/assets/classification_dataset"
-        engine = OTXEngine(work_dir=tmp_path, data_root=data_root, num_devices=3)
+        engine = OTXEngine(work_dir=tmp_path, data=data_root, num_devices=3)
         assert engine.num_devices == 3
         assert engine._cache.args.get("devices") == 3

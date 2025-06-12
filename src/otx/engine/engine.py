@@ -42,6 +42,7 @@ class Engine(ABC):
     @abstractmethod
     def is_supported(model: MODEL, data: DATA) -> bool:
         """Check if the engine is supported for the given model and data."""
+        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -57,6 +58,7 @@ class Engine(ABC):
         Returns:
             MODEL: model object.
         """
+        raise NotImplementedError
 
     @model.setter
     @abstractmethod

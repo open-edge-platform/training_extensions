@@ -41,19 +41,6 @@ class TestEngine:
         engine = OVEngine(work_dir=tmp_path, data=data_root, model=f"{tmp_path}/model.xml")
         assert engine.model == fxt_ov_model
 
-    @pytest.fixture()
-    def mock_datamodule(self, mocker):
-        mock_datamodule = MagicMock()
-        mock_datamodule.label_info = 4321
-        mock_datamodule.input_size = (1234, 1234)
-        mock_datamodule.input_mean = (0.0, 0.0, 0.0)
-        mock_datamodule.input_std = (1.0, 1.0, 1.0)
-
-        return mocker.patch(
-            "otx.backend.native.tools.auto_configurator.AutoConfigurator.get_datamodule",
-            return_value=mock_datamodule,
-        )
-
     def test_model_setter(self, fxt_engine, tmp_path, mocker) -> None:
         assert isinstance(fxt_engine.model, OVModel)
         fxt_engine.model = f"{tmp_path}/model.xml"

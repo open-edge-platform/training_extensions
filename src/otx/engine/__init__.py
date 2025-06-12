@@ -27,13 +27,25 @@ def create_engine(model: MODEL, data: DATA, **kwargs) -> Engine:
     Raises:
         ValueError: If no compatible engine is found
     """
-    # Get all concrete (non-abstract) subclasses of Engine
-    engine_classes: list[type[Engine]] = Engine.__subclasses__()
+    from otx.backend.native.engine import OTXEngine
+    from otx.backend.openvino.engine import OVEngine
 
-    for engine_cls in engine_classes:
+    supported_engines = [OTXEngine, OVEngine]
+    # Dynamically discover all custom subclasses of Engine
+    for child_engines in Engine.__subclasses__():
+        if child_engines not in supported_engines:
+            supported_engines.append(child_engines)
+
+    for engine_cls in supported_engines:
+        if not hasattr(engine_cls, "is_supported"):
+            msg = f"Engine {engine_cls.__name__} does not implement is_supported method."
+            raise ValueError(msg)
         if engine_cls.is_supported(model, data):
             # Type ignore since mypy can't verify the constructor signature of subclasses
             return engine_cls(model=model, data=data, **kwargs)  # type: ignore[call-arg]
 
     msg = f"No engine found for model {model} and data {data}"
     raise ValueError(msg)
+
+
+__all__ = ["Engine", "create_engine"]

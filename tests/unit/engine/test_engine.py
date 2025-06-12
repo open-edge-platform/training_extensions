@@ -23,7 +23,7 @@ class TestCreateEngine:
         return mock_engine_cls
 
     @patch("otx.engine.Engine.__subclasses__", autospec=True)
-    def test_create_engine(self, mock___subclasses__, mock_engine_subclass, mocker):
+    def test_create_engine(self, mock___subclasses__, mock_engine_subclass):
         """Test create_engine with arbitrary Engine."""
         mock___subclasses__.return_value = [mock_engine_subclass]
         mock_model = MagicMock()
@@ -32,7 +32,7 @@ class TestCreateEngine:
         engine_instance = create_engine(mock_model, mock_data)
 
         mock_engine_subclass.is_supported.assert_called_once_with(mock_model, mock_data)
-        mock_engine_subclass.assert_called_once_with(model=mock_model, datamodule=mock_data)
+        mock_engine_subclass.assert_called_once_with(model=mock_model, data=mock_data)
         assert engine_instance == mock_engine_subclass.return_value
 
         # test create_engine when is_supported returns False
@@ -56,14 +56,14 @@ class TestCreateEngine:
         # test OTXEngine creation with OTXModel
         engine_instance = create_engine(mock_model, mock_data)
         assert isinstance(engine_instance, OTXEngine)
-        mock_engine_init.assert_called_once_with(model=mock_model, datamodule=mock_data)
+        mock_engine_init.assert_called_once_with(model=mock_model, data=mock_data)
 
         # test with additional kwargs
         engine_instance = create_engine(mock_model, mock_data, work_dir="path/to/workdir", device="CPU")
         assert isinstance(engine_instance, OTXEngine)
         mock_engine_init.assert_called_with(
             model=mock_model,
-            datamodule=mock_data,
+            data=mock_data,
             work_dir="path/to/workdir",
             device="CPU",
         )
@@ -76,10 +76,10 @@ class TestCreateEngine:
         mock_engine_init = mocker.patch("otx.backend.openvino.engine.OVEngine.__init__", return_value=None)
         engine_instance = create_engine(mock_model, mock_data)
         assert isinstance(engine_instance, OVEngine)
-        mock_engine_init.assert_called_once_with(model=mock_model, datamodule=mock_data)
+        mock_engine_init.assert_called_once_with(model=mock_model, data=mock_data)
 
         # test with IR path
         mock_model = "/path/to/model.xml"
         engine_instance = create_engine(mock_model, mock_data, work_dir="path/to/workdir")
         assert isinstance(engine_instance, OVEngine)
-        mock_engine_init.assert_called_with(model=mock_model, datamodule=mock_data, work_dir="path/to/workdir")
+        mock_engine_init.assert_called_with(model=mock_model, data=mock_data, work_dir="path/to/workdir")

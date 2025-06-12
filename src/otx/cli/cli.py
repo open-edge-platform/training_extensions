@@ -143,7 +143,7 @@ class OTXCLI:
             "Setting this option to true will disable this behavior.",
             action="store_true",
         )
-        engine_skip = {"model", "data", "work_dir"}
+        engine_skip = {"model", "work_dir", "data"}
         parser.add_class_arguments(
             OTXEngine,
             "engine",
@@ -175,7 +175,7 @@ class OTXCLI:
         parser.add_class_arguments(Workspace, "workspace")
         parser.link_arguments("work_dir", "workspace.work_dir")
 
-        parser.link_arguments("data_root", "engine.data")
+        # parser.link_arguments("data_root", "engine.data")
         parser.link_arguments("data_root", "data.data_root")
         parser.link_arguments("engine.device", "data.device")
 
@@ -291,7 +291,7 @@ class OTXCLI:
             task = sys.argv[sys.argv.index("--task") + 1]
         enable_auto_config = data_root is not None and "--config" not in sys.argv
         if enable_auto_config:
-            from otx.backend.native.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
+            from otx.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
             auto_configurator = AutoConfigurator(
                 data_root=data_root,
@@ -365,6 +365,7 @@ class OTXCLI:
             An instance of the Engine class.
         """
         engine_kwargs = self.get_config_value(self.config_init, "engine")
+
         return OTXEngine(
             model=self.model,
             data=self.datamodule,
