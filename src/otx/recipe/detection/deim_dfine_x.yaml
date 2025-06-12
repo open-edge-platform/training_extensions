@@ -13,16 +13,14 @@ model:
         weight_decay: 0.000125
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.core.schedulers.FlatCosineScheduler
       init_args:
-        num_warmup_steps: 10
-        main_scheduler_callable:
-          class_path: lightning.pytorch.cli.ReduceLROnPlateau
-          init_args:
-            mode: max
-            factor: 0.1
-            patience: 4
-            monitor: val/map_50
+        lr_gamma: 0.5
+        total_epochs: 40
+        warmup_iters: 30
+        flat_epochs: 23
+        no_aug_epochs: 8
+
 engine:
   task: DETECTION
   device: auto
@@ -191,7 +189,7 @@ data_aug_switch:
 
 data: ../_base_/data/torchvision_base.yaml
 overrides:
-  log_every_n_steps: 1  # TODO(Eugene): remember to remove this before shipping
+  log_every_n_steps: 1 # TODO(Eugene): remember to remove this before shipping
 
   callbacks:
     - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling

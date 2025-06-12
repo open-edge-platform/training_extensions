@@ -12,6 +12,7 @@ from torch.optim.lr_scheduler import LRScheduler
 from torch.optim.optimizer import Optimizer
 
 from otx.core.schedulers.callable import SchedulerCallableSupportAdaptiveBS
+from otx.core.schedulers.flat_cosine import FlatCosineScheduler
 from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
 
 LRSchedulerListCallable = Callable[[Optimizer], list[LRScheduler | ReduceLROnPlateau]]
@@ -21,4 +22,5 @@ __all__ = [
     "LinearWarmupScheduler",
     "LinearWarmupSchedulerCallable",
     "SchedulerCallableSupportAdaptiveBS",
+    "FlatCosineScheduler",
 ]

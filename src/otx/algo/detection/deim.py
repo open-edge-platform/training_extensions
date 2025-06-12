@@ -5,7 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
+
+import torch
 
 from otx.algo.detection.backbones.hgnetv2 import HGNetv2
 from otx.algo.detection.d_fine import DFine
@@ -144,3 +146,35 @@ class DEIMDFine(DFine):
         load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
 
         return model
+
+    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
+        """Configure an optimizer and learning-rate schedulers.
+
+        Set up the optimizer and schedulers from the provided inputs.
+        Typically, a warmup scheduler is used initially, followed by the main scheduler.
+
+        Returns:
+            Two list. The former is a list that contains an optimizer
+            The latter is a list of lr scheduler configs which has a dictionary format.
+        """
+        param_groups = self._get_optim_params(self.model.optimizer_configuration, self.model)
+        optimizer = self.optimizer_callable(param_groups)
+
+        bs = self.trainer.datamodule.train_subset.batch_size
+        num_samples = len(self.trainer.datamodule.subsets["train"])
+        iter_per_epoch = num_samples // bs
+        schedulers = self.scheduler_callable(optimizer, iter_per_epoch)
+
+        def ensure_list(item: Any) -> list:  # noqa: ANN401
+            return item if isinstance(item, list) else [item]
+
+        lr_scheduler_configs = []
+        for scheduler in ensure_list(schedulers):
+            lr_scheduler_config = {"scheduler": scheduler}
+            if hasattr(scheduler, "interval"):
+                lr_scheduler_config["interval"] = scheduler.interval
+            if hasattr(scheduler, "monitor"):
+                lr_scheduler_config["monitor"] = scheduler.monitor
+            lr_scheduler_configs.append(lr_scheduler_config)
+
+        return [optimizer], lr_scheduler_configs
