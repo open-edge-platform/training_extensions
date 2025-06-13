@@ -71,9 +71,11 @@ class RTDETR(OTXDetectionModel):
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
+        multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
+        self.multi_scale = multi_scale
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -108,17 +110,26 @@ class RTDETR(OTXDetectionModel):
         ]
 
         model = DETR(
+            multi_scale=self.generate_scales(self.data_input_params.input_size[0]) if self.multi_scale else None,
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
-            input_size=self.data_input_params.input_size[0],
         )
         model.init_weights()
         load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
 
         return model
+
+    @staticmethod
+    def generate_scales(input_size: int, base_size_repeat: int = 3) -> list[int]:
+        """Generates scales for multi-scale training."""
+        scale_repeat = (input_size - int(input_size * 0.75 / 32) * 32) // 32
+        scales = [int(input_size * 0.75 / 32) * 32 + i * 32 for i in range(scale_repeat)]
+        scales += [input_size] * base_size_repeat
+        scales += [int(input_size * 1.25 / 32) * 32 - i * 32 for i in range(scale_repeat)]
+        return scales
 
     def _customize_inputs(
         self,

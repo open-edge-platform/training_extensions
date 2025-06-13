@@ -17,6 +17,8 @@ from otx.algo.detection.losses.dfine_loss import DFINECriterion
 
 
 class DEIMCriterion(DFINECriterion):
+    """DEIM criterion for DEIM-DFine model."""
+
     def loss_labels_mal(
         self,
         outputs: dict[str, Tensor],

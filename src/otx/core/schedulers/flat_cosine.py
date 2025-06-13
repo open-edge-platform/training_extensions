@@ -1,25 +1,29 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-"""FlatCosineScheduler schedulers"""
-from torch.optim.lr_scheduler import LRScheduler
-
+"""FlatCosineScheduler schedulers."""
+from __future__ import annotations
 
 import math
 from functools import partial
+from typing import TYPE_CHECKING
+
+from torch.optim.lr_scheduler import LRScheduler
+
+if TYPE_CHECKING:
+    from torch.optim.optimizer import Optimizer
 
 
 def flat_cosine_schedule(
-    total_iters, 
-    warmup_iters, 
-    flat_iters, 
-    no_aug_iters, 
-    current_iter, 
-    init_lr, 
-    min_lr
-):
-    """
-    Computes the learning rate using a warm-up, flat, and cosine decay schedule.
+    total_iters: int,
+    warmup_iters: int,
+    flat_iters: int,
+    no_aug_iters: int,
+    current_iter: int,
+    init_lr: float,
+    min_lr: float,
+) -> float:
+    """Computes the learning rate using a warm-up, flat, and cosine decay schedule.
 
     Args:
         total_iter (int): Total number of iterations.
@@ -35,14 +39,16 @@ def flat_cosine_schedule(
     """
     if current_iter <= warmup_iters:
         return init_lr * (current_iter / float(warmup_iters)) ** 2
-    elif warmup_iters < current_iter <= flat_iters:
+    if warmup_iters < current_iter <= flat_iters:
         return init_lr
-    elif current_iter >= total_iters - no_aug_iters:
+    if current_iter >= total_iters - no_aug_iters:
         return min_lr
-    else:
-        cosine_decay = 0.5 * (1 + math.cos(math.pi * (current_iter - flat_iters) /
-                                           (total_iters - flat_iters - no_aug_iters)))
-        return min_lr + (init_lr - min_lr) * cosine_decay
+
+    cosine_decay = 0.5 * (
+        1 + math.cos(math.pi * (current_iter - flat_iters) / (total_iters - flat_iters - no_aug_iters))
+    )
+    return min_lr + (init_lr - min_lr) * cosine_decay
+
 
 class FlatCosineScheduler(LRScheduler):
     """Flat Cosine Scheduler.
@@ -59,15 +65,15 @@ class FlatCosineScheduler(LRScheduler):
 
     def __init__(
         self,
-        optimizer,
-        iter_per_epoch,
+        optimizer: Optimizer,
+        iter_per_epoch: int,
         lr_gamma: float = 0.5,
-        total_epochs: float = 40, 
+        total_epochs: float = 40,
         warmup_iters: float = 30,
-        flat_epochs: float = -1, 
+        flat_epochs: float = -1,
         no_aug_epochs: float = -1,
         interval: str = "step",
-    ):
+    ) -> None:
         self.base_lrs = [group["lr"] for group in optimizer.param_groups]
         self.min_lrs = [base_lr * lr_gamma for base_lr in self.base_lrs]
         self.interval = interval
@@ -83,19 +89,18 @@ class FlatCosineScheduler(LRScheduler):
         flat_iters = int(iter_per_epoch * self.flat_epochs)
 
         self.lr_func = partial(
-            flat_cosine_schedule, 
+            flat_cosine_schedule,
             total_iters,
             self.warmup_iters,
             flat_iters,
-            no_aug_iters
+            no_aug_iters,
         )
 
         super().__init__(optimizer)
 
-    def get_lr(self):
+    def get_lr(self) -> list[float]:
         """Compute the learning rate for the current epoch."""
         return [
-            self.lr_func(self._step_count, self.base_lrs[i], self.min_lrs[i]) 
-            for i, group in enumerate(self.optimizer.param_groups)
+            self.lr_func(self._step_count, self.base_lrs[i], self.min_lrs[i])
+            for i in range(len(self.optimizer.param_groups))
         ]
-        

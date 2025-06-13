@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 import torch
 
 from otx.algo.detection.backbones.hgnetv2 import HGNetv2
-from otx.algo.detection.d_fine import DFine
 from otx.algo.detection.detectors import DETR
 from otx.algo.detection.heads.dfine_decoder import DFINETransformer
 from otx.algo.detection.losses.deim_loss import DEIMCriterion
 from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
+from otx.algo.detection.rtdetr import RTDETR
 from otx.algo.utils.utils import load_checkpoint
 from otx.core.config.data import TileConfig
 from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from otx.core.types.label import LabelInfoTypes
 
 
-class DEIMDFine(DFine):
+class DEIMDFine(RTDETR):
     """OTX Detection model class for DEIMDFine.
 
     Attributes:
@@ -75,7 +75,6 @@ class DEIMDFine(DFine):
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.multi_scale = multi_scale
         super().__init__(
             model_name=model_name,
             label_info=label_info,
@@ -85,6 +84,7 @@ class DEIMDFine(DFine):
             metric=metric,
             torch_compile=torch_compile,
             tile_config=tile_config,
+            multi_scale=multi_scale,
         )
 
     def _create_model(self, num_classes: int | None = None) -> DETR:
@@ -134,7 +134,7 @@ class DEIMDFine(DFine):
         ]
 
         model = DETR(
-            multi_scale=None if self.multi_scale else [],
+            multi_scale=self.generate_scales(self.data_input_params.input_size[0]) if self.multi_scale else None,
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,
