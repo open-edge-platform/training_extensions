@@ -100,10 +100,9 @@ class OTXEngine(Engine):
 
     def __init__(
         self,
-        data: OTXDataModule | PathLike | None = None,
-        task: OTXTaskType | None = None,
+        model: OTXModel | PathLike,
+        data: OTXDataModule | PathLike,
         work_dir: PathLike = "./otx-workspace",
-        model: OTXModel | str | None = None,
         checkpoint: PathLike | None = None,
         device: DeviceType = DeviceType.auto,
         num_devices: int = 1,
@@ -112,34 +111,36 @@ class OTXEngine(Engine):
         """Initializes the OTX Engine.
 
         Args:
-            data (OTXDataModule | PathLike | None, optional): The data module for the engine
-                or root directory for the data. Defaults to None.
+            model (OTXModel | PathLike): The OTX model for the engine or model config path.
+            data (OTXDataModule | PathLike): The data module for the engine
+                or root directory for the data.
             task (OTXTaskType | None, optional): The type of OTX task. Defaults to None.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
-            model (OTXModel | str | None, optional): The model for the engine. Defaults to None.
             checkpoint (PathLike | None, optional): Path to the checkpoint file (model weights). Defaults to None.
             device (DeviceType, optional): The device type to use. Defaults to DeviceType.auto.
             num_devices (int, optional): The number of devices to use. If it is 2 or more, it will behave as multi-gpu.
             **kwargs: Additional keyword arguments for pl.Trainer.
         """
         self._cache = TrainerArgumentsCache(**kwargs)
-        self.checkpoint = checkpoint
         self.work_dir = work_dir
         self.device = device  # type: ignore[assignment]
         self.num_devices = num_devices
+        if not isinstance(data, (OTXDataModule, str, os.PathLike)):
+            msg = f"data should be OTXDataModule or PathLike, but got {type(data)}"
+            raise TypeError(msg)
         self._auto_configurator = AutoConfigurator(
             data_root=data if isinstance(data, (str, os.PathLike)) else None,
-            task=data.task if isinstance(data, OTXDataModule) else task,
-            model_name=None if isinstance(model, OTXModel) else model,
+            task=data.task if isinstance(data, OTXDataModule) else None,
+            model_config_path=None if isinstance(model, OTXModel) else model,
         )
         self._datamodule: OTXDataModule | None = (
             data if isinstance(data, OTXDataModule) else self._auto_configurator.get_datamodule()
         )
-        self.task = task if task is not None else self._auto_configurator.task
 
         self._trainer: Trainer | None = None
-        get_model_args: dict[str, Any] = {}
-        if self._datamodule is not None:
+
+        if not isinstance(model, OTXModel):
+            get_model_args: dict[str, Any] = {}
             get_model_args["label_info"] = self._datamodule.label_info
             input_size = self._datamodule.input_size
             get_model_args["data_input_params"] = DataInputParams(
@@ -148,14 +149,25 @@ class OTXEngine(Engine):
                 std=self._datamodule.input_std,
             )
 
-        self._model: OTXModel = (
-            model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
-        )
+            model = self._auto_configurator.get_model(**get_model_args)
+
+        self._model: OTXModel = model
+
+        if self._model.task != self._datamodule.task:
+            msg = (
+                f"Task of the model ({self._model.task}) is not equal to the task of the datamodule ({self._datamodule.task}). "
+                "Please, check whether you use compatible dataset."
+            )
+            raise ValueError(msg)
+
+        self.task = self._model.task
+
+        self.checkpoint = checkpoint
         if self.checkpoint:
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
-            self.model.load_state_dict_incrementally(torch.load(self.checkpoint))
+            self._model.load_state_dict_incrementally(torch.load(self.checkpoint))
 
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points

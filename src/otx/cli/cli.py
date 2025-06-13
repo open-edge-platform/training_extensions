@@ -282,23 +282,6 @@ class OTXCLI:
                 warn(f"Load default config from {self.cache_dir / 'configs.yaml'}.", stacklevel=0)
             return parser_kwargs
 
-        # If don't use cache, use the default config from auto configuration.
-        data_root = None
-        task = None
-        if "--data_root" in sys.argv:
-            data_root = sys.argv[sys.argv.index("--data_root") + 1]
-        if "--task" in sys.argv:
-            task = sys.argv[sys.argv.index("--task") + 1]
-        enable_auto_config = data_root is not None and "--config" not in sys.argv
-        if enable_auto_config:
-            from otx.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
-
-            auto_configurator = AutoConfigurator(
-                data_root=data_root,
-                task=OTXTaskType(task) if task is not None else task,
-            )
-            config_file_path = DEFAULT_CONFIG_PER_TASK[auto_configurator.task]
-            parser_kwargs["default_config_files"] = [str(config_file_path)]
         return parser_kwargs
 
     def _set_extension_subcommands_parser(self, parser_subcommands: _ActionSubCommands) -> None:

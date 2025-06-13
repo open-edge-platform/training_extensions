@@ -45,6 +45,7 @@ from otx.metrics import MetricInput, NullMetricCallable
 from otx.types.export import OTXExportFormatType, TaskLevelExportParameters
 from otx.types.label import LabelInfo, LabelInfoTypes
 from otx.types.precision import OTXPrecisionType
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -117,6 +118,7 @@ class OTXModel(LightningModule):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
+        task: OTXTaskType,
         model_name: str = "OTXModel",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -150,6 +152,7 @@ class OTXModel(LightningModule):
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)
         self.metric_callable = ensure_callable(metric)
+        self._task = task
 
         self.torch_compile = torch_compile
         self._explain_mode = False
@@ -901,3 +904,8 @@ class OTXModel(LightningModule):
         ):
             msg = f"Input size should be a multiple of {self.input_size_multiplier}, but got {input_size} instead."
             raise ValueError(msg)
+
+    @property
+    def task(self) -> OTXTaskType:
+        """Get  task type."""
+        return self._task

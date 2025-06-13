@@ -1,3 +1,4 @@
+task: SEMANTIC_SEGMENTATION
 model:
   class_path: otx.backend.native.models.segmentation.dino_v2_seg.DinoV2Seg
   init_args:

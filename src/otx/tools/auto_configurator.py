@@ -90,35 +90,7 @@ OVMODEL_PER_TASK = {
 }
 
 
-def configure_task(data_root: PathLike) -> OTXTaskType:
-    """Configures the task based on the given data root.
 
-    Args:
-        data_root (PathLike): The root directory of the data.
-
-    Returns:
-        OTXTaskType: The configured task type, or None if data_root is None.
-
-    Raises:
-        ValueError: If the data format is not supported.
-    """
-    data_root = Path(data_root).resolve()
-
-    data_format = datumaro.Environment().detect_dataset(str(data_root))
-    if not len(data_format):
-        msg = "Unable to detect data format."
-        raise ValueError(msg)
-    if len(data_format) > 1:
-        logger.warning(f"Found multiple data formats: {data_format}. We will use the first one.")
-    data_format = data_format[0]
-    if data_format not in TASK_PER_DATA_FORMAT:
-        msg = f"Can't find proper task. We do not support {data_format} format, yet."
-        raise ValueError(msg)
-    if len(TASK_PER_DATA_FORMAT[data_format]) > 1:
-        logger.warning(
-            f"Found multiple tasks with {data_format}: {TASK_PER_DATA_FORMAT[data_format]}. We will use the first one.",
-        )
-    return TASK_PER_DATA_FORMAT[data_format][0]
 
 
 class AutoConfigurator:
@@ -148,12 +120,19 @@ class AutoConfigurator:
         self,
         data_root: PathLike | None = None,
         task: OTXTaskType | None = None,
-        model_name: str | None = None,
+        model_config_path: PathLike | None = None,
     ) -> None:
         self.data_root = data_root
         self._task = task
-        self._config: dict | None = None
-        self.model_name: str | None = model_name
+        if model_config_path and not Path(model_config_path).exists():
+            msg = f"Model config path {model_config_path} does not exist."
+            raise FileNotFoundError(msg)
+        elif model_config_path:
+            self._config = self._load_default_config(config_path=model_config_path)
+        elif task:
+            self._config = self._load_default_config(task=task)
+        else:
+            self._config = None
 
     @property
     def task(self) -> OTXTaskType:
@@ -167,9 +146,8 @@ class AutoConfigurator:
         """
         if self._task is not None:
             return self._task
-        if self.data_root is not None:
-            self._task = configure_task(self.data_root)
-            return self._task
+        if self._config is not None and "task" in self._config:
+            return OTXTaskType(self._config["task"])
         msg = "There are no ready task"
         raise RuntimeError(msg)
 
@@ -177,17 +155,12 @@ class AutoConfigurator:
     def config(self) -> dict:
         """Retrieves the configuration for the auto configurator.
 
-        If the configuration has not been loaded yet, it will be loaded using the default configuration
-        based on the model name.
-
         Returns:
             dict: The configuration as a dict object.
         """
-        if self._config is None:
-            self._config = self._load_default_config(self.model_name)
         return self._config
 
-    def _load_default_config(self, model_name: str | None = None, task: OTXTaskType | None = None) -> dict:
+    def _load_default_config(self, config_path: PathLike | None = None, task: OTXTaskType | None = None) -> dict:
         """Load the default configuration for the specified model.
 
         Args:
@@ -200,18 +173,15 @@ class AutoConfigurator:
         Raises:
             ValueError: If the task doesn't supported for auto-configuration.
         """
-        task = task or self.task
-        config_file = DEFAULT_CONFIG_PER_TASK.get(task, None)
-        if config_file is None:
-            msg = f"{task} doesn't support Auto-Configuration."
-            raise ValueError(msg)
-        if model_name is not None:
-            model_path = str(config_file).split("/")
-            model_path[-1] = f"{model_name}.yaml"
-            config_file = Path("/".join(model_path))
         from otx.cli.utils.jsonargparse import get_configuration
 
-        return get_configuration(config_file)
+        if config_path is None and task is None:
+            msg = "Either config_path or task must be provided."
+            raise ValueError(msg)
+        elif config_path is None:
+            config_path = DEFAULT_CONFIG_PER_TASK.get(task, None)
+
+        return get_configuration(config_path)
 
     def get_datamodule(self, data_root: PathLike | None = None) -> OTXDataModule | None:
         """Returns an instance of OTXDataModule with the configured data root.

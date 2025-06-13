@@ -51,6 +51,7 @@ class OTXAnomaly(OTXModel):
         super().__init__(
             label_info=AnomalyLabelInfo(),
             data_input_params=self.data_input_params,
+            task=OTXTaskType.ANOMALY,
             model_name="otx_anomaly_model",
         )
         self.optimizer: list[OptimizerCallable] | OptimizerCallable = None

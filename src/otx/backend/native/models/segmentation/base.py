@@ -28,6 +28,7 @@ from otx.metrics import MetricInput
 from otx.metrics.dice import SegmCallable
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -66,6 +67,7 @@ class OTXSegmentationModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
+            task=OTXTaskType.SEMANTIC_SEGMENTATION,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,

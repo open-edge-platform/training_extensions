@@ -21,6 +21,7 @@ from otx.metrics.accuracy import (
 )
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -55,6 +56,7 @@ class OTXMultilabelClsModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
+            task=OTXTaskType.MULTI_LABEL_CLS,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,

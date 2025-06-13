@@ -1,3 +1,4 @@
+task: SEMANTIC_SEGMENTATION
 model:
   class_path: otx.backend.native.models.segmentation.segnext.SegNext
   init_args:
