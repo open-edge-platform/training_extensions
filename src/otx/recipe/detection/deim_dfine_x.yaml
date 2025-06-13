@@ -16,9 +16,9 @@ model:
       class_path: otx.core.schedulers.FlatCosineScheduler
       init_args:
         lr_gamma: 0.5
-        total_epochs: 40
+        decay_duration: 50
         warmup_iters: 30
-        flat_epochs: 23
+        flat_lr_duration: 23 # after warmup, 23 epochs with flat learning rate
         no_aug_epochs: 8
 
 engine:

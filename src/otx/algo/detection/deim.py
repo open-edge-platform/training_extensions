@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-import torch
-
 from otx.algo.detection.backbones.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors import DETR
 from otx.algo.detection.heads.dfine_decoder import DFINETransformer
@@ -21,6 +19,7 @@ from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 
 if TYPE_CHECKING:
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.core.metrics import MetricCallable

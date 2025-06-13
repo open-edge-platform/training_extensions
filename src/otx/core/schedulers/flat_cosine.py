@@ -15,9 +15,9 @@ if TYPE_CHECKING:
 
 
 def flat_cosine_schedule(
-    total_iters: int,
+    decay_iters: int,
     warmup_iters: int,
-    flat_iters: int,
+    flat_lr_iters: int,
     no_aug_iters: int,
     current_iter: int,
     init_lr: float,
@@ -26,10 +26,10 @@ def flat_cosine_schedule(
     """Computes the learning rate using a warm-up, flat, and cosine decay schedule.
 
     Args:
-        total_iter (int): Total number of iterations.
+        decay_iters (int): Total number of iterations.
         warmup_iter (int): Number of iterations for warm-up phase.
-        flat_iter (int): Number of iterations for flat phase.
-        no_aug_iter (int): Number of iterations for no-augmentation phase.
+        flat_lr_iters (int): Number of iterations for flat phase.
+        no_aug_iters (int): Number of iterations for no-augmentation phase.
         current_iter (int): Current iteration.
         init_lr (float): Initial learning rate.
         min_lr (float): Minimum learning rate.
@@ -39,13 +39,13 @@ def flat_cosine_schedule(
     """
     if current_iter <= warmup_iters:
         return init_lr * (current_iter / float(warmup_iters)) ** 2
-    if warmup_iters < current_iter <= flat_iters:
+    if warmup_iters < current_iter <= flat_lr_iters:
         return init_lr
-    if current_iter >= total_iters - no_aug_iters:
+    if current_iter >= decay_iters - no_aug_iters:
         return min_lr
 
     cosine_decay = 0.5 * (
-        1 + math.cos(math.pi * (current_iter - flat_iters) / (total_iters - flat_iters - no_aug_iters))
+        1 + math.cos(math.pi * (current_iter - flat_lr_iters) / (decay_iters - flat_lr_iters - no_aug_iters))
     )
     return min_lr + (init_lr - min_lr) * cosine_decay
 
@@ -58,9 +58,13 @@ class FlatCosineScheduler(LRScheduler):
 
     Args:
         optimizer (Optimizer): The optimizer for which to schedule the learning rate.
-        num_flat_steps (int): Number of steps during which the learning rate remains constant.
-        num_decay_steps (int): Number of steps over which the learning rate decays.
-        last_epoch (int, optional): The index of the last epoch. Default: -1.
+        iter_per_epoch (int): Number of iterations per epoch.
+        lr_gamma (float): Factor by which the learning rate is multiplied at the end of the schedule.
+        decay_duration (int): Total duration of the annealing phase in epochs.
+        warmup_iters (int): Number of iterations for the warm-up phase.
+        flat_lr_duration (int): Duration of the flat learning rate phase in epochs.
+        no_aug_epochs (int): Number of epochs without augmentation.
+        interval (str): Interval for updating the learning rate, either "step" or "epoch".
     """
 
     def __init__(
@@ -68,31 +72,25 @@ class FlatCosineScheduler(LRScheduler):
         optimizer: Optimizer,
         iter_per_epoch: int,
         lr_gamma: float = 0.5,
-        total_epochs: float = 40,
-        warmup_iters: float = 30,
-        flat_epochs: float = -1,
-        no_aug_epochs: float = -1,
+        decay_duration: int = 40,
+        warmup_iters: int = 30,
+        flat_lr_duration: int = 23,
+        no_aug_epochs: int = 8,
         interval: str = "step",
     ) -> None:
         self.base_lrs = [group["lr"] for group in optimizer.param_groups]
         self.min_lrs = [base_lr * lr_gamma for base_lr in self.base_lrs]
         self.interval = interval
 
-        self.lr_gamma = lr_gamma
-        self.no_aug_epochs = no_aug_epochs
-        self.flat_epochs = flat_epochs
-        self.total_epochs = total_epochs
-        self.warmup_iters = warmup_iters
-
-        total_iters = int(iter_per_epoch * self.total_epochs)
-        no_aug_iters = int(iter_per_epoch * self.no_aug_epochs)
-        flat_iters = int(iter_per_epoch * self.flat_epochs)
+        decay_iters = int(iter_per_epoch * decay_duration)
+        no_aug_iters = int(iter_per_epoch * no_aug_epochs)
+        flat_lr_iters = int(iter_per_epoch * flat_lr_duration)
 
         self.lr_func = partial(
             flat_cosine_schedule,
-            total_iters,
-            self.warmup_iters,
-            flat_iters,
+            decay_iters,
+            warmup_iters,
+            flat_lr_iters,
             no_aug_iters,
         )
 
