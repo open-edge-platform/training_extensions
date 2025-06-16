@@ -9,7 +9,6 @@ model:
     task: ANOMALY
 
 engine:
-  task: ANOMALY
   device: auto
 
 callback_monitor: image_F1Score # this has no effect as Padim does not need to be trained

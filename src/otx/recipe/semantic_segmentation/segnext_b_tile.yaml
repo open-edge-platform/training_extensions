@@ -26,7 +26,6 @@ model:
             last_epoch: -1
 
 engine:
-  task: SEMANTIC_SEGMENTATION
   device: auto
 
 callback_monitor: val/Dice
