@@ -4,6 +4,7 @@
 import pytest
 
 from otx.tools.converter import ConfigConverter
+from otx.types.task import OTXTaskType
 
 
 class TestConfigConverter:
@@ -28,14 +29,14 @@ class TestConfigConverter:
         default_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json")
         assert default_config["task"] == "MULTI_CLASS_CLS"
 
-        override_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json", task="MULTI_LABEL_CLS")
+        override_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json", task=OTXTaskType("MULTI_LABEL_CLS"))
         assert override_config["task"] == "MULTI_LABEL_CLS"
 
-        override_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json", task="H_LABEL_CLS")
+        override_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json", task=OTXTaskType("H_LABEL_CLS"))
         assert override_config["task"] == "H_LABEL_CLS"
 
         with pytest.raises(FileNotFoundError):
-            ConfigConverter.convert("tests/assets/geti-configs/cls.json", task="DETECTION")
+            ConfigConverter.convert("tests/assets/geti-configs/cls.json", task=OTXTaskType("DETECTION"))
 
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"

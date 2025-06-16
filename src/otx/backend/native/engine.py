@@ -127,15 +127,6 @@ class OTXEngine(Engine):
             model = self._auto_configurator.get_model(**get_model_args)
 
         self._model: OTXModel = model
-
-        if self._model.task != self._datamodule.task:
-            msg = (
-                f"Task of the model ({self._model.task}) is not equal to "
-                f"the task of the datamodule ({self._datamodule.task}). "
-                "Please, check whether you use compatible dataset."
-            )
-            raise ValueError(msg)
-
         self.task = self._model.task
 
         self.checkpoint = checkpoint

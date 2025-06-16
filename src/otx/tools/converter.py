@@ -218,10 +218,23 @@ class ConfigConverter:
         if param_dict.get("enable_tiling", None) and "_tile" not in Path(task_info["model_config_path"]).name:
             task_info["model_config_path"] += "_tile"
         # classification task type can't be deducted from template name, try to extract from config
-        if "sub_task_type" in template_config and "_CLS" in task_info["task"]:
-            task_info["task"] = template_config["sub_task_type"]
+        if "sub_task_type" in template_config and "_cls" in Path(task_info["model_config_path"]).parent.name:
+            new_task = template_config["sub_task_type"].lower()
+            task_info["model_config_path"] = (
+                Path("src/otx/recipe/classification") / new_task / Path(task_info["model_config_path"]).name
+            )
         if task is not None:
-            task_info["task"] = task
+            # override the task for the given model
+            config_path = Path(task_info["model_config_path"])
+            parent_path = config_path.parent.parent if "_cls" in config_path.parent.name else config_path.parent
+            name_of_model = Path(task_info["model_config_path"]).name
+            task_info["model_config_path"] = str(parent_path / task.value.lower() / name_of_model)
+            if not Path(task_info["model_config_path"]).exists():
+                msg = (
+                    f"Overrided model config file: {task_info['model_config_path']} "
+                    "with the given task: {task.value} does not exist."
+                )
+                raise FileNotFoundError(msg)
         default_config = ConfigConverter._get_default_config(task_info)
         ConfigConverter._update_params(default_config, param_dict)
         ConfigConverter._remove_unused_key(default_config)
