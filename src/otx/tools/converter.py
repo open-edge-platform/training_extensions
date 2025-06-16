@@ -225,9 +225,11 @@ class ConfigConverter:
             )
         if task is not None:
             # override the task for the given model
-            config_path = Path(task_info["model_config_path"])
-            parent_path = config_path.parent.parent if "_cls" in config_path.parent.name else config_path.parent
-            name_of_model = Path(task_info["model_config_path"]).name
+            full_config_path = Path(task_info["model_config_path"])
+            parent_path = (
+                full_config_path.parent.parent if "_cls" in full_config_path.parent.name else full_config_path.parent
+            )
+            name_of_model = full_config_path.name
             task_info["model_config_path"] = str(parent_path / task.value.lower() / name_of_model)
             if not Path(task_info["model_config_path"]).exists():
                 msg = (

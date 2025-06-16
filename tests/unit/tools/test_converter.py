@@ -29,7 +29,10 @@ class TestConfigConverter:
         default_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json")
         assert default_config["task"] == "MULTI_CLASS_CLS"
 
-        override_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json", task=OTXTaskType("MULTI_LABEL_CLS"))
+        override_config = ConfigConverter.convert(
+            "tests/assets/geti-configs/cls.json",
+            task=OTXTaskType("MULTI_LABEL_CLS"),
+        )
         assert override_config["task"] == "MULTI_LABEL_CLS"
 
         override_config = ConfigConverter.convert("tests/assets/geti-configs/cls.json", task=OTXTaskType("H_LABEL_CLS"))
