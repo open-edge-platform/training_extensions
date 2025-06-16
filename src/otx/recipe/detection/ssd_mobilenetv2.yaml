@@ -1,3 +1,4 @@
+task: DETECTION
 model:
   class_path: otx.backend.native.models.detection.ssd.SSD
   init_args:
@@ -24,7 +25,6 @@ model:
             monitor: val/map_50
 
 engine:
-  task: DETECTION
   device: auto
 
 callback_monitor: val/map_50

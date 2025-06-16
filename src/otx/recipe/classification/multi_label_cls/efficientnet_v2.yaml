@@ -1,3 +1,4 @@
+task: MULTI_LABEL_CLS
 model:
   class_path: otx.backend.native.models.classification.multilabel_models.timm_model.TimmModelMultilabelCls
   init_args:

@@ -1,3 +1,4 @@
+task: ANOMALY
 model:
   class_path: otx.backend.native.models.anomaly.stfpm.Stfpm
   init_args:

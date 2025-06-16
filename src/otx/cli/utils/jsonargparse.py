@@ -421,7 +421,7 @@ def patch_update_configs() -> Iterator[None]:
         ArgumentParser.get_defaults = original_get_defaults
 
 
-def get_configuration(config_path: str | Path, subcommand: str = "train", **kwargs) -> dict:
+def get_configuration(config_path: str | PathLike, subcommand: str = "train", **kwargs) -> dict:
     """Get the configuration from the given path.
 
     Args:
@@ -445,7 +445,6 @@ def get_configuration(config_path: str | Path, subcommand: str = "train", **kwar
     cli_args = [
         "verbose",
         "data_root",
-        "task",
         "seed",
         "callback_monitor",
         "resume",

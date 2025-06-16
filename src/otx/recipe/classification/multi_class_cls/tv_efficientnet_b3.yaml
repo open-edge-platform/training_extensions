@@ -1,3 +1,4 @@
+task: MULTI_CLASS_CLS
 model:
   class_path: otx.backend.native.models.classification.multiclass_models.torchvision_model.TVModelMulticlassCls
   init_args:
@@ -22,7 +23,6 @@ model:
             eta_min: 0
 
 engine:
-  task: MULTI_CLASS_CLS
   device: auto
 
 callback_monitor: val/accuracy

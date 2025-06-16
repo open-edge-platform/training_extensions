@@ -13,12 +13,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from warnings import warn
 
-import datumaro
 from jsonargparse import ArgumentParser, Namespace
 
 from otx.backend.native.cli.utils import get_otx_root_path
 from otx.backend.native.models.base import DataInputParams, OTXModel
-from otx.backend.native.utils.instantiators import partial_instantiate_class
 from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.data.module import OTXDataModule
 from otx.types import PathLike
@@ -27,9 +25,6 @@ from otx.types.task import OTXTaskType
 from otx.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
 if TYPE_CHECKING:
-    from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from torchmetrics import Metric
-
     from otx.backend.openvino.models.base import OVModel
 
 
@@ -51,28 +46,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
-TASK_PER_DATA_FORMAT = {
-    "imagenet_with_subset_dirs": [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.H_LABEL_CLS],
-    "datumaro": [OTXTaskType.MULTI_LABEL_CLS],
-    "coco_person_keypoints": [OTXTaskType.KEYPOINT_DETECTION],
-    "coco_instances": [
-        OTXTaskType.DETECTION,
-        OTXTaskType.ROTATED_DETECTION,
-        OTXTaskType.INSTANCE_SEGMENTATION,
-    ],
-    "coco": [
-        OTXTaskType.DETECTION,
-        OTXTaskType.ROTATED_DETECTION,
-        OTXTaskType.INSTANCE_SEGMENTATION,
-    ],
-    "common_semantic_segmentation_with_subset_dirs": [OTXTaskType.SEMANTIC_SEGMENTATION],
-    "mvtec_classification": [
-        OTXTaskType.ANOMALY,
-        OTXTaskType.ANOMALY_CLASSIFICATION,
-        OTXTaskType.ANOMALY_DETECTION,
-        OTXTaskType.ANOMALY_SEGMENTATION,
-    ],
-}
 
 OVMODEL_PER_TASK = {
     OTXTaskType.MULTI_CLASS_CLS: "otx.backend.openvino.models.OVMulticlassClassificationModel",
@@ -88,9 +61,6 @@ OVMODEL_PER_TASK = {
     OTXTaskType.ANOMALY_SEGMENTATION: "otx.backend.native.models.anomaly.openvino_model.AnomalyOpenVINO",
     OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.OVKeypointDetectionModel",
 }
-
-
-
 
 
 class AutoConfigurator:
@@ -127,12 +97,14 @@ class AutoConfigurator:
         if model_config_path and not Path(model_config_path).exists():
             msg = f"Model config path {model_config_path} does not exist."
             raise FileNotFoundError(msg)
-        elif model_config_path:
-            self._config = self._load_default_config(config_path=model_config_path)
+        if model_config_path:
+            self._config: dict = self._load_default_config(config_path=model_config_path)
+            self._task = OTXTaskType(self._config.get("task", task))
         elif task:
             self._config = self._load_default_config(task=task)
         else:
-            self._config = None
+            msg = "Either task or model_config_path must be provided."
+            raise ValueError(msg)
 
     @property
     def task(self) -> OTXTaskType:
@@ -175,23 +147,24 @@ class AutoConfigurator:
         """
         from otx.cli.utils.jsonargparse import get_configuration
 
-        if config_path is None and task is None:
-            msg = "Either config_path or task must be provided."
-            raise ValueError(msg)
-        elif config_path is None:
-            config_path = DEFAULT_CONFIG_PER_TASK.get(task, None)
+        task = task if task is not None else self._task
+        if config_path is None:
+            if task is None:
+                msg = "Either config_path or task must be provided."
+                raise ValueError(msg)
+            config_path = DEFAULT_CONFIG_PER_TASK[task]
 
         return get_configuration(config_path)
 
-    def get_datamodule(self, data_root: PathLike | None = None) -> OTXDataModule | None:
+    def get_datamodule(self, data_root: PathLike | None = None) -> OTXDataModule:
         """Returns an instance of OTXDataModule with the configured data root.
 
         Returns:
             OTXDataModule | None: An instance of OTXDataModule.
         """
         if data_root is None and self.data_root is None:
-            logger.warning("No data root provided. Returning None.")
-            return None
+            msg = "No data root provided."
+            raise ValueError(msg)
         if data_root is not None and not isinstance(data_root, (str, os.PathLike)):
             msg = f"data_root should be of type PathLike, but got {type(data_root)}"
             raise TypeError(msg)
@@ -293,57 +266,6 @@ class AutoConfigurator:
         )
         return model_parser.instantiate_classes(Namespace(model=model_config)).get("model")
 
-    def get_optimizer(self) -> list[OptimizerCallable] | None:
-        """Returns the optimizer callable based on the configuration.
-
-        Returns:
-            list[OptimizerCallable] | None: The optimizer callable.
-        """
-        if (
-            (model_config := self.config.get("model", None))
-            and (init_args := model_config.get("init_args", None))
-            and (config := init_args.get("optimizer", None))
-        ):
-            if callable(config):
-                return [config]
-            return partial_instantiate_class(init=config)
-
-        return None
-
-    def get_scheduler(self) -> list[LRSchedulerCallable] | None:
-        """Returns the instantiated scheduler based on the configuration.
-
-        Returns:
-            list[LRSchedulerCallable] | None: The instantiated scheduler.
-        """
-        if (
-            (model_config := self.config.get("model", None))
-            and (init_args := model_config.get("init_args", None))
-            and (config := init_args.get("scheduler", None))
-        ):
-            if callable(config):
-                return [config]
-            return partial_instantiate_class(init=config)
-
-        return None
-
-    def get_metric(self) -> Metric | None:
-        """Returns the instantiated metric based on the configuration.
-
-        Returns:
-            Metric | None: The instantiated metric.
-        """
-        if self.task in DEFAULT_CONFIG_PER_TASK:
-            metric_config = self.config.get("metric", None)
-            logger.warning(f"Set Default Metric: {metric_config}")
-
-            # Currently, single metric only available.
-            if metric_config:
-                metric = partial_instantiate_class(init=metric_config)
-                return metric[0] if isinstance(metric, list) else metric
-
-        return None
-
     def get_ov_model(self, model_name: PathLike, task: OTXTaskType | None = None) -> OVModel:
         """Retrieves the OVModel instance based on the given model name and label information.
 
@@ -384,7 +306,12 @@ class AutoConfigurator:
         Returns:
             OTXDataModule: The modified OTXDataModule object with OpenVINO subset transforms applied.
         """
-        ov_config = self._load_default_config(model_name="openvino_model", task=task)["data"]
+        task = task if task is not None else self._task
+        if task is None:
+            msg = "Task must be provided to update OpenVINO subset pipeline."
+            raise ValueError(msg)
+        ov_config_path = DEFAULT_CONFIG_PER_TASK[task].parent / "openvino_model.yaml"
+        ov_config = self._load_default_config(config_path=ov_config_path)["data"]
         subset_config = getattr(datamodule, f"{subset}_subset")
         subset_config.batch_size = ov_config[f"{subset}_subset"]["batch_size"]
         subset_config.transform_lib_type = ov_config[f"{subset}_subset"]["transform_lib_type"]

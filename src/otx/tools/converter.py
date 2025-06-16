@@ -26,189 +26,145 @@ from otx.types.task import OTXTaskType
 TEMPLATE_ID_DICT = {
     # MULTI_CLASS_CLS
     "Custom_Image_Classification_DeiT-Tiny": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "deit_tiny",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/deit_tiny",
     },
     "Custom_Image_Classification_EfficinetNet-B0": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "efficientnet_b0",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_b0",
     },
     "Custom_Image_Classification_EfficientNet-V2-S": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "efficientnet_v2",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_v2",
     },
     "Custom_Image_Classification_MobileNet-V3-large-1x": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "mobilenet_v3_large",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large",
     },
     "Custom_Image_Classification_EfficientNet-B3": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "tv_efficientnet_b3",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3",
     },
     "Custom_Image_Classification_EfficientNet-V2-L": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "tv_efficientnet_v2_l",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l",
     },
     "Custom_Image_Classification_MobileNet-V3-small": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "tv_mobilenet_v3_small",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small",
     },
     # DETECTION
     "Custom_Object_Detection_Gen3_ATSS": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "atss_mobilenetv2",
+        "model_config_path": "src/otx/recipe/detection/atss_mobilenetv2",
     },
     "Object_Detection_ResNeXt101_ATSS": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "atss_resnext101",
+        "model_config_path": "src/otx/recipe/detection/atss_resnext101",
     },
     "Custom_Object_Detection_Gen3_SSD": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "ssd_mobilenetv2",
+        "model_config_path": "src/otx/recipe/detection/ssd_mobilenetv2",
     },
     "Object_Detection_YOLOX_X": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_x",
+        "model_config_path": "src/otx/recipe/detection/yolox_x",
     },
     "Object_Detection_YOLOX_L": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_l",
+        "model_config_path": "src/otx/recipe/detection/yolox_l",
     },
     "Object_Detection_YOLOX_S": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_s",
+        "model_config_path": "src/otx/recipe/detection/yolox_s",
     },
     "Custom_Object_Detection_YOLOX": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_tiny",
+        "model_config_path": "src/otx/recipe/detection/yolox_tiny",
     },
     "Object_Detection_RTDetr_18": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtdetr_18",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_18",
     },
     "Object_Detection_RTDetr_50": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtdetr_50",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_50",
     },
     "Object_Detection_RTDetr_101": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtdetr_101",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_101",
     },
     "Object_Detection_RTMDet_tiny": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtmdet_tiny",
+        "model_config_path": "src/otx/recipe/detection/rtmdet_tiny",
     },
     "Object_Detection_DFine_X": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "dfine_x",
+        "model_config_path": "src/otx/recipe/detection/dfine_x",
     },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_r50",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_swint",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_swint",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_efficientnetb2b",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b",
     },
     "Custom_Instance_Segmentation_RTMDet_tiny": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "rtmdet_inst_tiny",
+        "model_config_path": "src/otx/recipe/instance_segmentation/rtmdet_inst_tiny",
     },
     "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_r50_tv",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50_tv",
     },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "task": OTXTaskType.ROTATED_DETECTION,
-        "model_name": "maskrcnn_r50",
+        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50",
     },
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "task": OTXTaskType.ROTATED_DETECTION,
-        "model_name": "maskrcnn_efficientnetb2b",
+        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b",
     },
     # SEMANTIC_SEGMENTATION
     "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_18",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_18",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_s",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_s",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_x",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_x",
     },
     "Custom_Semantic_Segmentation_SegNext_t": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "segnext_t",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_t",
     },
     "Custom_Semantic_Segmentation_SegNext_s": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "segnext_s",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_s",
     },
     "Custom_Semantic_Segmentation_SegNext_B": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "segnext_b",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_b",
     },
     "Custom_Semantic_Segmentation_DINOV2_S": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "dino_v2",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/dino_v2",
     },
     # ANOMALY
     "ote_anomaly_padim": {
-        "task": OTXTaskType.ANOMALY,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly/padim",
     },
     "ote_anomaly_stfpm": {
-        "task": OTXTaskType.ANOMALY,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly/stfpm",
     },
     "ote_anomaly_uflow": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "uflow",
+        "model_config_path": "src/otx/recipe/anomaly/uflow",
     },
     # ANOMALY CLASSIFICATION
     "ote_anomaly_classification_padim": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly_classification/padim",
     },
     "ote_anomaly_classification_stfpm": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_classification/stfpm",
     },
     # ANOMALY_DETECTION
     "ote_anomaly_detection_padim": {
-        "task": OTXTaskType.ANOMALY_DETECTION,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly_detection/padim",
     },
     "ote_anomaly_detection_stfpm": {
-        "task": OTXTaskType.ANOMALY_DETECTION,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_detection/stfpm",
     },
     # ANOMALY_SEGMENTATION
     "ote_anomaly_segmentation_padim": {
-        "task": OTXTaskType.ANOMALY_SEGMENTATION,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly_segmentation/padim",
     },
     "ote_anomaly_segmentation_stfpm": {
-        "task": OTXTaskType.ANOMALY_SEGMENTATION,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_segmentation/stfpm",
     },
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
-        "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny",
+        "model_config_path": "src/otx/recipe/keypoint_detection/rtmpose_tiny",
     },
 }
 
@@ -259,8 +215,8 @@ class ConfigConverter:
         param_dict = ConfigConverter._get_params(hyperparameters)
 
         task_info = TEMPLATE_ID_DICT[template_config["model_template_id"]]
-        if param_dict.get("enable_tiling", None) and not task_info["model_name"].endswith("_tile"):
-            task_info["model_name"] += "_tile"
+        if param_dict.get("enable_tiling", None) and "_tile" not in Path(task_info["model_config_path"]).name:
+            task_info["model_config_path"] += "_tile"
         # classification task type can't be deducted from template name, try to extract from config
         if "sub_task_type" in template_config and "_CLS" in task_info["task"]:
             task_info["task"] = template_config["sub_task_type"]
@@ -274,6 +230,20 @@ class ConfigConverter:
     @staticmethod
     def _get_default_config(task_info: dict) -> dict:
         """Return default otx conifg for template use."""
+        if Path(task_info["model_config_path"]).suffix != ".yaml":
+            task_info["model_config_path"] = str(task_info["model_config_path"]) + ".yaml"
+        if "task" in task_info:
+            # override the task with the same model
+            path_to_task = Path(task_info["model_config_path"]).parent.parent
+            name_of_file = Path(task_info["model_config_path"]).name
+            task_info["model_config_path"] = path_to_task / task_info["task"].lower() / name_of_file
+            if not task_info["model_config_path"].exists():
+                msg = (
+                    f"Overrided model config file: {task_info['model_config_path']} "
+                    "with the given task: {task_info['task']} does not exist."
+                )
+                raise FileNotFoundError(msg)
+
         return AutoConfigurator(**task_info).config  # type: ignore[arg-type]
 
     @staticmethod

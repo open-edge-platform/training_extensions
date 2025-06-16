@@ -1,3 +1,4 @@
+task: ANOMALY_SEGMENTATION
 model:
   class_path: otx.backend.native.models.anomaly.stfpm.Stfpm
   init_args:

@@ -10,7 +10,6 @@ from pytest_mock import MockerFixture
 from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.backend.native.models.classification.multiclass_models import EfficientNetMulticlassCls
-from otx.backend.native.models.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
 from otx.types.export import OTXExportFormatType
 from otx.types.label import NullLabelInfo
 from otx.types.precision import OTXPrecisionType
@@ -20,8 +19,7 @@ from otx.types.precision import OTXPrecisionType
 def fxt_engine(tmp_path) -> OTXEngine:
     return OTXEngine(
         data="tests/assets/classification_dataset",
-        task="MULTI_CLASS_CLS",
-        model="tv_mobilenet_v3_small",
+        model="src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
         work_dir=tmp_path,
         max_epochs=90,
     )
@@ -29,12 +27,13 @@ def fxt_engine(tmp_path) -> OTXEngine:
 
 class TestEngine:
     def test_constructor(self, tmp_path) -> None:
-        with pytest.raises(RuntimeError):
-            OTXEngine(work_dir=tmp_path)
-
         # Check auto-configuration
         data_root = "tests/assets/classification_dataset"
-        engine = OTXEngine(work_dir=tmp_path, data=data_root)
+        engine = OTXEngine(
+            work_dir=tmp_path,
+            data=data_root,
+            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+        )
         assert engine.task == "MULTI_CLASS_CLS"
         assert engine.datamodule.task == "MULTI_CLASS_CLS"
         assert isinstance(engine.model, EfficientNetMulticlassCls)
@@ -46,34 +45,27 @@ class TestEngine:
         assert "devices" in engine.trainer_params
         assert engine.trainer_params["devices"] == 1
 
-        # Create engine with no data_root
-        with pytest.raises(ValueError, match="Given model class (.*) requires a valid label_info to instantiate."):
-            _ = OTXEngine(work_dir=tmp_path, task="MULTI_CLASS_CLS")
-
-    @pytest.fixture()
-    def mock_datamodule(self, mocker):
+    def test_model_init(self, tmp_path, mocker):
+        data_root = "tests/assets/classification_dataset"
         mock_datamodule = MagicMock()
         mock_datamodule.label_info = 4321
         mock_datamodule.input_size = (1234, 1234)
         mock_datamodule.input_mean = (0.0, 0.0, 0.0)
         mock_datamodule.input_std = (1.0, 1.0, 1.0)
+        mock_datamodule.task = "MULTI_CLASS_CLS"
 
-        return mocker.patch(
+        mocker.patch(
             "otx.tools.auto_configurator.AutoConfigurator.get_datamodule",
             return_value=mock_datamodule,
         )
-
-    def test_model_init(self, tmp_path, mock_datamodule):
-        data_root = "tests/assets/classification_dataset"
-        engine = OTXEngine(work_dir=tmp_path, data=data_root)
+        engine = OTXEngine(
+            work_dir=tmp_path,
+            data=data_root,
+            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+        )
 
         assert engine._model.data_input_params == DataInputParams((1234, 1234), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
         assert engine._model.label_info.num_classes == 4321
-
-    def test_model_setter(self, fxt_engine, mocker) -> None:
-        assert isinstance(fxt_engine.model, TVModelMulticlassCls)
-        fxt_engine.model = "efficientnet_b0"
-        assert isinstance(fxt_engine.model, EfficientNetMulticlassCls)
 
     def test_training_with_override_args(self, fxt_engine, mocker) -> None:
         mocker.patch("pathlib.Path.symlink_to")
@@ -271,8 +263,8 @@ class TestEngine:
         with pytest.raises(FileNotFoundError):
             engine = OTXEngine.from_model_name(
                 model_name="wrong_model",
-                data_root=data_root,
                 task=task_type,
+                data_root=data_root,
                 work_dir=tmp_path,
                 **overriding,
             )
@@ -280,7 +272,6 @@ class TestEngine:
     def test_from_config(self, tmp_path) -> None:
         recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
         data_root = "tests/assets/classification_dataset"
-        task_type = "MULTI_CLASS_CLS"
 
         overriding = {
             "data.train_subset.batch_size": 3,
@@ -290,7 +281,6 @@ class TestEngine:
         engine = OTXEngine.from_config(
             config_path=recipe_path,
             data_root=data_root,
-            task=task_type,
             work_dir=tmp_path,
             **overriding,
         )
@@ -320,6 +310,11 @@ class TestEngine:
         assert fxt_engine._cache.args.get("devices") == 2
 
         data_root = "tests/assets/classification_dataset"
-        engine = OTXEngine(work_dir=tmp_path, data=data_root, num_devices=3)
+        engine = OTXEngine(
+            work_dir=tmp_path,
+            data=data_root,
+            num_devices=3,
+            model="src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+        )
         assert engine.num_devices == 3
         assert engine._cache.args.get("devices") == 3

@@ -70,30 +70,6 @@ class OTXEngine(Engine):
     """OTX Engine.
 
     This class defines the Engine for OTX, which governs each step of the OTX workflow.
-
-    Example:
-        The following examples show how to use the Engine class.
-
-        Auto-Configuration with data_root::
-
-            engine = OTXEngine(
-                data_root=<dataset/path>,
-            )
-
-        Create Engine with Custom OTXModel::
-
-            engine = OTXEngine(
-                data_root=<dataset/path>,
-                model=OTXModel(...),
-                checkpoint=<checkpoint/path>,
-            )
-
-        Create Engine with Custom OTXDataModule::
-
-            engine = OTXEngine(
-                model = OTXModel(...),
-                datamodule = OTXDataModule(...),
-            )
     """
 
     _EXPORTED_MODEL_BASE_NAME: ClassVar[str] = "exported_model"
@@ -114,7 +90,6 @@ class OTXEngine(Engine):
             model (OTXModel | PathLike): The OTX model for the engine or model config path.
             data (OTXDataModule | PathLike): The data module for the engine
                 or root directory for the data.
-            task (OTXTaskType | None, optional): The type of OTX task. Defaults to None.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
             checkpoint (PathLike | None, optional): Path to the checkpoint file (model weights). Defaults to None.
             device (DeviceType, optional): The device type to use. Defaults to DeviceType.auto.
@@ -133,7 +108,7 @@ class OTXEngine(Engine):
             task=data.task if isinstance(data, OTXDataModule) else None,
             model_config_path=None if isinstance(model, OTXModel) else model,
         )
-        self._datamodule: OTXDataModule | None = (
+        self._datamodule: OTXDataModule = (
             data if isinstance(data, OTXDataModule) else self._auto_configurator.get_datamodule()
         )
 
@@ -155,7 +130,8 @@ class OTXEngine(Engine):
 
         if self._model.task != self._datamodule.task:
             msg = (
-                f"Task of the model ({self._model.task}) is not equal to the task of the datamodule ({self._datamodule.task}). "
+                f"Task of the model ({self._model.task}) is not equal to "
+                f"the task of the datamodule ({self._datamodule.task}). "
                 "Please, check whether you use compatible dataset."
             )
             raise ValueError(msg)
@@ -563,7 +539,7 @@ class OTXEngine(Engine):
             # making sure previous model trained without model_name can be loaded.
             kwargs_user_input["model_name"] = self.model.model_name
 
-        self.model = model_cls.load_from_checkpoint(
+        self._model = model_cls.load_from_checkpoint(
             checkpoint_path=checkpoint,
             map_location="cpu",
             **kwargs_user_input,
@@ -729,7 +705,7 @@ class OTXEngine(Engine):
             kwargs_user_input: dict[str, Any] = {}
 
             model_cls = self.model.__class__
-            self.model = model_cls.load_from_checkpoint(
+            self._model = model_cls.load_from_checkpoint(
                 checkpoint_path=checkpoint,
                 map_location="cpu",
                 **kwargs_user_input,
@@ -927,7 +903,6 @@ class OTXEngine(Engine):
             config_path=config,
             data_root=data_root,
             work_dir=work_dir,
-            task=task,
             **kwargs,
         )
 
@@ -1028,20 +1003,6 @@ class OTXEngine(Engine):
         """
         return self._model
 
-    @model.setter
-    def model(self, model: OTXModel | str) -> None:
-        """Sets the model for the engine.
-
-        Args:
-            model (OTXModel | str): The model to be set.
-
-        Returns:
-            None
-        """
-        if isinstance(model, str):
-            model = self._auto_configurator.get_model(model, label_info=self.datamodule.label_info)
-        self._model = model
-
     @property
     def datamodule(self) -> OTXDataModule:
         """Returns the datamodule object associated with the engine.
@@ -1053,28 +1014,6 @@ class OTXEngine(Engine):
             msg = "Please include the `data_root` or `datamodule` when creating the Engine."
             raise RuntimeError(msg)
         return self._datamodule
-
-    @datamodule.setter
-    def datamodule(self, data: OTXDataModule | PathLike) -> None:
-        """Sets the datamodule for the engine.
-
-        Args:
-            data (OTXDataModule): The datamodule to be set.
-
-        Returns:
-            None
-        """
-        if isinstance(data, (str, os.PathLike)):
-            datamodule = self._auto_configurator.get_datamodule(
-                data_root=data,
-            )
-        elif isinstance(data, OTXDataModule):
-            datamodule = data
-        else:
-            msg = f"Unsupported type for datamodule: {type(data)}. Expected OTXDataModule or PathLike."
-            raise TypeError(msg)
-
-        self._datamodule = datamodule
 
     @staticmethod
     def is_supported(model: MODEL, data: DATA) -> bool:

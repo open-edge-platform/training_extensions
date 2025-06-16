@@ -1,3 +1,4 @@
+task: MULTI_CLASS_CLS
 model:
   class_path: otx.backend.native.models.classification.multiclass_models.timm_model.TimmModelMulticlassCls
   init_args:
@@ -21,7 +22,6 @@ model:
             patience: 3
             monitor: val/accuracy
 engine:
-  task: MULTI_CLASS_CLS
   device: auto
 callback_monitor: val/accuracy
 data: ../../_base_/data/classification.yaml

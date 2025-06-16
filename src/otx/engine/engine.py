@@ -60,19 +60,6 @@ class Engine(ABC):
         """
         raise NotImplementedError
 
-    @model.setter
-    @abstractmethod
-    def model(self, model: MODEL) -> None:
-        """Sets the model for the engine.
-
-        Args:
-            model: The model to be set.
-
-        Returns:
-            None
-        """
-        raise NotImplementedError
-
     @property
     @abstractmethod
     def datamodule(self) -> DATA:
@@ -80,18 +67,5 @@ class Engine(ABC):
 
         Returns:
             DATA: datamodule object.
-        """
-        raise NotImplementedError
-
-    @datamodule.setter
-    @abstractmethod
-    def datamodule(self, data: DATA) -> None:
-        """Sets the datamodule for the engine.
-
-        Args:
-            data: The datamodule to be set.
-
-        Returns:
-            None
         """
         raise NotImplementedError

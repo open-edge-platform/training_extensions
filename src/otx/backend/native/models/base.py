@@ -118,7 +118,7 @@ class OTXModel(LightningModule):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        task: OTXTaskType,
+        task: OTXTaskType | None = None,
         model_name: str = "OTXModel",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -908,4 +908,7 @@ class OTXModel(LightningModule):
     @property
     def task(self) -> OTXTaskType:
         """Get  task type."""
+        if self._task is None:
+            msg = "Task type is not set. Please set the task type before using this model."
+            raise ValueError(msg)
         return self._task

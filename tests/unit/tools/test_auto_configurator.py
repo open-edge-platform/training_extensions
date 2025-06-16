@@ -13,7 +13,6 @@ from otx.tools import auto_configurator as target_file
 from otx.tools.auto_configurator import (
     DEFAULT_CONFIG_PER_TASK,
     AutoConfigurator,
-    configure_task,
 )
 from otx.types.label import LabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
@@ -24,47 +23,38 @@ from otx.utils.utils import should_pass_label_info
 @pytest.fixture()
 def fxt_data_root_per_task_type() -> dict:
     return {
-        "tests/assets/classification_dataset": OTXTaskType.MULTI_CLASS_CLS,
-        "tests/assets/multilabel_classification": OTXTaskType.MULTI_LABEL_CLS,
-        "tests/assets/car_tree_bug": OTXTaskType.DETECTION,
-        "tests/assets/common_semantic_segmentation_dataset": OTXTaskType.SEMANTIC_SEGMENTATION,
+        OTXTaskType.MULTI_CLASS_CLS: "tests/assets/classification_dataset",
+        OTXTaskType.MULTI_LABEL_CLS: "tests/assets/multilabel_classification",
+        OTXTaskType.DETECTION: "tests/assets/car_tree_bug",
+        OTXTaskType.ANOMALY: "tests/assets/anomaly_hazelnut",
+        OTXTaskType.ANOMALY_CLASSIFICATION: "tests/assets/anomaly_hazelnut",
+        OTXTaskType.ANOMALY_DETECTION: "tests/assets/anomaly_hazelnut",
+        OTXTaskType.ANOMALY_SEGMENTATION: "tests/assets/anomaly_hazelnut",
+        OTXTaskType.KEYPOINT_DETECTION: "tests/assets/car_tree_bug_keypoint",
+        OTXTaskType.ROTATED_DETECTION: "tests/assets/car_tree_bug",
+        OTXTaskType.INSTANCE_SEGMENTATION: "tests/assets/car_tree_bug",
+        OTXTaskType.SEMANTIC_SEGMENTATION: "tests/assets/common_semantic_segmentation_dataset",
     }
-
-
-def test_configure_task_with_supported_data_format(fxt_data_root_per_task_type: dict) -> None:
-    # Test the configure_task function with a supported data format
-    for data_root in fxt_data_root_per_task_type:
-        task = configure_task(data_root)
-        assert task is not None
-        assert isinstance(task, OTXTaskType)
-        assert task == fxt_data_root_per_task_type[data_root]
-
-
-def test_configure_task_with_unsupported_data_format(tmp_path: Path) -> None:
-    # Create a temporary directory for testing
-    data_root = tmp_path / "data"
-    data_root.mkdir()
-    (data_root / "1.jpg").open("a").close()  # Dummy image file
-
-    # Test the configure_task function with an unsupported data format
-    with pytest.raises(ValueError, match="Can't find proper task."):
-        configure_task(data_root)
 
 
 class TestAutoConfigurator:
     def test_check_task(self) -> None:
         # None inputs
-        auto_configurator = AutoConfigurator(data_root=None, task=None)
-        with pytest.raises(RuntimeError):
-            _ = auto_configurator.task
+        with pytest.raises(ValueError, match="Either task or model_config_path must be provided."):
+            auto_configurator = AutoConfigurator(task=None, model_config_path=None)
 
         # data_root is None & task is not None
         auto_configurator = AutoConfigurator(data_root=None, task="MULTI_CLASS_CLS")
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
+        # instantiate with model_config_path
+        model_config_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
+        auto_configurator = AutoConfigurator(data_root=None, task=None, model_config_path=model_config_path)
+        assert auto_configurator.task == "MULTI_CLASS_CLS"
+
         # data_root is not None & task is None
         data_root = "tests/assets/classification_dataset"
-        auto_configurator = AutoConfigurator(data_root=data_root)
+        auto_configurator = AutoConfigurator(data_root=data_root, task="MULTI_CLASS_CLS")
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
     def test_load_default_config(self) -> None:
@@ -85,7 +75,9 @@ class TestAutoConfigurator:
         # OTX-Mobilenet-v2
         # new_config
         model_name = "deit_tiny"
-        new_config = auto_configurator._load_default_config(model_name=model_name)
+        new_config = auto_configurator._load_default_config(
+            config_path="src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml",
+        )
         new_path = str(target_config).split("/")
         new_path[-1] = f"{model_name}.yaml"
         new_target_config = Path("/".join(new_path))
@@ -93,7 +85,7 @@ class TestAutoConfigurator:
         assert len(new_config) > 0
         assert "config" in new_config
         assert len(new_config["config"]) > 0
-        assert new_config["config"][0] == new_target_config
+        assert new_config["config"][0].resolve() == new_target_config
 
     def test_get_datamodule(self) -> None:
         data_root = None
@@ -101,7 +93,8 @@ class TestAutoConfigurator:
         auto_configurator = AutoConfigurator(data_root=data_root, task=task)
 
         # data_root is None
-        assert auto_configurator.get_datamodule() is None
+        with pytest.raises(ValueError, match="No data root provided."):
+            assert auto_configurator.get_datamodule() is None
 
         data_root = "tests/assets/car_tree_bug"
         auto_configurator = AutoConfigurator(data_root=data_root, task=task)
@@ -115,7 +108,7 @@ class TestAutoConfigurator:
         auto_configurator = AutoConfigurator(
             data_root="tests/assets/car_tree_bug",
             task=OTXTaskType.DETECTION,
-            model_name="yolox_tiny",
+            model_config_path="src/otx/recipe/detection/yolox_tiny.yaml",
         )
         auto_configurator.config["data"]["input_size"] = "auto"
 
@@ -123,11 +116,11 @@ class TestAutoConfigurator:
 
         assert mock_otxdatamodule.call_args.kwargs["input_size_multiplier"] == 32
 
-    def test_get_model(self, fxt_task: OTXTaskType) -> None:
+    def test_get_model(self, fxt_task: OTXTaskType, fxt_data_root_per_task_type) -> None:
         if fxt_task is OTXTaskType.H_LABEL_CLS:
             pytest.xfail(reason="Not working")
 
-        auto_configurator = AutoConfigurator(task=fxt_task)
+        auto_configurator = AutoConfigurator(task=fxt_task, data_root=fxt_data_root_per_task_type[fxt_task])
 
         # With label_info
         label_names = ["class1", "class2", "class3"]
@@ -159,40 +152,6 @@ class TestAutoConfigurator:
         )
 
         assert model.data_input_params.input_size == (300, 300)
-
-    def test_get_optimizer(self, fxt_task: OTXTaskType) -> None:
-        if fxt_task in {
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-            OTXTaskType.ANOMALY_DETECTION,
-        }:
-            pytest.xfail(reason="Not working")
-
-        auto_configurator = AutoConfigurator(task=fxt_task)
-        optimizer = auto_configurator.get_optimizer()
-        if isinstance(optimizer, list):
-            for opt in optimizer:
-                assert callable(opt)
-        else:
-            assert callable(optimizer)
-
-    def test_get_scheduler(self, fxt_task: OTXTaskType) -> None:
-        if fxt_task in {
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-            OTXTaskType.ANOMALY_DETECTION,
-        }:
-            pytest.xfail(reason="Not working")
-
-        auto_configurator = AutoConfigurator(task=fxt_task)
-        scheduler = auto_configurator.get_scheduler()
-        if isinstance(scheduler, list):
-            for sch in scheduler:
-                assert callable(sch)
-        else:
-            assert callable(scheduler)
 
     def test_update_ov_subset_pipeline(self) -> None:
         data_root = "tests/assets/car_tree_bug"

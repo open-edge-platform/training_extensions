@@ -1,3 +1,4 @@
+task: H_LABEL_CLS
 model:
   class_path: otx.backend.native.models.classification.hlabel_models.torchvision_model.TVModelHLabelCls
   init_args:
@@ -22,7 +23,6 @@ model:
             eta_min: 0
 
 engine:
-  task: H_LABEL_CLS
   device: auto
 
 callback_monitor: val/accuracy

@@ -461,6 +461,6 @@ def test_get_configuration(tmp_path):
     assert "data" in config
     assert config["data"]["task"] == "SEMANTIC_SEGMENTATION"
 
-    cli_args = ["verbose", "data_root", "task", "seed", "callback_monitor", "resume", "disable_infer_num_classes"]
+    cli_args = ["verbose", "data_root", "seed", "callback_monitor", "resume", "disable_infer_num_classes"]
     for arg in cli_args:
         assert arg not in config
