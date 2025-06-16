@@ -21,7 +21,7 @@ def fxt_engine(tmp_path) -> OTXEngine:
         data="tests/assets/classification_dataset",
         model="src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
         work_dir=tmp_path,
-        max_epochs=90,
+        max_epochs=9,
     )
 
 
@@ -72,10 +72,10 @@ class TestEngine:
         mocker.patch("otx.backend.native.engine.Trainer.fit")
         mock_seed_everything = mocker.patch("otx.backend.native.engine.seed_everything")
 
-        assert fxt_engine._cache.args["max_epochs"] == 90
+        assert fxt_engine._cache.args["max_epochs"] == 9
 
-        fxt_engine.train(max_epochs=100, seed=1234)
-        assert fxt_engine._cache.args["max_epochs"] == 100
+        fxt_engine.train(max_epochs=5, seed=1234)
+        assert fxt_engine._cache.args["max_epochs"] == 5
         mock_seed_everything.assert_called_once_with(1234, workers=True)
 
     @pytest.mark.parametrize("resume", [True, False])
