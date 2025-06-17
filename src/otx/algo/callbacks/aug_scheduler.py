@@ -61,7 +61,7 @@ class DataAugSwitch:
         e = self.epoch
         p0, p1, p2 = self.policy_epochs
         if e < p0:
-            return "light_aug"
+            return "no_aug"
         elif p0 <= e < p1:
             return "strong_aug_1" if random.random() < 0.5 else "strong_aug_2"
         return "light_aug"
