@@ -61,13 +61,10 @@ class DataAugSwitch:
         e = self.epoch
         p0, p1, p2 = self.policy_epochs
         if e < p0:
-            return "no_aug"
+            return "light_aug"
         elif p0 <= e < p1:
             return "strong_aug_1" if random.random() < 0.5 else "strong_aug_2"
-        elif p1 <= e < p2:
-            return "light_aug"
-        else:
-            return "light_aug"
+        return "light_aug"
 
     @property
     def current_transforms(self) -> tuple[bool, Compose]:
