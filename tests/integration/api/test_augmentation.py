@@ -22,13 +22,12 @@ def _test_augmentation(
 ) -> None:
     # Load recipe
     recipe_tokens = recipe.split("/")
-    model_name = recipe_tokens[-1].split(".")[0]
     task_name = recipe_tokens[-2]
     task = OTXTaskType(task_name.upper())
     config = AutoConfigurator(
         data_root=target_dataset_per_task[task_name],
         task=task,
-        model_name=model_name,
+        model_config_path=recipe,
     ).config
     train_config = config["data"]["train_subset"]
     train_config["input_size"] = (32, 32)
