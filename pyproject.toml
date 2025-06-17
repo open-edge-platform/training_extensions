@@ -1,0 +1,22 @@
+[project]
+name = "geti-edge"
+version = "0.1.0"
+description = "Geti Edge"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "fastapi~=0.115.12",
+    "fastrtc~=0.0.28",
+    "openvino-model-api~=0.3.0.2",
+    "opencv-python~=4.11",
+    "pillow~=11.2",
+    "python-multipart~=0.0.20",
+    "uvicorn~=0.34.3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.12",
+    "ty>=0.0.1a10",
+]
