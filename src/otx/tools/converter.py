@@ -26,145 +26,145 @@ from otx.types.task import OTXTaskType
 TEMPLATE_ID_DICT = {
     # MULTI_CLASS_CLS
     "Custom_Image_Classification_DeiT-Tiny": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/deit_tiny",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml",
     },
     "Custom_Image_Classification_EfficinetNet-B0": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_b0",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
     },
     "Custom_Image_Classification_EfficientNet-V2-S": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_v2",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml",
     },
     "Custom_Image_Classification_MobileNet-V3-large-1x": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
     },
     "Custom_Image_Classification_EfficientNet-B3": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml",
     },
     "Custom_Image_Classification_EfficientNet-V2-L": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml",
     },
     "Custom_Image_Classification_MobileNet-V3-small": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
     },
     # DETECTION
     "Custom_Object_Detection_Gen3_ATSS": {
-        "model_config_path": "src/otx/recipe/detection/atss_mobilenetv2",
+        "model_config_path": "src/otx/recipe/detection/atss_mobilenetv2.yaml",
     },
     "Object_Detection_ResNeXt101_ATSS": {
-        "model_config_path": "src/otx/recipe/detection/atss_resnext101",
+        "model_config_path": "src/otx/recipe/detection/atss_resnext101.yaml",
     },
     "Custom_Object_Detection_Gen3_SSD": {
-        "model_config_path": "src/otx/recipe/detection/ssd_mobilenetv2",
+        "model_config_path": "src/otx/recipe/detection/ssd_mobilenetv2.yaml",
     },
     "Object_Detection_YOLOX_X": {
-        "model_config_path": "src/otx/recipe/detection/yolox_x",
+        "model_config_path": "src/otx/recipe/detection/yolox_x.yaml",
     },
     "Object_Detection_YOLOX_L": {
-        "model_config_path": "src/otx/recipe/detection/yolox_l",
+        "model_config_path": "src/otx/recipe/detection/yolox_l.yaml",
     },
     "Object_Detection_YOLOX_S": {
-        "model_config_path": "src/otx/recipe/detection/yolox_s",
+        "model_config_path": "src/otx/recipe/detection/yolox_s.yaml",
     },
     "Custom_Object_Detection_YOLOX": {
-        "model_config_path": "src/otx/recipe/detection/yolox_tiny",
+        "model_config_path": "src/otx/recipe/detection/yolox_tiny.yaml",
     },
     "Object_Detection_RTDetr_18": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_18",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_18.yaml",
     },
     "Object_Detection_RTDetr_50": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_50",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_50.yaml",
     },
     "Object_Detection_RTDetr_101": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_101",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_101.yaml",
     },
     "Object_Detection_RTMDet_tiny": {
-        "model_config_path": "src/otx/recipe/detection/rtmdet_tiny",
+        "model_config_path": "src/otx/recipe/detection/rtmdet_tiny.yaml",
     },
     "Object_Detection_DFine_X": {
-        "model_config_path": "src/otx/recipe/detection/dfine_x",
+        "model_config_path": "src/otx/recipe/detection/dfine_x.yaml",
     },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_swint",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml",
     },
     "Custom_Instance_Segmentation_RTMDet_tiny": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/rtmdet_inst_tiny",
+        "model_config_path": "src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml",
     },
     "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50_tv",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml",
     },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50",
+        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50.yaml",
     },
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b",
+        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b.yaml",
     },
     # SEMANTIC_SEGMENTATION
     "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_s",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_s.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_x",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_x.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_t": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_t",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_t.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_s": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_s",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_s.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_B": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_b",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_b.yaml",
     },
     "Custom_Semantic_Segmentation_DINOV2_S": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/dino_v2",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/dino_v2.yaml",
     },
     # ANOMALY
     "ote_anomaly_padim": {
-        "model_config_path": "src/otx/recipe/anomaly/padim",
+        "model_config_path": "src/otx/recipe/anomaly/padim.yaml",
     },
     "ote_anomaly_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly/stfpm",
+        "model_config_path": "src/otx/recipe/anomaly/stfpm.yaml",
     },
     "ote_anomaly_uflow": {
-        "model_config_path": "src/otx/recipe/anomaly/uflow",
+        "model_config_path": "src/otx/recipe/anomaly/uflow.yaml",
     },
     # ANOMALY CLASSIFICATION
     "ote_anomaly_classification_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_classification/padim",
+        "model_config_path": "src/otx/recipe/anomaly_classification/padim.yaml",
     },
     "ote_anomaly_classification_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_classification/stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_classification/stfpm.yaml",
     },
     # ANOMALY_DETECTION
     "ote_anomaly_detection_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_detection/padim",
+        "model_config_path": "src/otx/recipe/anomaly_detection/padim.yaml",
     },
     "ote_anomaly_detection_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_detection/stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_detection/stfpm.yaml",
     },
     # ANOMALY_SEGMENTATION
     "ote_anomaly_segmentation_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_segmentation/padim",
+        "model_config_path": "src/otx/recipe/anomaly_segmentation/padim.yaml",
     },
     "ote_anomaly_segmentation_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_segmentation/stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_segmentation/stfpm.yaml",
     },
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
-        "model_config_path": "src/otx/recipe/keypoint_detection/rtmpose_tiny",
+        "model_config_path": "src/otx/recipe/keypoint_detection/rtmpose_tiny.yaml",
     },
 }
 
@@ -215,28 +215,30 @@ class ConfigConverter:
         param_dict = ConfigConverter._get_params(hyperparameters)
 
         task_info = TEMPLATE_ID_DICT[template_config["model_template_id"]]
-        if param_dict.get("enable_tiling", None) and "_tile" not in Path(task_info["model_config_path"]).name:
-            task_info["model_config_path"] += "_tile"
+        model_config_path = Path(task_info["model_config_path"])
+        # override necessary parameters for config
+        if param_dict.get("enable_tiling", None) and "_tile" not in model_config_path.stem:
+            tile_name = model_config_path.stem + "_tile.yaml"
+            model_config_path = model_config_path.parent / tile_name
         # classification task type can't be deducted from template name, try to extract from config
-        if "sub_task_type" in template_config and "_cls" in Path(task_info["model_config_path"]).parent.name:
+        if "sub_task_type" in template_config and "_cls" in model_config_path.parent.name:
             new_task = template_config["sub_task_type"].lower()
-            task_info["model_config_path"] = (
-                Path("src/otx/recipe/classification") / new_task / Path(task_info["model_config_path"]).name
-            )
+            model_config_path = Path("src/otx/recipe/classification") / new_task / model_config_path.name
         if task is not None:
             # override the task for the given model
-            full_config_path = Path(task_info["model_config_path"])
             parent_path = (
-                full_config_path.parent.parent if "_cls" in full_config_path.parent.name else full_config_path.parent
+                model_config_path.parent.parent if "_cls" in model_config_path.parent.name else model_config_path.parent
             )
-            name_of_model = full_config_path.name
-            task_info["model_config_path"] = str(parent_path / task.value.lower() / name_of_model)
-            if not Path(task_info["model_config_path"]).exists():
+            name_of_model = model_config_path.name
+            model_config_path = parent_path / task.value.lower() / name_of_model
+            if not model_config_path.exists():
                 msg = (
-                    f"Overrided model config file: {task_info['model_config_path']} "
+                    f"Overrided model config file: {model_config_path} "
                     "with the given task: {task.value} does not exist."
                 )
                 raise FileNotFoundError(msg)
+        # assign back the modified model config path to the task_info
+        task_info["model_config_path"] = str(model_config_path)
         default_config = ConfigConverter._get_default_config(task_info)
         ConfigConverter._update_params(default_config, param_dict)
         ConfigConverter._remove_unused_key(default_config)
@@ -249,9 +251,9 @@ class ConfigConverter:
             task_info["model_config_path"] = str(task_info["model_config_path"]) + ".yaml"
         if "task" in task_info:
             # override the task with the same model
-            path_to_task = Path(task_info["model_config_path"]).parent.parent
+            path_to_task_parent = Path(task_info["model_config_path"]).parent.parent
             name_of_file = Path(task_info["model_config_path"]).name
-            task_info["model_config_path"] = path_to_task / task_info["task"].lower() / name_of_file
+            task_info["model_config_path"] = path_to_task_parent / task_info["task"].lower() / name_of_file
             if not task_info["model_config_path"].exists():
                 msg = (
                     f"Overrided model config file: {task_info['model_config_path']} "
