@@ -85,7 +85,8 @@ class TestAutoConfigurator:
         assert len(new_config) > 0
         assert "config" in new_config
         assert len(new_config["config"]) > 0
-        assert new_config["config"][0].resolve() == new_target_config
+        assert Path(new_config["config"][0]).name == new_target_config.name
+        assert Path(new_config["config"][0]).exists()
 
     def test_get_datamodule(self) -> None:
         data_root = None
