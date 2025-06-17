@@ -67,7 +67,7 @@ class DataAugSwitch:
         elif p1 <= e < p2:
             return "light_aug"
         else:
-            return "no_aug"
+            return "light_aug"
 
     @property
     def current_transforms(self) -> tuple[bool, Compose]:
