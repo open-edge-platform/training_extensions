@@ -166,13 +166,12 @@ class OTXModel(LightningModule):
         # so that it can retrieve it from the checkpoint
         self.save_hyperparameters(logger=False, ignore=["optimizer", "scheduler", "metric"])
 
-    def training_step(self, batch: OTXDataBatch, batch_idx: int) -> Tensor | None:
+    def training_step(self, batch: OTXDataBatch, batch_idx: int) -> Tensor:
         """Step for model training."""
         train_loss = self.forward(inputs=batch)
         if train_loss is None:
-            # to skip current iteration
-            # TODO (sungchul): check this in distributed training
-            return None if self.trainer.world_size == 1 else torch.tensor(0.0, device=self.device)
+            msg = "Loss is None."
+            raise ValueError(msg)
 
         if isinstance(train_loss, Tensor):
             self.log(
@@ -205,7 +204,7 @@ class OTXModel(LightningModule):
 
         raise TypeError(train_loss)
 
-    def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> None:
+    def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
         """Perform a single validation step on a batch of data from the validation set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
@@ -230,7 +229,7 @@ class OTXModel(LightningModule):
 
         raise TypeError(metric_inputs)
 
-    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> None:
+    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
         """Perform a single test step on a batch of data from the test set.
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target
