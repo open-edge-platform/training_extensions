@@ -64,7 +64,6 @@ class TestOTXCLI:
             "config",
             "print_config",
             "data_root",
-            "task",
             "seed",
             "callback_monitor",
         ]

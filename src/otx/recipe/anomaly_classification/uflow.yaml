@@ -1,3 +1,4 @@
+task: ANOMALY_CLASSIFICATION
 model:
   class_path: otx.backend.native.models.anomaly.uflow.Uflow
   init_args:
@@ -9,7 +10,6 @@ model:
     task: ANOMALY_CLASSIFICATION
 
 engine:
-  task: ANOMALY_CLASSIFICATION
   device: auto
 
 callback_monitor: image_F1Score

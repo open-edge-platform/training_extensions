@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from otx.types import PathLike
     from otx.types.types import ANNOTATIONS, DATA, METRICS, MODEL
 
 
@@ -41,4 +42,30 @@ class Engine(ABC):
     @abstractmethod
     def is_supported(model: MODEL, data: DATA) -> bool:
         """Check if the engine is supported for the given model and data."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def work_dir(self) -> PathLike:
+        """Get the working directory for the engine."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def model(self) -> MODEL:
+        """Returns the model object associated with the engine.
+
+        Returns:
+            MODEL: model object.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def datamodule(self) -> DATA:
+        """Returns the datamodule object associated with the engine.
+
+        Returns:
+            DATA: datamodule object.
+        """
         raise NotImplementedError

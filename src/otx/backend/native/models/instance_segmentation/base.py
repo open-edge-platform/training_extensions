@@ -35,6 +35,7 @@ from otx.metrics.fmeasure import FMeasure
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -75,6 +76,7 @@ class OTXInstanceSegModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
+            task=OTXTaskType.INSTANCE_SEGMENTATION,
             model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,

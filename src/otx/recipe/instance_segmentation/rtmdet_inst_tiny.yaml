@@ -1,3 +1,4 @@
+task: INSTANCE_SEGMENTATION
 model:
   class_path: otx.backend.native.models.instance_segmentation.rtmdet_inst.RTMDetInst
   init_args:
@@ -25,7 +26,6 @@ model:
             min_lr: 4e-06
 
 engine:
-  task: INSTANCE_SEGMENTATION
   device: auto
 
 callback_monitor: val/map_50

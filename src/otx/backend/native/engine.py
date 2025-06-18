@@ -9,6 +9,7 @@ import copy
 import csv
 import inspect
 import logging
+import os
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -26,6 +27,7 @@ from otx.config.device import DeviceConfig
 from otx.config.explain import ExplainConfig
 from otx.data.module import OTXDataModule
 from otx.engine.engine import Engine
+from otx.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 from otx.types import PathLike
 from otx.types.device import DeviceType
 from otx.types.export import OTXExportFormatType
@@ -33,8 +35,6 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from otx.utils.utils import measure_flops
-
-from .tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
 
 if TYPE_CHECKING:
     from lightning import Callback
@@ -70,42 +70,15 @@ class OTXEngine(Engine):
     """OTX Engine.
 
     This class defines the Engine for OTX, which governs each step of the OTX workflow.
-
-    Example:
-        The following examples show how to use the Engine class.
-
-        Auto-Configuration with data_root::
-
-            engine = OTXEngine(
-                data_root=<dataset/path>,
-            )
-
-        Create Engine with Custom OTXModel::
-
-            engine = OTXEngine(
-                data_root=<dataset/path>,
-                model=OTXModel(...),
-                checkpoint=<checkpoint/path>,
-            )
-
-        Create Engine with Custom OTXDataModule::
-
-            engine = OTXEngine(
-                model = OTXModel(...),
-                datamodule = OTXDataModule(...),
-            )
     """
 
     _EXPORTED_MODEL_BASE_NAME: ClassVar[str] = "exported_model"
 
     def __init__(
         self,
-        *,
-        data_root: PathLike | None = None,
-        task: OTXTaskType | None = None,
+        model: OTXModel | PathLike,
+        data: OTXDataModule | PathLike,
         work_dir: PathLike = "./otx-workspace",
-        datamodule: OTXDataModule | None = None,
-        model: OTXModel | str | None = None,
         checkpoint: PathLike | None = None,
         device: DeviceType = DeviceType.auto,
         num_devices: int = 1,
@@ -114,34 +87,35 @@ class OTXEngine(Engine):
         """Initializes the OTX Engine.
 
         Args:
-            data_root (PathLike | None, optional): Root directory for the data. Defaults to None.
-            task (OTXTaskType | None, optional): The type of OTX task. Defaults to None.
+            model (OTXModel | PathLike): The OTX model for the engine or model config path.
+            data (OTXDataModule | PathLike): The data module for the engine
+                or root directory for the data.
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
-            datamodule (OTXDataModule | None, optional): The data module for the engine. Defaults to None.
-            model (OTXModel | str | None, optional): The model for the engine. Defaults to None.
-            checkpoint (PathLike | None, optional): Path to the checkpoint file. Defaults to None.
+            checkpoint (PathLike | None, optional): Path to the checkpoint file (model weights). Defaults to None.
             device (DeviceType, optional): The device type to use. Defaults to DeviceType.auto.
             num_devices (int, optional): The number of devices to use. If it is 2 or more, it will behave as multi-gpu.
             **kwargs: Additional keyword arguments for pl.Trainer.
         """
         self._cache = TrainerArgumentsCache(**kwargs)
-        self.checkpoint = checkpoint
         self.work_dir = work_dir
         self.device = device  # type: ignore[assignment]
         self.num_devices = num_devices
+        if not isinstance(data, (OTXDataModule, str, os.PathLike)):
+            msg = f"data should be OTXDataModule or PathLike, but got {type(data)}"
+            raise TypeError(msg)
         self._auto_configurator = AutoConfigurator(
-            data_root=data_root,
-            task=datamodule.task if datamodule is not None else task,
-            model_name=None if isinstance(model, OTXModel) else model,
+            data_root=data if isinstance(data, (str, os.PathLike)) else None,
+            task=data.task if isinstance(data, OTXDataModule) else None,
+            model_config_path=None if isinstance(model, OTXModel) else model,
         )
-        self._datamodule: OTXDataModule | None = (
-            datamodule if datamodule is not None else self._auto_configurator.get_datamodule()
+        self._datamodule: OTXDataModule = (
+            data if isinstance(data, OTXDataModule) else self._auto_configurator.get_datamodule()
         )
-        self.task = task if task is not None else self._auto_configurator.task
 
         self._trainer: Trainer | None = None
-        get_model_args: dict[str, Any] = {}
-        if self._datamodule is not None:
+
+        if not isinstance(model, OTXModel):
+            get_model_args: dict[str, Any] = {}
             get_model_args["label_info"] = self._datamodule.label_info
             input_size = self._datamodule.input_size
             get_model_args["data_input_params"] = DataInputParams(
@@ -150,9 +124,17 @@ class OTXEngine(Engine):
                 std=self._datamodule.input_std,
             )
 
-        self._model: OTXModel = (
-            model if isinstance(model, OTXModel) else self._auto_configurator.get_model(**get_model_args)
-        )
+            model = self._auto_configurator.get_model(**get_model_args)
+
+        self._model: OTXModel = model
+        self.task = self._model.task
+
+        self.checkpoint = checkpoint
+        if self.checkpoint:
+            if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
+                msg = f"Checkpoint {self.checkpoint} does not exist."
+                raise FileNotFoundError(msg)
+            self._model.load_state_dict_incrementally(torch.load(self.checkpoint))
 
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points
@@ -233,8 +215,6 @@ class OTXEngine(Engine):
                 >>> otx train --work_dir <WORK_DIR_PATH, str>
                 ```
         """
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -550,7 +530,7 @@ class OTXEngine(Engine):
             # making sure previous model trained without model_name can be loaded.
             kwargs_user_input["model_name"] = self.model.model_name
 
-        self.model = model_cls.load_from_checkpoint(
+        self._model = model_cls.load_from_checkpoint(
             checkpoint_path=checkpoint,
             map_location="cpu",
             **kwargs_user_input,
@@ -716,7 +696,7 @@ class OTXEngine(Engine):
             kwargs_user_input: dict[str, Any] = {}
 
             model_cls = self.model.__class__
-            self.model = model_cls.load_from_checkpoint(
+            self._model = model_cls.load_from_checkpoint(
                 checkpoint_path=checkpoint,
                 map_location="cpu",
                 **kwargs_user_input,
@@ -851,7 +831,7 @@ class OTXEngine(Engine):
 
         return cls(
             work_dir=instantiated_config.get("work_dir", work_dir),
-            datamodule=datamodule,
+            data=datamodule,
             model=model,
             **engine_kwargs,
         )
@@ -914,7 +894,6 @@ class OTXEngine(Engine):
             config_path=config,
             data_root=data_root,
             work_dir=work_dir,
-            task=task,
             **kwargs,
         )
 
@@ -1014,20 +993,6 @@ class OTXEngine(Engine):
             OTXModel: The OTXModel object.
         """
         return self._model
-
-    @model.setter
-    def model(self, model: OTXModel | str) -> None:
-        """Sets the model for the engine.
-
-        Args:
-            model (OTXModel | str): The model to be set.
-
-        Returns:
-            None
-        """
-        if isinstance(model, str):
-            model = self._auto_configurator.get_model(model, label_info=self.datamodule.label_info)
-        self._model = model
 
     @property
     def datamodule(self) -> OTXDataModule:

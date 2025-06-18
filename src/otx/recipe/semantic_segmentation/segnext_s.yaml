@@ -1,3 +1,4 @@
+task: SEMANTIC_SEGMENTATION
 model:
   class_path: otx.backend.native.models.segmentation.segnext.SegNext
   init_args:
@@ -25,7 +26,6 @@ model:
             last_epoch: -1
 
 engine:
-  task: SEMANTIC_SEGMENTATION
   device: auto
 
 callback_monitor: val/Dice

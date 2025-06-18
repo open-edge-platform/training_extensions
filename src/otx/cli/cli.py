@@ -143,7 +143,7 @@ class OTXCLI:
             "Setting this option to true will disable this behavior.",
             action="store_true",
         )
-        engine_skip = {"model", "datamodule", "work_dir"}
+        engine_skip = {"model", "work_dir", "data"}
         parser.add_class_arguments(
             OTXEngine,
             "engine",
@@ -175,7 +175,6 @@ class OTXCLI:
         parser.add_class_arguments(Workspace, "workspace")
         parser.link_arguments("work_dir", "workspace.work_dir")
 
-        parser.link_arguments("data_root", "engine.data_root")
         parser.link_arguments("data_root", "data.data_root")
         parser.link_arguments("engine.device", "data.device")
 
@@ -282,23 +281,6 @@ class OTXCLI:
                 warn(f"Load default config from {self.cache_dir / 'configs.yaml'}.", stacklevel=0)
             return parser_kwargs
 
-        # If don't use cache, use the default config from auto configuration.
-        data_root = None
-        task = None
-        if "--data_root" in sys.argv:
-            data_root = sys.argv[sys.argv.index("--data_root") + 1]
-        if "--task" in sys.argv:
-            task = sys.argv[sys.argv.index("--task") + 1]
-        enable_auto_config = data_root is not None and "--config" not in sys.argv
-        if enable_auto_config:
-            from otx.backend.native.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
-
-            auto_configurator = AutoConfigurator(
-                data_root=data_root,
-                task=OTXTaskType(task) if task is not None else task,
-            )
-            config_file_path = DEFAULT_CONFIG_PER_TASK[auto_configurator.task]
-            parser_kwargs["default_config_files"] = [str(config_file_path)]
         return parser_kwargs
 
     def _set_extension_subcommands_parser(self, parser_subcommands: _ActionSubCommands) -> None:
@@ -365,9 +347,10 @@ class OTXCLI:
             An instance of the Engine class.
         """
         engine_kwargs = self.get_config_value(self.config_init, "engine")
+
         return OTXEngine(
             model=self.model,
-            datamodule=self.datamodule,
+            data=self.datamodule,
             work_dir=self.workspace.work_dir,
             **engine_kwargs,
         )

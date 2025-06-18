@@ -1,3 +1,4 @@
+task: SEMANTIC_SEGMENTATION
 model:
   class_path: otx.backend.native.models.segmentation.litehrnet.LiteHRNet
   init_args:
@@ -26,7 +27,6 @@ model:
             monitor: val/Dice
 
 engine:
-  task: SEMANTIC_SEGMENTATION
   device: auto
 
 callback_monitor: val/Dice

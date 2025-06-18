@@ -499,7 +499,7 @@ def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskT
             continue
 
         model_info = TEMPLATE_ID_DICT[model_id]
-        model_task = model_info["task"]
+        model_task = OTXTaskType(Path(model_info["model_config_path"]).parent.name.upper())
 
         if model_category_only and "model_category" not in template:
             continue

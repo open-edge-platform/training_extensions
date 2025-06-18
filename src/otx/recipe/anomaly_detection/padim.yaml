@@ -1,3 +1,4 @@
+task: ANOMALY_DETECTION
 model:
   class_path: otx.backend.native.models.anomaly.padim.Padim
   init_args:
@@ -8,7 +9,6 @@ model:
     task: ANOMALY_DETECTION
 
 engine:
-  task: ANOMALY_DETECTION
   device: auto
 
 callback_monitor: image_F1Score # this has no effect as Padim does not need to be trained

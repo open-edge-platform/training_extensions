@@ -1,3 +1,4 @@
+task: DETECTION
 model:
   class_path: otx.backend.native.models.detection.d_fine.DFine
   init_args:
@@ -25,7 +26,6 @@ model:
             monitor: val/map_50
             min_lr: 2e-06
 engine:
-  task: DETECTION
   device: auto
 
 callback_monitor: val/map_50

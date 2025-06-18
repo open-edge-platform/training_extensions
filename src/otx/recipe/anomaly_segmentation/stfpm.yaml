@@ -1,3 +1,4 @@
+task: ANOMALY_SEGMENTATION
 model:
   class_path: otx.backend.native.models.anomaly.stfpm.Stfpm
   init_args:
@@ -6,7 +7,6 @@ model:
     task: ANOMALY_SEGMENTATION
 
 engine:
-  task: ANOMALY_SEGMENTATION
   device: auto
 
 callback_monitor: pixel_F1Score

@@ -1,3 +1,4 @@
+task: INSTANCE_SEGMENTATION
 model:
   class_path: otx.backend.native.models.instance_segmentation.maskrcnn.MaskRCNN
   init_args:
@@ -23,7 +24,6 @@ model:
             monitor: val/map_50
 
 engine:
-  task: INSTANCE_SEGMENTATION
   device: auto
 
 callback_monitor: val/map_50

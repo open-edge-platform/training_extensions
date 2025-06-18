@@ -1,3 +1,4 @@
+task: MULTI_LABEL_CLS
 model:
   class_path: otx.backend.native.models.classification.multilabel_models.vit.VisionTransformerMultilabelCls
   init_args:
@@ -23,7 +24,6 @@ model:
             monitor: val/accuracy
 
 engine:
-  task: MULTI_LABEL_CLS
   device: auto
 
 callback_monitor: val/accuracy

@@ -8,8 +8,8 @@ import openvino.runtime as ov
 import pytest
 
 from otx.backend.native.engine import OTXEngine
-from otx.backend.openvino.engine import OVEngine
 from otx.data.entity.torch import OTXPredBatch
+from otx.engine import create_engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
 MULTI_CLASS_CLS = [recipe for recipe in RECIPE_LIST_ALL if "multi_class_cls" in recipe]
@@ -164,7 +164,7 @@ def test_predict_with_explain(
     assert len(feature_vector_output.get_shape()) == 2
 
     # Predict OV model with xai & process maps
-    ov_engine = OVEngine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
+    ov_engine = create_engine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
     predict_result_explain_ov = ov_engine.predict(checkpoint=exported_model_path, explain=True)
     assert isinstance(predict_result_explain_ov[0], OTXPredBatch)
     assert predict_result_explain_ov[0].has_xai_outputs

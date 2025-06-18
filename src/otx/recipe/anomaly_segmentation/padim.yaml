@@ -1,3 +1,4 @@
+task: ANOMALY_SEGMENTATION
 model:
   class_path: otx.backend.native.models.anomaly.padim.Padim
   init_args:
@@ -8,7 +9,6 @@ model:
     task: ANOMALY_SEGMENTATION
 
 engine:
-  task: ANOMALY_SEGMENTATION
   device: auto
 
 callback_monitor: image_F1Score # this has no effect as Padim does not need to be trained

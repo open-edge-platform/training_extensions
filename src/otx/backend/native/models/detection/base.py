@@ -29,6 +29,7 @@ from otx.metrics import MetricCallable, MetricInput
 from otx.metrics.fmeasure import FMeasure, MeanAveragePrecisionFMeasureCallable
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -66,6 +67,7 @@ class OTXDetectionModel(OTXModel):
         super().__init__(
             label_info=label_info,
             model_name=model_name,
+            task=OTXTaskType.DETECTION,
             data_input_params=data_input_params,
             optimizer=optimizer,
             scheduler=scheduler,
