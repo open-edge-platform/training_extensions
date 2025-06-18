@@ -124,10 +124,7 @@ class DEIMDFine(RTDETR):
             raise ValueError(msg) from err
 
         optimizer_configuration = [
-            # no weight decay for norm layers in backbone
-            {"params": "^(?=.*backbone)(?=.*norm|bn).*$", "weight_decay": 0.0, "lr": backbone_lr},
-            # lr for the backbone, but not norm layers is 0.00001
-            {"params": "^(?=.*backbone)(?=.*norm|bn).*$", "lr": backbone_lr},
+            {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
             # no weight decay for norm layers and biases in encoder and decoder layers
             {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
         ]
