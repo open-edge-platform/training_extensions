@@ -19,7 +19,6 @@ model:
         warmup_iters: 30
         flat_lr_duration: 23 # after warmup, 23 epochs with flat learning rate
         decay_duration: 40 # after 23 epochs, decay starts from 23 - 40 epochs
-        no_aug_epochs: 8
 
 engine:
   task: DETECTION
@@ -53,7 +52,7 @@ callbacks:
 data_aug_switch:
   class_path: otx.algo.callbacks.aug_scheduler.DataAugSwitch
   init_args:
-    policy_epochs: [4, 23, 34]
+    policy_epochs: [4, 23, 40]
     policies:
       no_aug:
         to_tv_image: false

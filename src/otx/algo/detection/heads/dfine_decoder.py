@@ -966,6 +966,23 @@ class DFINETransformer:
             "eval_spatial_size": [640, 640],
             "activation": nn.SiLU,
         },
+        "deim_dfine_hgnetv2_s": {
+            "feat_channels": [256, 256, 256],
+            "num_decoder_layers": 3,
+            "eval_idx": -1,
+            "eval_spatial_size": [640, 640],
+            "num_points_list": [3, 6, 3],
+            "activation": nn.SiLU,
+        },
+        "deim_dfine_hgnetv2_m": {
+            "num_decoder_layers": 4,
+            "eval_idx": -1,
+            "eval_spatial_size": [640, 640],
+            "activation": nn.SiLU,
+        },
+        "deim_dfine_hgnetv2_l": {
+            "activation": nn.SiLU,
+        },
         "deim_dfine_hgnetv2_x": {
             "feat_channels": [384, 384, 384],
             "reg_scale": 8.0,

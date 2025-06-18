@@ -438,6 +438,20 @@ class HybridEncoder:
             "depth_mult": 0.5,
             "eval_spatial_size": [640, 640],
         },
+        "deim_dfine_hgnetv2_s": {
+            "in_channels": [256, 512, 1024],
+            "hidden_dim": 256,
+            "expansion": 0.5,
+            "depth_mult": 0.34,
+            "eval_spatial_size": [640, 640],
+        },
+        "deim_dfine_hgnetv2_m": {
+            "in_channels": [384, 768, 1536],
+            "hidden_dim": 256,
+            "depth_mult": 0.67,
+            "eval_spatial_size": [640, 640],
+        },
+        "deim_dfine_hgnetv2_l": {},
         "deim_dfine_hgnetv2_x": {
             "hidden_dim": 384,
             "dim_feedforward": 2048,

@@ -18,7 +18,6 @@ def flat_cosine_schedule(
     decay_iters: int,
     warmup_iters: int,
     flat_lr_iters: int,
-    no_aug_iters: int,
     current_iter: int,
     init_lr: float,
     min_lr: float,
@@ -41,12 +40,10 @@ def flat_cosine_schedule(
         return init_lr * (current_iter / float(warmup_iters)) ** 2
     if warmup_iters < current_iter <= flat_lr_iters:
         return init_lr
-    if current_iter >= decay_iters - no_aug_iters:
+    if current_iter >= decay_iters:
         return min_lr
 
-    cosine_decay = 0.5 * (
-        1 + math.cos(math.pi * (current_iter - flat_lr_iters) / (decay_iters - flat_lr_iters - no_aug_iters))
-    )
+    cosine_decay = 0.5 * (1 + math.cos(math.pi * (current_iter - flat_lr_iters) / (decay_iters - flat_lr_iters)))
     return min_lr + (init_lr - min_lr) * cosine_decay
 
 
@@ -63,7 +60,6 @@ class FlatCosineScheduler(LRScheduler):
         decay_duration (int): Total duration of the annealing phase in epochs.
         warmup_iters (int): Number of iterations for the warm-up phase.
         flat_lr_duration (int): Duration of the flat learning rate phase in epochs.
-        no_aug_epochs (int): Number of epochs without augmentation.
         interval (str): Interval for updating the learning rate, either "step" or "epoch".
     """
 
@@ -75,7 +71,6 @@ class FlatCosineScheduler(LRScheduler):
         decay_duration: int = 40,
         warmup_iters: int = 30,
         flat_lr_duration: int = 23,
-        no_aug_epochs: int = 8,
         interval: str = "step",
     ) -> None:
         self.base_lrs = [group["lr"] for group in optimizer.param_groups]
@@ -83,7 +78,6 @@ class FlatCosineScheduler(LRScheduler):
         self.interval = interval
 
         decay_iters = int(iter_per_epoch * decay_duration)
-        no_aug_iters = int(iter_per_epoch * no_aug_epochs)
         flat_lr_iters = int(iter_per_epoch * flat_lr_duration)
 
         self.lr_func = partial(
@@ -91,7 +85,6 @@ class FlatCosineScheduler(LRScheduler):
             decay_iters,
             warmup_iters,
             flat_lr_iters,
-            no_aug_iters,
         )
 
         super().__init__(optimizer)

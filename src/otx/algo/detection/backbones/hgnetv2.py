@@ -635,6 +635,27 @@ class HGNetv2:
             "freeze_stem_only": True,
             "pretrained": True,
         },
+        "deim_dfine_hgnetv2_s": {
+            "name": "B0",
+            "return_idx": [1, 2, 3],
+            "freeze_at": -1,
+            "freeze_norm": False,
+            "use_lab": True,
+        },
+        "deim_dfine_hgnetv2_m": {
+            "name": "B2",
+            "return_idx": [1, 2, 3],
+            "freeze_at": -1,
+            "freeze_norm": False,
+            "use_lab": True,
+        },
+        "deim_dfine_hgnetv2_l": {
+            "name": "B4",
+            "return_idx": [1, 2, 3],
+            "freeze_at": 0,
+            "freeze_norm": True,
+            "freeze_stem_only": True,
+        },
         "deim_dfine_hgnetv2_x": {
             "name": "B5",
             "return_idx": [1, 2, 3],
