@@ -127,6 +127,7 @@ class VisionTransformer(BaseModule):
                 "num_heads": 6,
                 "reg_tokens": 4,
                 "no_embed_class": True,
+                "init_values": 1e-5,
             },
         ),
         **dict.fromkeys(
@@ -346,7 +347,7 @@ class VisionTransformer(BaseModule):
             # convert dinov2 pretrained weights
             state_dict = torch.load(checkpoint_path)
             state_dict.pop("mask_token", None)
-            if "reg_token" in state_dict:
+            if "register_tokens" in state_dict:
                 state_dict["reg_token"] = state_dict.pop("register_tokens")
             state_dict["cls_token"] = state_dict.pop("cls_token") + state_dict["pos_embed"][:, 0]
 

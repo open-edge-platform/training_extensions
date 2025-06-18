@@ -1,6 +1,7 @@
 callback_monitor: val/map_50
 
 data: ../_base_/data/detection.yaml
+
 overrides:
   reset:
     - data.train_subset.transforms

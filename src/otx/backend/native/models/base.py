@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for base model entity used in OTX."""
 
@@ -221,12 +221,12 @@ class OTXModel(LightningModule):
 
         if isinstance(metric_inputs, dict):
             self.metric.update(**metric_inputs)
-            return
+            return preds
 
         if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
             for inp in metric_inputs:
                 self.metric.update(**inp)
-            return
+            return preds
 
         raise TypeError(metric_inputs)
 
@@ -246,12 +246,12 @@ class OTXModel(LightningModule):
 
         if isinstance(metric_inputs, dict):
             self.metric.update(**metric_inputs)
-            return
+            return preds
 
         if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
             for inp in metric_inputs:
                 self.metric.update(**inp)
-            return
+            return preds
 
         raise TypeError(metric_inputs)
 
@@ -768,6 +768,7 @@ class OTXModel(LightningModule):
         return TaskLevelExportParameters(
             model_type="null",
             task_type="null",
+            model_name=self.model_name,
             label_info=self.label_info,
             optimization_config=self._optimization_config,
         )

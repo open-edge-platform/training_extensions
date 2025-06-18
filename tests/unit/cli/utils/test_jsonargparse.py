@@ -56,7 +56,7 @@ def fxt_configs() -> Namespace:
         ),
         callbacks=[
             Namespace(
-                class_path="otx.algo.callbacks.iteration_timer.IterationTimer",
+                class_path="otx.backend.native.callbacks.iteration_timer.IterationTimer",
                 init_args=Namespace(prog_bar=True),
             ),
             Namespace(

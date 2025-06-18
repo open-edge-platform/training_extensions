@@ -59,7 +59,6 @@ class TestOTXDatasetFactory:
         self,
         fxt_mock_hlabelinfo,
         fxt_mock_dm_subset,
-        fxt_mem_cache_handler,
         task_type,
         dataset_cls,
         mocker,
@@ -72,7 +71,6 @@ class TestOTXDatasetFactory:
             OTXDatasetFactory.create(
                 task=task_type,
                 dm_subset=fxt_mock_dm_subset,
-                mem_cache_handler=fxt_mem_cache_handler,
                 cfg_subset=cfg_subset,
                 image_color_channel=image_color_channel,
                 data_format="",

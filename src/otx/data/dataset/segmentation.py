@@ -16,7 +16,6 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
-from otx.data.mem_cache import NULL_MEM_CACHE_HANDLER, MemCacheHandlerBase
 from otx.types.image import ImageColorChannel
 from otx.types.label import SegLabelInfo
 
@@ -161,8 +160,6 @@ class OTXSegmentationDataset(OTXDataset):
         self,
         dm_subset: DmDataset,
         transforms: Transforms,
-        mem_cache_handler: MemCacheHandlerBase = NULL_MEM_CACHE_HANDLER,
-        mem_cache_img_max_size: tuple[int, int] | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         to_tv_image: bool = True,
@@ -172,8 +169,6 @@ class OTXSegmentationDataset(OTXDataset):
         super().__init__(
             dm_subset,
             transforms,
-            mem_cache_handler,
-            mem_cache_img_max_size,
             max_refetch,
             image_color_channel,
             to_tv_image,

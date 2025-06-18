@@ -27,6 +27,7 @@ class TaskLevelExportParameters:
 
     Attributes:
         model_type (str): Model type field used in ModelAPI.
+        model_name (str): Model name field.
         task_type (str): Task type field used in ModelAPI.
         label_info (LabelInfo): OTX label info metadata.
             It will be parsed into a format compatible with ModelAPI.
@@ -56,6 +57,7 @@ class TaskLevelExportParameters:
 
     # Common
     model_type: str
+    model_name: str
     task_type: str
     label_info: LabelInfo
     optimization_config: dict
@@ -114,6 +116,7 @@ class TaskLevelExportParameters:
         metadata = {
             # Common
             ("model_info", "model_type"): self.model_type,
+            ("model_info", "model_name"): self.model_name,
             ("model_info", "task_type"): self.task_type,
             ("model_info", "label_info"): self.label_info.to_json(),
             ("model_info", "labels"): all_labels.strip(),

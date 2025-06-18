@@ -281,9 +281,6 @@ class ConfigConverter:
         """Update params of OTX recipe from Geit configurable params."""
         unused_params = deepcopy(param_dict)
 
-        def update_mem_cache_size(param_value: int) -> None:
-            config["data"]["mem_cache_size"] = f"{int(param_value / 1000000)}MB"
-
         def update_batch_size(param_value: int) -> None:
             config["data"]["train_subset"]["batch_size"] = param_value
 
@@ -326,12 +323,13 @@ class ConfigConverter:
                 config["callbacks"].pop(idx)
 
         def update_early_stop_patience(param_value: int) -> None:
-            for callback in config["callbacks"]:
-                if (
-                    callback["class_path"]
-                    == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
-                ):
-                    callback["init_args"]["patience"] = param_value
+            if "callbacks" in config and config["callbacks"] is not None:
+                for callback in config["callbacks"]:
+                    if (
+                        callback["class_path"]
+                        == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+                    ):
+                        callback["init_args"]["patience"] = param_value
                     break
 
         def update_use_adaptive_interval(param_value: bool) -> None:
@@ -372,7 +370,6 @@ class ConfigConverter:
                     unused_params.pop(tile_param)
 
         param_update_funcs = {
-            "mem_cache_size": update_mem_cache_size,
             "batch_size": update_batch_size,
             "inference_batch_size": update_inference_batch_size,
             "learning_rate": update_learning_rate,
@@ -478,14 +475,16 @@ class ConfigConverter:
             fail_untyped=False,
         )
         # Update callbacks & logger dir as engine.work_dir
-        for callback in config["callbacks"]:
-            if "init_args" in callback and "dirpath" in callback["init_args"]:
-                callback["init_args"]["dirpath"] = engine.work_dir
-        for logger in config["logger"]:
-            if "save_dir" in logger["init_args"]:
-                logger["init_args"]["save_dir"] = engine.work_dir
-            if "log_dir" in logger["init_args"]:
-                logger["init_args"]["log_dir"] = engine.work_dir
+        if "callbacks" in config and config["callbacks"] is not None:
+            for callback in config["callbacks"]:
+                if "init_args" in callback and "dirpath" in callback["init_args"]:
+                    callback["init_args"]["dirpath"] = engine.work_dir
+        if "logger" in config and config["logger"] is not None:
+            for logger in config["logger"]:
+                if "save_dir" in logger["init_args"]:
+                    logger["init_args"]["save_dir"] = engine.work_dir
+                if "log_dir" in logger["init_args"]:
+                    logger["init_args"]["log_dir"] = engine.work_dir
         instantiated_kwargs = engine_parser.instantiate_classes(Namespace(**config))
 
         train_kwargs = {k: v for k, v in instantiated_kwargs.items() if k in train_arguments}

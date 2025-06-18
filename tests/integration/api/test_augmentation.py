@@ -10,7 +10,6 @@ from datumaro import Dataset as DmDataset
 
 from otx.config.data import SamplerConfig, SubsetConfig
 from otx.data.factory import OTXDatasetFactory
-from otx.data.mem_cache import MemCacheHandlerSingleton
 from otx.tools.auto_configurator import AutoConfigurator
 from otx.types.task import OTXTaskType
 
@@ -38,10 +37,6 @@ def _test_augmentation(
         target_dataset_per_task[task_name],
         format=data_format,
     )
-    mem_cache_handler = MemCacheHandlerSingleton.create(
-        mode="singleprocessing",
-        mem_size=0,
-    )
 
     # Evaluate all on/off aug combinations
     img_shape = None
@@ -60,7 +55,6 @@ def _test_augmentation(
             task=task,
             dm_subset=dm_dataset,
             cfg_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
-            mem_cache_handler=mem_cache_handler,
             data_format=data_format,
         )
 
