@@ -23,7 +23,7 @@ UI_MODE: bool = True
 MOCK_CAMERA: bool = True
 
 
-def init_video_stream() -> VideoStream:
+def get_video_stream() -> VideoStream:
     """Initialize the camera"""
     if MOCK_CAMERA:
         return VideoFileStream(VIDEO_PATH)
@@ -32,15 +32,16 @@ def init_video_stream() -> VideoStream:
 
 def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None, None]:
     """Main loop. Acquires frames from the video stream and detects objects in them."""
-    video_stream = init_video_stream()
+    video_stream = iter(get_video_stream())
     model_service = ModelService()
     system_service = SystemService()
+
     while True:
         model = model_service.get_inference_model()
         if not model:
             time.sleep(1)
             continue
-        frame = video_stream.get_frame()
+        frame = next(video_stream)
         detections = model(frame)
         frame_with_detections = DetectionVisualizer.overlay_predictions(original_image=frame, predictions=detections)
         mem_mb, _ = system_service.get_memory_usage()

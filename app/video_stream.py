@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 import cv2
 import numpy as np
@@ -23,6 +24,14 @@ class VideoStream(ABC):
     @abstractmethod
     def release(self) -> None:
         """Release the video stream resources."""
+
+    def __iter__(self) -> Iterator[np.ndarray]:
+        while True:
+            try:
+                yield self.get_frame()
+            except RuntimeError as exc:
+                self.release()
+                raise StopIteration from exc
 
 
 class WebcamStream(VideoStream):
