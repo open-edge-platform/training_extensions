@@ -14,7 +14,7 @@ from api.endpoints import model_management
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastrtc import AdditionalOutputs, Stream
-from services import ModelService
+from services import ModelService, SystemService
 from video_stream import VideoFileStream, VideoStream, WebcamStream
 from visualization import DetectionVisualizer
 
@@ -34,6 +34,7 @@ def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None
     """Main loop. Acquires frames from the video stream and detects objects in them."""
     video_stream = init_video_stream()
     model_service = ModelService()
+    system_service = SystemService()
     while True:
         model = model_service.get_inference_model()
         if not model:
@@ -42,15 +43,19 @@ def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None
         frame = video_stream.get_frame()
         detections = model(frame)
         frame_with_detections = DetectionVisualizer.overlay_predictions(original_image=frame, predictions=detections)
-        yield frame_with_detections, AdditionalOutputs(str(detections))
+        mem_mb, _ = system_service.get_memory_usage()
+        yield frame_with_detections, AdditionalOutputs(str(detections), f"{mem_mb:.2f} MB")
 
 
 stream = Stream(
     handler=acquire_and_detect,
     modality="video",
     mode="receive",
-    additional_outputs=[gr.Textbox(label="predictions")],
-    additional_outputs_handler=lambda component, x: x,  # noqa: ARG005
+    additional_outputs=[
+        gr.Textbox(label="Predictions"),
+        gr.Textbox(label="Memory Usage (MB)"),
+    ],
+    additional_outputs_handler=lambda _c1, _c2, pred, mem: (pred, mem),
 )
 
 app = FastAPI(
