@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+
 import cv2
 import numpy as np
+
 
 class VideoStream(ABC):
     """Abstract base class for video stream implementations."""
@@ -11,23 +13,22 @@ class VideoStream(ABC):
         Returns:
             np.ndarray: The latest frame as a numpy array
         """
-        pass
 
-    def __enter__(self):
+    def __enter__(self) -> "VideoStream":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
         self.release()
 
     @abstractmethod
-    def release(self):
+    def release(self) -> None:
         """Release the video stream resources."""
-        pass
+
 
 class WebcamStream(VideoStream):
     """Video stream implementation using webcam via OpenCV."""
 
-    def __init__(self, device_id: int = 0):
+    def __init__(self, device_id: int = 0) -> None:
         """Initialize webcam stream.
         Args:
             device_id (int): The device ID of the webcam (default: 0)
@@ -42,14 +43,15 @@ class WebcamStream(VideoStream):
             raise RuntimeError("Failed to capture frame from webcam")
         return frame
 
-    def release(self):
+    def release(self) -> None:
         if self.cap is not None:
             self.cap.release()
+
 
 class VideoFileStream(VideoStream):
     """Video stream implementation using video file via OpenCV."""
 
-    def __init__(self, video_path: str):
+    def __init__(self, video_path: str) -> None:
         """Initialize video file stream.
         Args:
             video_path (str): Path to the video file
@@ -68,6 +70,6 @@ class VideoFileStream(VideoStream):
                 raise RuntimeError("Failed to capture frame from video file")
         return frame
 
-    def release(self):
+    def release(self) -> None:
         if self.cap is not None:
             self.cap.release()
