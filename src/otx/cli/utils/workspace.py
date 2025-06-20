@@ -3,7 +3,6 @@
 
 """Class modules that manage Workspace."""
 
-
 from __future__ import annotations
 
 from datetime import datetime, timezone

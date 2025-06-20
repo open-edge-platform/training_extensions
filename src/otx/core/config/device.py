@@ -3,7 +3,6 @@
 
 """Config data type objects for device."""
 
-
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -3,7 +3,6 @@
 
 """Optimizer callable to support adaptive batch size."""
 
-
 from __future__ import annotations
 
 import importlib

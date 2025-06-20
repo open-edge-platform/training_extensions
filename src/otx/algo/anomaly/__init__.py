@@ -3,7 +3,6 @@
 
 """Module for anomaly OTX Models."""
 
-
 from .padim import Padim
 from .stfpm import Stfpm
 

@@ -3,7 +3,6 @@
 
 """OTX APIs for User-friendliness."""
 
-
 from __future__ import annotations
 
 import fnmatch

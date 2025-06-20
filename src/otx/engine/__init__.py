@@ -3,7 +3,6 @@
 
 """API for OTX Entry-Point User."""
 
-
 from .engine import Engine
 
 __all__ = ["Engine"]

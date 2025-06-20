@@ -3,7 +3,6 @@
 
 """OpenVINO Training Extensions."""
 
-
 __version__ = "2.5.0dev"
 
 import os

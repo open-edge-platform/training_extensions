@@ -3,7 +3,6 @@
 
 """Custom Help Formatters for OTX CLI."""
 
-
 from __future__ import annotations
 
 import re

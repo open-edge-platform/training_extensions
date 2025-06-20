@@ -3,7 +3,6 @@
 
 """Functions related to jsonargparse."""
 
-
 from __future__ import annotations
 
 import ast

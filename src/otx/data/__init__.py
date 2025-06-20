@@ -3,7 +3,6 @@
 
 """Dataclasses for data entities."""
 
-
 from .torch import (
     OTXDataBatch,
     OTXDataItem,
