@@ -43,6 +43,7 @@ def pre_filtering(
         empty_items = [
             item.id for item in dataset if item.subset in ("train", "TRAINING") and len(item.annotations) == 0
         ]
+        # nosec B311: pseudo-random is fine here, this is not a security-sensitive context
         used_background_items = set(sample(empty_items, int(len(empty_items) * unannotated_items_ratio)))
 
     return DmDataset.filter(
