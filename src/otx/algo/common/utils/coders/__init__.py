@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Custom coder implementations."""
 
 from .base_bbox_coder import BaseBBoxCoder

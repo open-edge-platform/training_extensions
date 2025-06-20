@@ -1,6 +1,8 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) OpenMMLab. All rights reserved.
+
 """SSD object detector for the OTX detection.
 
 Implementation modified from mmdet.models.detectors.single_stage.

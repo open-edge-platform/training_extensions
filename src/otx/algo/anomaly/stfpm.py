@@ -1,5 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 """OTX STFPM model."""
 
 # TODO(someone): Revisit mypy errors after OTXLitModule deprecation and anomaly refactoring

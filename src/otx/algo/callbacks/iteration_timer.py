@@ -1,6 +1,6 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Timer for logging iteration time for train, val, and test phases."""
 
 from __future__ import annotations
