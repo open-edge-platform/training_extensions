@@ -142,7 +142,7 @@ class OTXEngine(Engine):
 
     def train(
         self,
-        max_epochs: int = 10,
+        max_epochs: int = 200,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
         precision: _PRECISION_INPUT | None = "32",

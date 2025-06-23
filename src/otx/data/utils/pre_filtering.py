@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
+import secrets
 import warnings
-from random import sample
 from typing import TYPE_CHECKING
 
 from datumaro.components.annotation import Annotation, Bbox, Polygon
@@ -43,7 +43,9 @@ def pre_filtering(
         empty_items = [
             item.id for item in dataset if item.subset in ("train", "TRAINING") and len(item.annotations) == 0
         ]
-        used_background_items = set(sample(empty_items, int(len(empty_items) * unannotated_items_ratio)))
+        used_background_items = set(
+            secrets.SystemRandom().sample(empty_items, int(len(empty_items) * unannotated_items_ratio)),
+        )
 
     return DmDataset.filter(
         dataset,
