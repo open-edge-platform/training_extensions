@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.algo.detection.backbones.hgnetv2 import HGNetv2
 from otx.algo.detection.detectors import DETR
@@ -19,7 +19,6 @@ from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 
 if TYPE_CHECKING:
-    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.core.metrics import MetricCallable
@@ -123,11 +122,25 @@ class DEIMDFine(RTDETR):
             msg = f"Unsupported model name: {self.model_name}"
             raise ValueError(msg) from err
 
-        optimizer_configuration = [
-            {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
-            # no weight decay for norm layers and biases in encoder and decoder layers
-            {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
-        ]
+        if self.model_name in ["deim_dfine_hgnetv2_x", "deim_dfine_hgnetv2_l"]:
+            optimizer_configuration = [
+                {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
+                {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
+            ]
+        elif self.model_name in ["deim_dfine_hgnetv2_m", "deim_dfine_hgnetv2_s"]:
+            optimizer_configuration = [
+                {"params": "^(?=.*backbone)(?!.*bn).*$", "lr": backbone_lr},
+                {"params": "^(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
+            ]
+        elif self.model_name == "deim_dfine_hgnetv2_n":
+            optimizer_configuration = [
+                {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
+                {"params": "^(?=.*backbone)(?=.*norm|bn).*$", "lr": backbone_lr, "weight_decay": 0.0},
+                {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$", "weight_decay": 0.0},
+            ]
+        else:
+            msg = "Invalid model"
+            raise RuntimeError(msg)
 
         model = DETR(
             multi_scale=self.generate_scales(self.data_input_params.input_size[0]) if self.multi_scale else None,
@@ -142,35 +155,3 @@ class DEIMDFine(RTDETR):
         load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
 
         return model
-
-    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
-        """Configure an optimizer and learning-rate schedulers.
-
-        Set up the optimizer and schedulers from the provided inputs.
-        Typically, a warmup scheduler is used initially, followed by the main scheduler.
-
-        Returns:
-            Two list. The former is a list that contains an optimizer
-            The latter is a list of lr scheduler configs which has a dictionary format.
-        """
-        param_groups = self._get_optim_params(self.model.optimizer_configuration, self.model)
-        optimizer = self.optimizer_callable(param_groups)
-
-        bs = self.trainer.datamodule.train_subset.batch_size
-        num_samples = len(self.trainer.datamodule.subsets["train"])
-        iter_per_epoch = num_samples // bs
-        schedulers = self.scheduler_callable(optimizer, iter_per_epoch)
-
-        def ensure_list(item: Any) -> list:  # noqa: ANN401
-            return item if isinstance(item, list) else [item]
-
-        lr_scheduler_configs = []
-        for scheduler in ensure_list(schedulers):
-            lr_scheduler_config = {"scheduler": scheduler}
-            if hasattr(scheduler, "interval"):
-                lr_scheduler_config["interval"] = scheduler.interval
-            if hasattr(scheduler, "monitor"):
-                lr_scheduler_config["monitor"] = scheduler.monitor
-            lr_scheduler_configs.append(lr_scheduler_config)
-
-        return [optimizer], lr_scheduler_configs
