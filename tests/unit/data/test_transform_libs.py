@@ -133,7 +133,7 @@ class TestTorchVisionTransformLib:
         - 300
         - 200
         transforms:
-          - class_path: otx.core.data.transform_libs.torchvision.RandomResize
+          - class_path: otx.data.transform_libs.torchvision.RandomResize
             init_args:
                 scale: $(input_size) * 0.5
           - class_path: otx.data.transform_libs.torchvision.RandomCrop

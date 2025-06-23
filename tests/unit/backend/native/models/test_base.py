@@ -44,9 +44,8 @@ class TestOTXModel:
         batch = {"input": torch.randn(2, 3)}
         batch_idx = 0
 
-        results = current_model.training_step(batch, batch_idx)
-
-        assert results is None
+        with pytest.raises(ValueError, match="Loss is None."):
+            current_model.training_step(batch, batch_idx)
 
     def test_smart_weight_loading(self, mocker) -> None:
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(2)):

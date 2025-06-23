@@ -18,6 +18,7 @@ def get_dummy_ov_cls_model() -> ov.Model:
     ov_model.outputs[0].tensor.set_names({"output"})
     model_params = TaskLevelExportParameters(
         model_type="Classification",
+        model_name="dummy_model",
         task_type="classification",
         multilabel=True,
         hierarchical=False,
