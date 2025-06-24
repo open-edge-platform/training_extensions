@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Unit tests for classification model module."""
 
 from __future__ import annotations

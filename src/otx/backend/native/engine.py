@@ -1,7 +1,7 @@
-"""OTX Engine."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""OTX Engine."""
 
 from __future__ import annotations
 

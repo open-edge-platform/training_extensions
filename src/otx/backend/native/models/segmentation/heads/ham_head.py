@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Implementation of HamburgerNet head."""
 
 from __future__ import annotations

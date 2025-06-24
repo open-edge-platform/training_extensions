@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """OTX Anomaly OpenVINO model.
 
 All anomaly models use the same AnomalyDetection model from ModelAPI.
@@ -5,9 +8,6 @@ All anomaly models use the same AnomalyDetection model from ModelAPI.
 
 # TODO(someone): Revisit mypy errors after OTXLitModule deprecation and anomaly refactoring
 # mypy: ignore-errors
-
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 

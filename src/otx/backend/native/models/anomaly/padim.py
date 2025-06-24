@@ -1,7 +1,8 @@
-"""OTX Padim model."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""OTX Padim model."""
+
 # TODO(someone): Revisit mypy errors after OTXLitModule deprecation and anomaly refactoring
 # mypy: ignore-errors
 

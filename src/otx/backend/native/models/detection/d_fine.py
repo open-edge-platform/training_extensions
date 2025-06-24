@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """D-Fine model implementations."""
 
 from __future__ import annotations

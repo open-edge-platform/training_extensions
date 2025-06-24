@@ -1,6 +1,8 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) OpenMMLab. All rights reserved.
+
 """CSPNeXtPAFPN (CSPNeXt Path Aggregation Feature Pyramid Network).
 
 Implementation modified from mmdet.models.necks.cspnext_pafpn.py.

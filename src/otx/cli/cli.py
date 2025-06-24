@@ -1,8 +1,7 @@
-"""CLI entrypoints."""
-
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""CLI entrypoints."""
 
 from __future__ import annotations
 

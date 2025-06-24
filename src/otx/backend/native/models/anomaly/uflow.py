@@ -1,7 +1,8 @@
-"""OTX UFlow model."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""OTX UFlow model."""
+
 # mypy: ignore-errors
 
 from __future__ import annotations

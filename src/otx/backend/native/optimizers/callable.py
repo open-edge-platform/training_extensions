@@ -1,7 +1,7 @@
-"""Optimizer callable to support adaptive batch size."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Optimizer callable to support adaptive batch size."""
 
 from __future__ import annotations
 

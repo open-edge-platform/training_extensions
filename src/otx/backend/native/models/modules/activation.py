@@ -1,5 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Custom activation implementation copied from mmcv.cnn.bricks.swish.py."""

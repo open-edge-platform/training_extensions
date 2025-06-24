@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Module for OTXKeypointDetectionDataset."""
 
 from __future__ import annotations

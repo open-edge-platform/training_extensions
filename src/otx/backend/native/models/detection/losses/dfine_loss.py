@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """D-FINE criterion implementations. Modified from https://github.com/Peterande/D-FINE."""
 
 

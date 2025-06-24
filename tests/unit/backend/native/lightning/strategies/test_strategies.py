@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Tests the XPU strategy."""
 import pytest
 from lightning.pytorch.utilities.exceptions import MisconfigurationException

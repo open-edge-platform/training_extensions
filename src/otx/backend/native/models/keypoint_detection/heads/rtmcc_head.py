@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
+
 """Implementation of RTMCCHead."""
 from __future__ import annotations
 

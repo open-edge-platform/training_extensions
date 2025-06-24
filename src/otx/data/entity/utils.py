@@ -1,6 +1,6 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Utility functions for OTX data entities."""
 
 from __future__ import annotations

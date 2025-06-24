@@ -1,6 +1,8 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) OpenMMLab. All rights reserved.
+
 """Implementation of ChannelAttention copied from mmdet.models.layers.se_layer.py."""
 
 from __future__ import annotations

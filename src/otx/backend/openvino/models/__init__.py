@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """OpenVINO models implementation for all supported CV tasks."""
 
 from .base import OVModel

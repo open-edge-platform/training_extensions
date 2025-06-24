@@ -1,7 +1,7 @@
-"""OpenVINO Training Extensions."""
-
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""OpenVINO Training Extensions."""
 
 __version__ = "2.5.0dev"
 

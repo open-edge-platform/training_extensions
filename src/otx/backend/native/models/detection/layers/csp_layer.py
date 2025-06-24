@@ -1,6 +1,8 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) OpenMMLab. All rights reserved.
+
 """Implementation of CSPLayer copied from mmdet.models.layers.csp_layer.py."""
 
 from __future__ import annotations

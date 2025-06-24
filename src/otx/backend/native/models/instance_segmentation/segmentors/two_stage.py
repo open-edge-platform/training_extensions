@@ -1,10 +1,11 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
-# This class and its supporting functions are adapted from the mmdet.
-# Please refer to https://github.com/open-mmlab/mmdetection/
 
-"""TwoStageDetector."""
+"""TwoStageDetector.
+
+This class and its supporting functions are adapted from the mmdet.
+Please refer to https://github.com/open-mmlab/mmdetection/
+"""
 
 from __future__ import annotations
 

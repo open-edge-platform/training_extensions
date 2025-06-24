@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """HRNet network modules for base backbone.
 
 Modified from:

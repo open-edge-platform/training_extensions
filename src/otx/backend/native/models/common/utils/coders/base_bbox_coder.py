@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Base bounding box coder."""
 
 from abc import ABCMeta, abstractmethod
