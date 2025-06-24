@@ -1,5 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 """Common layers implementation.
 
 Reference : https://github.com/WongKinYiu/YOLO

@@ -1,6 +1,6 @@
 # Copyright (C) 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Module for defining AsymmetricAngularLossWithIgnore."""
 
 from __future__ import annotations

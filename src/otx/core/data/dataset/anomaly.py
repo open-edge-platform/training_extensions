@@ -1,7 +1,7 @@
-"""Anomaly Classification Dataset."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Anomaly Classification Dataset."""
 
 from __future__ import annotations
 

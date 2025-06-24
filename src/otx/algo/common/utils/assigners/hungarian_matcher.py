@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """DETR style Hungarian matcher for bipartite matching."""
 
 from __future__ import annotations

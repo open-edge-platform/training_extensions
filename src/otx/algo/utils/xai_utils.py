@@ -1,5 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 """Utils used for XAI."""
 
 # TODO(gzalessk): Typings in this file is too weak or wrong. It should be fixed.

@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Auto-Configurator class & util functions for OTX Auto-Configuration."""
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """A collection of miscellaneous utility functions."""
 
 from typing import Callable, TypeVar

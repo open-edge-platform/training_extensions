@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Module for OTX instance segmentation segmentors."""
 
 from .maskrcnn_tv import MaskRCNN

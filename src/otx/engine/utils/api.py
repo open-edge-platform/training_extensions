@@ -1,7 +1,7 @@
-"""OTX APIs for User-friendliness."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""OTX APIs for User-friendliness."""
 
 from __future__ import annotations
 

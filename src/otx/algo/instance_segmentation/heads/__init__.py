@@ -1,5 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 """Custom head implementations for instance segmentation task."""
 
 from .bbox_head import ConvFCBBoxHead

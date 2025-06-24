@@ -1,7 +1,7 @@
-"""OTX Device type definition."""
-
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""OTX Device type definition."""
 
 from __future__ import annotations
 
