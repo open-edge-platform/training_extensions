@@ -224,7 +224,7 @@ overrides:
     task: DETECTION
     data_format: coco_instances
     train_subset:
-      batch_size: 16
+      batch_size: 8
       num_workers: 4
       transforms: []
       sampler:

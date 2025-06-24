@@ -122,25 +122,16 @@ class DEIMDFine(RTDETR):
             msg = f"Unsupported model name: {self.model_name}"
             raise ValueError(msg) from err
 
-        if self.model_name in ["deim_dfine_hgnetv2_x", "deim_dfine_hgnetv2_l", "deim_dfine_hgnetv2_m"]:
-            optimizer_configuration = [
-                {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
-                {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
-            ]
-        elif self.model_name in ["deim_dfine_hgnetv2_s"]:
-            optimizer_configuration = [
-                {"params": "^(?=.*backbone)(?!.*bn).*$", "lr": backbone_lr},
-                {"params": "^(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
-            ]
-        elif self.model_name == "deim_dfine_hgnetv2_n":
+        optimizer_configuration = [
+            {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
+            {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
+        ]
+        if self.model_name == "deim_dfine_hgnetv2_n":
             optimizer_configuration = [
                 {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
                 {"params": "^(?=.*backbone)(?=.*norm|bn).*$", "lr": backbone_lr, "weight_decay": 0.0},
                 {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$", "weight_decay": 0.0},
             ]
-        else:
-            msg = "Invalid model"
-            raise RuntimeError(msg)
 
         model = DETR(
             multi_scale=self.generate_scales(self.data_input_params.input_size[0]) if self.multi_scale else None,
