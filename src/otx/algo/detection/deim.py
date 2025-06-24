@@ -122,12 +122,12 @@ class DEIMDFine(RTDETR):
             msg = f"Unsupported model name: {self.model_name}"
             raise ValueError(msg) from err
 
-        if self.model_name in ["deim_dfine_hgnetv2_x", "deim_dfine_hgnetv2_l"]:
+        if self.model_name in ["deim_dfine_hgnetv2_x", "deim_dfine_hgnetv2_l", "deim_dfine_hgnetv2_m"]:
             optimizer_configuration = [
                 {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
                 {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
             ]
-        elif self.model_name in ["deim_dfine_hgnetv2_m", "deim_dfine_hgnetv2_s"]:
+        elif self.model_name in ["deim_dfine_hgnetv2_s"]:
             optimizer_configuration = [
                 {"params": "^(?=.*backbone)(?!.*bn).*$", "lr": backbone_lr},
                 {"params": "^(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
