@@ -75,13 +75,13 @@ If you want to make changes to the library, then a local installation is recomme
 Installing the library with uv tool is the easiest way to get started with otx.
 
 ```bash
-uv pip install otx
+uv pip install otx[cuda]
 ```
 
 For Intel GPUs users:
 
 ```bash
-uv pip install otx --extra-index-url https://download.pytorch.org/whl/test/xpu
+uv pip install otx[xpu]
 ```
 
 </details>
@@ -100,9 +100,9 @@ git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions
 
 # Install in editable mode
-uv pip install -e .
+uv pip install -e .[cuda]
 # For Intel GPUs users
-uv pip install -e . --extra-index-url https://download.pytorch.org/whl/test/xpu
+uv pip install -e .[xpu]
 ```
 
 </details>

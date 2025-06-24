@@ -40,7 +40,6 @@ dependencies = [
     "typeguard>=4.3,<4.5",
     # TODO(ashwinvaidya17): https://github.com/openvinotoolkit/anomalib/issues/2126
     "setuptools<70",
-    "torch==2.7.0",
     "lightning==2.4.0",
     "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
@@ -56,7 +55,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "uv",
-    "tox==4.25.0",
+    "tox-uv==1.26.0",
     "pre-commit==4.2.0",
     "pylint",
     "pytest",
@@ -66,6 +65,12 @@ dev = [
     "pytest-csv",
     "pytest-cov",
     "onnxruntime==1.21.1",
+]
+
+cuda = ["torch==2.7.0"]
+xpu = [
+    "torch==2.7.0+xpu",
+    "pytorch-triton-xpu==3.3.0",
 ]
 
 docs = [
@@ -106,6 +111,27 @@ otx = "otx.cli:main"
 [project.urls]
 Documentation = "https://open-edge-platform.github.io/training_extensions/"
 Repository = "https://github.com/open-edge-platform/training_extensions/"
+
+[tool.uv.sources]
+torch = [
+    { index = "torch-xpu", extra = "xpu"},
+    { index = "torch-cuda", extra = "cuda"},
+]
+pytorch-triton-xpu = [
+    { index = "torch-xpu", extra = "xpu"},
+]
+
+
+[[tool.uv.index]]
+name = "torch-cuda"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "torch-xpu"
+url = "https://download.pytorch.org/whl/xpu"
+explicit = true
+
 
 [tool.setuptools.dynamic]
 version = {attr = "otx.__version__"}
