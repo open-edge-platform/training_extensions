@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """High Performance GPU Net(HGNet) Backbone from PaddlePaddle.
 
 Modified from:

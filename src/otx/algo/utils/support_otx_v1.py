@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Utility functions to guarantee the OTX1.x models."""
 from __future__ import annotations
 

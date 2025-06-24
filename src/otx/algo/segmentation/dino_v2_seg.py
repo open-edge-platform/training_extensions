@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """DinoV2Seg model implementations."""
 
 from __future__ import annotations

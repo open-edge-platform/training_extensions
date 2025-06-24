@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Custom assigner implementations."""
 
 from .dynamic_soft_label_assigner import DynamicSoftLabelAssigner

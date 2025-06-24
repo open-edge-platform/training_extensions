@@ -1,6 +1,8 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) OpenMMLab. All rights reserved.
+
 """Data structures for detection task.
 
 Implementation modified from mmdet.models.task_modules.assigners.assign_result

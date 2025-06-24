@@ -1,7 +1,7 @@
-"""Dataclasses for data entities."""
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Dataclasses for data entities."""
 
 from .torch import (
     OTXDataBatch,

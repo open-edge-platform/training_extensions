@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Pre filtering data for OTX."""
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ def pre_filtering(
         empty_items = [
             item.id for item in dataset if item.subset in ("train", "TRAINING") and len(item.annotations) == 0
         ]
-        used_background_items = set(sample(empty_items, int(len(empty_items) * unannotated_items_ratio)))
+        used_background_items = set(sample(empty_items, int(len(empty_items) * unannotated_items_ratio)))  # nosec B311: # disable random check
 
     return DmDataset.filter(
         dataset,

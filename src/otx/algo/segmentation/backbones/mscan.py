@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """MSCAN backbone for SegNext model."""
 
 from __future__ import annotations

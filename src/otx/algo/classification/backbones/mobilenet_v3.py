@@ -1,6 +1,6 @@
 # Copyright (C) 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """Implementation of MobileNetV3.
 
 Original papers:
