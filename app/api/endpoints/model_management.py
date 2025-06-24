@@ -2,16 +2,23 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
-from services.model_service import ModelAlreadyExistsError, ModelNotFoundError, ModelService
+from services.model_service import (
+    ModelAlreadyExistsError,
+    ModelNotFoundError,
+    ModelService,
+)
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
+
 
 class ModelResponse(BaseModel):
     model_name: str
 
+
 class ModelsInfoResponse(BaseModel):
     active_model: str | None
     available_models: list[str]
+
 
 @router.post("/models")
 async def add_model(

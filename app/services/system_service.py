@@ -5,9 +5,9 @@ from utils.singleton import Singleton
 
 class SystemService(metaclass=Singleton):
     """Service to get system information"""
+
     def __init__(self) -> None:
         self.process = psutil.Process()
-
 
     def get_memory_usage(self):
         """

@@ -7,12 +7,14 @@
 
 import time
 from collections.abc import Generator
+from pathlib import Path
 
 import gradio as gr
 import numpy as np
 from api.endpoints import model_management
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastrtc import AdditionalOutputs, Stream
 from services import ModelService, SystemService
 from video_stream import VideoFileStream, VideoStream, WebcamStream
@@ -62,6 +64,9 @@ stream = Stream(
 app = FastAPI(
     title="GETI Edge",
     description="Edge inference server for GETI models",
+    openapi_url="/api/openapi.json",
+    redoc_url=None,
+    docs_url=None,
     # TODO add contact info
     # TODO add license
 )
@@ -74,7 +79,17 @@ app.add_middleware(  # TODO restrict settings in production
 )
 app.include_router(model_management.router)
 
-stream.mount(app)
+cur_dir = Path(__file__).parent
+
+
+@app.get("/api/docs")
+async def get_scalar_docs() -> HTMLResponse:
+    """Shows docs for our OpenAPI specification using scalar"""
+    html_content = open(cur_dir / "scalar.html").read()
+    return HTMLResponse(content=html_content)
+
+
+stream.mount(app, "/api")
 
 if __name__ == "__main__":
     if UI_MODE:
