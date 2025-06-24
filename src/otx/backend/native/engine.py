@@ -143,9 +143,10 @@ class OTXEngine(Engine):
     def train(
         self,
         max_epochs: int = 200,
+        min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = "32",
+        precision: _PRECISION_INPUT | None = "16",
         val_check_interval: int | float | None = None,
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
@@ -153,17 +154,20 @@ class OTXEngine(Engine):
         metric: MetricCallable | None = None,
         checkpoint: PathLike | None = None,
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
+        check_val_every_n_epoch: int | None = 1,
+        num_sanity_val_steps: int | None = 0,
         **kwargs,
     ) -> dict[str, Any]:
         r"""Trains the model using the provided LightningModule and OTXDataModule.
 
         Args:
             max_epochs (int | None, optional): The maximum number of epochs. Defaults to None.
+            min_epochs (int | None, optional): The minimum number of epochs. Defaults to 1.
             seed (int | None, optional): The random seed. Defaults to None.
             deterministic (bool | Literal["warn"]): Whether to enable deterministic behavior.
                 Also, can be set to `warn` to avoid failures, because some operations don't
                 support deterministic mode. Defaults to False.
-            precision (_PRECISION_INPUT | None, optional): The precision of the model. Defaults to 32.
+            precision (_PRECISION_INPUT | None, optional): The precision of the model. Defaults to 16.
             val_check_interval (int | float | None, optional): The validation check interval. Defaults to None.
             callbacks (list[Callback] | Callback | None, optional): The callbacks to be used during training.
             logger (Logger | Iterable[Logger] | bool | None, optional): The logger(s) to be used. Defaults to None.
@@ -174,6 +178,8 @@ class OTXEngine(Engine):
             adaptive_bs (Literal["None", "Safe", "Full"]):
                 Change the actual batch size depending on the current GPU status.
                 Safe => Prevent GPU out of memory. Full => Find a batch size using most of GPU memory.
+            check_val_every_n_epoch (int | None, optional): How often to check validation. Defaults to 1.
+            num_sanity_val_steps (int | None, optional): Number of validation steps to run before training starts.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
@@ -215,6 +221,8 @@ class OTXEngine(Engine):
                 >>> otx train --work_dir <WORK_DIR_PATH, str>
                 ```
         """
+        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
+
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -226,8 +234,11 @@ class OTXEngine(Engine):
             callbacks=callbacks,
             precision=precision,
             max_epochs=max_epochs,
+            min_epochs=min_epochs,
             deterministic=deterministic,
             val_check_interval=val_check_interval,
+            check_val_every_n_epoch=check_val_every_n_epoch,
+            num_sanity_val_steps=num_sanity_val_steps,
             **kwargs,
         )
         fit_kwargs: dict[str, Any] = {}
