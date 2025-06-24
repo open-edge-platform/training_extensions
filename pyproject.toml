@@ -14,6 +14,7 @@ dependencies = [
     "python-multipart~=0.0.20",
     "uvicorn~=0.34.3",
     "psutil~=7.0.0",
+    "anyio>=4.9.0",
 ]
 
 [dependency-groups]

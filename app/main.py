@@ -9,6 +9,7 @@ import time
 from collections.abc import Generator
 from pathlib import Path
 
+import anyio
 import gradio as gr
 import numpy as np
 from api.endpoints import model_management
@@ -21,7 +22,7 @@ from video_stream import VideoFileStream, VideoStream, WebcamStream
 from visualization import DetectionVisualizer
 
 VIDEO_PATH = "data/media/video.mp4"
-UI_MODE: bool = True
+UI_MODE: bool = False
 MOCK_CAMERA: bool = True
 
 
@@ -85,8 +86,9 @@ cur_dir = Path(__file__).parent
 @app.get("/api/docs")
 async def get_scalar_docs() -> HTMLResponse:
     """Shows docs for our OpenAPI specification using scalar"""
-    html_content = open(cur_dir / "scalar.html").read()
-    return HTMLResponse(content=html_content)
+    async with await anyio.open_file(cur_dir / "scalar.html") as file:
+        html_content = await file.read()
+        return HTMLResponse(content=html_content)
 
 
 stream.mount(app, "/api")

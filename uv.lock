@@ -464,6 +464,7 @@ name = "geti-edge"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "anyio" },
     { name = "fastapi" },
     { name = "fastrtc" },
     { name = "opencv-python" },
@@ -482,6 +483,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "anyio", specifier = ">=4.9.0" },
     { name = "fastapi", specifier = "~=0.115.12" },
     { name = "fastrtc", specifier = "~=0.0.28" },
     { name = "opencv-python", specifier = "~=4.11" },

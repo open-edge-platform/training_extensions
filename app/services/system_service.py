@@ -1,5 +1,4 @@
 import psutil
-
 from utils.singleton import Singleton
 
 
@@ -9,7 +8,7 @@ class SystemService(metaclass=Singleton):
     def __init__(self) -> None:
         self.process = psutil.Process()
 
-    def get_memory_usage(self):
+    def get_memory_usage(self) -> tuple[float, float]:
         """
         Get the memory usage of the process
 
