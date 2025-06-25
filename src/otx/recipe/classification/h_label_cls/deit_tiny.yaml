@@ -1,5 +1,6 @@
+task: H_LABEL_CLS
 model:
-  class_path: otx.algo.classification.hlabel_models.vit.VisionTransformerHLabelCls
+  class_path: otx.backend.native.models.classification.hlabel_models.vit.VisionTransformerHLabelCls
   init_args:
     model_name: "vit-tiny"
 
@@ -10,7 +11,7 @@ model:
         weight_decay: 0.05
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 0
         main_scheduler_callable:
@@ -22,7 +23,6 @@ model:
             monitor: val/accuracy
 
 engine:
-  task: H_LABEL_CLS
   device: auto
 
 callback_monitor: val/accuracy
@@ -30,7 +30,7 @@ callback_monitor: val/accuracy
 data: ../../_base_/data/classification.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       patience: 5
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint

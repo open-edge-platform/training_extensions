@@ -5,14 +5,13 @@ from __future__ import annotations
 
 import importlib
 import inspect
-from collections import defaultdict
 from pathlib import Path
 
 import pytest
 import yaml
 
-from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT
+from otx.types.task import OTXTaskType
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -86,13 +85,13 @@ def get_model_category_list(task: str, default_model_only: bool = False) -> list
     otx_module = importlib.import_module("otx")
     otx_root = Path(inspect.getfile(otx_module)).parent
     template_dir = otx_root / "tools" / "templates"
-    recipe_dir = otx_root / "recipe"
 
     # Collect all template.yaml files
     template_paths = template_dir.rglob("template.yaml")
-    template_dict = defaultdict(list)
+    recipes = []
 
     # Extract model categories from templates
+    task_list = get_task_list(task.lower())
     for template_path in template_paths:
         with template_path.open() as file:
             template = yaml.safe_load(file)
@@ -108,38 +107,19 @@ def get_model_category_list(task: str, default_model_only: bool = False) -> list
         if not model_info:
             continue
 
-        model_name = model_info["model_name"]
-        model_task = model_info["task"]
-        template_dict[model_task].append(model_name)
+        config_path = model_info["model_config_path"]
+        task = OTXTaskType(config_path.split("/")[-2].upper())  # Extract task from the path
+        if task in task_list:
+            recipes.append(config_path)
 
-    # Extend classification categories
-    template_dict[OTXTaskType.MULTI_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
-    template_dict[OTXTaskType.H_LABEL_CLS] = template_dict[OTXTaskType.MULTI_CLASS_CLS]
+        if task == OTXTaskType.MULTI_CLASS_CLS:
+            # Add multi_label_cls and h_label_cls configs as well if they are in the list
+            if OTXTaskType.MULTI_LABEL_CLS in task_list:
+                recipes.append(config_path.replace("multi_class_cls", "multi_label_cls"))
+            if OTXTaskType.H_LABEL_CLS in task_list:
+                recipes.append(config_path.replace("multi_class_cls", "h_label_cls"))
 
-    # Get the list of tasks to search for recipes
-    task_list = get_task_list(task.lower())
-    recipes = set()
-
-    # Find matching recipes for each model
-    for task_type in task_list:
-        if task_type not in template_dict:
-            continue
-
-        task_recipe_dirs = list(recipe_dir.rglob(task_type.lower()))
-        if not task_recipe_dirs:
-            continue
-
-        task_recipe_dir = task_recipe_dirs[0]  # Assuming one directory per task
-
-        for model_name in template_dict[task_type]:
-            recipe_paths = task_recipe_dir.rglob(f"{model_name}*.yaml")
-            recipes.update(recipe_paths)
-
-    if not recipes:
-        msg = f"No recipe found for task '{task}'."
-        raise FileNotFoundError(msg)
-
-    return [str(recipe) for recipe in recipes]
+    return recipes
 
 
 def pytest_configure(config):

@@ -1,5 +1,6 @@
+task: KEYPOINT_DETECTION
 model:
-  class_path: otx.algo.keypoint_detection.rtmpose.RTMPose
+  class_path: otx.backend.native.models.keypoint_detection.rtmpose.RTMPose
   init_args:
     label_info: 17
     model_name: rtmpose_tiny
@@ -11,7 +12,7 @@ model:
         weight_decay: 0.
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 100
         main_scheduler_callable:
@@ -21,7 +22,6 @@ model:
             eta_min: 0
 
 engine:
-  task: KEYPOINT_DETECTION
   device: auto
 
 callback_monitor: val/PCK
@@ -29,7 +29,7 @@ callback_monitor: val/PCK
 data: ../_base_/data/keypoint_detection.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       warmup_iters: 300
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint

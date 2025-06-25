@@ -1,5 +1,6 @@
+task: DETECTION
 model:
-  class_path: otx.algo.detection.d_fine.DFine
+  class_path: otx.backend.native.models.detection.d_fine.DFine
   init_args:
     model_name: dfine_hgnetv2_x
     label_info: 80
@@ -13,7 +14,7 @@ model:
         weight_decay: 0.000125
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 100
         main_scheduler_callable:
@@ -24,7 +25,6 @@ model:
             patience: 6
             monitor: val/map_50
 engine:
-  task: DETECTION
   device: auto
 
 callback_monitor: val/map_50
@@ -32,11 +32,11 @@ callback_monitor: val/map_50
 data: ../_base_/data/torchvision_base.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
       min_lrschedule_patience: 3
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       warmup_iters: 100
       warmup_epochs: 7
@@ -67,26 +67,26 @@ overrides:
         - class_path: torchvision.transforms.v2.RandomZoomOut
           init_args:
             fill: 0
-        - class_path: otx.core.data.transform_libs.torchvision.RandomIoUCrop
+        - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
           init_args:
             p: 0.8
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
             min_size: 1
-        - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+        - class_path: otx.data.transform_libs.torchvision.RandomFlip
           init_args:
             prob: 0.5
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             transform_bbox: true
             keep_ratio: false
             is_numpy_to_tvtensor: true
-        - class_path: otx.core.data.transform_libs.torchvision.PhotoMetricDistortion
+        - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
           enable: false
           init_args:
             is_numpy_to_tvtensor: true
-        - class_path: otx.core.data.transform_libs.torchvision.RandomAffine
+        - class_path: otx.data.transform_libs.torchvision.RandomAffine
           enable: false
           init_args:
             is_numpy_to_tvtensor: true
@@ -110,12 +110,12 @@ overrides:
           init_args:
             min_size: 1
       sampler:
-        class_path: otx.algo.samplers.balanced_sampler.BalancedSampler
+        class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false
@@ -132,7 +132,7 @@ overrides:
     test_subset:
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false

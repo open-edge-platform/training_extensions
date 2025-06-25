@@ -28,7 +28,7 @@ How to Use LoRA in OpenVINO™ Training Extensions
 
         .. code-block:: python
 
-            from otx.algo.classification.multiclass_models.vit import VisionTransformerMulticlassCls
+            from otx.backend.native.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
 
             model = VisionTransformerMulticlassCls(..., lora=True)
 

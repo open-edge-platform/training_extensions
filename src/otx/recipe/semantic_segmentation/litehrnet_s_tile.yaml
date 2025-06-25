@@ -1,5 +1,6 @@
+task: SEMANTIC_SEGMENTATION
 model:
-  class_path: otx.algo.segmentation.litehrnet.LiteHRNet
+  class_path: otx.backend.native.models.segmentation.litehrnet.LiteHRNet
   init_args:
     label_info: 2
     model_name: lite_hrnet_s
@@ -14,7 +15,7 @@ model:
         weight_decay: 0.0
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 100
         main_scheduler_callable:
@@ -26,7 +27,6 @@ model:
             monitor: val/Dice
 
 engine:
-  task: SEMANTIC_SEGMENTATION
   device: auto
 
 callback_monitor: val/Dice
@@ -34,7 +34,7 @@ callback_monitor: val/Dice
 data: ../_base_/data/semantic_segmentation_tile.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       warmup_iters: 100
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint

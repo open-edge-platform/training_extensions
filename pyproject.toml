@@ -337,14 +337,14 @@ src = ["src", "tests"]
 # Allow default arguments like, e.g., `data: List[str] = fastapi.Query(None)`.
 extend-immutable-calls = [
     # Label info objects
-    "otx.core.types.label.LabelInfo",
-    "otx.core.types.label.HLabelInfo",
-    "otx.core.types.label.SegLabelInfo",
-    "otx.core.types.label.NullLabelInfo",
-    "otx.core.types.label.AnomalyLabelInfo",
+    "otx.types.label.LabelInfo",
+    "otx.types.label.HLabelInfo",
+    "otx.types.label.SegLabelInfo",
+    "otx.types.label.NullLabelInfo",
+    "otx.types.label.AnomalyLabelInfo",
 
     # Config objects
-    "otx.core.config.data.TileConfig",
+    "otx.config.data.TileConfig",
 ]
 
 [tool.ruff.mccabe]

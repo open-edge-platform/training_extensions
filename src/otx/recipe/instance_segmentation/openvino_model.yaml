@@ -1,16 +1,3 @@
-model:
-  class_path: otx.core.model.instance_segmentation.OVInstanceSegmentationModel
-  init_args:
-    label_info: 80
-    model_name: openvino.xml
-    model_type: MaskRCNN
-    async_inference: true
-    use_throughput_mode: true
-
-engine:
-  task: INSTANCE_SEGMENTATION
-  device: cpu
-
 callback_monitor: val/map_50
 
 data: ../_base_/data/instance_segmentation.yaml

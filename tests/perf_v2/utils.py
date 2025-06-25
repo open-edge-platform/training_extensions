@@ -20,7 +20,7 @@ import pandas as pd
 from cpuinfo import get_cpu_info
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

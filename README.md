@@ -136,9 +136,9 @@ Below is how to train with auto-configuration, which is provided to users with d
 
 ```python
 # Training with Auto-Configuration via Engine
-from otx.engine import Engine
+from otx.backend.native.engine import OTXEngine
 
-engine = Engine(data_root="data/wgisd", task="DETECTION")
+engine = OTXEngine(data_root="data/wgisd", task="DETECTION")
 engine.train()
 ```
 
