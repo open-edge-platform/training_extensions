@@ -8,10 +8,10 @@ import itertools
 import pytest
 from datumaro import Dataset as DmDataset
 
-from otx.core.config.data import SamplerConfig, SubsetConfig
-from otx.core.data.factory import OTXDatasetFactory
-from otx.core.types.task import OTXTaskType
-from otx.engine.utils.auto_configurator import AutoConfigurator
+from otx.config.data import SamplerConfig, SubsetConfig
+from otx.data.factory import OTXDatasetFactory
+from otx.tools.auto_configurator import AutoConfigurator
+from otx.types.task import OTXTaskType
 
 
 def _test_augmentation(
@@ -21,13 +21,12 @@ def _test_augmentation(
 ) -> None:
     # Load recipe
     recipe_tokens = recipe.split("/")
-    model_name = recipe_tokens[-1].split(".")[0]
     task_name = recipe_tokens[-2]
     task = OTXTaskType(task_name.upper())
     config = AutoConfigurator(
         data_root=target_dataset_per_task[task_name],
         task=task,
-        model_name=model_name,
+        model_config_path=recipe,
     ).config
     train_config = config["data"]["train_subset"]
     train_config["input_size"] = (32, 32)

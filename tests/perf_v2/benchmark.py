@@ -15,8 +15,8 @@ from typing import Any, Literal
 import pandas as pd
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.types.task import OTXTaskType
-from otx.engine import Engine
+from otx.backend.native.engine import OTXEngine
+from otx.types.task import OTXTaskType
 from tests.perf_v2 import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf_v2.utils import (
     Criterion,
@@ -301,7 +301,7 @@ class Benchmark:
         dataset_info: DatasetInfo,
         work_dir: Path,
         subcommand: SubCommand,
-    ) -> tuple[Engine, dict[str, Any]]:
+    ) -> tuple[OTXEngine, dict[str, Any]]:
         """Initialise engine with given model and dataset settings.
 
         Args:
@@ -313,7 +313,7 @@ class Benchmark:
             Engine: Initialised engine
         """
 
-        engine = Engine(
+        engine = OTXEngine(
             model=model_info.name,
             task=model_info.task,
             data_root=self.data_root / dataset_info.path,
@@ -326,7 +326,7 @@ class Benchmark:
         # Instantiate Train Arguments
         engine_parser = ArgumentParser()
         arguments = engine_parser.add_method_arguments(
-            Engine,
+            OTXEngine,
             subcommand.value,
             skip={"accelerator", "devices"},
             fail_untyped=False,

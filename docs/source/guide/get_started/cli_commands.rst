@@ -167,7 +167,7 @@ Preview all configuration values that will be executed through that command line
       work_dir: ./otx-workspace
       device: auto
     model:
-    class_path: otx.algo.detection.atss.ATSS
+    class_path: otx.backend.native.models.detection.atss.ATSS
     init_args:
         label_info: 80
         model_name: atss_mobilenetv2

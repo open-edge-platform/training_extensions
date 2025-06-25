@@ -13,12 +13,13 @@ import cv2
 import pytest
 from model_api.models import Model
 
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import OTXModel
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.precision import OTXPrecisionType
-from otx.core.types.task import OTXTaskType
+from otx.backend.native.models.base import OTXModel
+from otx.data.module import OTXDataModule
+from otx.engine import create_engine
 from otx.tools.converter import ConfigConverter
+from otx.types.export import OTXExportFormatType
+from otx.types.precision import OTXPrecisionType
+from otx.types.task import OTXTaskType
 from tests.integration.api.geti_otx_config_utils import (
     ExportFormat,
     ExportParameter,
@@ -29,7 +30,7 @@ from tests.integration.api.geti_otx_config_utils import (
 )
 
 if TYPE_CHECKING:
-    from otx.engine.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
 TEST_ARROW_PATH = Path(__file__).parent.parent.parent / "assets" / "geti_config_arrow"
 DEFAULT_GETI_CONFIG_PER_TASK = {
@@ -114,7 +115,7 @@ class TestEngineAPI:
         )
         return otx_config.to_otx_config(self.tmp_path)
 
-    def _instantiate_engine(self) -> tuple[Engine, dict[str, Any]]:
+    def _instantiate_engine(self) -> tuple[OTXEngine, dict[str, Any]]:
         return ConfigConverter.instantiate(
             config=self.otx_config,
             work_dir=self.tmp_path,
@@ -206,22 +207,19 @@ class TestEngineAPI:
             exported_path=exported_path,
             dst_dir=fp32_export_dir,
         )
-        optimized_path = self.engine.optimize(
+        # instantiate the OpenVINO engine
+        ov_engine = create_engine(
+            model=fp32_export_dir / "exported_model.xml",
+            data=self.engine.datamodule,
+            work_dir=self.tmp_path,
+        )
+        optimized_path = ov_engine.optimize(
             checkpoint=fp32_export_dir / "exported_model.xml",
-            export_demo_package=True,
         )
         assert optimized_path.exists()
 
         # Test Model API
-        ov_optimized_dir = self.tmp_path / "ov_optimize"
-        ov_optimized_dir.mkdir(parents=True, exist_ok=True)
-        unzip_exportable_code(
-            work_dir=self.tmp_path,
-            exported_path=optimized_path,
-            dst_dir=ov_optimized_dir,
-        )
-        xml_path = ov_optimized_dir / "exported_model.xml"
-        mapi_model = Model.create_model(xml_path)
+        mapi_model = Model.create_model(optimized_path)
         assert mapi_model is not None
 
         predictions = mapi_model(self.image)

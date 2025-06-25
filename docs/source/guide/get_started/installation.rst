@@ -66,7 +66,7 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
             source .otx/bin/activate
 
             # Install from PyPI
-            uv pip install otx
+            uv pip install otx[cuda]
 
     .. tab-item:: Source
 
@@ -81,10 +81,10 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
             source .otx/bin/activate
 
             # Install the package in editable mode with base dependencies
-            uv pip install -e .
+            uv pip install -e .[cuda]
 
             # Install OTX in development mode
-            uv pip install -e .[dev]
+            uv pip install -e .[dev,cuda]
 
 2. Once the package is installed in the virtual environment, you can use the full
 OpenVINO™ Training Extensions command line functionality.
@@ -107,7 +107,7 @@ Install OpenVINO™ Training Extensions for users (Intel GPUs)
     uv venv .otx --python 3.10 # or 3.11
     source .otx/bin/activate
 
-    uv pip install -e . --extra-index-url https://download.pytorch.org/whl/test/xpu
+    uv pip install -e .[xpu]
 
 .. note::
 

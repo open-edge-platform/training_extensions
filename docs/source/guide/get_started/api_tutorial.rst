@@ -164,12 +164,12 @@ The ``otx.engine.Engine`` class is the main entry point for using OpenVINO™ Tr
 1. Setting ``task``
 
 Specify ``task``. This is the task type for that ``Engine`` usage.
-You can set the task by referencing the ``OTXTaskType`` in ``otx.core.types.task``.
+You can set the task by referencing the ``OTXTaskType`` in ``otx.types.task``.
 If no task is specified, the task is detected and used via ``datamodule`` or ``data_root``.
 
 .. code-block:: python
 
-    from otx.core.types.task import OTXTaskType
+    from otx.types.task import OTXTaskType
     from otx.engine import Engine
 
     engine = Engine(task=OTXTaskType.DETECTION)
@@ -190,12 +190,12 @@ The default value is currently ``./otx-workspace``.
 
 3. Setting device
 
-You can set the device by referencing the ``DeviceType`` in ``otx.core.types.device``.
+You can set the device by referencing the ``DeviceType`` in ``otx.types.device``.
 The current default setting is ``auto``.
 
 .. code-block:: python
 
-    from otx.core.types.device import DeviceType
+    from otx.types.device import DeviceType
     from otx.engine import Engine
 
     engine = Engine(device=DeviceType.gpu)
@@ -253,7 +253,7 @@ Create an output model and start actual training:
 
 3. If you want to specify the model, you can do so as shown below:
 
-The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
+The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
 
 .. tab-set::
 
@@ -261,7 +261,7 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
         .. code-block:: python
 
-            from otx.algo.detection.atss import ATSS
+            from otx.backend.native.models.detection.atss import ATSS
             from otx.engine import Engine
 
             model = ATSS(label_info=5, model_name="mobilenetv2", data_input_params=DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)))
@@ -273,7 +273,7 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
         .. code-block:: python
 
-            from otx.algo.detection.atss import ATSS
+            from otx.backend.native.models.detection.atss import ATSS
             from otx.engine import Engine
 
             model = ATSS(label_info=5, model_name="mobilenetv2")
@@ -287,7 +287,7 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
             from torch.optim import SGD
             from torch.optim.lr_scheduler import CosineAnnealingLR
-            from otx.algo.detection.atss import ATSS
+            from otx.backend.native.models.detection.atss import ATSS
             from otx.engine import Engine
 
             model = ATSS(label_info=5, model_name="mobilenetv2")
@@ -304,11 +304,11 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
 4. If you want to specify the datamodule, you can do so as shown below:
 
-The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModule``.
+The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
 
 .. code-block:: python
 
-    from otx.core.data.module import OTXDataModule
+    from otx.data.module import OTXDataModule
     from otx.engine import Engine
 
     datamodule = OTXDataModule(data_root="data/wgisd", ...)
@@ -326,7 +326,7 @@ The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModul
 
     .. code-block:: python
 
-        from otx.engine.utils.auto_configuration import AutoConfigurator
+        from otx.tools.auto_configuration import AutoConfigurator
 
         datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
 
@@ -362,9 +362,9 @@ The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModul
 
         .. code-block:: python
 
-            from otx.core.metrics.fmeasure import FMeasure
+            from otx.metrics.fmeasure import FMeasure
 
-            metric = FMeasue(label_info=5)
+            metric = FMeasure(label_info=5)
             engine.train(metric=metric)
 
     .. tab-item:: Set Callbacks & Logger
@@ -415,7 +415,7 @@ If the training is already in place, we just need to use the code below:
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(data_root="data/wgisd")
             engine.test(datamodule=datamodule)
@@ -424,7 +424,7 @@ If the training is already in place, we just need to use the code below:
 
         .. code-block:: python
 
-            from otx.core.metrics.fmeasure import FMeasure
+            from otx.metrics.fmeasure import FMeasure
 
             metric = FMeasue(label_info=5)
             engine.test(metric=metric)
@@ -495,7 +495,7 @@ To run the XAI with the OpenVINO™ IR model, we need to create an output model 
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(data_root="data/wgisd")
             engine.explain(..., datamodule=datamodule)
@@ -525,7 +525,7 @@ To run the optimization with PTQ on the OpenVINO™ IR model, we need to create 
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(data_root="data/wgisd")
             engine.optimize(..., datamodule=datamodule)

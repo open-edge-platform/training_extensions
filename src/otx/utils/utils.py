@@ -13,7 +13,7 @@ from functools import partial
 from types import LambdaType
 from typing import TYPE_CHECKING, Any, Callable
 
-from otx.core.model.base import OTXModel
+from otx.backend.native.models.base import OTXModel
 
 if TYPE_CHECKING:
     from pathlib import Path

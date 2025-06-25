@@ -1,16 +1,3 @@
-model:
-  class_path: otx.core.model.keypoint_detection.OVKeypointDetectionModel
-  init_args:
-    label_info: 19
-    model_name: rtm_pose_tiny
-    model_type: "keypoint_detection"
-    async_inference: true
-    use_throughput_mode: true
-
-engine:
-  task: KEYPOINT_DETECTION
-  device: cpu
-
 callback_monitor: val/PCK
 
 data: ../_base_/data/keypoint_detection.yaml
