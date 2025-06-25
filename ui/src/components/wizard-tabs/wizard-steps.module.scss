@@ -1,0 +1,89 @@
+// Copyright (C) 2022-2025 Intel Corporation
+// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+
+.tabList {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+}
+
+.wizardTabs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spectrum-global-dimension-size-400, var(--spectrum-alias-size-400));
+    max-width: 1024px;
+}
+
+.stepNumber {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--spectrum-global-dimension-size-350);
+    height: var(--spectrum-global-dimension-size-350);
+    border-radius: 50%;
+    background-color: var(--spectrum-global-color-gray-300);
+}
+
+.wizardTab {
+    position: relative;
+    width: 100%;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+
+    // Add a border before and after the label
+    &:before,
+    &:after {
+        content: '';
+        width: 100%;
+        border-bottom: solid 1px var(--spectrum-global-color-gray-500);
+        display: block;
+        height: 2px;
+    }
+
+    &[data-hovered],
+    &[data-focused] {
+        color: var(--spectrum-global-color-gray-800);
+
+        .stepNumber {
+            background-color: var(--spectrum-global-color-gray-400);
+        }
+    }
+
+    &[data-selected] {
+        font-weight: 600;
+        color: var(--spectrum-global-color-gray-900);
+
+        .stepNumber {
+            background-color: var(--energy-blue);
+            color: var(--spectrum-global-color-gray-100);
+        }
+    }
+
+    &[data-disabled] {
+        cursor: default;
+        color: var(--spectrum-global-color-gray-600);
+        .stepNumber {
+            background-color: var(--spectrum-global-color-gray-200);
+        }
+    }
+
+    &:first-child:before {
+        border-bottom: 0;
+    }
+    &:last-child:after {
+        border-bottom: 0;
+    }
+}
+
+.wizardTabText {
+    position: absolute;
+    text-align: center;
+    width: 30ch;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-block-start: 5em;
+}

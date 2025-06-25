@@ -1,0 +1,105 @@
+name: UI checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions: {} # No permissions by default on workflow level
+
+jobs:
+  build:
+    name: Build UI
+    runs-on: innersource.prod.amr.dind
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.2
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || '' }}
+
+      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        id: setup-node
+        with:
+          node-version-file: ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: "ui"
+        run: npm ci
+
+      - name: Build UI
+        working-directory: "ui"
+        run: npm run build
+
+      - name: Compress build
+        working-directory: "ui"
+        run: tar -czf dist.tar.gz dist
+
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: webui-dist
+          path: "ui/dist.tar.gz"
+
+  lint:
+    name: Eslint checks
+    runs-on: innersource.prod.amr.dind
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.2
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || '' }}
+
+      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        id: setup-node
+        with:
+          node-version-file: ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: "ui"
+        run: npm ci
+
+      - name: Prettier
+        working-directory: "ui"
+        run: npm run format:check
+
+      - name: Eslint
+        working-directory: "ui"
+        run: npm run lint
+
+      - name: Eslint cyclic imports
+        working-directory: "ui"
+        run: npm run cyclic-deps-check
+
+      - name: Typescript
+        working-directory: "ui"
+        run: npm run type-check
+
+  unit-tests:
+    name: Jest tests
+    runs-on: innersource.prod.amr.dind
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.2
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || '' }}
+
+      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        id: setup-node
+        with:
+          node-version-file: ui/.nvmrc
+
+      - name: Install dependencies
+        working-directory: "ui"
+        run: npm ci
+
+      - name: UI Unit tests
+        working-directory: "ui"
+        run: npm run test:unit

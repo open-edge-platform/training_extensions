@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastrtc import AdditionalOutputs, Stream
+from pydantic import BaseModel, Field
 
 from app.api.endpoints import model_management
 from app.services import ModelService, SystemService
@@ -91,6 +92,17 @@ async def get_scalar_docs() -> HTMLResponse:
     async with await anyio.open_file(cur_dir / "scalar.html") as file:
         html_content = await file.read()
         return HTMLResponse(content=html_content)
+
+
+class InputData(BaseModel):
+    webrtc_id: str
+    conf_threshold: float = Field(ge=0, le=1)
+
+
+@app.post("/api/input_hook", tags=["webrtc"])
+async def webrtc_input_hook(data: InputData) -> None:
+    """Update webrtc input for user"""
+    stream.set_input(data.webrtc_id, data.conf_threshold)
 
 
 stream.mount(app, "/api")

@@ -1,0 +1,16 @@
+.canvasContainer {
+    display: grid;
+    grid-template-areas: 'innercanvas';
+    overflow: hidden;
+    justify-items: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.canvasItem {
+    grid-area: innercanvas;
+}
