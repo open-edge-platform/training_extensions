@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 
 dependencies = [
-    "fastapi~=0.115.12",
+    "fastapi[standard]~=0.115.12",
     "fastrtc~=0.0.28",
     "openvino-model-api~=0.3.0.2",
     "opencv-python~=4.11",

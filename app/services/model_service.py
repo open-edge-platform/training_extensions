@@ -7,8 +7,9 @@ from threading import Lock
 import anyio
 from fastapi import UploadFile
 from model_api.models import DetectionModel
-from schemas.model_activation import ModelActivationState
-from utils.singleton import Singleton
+
+from app.schemas.model_activation import ModelActivationState
+from app.utils.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 

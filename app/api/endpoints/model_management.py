@@ -2,7 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
-from services.model_service import ModelAlreadyExistsError, ModelNotFoundError, ModelService
+
+from app.services.model_service import ModelAlreadyExistsError, ModelNotFoundError, ModelService
 
 router = APIRouter(prefix="/api")
 

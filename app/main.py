@@ -1,7 +1,8 @@
 # export no_proxy="localhost, 127.0.0.1, ::1"
 # Start with:
-#  - uv run app/main.py
-# or
+#  - uv run fastapi run
+#  - uv run fastapi dev
+# or use docker and access UI and backend at geti-edge.localhost
 #  - docker build -t geti-edge .
 #  - docker run --network host --name geti-edge geti-edge
 
@@ -12,14 +13,15 @@ from pathlib import Path
 import anyio
 import gradio as gr
 import numpy as np
-from api.endpoints import model_management
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastrtc import AdditionalOutputs, Stream
-from services import ModelService, SystemService
-from video_stream import VideoFileStream, VideoStream, WebcamStream
-from visualization import DetectionVisualizer
+
+from app.api.endpoints import model_management
+from app.services import ModelService, SystemService
+from app.video_stream import VideoFileStream, VideoStream, WebcamStream
+from app.visualization import DetectionVisualizer
 
 VIDEO_PATH = "data/media/video.mp4"
 UI_MODE: bool = False

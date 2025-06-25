@@ -1,5 +1,6 @@
 import psutil
-from utils.singleton import Singleton
+
+from app.utils.singleton import Singleton
 
 
 class SystemService(metaclass=Singleton):
