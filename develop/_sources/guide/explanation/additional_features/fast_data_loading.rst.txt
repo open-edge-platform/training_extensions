@@ -27,7 +27,7 @@ training time in those cases.
 
       .. code-block:: python
 
-         from otx.core.data.module import OTXDataModule
+         from otx.data.module import OTXDataModule
 
          datamodule = OTXDataModule(..., mem_cache_size="8GB")
 

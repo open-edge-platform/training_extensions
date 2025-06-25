@@ -1,0 +1,29 @@
+otx.backend.native.optimizers
+=============================
+
+.. automodule:: otx.backend.native.optimizers
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OptimizerCallableSupportAdaptiveBS
+   
+   
+
+   
+   
+   
+
+
+

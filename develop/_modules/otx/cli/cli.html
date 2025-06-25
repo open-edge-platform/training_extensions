@@ -270,24 +270,24 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Console</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTX_LOGO</span><span class="p">,</span> <span class="n">__version__</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.cli.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute_path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.cli.utils.help_formatter</span><span class="w"> </span><span class="kn">import</span> <span class="n">CustomHelpFormatter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.cli.utils.jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_short_docstring</span><span class="p">,</span> <span class="n">patch_update_configs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.cli.utils.workspace</span><span class="w"> </span><span class="kn">import</span> <span class="n">Workspace</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse._actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">_ActionSubCommands</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
 
 <span class="n">_ENGINE_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_configs</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_configs</span>
 
     <span class="n">register_configs</span><span class="p">()</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -402,9 +402,9 @@
             <span class="s2">&quot;Setting this option to true will disable this behavior.&quot;</span><span class="p">,</span>
             <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">engine_skip</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;datamodule&quot;</span><span class="p">,</span> <span class="s2">&quot;work_dir&quot;</span><span class="p">}</span>
+        <span class="n">engine_skip</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;work_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">}</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_class_arguments</span><span class="p">(</span>
-            <span class="n">Engine</span><span class="p">,</span>
+            <span class="n">OTXEngine</span><span class="p">,</span>
             <span class="s2">&quot;engine&quot;</span><span class="p">,</span>
             <span class="n">fail_untyped</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">sub_configs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -412,16 +412,17 @@
             <span class="n">skip</span><span class="o">=</span><span class="n">engine_skip</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># Model Settings</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.openvino.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OVModel</span>
 
         <span class="n">parser</span><span class="o">.</span><span class="n">add_subclass_arguments</span><span class="p">(</span>
-            <span class="n">OTXModel</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">OTXModel</span><span class="p">,</span> <span class="n">OVModel</span><span class="p">),</span>
             <span class="s2">&quot;model&quot;</span><span class="p">,</span>
             <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">fail_untyped</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># Datamodule Settings</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 
         <span class="n">parser</span><span class="o">.</span><span class="n">add_class_arguments</span><span class="p">(</span>
             <span class="n">OTXDataModule</span><span class="p">,</span>
@@ -433,12 +434,11 @@
         <span class="n">parser</span><span class="o">.</span><span class="n">add_class_arguments</span><span class="p">(</span><span class="n">Workspace</span><span class="p">,</span> <span class="s2">&quot;workspace&quot;</span><span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">link_arguments</span><span class="p">(</span><span class="s2">&quot;work_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;workspace.work_dir&quot;</span><span class="p">)</span>
 
-        <span class="n">parser</span><span class="o">.</span><span class="n">link_arguments</span><span class="p">(</span><span class="s2">&quot;data_root&quot;</span><span class="p">,</span> <span class="s2">&quot;engine.data_root&quot;</span><span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">link_arguments</span><span class="p">(</span><span class="s2">&quot;data_root&quot;</span><span class="p">,</span> <span class="s2">&quot;data.data_root&quot;</span><span class="p">)</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">link_arguments</span><span class="p">(</span><span class="s2">&quot;engine.device&quot;</span><span class="p">,</span> <span class="s2">&quot;data.device&quot;</span><span class="p">)</span>
 
         <span class="n">added_arguments</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_method_arguments</span><span class="p">(</span>
-            <span class="n">Engine</span><span class="p">,</span>
+            <span class="n">OTXEngine</span><span class="p">,</span>
             <span class="n">subcommand</span><span class="p">,</span>
             <span class="n">skip</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">OTXCLI</span><span class="o">.</span><span class="n">engine_subcommands</span><span class="p">()[</span><span class="n">subcommand</span><span class="p">]),</span>
             <span class="n">fail_untyped</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -478,7 +478,6 @@
             <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;datamodule&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">device_kwargs</span><span class="p">),</span>
             <span class="s2">&quot;predict&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;datamodule&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">device_kwargs</span><span class="p">),</span>
             <span class="s2">&quot;export&quot;</span><span class="p">:</span> <span class="n">device_kwargs</span><span class="p">,</span>
-            <span class="s2">&quot;optimize&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;datamodule&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">device_kwargs</span><span class="p">),</span>
             <span class="s2">&quot;explain&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;datamodule&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">device_kwargs</span><span class="p">),</span>
             <span class="s2">&quot;benchmark&quot;</span><span class="p">:</span> <span class="n">device_kwargs</span><span class="p">,</span>
         <span class="p">}</span></div>
@@ -513,7 +512,7 @@
                 <span class="c1"># If the user specifies the config directly, not set the cache ckpt as default.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_load_cache_ckpt</span><span class="p">(</span><span class="n">parser</span><span class="o">=</span><span class="n">sub_parser</span><span class="p">)</span>
 
-            <span class="n">fn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Engine</span><span class="p">,</span> <span class="n">subcommand</span><span class="p">)</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">OTXEngine</span><span class="p">,</span> <span class="n">subcommand</span><span class="p">)</span>
             <span class="n">description</span> <span class="o">=</span> <span class="n">get_short_docstring</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_subcommand_method_arguments</span><span class="p">[</span><span class="n">subcommand</span><span class="p">]</span> <span class="o">=</span> <span class="n">added_arguments</span>
@@ -541,23 +540,6 @@
                 <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Load default config from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">&#39;configs.yaml&#39;</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">parser_kwargs</span>
 
-        <span class="c1"># If don&#39;t use cache, use the default config from auto configuration.</span>
-        <span class="n">data_root</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">task</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="s2">&quot;--data_root&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
-            <span class="n">data_root</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;--data_root&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s2">&quot;--task&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
-            <span class="n">task</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;--task&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="n">enable_auto_config</span> <span class="o">=</span> <span class="n">data_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;--config&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
-        <span class="k">if</span> <span class="n">enable_auto_config</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.auto_configurator</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_CONFIG_PER_TASK</span><span class="p">,</span> <span class="n">AutoConfigurator</span>
-
-            <span class="n">auto_configurator</span> <span class="o">=</span> <span class="n">AutoConfigurator</span><span class="p">(</span>
-                <span class="n">data_root</span><span class="o">=</span><span class="n">data_root</span><span class="p">,</span>
-                <span class="n">task</span><span class="o">=</span><span class="n">OTXTaskType</span><span class="p">(</span><span class="n">task</span><span class="p">)</span> <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">task</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">DEFAULT_CONFIG_PER_TASK</span><span class="p">[</span><span class="n">auto_configurator</span><span class="o">.</span><span class="n">task</span><span class="p">]</span>
-            <span class="n">parser_kwargs</span><span class="p">[</span><span class="s2">&quot;default_config_files&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">parser_kwargs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_extension_subcommands_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_subcommands</span><span class="p">:</span> <span class="n">_ActionSubCommands</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -622,16 +604,17 @@
 
 <div class="viewcode-block" id="OTXCLI.instantiate_engine">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.cli.cli.html#otx.cli.cli.OTXCLI.instantiate_engine">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">instantiate_engine</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Engine</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">instantiate_engine</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXEngine</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate an Engine object with the specified parameters.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            An instance of the Engine class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">engine_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_config_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_init</span><span class="p">,</span> <span class="s2">&quot;engine&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Engine</span><span class="p">(</span>
+
+        <span class="k">return</span> <span class="n">OTXEngine</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="n">datamodule</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="p">,</span>
             <span class="n">work_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span>
             <span class="o">**</span><span class="n">engine_kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
@@ -651,7 +634,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            tuple: The model and optimizer and scheduler.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.core.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModel</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">otx.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">can_pass_tile_config</span><span class="p">,</span> <span class="n">get_model_cls_from_config</span><span class="p">,</span> <span class="n">should_pass_label_info</span>
 
         <span class="n">skip</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -814,7 +797,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[blue]</span><span class="si">{</span><span class="n">OTX_LOGO</span><span class="si">}</span><span class="s2">[/blue] ver.</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span> <span class="o">==</span> <span class="s2">&quot;find&quot;</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.cli.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
 
             <span class="n">list_models</span><span class="p">(</span><span class="n">print_table</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="p">])</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine_subcommands</span><span class="p">():</span>
@@ -851,7 +834,7 @@
                     <span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">row</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># noqa: PLW2901</span>
                 <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">metric</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;export&quot;</span><span class="p">,</span> <span class="s2">&quot;optimize&quot;</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span> <span class="o">==</span> <span class="s2">&quot;export&quot;</span><span class="p">:</span>
             <span class="c1"># Print output model path</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="si">}</span><span class="s2"> output: </span><span class="si">{</span><span class="n">outputs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Work Directory: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">work_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>

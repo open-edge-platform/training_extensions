@@ -1,0 +1,30 @@
+otx.backend.native.cli
+======================
+
+.. automodule:: otx.backend.native.cli
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      list_models
+      get_otx_root_path
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

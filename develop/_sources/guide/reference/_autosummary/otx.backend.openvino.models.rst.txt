@@ -1,0 +1,36 @@
+otx.backend.openvino.models
+===========================
+
+.. automodule:: otx.backend.openvino.models
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OVModel
+      OVDetectionModel
+      OVMulticlassClassificationModel
+      OVMultilabelClassificationModel
+      OVSegmentationModel
+      OVHlabelClassificationModel
+      OVInstanceSegmentationModel
+      OVKeypointDetectionModel
+   
+   
+
+   
+   
+   
+
+
+

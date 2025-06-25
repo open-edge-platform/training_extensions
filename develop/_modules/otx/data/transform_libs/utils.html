@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>otx.data.transform_libs.utils &#8212; OpenVINO™ Training Extensions 2.5.0dev documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../_static/styles/bootstrap.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
+
+    <script src="../../../../_static/documentation_options.js?v=9b901575"></script>
+    <script src="../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/data/transform_libs/utils';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fa-solid fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../_static/logos/otx-logo.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../_static/logos/otx-logo.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+    </div>
+
+    <div id="navbar-end">
+      
+        <div class="navbar-end-item navbar-persistent--container">
+          
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+        </div>
+      
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  
+    <div class="navbar-persistent--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+    </div>
+  
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+  
+  <div id="rtd-footer-container"></div>
+
+      </div>
+      <main id="main-content" class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for otx.data.transform_libs.utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+
+<span class="c1"># Copyright (c) OpenMMLab. All rights reserved.</span>
+
+<span class="sd">&quot;&quot;&quot;Utils for data transform functions.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">weakref</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shapely</span><span class="w"> </span><span class="kn">import</span> <span class="n">geometry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoolTensor</span><span class="p">,</span> <span class="n">Tensor</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Polygon</span>
+
+
+<span class="n">CV2_INTERP_CODES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;nearest&quot;</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_NEAREST</span><span class="p">,</span>
+    <span class="s2">&quot;bilinear&quot;</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">,</span>
+    <span class="s2">&quot;bicubic&quot;</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_CUBIC</span><span class="p">,</span>
+    <span class="s2">&quot;area&quot;</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_AREA</span><span class="p">,</span>
+    <span class="s2">&quot;lanczos&quot;</span><span class="p">:</span> <span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LANCZOS4</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="cache_randomness">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.cache_randomness">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">cache_randomness</span><span class="p">:</span>  <span class="c1"># noqa: N801</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator that marks the method with random return value(s) in a transform class.</span>
+
+<span class="sd">    Reference : https://github.com/open-mmlab/mmcv/blob/v2.1.0/mmcv/transforms/utils.py#L15-L87</span>
+
+<span class="sd">    This decorator is usually used together with the context-manager</span>
+<span class="sd">    :func`:cache_random_params`. In this context, a decorated method will</span>
+<span class="sd">    cache its return value(s) at the first time of being invoked, and always</span>
+<span class="sd">    return the cached values when being invoked again.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        Only an instance method can be decorated with ``cache_randomness``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>  <span class="c1"># noqa: ANN001</span>
+        <span class="c1"># Check `func` is to be bound as an instance method</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Unsupport callable to decorate with@cache_randomness.&quot;</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">func_args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="n">func</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">func_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">func_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;self&quot;</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;@cache_randomness should only be used to decorate instance methods (the first argument is ``self``).&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">functools</span><span class="o">.</span><span class="n">update_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance_ref</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__set_name__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>  <span class="c1"># noqa: ANN001</span>
+        <span class="c1"># Maintain a record of decorated methods in the class</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">&quot;_methods_with_randomness&quot;</span><span class="p">):</span>
+            <span class="n">owner</span><span class="o">.</span><span class="n">_methods_with_randomness</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># noqa: SLF001</span>
+
+        <span class="c1"># Here `name` equals to `self.__name__`, i.e., the name of the</span>
+        <span class="c1"># decorated function, due to the invocation of `update_wrapper` in</span>
+        <span class="c1"># `self.__init__()`</span>
+        <span class="n">owner</span><span class="o">.</span><span class="n">_methods_with_randomness</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
+
+<div class="viewcode-block" id="cache_randomness.__call__">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.cache_randomness.__call__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># noqa: D102</span>
+        <span class="c1"># Get the transform instance whose method is decorated</span>
+        <span class="c1"># by cache_randomness</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance_ref</span><span class="p">()</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="c1"># Check the flag ``self._cache_enabled``, which should be</span>
+        <span class="c1"># set by the contextmanagers like ``cache_random_parameters```</span>
+        <span class="n">cache_enabled</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;_cache_enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cache_enabled</span><span class="p">:</span>
+            <span class="c1"># Initialize the cache of the transform instances. The flag</span>
+            <span class="c1"># ``cache_enabled``` is set by contextmanagers like</span>
+            <span class="c1"># ``cache_random_params```.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;_cache&quot;</span><span class="p">):</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># noqa: SLF001</span>
+
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span>  <span class="c1"># noqa: SLF001</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
+            <span class="c1"># Return the cached value</span>
+            <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>  <span class="c1"># noqa: SLF001</span>
+
+        <span class="c1"># Clear cache</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;_cache&quot;</span><span class="p">):</span>
+            <span class="k">del</span> <span class="n">instance</span><span class="o">.</span><span class="n">_cache</span>  <span class="c1"># noqa: SLF001</span>
+        <span class="c1"># Return function output</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>  <span class="c1"># noqa: ANN001</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance_ref</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="c1"># Return a copy to avoid multiple transform instances sharing</span>
+        <span class="c1"># one `cache_randomness` instance, which may cause data races</span>
+        <span class="c1"># in multithreading cases.</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_image_shape">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.get_image_shape">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_image_shape</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get image(s) shape with (height, width).&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">get_image_shape</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># for list</span></div>
+
+
+
+<div class="viewcode-block" id="to_np_image">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.to_np_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_np_image</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert torch.Tensor 3D image to numpy 3D image.</span>
+
+<span class="sd">    TODO (sungchul): move it into base data entity?</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">img</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">to_np_image</span><span class="p">(</span><span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">img</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="rescale_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.rescale_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rescale_bboxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rescale boxes w.r.t. rescale_factor in-place.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Both ``rescale_`` and ``resize_`` will enlarge or shrink boxes</span>
+<span class="sd">        w.r.t ``scale_facotr``. The difference is that ``resize_`` only</span>
+<span class="sd">        changes the width and the height of boxes, but ``rescale_`` also</span>
+<span class="sd">        rescales the box centers simultaneously.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        boxes (Tensor): bounding boxes to be rescaled.</span>
+<span class="sd">        scale_factor (tuple[float, float]): factors for scaling boxes with (height, width).</span>
+<span class="sd">            It will be used after flipped. The length should be 2.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Tensor): rescaled bounding boxes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># noqa: S101</span>
+    <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">new_tensor</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">boxes</span> <span class="o">*</span> <span class="n">scale_factor</span></div>
+
+
+
+<div class="viewcode-block" id="rescale_masks">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.rescale_masks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rescale_masks</span><span class="p">(</span>
+    <span class="n">masks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">scale_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>  <span class="c1"># (H, W)</span>
+    <span class="n">interpolation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rescale masks as large as possible while keeping the aspect ratio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        masks (np.ndarray): Masks to be rescaled.</span>
+<span class="sd">        scale_factor (float | tuple[float, float]): Scale factor to be applied to masks with (height, width).</span>
+<span class="sd">        interpolation (str): Interpolation mode. Defaults to `nearest`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.ndarray) : The rescaled masks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">new_size</span> <span class="o">=</span> <span class="n">rescale_size</span><span class="p">((</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">),</span> <span class="n">scale_factor</span><span class="p">)</span>  <span class="c1"># (H, W)</span>
+
+    <span class="c1"># flipping `new_size` is required because cv2.resize uses (W, H)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">new_size</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">CV2_INTERP_CODES</span><span class="p">[</span><span class="n">interpolation</span><span class="p">])</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="p">],</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="rescale_polygons">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.rescale_polygons">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rescale_polygons</span><span class="p">(</span><span class="n">polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">],</span> <span class="n">scale_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rescale polygons as large as possible while keeping the aspect ratio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        polygons (np.ndarray): Polygons to be rescaled.</span>
+<span class="sd">        scale_factor (float | tuple[float, float]): Scale factor to be applied to polygons with (height, width)</span>
+<span class="sd">            or single float value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.ndarray) : The rescaled polygons.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">w_scale</span> <span class="o">=</span> <span class="n">h_scale</span> <span class="o">=</span> <span class="n">scale_factor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h_scale</span><span class="p">,</span> <span class="n">w_scale</span> <span class="o">=</span> <span class="n">scale_factor</span>
+
+    <span class="k">for</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="n">polygons</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">*=</span> <span class="n">w_scale</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">*=</span> <span class="n">h_scale</span>
+        <span class="n">polygon</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">polygons</span></div>
+
+
+
+<div class="viewcode-block" id="rescale_keypoints">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.rescale_keypoints">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rescale_keypoints</span><span class="p">(</span><span class="n">keypoints</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rescale keypoints as large as possible while keeping the aspect ratio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        keypoints (Tensor): Keypoints to be rescaled.</span>
+<span class="sd">        scale_factor (float | tuple[float, float]): Scale factor to be applied to keypoints with (height, width)</span>
+<span class="sd">            or single float value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Tensor): The rescaled keypoints.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">w_scale</span> <span class="o">=</span> <span class="n">h_scale</span> <span class="o">=</span> <span class="n">scale_factor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h_scale</span><span class="p">,</span> <span class="n">w_scale</span> <span class="o">=</span> <span class="n">scale_factor</span>
+
+    <span class="n">keypoints</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="n">w_scale</span>
+    <span class="n">keypoints</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="n">h_scale</span>
+    <span class="k">return</span> <span class="n">keypoints</span></div>
+
+
+
+<div class="viewcode-block" id="translate_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.translate_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">translate_bboxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">distances</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Translate boxes in-place.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        boxes (Tensor): Bounding boxes to be translated.</span>
+<span class="sd">        distances (Sequence[float]): Translate distances. The first</span>
+<span class="sd">            is horizontal distance and the second is vertical distance.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Tensor): Translated bounding boxes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># noqa: S101</span>
+    <span class="k">return</span> <span class="n">boxes</span> <span class="o">+</span> <span class="n">boxes</span><span class="o">.</span><span class="n">new_tensor</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="translate_masks">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.translate_masks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">translate_masks</span><span class="p">(</span>
+    <span class="n">masks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">out_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">,</span>
+    <span class="n">border_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">interpolation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Translate the masks.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        masks (np.ndarray): Masks to be translated.</span>
+<span class="sd">        out_shape (tuple[int]): Shape for output mask, format (h, w).</span>
+<span class="sd">        offset (int | float): The offset for translate.</span>
+<span class="sd">        direction (str): The translate direction, either &quot;horizontal&quot; or &quot;vertical&quot;.</span>
+<span class="sd">        border_value (int | tuple[int]): Border value. Default 0 for masks.</span>
+<span class="sd">        interpolation (str): Interpolation method, accepted values are</span>
+<span class="sd">            &#39;nearest&#39;, &#39;bilinear&#39;, &#39;bicubic&#39;, &#39;area&#39;, &#39;lanczos&#39;. Defaults to</span>
+<span class="sd">            &#39;bilinear&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.ndarray): Translated BitmapMasks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="k">if</span> <span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">out_shape</span><span class="p">:</span>
+        <span class="n">empty_masks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">out_shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">min_h</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">out_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">min_w</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">out_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">empty_masks</span><span class="p">[:,</span> <span class="p">:</span><span class="n">min_h</span><span class="p">,</span> <span class="p">:</span><span class="n">min_w</span><span class="p">]</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[:,</span> <span class="p">:</span><span class="n">min_h</span><span class="p">,</span> <span class="p">:</span><span class="n">min_w</span><span class="p">]</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="n">empty_masks</span>
+
+    <span class="c1"># from https://github.com/open-mmlab/mmcv/blob/v2.1.0/mmcv/image/geometric.py#L740-L788</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">masks</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">masks</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">border_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">border_value</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">border_value</span><span class="p">]</span> <span class="o">*</span> <span class="n">channels</span><span class="p">)</span>  <span class="c1"># type: ignore[assignment]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">border_value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">border_value</span><span class="p">)</span> <span class="o">==</span> <span class="n">channels</span><span class="p">,</span> <span class="p">(</span>  <span class="c1"># noqa: S101</span>
+            <span class="s2">&quot;Expected the num of elements in tuple equals the channels&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;of input image. Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">border_value</span><span class="p">)</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">channels</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">border_value</span><span class="p">)</span><span class="si">}</span><span class="s2"> for `border_value`.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+
+    <span class="n">translate_matrix</span> <span class="o">=</span> <span class="n">_get_translate_matrix</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span>
+    <span class="n">translated_masks</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpAffine</span><span class="p">(</span>
+        <span class="n">masks</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+        <span class="n">translate_matrix</span><span class="p">,</span>
+        <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span>
+        <span class="c1"># Note case when the number elements in `border_value`</span>
+        <span class="c1"># greater than 3 (e.g. translating masks whose channels</span>
+        <span class="c1"># large than 3) will raise TypeError in `cv2.warpAffine`.</span>
+        <span class="c1"># Here simply slice the first 3 values in `border_value`.</span>
+        <span class="n">borderValue</span><span class="o">=</span><span class="n">border_value</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span>  <span class="c1"># type: ignore[index]</span>
+        <span class="n">flags</span><span class="o">=</span><span class="n">CV2_INTERP_CODES</span><span class="p">[</span><span class="n">interpolation</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">translated_masks</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">translated_masks</span> <span class="o">=</span> <span class="n">translated_masks</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">translated_masks</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="translate_polygons">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.translate_polygons">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">translate_polygons</span><span class="p">(</span>
+    <span class="n">polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">],</span>
+    <span class="n">out_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">,</span>
+    <span class="n">border_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Translate polygons.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="p">(</span>  <span class="c1"># noqa: S101</span>
+        <span class="n">border_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">border_value</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Here border_value is not used, and defaultly should be None or 0. got </span><span class="si">{</span><span class="n">border_value</span><span class="si">}</span><span class="s2">.&quot;</span>
+
+    <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span> <span class="k">else</span> <span class="n">out_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="n">polygons</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">p</span><span class="p">[</span><span class="n">axis</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">axis</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+        <span class="n">polygon</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">polygons</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_translate_matrix</span><span class="p">(</span><span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">,</span> <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the translate matrix.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        offset (int | float): The offset used for translate.</span>
+<span class="sd">        direction (str): The translate direction, either</span>
+<span class="sd">            &quot;horizontal&quot; or &quot;vertical&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: The translate matrix with dtype float32.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">:</span>
+        <span class="n">translate_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">offset</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;vertical&quot;</span><span class="p">:</span>
+        <span class="n">translate_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">translate_matrix</span>
+
+
+<div class="viewcode-block" id="clip_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.clip_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clip_bboxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clip boxes according to the image shape in-place.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        img_shape (tuple[int, int]): A tuple of image height and width.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Tensor): Clipped boxes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">img_shape</span>
+    <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">boxes</span></div>
+
+
+
+<div class="viewcode-block" id="is_inside_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.is_inside_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_inside_bboxes</span><span class="p">(</span>
+    <span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">img_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">all_inside</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">allowed_border</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BoolTensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find boxes inside the image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        boxes (Tensor): Bounding boxes to be checked.</span>
+<span class="sd">        img_shape (tuple[int, int]): A tuple of image height and width.</span>
+<span class="sd">        all_inside (bool): Whether the boxes are all inside the image or</span>
+<span class="sd">            part inside the image. Defaults to False.</span>
+<span class="sd">        allowed_border (int): Boxes that extend beyond the image shape</span>
+<span class="sd">            boundary by more than ``allowed_border`` are considered</span>
+<span class="sd">            &quot;outside&quot; Defaults to 0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (BoolTensor): A BoolTensor indicating whether the box is inside</span>
+<span class="sd">            the image. Assuming the original boxes have shape (m, n, 4),</span>
+<span class="sd">            the output has shape (m, n).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img_h</span><span class="p">,</span> <span class="n">img_w</span> <span class="o">=</span> <span class="n">img_shape</span>
+    <span class="k">if</span> <span class="n">all_inside</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">allowed_border</span><span class="p">)</span>
+            <span class="o">&amp;</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">allowed_border</span><span class="p">)</span>
+            <span class="o">&amp;</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">img_w</span> <span class="o">+</span> <span class="n">allowed_border</span><span class="p">)</span>
+            <span class="o">&amp;</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">img_h</span> <span class="o">+</span> <span class="n">allowed_border</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">img_w</span> <span class="o">+</span> <span class="n">allowed_border</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">img_h</span> <span class="o">+</span> <span class="n">allowed_border</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">allowed_border</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">allowed_border</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="flip_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.flip_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flip_bboxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flip boxes horizontally or vertically in-place.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        boxes (Tensor): Bounding boxes to be flipped.</span>
+<span class="sd">        img_shape (Tuple[int, int]): A tuple of image height and width.</span>
+<span class="sd">        direction (str): Flip direction, options are &quot;horizontal&quot;,</span>
+<span class="sd">            &quot;vertical&quot; and &quot;diagonal&quot;. Defaults to &quot;horizontal&quot;</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Tensor): Flipped bounding boxes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">direction</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;horizontal&quot;</span><span class="p">,</span> <span class="s2">&quot;vertical&quot;</span><span class="p">,</span> <span class="s2">&quot;diagonal&quot;</span><span class="p">]</span>  <span class="c1"># noqa: S101</span>
+    <span class="n">flipped</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">:</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;vertical&quot;</span><span class="p">:</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">flipped</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">flipped</span></div>
+
+
+
+<div class="viewcode-block" id="overlap_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.overlap_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">overlap_bboxes</span><span class="p">(</span>
+    <span class="n">bboxes1</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">bboxes2</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;iou&quot;</span><span class="p">,</span>
+    <span class="n">is_aligned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate overlap between two set of bboxes.</span>
+
+<span class="sd">    FP16 Contributed by https://github.com/open-mmlab/mmdetection/pull/4889</span>
+<span class="sd">    Note:</span>
+<span class="sd">        Assume bboxes1 is M x 4, bboxes2 is N x 4, when mode is &#39;iou&#39;,</span>
+<span class="sd">        there are some new generated variable when calculating IOU</span>
+<span class="sd">        using overlap_bboxes function:</span>
+
+<span class="sd">        1) is_aligned is False</span>
+<span class="sd">            area1: M x 1</span>
+<span class="sd">            area2: N x 1</span>
+<span class="sd">            lt: M x N x 2</span>
+<span class="sd">            rb: M x N x 2</span>
+<span class="sd">            wh: M x N x 2</span>
+<span class="sd">            overlap: M x N x 1</span>
+<span class="sd">            union: M x N x 1</span>
+<span class="sd">            ious: M x N x 1</span>
+
+<span class="sd">            Total memory:</span>
+<span class="sd">                S = (9 x N x M + N + M) * 4 Byte,</span>
+
+<span class="sd">            When using FP16, we can reduce:</span>
+<span class="sd">                R = (9 x N x M + N + M) * 4 / 2 Byte</span>
+<span class="sd">                R large than (N + M) * 4 * 2 is always true when N and M &gt;= 1.</span>
+<span class="sd">                Obviously, N + M &lt;= N * M &lt; 3 * N * M, when N &gt;=2 and M &gt;=2,</span>
+<span class="sd">                           N + 1 &lt; 3 * N, when N or M is 1.</span>
+
+<span class="sd">            Given M = 40 (ground truth), N = 400000 (three anchor boxes</span>
+<span class="sd">            in per grid, FPN, R-CNNs),</span>
+<span class="sd">                R = 275 MB (one times)</span>
+
+<span class="sd">            A special case (dense detection), M = 512 (ground truth),</span>
+<span class="sd">                R = 3516 MB = 3.43 GB</span>
+
+<span class="sd">            When the batch size is B, reduce:</span>
+<span class="sd">                B x R</span>
+
+<span class="sd">            Therefore, CUDA memory runs out frequently.</span>
+
+<span class="sd">            Experiments on GeForce RTX 2080Ti (11019 MiB):</span>
+
+<span class="sd">            |   dtype   |   M   |   N   |   Use    |   Real   |   Ideal   |</span>
+<span class="sd">            |:----:|:----:|:----:|:----:|:----:|:----:|</span>
+<span class="sd">            |   FP32   |   512 | 400000 | 8020 MiB |   --   |   --   |</span>
+<span class="sd">            |   FP16   |   512 | 400000 |   4504 MiB | 3516 MiB | 3516 MiB |</span>
+<span class="sd">            |   FP32   |   40 | 400000 |   1540 MiB |   --   |   --   |</span>
+<span class="sd">            |   FP16   |   40 | 400000 |   1264 MiB |   276MiB   | 275 MiB |</span>
+
+<span class="sd">        2) is_aligned is True</span>
+<span class="sd">            area1: N x 1</span>
+<span class="sd">            area2: N x 1</span>
+<span class="sd">            lt: N x 2</span>
+<span class="sd">            rb: N x 2</span>
+<span class="sd">            wh: N x 2</span>
+<span class="sd">            overlap: N x 1</span>
+<span class="sd">            union: N x 1</span>
+<span class="sd">            ious: N x 1</span>
+
+<span class="sd">            Total memory:</span>
+<span class="sd">                S = 11 x N * 4 Byte</span>
+
+<span class="sd">            When using FP16, we can reduce:</span>
+<span class="sd">                R = 11 x N * 4 / 2 Byte</span>
+
+<span class="sd">        So do the &#39;giou&#39; (large than &#39;iou&#39;).</span>
+
+<span class="sd">        Time-wise, FP16 is generally faster than FP32.</span>
+
+<span class="sd">        When gpu_assign_thr is not -1, it takes more time on cpu</span>
+<span class="sd">        but not reduce memory.</span>
+<span class="sd">        There, we can reduce half the memory and keep the speed.</span>
+
+<span class="sd">    If ``is_aligned`` is ``False``, then calculate the overlaps between each</span>
+<span class="sd">    bbox of bboxes1 and bboxes2, otherwise the overlaps between each aligned</span>
+<span class="sd">    pair of bboxes1 and bboxes2.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bboxes1 (Tensor): shape (B, m, 4) in &lt;x1, y1, x2, y2&gt; format or empty.</span>
+<span class="sd">        bboxes2 (Tensor): shape (B, n, 4) in &lt;x1, y1, x2, y2&gt; format or empty.</span>
+<span class="sd">            B indicates the batch dim, in shape (B1, B2, ..., Bn).</span>
+<span class="sd">            If ``is_aligned`` is ``True``, then m and n must be equal.</span>
+<span class="sd">        mode (str): &quot;iou&quot; (intersection over union), &quot;iof&quot; (intersection over</span>
+<span class="sd">            foreground) or &quot;giou&quot; (generalized intersection over union).</span>
+<span class="sd">            Default &quot;iou&quot;.</span>
+<span class="sd">        is_aligned (bool, optional): If True, then m and n must be equal.</span>
+<span class="sd">            Default False.</span>
+<span class="sd">        eps (float, optional): A value added to the denominator for numerical</span>
+<span class="sd">            stability. Default 1e-6.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor: shape (m, n) if ``is_aligned`` is False else shape (m,)</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; bboxes1 = torch.FloatTensor([</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 0, 10, 10],</span>
+<span class="sd">        &gt;&gt;&gt;     [10, 10, 20, 20],</span>
+<span class="sd">        &gt;&gt;&gt;     [32, 32, 38, 42],</span>
+<span class="sd">        &gt;&gt;&gt; ])</span>
+<span class="sd">        &gt;&gt;&gt; bboxes2 = torch.FloatTensor([</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 0, 10, 20],</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 10, 10, 19],</span>
+<span class="sd">        &gt;&gt;&gt;     [10, 10, 20, 20],</span>
+<span class="sd">        &gt;&gt;&gt; ])</span>
+<span class="sd">        &gt;&gt;&gt; overlaps = overlap_bboxes(bboxes1, bboxes2)</span>
+<span class="sd">        &gt;&gt;&gt; assert overlaps.shape == (3, 3)</span>
+<span class="sd">        &gt;&gt;&gt; overlaps = overlap_bboxes(bboxes1, bboxes2, is_aligned=True)</span>
+<span class="sd">        &gt;&gt;&gt; assert overlaps.shape == (3, )</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; empty = torch.empty(0, 4)</span>
+<span class="sd">        &gt;&gt;&gt; nonempty = torch.FloatTensor([[0, 0, 10, 9]])</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(overlap_bboxes(empty, nonempty).shape) == (0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(overlap_bboxes(nonempty, empty).shape) == (1, 0)</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(overlap_bboxes(empty, empty).shape) == (0, 0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;iou&quot;</span><span class="p">,</span> <span class="s2">&quot;iof&quot;</span><span class="p">,</span> <span class="s2">&quot;giou&quot;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;Unsupported mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa: S101</span>
+    <span class="c1"># Either the boxes are empty or the length of boxes&#39; last dimension is 4</span>
+    <span class="k">assert</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>  <span class="c1"># noqa: S101</span>
+    <span class="k">assert</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>  <span class="c1"># noqa: S101</span>
+
+    <span class="c1"># Batch dim must be the same</span>
+    <span class="c1"># Batch dim: (B1, B2, ... Bn)</span>
+    <span class="k">assert</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># noqa: S101</span>
+    <span class="n">batch_shape</span> <span class="o">=</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">rows</span> <span class="o">==</span> <span class="n">cols</span>  <span class="c1"># noqa: S101</span>
+
+    <span class="k">if</span> <span class="n">rows</span> <span class="o">*</span> <span class="n">cols</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">new</span><span class="p">((</span><span class="o">*</span><span class="n">batch_shape</span><span class="p">,</span> <span class="n">rows</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">new</span><span class="p">((</span><span class="o">*</span><span class="n">batch_shape</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
+
+    <span class="n">area1</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">area2</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># [B, rows, 2]</span>
+        <span class="n">rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span>  <span class="c1"># [B, rows, 2]</span>
+
+        <span class="n">wh</span> <span class="o">=</span> <span class="n">fp16_clamp</span><span class="p">(</span><span class="n">rb</span> <span class="o">-</span> <span class="n">lt</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span> <span class="o">+</span> <span class="n">area2</span> <span class="o">-</span> <span class="n">overlap</span> <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;iou&quot;</span><span class="p">,</span> <span class="s2">&quot;giou&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="n">area1</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;giou&quot;</span><span class="p">:</span>
+            <span class="n">enclosed_lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">enclosed_rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># [B, rows, cols, 2]</span>
+        <span class="n">rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:])</span>  <span class="c1"># [B, rows, cols, 2]</span>
+
+        <span class="n">wh</span> <span class="o">=</span> <span class="n">fp16_clamp</span><span class="p">(</span><span class="n">rb</span> <span class="o">-</span> <span class="n">lt</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">area2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">overlap</span> <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;iou&quot;</span><span class="p">,</span> <span class="s2">&quot;giou&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="n">area1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;giou&quot;</span><span class="p">:</span>
+            <span class="n">enclosed_lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">enclosed_rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:])</span>
+
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">union</span><span class="o">.</span><span class="n">new_tensor</span><span class="p">([</span><span class="n">eps</span><span class="p">])</span>
+    <span class="n">union</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">union</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">ious</span> <span class="o">=</span> <span class="n">overlap</span> <span class="o">/</span> <span class="n">union</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;iou&quot;</span><span class="p">,</span> <span class="s2">&quot;iof&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">ious</span>
+    <span class="c1"># calculate gious</span>
+    <span class="n">enclose_wh</span> <span class="o">=</span> <span class="n">fp16_clamp</span><span class="p">(</span><span class="n">enclosed_rb</span> <span class="o">-</span> <span class="n">enclosed_lt</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">enclose_area</span> <span class="o">=</span> <span class="n">enclose_wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">enclose_wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">enclose_area</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">enclose_area</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ious</span> <span class="o">-</span> <span class="p">(</span><span class="n">enclose_area</span> <span class="o">-</span> <span class="n">union</span><span class="p">)</span> <span class="o">/</span> <span class="n">enclose_area</span></div>
+
+
+
+<div class="viewcode-block" id="centers_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.centers_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">centers_bboxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a tensor representing the centers of boxes.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">boxes</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="fp16_clamp">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.fp16_clamp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fp16_clamp</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="nb">min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>  <span class="c1"># noqa: A002</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clamp fp16 tensor.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_cuda</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
+        <span class="c1"># clamp for cpu float16, tensor fp16 has no clamp implementation</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span><span class="o">.</span><span class="n">half</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="scale_size">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.scale_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">scale_size</span><span class="p">(</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rescale a size by a ratio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        size (tuple[int]): (height, width).</span>
+<span class="sd">        scale (float | int | tuple(float) | tuple(int)): Scaling factor with (height, width).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[int]: scaled size with (height, width).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="rescale_size">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.rescale_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rescale_size</span><span class="p">(</span>
+    <span class="n">old_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">return_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the new size to be rescaled to.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        old_size (tuple[int]): The old size (height, width) of image.</span>
+<span class="sd">        scale (float | int | tuple[float] | tuple[int]): The scaling factor or maximum size.</span>
+<span class="sd">            If it is a float number, an integer, or a tuple of 2 float numbers,</span>
+<span class="sd">            then the image will be rescaled by this factor, else if it is a tuple of 2 integers,</span>
+<span class="sd">            then the image will be rescaled as large as possible within the scale.</span>
+<span class="sd">        return_scale (bool): Whether to return the scaling factor besides the rescaled image size.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[int]: The new rescaled image size with (height, width).</span>
+<span class="sd">            If return_scale is True, scale_factor obtained again will be returned as well.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">old_size</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid scale </span><span class="si">{</span><span class="n">scale</span><span class="si">}</span><span class="s2">, must be positive.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">scale</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">max_long_edge</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+            <span class="n">max_short_edge</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+            <span class="n">scale_factor</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_long_edge</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">),</span> <span class="n">max_short_edge</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">scale</span>  <span class="c1"># type: ignore[assignment]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Scale must be a number or tuple of int/float, but got tuple of </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Scale must be a number or tuple of int/float, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">if</span> <span class="n">msg</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">new_size</span> <span class="o">=</span> <span class="n">scale_size</span><span class="p">((</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">),</span> <span class="n">scale_factor</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_scale</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">new_size</span><span class="p">,</span> <span class="n">scale_factor</span>
+    <span class="k">return</span> <span class="n">new_size</span></div>
+
+
+
+<div class="viewcode-block" id="flip_image">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.flip_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flip_image</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flip an image horizontally or vertically.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        img (ndarray): Image to be flipped.</span>
+<span class="sd">        direction (str): The flip direction, either &quot;horizontal&quot; or</span>
+<span class="sd">            &quot;vertical&quot; or &quot;diagonal&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: The flipped image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;horizontal&quot;</span><span class="p">,</span> <span class="s2">&quot;vertical&quot;</span><span class="p">,</span> <span class="s2">&quot;diagonal&quot;</span><span class="p">]:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;direction (=</span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2">) should be in one of (&#39;horizontal&#39;, &#39;vertical&#39;, &#39;diagonal&#39;).&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">flip_image</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">img</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;vertical&quot;</span><span class="p">:</span>  <span class="c1"># noqa: RET505</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="flip_masks">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.flip_masks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flip_masks</span><span class="p">(</span><span class="n">masks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flip masks alone the given direction.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">direction</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;horizontal&quot;</span><span class="p">,</span> <span class="s2">&quot;vertical&quot;</span><span class="p">,</span> <span class="s2">&quot;diagonal&quot;</span><span class="p">)</span>  <span class="c1"># noqa: S101</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">flip_image</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="flip_polygons">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.flip_polygons">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flip_polygons</span><span class="p">(</span><span class="n">polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">],</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flip polygons alone the given direction.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="n">polygons</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">width</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;vertical&quot;</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">width</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">polygon</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">polygons</span></div>
+
+
+
+<div class="viewcode-block" id="project_bboxes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.project_bboxes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">project_bboxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">homography_matrix</span><span class="p">:</span> <span class="n">Tensor</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Geometric transformat boxes in-place.</span>
+
+<span class="sd">    Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/structures/bbox/horizontal_boxes.py#L184-L202</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        homography_matrix (Tensor or np.ndarray]):</span>
+<span class="sd">            Shape (3, 3) for geometric transformation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Tensor | np.ndarray): Projected bounding boxes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">homography_matrix</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">homography_matrix</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">new_tensor</span><span class="p">(</span><span class="n">homography_matrix</span><span class="p">)</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">hbox2corner</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">corners</span><span class="p">,</span> <span class="n">corners</span><span class="o">.</span><span class="n">new_ones</span><span class="p">(</span><span class="o">*</span><span class="n">corners</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">corners_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">corners_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">homography_matrix</span><span class="p">,</span> <span class="n">corners_t</span><span class="p">)</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">corners_t</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># Convert to homogeneous coordinates by normalization</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">corners</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">corners</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">corner2hbox</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="hbox2corner">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.hbox2corner">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hbox2corner</span><span class="p">(</span><span class="n">boxes</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert box coordinates from (x1, y1, x2, y2) to corners ((x1, y1), (x2, y1), (x1, y2), (x2, y2)).</span>
+
+<span class="sd">    Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/structures/bbox/horizontal_boxes.py#L204-L217</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        boxes (Tensor): Horizontal box tensor with shape of (..., 4).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor: Corner tensor with shape of (..., 4, 2).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">corners</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="n">corners</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="corner2hbox">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.corner2hbox">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">corner2hbox</span><span class="p">(</span><span class="n">corners</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert box coordinates from corners ((x1, y1), (x2, y1), (x1, y2), (x2, y2)) to (x1, y1, x2, y2).</span>
+
+<span class="sd">    Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/structures/bbox/horizontal_boxes.py#L219-L234</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        corners (Tensor): Corner tensor with shape of (..., 4, 2).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor: Horizontal box tensor with shape of (..., 4).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">corners</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">corners</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">min_xy</span> <span class="o">=</span> <span class="n">corners</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">max_xy</span> <span class="o">=</span> <span class="n">corners</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">min_xy</span><span class="p">,</span> <span class="n">max_xy</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="crop_masks">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.crop_masks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">crop_masks</span><span class="p">(</span><span class="n">masks</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">bbox</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Crop each mask by the given bbox.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>  <span class="c1"># noqa: S101</span>
+    <span class="k">assert</span> <span class="n">bbox</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># noqa: S101</span>
+
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="c1"># clip the boundary</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="n">bbox</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bbox</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">masks</span><span class="p">[:,</span> <span class="n">y1</span> <span class="p">:</span> <span class="n">y1</span> <span class="o">+</span> <span class="n">h</span><span class="p">,</span> <span class="n">x1</span> <span class="p">:</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">w</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="crop_polygons">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.crop_polygons">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">crop_polygons</span><span class="p">(</span><span class="n">polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">],</span> <span class="n">bbox</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Crop each polygon by the given bbox.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>  <span class="c1"># noqa: S101</span>
+    <span class="k">assert</span> <span class="n">bbox</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># noqa: S101</span>
+
+    <span class="c1"># clip the boundary</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="n">bbox</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bbox</span>
+
+    <span class="c1"># reference: https://github.com/facebookresearch/fvcore/blob/main/fvcore/transforms/transform.py</span>
+    <span class="n">crop_box</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">box</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="c1"># suppress shapely warnings util it incorporates GEOS&gt;=3.11.2</span>
+    <span class="c1"># reference: https://github.com/shapely/shapely/issues/1345</span>
+    <span class="n">initial_settings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">()</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="n">polygons</span><span class="p">:</span>
+        <span class="n">cropped_poly_per_obj</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">points</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">Polygon</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="c1"># polygon must be valid to perform intersection.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+            <span class="c1"># a dummy polygon to avoid misalignment between masks and boxes</span>
+            <span class="n">polygon</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="k">continue</span>
+
+        <span class="n">cropped</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">crop_box</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cropped</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="c1"># a dummy polygon to avoid misalignment between masks and boxes</span>
+            <span class="n">polygon</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="k">continue</span>
+
+        <span class="n">cropped</span> <span class="o">=</span> <span class="n">cropped</span><span class="o">.</span><span class="n">geoms</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cropped</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">BaseMultipartGeometry</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">cropped</span><span class="p">]</span>
+
+        <span class="c1"># one polygon may be cropped to multiple ones</span>
+        <span class="k">for</span> <span class="n">poly</span> <span class="ow">in</span> <span class="n">cropped</span><span class="p">:</span>
+            <span class="c1"># ignore lines or points</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">Polygon</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">poly</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+
+            <span class="c1"># remove an extra identical vertex at the end</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">coords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">x1</span>
+            <span class="n">coords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">y1</span>
+            <span class="n">cropped_poly_per_obj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="c1"># a dummy polygon to avoid misalignment between masks and boxes</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cropped_poly_per_obj</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cropped_poly_per_obj</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">polygon</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">cropped_poly_per_obj</span><span class="p">))</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="o">**</span><span class="n">initial_settings</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">polygons</span></div>
+
+
+
+<div class="viewcode-block" id="get_bboxes_from_masks">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.get_bboxes_from_masks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_bboxes_from_masks</span><span class="p">(</span><span class="n">masks</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create boxes from masks.&quot;&quot;&quot;</span>
+    <span class="n">num_masks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span>
+    <span class="n">bboxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_masks</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="n">x_any</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y_any</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_masks</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x_any</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_any</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># use +1 for x_max and y_max so that the right and bottom</span>
+            <span class="c1"># boundary of instance masks are fully included by the box</span>
+            <span class="n">bboxes</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bboxes</span></div>
+
+
+
+<div class="viewcode-block" id="get_bboxes_from_polygons">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.get_bboxes_from_polygons">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_bboxes_from_polygons</span><span class="p">(</span><span class="n">polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">],</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create boxes from polygons.&quot;&quot;&quot;</span>
+    <span class="n">num_polygons</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">polygons</span><span class="p">)</span>
+    <span class="n">boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_polygons</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">polygons</span><span class="p">):</span>
+        <span class="c1"># simply use a number that is big enough for comparison with coordinates</span>
+        <span class="n">xy_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">width</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">height</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">xy_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">points</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">xy_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">xy_min</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">xy_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">xy_max</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">boxes</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">xy_min</span>
+        <span class="n">boxes</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">xy_max</span>
+    <span class="k">return</span> <span class="n">boxes</span></div>
+
+
+
+<div class="viewcode-block" id="area_polygon">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.utils.html#otx.data.transform_libs.utils.area_polygon">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">area_polygon</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the area of a component of a polygon.</span>
+
+<span class="sd">    Using the shoelace formula:</span>
+<span class="sd">    https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x (ndarray): x coordinates of the component</span>
+<span class="sd">        y (ndarray): y coordinates of the component</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        (float): the are of the component</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span></div>
+
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div id="searchbox"></div>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2024, OpenVINO™ Training Extensions Contributors.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">
+        PyData Sphinx Theme
+    </a>
+    0.12.0.
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

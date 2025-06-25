@@ -1,0 +1,38 @@
+otx.backend.native
+==================
+
+.. automodule:: otx.backend.native
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   otx.backend.native.callbacks
+   otx.backend.native.cli
+   otx.backend.native.engine
+   otx.backend.native.exporter
+   otx.backend.native.models
+   otx.backend.native.optimizers
+   otx.backend.native.schedulers
+   otx.backend.native.tools
+

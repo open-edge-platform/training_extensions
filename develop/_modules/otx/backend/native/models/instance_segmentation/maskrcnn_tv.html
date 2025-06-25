@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>otx.backend.native.models.instance_segmentation.maskrcnn_tv &#8212; OpenVINO™ Training Extensions 2.5.0dev documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../../../_static/styles/bootstrap.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+
+  
+  <link href="../../../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/custom.css?v=6232a102" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
+
+    <script src="../../../../../../_static/documentation_options.js?v=9b901575"></script>
+    <script src="../../../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/native/models/instance_segmentation/maskrcnn_tv';</script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fa-solid fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../../../_static/logos/otx-logo.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../../../_static/logos/otx-logo.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+    </div>
+
+    <div id="navbar-end">
+      
+        <div class="navbar-end-item navbar-persistent--container">
+          
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+        </div>
+      
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  
+    <div class="navbar-persistent--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+    </div>
+  
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+  
+  <div id="rtd-footer-container"></div>
+
+      </div>
+      <main id="main-content" class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for otx.backend.native.models.instance_segmentation.maskrcnn_tv</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2024 Intel Corporation</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+
+<span class="sd">&quot;&quot;&quot;TV MaskRCNN model implementations.&quot;&quot;&quot;</span>
+
+<span class="c1"># type: ignore[override]</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models.detection.faster_rcnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastRCNNPredictor</span><span class="p">,</span> <span class="n">_default_anchorgen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models.detection.mask_rcnn</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MaskRCNN_ResNet50_FPN_V2_Weights</span><span class="p">,</span>
+    <span class="n">MaskRCNNPredictor</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXInstanceSegModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">TVRoIHeads</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FastRCNNConvFCHead</span><span class="p">,</span>
+    <span class="n">MaskRCNN</span><span class="p">,</span>
+    <span class="n">MaskRCNNBackbone</span><span class="p">,</span>
+    <span class="n">MaskRCNNHeads</span><span class="p">,</span>
+    <span class="n">RPNHead</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXBatchLossEntity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">OTXPredBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">stack_batch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.mean_ap</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaskRLEMeanAPFMeasureCallable</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span>
+
+
+<div class="viewcode-block" id="MaskRCNNTV">
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.MaskRCNNTV">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MaskRCNNTV</span><span class="p">(</span><span class="n">OTXInstanceSegModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of torchvision MaskRCNN for instance segmentation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        label_info (LabelInfoTypes): Information about the labels used in the model.</span>
+<span class="sd">        data_input_params (DataInputParams): Parameters for the data input.</span>
+<span class="sd">        model_name (str, optional): Name of the model. Defaults to &quot;maskrcnn_resnet_50&quot;.</span>
+<span class="sd">        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.</span>
+<span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.</span>
+<span class="sd">            Defaults to DefaultSchedulerCallable.</span>
+<span class="sd">        metric (MetricCallable, optional): Metric for evaluating the model.</span>
+<span class="sd">            Defaults to MaskRLEMeanAPFMeasureCallable.</span>
+<span class="sd">        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.</span>
+<span class="sd">        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).</span>
+<span class="sd">        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">:</span> <span class="n">MaskRCNN_ResNet50_FPN_V2_Weights</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
+        <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">MaskRLEMeanAPFMeasureCallable</span><span class="p">,</span>
+        <span class="n">torch_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span> <span class="o">=</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">label_info</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span>
+            <span class="n">data_input_params</span><span class="o">=</span><span class="n">data_input_params</span><span class="p">,</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+            <span class="n">scheduler</span><span class="o">=</span><span class="n">scheduler</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+            <span class="n">torch_compile</span><span class="o">=</span><span class="n">torch_compile</span><span class="p">,</span>
+            <span class="n">tile_config</span><span class="o">=</span><span class="n">tile_config</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskRCNN</span><span class="p">:</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="k">if</span> <span class="n">num_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span>
+
+        <span class="c1"># NOTE: Add 1 to num_classes to account for background class.</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">]</span>
+
+        <span class="c1"># init model components, model itself and load weights</span>
+        <span class="n">rpn_anchor_generator</span> <span class="o">=</span> <span class="n">_default_anchorgen</span><span class="p">()</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="n">MaskRCNNBackbone</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">rpn_head</span> <span class="o">=</span> <span class="n">RPNHead</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">anchorgen</span><span class="o">=</span><span class="n">rpn_anchor_generator</span><span class="p">)</span>
+        <span class="n">box_head</span> <span class="o">=</span> <span class="n">FastRCNNConvFCHead</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">mask_head</span> <span class="o">=</span> <span class="n">MaskRCNNHeads</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="n">MaskRCNN</span><span class="p">(</span>
+            <span class="n">backbone</span><span class="p">,</span>
+            <span class="n">num_classes</span><span class="o">=</span><span class="mi">91</span><span class="p">,</span>
+            <span class="n">rpn_anchor_generator</span><span class="o">=</span><span class="n">rpn_anchor_generator</span><span class="p">,</span>
+            <span class="n">rpn_head</span><span class="o">=</span><span class="n">rpn_head</span><span class="p">,</span>
+            <span class="n">box_head</span><span class="o">=</span><span class="n">box_head</span><span class="p">,</span>
+            <span class="n">mask_head</span><span class="o">=</span><span class="n">mask_head</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">get_state_dict</span><span class="p">(</span><span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check_hash</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+        <span class="c1"># Replace RoIHeads since torchvision does not allow customized roi_heads.</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span> <span class="o">=</span> <span class="n">TVRoIHeads</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_roi_pool</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_head</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span><span class="p">,</span>
+            <span class="n">fg_iou_thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">bg_iou_thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">batch_size_per_image</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+            <span class="n">positive_fraction</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+            <span class="n">bbox_reg_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">score_thresh</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">score_thresh</span><span class="p">,</span>
+            <span class="n">nms_thresh</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">nms_thresh</span><span class="p">,</span>
+            <span class="n">detections_per_img</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">detections_per_img</span><span class="p">,</span>
+            <span class="n">mask_roi_pool</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">mask_roi_pool</span><span class="p">,</span>
+            <span class="n">mask_head</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">mask_head</span><span class="p">,</span>
+            <span class="n">mask_predictor</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">mask_predictor</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># get number of input features for the classifier</span>
+        <span class="n">in_features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span><span class="o">.</span><span class="n">cls_score</span><span class="o">.</span><span class="n">in_features</span>
+        <span class="c1"># replace the pre-trained head with a new one</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span> <span class="o">=</span> <span class="n">FastRCNNPredictor</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+
+        <span class="c1"># now get the number of input features for the mask classifier</span>
+        <span class="n">in_features_mask</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">mask_predictor</span><span class="o">.</span><span class="n">conv5_mask</span><span class="o">.</span><span class="n">in_channels</span>
+        <span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">mask_predictor</span><span class="o">.</span><span class="n">conv5_mask</span><span class="o">.</span><span class="n">out_channels</span>
+
+        <span class="c1"># and replace the mask predictor with a new one</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">mask_predictor</span> <span class="o">=</span> <span class="n">MaskRCNNPredictor</span><span class="p">(</span>
+            <span class="n">in_features_mask</span><span class="p">,</span>
+            <span class="n">hidden_layer</span><span class="p">,</span>
+            <span class="n">num_classes</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">model</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span> <span class="o">=</span> <span class="n">stack_batch</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span> <span class="n">pad_size_divisor</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type,assignment]</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;entity&quot;</span><span class="p">:</span> <span class="n">entity</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span> <span class="o">|</span> <span class="n">OTXBatchLossEntity</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+            <span class="n">losses</span> <span class="o">=</span> <span class="n">OTXBatchLossEntity</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">loss_name</span><span class="p">,</span> <span class="n">loss_value</span> <span class="ow">in</span> <span class="n">outputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_value</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+                    <span class="n">losses</span><span class="p">[</span><span class="n">loss_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss_value</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">losses</span><span class="p">[</span><span class="n">loss_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">for</span> <span class="n">_loss</span> <span class="ow">in</span> <span class="n">loss_value</span><span class="p">)</span>
+            <span class="c1"># pop acc from losses</span>
+            <span class="n">losses</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;acc&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">losses</span>
+
+        <span class="n">scores</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bboxes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">masks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># XAI wraps prediction under dictionary with key &quot;predictions&quot;</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">outputs</span>
+        <span class="k">for</span> <span class="n">img_info</span><span class="p">,</span> <span class="n">prediction</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span> <span class="n">predictions</span><span class="p">):</span>  <span class="c1"># type: ignore[arg-type]</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;scores&quot;</span><span class="p">])</span>
+            <span class="n">bboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
+                    <span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">],</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;XYXY&quot;</span><span class="p">,</span>
+                    <span class="n">canvas_size</span><span class="o">=</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">,</span>  <span class="c1"># type: ignore[union-attr]</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">output_masks</span> <span class="o">=</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span>
+                <span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;masks&quot;</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_masks</span><span class="p">)</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediction</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Model output should be a dict, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;feature_vector&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No feature vector in the model output.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;saliency_map&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No saliency maps in the model output.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">saliency_map</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">feature_vector</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;feature_vector&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+                <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+                <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
+                <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
+                <span class="n">bboxes</span><span class="o">=</span><span class="n">bboxes</span><span class="p">,</span>
+                <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
+                <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+                <span class="n">saliency_map</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">saliency_map</span><span class="p">),</span>
+                <span class="n">feature_vector</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">feature_vector</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+            <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
+            <span class="n">bboxes</span><span class="o">=</span><span class="n">bboxes</span><span class="p">,</span>
+            <span class="n">masks</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_exporter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXModelExporter</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates OTXModelExporter object that can export the model.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">OTXNativeModelExporter</span><span class="p">(</span>
+            <span class="n">task_level_export_parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_export_parameters</span><span class="p">,</span>
+            <span class="n">data_input_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="p">,</span>
+            <span class="n">resize_mode</span><span class="o">=</span><span class="s2">&quot;fit_to_window&quot;</span><span class="p">,</span>
+            <span class="n">pad_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">swap_rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;input_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;output_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;dynamic_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
+                    <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
+                    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
+                    <span class="s2">&quot;masks&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;height&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;width&quot;</span><span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;opset_version&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+                <span class="s2">&quot;autograd_inlining&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="MaskRCNNTV.forward_for_tracing">
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.MaskRCNNTV.forward_for_tracing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function for export.&quot;&quot;&quot;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+        <span class="n">meta_info</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;image_shape&quot;</span><span class="p">:</span> <span class="n">shape</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">meta_info_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">meta_info</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">meta_info_list</span><span class="p">,</span> <span class="n">explain_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div id="searchbox"></div>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94"></script>
+<script src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2024, OpenVINO™ Training Extensions Contributors.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">
+        PyData Sphinx Theme
+    </a>
+    0.12.0.
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

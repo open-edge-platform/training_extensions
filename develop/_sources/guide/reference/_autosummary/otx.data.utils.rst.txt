@@ -1,0 +1,30 @@
+otx.data.utils
+==============
+
+.. automodule:: otx.data.utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      adapt_tile_config
+      adapt_input_size_to_dataset
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

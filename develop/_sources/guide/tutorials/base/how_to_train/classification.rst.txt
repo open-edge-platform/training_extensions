@@ -250,8 +250,8 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100, e
 
         .. code-block:: python
 
-            from otx.core.config.data import SubsetConfig
-            from otx.core.data.module import OTXDataModule
+            from otx.config.data import SubsetConfig
+            from otx.data.module import OTXDataModule
             from otx.engine import Engine
 
             datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))

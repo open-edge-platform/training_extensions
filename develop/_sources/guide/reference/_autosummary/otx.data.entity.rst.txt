@@ -1,0 +1,40 @@
+otx.data.entity
+===============
+
+.. automodule:: otx.data.entity
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OTXDataItem
+      OTXDataBatch
+      OTXPredBatch
+      OTXPredItem
+      TileDetDataEntity
+      TileSegDataEntity
+      TileBatchInstSegDataEntity
+      TileBatchDetDataEntity
+      TileBatchSegDataEntity
+      ImageType
+      ImageInfo
+      Points
+   
+   
+
+   
+   
+   
+
+
+

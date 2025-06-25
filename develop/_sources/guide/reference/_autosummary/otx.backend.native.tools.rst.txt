@@ -1,0 +1,29 @@
+otx.backend.native.tools
+========================
+
+.. automodule:: otx.backend.native.tools
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      adapt_batch_size
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
