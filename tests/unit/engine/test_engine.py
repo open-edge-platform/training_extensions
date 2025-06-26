@@ -125,6 +125,24 @@ class TestEngine:
             mock_torch_load.assert_called_once()
             mock_load_state_dict_incrementally.assert_called_once()
 
+    def test_loading_old_checkpoint(self, fxt_engine, resume: bool, mocker: MockerFixture, tmpdir) -> None:
+        checkpoint = "tests/assets/dummy_snapshots/dummy_checkpoint.ckpt"
+
+        mock_trainer = mocker.patch("otx.engine.engine.Trainer")
+        mock_trainer.return_value.default_root_dir = Path(tmpdir)
+        mock_trainer_fit = mock_trainer.return_value.fit
+
+        mock_load_state_dict_incrementally = mocker.patch.object(fxt_engine.model, "load_state_dict_incrementally")
+
+        trained_checkpoint = Path(tmpdir) / "best.ckpt"
+        trained_checkpoint.touch()
+        mock_trainer.return_value.checkpoint_callback.best_model_path = trained_checkpoint
+
+        fxt_engine.train(checkpoint=checkpoint)
+
+        mock_load_state_dict_incrementally.assert_called_once()
+        mock_trainer_fit.assert_called_once()
+
     @pytest.mark.parametrize(
         "checkpoint",
         [
