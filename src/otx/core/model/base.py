@@ -385,6 +385,8 @@ class OTXModel(LightningModule):
             "datamodule_hyper_parameters",
             None,
         )  # Remove datamodule_hyper_parameters to prevent storing OTX classes
+        checkpoint["state_dict"] = {"model": torch.tensor([0.0], requires_grad=True)}
+        checkpoint["optimizers_state"] = {"model": torch.tensor([0.0], requires_grad=True)}
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
