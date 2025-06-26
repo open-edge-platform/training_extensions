@@ -1059,14 +1059,15 @@ class Engine:
             from otx.core.types.image import ImageColorChannel
             from otx.core.types.transformer_libs import TransformLibType
 
-            # Step 2: Create dummy classes with correct __module__
             OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
             OTXTrainType.__module__ = "otx.core.types.task"
 
             UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
             UnlabeledDataConfig.__module__ = "otx.core.config.data"
 
-            # Step 3: Add to fake modules
+            VisualPromptingConfig = type("VisualPromptingConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+            VisualPromptingConfig.__module__ = "otx.core.config.data"
+
             setattr(sys.modules["otx.core.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
             setattr(sys.modules["otx.core.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
             torch.serialization.add_safe_globals(
@@ -1078,6 +1079,7 @@ class Engine:
                     np.dtype,
                     OTXTrainType,
                     UnlabeledDataConfig,
+                    VisualPromptingConfig,
                     OTXTaskType,
                     SubsetConfig,
                     TransformLibType,

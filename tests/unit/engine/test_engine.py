@@ -108,7 +108,7 @@ class TestEngine:
         mock_trainer.return_value.default_root_dir = Path(tmpdir)
         mock_trainer_fit = mock_trainer.return_value.fit
 
-        mock_torch_load = mocker.patch("otx.engine.engine.torch.load")
+        mock_chkpt_load = mocker.patch.object(fxt_engine._load_model_checkpoint, {})
         mock_load_state_dict_incrementally = mocker.patch.object(fxt_engine.model, "load_state_dict_incrementally")
 
         trained_checkpoint = Path(tmpdir) / "best.ckpt"
@@ -122,11 +122,11 @@ class TestEngine:
         else:
             assert "ckpt_path" not in mock_trainer_fit.call_args.kwargs
 
-            mock_torch_load.assert_called_once()
+            mock_chkpt_load.assert_called_once()
             mock_load_state_dict_incrementally.assert_called_once()
 
-    def test_loading_old_checkpoint(self, fxt_engine, resume: bool, mocker: MockerFixture, tmpdir) -> None:
-        checkpoint = "tests/assets/dummy_snapshots/dummy_checkpoint.ckpt"
+    def test_loading_old_checkpoint(self, fxt_engine, mocker: MockerFixture, tmpdir) -> None:
+        checkpoint = "/home/kprokofi/training_extensions/old_snapshot/20250626_141734/best_checkpoint.ckpt"
 
         mock_trainer = mocker.patch("otx.engine.engine.Trainer")
         mock_trainer.return_value.default_root_dir = Path(tmpdir)
@@ -154,14 +154,13 @@ class TestEngine:
         mock_test = mocker.patch("otx.engine.engine.Trainer.test")
         _ = mocker.patch("otx.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
         mock_get_ov_model = mocker.patch("otx.engine.engine.AutoConfigurator.get_ov_model")
-        mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
+        mocker.patch.object(fxt_engine._load_model_checkpoint, {})
 
         ext = Path(checkpoint).suffix
 
         if ext == ".ckpt":
             mock_model = mocker.create_autospec(OTXModel)
-
-            mock_load_from_checkpoint.return_value = mock_model
+            mocker.patch.object(fxt_engine.model.load_state_dict, mock_model)
         else:
             mock_model = mocker.create_autospec(OVModel)
 
