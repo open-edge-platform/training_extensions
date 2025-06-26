@@ -13,7 +13,7 @@ import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from pickle import UnpicklingError
+from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
