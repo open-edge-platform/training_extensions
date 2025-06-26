@@ -12,6 +12,7 @@ import json
 import logging
 import warnings
 from abc import abstractmethod
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import numpy as np
@@ -121,21 +122,15 @@ class OTXModel(LightningModule):
         self.input_size = input_size
         self.classification_layers: dict[str, dict[str, Any]] = {}
         self.model = self._create_model()
-        self.optimizer_callable = ensure_callable(optimizer)
-        self.scheduler_callable = ensure_callable(scheduler)
-        self.metric_callable = ensure_callable(metric)
+        self.optimizer_callable: OptimizerCallable = ensure_callable(optimizer)
+        self.scheduler_callable: LRSchedulerCallable = ensure_callable(scheduler)
+        self.metric_callable: MetricCallable = ensure_callable(metric)
 
         self.torch_compile = torch_compile
         self._explain_mode = False
 
         # NOTE: To guarantee immutablility of the default value
         self._tile_config = tile_config.clone()
-
-        # this line allows to access init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
-        # TODO(vinnamki): Ticket no. 138995: MetricCallable should be saved in the checkpoint
-        # so that it can retrieve it from the checkpoint
-        self.save_hyperparameters(logger=False, ignore=["optimizer", "scheduler", "metric"])
 
     def training_step(self, batch: T_OTXBatchDataEntity, batch_idx: int) -> Tensor | None:
         """Step for model training."""
@@ -377,16 +372,25 @@ class OTXModel(LightningModule):
             checkpoint["state_dict"] = remove_state_dict_prefix(compiled_state_dict, "_orig_mod.")
         super().on_save_checkpoint(checkpoint)
 
-        checkpoint["label_info"] = self.label_info
+        checkpoint["label_info"] = asdict(self.label_info)
         checkpoint["otx_version"] = __version__
-        checkpoint["tile_config"] = self.tile_config
+        checkpoint["tile_config"] = asdict(self.tile_config)
+        checkpoint.pop(
+            "datamodule_hyper_parameters",
+            None,
+        )  # Remove datamodule_hyper_parameters to prevent storing OTX classes
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
         super().on_load_checkpoint(checkpoint)
 
         if ckpt_label_info := checkpoint.get("label_info"):
-            if isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
+            if isinstance(ckpt_label_info, dict):
+                if "label_ids" not in ckpt_label_info:
+                    # NOTE: This is for backward compatibility
+                    ckpt_label_info["label_ids"] = ckpt_label_info["label_names"]
+                    ckpt_label_info = LabelInfo(**ckpt_label_info)
+            elif isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
                 # NOTE: This is for backward compatibility
                 ckpt_label_info = LabelInfo(
                     label_groups=ckpt_label_info.label_groups,
@@ -396,6 +400,8 @@ class OTXModel(LightningModule):
             self._label_info = ckpt_label_info
 
         if ckpt_tile_config := checkpoint.get("tile_config"):
+            if isinstance(ckpt_tile_config, dict):
+                ckpt_tile_config = TileConfig(**ckpt_tile_config)
             self.tile_config = ckpt_tile_config
 
     def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:

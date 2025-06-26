@@ -9,6 +9,7 @@ import copy
 import csv
 import inspect
 import logging
+import pickle
 import tempfile
 import time
 from contextlib import contextmanager
@@ -20,11 +21,12 @@ import torch
 from lightning import Trainer, seed_everything
 from lightning.pytorch.plugins.precision import MixedPrecision
 
+from otx.core.config.data import TileConfig
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel, OVModel
-from otx.core.types import PathLike
+from otx.core.types import LabelInfo, PathLike
 from otx.core.types.device import DeviceType
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
@@ -266,7 +268,43 @@ class Engine:
             # load the model state from the checkpoint incrementally.
             # This means only the model weights are loaded. If there is a mismatch in label_info,
             # perform incremental weight loading for the model's classification layer.
-            ckpt = torch.load(checkpoint, weights_only=False)
+            # Create a dummy module and class to fake the deleted class
+            torch.serialization.add_safe_globals([LabelInfo, TileConfig])
+            try:
+                ckpt = torch.load(checkpoint)
+            except pickle.UnpicklingError:
+                import sys
+                import types
+
+                # load old checkpoint
+                module_names = ["otx.core.types.task", "otx.core.config.data"]
+                for module_name in module_names:
+                    if module_name not in sys.modules:
+                        warn(f"Module {module_name} is not loaded. It will be faked.", stacklevel=2)
+                        sys.modules[module_name] = types.ModuleType(module_name)
+                setattr(  # noqa: B010
+                    sys.modules["otx.core.config.data"],
+                    "UnlabeledDataConfig",
+                    type(
+                        "UnlabeledDataConfig",
+                        (object,),
+                        {"__init__": lambda *_: None},
+                    ),
+                )
+                setattr(  # noqa: B010
+                    sys.modules["otx.core.types.task"],
+                    "OTXTrainType",
+                    type(
+                        "OTXTrainType",
+                        (object,),
+                        {"__init__": lambda *_: None},
+                    ),
+                )
+                ckpt = torch.load(checkpoint, weights_only=False)
+            except:  # noqa: E722
+                msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
+                raise RuntimeError(msg) from None
+
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
