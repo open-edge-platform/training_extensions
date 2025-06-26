@@ -1,7 +1,7 @@
 # Description.
-model_template_id: ote_anomaly_classification_padim
+model_template_id: ote_anomaly_padim
 name: PADIM
-task_type: ANOMALY_CLASSIFICATION
+task_type: ANOMALY
 task_family: VISION
 instantiation: "CLASS"
 summary: This model is faster and in many cases more accurate, but it requires a fixed position of the objects within the image.
