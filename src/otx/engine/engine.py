@@ -9,11 +9,11 @@ import copy
 import csv
 import inspect
 import logging
-import pickle
 import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from pickle import UnpicklingError
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
@@ -1050,7 +1050,7 @@ class Engine:
 
         try:
             ckpt = torch.load(checkpoint, map_location=map_location)
-        except pickle.UnpicklingError:
+        except UnpicklingError:
             # patch an old OTX checkpoint to load it
             import sys
 
