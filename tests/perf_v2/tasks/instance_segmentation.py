@@ -118,8 +118,6 @@ BENCHMARK_CRITERIA = [
     Criterion(name="optimize:test/f1-score", summary="max", compare=">", margin=0.1),
     Criterion(name="training:train/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize:test/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize:e2e_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/latency", summary="mean", compare="<", margin=0.1),
     Criterion(name="export:test/latency", summary="mean", compare="<", margin=0.1),

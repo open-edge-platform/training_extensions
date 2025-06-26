@@ -72,24 +72,21 @@ DATASET_TEST_CASES = [
     ),
 ]
 
-# TODO (someone): align with detection task (adding gpu_mem, latency, optimize/e2e, etc)
 BENCHMARK_CRITERIA = [
     Criterion(name="training:epoch", summary="max", compare="<", margin=0.1),
     Criterion(name="training:e2e_time", summary="max", compare="<", margin=0.1),
-    Criterion(name="training:val/Dice", summary="max", compare=">", margin=0.1),
+    Criterion(name="training:gpu_mem", summary="max", compare="<", margin=0.1),
     Criterion(name="training:train/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="training:val/Dice", summary="max", compare=">", margin=0.1),
     Criterion(name="torch:test/Dice", summary="max", compare=">", margin=0.1),
     Criterion(name="export:test/Dice", summary="max", compare=">", margin=0.1),
     Criterion(name="optimize:test/Dice", summary="max", compare=">", margin=0.1),
-    Criterion(name="training:train/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize:test/iter_time", summary="mean", compare="<", margin=0.1),
+    Criterion(name="optimize:e2e_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/e2e_time", summary="max", compare=">", margin=0.1),
     Criterion(name="export:test/e2e_time", summary="max", compare=">", margin=0.1),
     Criterion(name="optimize:test/e2e_time", summary="max", compare=">", margin=0.1),
     Criterion(name="torch:test/latency", summary="mean", compare="<", margin=0.1),
     Criterion(name="export:test/latency", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize:test/latency", summary="mean", compare="<", margin=0.1),
-    Criterion(name="training:gpu_mem", summary="max", compare="<", margin=0.1),
 ]
