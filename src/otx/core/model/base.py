@@ -375,6 +375,7 @@ class OTXModel(LightningModule):
         checkpoint["label_info"] = asdict(self.label_info)
         checkpoint["otx_version"] = __version__
         checkpoint["tile_config"] = asdict(self.tile_config)
+        checkpoint.pop("datamodule_hparams_name", None)
         checkpoint.pop(
             "datamodule_hyper_parameters",
             None,
@@ -383,13 +384,12 @@ class OTXModel(LightningModule):
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
         super().on_load_checkpoint(checkpoint)
-
         if ckpt_label_info := checkpoint.get("label_info"):
             if isinstance(ckpt_label_info, dict):
                 if "label_ids" not in ckpt_label_info:
                     # NOTE: This is for backward compatibility
                     ckpt_label_info["label_ids"] = ckpt_label_info["label_names"]
-                    ckpt_label_info = LabelInfo(**ckpt_label_info)
+                ckpt_label_info = LabelInfo(**ckpt_label_info)
             elif isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
                 # NOTE: This is for backward compatibility
                 ckpt_label_info = LabelInfo(
@@ -413,6 +413,9 @@ class OTXModel(LightningModule):
         if ckpt_label_info is None:
             msg = "Checkpoint should have `label_info`."
             raise ValueError(msg, ckpt_label_info)
+
+        if isinstance(ckpt_label_info, dict):
+            ckpt_label_info = LabelInfo(**ckpt_label_info)
 
         if not hasattr(ckpt_label_info, "label_ids"):
             msg = "Loading checkpoint from OTX < 2.2.1, label_ids are assigned automatically"

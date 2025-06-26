@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
+import numpy as np
 import torch
 from lightning import Trainer, seed_everything
 from lightning.pytorch.plugins.precision import MixedPrecision
@@ -269,38 +270,45 @@ class Engine:
             # This means only the model weights are loaded. If there is a mismatch in label_info,
             # perform incremental weight loading for the model's classification layer.
             # Create a dummy module and class to fake the deleted class
-            torch.serialization.add_safe_globals([LabelInfo, TileConfig])
             try:
                 ckpt = torch.load(checkpoint)
             except pickle.UnpicklingError:
+                # patch an old OTX checkpoint to load it
                 import sys
-                import types
 
-                # load old checkpoint
-                module_names = ["otx.core.types.task", "otx.core.config.data"]
-                for module_name in module_names:
-                    if module_name not in sys.modules:
-                        warn(f"Module {module_name} is not loaded. It will be faked.", stacklevel=2)
-                        sys.modules[module_name] = types.ModuleType(module_name)
-                setattr(  # noqa: B010
-                    sys.modules["otx.core.config.data"],
-                    "UnlabeledDataConfig",
-                    type(
-                        "UnlabeledDataConfig",
-                        (object,),
-                        {"__init__": lambda *_: None},
-                    ),
+                from otx.core.config.data import SamplerConfig, SubsetConfig
+                from otx.core.types.device import DeviceType
+                from otx.core.types.image import ImageColorChannel
+                from otx.core.types.transformer_libs import TransformLibType
+
+                # Step 2: Create dummy classes with correct __module__
+                OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
+                OTXTrainType.__module__ = "otx.core.types.task"
+
+                UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+                UnlabeledDataConfig.__module__ = "otx.core.config.data"
+
+                # Step 3: Add to fake modules
+                setattr(sys.modules["otx.core.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
+                setattr(sys.modules["otx.core.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
+                torch.serialization.add_safe_globals(
+                    [
+                        LabelInfo,
+                        TileConfig,
+                        np.core.multiarray.scalar,
+                        np.dtype(np.float64).__class__,
+                        np.dtype,
+                        OTXTrainType,
+                        UnlabeledDataConfig,
+                        OTXTaskType,
+                        SubsetConfig,
+                        TransformLibType,
+                        SamplerConfig,
+                        ImageColorChannel,
+                        DeviceType,
+                    ],
                 )
-                setattr(  # noqa: B010
-                    sys.modules["otx.core.types.task"],
-                    "OTXTrainType",
-                    type(
-                        "OTXTrainType",
-                        (object,),
-                        {"__init__": lambda *_: None},
-                    ),
-                )
-                ckpt = torch.load(checkpoint, weights_only=False)
+                ckpt = torch.load(checkpoint)
             except:  # noqa: E722
                 msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
                 raise RuntimeError(msg) from None
