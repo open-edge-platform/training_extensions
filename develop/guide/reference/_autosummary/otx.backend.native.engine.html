@@ -522,6 +522,25 @@ Defaults to True.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.engine.OTXEngine.configure_accelerator">
+<span class="sig-name descname"><span class="pre">configure_accelerator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/backend/native/engine.html#OTXEngine.configure_accelerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.backend.native.engine.OTXEngine.configure_accelerator" title="Link to this definition">#</a></dt>
+<dd><p>Updates the cache arguments based on the device type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.engine.OTXEngine.configure_callbacks">
+<span class="sig-name descname"><span class="pre">configure_callbacks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/backend/native/engine.html#OTXEngine.configure_callbacks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.backend.native.engine.OTXEngine.configure_callbacks" title="Link to this definition">#</a></dt>
+<dd><p>Sets up the OTX callbacks for the trainer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.engine.OTXEngine.configure_loggers">
+<span class="sig-name descname"><span class="pre">configure_loggers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Logger</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Logger</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/backend/native/engine.html#OTXEngine.configure_loggers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.backend.native.engine.OTXEngine.configure_loggers" title="Link to this definition">#</a></dt>
+<dd><p>Sets up the loggers for the trainer.</p>
+<p>If no logger is provided, it will use the default loggers.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="otx.backend.native.engine.OTXEngine.explain">
 <span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PathLike</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datamodule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EVAL_DATALOADERS</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="otx.data.module.html#otx.data.module.OTXDataModule" title="otx.data.module.OTXDataModule"><span class="pre">OTXDataModule</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.config.explain.html#otx.config.explain.ExplainConfig" title="otx.config.explain.ExplainConfig"><span class="pre">ExplainConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/backend/native/engine.html#OTXEngine.explain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.backend.native.engine.OTXEngine.explain" title="Link to this definition">#</a></dt>
 <dd><p>Run XAI using the specified model and data (test subset).</p>
@@ -1100,6 +1119,33 @@ Safe =&gt; Prevent GPU out of memory. Full =&gt; Find a batch size using most of
      <code class="docutils literal notranslate">
       <span class="pre">
        OTXEngine.benchmark()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.engine.OTXEngine.configure_accelerator">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXEngine.configure_accelerator()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.engine.OTXEngine.configure_callbacks">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXEngine.configure_callbacks()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.engine.OTXEngine.configure_loggers">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXEngine.configure_loggers()
       </span>
      </code>
     </a>
