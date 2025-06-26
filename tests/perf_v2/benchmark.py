@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import gc
 import logging
 import shutil
 from pathlib import Path
@@ -15,7 +14,9 @@ from typing import Any, Literal
 import pandas as pd
 from jsonargparse import ArgumentParser, Namespace
 
+from otx.backend.native.cli.utils import RECIPE_PATH
 from otx.backend.native.engine import OTXEngine
+from otx.backend.openvino.engine import OVEngine
 from otx.types.task import OTXTaskType
 from tests.perf_v2 import CRITERIA_COLLECTIONS, DATASET_COLLECTIONS, MODEL_COLLECTIONS, summary
 from tests.perf_v2.utils import (
@@ -32,6 +33,21 @@ from tests.perf_v2.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+FOLDER_MAPPINGS = {
+    OTXTaskType.MULTI_CLASS_CLS: RECIPE_PATH / "classification" / "multi_class_cls",
+    OTXTaskType.MULTI_LABEL_CLS: RECIPE_PATH / "classification" / "multi_label_cls",
+    OTXTaskType.H_LABEL_CLS: RECIPE_PATH / "classification" / "h_label_cls",
+    OTXTaskType.DETECTION: RECIPE_PATH / "detection",
+    OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection",
+    OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation",
+    OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation",
+    OTXTaskType.ANOMALY: RECIPE_PATH / "anomaly",
+    OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification",
+    OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation",
+    OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection",
+    OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection",
+}
 
 
 def task_benchmark_dataset(task: OTXTaskType) -> dict[str, DatasetInfo]:
@@ -137,8 +153,9 @@ class Benchmark:
         )
 
         extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("train", {}).items():
-            extra_kwargs[key] = value
+        if extra_overrides := dataset_info.extra_overrides:
+            for key, value in extra_overrides.get("train", {}).items():
+                extra_kwargs[key] = value
         extra_kwargs["seed"] = seed
         extra_kwargs["deterministic"] = self.deterministic
         if self.num_epoch > 0:
@@ -188,16 +205,26 @@ class Benchmark:
         if self.test_only not in ["all", test_type, None]:
             return
 
-        engine, kwargs = self._initialize_engine(
-            model_info=model_info,
-            dataset_info=dataset_info,
-            work_dir=sub_work_dir / SubCommand.TEST.value / test_type,
-            subcommand=SubCommand.TEST,
-        )
+        work_dir = sub_work_dir / SubCommand.TEST.value / test_type
+        kwargs = {}
+        if what2test == RunTestType.TORCH:
+            engine, kwargs = self._initialize_engine(
+                model_info=model_info,
+                dataset_info=dataset_info,
+                work_dir=work_dir,
+                subcommand=SubCommand.TEST,
+            )
+        else:
+            engine = OVEngine(
+                work_dir=work_dir,
+                data=self.data_root / dataset_info.path,
+                model=checkpoint,
+            )
 
         extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("test", {}).items():
-            extra_kwargs[key] = value
+        if extra_overrides := dataset_info.extra_overrides:
+            for key, value in extra_overrides.get("test", {}).items():
+                extra_kwargs[key] = value
         kwargs.update(extra_kwargs)
         kwargs.pop("checkpoint", None)  # Remove checkpoint
 
@@ -244,8 +271,9 @@ class Benchmark:
         )
 
         extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("export", {}).items():
-            extra_kwargs[key] = value
+        if extra_overrides := dataset_info.extra_overrides:
+            for key, value in extra_overrides.get("export", {}).items():
+                extra_kwargs[key] = value
         kwargs.update(extra_kwargs)
 
         ckpt_path = sub_work_dir / "train" / "best_checkpoint.ckpt"
@@ -258,26 +286,25 @@ class Benchmark:
             checkpoint=ckpt_path,
             **kwargs,
         )
+        del engine
 
     def optimize(
         self,
-        model_info: ModelInfo,
         dataset_info: DatasetInfo,
         sub_work_dir: Path,
         exported_model_path: Path,
     ):
-        engine, kwargs = self._initialize_engine(
-            model_info=model_info,
-            dataset_info=dataset_info,
+        engine = OVEngine(
             work_dir=sub_work_dir / SubCommand.OPTIMIZE.value,
-            subcommand=SubCommand.OPTIMIZE,
+            data=self.data_root / dataset_info.path,
+            model=exported_model_path,
         )
 
-        extra_kwargs = {}
-        for key, value in dataset_info.extra_overrides.get("optimize", {}).items():
-            extra_kwargs[key] = value
+        kwargs = {}
+        if extra_overrides := dataset_info.extra_overrides:
+            for key, value in extra_overrides.get("optimize", {}).items():
+                kwargs[key] = value
 
-        kwargs.update(extra_kwargs)
         kwargs.pop("checkpoint", None)  # Remove checkpoint
 
         # ======Optimize=======
@@ -287,6 +314,7 @@ class Benchmark:
             checkpoint=exported_model_path,
             **kwargs,
         )
+        del engine
         total_time = time() - start_time
 
         # OTX does not create metrics.cvs during optimization,
@@ -314,8 +342,7 @@ class Benchmark:
         """
 
         engine = OTXEngine(
-            model=model_info.name,
-            task=model_info.task,
+            model=FOLDER_MAPPINGS[model_info.task] / (model_info.name + ".yaml"),
             data=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,
@@ -332,14 +359,16 @@ class Benchmark:
             fail_untyped=False,
         )
         # Update callbacks & logger dir as engine.work_dir
-        for callback in config["callbacks"]:
-            if "init_args" in callback and "dirpath" in callback["init_args"]:
-                callback["init_args"]["dirpath"] = engine.work_dir
-        for logger in config["logger"]:
-            if "save_dir" in logger["init_args"]:
-                logger["init_args"]["save_dir"] = engine.work_dir
-            if "log_dir" in logger["init_args"]:
-                logger["init_args"]["log_dir"] = engine.work_dir
+        if "callbacks" in config and config["callbacks"] is not None:
+            for callback in config["callbacks"]:
+                if "init_args" in callback and "dirpath" in callback["init_args"]:
+                    callback["init_args"]["dirpath"] = engine.work_dir
+        if "logger" in config and config["logger"] is not None:
+            for logger in config["logger"]:
+                if "save_dir" in logger["init_args"]:
+                    logger["init_args"]["save_dir"] = engine.work_dir
+                if "log_dir" in logger["init_args"]:
+                    logger["init_args"]["log_dir"] = engine.work_dir
         instantiated_kwargs = engine_parser.instantiate_classes(Namespace(**config))
 
         kwargs = {k: v for k, v in instantiated_kwargs.items() if k in arguments}
@@ -450,7 +479,6 @@ class Benchmark:
             if self.eval_upto == "optimize":
                 if "optimize" not in copied_ops_dir:
                     self.optimize(
-                        model_info=model_info,
                         dataset_info=dataset_info,
                         sub_work_dir=sub_work_dir,
                         exported_model_path=exported_model_path,
@@ -462,8 +490,6 @@ class Benchmark:
                     )
 
                 optimized_model_path = sub_work_dir / "optimize" / "optimized_model.xml"
-                if not optimized_model_path.exists():
-                    optimized_model_path = sub_work_dir / "optimize" / "optimized_model_decoder.xml"
 
                 self.test(
                     model_info=model_info,
@@ -474,9 +500,6 @@ class Benchmark:
                     checkpoint=optimized_model_path,
                     what2test=RunTestType.OPTIMIZE,
                 )
-
-            # Force memory clean up
-            gc.collect()
         except Exception as e:
             exceptions.append((seed, str(e)))
 

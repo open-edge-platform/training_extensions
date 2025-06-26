@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import defusedxml.ElementTree as Elet
 import numpy as np
 import torch
-from pytorch_lightning.loggers import CSVLogger
+from lightning.pytorch.loggers import CSVLogger
 from rich.progress import Progress
 
 from otx.backend.openvino.models import OVModel
@@ -135,27 +135,6 @@ class OVEngine(Engine):
 
         return task_map[otx_task_name]
 
-    def _setup_logger(
-        self,
-        name: str = "ov_engine",
-        prefix: str = "",
-        join_char: str = "",
-    ) -> CSVLogger:
-        """Set up CSV logger for the engine.
-
-        Args:
-            prefix (str, optional): A prefix to add to the logger name. Defaults to "".
-            join_char (str, optional): A character to join the logger name with the prefix.
-        """
-        logger = CSVLogger(
-            self.work_dir,
-            name=name,
-            prefix=prefix,
-        )
-        if join_char:
-            logger.LOGGER_JOIN_CHAR = join_char
-        return logger
-
     def train(self, *args, **kwargs) -> METRICS:
         """Train method is not supported for OVEngine."""
         msg = "OVEngine does not support training. Use test or predict methods to evaluate IR model."
@@ -242,14 +221,25 @@ class OVEngine(Engine):
 
         metrics_result = model.compute_metrics(metric_callable)
 
-        logger = self._setup_logger(
-            name="ov_test_results",
-            prefix="test",
-            join_char="/",
-        )
-        logger.log_metrics(metrics_result, step=0)
-        logger.finalize("success")
+        self.log_results(metrics_result)
+
         return metrics_result
+
+    def log_results(self, metrics: METRICS) -> None:
+        """Log the results of the testing phase to a CSV file."""
+        clean = {}
+        for k, v in metrics.items():
+            if isinstance(v, torch.Tensor):
+                if v.numel() == 1:
+                    clean[k] = v.item()
+                else:
+                    continue  # or flatten/log each value separately
+            else:
+                clean[k] = v
+
+        logger = CSVLogger(self.work_dir, name="csv/", prefix="")
+        logger.log_metrics(clean, step=0)
+        logger.finalize("success")
 
     def predict(
         self,
