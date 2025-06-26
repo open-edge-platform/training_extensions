@@ -226,16 +226,20 @@ class OVEngine(Engine):
         return metrics_result
 
     def log_results(self, metrics: METRICS) -> None:
-        """Log the results of the testing phase to a CSV file."""
+        """Log testing phase results to a CSV file.
+
+        This function behaves similarly to `OTXModel._log_metrics(metrics, key="test")`.
+        """
         clean = {}
         for k, v in metrics.items():
+            metric_name = f"test/{k}"
             if isinstance(v, torch.Tensor):
                 if v.numel() == 1:
-                    clean[k] = v.item()
+                    clean[metric_name] = v.item()
                 else:
                     continue  # or flatten/log each value separately
             else:
-                clean[k] = v
+                clean[metric_name] = v
 
         logger = CSVLogger(self.work_dir, name="csv/", prefix="")
         logger.log_metrics(clean, step=0)

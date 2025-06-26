@@ -26,19 +26,16 @@ DATASET_TEST_CASES = [
         name="coco_person_keypoint_single_obj_small",
         path=Path("keypoint_detection/coco_keypoint_single_obj/small"),
         group="small",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="coco_person_keypoint_single_obj_medium",
         path=Path("keypoint_detection/coco_keypoint_single_obj/medium"),
         group="medium",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="coco_person_keypoint_single_obj_large",
         path=Path("keypoint_detection/coco_keypoint_single_obj/large"),
         group="large",
-        extra_overrides={},
     ),
 ]
 
