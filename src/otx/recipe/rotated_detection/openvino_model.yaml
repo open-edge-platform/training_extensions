@@ -1,3 +1,4 @@
+task: ROTATED_DETECTION
 model:
   class_path: otx.core.model.instance_segmentation.OVInstanceSegmentationModel
   init_args:
@@ -8,7 +9,6 @@ model:
     use_throughput_mode: true
 
 engine:
-  task: ROTATED_DETECTION
   device: cpu
 
 callback_monitor: val/map_50

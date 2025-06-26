@@ -8,7 +8,7 @@ __version__ = "2.5.0dev"
 import os
 from pathlib import Path
 
-from otx.core.types import *  # noqa: F403
+from otx.types import *  # noqa: F403
 
 # Set the value of HF_HUB_CACHE to set the cache folder that stores the pretrained weights for timm and huggingface.
 # Refer: huggingface_hub/constants.py::HF_HUB_CACHE

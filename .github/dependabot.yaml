@@ -33,7 +33,7 @@ updates:
       - dependency-name: "openvino*"
       - dependency-name: "nncf"
       - dependency-name: "anomalib"
-      - dependency-name: "intel-extension-for-pytorch"
+      - dependency-name: "torchmetrics"
       - dependency-name: "oneccl_bind_pt"
     groups:
       pip-mmlab:

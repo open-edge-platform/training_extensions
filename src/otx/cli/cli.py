@@ -15,24 +15,24 @@ from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, namespace_
 from rich.console import Console
 
 from otx import OTX_LOGO, __version__
+from otx.backend.native.models.base import DataInputParams
 from otx.cli.utils import absolute_path
 from otx.cli.utils.help_formatter import CustomHelpFormatter
 from otx.cli.utils.jsonargparse import get_short_docstring, patch_update_configs
 from otx.cli.utils.workspace import Workspace
-from otx.core.model.base import DataInputParams
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from jsonargparse._actions import _ActionSubCommands
 
-    from otx.core.data.module import OTXDataModule
-    from otx.core.model.base import OTXModel
+    from otx.backend.native.models.base import OTXModel
+    from otx.data.module import OTXDataModule
 
 
 _ENGINE_AVAILABLE = True
 try:
-    from otx.core.config import register_configs
-    from otx.engine import Engine
+    from otx.backend.native.engine import OTXEngine
+    from otx.config import register_configs
 
     register_configs()
 except ImportError:
@@ -140,9 +140,9 @@ class OTXCLI:
             "Setting this option to true will disable this behavior.",
             action="store_true",
         )
-        engine_skip = {"model", "datamodule", "work_dir"}
+        engine_skip = {"model", "work_dir", "data"}
         parser.add_class_arguments(
-            Engine,
+            OTXEngine,
             "engine",
             fail_untyped=False,
             sub_configs=True,
@@ -150,16 +150,17 @@ class OTXCLI:
             skip=engine_skip,
         )
         # Model Settings
-        from otx.core.model.base import OTXModel
+        from otx.backend.native.models.base import OTXModel
+        from otx.backend.openvino.models import OVModel
 
         parser.add_subclass_arguments(
-            OTXModel,
+            (OTXModel, OVModel),
             "model",
             required=False,
             fail_untyped=False,
         )
         # Datamodule Settings
-        from otx.core.data.module import OTXDataModule
+        from otx.data.module import OTXDataModule
 
         parser.add_class_arguments(
             OTXDataModule,
@@ -171,12 +172,11 @@ class OTXCLI:
         parser.add_class_arguments(Workspace, "workspace")
         parser.link_arguments("work_dir", "workspace.work_dir")
 
-        parser.link_arguments("data_root", "engine.data_root")
         parser.link_arguments("data_root", "data.data_root")
         parser.link_arguments("engine.device", "data.device")
 
         added_arguments = parser.add_method_arguments(
-            Engine,
+            OTXEngine,
             subcommand,
             skip=set(OTXCLI.engine_subcommands()[subcommand]),
             fail_untyped=False,
@@ -213,7 +213,6 @@ class OTXCLI:
             "test": {"datamodule"}.union(device_kwargs),
             "predict": {"datamodule"}.union(device_kwargs),
             "export": device_kwargs,
-            "optimize": {"datamodule"}.union(device_kwargs),
             "explain": {"datamodule"}.union(device_kwargs),
             "benchmark": device_kwargs,
         }
@@ -245,7 +244,7 @@ class OTXCLI:
                 # If the user specifies the config directly, not set the cache ckpt as default.
                 self._load_cache_ckpt(parser=sub_parser)
 
-            fn = getattr(Engine, subcommand)
+            fn = getattr(OTXEngine, subcommand)
             description = get_short_docstring(fn)
 
             self._subcommand_method_arguments[subcommand] = added_arguments
@@ -272,23 +271,6 @@ class OTXCLI:
                 warn(f"Load default config from {self.cache_dir / 'configs.yaml'}.", stacklevel=0)
             return parser_kwargs
 
-        # If don't use cache, use the default config from auto configuration.
-        data_root = None
-        task = None
-        if "--data_root" in sys.argv:
-            data_root = sys.argv[sys.argv.index("--data_root") + 1]
-        if "--task" in sys.argv:
-            task = sys.argv[sys.argv.index("--task") + 1]
-        enable_auto_config = data_root is not None and "--config" not in sys.argv
-        if enable_auto_config:
-            from otx.engine.utils.auto_configurator import DEFAULT_CONFIG_PER_TASK, AutoConfigurator
-
-            auto_configurator = AutoConfigurator(
-                data_root=data_root,
-                task=OTXTaskType(task) if task is not None else task,
-            )
-            config_file_path = DEFAULT_CONFIG_PER_TASK[auto_configurator.task]
-            parser_kwargs["default_config_files"] = [str(config_file_path)]
         return parser_kwargs
 
     def _set_extension_subcommands_parser(self, parser_subcommands: _ActionSubCommands) -> None:
@@ -348,16 +330,17 @@ class OTXCLI:
             if instantiate_engine:
                 self.engine = self.instantiate_engine()
 
-    def instantiate_engine(self) -> Engine:
+    def instantiate_engine(self) -> OTXEngine:
         """Instantiate an Engine object with the specified parameters.
 
         Returns:
             An instance of the Engine class.
         """
         engine_kwargs = self.get_config_value(self.config_init, "engine")
-        return Engine(
+
+        return OTXEngine(
             model=self.model,
-            datamodule=self.datamodule,
+            data=self.datamodule,
             work_dir=self.workspace.work_dir,
             **engine_kwargs,
         )
@@ -374,7 +357,7 @@ class OTXCLI:
         Returns:
             tuple: The model and optimizer and scheduler.
         """
-        from otx.core.model.base import OTXModel
+        from otx.backend.native.models.base import OTXModel
         from otx.utils.utils import can_pass_tile_config, get_model_cls_from_config, should_pass_label_info
 
         skip = set()
@@ -516,7 +499,7 @@ class OTXCLI:
         """
         self.console.print(f"[blue]{OTX_LOGO}[/blue] ver.{__version__}", justify="center")
         if self.subcommand == "find":
-            from otx.engine.utils.api import list_models
+            from otx.backend.native.cli.utils import list_models
 
             list_models(print_table=True, **self.config[self.subcommand])
         elif self.subcommand in self.engine_subcommands():
@@ -552,7 +535,7 @@ class OTXCLI:
                     row = row.item() if row.numel() == 1 else row.tolist()  # noqa: PLW2901
                 table.add_row(*[metric, f"{row}"])
             self.console.print(table)
-        elif self.subcommand in ("export", "optimize"):
+        elif self.subcommand == "export":
             # Print output model path
             self.console.print(f"{self.subcommand} output: {outputs}")
         self.console.print(f"Work Directory: {self.engine.work_dir}")

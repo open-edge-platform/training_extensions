@@ -39,4 +39,4 @@ jobs:
         run: |
           pip install '.[ci_tox]'
       - name: Run Daily Integration Test
-        run: tox -vv -e daily-integration-test-${{ matrix.task }}
+        run: tox -vv -e daily-integration-test-${{ matrix.task }} -- --run-category-only=False

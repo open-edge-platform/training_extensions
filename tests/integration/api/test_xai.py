@@ -7,9 +7,9 @@ import numpy as np
 import openvino.runtime as ov
 import pytest
 
-from otx.core.data.entity.base import OTXBatchPredEntity
-from otx.data.torch import OTXPredBatch
-from otx.engine import Engine
+from otx.backend.native.engine import OTXEngine
+from otx.data.entity.torch import OTXPredBatch
+from otx.engine import create_engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
 MULTI_CLASS_CLS = [recipe for recipe in RECIPE_LIST_ALL if "multi_class_cls" in recipe]
@@ -62,18 +62,18 @@ def test_forward_explain(
     if "yolov9" in recipe:
         pytest.skip("yolov9 on detection is not supported yet.")
 
-    engine = Engine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
     )
 
     predict_result = engine.predict()
-    assert isinstance(predict_result[0], (OTXBatchPredEntity, OTXPredBatch))
+    assert isinstance(predict_result[0], OTXPredBatch)
     assert not predict_result[0].has_xai_outputs
 
     predict_result_explain = engine.predict(explain=True)
-    assert isinstance(predict_result_explain[0], (OTXBatchPredEntity, OTXPredBatch))
+    assert isinstance(predict_result_explain[0], OTXPredBatch)
     assert predict_result_explain[0].has_xai_outputs
 
     batch_size = len(predict_result[0].scores)
@@ -127,7 +127,7 @@ def test_predict_with_explain(
         pytest.skip("yolov9 on detection is not supported yet.")
 
     tmp_path = tmp_path / f"otx_xai_{model_name}"
-    engine = Engine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
@@ -136,7 +136,7 @@ def test_predict_with_explain(
 
     # Predict with explain torch & process maps
     predict_result_explain_torch = engine.predict(explain=True)
-    assert isinstance(predict_result_explain_torch[0], (OTXBatchPredEntity, OTXPredBatch))
+    assert isinstance(predict_result_explain_torch[0], OTXPredBatch)
     assert predict_result_explain_torch[0].has_xai_outputs
     assert predict_result_explain_torch[0].saliency_map is not None
     assert isinstance(predict_result_explain_torch[0].saliency_map[0], dict)
@@ -164,8 +164,9 @@ def test_predict_with_explain(
     assert len(feature_vector_output.get_shape()) == 2
 
     # Predict OV model with xai & process maps
-    predict_result_explain_ov = engine.predict(checkpoint=exported_model_path, explain=True)
-    assert isinstance(predict_result_explain_ov[0], (OTXBatchPredEntity, OTXPredBatch))
+    ov_engine = create_engine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
+    predict_result_explain_ov = ov_engine.predict(checkpoint=exported_model_path, explain=True)
+    assert isinstance(predict_result_explain_ov[0], OTXPredBatch)
     assert predict_result_explain_ov[0].has_xai_outputs
     assert predict_result_explain_ov[0].saliency_map is not None
     assert isinstance(predict_result_explain_ov[0].saliency_map[0], dict)

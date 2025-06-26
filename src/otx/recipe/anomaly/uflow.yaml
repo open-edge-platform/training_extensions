@@ -1,5 +1,6 @@
+task: ANOMALY
 model:
-  class_path: otx.algo.anomaly.uflow.Uflow
+  class_path: otx.backend.native.models.anomaly.uflow.Uflow
   init_args:
     backbone: "resnet18"
     flow_steps: 4
@@ -9,7 +10,6 @@ model:
     task: ANOMALY
 
 engine:
-  task: ANOMALY
   device: auto
 
 callback_monitor: image_F1Score

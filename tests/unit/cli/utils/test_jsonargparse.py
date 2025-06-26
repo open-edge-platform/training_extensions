@@ -29,7 +29,7 @@ def fxt_configs() -> Namespace:
                 num_workers=4,
                 transforms=[
                     {
-                        "class_path": "otx.core.data.transform_libs.torchvision.Resize",
+                        "class_path": "otx.data.transform_libs.torchvision.Resize",
                         "init_args": {
                             "keep_ratio": True,
                             "transform_bbox": True,
@@ -38,11 +38,11 @@ def fxt_configs() -> Namespace:
                         },
                     },
                     {
-                        "class_path": "otx.core.data.transform_libs.torchvision.Pad",
+                        "class_path": "otx.data.transform_libs.torchvision.Pad",
                         "init_args": {"pad_to_square": True, "transform_mask": True},
                     },
                     {
-                        "class_path": "otx.core.data.transform_libs.torchvision.RandomFlip",
+                        "class_path": "otx.data.transform_libs.torchvision.RandomFlip",
                         "init_args": {"prob": 0.5, "is_numpy_to_tvtensor": True},
                     },
                     {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
@@ -56,7 +56,7 @@ def fxt_configs() -> Namespace:
         ),
         callbacks=[
             Namespace(
-                class_path="otx.algo.callbacks.iteration_timer.IterationTimer",
+                class_path="otx.backend.native.callbacks.iteration_timer.IterationTimer",
                 init_args=Namespace(prog_bar=True),
             ),
             Namespace(
@@ -170,14 +170,14 @@ def test_namespace_override(fxt_configs) -> None:
             train_subset=Namespace(
                 transforms=[
                     {
-                        "class_path": "otx.core.data.transform_libs.torchvision.Resize",
+                        "class_path": "otx.data.transform_libs.torchvision.Resize",
                         "init_args": {
                             "keep_ratio": False,  # for boolean
                             "scale": [512, 512],  # for tuple
                         },
                     },
                     {
-                        "class_path": "otx.core.data.transform_libs.torchvision.Pad",
+                        "class_path": "otx.data.transform_libs.torchvision.Pad",
                         "init_args": {"size_divisor": 32},  # add new key
                     },
                     {
@@ -193,7 +193,7 @@ def test_namespace_override(fxt_configs) -> None:
 
         namespace_override(configs=cfg, key="data", overrides=overrides, convert_dict_to_namespace=False)
 
-        # otx.core.data.transform_libs.torchvision.Resize
+        # otx.data.transform_libs.torchvision.Resize
         assert (
             cfg.data.train_subset.transforms[0]["init_args"]["keep_ratio"]
             == overrides.train_subset.transforms[0]["init_args"]["keep_ratio"]
@@ -202,7 +202,7 @@ def test_namespace_override(fxt_configs) -> None:
             cfg.data.train_subset.transforms[0]["init_args"]["scale"]
             == overrides.train_subset.transforms[0]["init_args"]["scale"]
         )
-        # otx.core.data.transform_libs.torchvision.Pad
+        # otx.data.transform_libs.torchvision.Pad
         assert "size_divisor" in cfg.data.train_subset.transforms[1]["init_args"]
         assert (
             cfg.data.train_subset.transforms[1]["init_args"]["size_divisor"]
@@ -461,6 +461,6 @@ def test_get_configuration(tmp_path):
     assert "data" in config
     assert config["data"]["task"] == "SEMANTIC_SEGMENTATION"
 
-    cli_args = ["verbose", "data_root", "task", "seed", "callback_monitor", "resume", "disable_infer_num_classes"]
+    cli_args = ["verbose", "data_root", "seed", "callback_monitor", "resume", "disable_infer_num_classes"]
     for arg in cli_args:
         assert arg not in config

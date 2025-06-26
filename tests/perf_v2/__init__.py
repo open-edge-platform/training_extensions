@@ -3,7 +3,7 @@
 
 """OTX performance benchmark tests."""
 
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 
 from .tasks import (
     anomaly,
