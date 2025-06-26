@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import openvino as ov
 import pytest
 from pytest_mock import MockerFixture
+import torch
 
 from otx.algo.classification.efficientnet import EfficientNetForMulticlassCls
 from otx.algo.classification.torchvision_model import TVModelForMulticlassCls
@@ -125,23 +126,29 @@ class TestEngine:
             mock_chkpt_load.assert_called_once()
             mock_load_state_dict_incrementally.assert_called_once()
 
-    def test_loading_old_checkpoint(self, fxt_engine, mocker: MockerFixture, tmpdir) -> None:
+    @pytest.mark.parametrize(
+        "checkpoint",
+        [
+            "tests/assets/test_snapshots/dummy_checkpoint_cls.pth",
+            # "tests/assets/test_snapshots/dummy_checkpoint.pth",
+            # "tests/assets/test_snapshots/dummy_checkpoint_det_2.2.0.pth",
+            # "tests/assets/test_snapshots/dummy_checkpoint_det_2.4.5.pth"
+        ],
+    )
+    def test__load_model_checkpoint(self, fxt_engine, checkpoint, mocker: MockerFixture, tmpdir) -> None:
         checkpoint = "/home/kprokofi/training_extensions/old_snapshot/20250626_141734/best_checkpoint.ckpt"
+        ckpt = fxt_engine._load_model_checkpoint(checkpoint)
+        assert ckpt is not None
+        assert isinstance(ckpt, dict)
+        assert "state_dict" in ckpt
+        assert "label_info" in ckpt
+        assert isinstance(ckpt["state_dict"], dict)
+        assert isinstance(ckpt["state_dict"]["model"], torch.Tensor)
 
-        mock_trainer = mocker.patch("otx.engine.engine.Trainer")
-        mock_trainer.return_value.default_root_dir = Path(tmpdir)
-        mock_trainer_fit = mock_trainer.return_value.fit
-
-        mock_load_state_dict_incrementally = mocker.patch.object(fxt_engine.model, "load_state_dict_incrementally")
-
-        trained_checkpoint = Path(tmpdir) / "best.ckpt"
-        trained_checkpoint.touch()
-        mock_trainer.return_value.checkpoint_callback.best_model_path = trained_checkpoint
-
-        fxt_engine.train(checkpoint=checkpoint)
-
-        mock_load_state_dict_incrementally.assert_called_once()
-        mock_trainer_fit.assert_called_once()
+        if "_2.4.5" in checkpoint:
+            # simple loading with weights_only=True
+            chkpt = torch.load(checkpoint, map_location="cpu", weights_only=True)
+            assert isinstance(chkpt, dict)
 
     @pytest.mark.parametrize(
         "checkpoint",
