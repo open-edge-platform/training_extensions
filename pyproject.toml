@@ -2,7 +2,7 @@
 name = "geti-edge"
 version = "0.1.0"
 description = "Geti Edge"
-readme = "README.md"
+readme = "readme.md"
 requires-python = ">=3.10"
 
 dependencies = [
@@ -14,14 +14,23 @@ dependencies = [
     "python-multipart~=0.0.20",
     "uvicorn~=0.34.3",
     "psutil~=7.0.0",
-    "anyio>=4.9.0",
+    "pyyaml~=6.0.2",
 ]
 
 [dependency-groups]
 dev = [
     "ruff~=0.12.0",
     "mypy~=1.16.1",
+    "types-PyYAML~=6.0.12",
 ]
+
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+module-name = "app"
 
 [tool.ruff]
 target-version = "py310"
