@@ -128,21 +128,21 @@ class TestEngine:
     @pytest.mark.parametrize(
         "checkpoint",
         [
-            "tests/assets/test_snapshots/checkpoint_cls_2.2.0.ckpt",
-            "tests/assets/test_snapshots/checkpoint_is_2.2.0.ckpt",
-            "tests/assets/test_snapshots/checkpoint_det_2.2.0.ckpt",
-            "tests/assets/test_snapshots/checkpoint_det_2.4.5.ckpt",
+            "tests/assets/test_snapshots/dummy_checkpoint_cls_2.2.0.ckpt",
+            "tests/assets/test_snapshots/dummy_checkpoint_is_2.2.0.ckpt",
+            "tests/assets/test_snapshots/dummy_checkpoint_det_2.2.0.ckpt",
+            "tests/assets/test_snapshots/dummy_checkpoint_det_2.4.5.ckpt",
         ],
     )
     def test__load_model_checkpoint(self, fxt_engine, checkpoint) -> None:
-        ckpt = fxt_engine._load_model_checkpoint(Path(checkpoint).absolute())
+        ckpt = fxt_engine._load_model_checkpoint(checkpoint)
         assert ckpt is not None
         assert isinstance(ckpt, dict)
         assert "state_dict" in ckpt
         assert "hyper_parameters" in ckpt
         assert "label_info" in ckpt["hyper_parameters"]
         assert isinstance(ckpt["state_dict"], dict)
-        assert isinstance(ckpt["state_dict"]["model"], torch.Tensor)
+        assert isinstance(ckpt["optimizer_states"], dict)
 
         if "_2.4.5" in checkpoint:
             # simple loading with weights_only=True
