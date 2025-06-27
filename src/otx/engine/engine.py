@@ -13,6 +13,7 @@ import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
@@ -266,7 +267,7 @@ class Engine:
         elif not resume and checkpoint:
             # NOTE: If `resume` is not enabled but `checkpoint` is provided,
             # load the model state from the checkpoint incrementally.
-            ckpt = self._load_model_checkpoint(checkpoint)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
@@ -354,7 +355,7 @@ class Engine:
         # NOTE, trainer.test takes only lightning based checkpoint.
         # So, it can't take the OTX1.x checkpoint.
         if checkpoint is not None and not is_ir_ckpt:
-            ckpt = self._load_model_checkpoint(checkpoint)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
@@ -449,7 +450,7 @@ class Engine:
             datamodule = self._auto_configurator.update_ov_subset_pipeline(datamodule=datamodule, subset="test")
 
         if checkpoint is not None and not is_ir_ckpt:
-            ckpt = self._load_model_checkpoint(checkpoint)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
@@ -725,7 +726,7 @@ class Engine:
             model = self._auto_configurator.get_ov_model(model_name=str(checkpoint), label_info=datamodule.label_info)
 
         if checkpoint is not None and not is_ir_ckpt:
-            ckpt = self._load_model_checkpoint(checkpoint)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             self.model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
@@ -829,7 +830,7 @@ class Engine:
 
             if not is_ir_ckpt:
                 # load checkpoint
-                ckpt = self._load_model_checkpoint(checkpoint)
+                ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
                 self.model.load_state_dict(ckpt)
         elif isinstance(self.model, OVModel):
             msg = "To run benchmark on OV model, checkpoint must be specified."
@@ -1049,9 +1050,8 @@ class Engine:
 
         try:
             ckpt = torch.load(checkpoint, map_location=map_location)
-        except Exception as e:
+        except UnpicklingError:
             # patch an old OTX checkpoint to load it
-            print(e, type(e))
             import sys
 
             from otx.core.config.data import SamplerConfig, SubsetConfig
@@ -1089,9 +1089,9 @@ class Engine:
                 ],
             )
             ckpt = torch.load(checkpoint, map_location=map_location)
-            # except Exception as e:
-            #     msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
-            #     raise RuntimeError(e) from None
+        except Exception as e:
+            msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
+            raise RuntimeError(e) from None
 
         return ckpt
 

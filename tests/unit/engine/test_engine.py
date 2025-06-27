@@ -135,7 +135,7 @@ class TestEngine:
         ],
     )
     def test__load_model_checkpoint(self, fxt_engine, checkpoint) -> None:
-        ckpt = fxt_engine._load_model_checkpoint(checkpoint)
+        ckpt = fxt_engine._load_model_checkpoint(checkpoint, map_location="cpu")
         assert ckpt is not None
         assert isinstance(ckpt, dict)
         assert "state_dict" in ckpt
