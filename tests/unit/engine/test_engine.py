@@ -134,8 +134,8 @@ class TestEngine:
             "tests/assets/test_snapshots/checkpoint_det_2.4.5.ckpt",
         ],
     )
-    def test__load_model_checkpoint(self, fxt_engine, checkpoint, mocker: MockerFixture, tmpdir) -> None:
-        ckpt = fxt_engine._load_model_checkpoint(Path(checkpoint).resolve())
+    def test__load_model_checkpoint(self, fxt_engine, checkpoint) -> None:
+        ckpt = fxt_engine._load_model_checkpoint(Path(checkpoint).absolute())
         assert ckpt is not None
         assert isinstance(ckpt, dict)
         assert "state_dict" in ckpt
