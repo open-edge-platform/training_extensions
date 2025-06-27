@@ -333,13 +333,12 @@ class Benchmark:
             Engine: Initialised engine
         """
 
-        engine = OTXEngine.from_config(
+        return OTXEngine.from_config(
             config_path=FOLDER_MAPPINGS[model_info.task] / (model_info.name + ".yaml"),
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,
         )
-        return engine
 
     def run(
         self,
