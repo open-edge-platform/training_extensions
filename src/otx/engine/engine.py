@@ -1089,9 +1089,9 @@ class Engine:
                     ],
                 )
                 ckpt = torch.load(checkpoint, map_location=map_location)
-            except:  # noqa: E722
+            except Exception as e:  # noqa: E722
                 msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
-                raise RuntimeError(msg) from None
+                raise RuntimeError(e) from None
 
         return ckpt
 
