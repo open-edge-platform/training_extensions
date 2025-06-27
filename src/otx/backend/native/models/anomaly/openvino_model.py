@@ -21,7 +21,7 @@ from lightning import Callback, Trainer
 from torchvision.transforms.functional import resize
 
 from otx.backend.openvino.models import OVModel
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.module import OTXDataModule
 from otx.metrics.types import MetricCallable, NullMetricCallable
 from otx.types.label import AnomalyLabelInfo
@@ -143,6 +143,35 @@ class AnomalyOpenVINO(OVModel):
             model_type=self.model_type,
             configuration=self.model_api_configuration,
         )
+
+    def prepare_metric_inputs(
+        self,
+        preds: OTXPredBatch,  # type: ignore[override]
+        inputs: OTXDataBatch,  # type: ignore[override]
+    ) -> dict:
+        """Convert prediction and input entities to a format suitable for metric computation.
+
+        Args:
+            preds (OTXPredBatch): The predicted batch entity containing predicted bboxes.
+            inputs (OTXDataBatch): The input batch entity containing ground truth bboxes.
+
+        Returns:
+            MetricInput: A dictionary contains 'preds' and 'target' keys
+            corresponding to the predicted and target bboxes for metric evaluation.
+        """
+        score_dict = {
+            "pred_scores": torch.tensor(
+                [output.pred_score if output.pred_label == "Anomaly" else 1 - output.pred_score for output in preds],
+            ),
+            "labels": torch.tensor(inputs.labels) if inputs.batch_size == 1 else torch.vstack(inputs.labels),
+        }
+        score_dict["anomaly_maps"] = torch.tensor(np.array([output.anomaly_map for output in preds])) / 255.0
+        score_dict["masks"] = torch.vstack(inputs.masks)
+        # resize masks and anomaly maps to 256,256 as this is the size used in Anomalib
+        score_dict["masks"] = resize(score_dict["masks"], (256, 256))
+        score_dict["anomaly_maps"] = resize(score_dict["anomaly_maps"], (256, 256))
+
+        return score_dict
 
     def optimize(
         self,
