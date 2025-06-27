@@ -135,7 +135,7 @@ class TestEngine:
         ],
     )
     def test__load_model_checkpoint(self, fxt_engine, checkpoint, mocker: MockerFixture, tmpdir) -> None:
-        ckpt = fxt_engine._load_model_checkpoint(checkpoint)
+        ckpt = fxt_engine._load_model_checkpoint(Path(checkpoint).resolve())
         assert ckpt is not None
         assert isinstance(ckpt, dict)
         assert "state_dict" in ckpt
