@@ -13,7 +13,6 @@ import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
@@ -1050,48 +1049,49 @@ class Engine:
 
         try:
             ckpt = torch.load(checkpoint, map_location=map_location)
-        except UnpicklingError:
-            # patch an old OTX checkpoint to load it
-            import sys
-
-            from otx.core.config.data import SamplerConfig, SubsetConfig
-            from otx.core.types.device import DeviceType
-            from otx.core.types.image import ImageColorChannel
-            from otx.core.types.transformer_libs import TransformLibType
-
-            OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
-            OTXTrainType.__module__ = "otx.core.types.task"
-
-            UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
-            UnlabeledDataConfig.__module__ = "otx.core.config.data"
-
-            VisualPromptingConfig = type("VisualPromptingConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
-            VisualPromptingConfig.__module__ = "otx.core.config.data"
-
-            setattr(sys.modules["otx.core.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
-            setattr(sys.modules["otx.core.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
-            torch.serialization.add_safe_globals(
-                [
-                    LabelInfo,
-                    TileConfig,
-                    np.core.multiarray.scalar,
-                    np.dtype(np.float64).__class__,
-                    np.dtype,
-                    OTXTrainType,
-                    UnlabeledDataConfig,
-                    VisualPromptingConfig,
-                    OTXTaskType,
-                    SubsetConfig,
-                    TransformLibType,
-                    SamplerConfig,
-                    ImageColorChannel,
-                    DeviceType,
-                ],
-            )
-            ckpt = torch.load(checkpoint, map_location=map_location)
         except:  # noqa: E722
-            msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
-            raise RuntimeError(msg) from None
+            try:
+                # patch an old OTX checkpoint to load it
+                import sys
+
+                from otx.core.config.data import SamplerConfig, SubsetConfig
+                from otx.core.types.device import DeviceType
+                from otx.core.types.image import ImageColorChannel
+                from otx.core.types.transformer_libs import TransformLibType
+
+                OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
+                OTXTrainType.__module__ = "otx.core.types.task"
+
+                UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+                UnlabeledDataConfig.__module__ = "otx.core.config.data"
+
+                VisualPromptingConfig = type("VisualPromptingConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+                VisualPromptingConfig.__module__ = "otx.core.config.data"
+
+                setattr(sys.modules["otx.core.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
+                setattr(sys.modules["otx.core.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
+                torch.serialization.add_safe_globals(
+                    [
+                        LabelInfo,
+                        TileConfig,
+                        np.core.multiarray.scalar,
+                        np.dtype(np.float64).__class__,
+                        np.dtype,
+                        OTXTrainType,
+                        UnlabeledDataConfig,
+                        VisualPromptingConfig,
+                        OTXTaskType,
+                        SubsetConfig,
+                        TransformLibType,
+                        SamplerConfig,
+                        ImageColorChannel,
+                        DeviceType,
+                    ],
+                )
+                ckpt = torch.load(checkpoint, map_location=map_location)
+            except:  # noqa: E722
+                msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
+                raise RuntimeError(msg) from None
 
         return ckpt
 
