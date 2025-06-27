@@ -385,36 +385,36 @@ class OTXModel(LightningModule):
             "datamodule_hyper_parameters",
             None,
         )  # Remove datamodule_hyper_parameters to prevent storing OTX classes
-        checkpoint["state_dict"] = {"model": torch.tensor([0.0], requires_grad=True)}
-        checkpoint["optimizers_state"] = {"model": torch.tensor([0.0], requires_grad=True)}
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
         super().on_load_checkpoint(checkpoint)
-        if ckpt_label_info := checkpoint["hyper_parameters"].get("label_info"):
-            if isinstance(ckpt_label_info, dict):
-                if "label_ids" not in ckpt_label_info:
+        hyper_parameters = checkpoint.get("hyper_parameters", None)
+        if hyper_parameters:
+            if ckpt_label_info := hyper_parameters.get("label_info"):
+                if isinstance(ckpt_label_info, dict):
+                    if "label_ids" not in ckpt_label_info:
+                        # NOTE: This is for backward compatibility
+                        ckpt_label_info["label_ids"] = ckpt_label_info["label_names"]
+                    ckpt_label_info = LabelInfo(**ckpt_label_info)
+                elif isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
                     # NOTE: This is for backward compatibility
-                    ckpt_label_info["label_ids"] = ckpt_label_info["label_names"]
-                ckpt_label_info = LabelInfo(**ckpt_label_info)
-            elif isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
-                # NOTE: This is for backward compatibility
-                ckpt_label_info = LabelInfo(
-                    label_groups=ckpt_label_info.label_groups,
-                    label_names=ckpt_label_info.label_names,
-                    label_ids=ckpt_label_info.label_names,
-                )
-            self._label_info = ckpt_label_info
+                    ckpt_label_info = LabelInfo(
+                        label_groups=ckpt_label_info.label_groups,
+                        label_names=ckpt_label_info.label_names,
+                        label_ids=ckpt_label_info.label_names,
+                    )
+                self._label_info = ckpt_label_info
 
-        if ckpt_tile_config := checkpoint["hyper_parameters"].get("tile_config"):
-            if isinstance(ckpt_tile_config, dict):
-                ckpt_tile_config = TileConfig(**ckpt_tile_config)
-            self.tile_config = ckpt_tile_config
+            if ckpt_tile_config := hyper_parameters.get("tile_config"):
+                if isinstance(ckpt_tile_config, dict):
+                    ckpt_tile_config = TileConfig(**ckpt_tile_config)
+                self.tile_config = ckpt_tile_config
 
     def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
         """Load state dict incrementally."""
         ckpt_label_info: LabelInfo | None = (
-            ckpt["hyper_parameters"].get("label_info")
+            ckpt.get("hyper_parameters", {}).get("label_info")
             if not is_ckpt_from_otx_v1(ckpt)
             else self.get_ckpt_label_info_v1(ckpt)
         )

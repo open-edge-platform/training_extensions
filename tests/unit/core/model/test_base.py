@@ -66,7 +66,7 @@ class TestOTXModel:
             }
             current_model.label_info = ["car", "bus", "truck"]
             current_model.load_state_dict_incrementally(
-                {"state_dict": prev_state_dict, "label_info": prev_model.label_info},
+                {"state_dict": prev_state_dict, "hyper_parameters": {"label_info": prev_model.label_info}},
             )
             curr_state_dict = current_model.state_dict()
 
