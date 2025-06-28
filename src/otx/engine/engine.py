@@ -964,7 +964,7 @@ class Engine:
             raise TypeError(model)
 
         model.label_info = datamodule.label_info
-
+        print(model.label_info)
         return cls(
             work_dir=instantiated_config.get("work_dir", work_dir),
             datamodule=datamodule,
@@ -1054,9 +1054,14 @@ class Engine:
             # patch an old OTX checkpoint to load it
             import sys
 
+            from anomalib.metrics.threshold.f1_adaptive_threshold import F1AdaptiveThreshold
+            from torchmetrics.metric import jit_distributed_available
+            from torchmetrics.utilities.data import dim_zero_cat
+
             from otx.core.config.data import SamplerConfig, SubsetConfig
             from otx.core.types.device import DeviceType
             from otx.core.types.image import ImageColorChannel
+            from otx.core.types.label import AnomalyLabelInfo, HLabelInfo, NullLabelInfo, SegLabelInfo
             from otx.core.types.transformer_libs import TransformLibType
 
             OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
@@ -1073,8 +1078,13 @@ class Engine:
             torch.serialization.add_safe_globals(
                 [
                     LabelInfo,
+                    AnomalyLabelInfo,
+                    SegLabelInfo,
+                    HLabelInfo,
+                    NullLabelInfo,
                     TileConfig,
                     np.core.multiarray.scalar,
+                    jit_distributed_available,
                     np.dtype(np.float64).__class__,
                     np.dtype,
                     OTXTrainType,
@@ -1086,6 +1096,8 @@ class Engine:
                     SamplerConfig,
                     ImageColorChannel,
                     DeviceType,
+                    F1AdaptiveThreshold,
+                    dim_zero_cat,
                 ],
             )
             ckpt = torch.load(checkpoint, map_location=map_location)

@@ -478,10 +478,18 @@ class OTXHlabelClsModel(OTXModel):
 
     @staticmethod
     def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
-        if not isinstance(label_info, HLabelInfo):
-            raise TypeError(label_info)
+        if isinstance(label_info, dict):
+            if "label_ids" not in label_info:
+                # NOTE: This is for backward compatibility
+                label_info["label_ids"] = label_info["label_names"]
+            return HLabelInfo(**label_info)
+        if isinstance(label_info, HLabelInfo):
+            if not hasattr(label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                label_info.label_ids = label_info.label_names
+            return label_info
 
-        return label_info
+        raise TypeError(label_info)
 
     def get_dummy_input(self, batch_size: int = 1) -> HlabelClsBatchDataEntity:
         """Returns a dummy input for classification OV model."""

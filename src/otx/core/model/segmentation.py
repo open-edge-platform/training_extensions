@@ -193,6 +193,11 @@ class OTXSegmentationModel(OTXModel):
 
     @staticmethod
     def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
+        if isinstance(label_info, dict):
+            if "label_ids" not in label_info:
+                # NOTE: This is for backward compatibility
+                label_info["label_ids"] = label_info["label_names"]
+            return SegLabelInfo(**label_info)
         if isinstance(label_info, int):
             return SegLabelInfo.from_num_classes(num_classes=label_info)
         if isinstance(label_info, Sequence) and all(isinstance(name, str) for name in label_info):
@@ -202,6 +207,9 @@ class OTXSegmentationModel(OTXModel):
                 label_ids=[str(i) for i in range(len(label_info))],
             )
         if isinstance(label_info, SegLabelInfo):
+            if not hasattr(label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                label_info.label_ids = label_info.label_names
             return label_info
 
         raise TypeError(label_info)

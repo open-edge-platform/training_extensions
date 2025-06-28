@@ -392,20 +392,7 @@ class OTXModel(LightningModule):
         hyper_parameters = checkpoint.get("hyper_parameters", None)
         if hyper_parameters:
             if ckpt_label_info := hyper_parameters.get("label_info"):
-                if isinstance(ckpt_label_info, dict):
-                    if "label_ids" not in ckpt_label_info:
-                        # NOTE: This is for backward compatibility
-                        ckpt_label_info["label_ids"] = ckpt_label_info["label_names"]
-                    ckpt_label_info = LabelInfo(**ckpt_label_info)
-                elif isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
-                    # NOTE: This is for backward compatibility
-                    ckpt_label_info = LabelInfo(
-                        label_groups=ckpt_label_info.label_groups,
-                        label_names=ckpt_label_info.label_names,
-                        label_ids=ckpt_label_info.label_names,
-                    )
-                self._label_info = ckpt_label_info
-
+                self._label_info = self._dispatch_label_info(ckpt_label_info)
             if ckpt_tile_config := hyper_parameters.get("tile_config"):
                 if isinstance(ckpt_tile_config, dict):
                     ckpt_tile_config = TileConfig(**ckpt_tile_config)
@@ -860,6 +847,9 @@ class OTXModel(LightningModule):
                 label_ids=[str(i) for i in range(len(label_info))],
             )
         if isinstance(label_info, LabelInfo):
+            if not hasattr(label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                label_info.label_ids = label_info.label_names
             return label_info
 
         raise TypeError(label_info)
