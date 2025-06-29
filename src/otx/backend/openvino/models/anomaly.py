@@ -11,30 +11,28 @@ All anomaly models use the same AnomalyDetection model from ModelAPI.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Literal
 
-import numpy as np
 import openvino
 import torch
-from anomalib.metrics import create_metric_collection
 from torchvision.transforms.functional import resize
 
 from otx.backend.openvino.models import OVModel
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.module import OTXDataModule
-from otx.metrics.types import MetricCallable, NullMetricCallable
+from otx.metrics.anomaly import AnomalyCallable
+from otx.metrics.types import MetricCallable
 from otx.types.label import AnomalyLabelInfo
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from anomalib.metrics import AnomalibMetricCollection
     from model_api.models import Model
     from model_api.models.anomaly import AnomalyResult
 
 
-class AnomalyOpenVINO(OVModel):
+class OVAnomalyModel(OVModel):
     """Anomaly OpenVINO model."""
 
     def __init__(
@@ -44,7 +42,7 @@ class AnomalyOpenVINO(OVModel):
         max_num_requests: int | None = None,
         use_throughput_mode: bool = True,
         model_api_configuration: dict[str, Any] | None = None,
-        metric: MetricCallable = NullMetricCallable,  # Metrics is computed using Anomalib's metric
+        metric: MetricCallable = AnomalyCallable,
         task: Literal[
             OTXTaskType.ANOMALY,
             OTXTaskType.ANOMALY_CLASSIFICATION,
@@ -62,9 +60,6 @@ class AnomalyOpenVINO(OVModel):
             model_api_configuration=model_api_configuration,
             metric=metric,
         )
-        metric_names = ["AUROC", "F1Score"]
-        self.image_metrics: AnomalibMetricCollection = create_metric_collection(metric_names, prefix="image_")
-        self.pixel_metrics: AnomalibMetricCollection = create_metric_collection(metric_names, prefix="pixel_")
         self._task = task
 
     def _create_model(self) -> Model:
@@ -108,7 +103,7 @@ class AnomalyOpenVINO(OVModel):
             ),
             "labels": torch.tensor(inputs.labels) if inputs.batch_size == 1 else torch.vstack(inputs.labels),
         }
-        score_dict["anomaly_maps"] = torch.tensor(preds.mask)
+        score_dict["anomaly_maps"] = torch.vstack(preds.masks)
         score_dict["masks"] = torch.vstack(inputs.masks)
         # resize masks and anomaly maps to 256,256 as this is the size used in Anomalib
         score_dict["masks"] = resize(score_dict["masks"], (256, 256))
@@ -169,11 +164,11 @@ class AnomalyOpenVINO(OVModel):
     def _customize_outputs(self, outputs: list[AnomalyResult], inputs: OTXDataBatch) -> list[AnomalyResult]:
         """Return outputs from the OpenVINO model as is."""
         return OTXPredBatch(
-            images = inputs.images,
+            images=inputs.images,
             batch_size=inputs.batch_size,
-            labels = [torch.tensor(0) if output.pred_label == "Normal" else torch.tensor(1) for output in outputs],
-            scores = [output.pred_score for output in outputs],
-            masks = [torch.tensor(output.anomaly_map) / 255.0 for output in outputs]
+            labels=[torch.tensor(0) if output.pred_label == "Normal" else torch.tensor(1) for output in outputs],
+            scores=[torch.tensor(output.pred_score) for output in outputs],
+            masks=[torch.tensor(output.anomaly_map).unsqueeze(0) / 255.0 for output in outputs],
         )
 
     def _create_label_info_from_ov_ir(self) -> AnomalyLabelInfo:
