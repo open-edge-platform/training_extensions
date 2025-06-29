@@ -17,7 +17,6 @@ import numpy as np
 import openvino
 import torch
 from anomalib.metrics import create_metric_collection
-from lightning import Callback, Trainer
 from torchvision.transforms.functional import resize
 
 from otx.backend.openvino.models import OVModel
@@ -33,62 +32,6 @@ if TYPE_CHECKING:
     from anomalib.metrics import AnomalibMetricCollection
     from model_api.models import Model
     from model_api.models.anomaly import AnomalyResult
-
-
-class _OVMetricCallback(Callback):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def on_test_epoch_start(self, trainer: Trainer, pl_module: AnomalyOpenVINO) -> None:
-        pl_module.image_metrics.reset()
-        pl_module.pixel_metrics.reset()
-
-    def on_test_batch_end(
-        self,
-        trainer: Trainer,
-        pl_module: AnomalyOpenVINO,
-        outputs: list[AnomalyResult],
-        batch: OTXDataBatch,
-        batch_idx: int,
-        dataloader_idx: int = 0,
-    ) -> None:
-        # Convert modelAPI scores to anomaly scores. i.e flip scores with Normal label.
-        score_dict = {
-            "pred_scores": torch.tensor(
-                [output.pred_score if output.pred_label == "Anomaly" else 1 - output.pred_score for output in outputs],
-            ),
-            "labels": torch.tensor(batch.labels) if batch.batch_size == 1 else torch.vstack(batch.labels),
-        }
-        score_dict["anomaly_maps"] = torch.tensor(np.array([output.anomaly_map for output in outputs])) / 255.0
-        score_dict["masks"] = torch.vstack(batch.masks)
-        # resize masks and anomaly maps to 256,256 as this is the size used in Anomalib
-        score_dict["masks"] = resize(score_dict["masks"], (256, 256))
-        score_dict["anomaly_maps"] = resize(score_dict["anomaly_maps"], (256, 256))
-
-        self._update_metrics(pl_module.image_metrics, pl_module.pixel_metrics, score_dict)
-
-    def on_test_epoch_end(self, trainer: Trainer, pl_module: AnomalyOpenVINO) -> None:
-        self._log_metrics(pl_module)
-
-    def _update_metrics(
-        self,
-        image_metric: AnomalibMetricCollection,
-        pixel_metric: AnomalibMetricCollection,
-        outputs: dict[str, torch.Tensor],
-    ) -> None:
-        """Update performance metrics."""
-        image_metric.update(outputs["pred_scores"], outputs["labels"].int())
-        if "masks" in outputs and "anomaly_maps" in outputs:
-            pixel_metric.update(outputs["anomaly_maps"], outputs["masks"].int())
-
-    @staticmethod
-    def _log_metrics(pl_module: AnomalyOpenVINO) -> None:
-        """Log computed performance metrics."""
-        if pl_module.pixel_metrics._update_called:  # noqa: SLF001
-            pl_module.log_dict(pl_module.pixel_metrics, prog_bar=True)
-            pl_module.log_dict(pl_module.image_metrics, prog_bar=False)
-        else:
-            pl_module.log_dict(pl_module.image_metrics, prog_bar=True)
 
 
 class AnomalyOpenVINO(OVModel):
@@ -161,11 +104,11 @@ class AnomalyOpenVINO(OVModel):
         """
         score_dict = {
             "pred_scores": torch.tensor(
-                [output.pred_score if output.pred_label == "Anomaly" else 1 - output.pred_score for output in preds],
+                [score if label == "Anomaly" else 1 - score for score, label in zip(preds.scores, preds.labels)],
             ),
             "labels": torch.tensor(inputs.labels) if inputs.batch_size == 1 else torch.vstack(inputs.labels),
         }
-        score_dict["anomaly_maps"] = torch.tensor(np.array([output.anomaly_map for output in preds])) / 255.0
+        score_dict["anomaly_maps"] = torch.tensor(preds.mask)
         score_dict["masks"] = torch.vstack(inputs.masks)
         # resize masks and anomaly maps to 256,256 as this is the size used in Anomalib
         score_dict["masks"] = resize(score_dict["masks"], (256, 256))
@@ -223,21 +166,15 @@ class AnomalyOpenVINO(OVModel):
 
         return output_model_path
 
-    def configure_callbacks(self) -> Sequence[Callback] | Callback:
-        """Return the metric callback."""
-        return _OVMetricCallback()
-
-    def test_step(self, inputs: OTXDataBatch, batch_idx: int) -> list[AnomalyResult]:
-        """Return outputs from the OpenVINO model."""
-        return self.forward(inputs)  # type: ignore[return-value]
-
-    def predict_step(self, inputs: OTXDataBatch, batch_idx: int) -> list[AnomalyResult]:
-        """Return outputs from the OpenVINO model."""
-        return self.forward(inputs)  # type: ignore[return-value]
-
     def _customize_outputs(self, outputs: list[AnomalyResult], inputs: OTXDataBatch) -> list[AnomalyResult]:
         """Return outputs from the OpenVINO model as is."""
-        return outputs
+        return OTXPredBatch(
+            images = inputs.images,
+            batch_size=inputs.batch_size,
+            labels = [torch.tensor(0) if output.pred_label == "Normal" else torch.tensor(1) for output in outputs],
+            scores = [output.pred_score for output in outputs],
+            masks = [torch.tensor(output.anomaly_map) / 255.0 for output in outputs]
+        )
 
     def _create_label_info_from_ov_ir(self) -> AnomalyLabelInfo:
         return AnomalyLabelInfo()

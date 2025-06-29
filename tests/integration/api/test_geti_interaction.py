@@ -175,6 +175,15 @@ class TestEngineAPI:
             export_dir = exported_path.parent
             assert export_dir.exists()
 
+            # Test OpenVINO Engine API
+            ov_engine = create_engine(
+                model=export_dir / "exported_model.xml",
+                data=self.engine.datamodule,
+                work_dir=self.tmp_path,
+            )
+            metric = ov_engine.test()
+            assert metric > 1e-5
+
             # Test Model API
             ov_export_dir = self.tmp_path / "ov_export"
             ov_export_dir.mkdir(parents=True, exist_ok=True)
@@ -191,6 +200,11 @@ class TestEngineAPI:
             assert predictions is not None
 
             exported_path.unlink(missing_ok=True)
+
+            # Test OpenVINO Engine predict
+            ov_predictions = ov_engine.predict(data=[self.image])
+            assert ov_predictions is not None
+            assert len(ov_predictions) > 0
 
     def test_optimize_and_infer_openvino_fp32(self):
         """Test optimizing the OpenVINO model with FP32 precision."""
@@ -218,6 +232,10 @@ class TestEngineAPI:
         )
         assert optimized_path.exists()
 
+        # Test OV Engine API
+        metric = ov_engine.test(model=fp32_export_dir / "exported_model.xml")
+        assert metric > 1e-5
+
         # Test Model API
         mapi_model = Model.create_model(optimized_path)
         assert mapi_model is not None
@@ -225,6 +243,10 @@ class TestEngineAPI:
         predictions = mapi_model(self.image)
         assert predictions is not None
 
+        # Test OV Engine
+        ov_predictions = ov_engine.predict(model=optimized_path, data=[self.image])
+        assert ov_predictions is not None
+        assert len(ov_predictions) > 0
 
 def test_engine_api(
     task_template: tuple[OTXTaskType, Path, bool],
