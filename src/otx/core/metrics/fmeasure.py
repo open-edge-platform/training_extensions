@@ -761,6 +761,10 @@ class FMeasure(Metric):
     @property
     def best_confidence_threshold(self) -> float:
         """Returns best confidence threshold as ScoreMetric if exists."""
+        if isinstance(self._best_confidence_threshold, np.float_):
+            # Convert numpy float to python float
+            self._best_confidence_threshold = self._best_confidence_threshold.item()
+
         if self._best_confidence_threshold is None:
             msg = (
                 "Cannot obtain best_confidence_threshold updated previously. "

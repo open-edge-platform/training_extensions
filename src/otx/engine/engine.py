@@ -13,18 +13,21 @@ import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
+import numpy as np
 import torch
 from lightning import Trainer, seed_everything
 from lightning.pytorch.plugins.precision import MixedPrecision
 
+from otx.core.config.data import TileConfig
 from otx.core.config.device import DeviceConfig
 from otx.core.config.explain import ExplainConfig
 from otx.core.data.module import OTXDataModule
 from otx.core.model.base import OTXModel, OVModel
-from otx.core.types import PathLike
+from otx.core.types import LabelInfo, PathLike
 from otx.core.types.device import DeviceType
 from otx.core.types.export import OTXExportFormatType
 from otx.core.types.precision import OTXPrecisionType
@@ -264,9 +267,7 @@ class Engine:
         elif not resume and checkpoint:
             # NOTE: If `resume` is not enabled but `checkpoint` is provided,
             # load the model state from the checkpoint incrementally.
-            # This means only the model weights are loaded. If there is a mismatch in label_info,
-            # perform incremental weight loading for the model's classification layer.
-            ckpt = torch.load(checkpoint, weights_only=False)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
@@ -354,10 +355,8 @@ class Engine:
         # NOTE, trainer.test takes only lightning based checkpoint.
         # So, it can't take the OTX1.x checkpoint.
         if checkpoint is not None and not is_ir_ckpt:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             if (
@@ -451,10 +450,8 @@ class Engine:
             datamodule = self._auto_configurator.update_ov_subset_pipeline(datamodule=datamodule, subset="test")
 
         if checkpoint is not None and not is_ir_ckpt:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -565,20 +562,8 @@ class Engine:
             )
 
         if not is_ir_ckpt:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = self.model.__class__
-            if hasattr(self.model, "model_name"):
-                # NOTE: This is a solution to fix backward compatibility issue.
-                # If the model has `model_name` attribute, it will be passed to the `load_from_checkpoint` method,
-                # making sure previous model trained without model_name can be loaded.
-                kwargs_user_input["model_name"] = self.model.model_name
-
-            self.model = model_cls.load_from_checkpoint(
-                checkpoint_path=checkpoint,
-                map_location="cpu",
-                **kwargs_user_input,
-            )
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            self.model.load_state_dict(ckpt)
             self.model.eval()
 
         self.model.explain_mode = explain
@@ -741,10 +726,8 @@ class Engine:
             model = self._auto_configurator.get_ov_model(model_name=str(checkpoint), label_info=datamodule.label_info)
 
         if checkpoint is not None and not is_ir_ckpt:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            self.model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -846,14 +829,9 @@ class Engine:
                 )
 
             if not is_ir_ckpt:
-                kwargs_user_input: dict[str, Any] = {}
-
-                model_cls = self.model.__class__
-                self.model = model_cls.load_from_checkpoint(
-                    checkpoint_path=checkpoint,
-                    map_location="cpu",
-                    **kwargs_user_input,
-                )
+                # load checkpoint
+                ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+                self.model.load_state_dict(ckpt)
         elif isinstance(self.model, OVModel):
             msg = "To run benchmark on OV model, checkpoint must be specified."
             raise RuntimeError(msg)
@@ -986,7 +964,7 @@ class Engine:
             raise TypeError(model)
 
         model.label_info = datamodule.label_info
-
+        print(model.label_info)
         return cls(
             work_dir=instantiated_config.get("work_dir", work_dir),
             datamodule=datamodule,
@@ -1055,6 +1033,79 @@ class Engine:
             task=task,
             **kwargs,
         )
+
+    @staticmethod
+    def _load_model_checkpoint(checkpoint: PathLike, map_location: str | None = None) -> dict[str, Any]:
+        """Load model checkpoint from the given path.
+
+        Args:
+            checkpoint (PathLike): Path to the checkpoint file.
+
+        Returns:
+            dict[str, Any]: The loaded state dictionary from the checkpoint.
+        """
+        if not Path(checkpoint).exists():
+            msg = f"Checkpoint file does not exist: {checkpoint}"
+            raise FileNotFoundError(msg)
+
+        try:
+            ckpt = torch.load(checkpoint, map_location=map_location)
+        except UnpicklingError:
+            # patch an old OTX checkpoint to load it
+            import sys
+
+            from anomalib.metrics.threshold.f1_adaptive_threshold import F1AdaptiveThreshold
+            from torchmetrics.metric import jit_distributed_available
+            from torchmetrics.utilities.data import dim_zero_cat
+
+            from otx.core.config.data import SamplerConfig, SubsetConfig
+            from otx.core.types.device import DeviceType
+            from otx.core.types.image import ImageColorChannel
+            from otx.core.types.label import AnomalyLabelInfo, HLabelInfo, NullLabelInfo, SegLabelInfo
+            from otx.core.types.transformer_libs import TransformLibType
+
+            OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
+            OTXTrainType.__module__ = "otx.core.types.task"
+
+            UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+            UnlabeledDataConfig.__module__ = "otx.core.config.data"
+
+            VisualPromptingConfig = type("VisualPromptingConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+            VisualPromptingConfig.__module__ = "otx.core.config.data"
+
+            setattr(sys.modules["otx.core.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
+            setattr(sys.modules["otx.core.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
+            torch.serialization.add_safe_globals(
+                [
+                    LabelInfo,
+                    AnomalyLabelInfo,
+                    SegLabelInfo,
+                    HLabelInfo,
+                    NullLabelInfo,
+                    TileConfig,
+                    np.core.multiarray.scalar,
+                    jit_distributed_available,
+                    np.dtype(np.float64).__class__,
+                    np.dtype,
+                    OTXTrainType,
+                    UnlabeledDataConfig,
+                    VisualPromptingConfig,
+                    OTXTaskType,
+                    SubsetConfig,
+                    TransformLibType,
+                    SamplerConfig,
+                    ImageColorChannel,
+                    DeviceType,
+                    F1AdaptiveThreshold,
+                    dim_zero_cat,
+                ],
+            )
+            ckpt = torch.load(checkpoint, map_location=map_location)
+        except Exception as e:
+            msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
+            raise RuntimeError(e) from None
+
+        return ckpt
 
     # ------------------------------------------------------------------------ #
     # Property and setter functions provided by Engine.

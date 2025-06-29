@@ -12,6 +12,7 @@ import json
 import logging
 import warnings
 from abc import abstractmethod
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import numpy as np
@@ -106,13 +107,13 @@ class OTXModel(LightningModule):
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | dict,
         input_size: tuple[int, int] | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = NullMetricCallable,
         torch_compile: bool = False,
-        tile_config: TileConfig = TileConfig(enable_tiler=False),
+        tile_config: TileConfig | dict = TileConfig(enable_tiler=False),
     ) -> None:
         super().__init__()
 
@@ -121,21 +122,21 @@ class OTXModel(LightningModule):
         self.input_size = input_size
         self.classification_layers: dict[str, dict[str, Any]] = {}
         self.model = self._create_model()
-        self.optimizer_callable = ensure_callable(optimizer)
-        self.scheduler_callable = ensure_callable(scheduler)
-        self.metric_callable = ensure_callable(metric)
+        self.optimizer_callable: OptimizerCallable = ensure_callable(optimizer)
+        self.scheduler_callable: LRSchedulerCallable = ensure_callable(scheduler)
+        self.metric_callable: MetricCallable = ensure_callable(metric)
 
         self.torch_compile = torch_compile
         self._explain_mode = False
 
         # NOTE: To guarantee immutablility of the default value
+        if isinstance(tile_config, dict):
+            tile_config = TileConfig(**tile_config)
         self._tile_config = tile_config.clone()
-
-        # this line allows to access init params with 'self.hparams' attribute
-        # also ensures init params will be stored in ckpt
-        # TODO(vinnamki): Ticket no. 138995: MetricCallable should be saved in the checkpoint
-        # so that it can retrieve it from the checkpoint
-        self.save_hyperparameters(logger=False, ignore=["optimizer", "scheduler", "metric"])
+        self.save_hyperparameters(
+            logger=False,
+            ignore=["optimizer", "scheduler", "metric", "label_info", "tile_config"],
+        )
 
     def training_step(self, batch: T_OTXBatchDataEntity, batch_idx: int) -> Tensor | None:
         """Step for model training."""
@@ -376,37 +377,41 @@ class OTXModel(LightningModule):
             compiled_state_dict = checkpoint["state_dict"]
             checkpoint["state_dict"] = remove_state_dict_prefix(compiled_state_dict, "_orig_mod.")
         super().on_save_checkpoint(checkpoint)
-
-        checkpoint["label_info"] = self.label_info
+        checkpoint["hyper_parameters"]["label_info"] = asdict(self.label_info)
         checkpoint["otx_version"] = __version__
-        checkpoint["tile_config"] = self.tile_config
+        checkpoint["hyper_parameters"]["tile_config"] = asdict(self.tile_config)
+        checkpoint.pop("datamodule_hparams_name", None)
+        checkpoint.pop(
+            "datamodule_hyper_parameters",
+            None,
+        )  # Remove datamodule_hyper_parameters to prevent storing OTX classes
 
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
         super().on_load_checkpoint(checkpoint)
-
-        if ckpt_label_info := checkpoint.get("label_info"):
-            if isinstance(ckpt_label_info, LabelInfo) and not hasattr(ckpt_label_info, "label_ids"):
-                # NOTE: This is for backward compatibility
-                ckpt_label_info = LabelInfo(
-                    label_groups=ckpt_label_info.label_groups,
-                    label_names=ckpt_label_info.label_names,
-                    label_ids=ckpt_label_info.label_names,
-                )
-            self._label_info = ckpt_label_info
-
-        if ckpt_tile_config := checkpoint.get("tile_config"):
-            self.tile_config = ckpt_tile_config
+        hyper_parameters = checkpoint.get("hyper_parameters", None)
+        if hyper_parameters:
+            if ckpt_label_info := hyper_parameters.get("label_info"):
+                self._label_info = self._dispatch_label_info(ckpt_label_info)
+            if ckpt_tile_config := hyper_parameters.get("tile_config"):
+                if isinstance(ckpt_tile_config, dict):
+                    ckpt_tile_config = TileConfig(**ckpt_tile_config)
+                self.tile_config = ckpt_tile_config
 
     def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
         """Load state dict incrementally."""
         ckpt_label_info: LabelInfo | None = (
-            ckpt.get("label_info") if not is_ckpt_from_otx_v1(ckpt) else self.get_ckpt_label_info_v1(ckpt)
+            ckpt.get("hyper_parameters", {}).get("label_info")
+            if not is_ckpt_from_otx_v1(ckpt)
+            else self.get_ckpt_label_info_v1(ckpt)
         )
 
         if ckpt_label_info is None:
             msg = "Checkpoint should have `label_info`."
             raise ValueError(msg, ckpt_label_info)
+
+        if isinstance(ckpt_label_info, dict):
+            ckpt_label_info = LabelInfo(**ckpt_label_info)
 
         if not hasattr(ckpt_label_info, "label_ids"):
             msg = "Loading checkpoint from OTX < 2.2.1, label_ids are assigned automatically"
@@ -447,10 +452,10 @@ class OTXModel(LightningModule):
             warnings.warn(msg, stacklevel=2)
             state_dict = self.load_from_otx_v1_ckpt(ckpt)
         elif is_ckpt_for_finetuning(ckpt):
+            self.on_load_checkpoint(ckpt)
             state_dict = ckpt["state_dict"]
         else:
             state_dict = ckpt
-
         return super().load_state_dict(state_dict, *args, **kwargs)
 
     def load_from_otx_v1_ckpt(self, ckpt: dict[str, Any]) -> dict:
@@ -828,6 +833,11 @@ class OTXModel(LightningModule):
 
     @staticmethod
     def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
+        if isinstance(label_info, dict):
+            if "label_ids" not in label_info:
+                # NOTE: This is for backward compatibility
+                label_info["label_ids"] = label_info["label_names"]
+            return LabelInfo(**label_info)
         if isinstance(label_info, int):
             return LabelInfo.from_num_classes(num_classes=label_info)
         if isinstance(label_info, Sequence) and all(isinstance(name, str) for name in label_info):
@@ -837,6 +847,9 @@ class OTXModel(LightningModule):
                 label_ids=[str(i) for i in range(len(label_info))],
             )
         if isinstance(label_info, LabelInfo):
+            if not hasattr(label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                label_info.label_ids = label_info.label_names
             return label_info
 
         raise TypeError(label_info)

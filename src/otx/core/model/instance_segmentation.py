@@ -283,6 +283,7 @@ class OTXInstanceSegModel(OTXModel):
         # Instance segmentation needs to add empty label to satisfy MAPI wrapper requirements
         modified_label_info.label_names.insert(0, "otx_empty_lbl")
         modified_label_info.label_ids.insert(0, "None")
+        modified_label_info.label_groups[0].insert(0, "otx_empty_lbl")
 
         return super()._export_parameters.wrap(
             model_type="MaskRCNN",
@@ -762,7 +763,6 @@ class OVInstanceSegmentationModel(
 
     def _create_label_info_from_ov_ir(self) -> LabelInfo:
         ov_model = self.model.get_model()
-
         if ov_model.has_rt_info(["model_info", "label_info"]):
             serialized = ov_model.get_rt_info(["model_info", "label_info"]).value
             ir_label_info = LabelInfo.from_json(serialized)
