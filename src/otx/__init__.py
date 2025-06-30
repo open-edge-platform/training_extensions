@@ -3,7 +3,7 @@
 # Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-__version__ = "2.4.4"
+__version__ = "2.4.5"
 
 import os
 from pathlib import Path
