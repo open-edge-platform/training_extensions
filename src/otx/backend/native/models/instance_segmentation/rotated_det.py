@@ -3,16 +3,17 @@
 
 """Rotated Detection Prediction Mixin."""
 
-from otx.data.entity.torch.torch import OTXPredBatch
-
-from datumaro import Polygon
 import cv2
 import torch
+from datumaro import Polygon
 from torchvision import tv_tensors
+
+from otx.data.entity.torch.torch import OTXPredBatch
 
 
 def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
     """Convert masks to rotated bounding boxes and polygons.
+
     This function processes the predictions from an instance segmentation model,
     extracting rotated bounding boxes and polygons from the masks.
 
@@ -33,10 +34,15 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
         [preds.imgs_info, preds.bboxes, preds.scores, preds.labels, preds.masks],
     ):
         if field is None:
-            raise ValueError(f"Field '{field_name}' is None, which is not allowed.")
+            msg = f"Field '{field_name}' is None, which is not allowed."
+            raise ValueError(msg)
 
-    for img_info, pred_bboxes, pred_scores, pred_labels, pred_masks in zip(
-        preds.imgs_info, preds.bboxes, preds.scores, preds.labels, preds.masks  # type: ignore[arg-type,misc]
+    for img_info, pred_bboxes, pred_scores, pred_labels, pred_masks in zip(  # type: ignore[misc]
+        preds.imgs_info,  # type: ignore[arg-type]
+        preds.bboxes,  # type: ignore[arg-type]
+        preds.scores,  # type: ignore[arg-type]
+        preds.labels,  # type: ignore[arg-type]
+        preds.masks,  # type: ignore[arg-type]
     ):
         boxes, scores, labels, masks, polygons = [], [], [], [], []
 
@@ -89,6 +95,7 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
 
 class RotatedPredictMixin:
     """Mixin class for rotated detection prediction."""
+
     def rotated_predict_step(self, preds: OTXPredBatch) -> OTXPredBatch:
         """Perform prediction step for rotated detection."""
         return convert_masks_to_rotated_predictions(preds)
