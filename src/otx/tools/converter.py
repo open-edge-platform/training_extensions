@@ -106,6 +106,9 @@ TEMPLATE_ID_DICT = {
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
         "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b.yaml",
     },
+    "Rotated_Detection_MaskRCNN_ResNet50_V2": {
+        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50_v2.yaml",
+    },
     # SEMANTIC_SEGMENTATION
     "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
         "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
