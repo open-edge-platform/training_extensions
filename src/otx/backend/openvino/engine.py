@@ -203,7 +203,6 @@ class OVEngine(Engine):
                 f"datamodule.label_info={self.datamodule.label_info}"
             )
             raise ValueError(msg)
-
         metric_callable = metric(datamodule.label_info)
         with Progress() as progress:
             dataloader = datamodule.test_dataloader()
