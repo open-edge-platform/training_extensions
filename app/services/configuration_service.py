@@ -29,5 +29,11 @@ class ConfigurationService(metaclass=Singleton):
     def get_input_config(self) -> InputConfig:
         return self._app_config.input
 
-    def get_output_config(self) -> OutputConfig:
-        return self._app_config.output
+    def set_input_config(self, input_config: InputConfig) -> None:
+        self._app_config.input = input_config
+
+    def set_output_config(self, outputs: list[OutputConfig]) -> None:
+        self._app_config.outputs = outputs
+
+    def get_output_config(self) -> list[OutputConfig]:
+        return self._app_config.outputs

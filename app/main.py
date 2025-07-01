@@ -8,6 +8,7 @@
 #  - docker run --network host --name geti-edge geti-edge
 
 import logging
+import os
 import time
 from collections.abc import Generator
 from pathlib import Path
@@ -22,7 +23,7 @@ from fastapi.responses import HTMLResponse
 from fastrtc import AdditionalOutputs, Stream
 from pydantic import BaseModel, Field
 
-from app.api.endpoints import model_management
+from app.api.endpoints import configuration, model_management
 from app.entities.dispatchers import Dispatcher
 from app.services import ConfigurationService, DispatchService, ModelService, SystemService, VideoStreamService
 from app.visualization import DetectionVisualizer
@@ -31,8 +32,6 @@ if TYPE_CHECKING:
     from schemas.configuration import AppConfig
 
     from app.entities.video_stream import VideoStream
-
-UI_MODE: bool = False
 
 logging.basicConfig(
     level=logging.INFO,
@@ -131,6 +130,7 @@ app.add_middleware(  # TODO restrict settings in production
     allow_headers=["*"],
 )
 app.include_router(model_management.router)
+app.include_router(configuration.router)
 
 cur_dir = Path(__file__).parent
 
@@ -157,7 +157,7 @@ async def webrtc_input_hook(data: InputData) -> None:
 stream.mount(app, "/api")
 
 if __name__ == "__main__":
-    if UI_MODE:
+    if os.getenv("GRADIO_UI") is not None:
         stream.ui.launch(server_name="0.0.0.0", server_port=7860)  # noqa: S104
     else:
         import uvicorn
