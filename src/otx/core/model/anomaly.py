@@ -457,6 +457,10 @@ class AnomalyMixin:
             for key, value in anomaly_attrs.items():
                 setattr(self, key, value)
 
+    def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
+        """Bypass OTXModel's load_state_dict_incrementally."""
+        return self.load_state_dict(ckpt, *args, **kwargs)
+
     def load_state_dict(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
         """Load state dictionary from checkpoint state dictionary.
 
