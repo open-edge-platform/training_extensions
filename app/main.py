@@ -7,6 +7,7 @@
 #  - docker build -t geti-edge .
 #  - docker run --network host --name geti-edge geti-edge
 
+import copy
 import logging
 import os
 import time
@@ -63,16 +64,19 @@ def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None
                 video_stream.release()
             video_stream = VideoStreamService.get_video_stream(input_config=config.input)
 
-        if video_stream is None:
-            logger.debug("No video stream available... retrying in 1 second")
-            time.sleep(1)
-            continue
-
         if prev_config is None or config.outputs != prev_config.outputs:
             logger.debug(
                 f"Output config changed from {prev_config.outputs if prev_config else 'None'} to {config.outputs}"
             )
             destinations = DispatchService.get_destinations(output_configs=config.outputs)
+
+        if prev_config is None or config.input != prev_config.input or config.outputs != prev_config.outputs:
+            prev_config = copy.deepcopy(config)
+
+        if video_stream is None:
+            logger.debug("No video stream available... retrying in 1 second")
+            time.sleep(1)
+            continue
 
         # Get the model to use for inference
         model = model_service.get_inference_model()
@@ -98,8 +102,6 @@ def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None
 
         mem_mb, _ = system_service.get_memory_usage()
         yield frame_with_detections, AdditionalOutputs(str(detections), f"{mem_mb:.2f} MB")
-
-        prev_config = config
 
 
 stream = Stream(
