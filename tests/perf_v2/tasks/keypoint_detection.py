@@ -18,7 +18,7 @@ TASK_TYPE = OTXTaskType.KEYPOINT_DETECTION
 
 
 MODEL_TEST_CASES = [
-    ModelInfo(task=TASK_TYPE.value, name="rtmpose_tiny_single_obj", category="speed"),
+    ModelInfo(task=TASK_TYPE.value, name="rtmpose_tiny", category="speed"),
 ]
 
 DATASET_TEST_CASES = [
