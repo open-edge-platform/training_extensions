@@ -25,10 +25,6 @@ dev = [
     "types-PyYAML~=6.0.12",
 ]
 
-[build-system]
-requires = ["uv_build"]
-build-backend = "uv_build"
-
 [tool.uv.build-backend]
 module-root = ""
 module-name = "app"

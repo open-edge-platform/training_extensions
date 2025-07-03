@@ -1,5 +1,8 @@
- # Use Python 3.10 as the base image
-FROM python:3.10-slim
+#######
+# Base
+#######
+FROM python:3.10-slim@sha256:034724ef64585eeb0e82385e9aabcbeabfe5f7cae2c2dcedb1da95114372b6d7 AS base
+COPY --from=ghcr.io/astral-sh/uv:0.7.14@sha256:cda0fdc9b6066975ba4c791597870d18bc3a441dfc18ab24c5e888c16e15780c /uv /uvx /bin/
 
 # Set working directory
 WORKDIR /app
@@ -10,20 +13,28 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
-RUN pip install uv
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-dev --no-install-project
 
 # Copy project files
 COPY pyproject.toml uv.lock ./
-COPY app ./app
-COPY data/models ./data/models
-COPY data/media ./data/media
 
-# Install dependencies using uv
-RUN uv sync --frozen --no-dev --no-editable
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-editable
+
+COPY config.yaml ./config.yaml
+COPY app ./app
+
+#######
+# Server
+#######
+FROM base AS server
 
 # Expose port
 EXPOSE 7860
 
 # Set the entry point
-CMD ["uv", "run", "app/main.py"]
+CMD ["uv", "run", "fastapi", "run", "--port", "7860"]

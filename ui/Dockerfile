@@ -1,6 +1,17 @@
 # syntax=docker/dockerfile:1.7
 
 #############
+# build_rest_api_specs
+#############
+FROM node:24-alpine3.22@sha256:7aaba6b13a55a1d78411a1162c1994428ed039c6bbef7b1d9859c25ada1d7cc5 AS build_rest_api_specs
+
+WORKDIR /home/app/web_ui/
+
+COPY --link ./package.json .
+COPY --link --from=openapi_spec /openapi.json /home/app/web_ui/src/api/openapi-spec.json
+RUN npm run build:api
+
+#############
 # geti_ui_packages
 #############
 FROM node:24-alpine3.22@sha256:7aaba6b13a55a1d78411a1162c1994428ed039c6bbef7b1d9859c25ada1d7cc5 AS geti_ui_packags
@@ -26,16 +37,16 @@ COPY --link ./eslint.config.js ./
 COPY --link ./.prettierrc ./
 COPY --link ./tsconfig.json ./
 COPY --link ./rsbuild.config.ts ./
-
 COPY --link src/ src/
 
-ARG PUBLIC_API_BASE_URL=/
+ARG PUBLIC_API_BASE_URL=""
 ENV PUBLIC_API_BASE_URL ${PUBLIC_API_BASE_URL}
 
 #############
 # dev
 #############
 FROM base_web_ui as dev
+
 CMD npm run dev
 
 #############

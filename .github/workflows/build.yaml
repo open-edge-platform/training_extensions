@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+    tags:
+      - 'v*'
+  pull_request:
+
+
+jobs:
+  build:
+    name: Build and upload docker image
+    runs-on: innersource.prod.amr.dind
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@364cc21a5de5b1ee4a7f5f9d3fa374ce0ccde746 #v1.2.0
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 #v5.7.0
+        with:
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+
+      - name: Build images
+        run: |
+          # Build and tag images using provided metadata
+          for TAG in $TAGS ; do
+              TAG=${TAG} docker compose build
+
+              docker save -o geti-edge-backend-${TAG}.tar geti-edge-backend:${TAG}
+              docker save -o geti-edge-ui-${TAG}.tar geti-edge-ui:${TAG}
+          done
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          PUBLIC_API_BASE_URL: "/"
+
+      - name: Upload Docker images as artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
+        with:
+          name: docker-images
+          path: |
+            geti-edge-*.tar
+          retention-days: 7

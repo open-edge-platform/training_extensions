@@ -4,8 +4,8 @@
 #  - uv run fastapi run  (UI_MODE=False)
 #  - uv run fastapi dev  (UI_MODE=False, development mode)
 # or use docker and access UI and backend at geti-edge.localhost
-#  - docker build -t geti-edge .
-#  - docker run --network host --name geti-edge geti-edge
+#  - docker compose up
+#  - docker compose -f docker-compose.dev.yaml up
 
 import copy
 import logging

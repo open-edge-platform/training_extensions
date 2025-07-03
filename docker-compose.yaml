@@ -1,0 +1,59 @@
+x-proxies: &proxies
+  args:
+    - HTTP_PROXY=${HTTP_PROXY}
+    - HTTPS_PROXY=${HTTPS_PROXY}
+    - NO_PROXY=${NO_PROXY}
+    - http_proxy=${http_proxy}
+    - https_proxy=${https_proxy}
+    - no_proxy=${no_proxy}
+
+services:
+  server:
+    image: geti-edge-backend:${TAG:-latest}
+    restart: unless-stopped
+    build:
+      dockerfile: Dockerfile
+      <<: *proxies
+    depends_on:
+      - reverse-proxy
+    working_dir: /app
+    volumes:
+      - ./data/:/app/data/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-edge-server.rule=Host(`${GETI_EDGE_DOMAIN:-geti-edge.localhost}`) && (PathPrefix(`/api`))"
+      - "traefik.http.routers.geti-edge-server.entrypoints=web"
+
+  client:
+    image: geti-edge-ui:${TAG:-latest}
+    restart: unless-stopped
+    build:
+      dockerfile: Dockerfile
+      context: ./ui
+      <<: *proxies
+    depends_on:
+      - reverse-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-edge-client.rule=Host(`${GETI_EDGE_DOMAIN:-geti-edge.localhost}`)"
+      - "traefik.http.routers.geti-edge-client.entrypoints=web"
+
+  reverse-proxy:
+    image: traefik:v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-edge-proxy.rule=Host(`proxy.localhost`)"
+      - "traefik.http.routers.geti-edge-proxy.entrypoints=web"
+      - "traefik.http.services.geti-edge-proxy.loadbalancer.server.port=8080"
+    ports:
+      - "80:80"
+      - "443:443"
