@@ -56,7 +56,7 @@ class IterationTimer(Callback):
         self.start_time[phase] = time()
 
         if not self.end_time[phase]:
-            return
+            self.end_time[phase] = self.start_time[phase]
 
         name = f"{phase}/data_time"
 

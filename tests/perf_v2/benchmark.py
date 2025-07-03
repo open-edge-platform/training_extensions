@@ -321,6 +321,7 @@ class Benchmark:
 
         engine = Engine(
             model=model_info.name,
+            task=model_info.task,
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
             device=self.accelerator,
@@ -391,6 +392,9 @@ class Benchmark:
 
             # Run training if not in resume operation
             if "train" not in copied_ops_dir:
+                if sub_work_dir.exists():
+                    shutil.rmtree(sub_work_dir)
+
                 e2e_train_time = self.train(
                     model_info=model_info,
                     dataset_info=dataset_info,
