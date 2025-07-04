@@ -4,6 +4,7 @@ import { ThemeProvider } from '@geti/ui/theme';
 import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
 import { ZoomProvider } from './components/zoom/zoom';
 
 const queryClient = new QueryClient({
@@ -27,7 +28,9 @@ export function Providers({ children }: { children: ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-                <ZoomProvider>{children}</ZoomProvider>
+                <WebRTCConnectionProvider>
+                    <ZoomProvider>{children}</ZoomProvider>
+                </WebRTCConnectionProvider>
             </ThemeProvider>
         </QueryClientProvider>
     );

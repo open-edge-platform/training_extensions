@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
-import { Grid, View } from '@geti/ui';
+import { Button, Flex, Grid, Loading, View } from '@geti/ui';
+import { Play } from '@geti/ui/icons';
 
+import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
 import { Stream } from './../../components/stream/stream';
-import { ZoomTransform } from './../../components/zoom/zoom-transform';
 import { Aside } from './aside';
 import { Toolbar } from './toolbar';
 
@@ -11,6 +12,8 @@ import classes from './live-feed.module.css';
 
 export function LiveFeedPage() {
     const [size, setSize] = useState({ height: 608, width: 892 });
+    const { start, status } = useWebRTCConnection();
+
     return (
         <Grid
             areas={['toolbar aside', 'canvas aside']}
@@ -25,11 +28,31 @@ export function LiveFeedPage() {
             <Toolbar />
 
             <View gridArea={'canvas'} overflow={'hidden'}>
-                <ZoomTransform target={size}>
+                {status === 'idle' && (
                     <div className={classes.canvasContainer}>
-                        <Stream size={size} setSize={setSize} />
+                        <View backgroundColor={'gray-200'} width='90%' height='90%'>
+                            <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                                <Button onPress={start} UNSAFE_className={classes.playButton}>
+                                    <Play width='128px' height='128px' />
+                                </Button>
+                            </Flex>
+                        </View>
                     </div>
-                </ZoomTransform>
+                )}
+
+                {status === 'connecting' && (
+                    <div className={classes.canvasContainer}>
+                        <View backgroundColor={'gray-200'} width='90%' height='90%'>
+                            <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                                <Loading mode='inline' />
+                            </Flex>
+                        </View>
+                    </div>
+                )}
+
+                <div className={classes.canvasContainer}>
+                    <Stream size={size} setSize={setSize} />
+                </div>
             </View>
         </Grid>
     );
