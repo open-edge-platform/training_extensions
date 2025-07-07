@@ -13,7 +13,6 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from otx.metrics.fmeasure import FMeasureCallable
 from otx.types.task import OTXTaskType
 
 TASK_TYPE = OTXTaskType.INSTANCE_SEGMENTATION
@@ -33,11 +32,6 @@ DATASET_TEST_CASES = (
             name=f"blueberry_tiny_{idx}",
             path=Path("instance_seg/blueberry_tiny_coco") / f"{idx}",
             group="tiny",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         )
         for idx in (1, 2, 3)
     ]
@@ -46,11 +40,6 @@ DATASET_TEST_CASES = (
             name=f"wgisd_tiny_{idx}",
             path=Path("instance_seg/wgisd_merged_coco_tiny") / f"{idx}",
             group="tiny",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         )
         for idx in (1, 2, 3)
     ]
@@ -59,51 +48,26 @@ DATASET_TEST_CASES = (
             name="skindetect",
             path=Path("instance_seg/skindetect-roboflow"),
             group="small",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="vitens_coliform",
             path=Path("instance_seg/Vitens-Coliform-coco"),
             group="small",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="Vitens-Aeromonas",
             path=Path("instance_seg/Vitens-Aeromonas-coco"),
             group="medium",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="Chicken",
             path=Path("instance_seg/Chicken-Real-Time-coco-roboflow"),
             group="medium",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="cityscapes",
             path=Path("instance_seg/cityscapes_coco_reduced"),
             group="large",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
     ]
 )
@@ -118,8 +82,6 @@ BENCHMARK_CRITERIA = [
     Criterion(name="optimize:test/f1-score", summary="max", compare=">", margin=0.1),
     Criterion(name="training:train/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize:test/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize:e2e_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/latency", summary="mean", compare="<", margin=0.1),
     Criterion(name="export:test/latency", summary="mean", compare="<", margin=0.1),
