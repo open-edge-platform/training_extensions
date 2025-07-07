@@ -4,12 +4,12 @@ This module provides custom wrappers for popular `scikit-learn` models, enabling
 
 * Transparent training with Intel® optimizations via `scikit-learn-intelex` (sklearnex)
 * Optional conversion to OpenVINO™ IR format for optimized inference
-* Easy model saving/loading
-* Compatibility checks before export
+* Easy model saving/loading with `joblib`
+* Compatibility checks and custom warnings for unsupported parameters
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Installation
 
@@ -25,31 +25,43 @@ Or using `conda` (recommended for Intel optimization support):
 conda create -n openvino-sklearn python=3.10
 conda activate openvino-sklearn
 conda install -c intel scikit-learn-intelex
+pip install skl2onnx openvino joblib numpy
 ```
 
-> `openvino`, `skl2onnx`, and `joblib` are required for exporting and managing models
+> `openvino`, `skl2onnx`, and `joblib` are required for exporting and managing models.
 
 ---
 
 ## 📂 Available Models
 
-* Classification:
+**Classification:**
+- LogisticRegression
+- RandomForestClassifier
+- KNeighborsClassifier
+- SVC
+- NuSVC
 
-  * LogisticRegression
-  * RandomForestClassifier
-  * KNeighborsClassifier
-  * SVC
+**Regression:**
+- LinearRegression
+- Ridge
+- ElasticNet
+- Lasso
+- RandomForestRegressor
+- KNeighborsRegressor
+- SVR
+- NuSVR
 
-* Regression:
+**Clustering:**
+- KMeans
+- DBSCAN
 
-  * LinearRegression
-  * Ridge
-  * ElasticNet
-  * Lasso
-  * RandomForestRegressor
-  * KNeighborsRegressor
-  * SVR
-  * NuSVR
+**Decomposition:**
+- PCA
+- IncrementalPCA
+- TSNE
+
+**Neighbors:**
+- NearestNeighbors
 
 All models follow a consistent interface.
 
@@ -58,7 +70,7 @@ All models follow a consistent interface.
 ## ⚖️ Example Usage
 
 ```python
-from openvino_kit.sklearn import LogisticRegression
+from otx.backend.openvino.models.scikit_learn import LogisticRegression
 
 model = LogisticRegression()
 model.fit(X_train, y_train)
@@ -72,7 +84,7 @@ model.convert_to_ir(X_train, model_name="logreg")
 
 ## 💡 Features
 
-* OpenVINO patching with `sklearnex`
+* OpenVINO patching with `scikit-learn-intelex`
 * Export to ONNX and OpenVINO IR using `skl2onnx` and `openvino`
 * Custom warnings for unsupported parameters
 * Support for saving/loading via `joblib`
@@ -82,21 +94,18 @@ model.convert_to_ir(X_train, model_name="logreg")
 
 ## ⚙️ System Requirements
 
-### Operating Systems
+**Operating Systems**
+- Windows\*
+- Linux\*
 
-* Windows\*
-* Linux\*
+**Python Versions**
+- 3.9, 3.10, 3.11, 3.12, 3.13
 
-### Python Versions
+**Devices**
+- CPU (required)
+- GPU (optional, needs additional setup)
 
-* 3.9, 3.10, 3.11, 3.12, 3.13
-
-### Devices
-
-* CPU (required)
-* GPU (optional, needs additional setup)
-
-> **SPMD (multi-GPU)** and **GPU mode** require further configuration (see Intel docs)
+> **SPMD (multi-GPU)** and **GPU mode** require further configuration (see Intel docs).
 
 ---
 
