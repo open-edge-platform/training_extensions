@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; OpenVINO™ Training Extensions 2.5.0dev documentation</title>
+    <title>Installation &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
   
   
   
@@ -34,7 +34,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../_static/documentation_options.js?v=9b901575"></script>
+    <script src="../../_static/documentation_options.js?v=477152fe"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -422,6 +422,11 @@
 <li><p>Python &gt;= 3.10</p></li>
 <li><p>[<cite>uv</cite>](<a class="github reference external" href="https://github.com/astral-sh/uv">astral-sh/uv</a>) for dependency and environment management</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To enable efficient execution of multiple models, we increase the ONEDNN_PRIMITIVE_CACHE_CAPACITY environment variable from its default value to 10000.
+For more information, refer to the <a class="reference external" href="https://www.intel.com/content/www/us/en/docs/onednn/developer-guide-reference/2024-1/primitive-cache-002.html">Primitive cache</a>.</p>
+</div>
 </section>
 <section id="installing-uv">
 <h2>Installing <code class="docutils literal notranslate"><span class="pre">uv</span></code><a class="headerlink" href="#installing-uv" title="Link to this heading">#</a></h2>
