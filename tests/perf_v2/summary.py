@@ -17,6 +17,10 @@ from zipfile import ZipFile
 import pandas as pd
 
 from otx.types.task import OTXTaskType
+from tests.perf_v2 import (
+    METADATA_ENTRIES,
+    TASK_METRIC_MAP,
+)
 
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
@@ -24,34 +28,6 @@ pd.set_option("display.width", None)
 
 
 logger = logging.getLogger(__name__)
-
-TASK_METRIC_MAP = {
-    OTXTaskType.ANOMALY: "image_F1Score",  # perf v2 uses single anomaly task
-    OTXTaskType.MULTI_CLASS_CLS: "accuracy",
-    OTXTaskType.MULTI_LABEL_CLS: "accuracy",
-    OTXTaskType.H_LABEL_CLS: "accuracy",
-    OTXTaskType.DETECTION: "f1-score",
-    OTXTaskType.INSTANCE_SEGMENTATION: "f1-score",
-    OTXTaskType.SEMANTIC_SEGMENTATION: "Dice",
-    OTXTaskType.KEYPOINT_DETECTION: "PCK",
-}
-
-
-METADATA_ENTRIES = [
-    "date",
-    "task",
-    "model",
-    "data_group",
-    "data",
-    "otx_version",
-    "otx_ref",
-    "test_branch",
-    "test_commit",
-    "cpu_info",
-    "accelerator_info",
-    "user_name",
-    "machine_name",
-]
 
 
 def load(root_dir: Path, pattern="*raw*.csv") -> pd.DataFrame:
