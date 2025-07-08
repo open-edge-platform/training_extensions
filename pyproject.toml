@@ -104,6 +104,7 @@ ci_benchmark = [
     "mlflow==2.21.3",
     "py-cpuinfo==9.0.0",
     "dash",
+    "plotly",
 ]
 
 [project.scripts]
