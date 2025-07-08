@@ -2,7 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-
 ## \[2.4.6\]
 
 ### Bug fixes
@@ -14,7 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug fixes
 
-- Fix UFlow by adding self._setup in UFlow model
+- Fix UFlow by adding self.\_setup in UFlow model
   (<https://github.com/open-edge-platform/training_extensions/pull/4431>)
 - Fix loading/saving checkpoints in OTX
   (<https://github.com/open-edge-platform/training_extensions/pull/4433>,
