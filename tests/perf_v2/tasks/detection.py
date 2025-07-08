@@ -13,7 +13,6 @@ from tests.perf_v2.utils import (
     ModelInfo,
 )
 
-from otx.metrics.fmeasure import FMeasureCallable
 from otx.types.task import OTXTaskType
 
 TASK_TYPE = OTXTaskType.DETECTION
@@ -39,11 +38,6 @@ DATASET_TEST_CASES = (
             name=f"pothole_tiny_{idx}",
             path=Path("detection/pothole_coco_tiny") / f"{idx}",
             group="tiny",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         )
         for idx in (1, 2, 3)
     ]
@@ -52,11 +46,6 @@ DATASET_TEST_CASES = (
             name=f"blueberry_tiny_{idx}",
             path=Path("detection/blueberry_tiny_coco") / f"{idx}",
             group="tiny",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         )
         for idx in (1, 2, 3)
     ]
@@ -65,61 +54,31 @@ DATASET_TEST_CASES = (
             name="wgisd_small",
             path=Path("detection/wgisd_merged_coco_small"),
             group="small",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="skindetect",
             path=Path("detection/skindetect-roboflow"),
             group="small",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="diopsis",
             path=Path("detection/diopsis_coco"),
             group="medium",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="bdd_medium",
             path=Path("detection/bdd_medium"),
             group="medium",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="Vitens-Aeromonas",
             path=Path("detection/Vitens-Aeromonas-coco"),
             group="medium",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
         DatasetInfo(
             name="visdrone",
             path=Path("detection/visdrone_coco_custom_split"),
             group="large",
-            extra_overrides={
-                "test": {
-                    "metric": FMeasureCallable,
-                },
-            },
         ),
     ]
 )
@@ -134,8 +93,6 @@ BENCHMARK_CRITERIA = [
     Criterion(name="export:test/f1-score", summary="max", compare=">", margin=0.1),
     Criterion(name="optimize:test/f1-score", summary="max", compare=">", margin=0.1),
     Criterion(name="torch:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize:test/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize:e2e_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/latency", summary="mean", compare="<", margin=0.1),
     Criterion(name="export:test/latency", summary="mean", compare="<", margin=0.1),

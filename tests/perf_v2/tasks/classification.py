@@ -25,8 +25,6 @@ CLASSIFICATION_BENCHMARK_CRITERIA = [
     Criterion(name="optimize:test/accuracy", summary="max", compare=">", margin=0.1),
     Criterion(name="training:train/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="export:test/iter_time", summary="mean", compare="<", margin=0.1),
-    Criterion(name="optimize:test/iter_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="optimize:e2e_time", summary="mean", compare="<", margin=0.1),
     Criterion(name="torch:test/latency", summary="mean", compare="<", margin=0.1),
     Criterion(name="export:test/latency", summary="mean", compare="<", margin=0.1),
@@ -55,37 +53,31 @@ MULTI_CLASS_DATASET_TEST_CASES = [
         name="multiclass_tiny_pneumonia",
         path=Path("multiclass_classification/mcls_tiny_pneumonia_12_6_200"),
         group="tiny",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multiclass_tiny_cub_woodpecker",
         path=Path("multiclass_classification/mcls_tiny_cub_woodpecker_24_12_200"),
         group="tiny",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multiclass_small_flowers",
         path=Path("multiclass_classification/mcls_small_flowers_60_12_200"),
         group="small",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multiclass_small_eurosat",
         path=Path("multiclass_classification/mcls_small_eurosat_80_40_200"),
         group="small",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multiclass_medium_resisc",
         path=Path("multiclass_classification/mcls_medium_resisc_500_100_400"),
         group="medium",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multiclass_large_cub100",
         path=Path("multiclass_classification/mcls_large_cub100_3764_900_1200"),
         group="large",
-        extra_overrides={},
     ),
 ]
 
@@ -102,25 +94,21 @@ MULTI_LABEL_DATASET_TEST_CASES = [
         name="multilabel_tiny_bccd",
         path=Path("multilabel_classification/mlabel_tiny_bccd_24_6_100"),
         group="tiny",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multilabel_small_coco",
         path=Path("multilabel_classification/mlabel_small_coco_80_20_100"),
         group="small",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multilabel_medium_edsavehicle",
         path=Path("multilabel_classification/mlabel_medium_edsavehicle_600_150_200"),
         group="medium",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="multilabel_large_aid",
         path=Path("multilabel_classification/mlabel_large_aid_1000_300_300"),
         group="large",
-        extra_overrides={},
     ),
 ]
 
@@ -140,24 +128,20 @@ H_LABEL_CLS_DATASET_TEST_CASES = [
         name="hlabel_tiny_playingcards",
         path=Path("hlabel_classification/hlabel_tiny_playingcards-2L-6N_36_20_100"),
         group="tiny",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="hlabel_small_cub",
         path=Path("hlabel_classification/hlabel_small_cub-3L-6N_72_24_100"),
         group="small",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="hlabel_medium_stanfordcars",
         path=Path("hlabel_classification/hlabel_medium_stanfordcars-26N-3L_350_50_200"),
         group="medium",
-        extra_overrides={},
     ),
     DatasetInfo(
         name="hlabel_large_plantdiseases",
         path=Path("hlabel_classification/hlabel_large_plantdiseases-32N-5L_1000_300_300"),
         group="large",
-        extra_overrides={},
     ),
 ]

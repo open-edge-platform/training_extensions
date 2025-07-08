@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import defusedxml.ElementTree as Elet
 import numpy as np
 import torch
+from lightning.pytorch.loggers import CSVLogger
 from rich.progress import Progress
 
 from otx.backend.openvino.models import OVModel
@@ -218,7 +219,31 @@ class OVEngine(Engine):
                     metric_callable.update(**metric_inputs)
                 progress.update(task, advance=1)
 
-        return model.compute_metrics(metric_callable)
+        metrics_result = model.compute_metrics(metric_callable)
+
+        self.log_results(metrics_result)
+
+        return metrics_result
+
+    def log_results(self, metrics: METRICS) -> None:
+        """Log testing phase results to a CSV file.
+
+        This function behaves similarly to `OTXModel._log_metrics(metrics, key="test")`.
+        """
+        clean = {}
+        for k, v in metrics.items():
+            metric_name = f"test/{k}"
+            if isinstance(v, torch.Tensor):
+                if v.numel() == 1:
+                    clean[metric_name] = v.item()
+                else:
+                    continue  # or flatten/log each value separately
+            else:
+                clean[metric_name] = v
+
+        logger = CSVLogger(self.work_dir, name="csv/", prefix="")
+        logger.log_metrics(clean, step=0)
+        logger.finalize("success")
 
     def predict(
         self,
