@@ -29,7 +29,7 @@ from otx.core.metrics.dice import SegmCallable
 from otx.core.model.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel, OVModel
 from otx.core.schedulers import LRSchedulerListCallable
 from otx.core.types.export import TaskLevelExportParameters
-from otx.core.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
+from otx.core.types.label import LabelInfoTypes, SegLabelInfo
 from otx.core.utils.tile_merge import SegmentationTileMerge
 
 if TYPE_CHECKING:
@@ -192,7 +192,7 @@ class OTXSegmentationModel(OTXModel):
         ]
 
     @staticmethod
-    def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
+    def _dispatch_label_info(label_info: LabelInfoTypes) -> SegLabelInfo:
         if isinstance(label_info, dict):
             if "label_ids" not in label_info:
                 # NOTE: This is for backward compatibility

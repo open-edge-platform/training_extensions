@@ -410,8 +410,7 @@ class OTXModel(LightningModule):
             msg = "Checkpoint should have `label_info`."
             raise ValueError(msg, ckpt_label_info)
 
-        if isinstance(ckpt_label_info, dict):
-            ckpt_label_info = LabelInfo(**ckpt_label_info)
+        ckpt_label_info = self._dispatch_label_info(ckpt_label_info)
 
         if not hasattr(ckpt_label_info, "label_ids"):
             msg = "Loading checkpoint from OTX < 2.2.1, label_ids are assigned automatically"
