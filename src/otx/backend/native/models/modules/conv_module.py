@@ -8,6 +8,8 @@
 from __future__ import annotations
 
 import inspect
+import itertools
+import operator
 import warnings
 from copy import deepcopy
 from typing import TYPE_CHECKING, Callable
@@ -17,6 +19,7 @@ from torch.nn.modules.batchnorm import _BatchNorm as BatchNorm
 from torch.nn.modules.instancenorm import _InstanceNorm as InstanceNorm
 
 from otx.backend.native.models.utils.weight_init import constant_init, kaiming_init
+from otx.utils.device import is_xpu_available
 
 from .norm import build_norm_layer, infer_abbr
 from .padding import build_padding_layer
@@ -350,10 +353,46 @@ class DepthwiseSeparableConvModule(nn.Module):
         return self.pointwise_conv(x)
 
 
+def _patch_grad(x: Tensor) -> Tensor:
+    """Patch the output gradient of Conv2d to workaround a known bug in PyTorch for XPU."""
+
+    def hook(grad_x: Tensor) -> Tensor:
+        """Hook to fix the output gradient of Conv2d."""
+        stride = grad_x.stride()
+        size = grad_x.size()
+
+        # Calculate expected stride assuming that the tensor is contiguous.
+        calc_stride = [*reversed(list(itertools.accumulate(reversed(size[1:]), operator.mul))), 1]
+
+        # If the stride is equal to 1 for a dimension of size 1 (condition which triggers the bug),
+        # set the stride based on the expected one that we calculated above to workaround the problem.
+        new_stride = [cst if sz == 1 and st == 1 else st for cst, st, sz in zip(calc_stride, stride, size)]
+        return grad_x.as_strided(size, new_stride)
+
+    if x.requires_grad:
+        # Register a hook to fix the output gradient of Conv2d.
+        x.register_hook(hook)
+    return x
+
+
+class PatchedConv2d(nn.Conv2d):
+    """Patched Conv2d to fix the output gradient for XPU."""
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the Conv."""
+        x = super().forward(x)
+
+        # Apply the fix to the output gradient of Conv2d.
+        return _patch_grad(x)
+
+
 class Conv2dModule(ConvModule):
     """A conv2d block that bundles conv/norm/activation layers."""
 
-    _conv_nd = nn.Conv2d
+    # Use the patched Conv2d if XPU is available.
+    # This is to avoid issues with XPU performance.
+    # TODO(kprokofi): Remove this when XPU performance is fixed.
+    _conv_nd = PatchedConv2d if is_xpu_available() else nn.Conv2d
 
 
 class Conv3dModule(ConvModule):
