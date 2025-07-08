@@ -7,6 +7,8 @@ import numpy as np
 import openvino as ov
 import pytest
 import torch
+from datumaro import LabelCategories
+from datumaro.components.annotation import GroupType
 from lightning import Trainer
 from lightning.pytorch.utilities.types import LRSchedulerConfig
 from model_api.models.result import ClassificationResult
@@ -14,7 +16,10 @@ from pytest_mock import MockerFixture
 
 from otx.core.data.entity.base import OTXBatchDataEntity
 from otx.core.model.base import OTXModel, OVModel
+from otx.core.model.classification import OTXHlabelClsModel, OTXMulticlassClsModel
+from otx.core.model.segmentation import OTXSegmentationModel
 from otx.core.schedulers.warmup_schedulers import LinearWarmupScheduler
+from otx.core.types.label import HLabelInfo, LabelInfo, SegLabelInfo
 from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
 
 
@@ -82,6 +87,108 @@ class TestOTXModel:
             curr_state_dict["model.head.bias"].index_select(0, indices),
             prev_state_dict["model.head.bias"],
         )
+
+    def test_label_info_dispatch(self, mocker):
+        with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(3)):
+            with pytest.raises(TypeError, match="invalid_label_info"):
+                OTXModel(label_info="invalid_label_info")
+
+            # Test with LabelInfo
+            label_info = OTXModel(
+                label_info=LabelInfo(
+                    ["label_1", "label_2"],
+                    label_ids=["1", "2"],
+                    label_groups=[["label_1", "label_2"]],
+                ),
+            )
+            assert isinstance(label_info.label_info, LabelInfo)
+
+            # Test with SegLabelInfo
+            seg_label_info = OTXModel(label_info=SegLabelInfo.from_num_classes(3))
+            assert isinstance(seg_label_info.label_info, SegLabelInfo)
+
+        with mocker.patch.object(OTXMulticlassClsModel, "_create_model", return_value=MockNNModule(3)):
+            # Test simple Classfication model loading checkpoint
+            cls_model = OTXMulticlassClsModel(
+                label_info=LabelInfo(
+                    ["label_1", "label_2"],
+                    label_ids=["1", "2"],
+                    label_groups=[["label_1", "label_2"]],
+                ),
+                input_size=(224, 224),
+            )
+            label_info_dict = {
+                "label_ids": ["1", "2"],
+                "label_names": ["label_1", "label_2"],
+                "label_groups": [["label_1", "label_2"]],
+            }
+            cls_model.load_state_dict_incrementally(
+                {"state_dict": cls_model.state_dict(), "hyper_parameters": {"label_info": label_info_dict}},
+            )
+            assert isinstance(cls_model.label_info, LabelInfo)
+            # test if ignore_index is not set
+            label_info_dict["ignore_index"] = 255
+            with pytest.raises(TypeError, match=r"unexpected keyword argument.*ignore_index"):
+                cls_model.load_state_dict_incrementally(
+                    {"state_dict": cls_model.state_dict(), "hyper_parameters": {"label_info": label_info_dict}},
+                )
+
+        with mocker.patch.object(OTXSegmentationModel, "_create_model", return_value=MockNNModule(3)):
+            # test segmentation model loading checkpoint with SegLabelInfo
+            segmentation_model = OTXSegmentationModel(
+                label_info=SegLabelInfo.from_num_classes(3),
+                input_size=(224, 224),
+                model_name="segmentation_model",
+            )
+            segmentation_model.load_state_dict_incrementally(
+                {"state_dict": segmentation_model.state_dict(), "hyper_parameters": {"label_info": label_info_dict}},
+            )
+            assert isinstance(segmentation_model.label_info, SegLabelInfo)
+            assert hasattr(segmentation_model.label_info, "ignore_index")
+            assert segmentation_model.label_info.ignore_index == 255
+
+        # test hlabel classification model loading checkpoint with HLabelInfo
+        labels = [
+            LabelCategories.Category(name="car", parent="vehicle"),
+            LabelCategories.Category(name="truck", parent="vehicle"),
+            LabelCategories.Category(name="plush toy", parent="plush toy"),
+            LabelCategories.Category(name="No class"),
+        ]
+        label_groups = [
+            LabelCategories.LabelGroup(
+                name="Detection labels___vehicle",
+                labels=["car", "truck"],
+                group_type=GroupType.EXCLUSIVE,
+            ),
+            LabelCategories.LabelGroup(
+                name="Detection labels___plush toy",
+                labels=["plush toy"],
+                group_type=GroupType.EXCLUSIVE,
+            ),
+            LabelCategories.LabelGroup(name="No class", labels=["No class"], group_type=GroupType.RESTRICTED),
+        ]
+        dm_label_categories = LabelCategories(items=labels, label_groups=label_groups)
+        hlabel_info = HLabelInfo.from_dm_label_groups(dm_label_categories)
+        hlabel_dict_label_info = hlabel_info.as_dict(normalize_label_names=True)
+
+        with mocker.patch.object(OTXHlabelClsModel, "_create_model", return_value=MockNNModule(3)):
+            hlabel_model = OTXHlabelClsModel(hlabel_dict_label_info, input_size=(224, 224))
+            hlabel_model.load_state_dict_incrementally(
+                {"state_dict": hlabel_model.state_dict(), "hyper_parameters": {"label_info": hlabel_dict_label_info}},
+            )
+
+            with pytest.raises(TypeError, match=r"unexpected keyword argument.*num_multiclass_heads"):
+                segmentation_model.load_state_dict_incrementally(
+                    {
+                        "state_dict": segmentation_model.state_dict(),
+                        "hyper_parameters": {"label_info": hlabel_dict_label_info},
+                    },
+                )
+
+            with pytest.raises(TypeError, match=r"unexpected keyword argument.*num_multiclass_heads"):
+                cls_model.load_state_dict_incrementally(
+                    {"state_dict": cls_model.state_dict(), "hyper_parameters": {"label_info": hlabel_dict_label_info}},
+                )
 
     def test_lr_scheduler_step(self, mocker: MockerFixture) -> None:
         mock_linear_warmup_scheduler = mocker.create_autospec(spec=LinearWarmupScheduler)
