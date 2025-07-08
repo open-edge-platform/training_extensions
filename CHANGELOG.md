@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## \[2.4.6\]
+
+### Bug fixes
+
+- Fix label info dispatching
+  (<https://github.com/open-edge-platform/training_extensions/pull/4443>)
+
+## \[2.4.5\]
+
+### Bug fixes
+
+- Fix UFlow by adding self._setup in UFlow model
+  (<https://github.com/open-edge-platform/training_extensions/pull/4431>)
+- Fix loading/saving checkpoints in OTX
+  (<https://github.com/open-edge-platform/training_extensions/pull/4433>,
+  <https://github.com/open-edge-platform/training_extensions/pull/4438>)
+
 ## \[2.4.4\]
 
 ### Bug fixes
