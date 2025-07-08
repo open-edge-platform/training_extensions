@@ -10,6 +10,7 @@ class VideoStreamService:
     @staticmethod
     def get_video_stream(input_config: InputConfig) -> VideoStream | None:
         video_stream: VideoStream | None
+        # TODO handle exceptions: if stream cannot be initialized, fallback to disconnected state
         match input_config.source_type:
             case SourceType.DISCONNECTED:
                 video_stream = None

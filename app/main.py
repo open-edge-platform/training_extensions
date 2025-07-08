@@ -7,17 +7,18 @@
 #  - docker compose up
 #  - docker compose -f docker-compose.dev.yaml up
 
-import copy
 import logging
+import multiprocessing as mp
 import os
-import time
-from collections.abc import Generator
+import signal
+import threading
+from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import anyio
 import gradio as gr
 import numpy as np
+import psutil
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -25,14 +26,15 @@ from fastrtc import AdditionalOutputs, Stream
 from pydantic import BaseModel, Field
 
 from app.api.endpoints import configuration, model_management
-from app.entities.dispatchers import Dispatcher
-from app.services import ConfigurationService, DispatchService, ModelService, SystemService, VideoStreamService
-from app.utils.visualization import Visualizer
-
-if TYPE_CHECKING:
-    from schemas.configuration import AppConfig
-
-    from app.entities.video_stream import VideoStream
+from app.utils.ipc import (
+    frame_queue,
+    mp_config_changed_condition,
+    mp_reload_model_event,
+    mp_stop_event,
+    pred_queue,
+    rtc_stream_queue,
+)
+from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,71 +43,49 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None, None]:
-    """Main loop. Acquires frames from the video stream and generates and overlays predictions on it."""
-    model_service = ModelService()
-    system_service = SystemService()
-    config_service = ConfigurationService()
+def handle_signal(signum, frame) -> None:  # noqa: ANN001, ARG001
+    """Shutdown handler for SIGINT and SIGTERM."""
+    logger.info(f"Process '{os.getpid()}' received signal {signum}, shutting down...")
 
-    prev_config: AppConfig | None = None
-    video_stream: VideoStream | None = None
-    destinations: list[Dispatcher] = []
+    pid = os.getpid()
+    cur_process = psutil.Process(pid)
+    alive_children = [child.pid for child in cur_process.children(recursive=True) if child.is_running()]
+    logger.debug(f"Alive children of process '{pid}': {alive_children}")
 
-    while True:
-        # Get the latest configuration
-        config = config_service.get_app_config()
+    mp_stop_event.set()
 
-        # Reset the video stream if the input configuration has changed
-        if prev_config is None or config.input != prev_config.input:
-            logger.debug(
-                f"Input configuration changed from {prev_config.input if prev_config else 'None'} to {config.input}"
-            )
-            if video_stream is not None:
-                video_stream.release()
-            video_stream = VideoStreamService.get_video_stream(input_config=config.input)
 
-        if prev_config is None or config.outputs != prev_config.outputs:
-            logger.debug(
-                f"Output config changed from {prev_config.outputs if prev_config else 'None'} to {config.outputs}"
-            )
-            destinations = DispatchService.get_destinations(output_configs=config.outputs)
+# Install the signal handlers before fork() so that all child processes inherit it
+signal.signal(signal.SIGINT, handle_signal)
+signal.signal(signal.SIGTERM, handle_signal)
 
-        if prev_config is None or config.input != prev_config.input or config.outputs != prev_config.outputs:
-            prev_config = copy.deepcopy(config)
+stream_loader_proc = mp.Process(
+    target=frame_acquisition_routine,
+    name="Stream loader",
+    args=(frame_queue, mp_stop_event, mp_config_changed_condition),
+)
+inference_server_proc = mp.Process(
+    target=inference_routine, name="Inferencer", args=(frame_queue, pred_queue, mp_stop_event, mp_reload_model_event)
+)
+dispatching_thread = threading.Thread(
+    target=dispatching_routine,
+    name="Dispatching thread",
+    args=(pred_queue, rtc_stream_queue, mp_stop_event, mp_config_changed_condition),
+)
+stream_loader_proc.start()
+inference_server_proc.start()
+dispatching_thread.start()
 
-        if video_stream is None:
-            logger.debug("No video stream available... retrying in 1 second")
-            time.sleep(1)
-            continue
 
-        # Get the model to use for inference
-        model = model_service.get_inference_model()
-        if model is None:
-            logger.debug("No model available... retrying in 1 second")
-            time.sleep(1)
-            continue
-
-        # Get a frame from the video stream
-        frame = video_stream.get_frame()
-
-        # Run inference
-        predictions = model(frame)
-
-        # Postprocess and dispatch results
-        frame_with_predictions = Visualizer.overlay_predictions(original_image=frame, predictions=predictions)
-        for destination in destinations:
-            destination.dispatch(
-                original_image=frame,
-                image_with_visualization=frame_with_predictions,
-                predictions=predictions,
-            )
-
-        mem_mb, _ = system_service.get_memory_usage()
-        yield frame_with_predictions, AdditionalOutputs(str(predictions), f"{mem_mb:.2f} MB")
+def rtc_stream_routine() -> Iterator[tuple[np.ndarray, AdditionalOutputs]]:
+    """Iterator to send frames with predictions to the WebRTC visualization stream"""
+    while not mp_stop_event.is_set():
+        yield rtc_stream_queue.get()
+    logger.info("Stopped RTC stream routine")
 
 
 stream = Stream(
-    handler=acquire_and_detect,
+    handler=rtc_stream_routine,
     modality="video",
     mode="receive",
     additional_outputs=[
@@ -165,3 +145,12 @@ if __name__ == "__main__":
         import uvicorn
 
         uvicorn.run(app, host="0.0.0.0", port=7860)  # noqa: S104
+
+    # TODO send SIGKILL as a last resort if processes do not shutdown within a reasonable time
+    logger.info("Joining dispatching thread...")
+    dispatching_thread.join()
+    logger.info("Joining inferencer...")
+    inference_server_proc.join()
+    logger.info("Joining stream loader...")
+    stream_loader_proc.join()
+    logger.info("All workers shut down gracefully.")

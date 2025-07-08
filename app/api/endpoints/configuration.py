@@ -1,8 +1,11 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.configuration import InputConfig, OutputConfig
 from app.services import ConfigurationService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
 
 
@@ -27,6 +30,7 @@ async def configure_input_stream(input_config: InputConfig) -> None:
     try:
         config_service.set_input_config(input_config)
     except Exception as e:
+        logger.exception("Failed to update input configuration")
         raise HTTPException(status_code=400, detail=str(e))
 
 

@@ -8,6 +8,7 @@ from app.schemas.configuration.output_config import DestinationType
 class DispatchService:
     @staticmethod
     def get_destination(output_config: OutputConfig) -> Dispatcher | None:
+        # TODO handle exceptions: if some output cannot be initialized, exclude it and raise a warning
         match output_config.destination_type:
             case DestinationType.DISCONNECTED:
                 return None

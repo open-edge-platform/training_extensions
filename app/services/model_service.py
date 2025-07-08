@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -9,9 +10,13 @@ from fastapi import UploadFile
 from model_api.models import Model
 
 from app.schemas.model_activation import ModelActivationState
+from app.utils.ipc import mp_reload_model_event
 from app.utils.singleton import Singleton
 
 logger = logging.getLogger(__name__)
+
+MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "AUTO")
+MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
 class ModelAlreadyExistsError(Exception):
@@ -53,6 +58,7 @@ class ModelService(metaclass=Singleton):
         """Save the state to the file"""
         with open(self.state_file, "w") as f:
             json.dump(self._model_activation_state.to_json_dict(), f)
+        mp_reload_model_event.set()
 
     def _get_model_xml_path(self, model_name: str) -> Path:
         return self.models_dir / f"{model_name}.xml"
@@ -155,7 +161,21 @@ class ModelService(metaclass=Singleton):
             # Store the state
             self._save_state()
 
-    def get_inference_model(self) -> Model | None:
+    def get_inference_model(self, force_reload: bool = False) -> Model | None:
+        """
+        Get the currently active model for inference.
+
+        Args:
+            force_reload: If True, reload the state and the model from disk. This option can be useful
+            to bypass the cache after the state has been modified externally.
+
+        Returns: Model for inference or None if no model is active
+        """
+        if force_reload:
+            with self._model_activation_state_lock:
+                self._model_activation_state = self._load_state()
+                self._loaded_model = None
+
         if self._model_activation_state.active_model is None:
             return None
 
@@ -164,6 +184,10 @@ class ModelService(metaclass=Singleton):
             model_path = self._get_model_xml_path(self._model_activation_state.active_model)
             self._loaded_model = LoadedModel(
                 name=self._model_activation_state.active_model,
-                model=Model.create_model(model_path),
+                model=Model.create_model(
+                    model=str(model_path),
+                    device=MODELAPI_DEVICE,
+                    nstreams=MODELAPI_NSTREAMS,
+                ),
             )
         return self._loaded_model.model
