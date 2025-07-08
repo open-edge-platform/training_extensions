@@ -6,7 +6,7 @@ from threading import Lock
 
 import anyio
 from fastapi import UploadFile
-from model_api.models import DetectionModel
+from model_api.models import Model
 
 from app.schemas.model_activation import ModelActivationState
 from app.utils.singleton import Singleton
@@ -25,7 +25,7 @@ class ModelNotFoundError(Exception):
 @dataclass
 class LoadedModel:
     name: str
-    model: DetectionModel
+    model: Model
 
 
 class ModelService(metaclass=Singleton):
@@ -155,7 +155,7 @@ class ModelService(metaclass=Singleton):
             # Store the state
             self._save_state()
 
-    def get_inference_model(self) -> DetectionModel | None:
+    def get_inference_model(self) -> Model | None:
         if self._model_activation_state.active_model is None:
             return None
 
@@ -164,6 +164,6 @@ class ModelService(metaclass=Singleton):
             model_path = self._get_model_xml_path(self._model_activation_state.active_model)
             self._loaded_model = LoadedModel(
                 name=self._model_activation_state.active_model,
-                model=DetectionModel.create_model(model_path),
+                model=Model.create_model(model_path),
             )
         return self._loaded_model.model

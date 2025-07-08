@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 from app.api.endpoints import configuration, model_management
 from app.entities.dispatchers import Dispatcher
 from app.services import ConfigurationService, DispatchService, ModelService, SystemService, VideoStreamService
-from app.visualization import DetectionVisualizer
+from app.utils.visualization import Visualizer
 
 if TYPE_CHECKING:
     from schemas.configuration import AppConfig
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 
 def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None, None]:
-    """Main loop. Acquires frames from the video stream and detects objects in them."""
+    """Main loop. Acquires frames from the video stream and generates and overlays predictions on it."""
     model_service = ModelService()
     system_service = SystemService()
     config_service = ConfigurationService()
@@ -89,19 +89,19 @@ def acquire_and_detect() -> Generator[tuple[np.ndarray, AdditionalOutputs], None
         frame = video_stream.get_frame()
 
         # Run inference
-        detections = model(frame)
+        predictions = model(frame)
 
         # Postprocess and dispatch results
-        frame_with_detections = DetectionVisualizer.overlay_predictions(original_image=frame, predictions=detections)
+        frame_with_predictions = Visualizer.overlay_predictions(original_image=frame, predictions=predictions)
         for destination in destinations:
             destination.dispatch(
                 original_image=frame,
-                image_with_visualization=frame_with_detections,
-                predictions=detections,
+                image_with_visualization=frame_with_predictions,
+                predictions=predictions,
             )
 
         mem_mb, _ = system_service.get_memory_usage()
-        yield frame_with_detections, AdditionalOutputs(str(detections), f"{mem_mb:.2f} MB")
+        yield frame_with_predictions, AdditionalOutputs(str(predictions), f"{mem_mb:.2f} MB")
 
 
 stream = Stream(
