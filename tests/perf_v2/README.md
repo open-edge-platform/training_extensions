@@ -24,18 +24,9 @@ uv pip install -e ".[ci_benchmark]"
 
 ## Usage
 
-### Testing the Dashboard
-Before running the full dashboard, you can test it with:
-```bash
-python test_dashboard.py
-```
-
-This will verify that the dashboard can load your data and create plots correctly.
-
-### Basic Usage
 Run the dashboard with default settings:
 ```bash
-python plot_benchmark.py
+python tests/perf_v2/plot_benchmark.py
 ```
 
 This will:
@@ -46,7 +37,7 @@ This will:
 ### Advanced Usage
 Customize the benchmark directory and port:
 ```bash
-python plot_benchmark.py --benchmark_dir /path/to/your/benchmark/data --port 8080
+python tests/perf_v2/plot_benchmark.py --benchmark_dir /path/to/your/benchmark/data --port 8080
 ```
 
 ### Command Line Options
