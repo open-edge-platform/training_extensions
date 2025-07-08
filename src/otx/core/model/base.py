@@ -13,7 +13,7 @@ import logging
 import warnings
 from abc import abstractmethod
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 import numpy as np
 import openvino
@@ -839,7 +839,7 @@ class OTXModel(LightningModule):
             return LabelInfo(**label_info)
         if isinstance(label_info, int):
             return LabelInfo.from_num_classes(num_classes=label_info)
-        if isinstance(label_info, Sequence) and all(isinstance(name, str) for name in label_info):
+        if isinstance(label_info, (list, tuple)) and all(isinstance(name, str) for name in label_info):
             return LabelInfo(
                 label_names=label_info,
                 label_groups=[label_info],
