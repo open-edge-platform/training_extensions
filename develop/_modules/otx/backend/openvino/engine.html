@@ -267,6 +267,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">defusedxml.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">Elet</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.loggers</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSVLogger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rich.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">Progress</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.openvino.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OVModel</span>
@@ -483,7 +484,34 @@
                     <span class="n">metric_callable</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">metric_inputs</span><span class="p">)</span>
                 <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">advance</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">metric_callable</span><span class="p">)</span></div>
+        <span class="n">metrics_result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">metric_callable</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_results</span><span class="p">(</span><span class="n">metrics_result</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metrics_result</span></div>
+
+
+<div class="viewcode-block" id="OVEngine.log_results">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.log_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">METRICS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log testing phase results to a CSV file.</span>
+
+<span class="sd">        This function behaves similarly to `OTXModel._log_metrics(metrics, key=&quot;test&quot;)`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">clean</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">metric_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;test/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">clean</span><span class="p">[</span><span class="n">metric_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># or flatten/log each value separately</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">clean</span><span class="p">[</span><span class="n">metric_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">CSVLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;csv/&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">(</span><span class="n">clean</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="s2">&quot;success&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="OVEngine.predict">
