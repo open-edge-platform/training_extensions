@@ -14,6 +14,22 @@ The `Input -> Inference -> Outputs[]`
 This wizard allows us to configure an inference pipeline.
 We assume the user only has a single pipeline.
 
+#### Configuring dispatchers
+
+- MQTT:
+
+```yaml
+  - destination_type: mqtt  # configuration for a destination that sends data to an MQTT broker
+    broker_host: localhost  # the hostname or IP address of the MQTT broker
+    broker_port: 1883  # the port number of the MQTT broker
+    topic: predictions  # the MQTT topic to which the data will be published
+    output_formats:  # the formats in which the output data will be generated
+      - image_original  # output the original image
+      - image_with_predictions  # output the image with predictions overlaid
+      - predictions  # output the prediction data
+    rate_limit: 0.2  # output every 5 seconds
+```
+
 #### Input
 
 The user can configure a single input source.

@@ -30,8 +30,11 @@ class FolderOutputConfig(BaseOutputConfig):
 
 class MqttOutputConfig(BaseOutputConfig):
     destination_type: Literal[DestinationType.MQTT]
-    mqtt_broker_url: str
-    mqtt_topic: str
+    broker_host: str
+    broker_port: int
+    topic: str
+    username: str | None = None
+    password: str | None = None
 
 
 class DdsOutputConfig(BaseOutputConfig):

@@ -55,7 +55,6 @@ services:
       - "traefik.http.routers.geti-edge-client.entrypoints=web"
       - "traefik.http.services.geti-edge-client.loadbalancer.server.port=3000"
 
-
   reverse-proxy:
     image: traefik:v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a
     restart: unless-stopped
@@ -75,3 +74,32 @@ services:
     ports:
       - "80:80"
       - "443:443"
+
+  mosquitto:
+    profiles:
+      - mqtt
+    image: eclipse-mosquitto:2.0
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./data/mosquitto/config:/mosquitto/config
+      - ./data/mosquitto/data:/mosquitto/data
+      - ./data/mosquitto/log:/mosquitto/log
+    environment:
+      - MOSQUITTO_USERNAME=testuser
+      - MOSQUITTO_PASSWORD=testpass
+
+  mqtt-web-ui:
+    profiles:
+      - mqtt
+    image: emqx/mqttx-web
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=9001
+    depends_on:
+      - mosquitto

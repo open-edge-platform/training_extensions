@@ -7,9 +7,9 @@ from multiprocessing.synchronize import Event as EventClass
 
 from fastrtc import AdditionalOutputs
 
-from app.entities.dispatchers import Dispatcher
 from app.schemas.configuration import OutputConfig
 from app.services import ConfigurationService, DispatchService, SystemService
+from app.services.dispatchers import Dispatcher
 
 logger = logging.getLogger(__name__)
 

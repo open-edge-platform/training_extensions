@@ -23,6 +23,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.geti-edge-server.rule=Host(`${GETI_EDGE_DOMAIN:-geti-edge.localhost}`) && (PathPrefix(`/api`))"
       - "traefik.http.routers.geti-edge-server.entrypoints=web"
+      - "traefik.http.services.geti-edge-server.loadbalancer.server.port=7860"
 
   client:
     image: geti-edge-ui:${TAG:-latest}
@@ -37,6 +38,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.geti-edge-client.rule=Host(`${GETI_EDGE_DOMAIN:-geti-edge.localhost}`)"
       - "traefik.http.routers.geti-edge-client.entrypoints=web"
+      - "traefik.http.services.geti-edge-client.loadbalancer.server.port=3000"
 
   reverse-proxy:
     image: traefik:v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a

@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 from model_api.models.result import Result
 
-from app.entities.dispatchers.base import BaseDispatcher
 from app.schemas.configuration import OutputConfig, OutputFormat
+from app.services.dispatchers.base import BaseDispatcher
 
 logger = logging.getLogger(__name__)
 
