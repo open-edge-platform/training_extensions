@@ -7,24 +7,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-import torch
-from torch import Tensor, nn
-from torchvision.ops import box_convert
-from torchvision.tv_tensors import BoundingBoxFormat
-
-from otx.backend.native.exporter.base import OTXModelExporter
-from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.backend.native.models.detection import RTDETR
 from otx.backend.native.models.detection.backbones.hgnetv2 import HGNetv2
-from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.backend.native.models.detection.detectors import DETR
 from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransformer
 from otx.backend.native.models.detection.losses.dfine_loss import DFINECriterion
 from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
-from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
@@ -35,7 +26,7 @@ if TYPE_CHECKING:
     from otx.types.label import LabelInfoTypes
 
 
-class DFine(OTXDetectionModel):
+class DFine(RTDETR):
     """OTX Detection model class for DFine.
 
     Attributes:
@@ -83,7 +74,7 @@ class DFine(OTXDetectionModel):
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_name=model_name,  # type: ignore[arg-type]
             label_info=label_info,
             data_input_params=data_input_params,
             optimizer=optimizer,

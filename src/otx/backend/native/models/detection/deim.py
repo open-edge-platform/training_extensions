@@ -1,29 +1,29 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """DEIM-DFine model implementations."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-from otx.algo.detection.backbones.hgnetv2 import HGNetv2
-from otx.algo.detection.detectors import DETR
-from otx.algo.detection.heads.dfine_decoder import DFINETransformer
-from otx.algo.detection.losses.deim_loss import DEIMCriterion
-from otx.algo.detection.necks.dfine_hybrid_encoder import HybridEncoder
-from otx.algo.detection.rtdetr import RTDETR
-from otx.algo.utils.utils import load_checkpoint
-from otx.core.config.data import TileConfig
-from otx.core.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.core.model.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.backend.native.models.detection import RTDETR
+from otx.backend.native.models.detection.backbones.hgnetv2 import HGNetv2
+from otx.backend.native.models.detection.detectors import DETR
+from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransformer
+from otx.backend.native.models.detection.losses.deim_loss import DEIMCriterion
+from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
+from otx.backend.native.models.utils.utils import load_checkpoint
+from otx.config.data import TileConfig
+from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-    from otx.core.metrics import MetricCallable
-    from otx.core.schedulers import LRSchedulerListCallable
-    from otx.core.types.label import LabelInfoTypes
+    from otx.backend.native.schedulers import LRSchedulerListCallable
+    from otx.metrics import MetricCallable
+    from otx.types.label import LabelInfoTypes
 
 
 class DEIMDFine(RTDETR):
@@ -74,7 +74,7 @@ class DEIMDFine(RTDETR):
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
         super().__init__(
-            model_name=model_name,
+            model_name=model_name,  # type: ignore[arg-type]
             label_info=label_info,
             data_input_params=data_input_params,
             optimizer=optimizer,
@@ -86,6 +86,7 @@ class DEIMDFine(RTDETR):
         )
 
     def _create_model(self, num_classes: int | None = None) -> DETR:
+        """Create DEIM-DFine model."""
         num_classes = num_classes if num_classes is not None else self.num_classes
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)

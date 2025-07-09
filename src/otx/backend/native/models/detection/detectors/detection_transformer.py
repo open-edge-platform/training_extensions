@@ -55,7 +55,7 @@ class DETR(BaseModule):
         if isinstance(multi_scale, list) and all(isinstance(sz, int) for sz in multi_scale):
             self.multi_scale = multi_scale
         elif multi_scale is None:
-            self.multi_scale = None
+            self.multi_scale = []
         else:
             msg = f"Expected multi_scale to be a list of integers or None, got {type(multi_scale)}"
             raise ValueError(msg)

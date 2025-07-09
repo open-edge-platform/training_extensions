@@ -10,9 +10,9 @@ import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
 
-from otx.algo.callbacks.aug_scheduler import DataAugSwitch
-from otx.core.data.entity.base import ImageInfo
-from otx.data import OTXDataItem
+from otx.backend.native.callbacks.aug_scheduler import DataAugSwitch
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataItem
 
 from .base import OTXDataset
 
