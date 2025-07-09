@@ -1,5 +1,6 @@
+task: ANOMALY_CLASSIFICATION
 model:
-  class_path: otx.algo.anomaly.padim.Padim
+  class_path: otx.backend.native.models.anomaly.padim.Padim
   init_args:
     layers: ["layer1", "layer2", "layer3"]
     backbone: "resnet18"
@@ -8,7 +9,6 @@ model:
     task: ANOMALY_CLASSIFICATION
 
 engine:
-  task: ANOMALY_CLASSIFICATION
   device: auto
 
 callback_monitor: image_F1Score # this has no effect as Padim does not need to be trained
@@ -16,7 +16,7 @@ callback_monitor: image_F1Score # this has no effect as Padim does not need to b
 data: ../_base_/data/anomaly.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint

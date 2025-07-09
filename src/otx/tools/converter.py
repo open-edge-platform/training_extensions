@@ -14,200 +14,157 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.core.config.data import SamplerConfig, SubsetConfig, TileConfig
-from otx.core.data.module import OTXDataModule
-from otx.core.model.base import DataInputParams, OTXModel
-from otx.core.types import PathLike
-from otx.core.types.task import OTXTaskType
-from otx.engine import Engine
-from otx.engine.utils.auto_configurator import AutoConfigurator
+from otx.backend.native.engine import OTXEngine
+from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
+from otx.data.module import OTXDataModule
+from otx.engine import Engine, create_engine
+from otx.tools.auto_configurator import AutoConfigurator
+from otx.types import PathLike
+from otx.types.task import OTXTaskType
 
 TEMPLATE_ID_DICT = {
     # MULTI_CLASS_CLS
     "Custom_Image_Classification_DeiT-Tiny": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "deit_tiny",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml",
     },
     "Custom_Image_Classification_EfficinetNet-B0": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "efficientnet_b0",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
     },
     "Custom_Image_Classification_EfficientNet-V2-S": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "efficientnet_v2",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml",
     },
     "Custom_Image_Classification_MobileNet-V3-large-1x": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "mobilenet_v3_large",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
     },
     "Custom_Image_Classification_EfficientNet-B3": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "tv_efficientnet_b3",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml",
     },
     "Custom_Image_Classification_EfficientNet-V2-L": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "tv_efficientnet_v2_l",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml",
     },
     "Custom_Image_Classification_MobileNet-V3-small": {
-        "task": OTXTaskType.MULTI_CLASS_CLS,
-        "model_name": "tv_mobilenet_v3_small",
+        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
     },
     # DETECTION
     "Custom_Object_Detection_Gen3_ATSS": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "atss_mobilenetv2",
+        "model_config_path": "src/otx/recipe/detection/atss_mobilenetv2.yaml",
     },
     "Object_Detection_ResNeXt101_ATSS": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "atss_resnext101",
+        "model_config_path": "src/otx/recipe/detection/atss_resnext101.yaml",
     },
     "Custom_Object_Detection_Gen3_SSD": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "ssd_mobilenetv2",
+        "model_config_path": "src/otx/recipe/detection/ssd_mobilenetv2.yaml",
     },
     "Object_Detection_YOLOX_X": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_x",
+        "model_config_path": "src/otx/recipe/detection/yolox_x.yaml",
     },
     "Object_Detection_YOLOX_L": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_l",
+        "model_config_path": "src/otx/recipe/detection/yolox_l.yaml",
     },
     "Object_Detection_YOLOX_S": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_s",
+        "model_config_path": "src/otx/recipe/detection/yolox_s.yaml",
     },
     "Custom_Object_Detection_YOLOX": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "yolox_tiny",
+        "model_config_path": "src/otx/recipe/detection/yolox_tiny.yaml",
     },
     "Object_Detection_RTDetr_18": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtdetr_18",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_18.yaml",
     },
     "Object_Detection_RTDetr_50": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtdetr_50",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_50.yaml",
     },
     "Object_Detection_RTDetr_101": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtdetr_101",
+        "model_config_path": "src/otx/recipe/detection/rtdetr_101.yaml",
     },
     "Object_Detection_RTMDet_tiny": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "rtmdet_tiny",
+        "model_config_path": "src/otx/recipe/detection/rtmdet_tiny.yaml",
     },
     "Object_Detection_DFine_X": {
-        "task": OTXTaskType.DETECTION,
-        "model_name": "dfine_x",
+        "model_config_path": "src/otx/recipe/detection/dfine_x.yaml",
     },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_r50",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_swint",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_efficientnetb2b",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml",
     },
     "Custom_Instance_Segmentation_RTMDet_tiny": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "rtmdet_inst_tiny",
+        "model_config_path": "src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml",
     },
     "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
-        "task": OTXTaskType.INSTANCE_SEGMENTATION,
-        "model_name": "maskrcnn_r50_tv",
+        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml",
     },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "task": OTXTaskType.ROTATED_DETECTION,
-        "model_name": "maskrcnn_r50",
+        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50.yaml",
     },
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "task": OTXTaskType.ROTATED_DETECTION,
-        "model_name": "maskrcnn_efficientnetb2b",
+        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b.yaml",
     },
     # SEMANTIC_SEGMENTATION
     "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_18",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_18",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_s",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_s.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "litehrnet_x",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_x.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_t": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "segnext_t",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_t.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_s": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "segnext_s",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_s.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_B": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "segnext_b",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_b.yaml",
     },
     "Custom_Semantic_Segmentation_DINOV2_S": {
-        "task": OTXTaskType.SEMANTIC_SEGMENTATION,
-        "model_name": "dino_v2",
+        "model_config_path": "src/otx/recipe/semantic_segmentation/dino_v2.yaml",
     },
     # ANOMALY
     "ote_anomaly_padim": {
-        "task": OTXTaskType.ANOMALY,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly/padim.yaml",
     },
     "ote_anomaly_stfpm": {
-        "task": OTXTaskType.ANOMALY,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly/stfpm.yaml",
     },
     "ote_anomaly_uflow": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "uflow",
+        "model_config_path": "src/otx/recipe/anomaly/uflow.yaml",
     },
     # ANOMALY CLASSIFICATION
     "ote_anomaly_classification_padim": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly_classification/padim.yaml",
     },
     "ote_anomaly_classification_stfpm": {
-        "task": OTXTaskType.ANOMALY_CLASSIFICATION,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_classification/stfpm.yaml",
     },
     # ANOMALY_DETECTION
     "ote_anomaly_detection_padim": {
-        "task": OTXTaskType.ANOMALY_DETECTION,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly_detection/padim.yaml",
     },
     "ote_anomaly_detection_stfpm": {
-        "task": OTXTaskType.ANOMALY_DETECTION,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_detection/stfpm.yaml",
     },
     # ANOMALY_SEGMENTATION
     "ote_anomaly_segmentation_padim": {
-        "task": OTXTaskType.ANOMALY_SEGMENTATION,
-        "model_name": "padim",
+        "model_config_path": "src/otx/recipe/anomaly_segmentation/padim.yaml",
     },
     "ote_anomaly_segmentation_stfpm": {
-        "task": OTXTaskType.ANOMALY_SEGMENTATION,
-        "model_name": "stfpm",
+        "model_config_path": "src/otx/recipe/anomaly_segmentation/stfpm.yaml",
     },
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
-        "task": OTXTaskType.KEYPOINT_DETECTION,
-        "model_name": "rtmpose_tiny",
+        "model_config_path": "src/otx/recipe/keypoint_detection/rtmpose_tiny.yaml",
     },
 }
 
@@ -258,13 +215,30 @@ class ConfigConverter:
         param_dict = ConfigConverter._get_params(hyperparameters)
 
         task_info = TEMPLATE_ID_DICT[template_config["model_template_id"]]
-        if param_dict.get("enable_tiling", None) and not task_info["model_name"].endswith("_tile"):
-            task_info["model_name"] += "_tile"
+        model_config_path = Path(task_info["model_config_path"])
+        # override necessary parameters for config
+        if param_dict.get("enable_tiling", None) and "_tile" not in model_config_path.stem:
+            tile_name = model_config_path.stem + "_tile.yaml"
+            model_config_path = model_config_path.parent / tile_name
         # classification task type can't be deducted from template name, try to extract from config
-        if "sub_task_type" in template_config and "_CLS" in task_info["task"]:
-            task_info["task"] = template_config["sub_task_type"]
+        if "sub_task_type" in template_config and "_cls" in model_config_path.parent.name:
+            new_task = template_config["sub_task_type"].lower()
+            model_config_path = Path("src/otx/recipe/classification") / new_task / model_config_path.name
         if task is not None:
-            task_info["task"] = task
+            # override the task for the given model
+            parent_path = (
+                model_config_path.parent.parent if "_cls" in model_config_path.parent.name else model_config_path.parent
+            )
+            name_of_model = model_config_path.name
+            model_config_path = parent_path / task.value.lower() / name_of_model
+            if not model_config_path.exists():
+                msg = (
+                    f"Overrided model config file: {model_config_path} "
+                    "with the given task: {task.value} does not exist."
+                )
+                raise FileNotFoundError(msg)
+        # assign back the modified model config path to the task_info
+        task_info["model_config_path"] = str(model_config_path)
         default_config = ConfigConverter._get_default_config(task_info)
         ConfigConverter._update_params(default_config, param_dict)
         ConfigConverter._remove_unused_key(default_config)
@@ -273,6 +247,20 @@ class ConfigConverter:
     @staticmethod
     def _get_default_config(task_info: dict) -> dict:
         """Return default otx conifg for template use."""
+        if Path(task_info["model_config_path"]).suffix != ".yaml":
+            task_info["model_config_path"] = str(task_info["model_config_path"]) + ".yaml"
+        if "task" in task_info:
+            # override the task with the same model
+            path_to_task_parent = Path(task_info["model_config_path"]).parent.parent
+            name_of_file = Path(task_info["model_config_path"]).name
+            task_info["model_config_path"] = path_to_task_parent / task_info["task"].lower() / name_of_file
+            if not task_info["model_config_path"].exists():
+                msg = (
+                    f"Overrided model config file: {task_info['model_config_path']} "
+                    "with the given task: {task_info['task']} does not exist."
+                )
+                raise FileNotFoundError(msg)
+
         return AutoConfigurator(**task_info).config  # type: ignore[arg-type]
 
     @staticmethod
@@ -312,7 +300,7 @@ class ConfigConverter:
             if (
                 isinstance(scheduler, dict)
                 and "class_path" in scheduler
-                and scheduler["class_path"] == "otx.core.schedulers.LinearWarmupSchedulerCallable"
+                and scheduler["class_path"] == "otx.backend.native.schedulers.LinearWarmupSchedulerCallable"
             ):
                 scheduler["init_args"]["num_warmup_steps"] = param_value
             else:
@@ -329,7 +317,7 @@ class ConfigConverter:
         def update_enable_early_stopping(param_value: bool) -> None:
             idx = ConfigConverter._get_callback_idx(
                 config["callbacks"],
-                "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+                "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
             )
             if not param_value and idx > -1:
                 config["callbacks"].pop(idx)
@@ -337,14 +325,17 @@ class ConfigConverter:
         def update_early_stop_patience(param_value: int) -> None:
             if "callbacks" in config and config["callbacks"] is not None:
                 for callback in config["callbacks"]:
-                    if callback["class_path"] == "otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup":
+                    if (
+                        callback["class_path"]
+                        == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
+                    ):
                         callback["init_args"]["patience"] = param_value
                     break
 
         def update_use_adaptive_interval(param_value: bool) -> None:
             idx = ConfigConverter._get_callback_idx(
                 config["callbacks"],
-                "otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
+                "otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
             )
             if not param_value and idx > -1:
                 config["callbacks"].pop(idx)
@@ -473,16 +464,12 @@ class ConfigConverter:
         # Instantiate Engine
         config_work_dir = config.pop("work_dir", config["engine"].pop("work_dir", None))
         config["engine"]["work_dir"] = work_dir if work_dir is not None else config_work_dir
-        engine = Engine(
-            model=model,
-            datamodule=datamodule,
-            **config.pop("engine"),
-        )
+        engine = create_engine(model=model, data=datamodule, **config["engine"])
 
         # Instantiate Engine.train Arguments
         engine_parser = ArgumentParser()
         train_arguments = engine_parser.add_method_arguments(
-            Engine,
+            OTXEngine,
             "train",
             skip={"accelerator", "devices"},
             fail_untyped=False,

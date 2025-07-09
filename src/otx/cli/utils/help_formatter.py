@@ -1,7 +1,7 @@
-"""Custom Help Formatters for OTX CLI."""
-
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+"""Custom Help Formatters for OTX CLI."""
 
 from __future__ import annotations
 
@@ -162,10 +162,10 @@ def render_guide(subcommand: str | None = None) -> list:
     """
     if subcommand is None:
         return []
-    from otx.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
     contents: list[Panel | Markdown] = [Markdown(INTRO_MARKDOWN)]
-    target_command = getattr(Engine, subcommand)
+    target_command = getattr(OTXEngine, subcommand)
     cli_usage = get_cli_usage_docstring(target_command)
     if cli_usage is not None:
         cli_usage += f"\n{VERBOSE_USAGE.format(subcommand=subcommand)}"

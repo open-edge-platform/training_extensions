@@ -16,7 +16,7 @@ from zipfile import ZipFile
 
 import pandas as pd
 
-from otx.core.types.task import OTXTaskType
+from otx.types.task import OTXTaskType
 
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
@@ -33,7 +33,7 @@ TASK_METRIC_MAP = {
     OTXTaskType.DETECTION: "f1-score",
     OTXTaskType.INSTANCE_SEGMENTATION: "f1-score",
     OTXTaskType.SEMANTIC_SEGMENTATION: "Dice",
-    OTXTaskType.KEYPOINT_DETECTION: "accuracy",
+    OTXTaskType.KEYPOINT_DETECTION: "PCK",
 }
 
 

@@ -1,12 +1,12 @@
+task: ANOMALY_DETECTION
 model:
-  class_path: otx.algo.anomaly.stfpm.Stfpm
+  class_path: otx.backend.native.models.anomaly.stfpm.Stfpm
   init_args:
     layers: ["layer1", "layer2", "layer3"]
     backbone: "resnet18"
     task: ANOMALY_DETECTION
 
 engine:
-  task: ANOMALY_DETECTION
   device: auto
 
 callback_monitor: pixel_F1Score
@@ -14,12 +14,12 @@ callback_monitor: pixel_F1Score
 data: ../_base_/data/anomaly.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       patience: 5
       mode: max
       monitor: pixel_F1Score
-  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint

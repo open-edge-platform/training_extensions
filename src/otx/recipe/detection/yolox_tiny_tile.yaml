@@ -1,5 +1,6 @@
+task: DETECTION
 model:
-  class_path: otx.algo.detection.yolox.YOLOX
+  class_path: otx.backend.native.models.detection.yolox.YOLOX
   init_args:
     model_name: yolox_tiny
     label_info: 80
@@ -12,7 +13,7 @@ model:
         weight_decay: 0.0001
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 0
         main_scheduler_callable:
@@ -24,7 +25,6 @@ model:
             monitor: val/map_50
 
 engine:
-  task: DETECTION
   device: auto
 
 callback_monitor: val/map_50
@@ -32,7 +32,7 @@ callback_monitor: val/map_50
 data: ../_base_/data/detection_tile.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 10
@@ -63,17 +63,17 @@ overrides:
       num_workers: 4
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false
             transform_bbox: true
-        - class_path: otx.core.data.transform_libs.torchvision.PhotoMetricDistortion
+        - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
           enable: false
-        - class_path: otx.core.data.transform_libs.torchvision.YOLOXHSVRandomAug
-        - class_path: otx.core.data.transform_libs.torchvision.RandomAffine
+        - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
+        - class_path: otx.data.transform_libs.torchvision.RandomAffine
           enable: false
-        - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+        - class_path: otx.data.transform_libs.torchvision.RandomFlip
           init_args:
             prob: 0.5
             is_numpy_to_tvtensor: true
@@ -97,7 +97,7 @@ overrides:
       num_workers: 4
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
         - class_path: torchvision.transforms.v2.Normalize
@@ -109,7 +109,7 @@ overrides:
       num_workers: 4
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
         - class_path: torchvision.transforms.v2.Normalize

@@ -1,426 +1,85 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+#
 
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-import openvino as ov
 import pytest
-from pytest_mock import MockerFixture
 
-from otx.algo.classification.multiclass_models import EfficientNetMulticlassCls
-from otx.algo.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
-from otx.core.model.base import DataInputParams, OTXModel, OVModel
-from otx.core.types.export import OTXExportFormatType
-from otx.core.types.label import NullLabelInfo
-from otx.core.types.precision import OTXPrecisionType
-from otx.engine import Engine
-from tests.unit.core.utils.test_utils import get_dummy_ov_cls_model
+from otx.backend.native.engine import OTXEngine
+from otx.backend.native.models.base import OTXModel
+from otx.backend.openvino.engine import OVEngine
+from otx.backend.openvino.models.base import OVModel
+from otx.data.module import OTXDataModule
+from otx.engine import Engine, create_engine
 
 
-@pytest.fixture()
-def fxt_engine(tmp_path) -> Engine:
-    recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
-    data_root = "tests/assets/classification_dataset"
-    task_type = "MULTI_CLASS_CLS"
-
-    return Engine.from_config(
-        config_path=recipe_path,
-        data_root=data_root,
-        task=task_type,
-        work_dir=tmp_path,
-    )
-
-
-class TestEngine:
-    def test_constructor(self, tmp_path) -> None:
-        with pytest.raises(RuntimeError):
-            Engine(work_dir=tmp_path)
-
-        # Check auto-configuration
-        data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root)
-        assert engine.task == "MULTI_CLASS_CLS"
-        assert engine.datamodule.task == "MULTI_CLASS_CLS"
-        assert isinstance(engine.model, EfficientNetMulticlassCls)
-
-        assert "default_root_dir" in engine.trainer_params
-        assert engine.trainer_params["default_root_dir"] == tmp_path
-        assert "accelerator" in engine.trainer_params
-        assert engine.trainer_params["accelerator"] == "auto"
-        assert "devices" in engine.trainer_params
-        assert engine.trainer_params["devices"] == 1
-
-        # Create engine with no data_root
-        with pytest.raises(ValueError, match="Given model class (.*) requires a valid label_info to instantiate."):
-            _ = Engine(work_dir=tmp_path, task="MULTI_CLASS_CLS")
-
+class TestCreateEngine:
     @pytest.fixture()
-    def mock_datamodule(self, mocker):
-        mock_datamodule = MagicMock()
-        mock_datamodule.label_info = 4321
-        mock_datamodule.input_size = (1234, 1234)
-        mock_datamodule.input_mean = (0.0, 0.0, 0.0)
-        mock_datamodule.input_std = (1.0, 1.0, 1.0)
+    def mock_engine_subclass(self):
+        """Fixture to create a mock Engine subclass."""
+        mock_engine_cls = MagicMock(spec=Engine)
+        mock_engine_cls.is_supported.return_value = True
+        return mock_engine_cls
 
-        return mocker.patch(
-            "otx.engine.utils.auto_configurator.AutoConfigurator.get_datamodule",
-            return_value=mock_datamodule,
+    @patch("otx.engine.Engine.__subclasses__", autospec=True)
+    def test_create_engine(self, mock___subclasses__, mock_engine_subclass):
+        """Test create_engine with arbitrary Engine."""
+        mock___subclasses__.return_value = [mock_engine_subclass]
+        mock_model = MagicMock()
+        mock_data = MagicMock()
+
+        engine_instance = create_engine(mock_model, mock_data)
+
+        mock_engine_subclass.is_supported.assert_called_once_with(mock_model, mock_data)
+        mock_engine_subclass.assert_called_once_with(model=mock_model, data=mock_data)
+        assert engine_instance == mock_engine_subclass.return_value
+
+        # test create_engine when is_supported returns False
+        mock_engine_subclass.is_supported.return_value = False
+        with pytest.raises(ValueError, match="No engine found for model .* and data .*"):
+            create_engine(mock_model, mock_data)
+
+        # test create_engine when no subclasses are found
+        mock___subclasses__.return_value = []
+        mock_model = MagicMock()
+        mock_data = MagicMock()
+
+        with pytest.raises(ValueError, match="No engine found for model .* and data .*"):
+            create_engine(mock_model, mock_data)
+
+    def test_create_native_engine(self, mocker):
+        mock_model = MagicMock(spec=OTXModel)
+        mock_data = MagicMock(spec=OTXDataModule)
+        mock_engine_init = mocker.patch("otx.backend.native.engine.OTXEngine.__init__", return_value=None)
+
+        # test OTXEngine creation with OTXModel
+        engine_instance = create_engine(mock_model, mock_data)
+        assert isinstance(engine_instance, OTXEngine)
+        mock_engine_init.assert_called_once_with(model=mock_model, data=mock_data)
+
+        # test with additional kwargs
+        engine_instance = create_engine(mock_model, mock_data, work_dir="path/to/workdir", device="CPU")
+        assert isinstance(engine_instance, OTXEngine)
+        mock_engine_init.assert_called_with(
+            model=mock_model,
+            data=mock_data,
+            work_dir="path/to/workdir",
+            device="CPU",
         )
 
-    def test_model_init(self, tmp_path, mock_datamodule):
-        data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root)
-
-        assert engine._model.data_input_params == DataInputParams((1234, 1234), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
-        assert engine._model.label_info.num_classes == 4321
-
-    def test_model_setter(self, fxt_engine, mocker) -> None:
-        assert isinstance(fxt_engine.model, TVModelMulticlassCls)
-        fxt_engine.model = "efficientnet_b0"
-        assert isinstance(fxt_engine.model, EfficientNetMulticlassCls)
-
-    def test_training_with_override_args(self, fxt_engine, mocker) -> None:
-        mocker.patch("pathlib.Path.symlink_to")
-        mocker.patch("otx.engine.engine.Trainer.fit")
-        mock_seed_everything = mocker.patch("otx.engine.engine.seed_everything")
-
-        assert fxt_engine._cache.args["max_epochs"] == 90
-
-        fxt_engine.train(max_epochs=100, seed=1234)
-        assert fxt_engine._cache.args["max_epochs"] == 100
-        mock_seed_everything.assert_called_once_with(1234, workers=True)
-
-    @pytest.mark.parametrize("resume", [True, False])
-    def test_training_with_checkpoint(self, fxt_engine, resume: bool, mocker: MockerFixture, tmpdir) -> None:
-        checkpoint = "path/to/checkpoint.ckpt"
-
-        mock_trainer = mocker.patch("otx.engine.engine.Trainer")
-        mock_trainer.return_value.default_root_dir = Path(tmpdir)
-        mock_trainer_fit = mock_trainer.return_value.fit
-
-        mock_torch_load = mocker.patch("otx.engine.engine.torch.load")
-        mock_load_state_dict_incrementally = mocker.patch.object(fxt_engine.model, "load_state_dict_incrementally")
-
-        trained_checkpoint = Path(tmpdir) / "best.ckpt"
-        trained_checkpoint.touch()
-        mock_trainer.return_value.checkpoint_callback.best_model_path = trained_checkpoint
-
-        fxt_engine.train(resume=resume, checkpoint=checkpoint)
-
-        if resume:
-            assert mock_trainer_fit.call_args.kwargs.get("ckpt_path") == checkpoint
-        else:
-            assert "ckpt_path" not in mock_trainer_fit.call_args.kwargs
-
-            mock_torch_load.assert_called_once()
-            mock_load_state_dict_incrementally.assert_called_once()
-
-    @pytest.mark.parametrize(
-        "checkpoint",
-        [
-            "path/to/checkpoint.ckpt",
-            "path/to/checkpoint.xml",
-        ],
-    )
-    def test_test(self, fxt_engine, checkpoint, mocker: MockerFixture) -> None:
-        mock_test = mocker.patch("otx.engine.engine.Trainer.test")
-        _ = mocker.patch("otx.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.engine.engine.AutoConfigurator.get_ov_model")
-        mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-
-        ext = Path(checkpoint).suffix
-
-        if ext == ".ckpt":
-            mock_model = mocker.create_autospec(OTXModel)
-
-            mock_load_from_checkpoint.return_value = mock_model
-        else:
-            mock_model = mocker.create_autospec(OVModel)
-
-            mock_get_ov_model.return_value = mock_model
-
-        # Correct label_info from the checkpoint
-        mock_model.label_info = fxt_engine.datamodule.label_info
-        fxt_engine.test(checkpoint=checkpoint)
-        mock_test.assert_called_once()
-
-        mock_model.label_info = NullLabelInfo()
-        # Incorrect label_info from the checkpoint
-        with pytest.raises(
-            ValueError,
-            match="To launch a test pipeline, the label information should be same (.*)",
-        ):
-            fxt_engine.test(checkpoint=checkpoint)
-
-    @pytest.mark.parametrize("explain", [True, False])
-    @pytest.mark.parametrize(
-        "checkpoint",
-        [
-            "path/to/checkpoint.ckpt",
-            "path/to/checkpoint.xml",
-        ],
-    )
-    def test_predict(self, fxt_engine, checkpoint, explain, mocker: MockerFixture) -> None:
-        mock_predict = mocker.patch("otx.engine.engine.Trainer.predict")
-        _ = mocker.patch("otx.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.engine.engine.AutoConfigurator.get_ov_model")
-        mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-        mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
-
-        ext = Path(checkpoint).suffix
-
-        if ext == ".ckpt":
-            mock_model = mocker.create_autospec(OTXModel)
-
-            mock_load_from_checkpoint.return_value = mock_model
-        else:
-            mock_model = mocker.create_autospec(OVModel)
-
-            mock_get_ov_model.return_value = mock_model
-
-        # Correct label_info from the checkpoint
-        mock_model.label_info = fxt_engine.datamodule.label_info
-        fxt_engine.predict(checkpoint=checkpoint, explain=explain)
-        mock_predict.assert_called_once()
-        assert mock_process_saliency_maps.called == explain
-
-        mock_model.label_info = NullLabelInfo()
-        # Incorrect label_info from the checkpoint
-        with pytest.raises(
-            ValueError,
-            match="To launch a predict pipeline, the label information should be same (.*)",
-        ):
-            fxt_engine.predict(checkpoint=checkpoint)
-
-    def test_exporting(self, fxt_engine, mocker) -> None:
-        with pytest.raises(RuntimeError, match="To make export, checkpoint must be specified."):
-            fxt_engine.export()
-
-        mock_export = mocker.patch("otx.engine.engine.OTXModel.export")
-
-        mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-        mock_load_from_checkpoint.return_value = fxt_engine.model
-
-        # Fetch Checkpoint
-        checkpoint = "path/to/checkpoint.ckpt"
-        fxt_engine.checkpoint = checkpoint
-        fxt_engine.export()
-        mock_load_from_checkpoint.assert_called_once_with(
-            checkpoint_path=checkpoint,
-            map_location="cpu",
-            model_name="mobilenet_v3_small",
-        )
-        mock_export.assert_called_once_with(
-            output_dir=Path(fxt_engine.work_dir),
-            base_name="exported_model",
-            export_format=OTXExportFormatType.OPENVINO,
-            precision=OTXPrecisionType.FP32,
-            to_exportable_code=False,
-        )
-
-        fxt_engine.export(export_precision=OTXPrecisionType.FP16)
-        mock_export.assert_called_with(
-            output_dir=Path(fxt_engine.work_dir),
-            base_name="exported_model",
-            export_format=OTXExportFormatType.OPENVINO,
-            precision=OTXPrecisionType.FP16,
-            to_exportable_code=False,
-        )
-
-        fxt_engine.export(export_format=OTXExportFormatType.ONNX)
-        mock_export.assert_called_with(
-            output_dir=Path(fxt_engine.work_dir),
-            base_name="exported_model",
-            export_format=OTXExportFormatType.ONNX,
-            precision=OTXPrecisionType.FP32,
-            to_exportable_code=False,
-        )
-
-        fxt_engine.export(export_format=OTXExportFormatType.ONNX, export_demo_package=True)
-        mock_export.assert_called_with(
-            output_dir=Path(fxt_engine.work_dir),
-            base_name="exported_model",
-            export_format=OTXExportFormatType.ONNX,
-            precision=OTXPrecisionType.FP32,
-            to_exportable_code=False,
-        )
-
-        # check exportable code with IR OpenVINO model
-        mock_export = mocker.patch("otx.engine.engine.OVModel.export")
-        fxt_engine.checkpoint = "path/to/checkpoint.xml"
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            ov.save_model(get_dummy_ov_cls_model(), f"{tmp_dir}/model.xml")
-            otx_ov_model = OVModel(model_name=f"{tmp_dir}/model.xml", model_type="Classification")
-
-        mock_get_ov_model = mocker.patch(
-            "otx.engine.engine.AutoConfigurator.get_ov_model",
-            return_value=otx_ov_model,
-        )
-        fxt_engine.export(checkpoint="path/to/checkpoint.xml", export_demo_package=True)
-        mock_get_ov_model.assert_called_once()
-        mock_export.assert_called_with(
-            output_dir=Path(fxt_engine.work_dir),
-            base_name="exported_model",
-            export_format=OTXExportFormatType.OPENVINO,
-            precision=OTXPrecisionType.FP32,
-            to_exportable_code=True,
-        )
-
-    def test_optimizing_model(self, fxt_engine, mocker) -> None:
-        with pytest.raises(RuntimeError, match="supports only OV IR or ONNX checkpoints"):
-            fxt_engine.optimize()
-
-        mocker.patch("otx.engine.engine.OTXModel.load_state_dict")
-        mock_ov_model = mocker.patch("otx.engine.engine.AutoConfigurator.get_ov_model")
-
-        # Fetch Checkpoint
-        fxt_engine.checkpoint = "path/to/exported_model.xml"
-        fxt_engine.optimize()
-        mock_ov_model.assert_called_once()
-        mock_ov_model.return_value.optimize.assert_called_once()
-
-        # With max_data_subset_size
-        fxt_engine.optimize(max_data_subset_size=100)
-        assert mock_ov_model.return_value.optimize.call_args[0][2]["subset_size"] == 100
-
-        # Optimize and export with exportable code
-        mocker_export = mocker.patch.object(fxt_engine, "export")
-        fxt_engine.optimize(export_demo_package=True)
-        mocker_export.assert_called_once()
-
-    @pytest.mark.parametrize(
-        "checkpoint",
-        [
-            "path/to/checkpoint.ckpt",
-            "path/to/checkpoint.xml",
-        ],
-    )
-    def test_explain(self, fxt_engine, checkpoint, mocker) -> None:
-        mock_predict = mocker.patch("otx.engine.engine.Trainer.predict")
-        _ = mocker.patch("otx.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.engine.engine.AutoConfigurator.get_ov_model")
-        mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-        mock_process_saliency_maps = mocker.patch("otx.algo.utils.xai_utils.process_saliency_maps_in_pred_entity")
-
-        ext = Path(checkpoint).suffix
-
-        if ext == ".ckpt":
-            mock_model = mocker.create_autospec(OTXModel)
-
-            mock_load_from_checkpoint.return_value = mock_model
-        else:
-            mock_model = mocker.create_autospec(OVModel)
-
-            mock_get_ov_model.return_value = mock_model
-
-        # Correct label_info from the checkpoint
-        mock_model.label_info = fxt_engine.datamodule.label_info
-        fxt_engine.explain(checkpoint=checkpoint)
-        mock_predict.assert_called_once()
-
-        mock_process_saliency_maps.assert_called_once()
-
-        mock_model.label_info = NullLabelInfo()
-        # Incorrect label_info from the checkpoint
-        with pytest.raises(
-            ValueError,
-            match="To launch a explain pipeline, the label information should be same (.*)",
-        ):
-            fxt_engine.explain(checkpoint=checkpoint)
-
-    def test_from_config_with_model_name(self, tmp_path) -> None:
-        model_name = "efficientnet_b0"
-        data_root = "tests/assets/classification_dataset"
-        task_type = "MULTI_CLASS_CLS"
-
-        overriding = {
-            "data.train_subset.batch_size": 3,
-            "data.test_subset.subset_name": "TESTING",
-        }
-
-        engine = Engine.from_model_name(
-            model_name=model_name,
-            data_root=data_root,
-            task=task_type,
-            work_dir=tmp_path,
-            **overriding,
-        )
-
-        assert engine is not None
-        assert engine.datamodule.train_subset.batch_size == 3
-        assert engine.datamodule.test_subset.subset_name == "TESTING"
-
-        with pytest.raises(FileNotFoundError):
-            engine = Engine.from_model_name(
-                model_name="wrong_model",
-                data_root=data_root,
-                task=task_type,
-                work_dir=tmp_path,
-                **overriding,
-            )
-
-    def test_from_config(self, tmp_path) -> None:
-        recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
-        data_root = "tests/assets/classification_dataset"
-        task_type = "MULTI_CLASS_CLS"
-
-        overriding = {
-            "data.train_subset.batch_size": 3,
-            "data.test_subset.subset_name": "TESTING",
-        }
-
-        engine = Engine.from_config(
-            config_path=recipe_path,
-            data_root=data_root,
-            task=task_type,
-            work_dir=tmp_path,
-            **overriding,
-        )
-
-        assert engine is not None
-        assert engine.datamodule.train_subset.batch_size == 3
-        assert engine.datamodule.test_subset.subset_name == "TESTING"
-
-    @pytest.mark.parametrize(
-        "checkpoint",
-        [
-            "path/to/checkpoint.ckpt",
-            "path/to/checkpoint.xml",
-        ],
-    )
-    def test_benchmark(self, fxt_engine, checkpoint, mocker: MockerFixture) -> None:
-        _ = mocker.patch("otx.engine.engine.AutoConfigurator.update_ov_subset_pipeline")
-        mock_get_ov_model = mocker.patch("otx.engine.engine.AutoConfigurator.get_ov_model")
-        mock_load_from_checkpoint = mocker.patch.object(fxt_engine.model.__class__, "load_from_checkpoint")
-
-        ext = Path(checkpoint).suffix
-
-        if ext == ".ckpt":
-            mock_model = mocker.create_autospec(OTXModel)
-
-            mock_load_from_checkpoint.return_value = mock_model
-        else:
-            mock_model = mocker.create_autospec(OVModel)
-
-            mock_get_ov_model.return_value = mock_model
-
-        # Correct label_info from the checkpoint
-        mock_model.label_info = fxt_engine.datamodule.label_info
-        result = fxt_engine.benchmark(checkpoint=checkpoint)
-        assert "latency" in result
-
-    def test_num_devices(self, fxt_engine, tmp_path) -> None:
-        assert fxt_engine.num_devices == 1
-        assert fxt_engine._cache.args.get("devices") == 1
-
-        fxt_engine.num_devices = 2
-        assert fxt_engine.num_devices == 2
-        assert fxt_engine._cache.args.get("devices") == 2
-
-        data_root = "tests/assets/classification_dataset"
-        engine = Engine(work_dir=tmp_path, data_root=data_root, num_devices=3)
-        assert engine.num_devices == 3
-        assert engine._cache.args.get("devices") == 3
+    def test_create_openvino_engine(self, mocker):
+        """Test create_engine for OpenVINO Engine."""
+        # tests OpenVINO Engine creation with OVModel
+        mock_model = MagicMock(spec=OVModel)
+        mock_data = MagicMock(spec=OTXDataModule)
+        mock_engine_init = mocker.patch("otx.backend.openvino.engine.OVEngine.__init__", return_value=None)
+        engine_instance = create_engine(mock_model, mock_data)
+        assert isinstance(engine_instance, OVEngine)
+        mock_engine_init.assert_called_once_with(model=mock_model, data=mock_data)
+
+        # test with IR path
+        mock_model = "/path/to/model.xml"
+        engine_instance = create_engine(mock_model, mock_data, work_dir="path/to/workdir")
+        assert isinstance(engine_instance, OVEngine)
+        mock_engine_init.assert_called_with(model=mock_model, data=mock_data, work_dir="path/to/workdir")

@@ -1,5 +1,6 @@
+task: DETECTION
 model:
-  class_path: otx.algo.detection.rtdetr.RTDETR
+  class_path: otx.backend.native.models.detection.rtdetr.RTDETR
   init_args:
     model_name: rtdetr_101
     label_info: 80
@@ -12,7 +13,7 @@ model:
         weight_decay: 0.0001
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 100
         main_scheduler_callable:
@@ -24,7 +25,6 @@ model:
             monitor: val/map_50
 
 engine:
-  task: DETECTION
   device: auto
 
 callback_monitor: val/map_50
@@ -32,11 +32,11 @@ callback_monitor: val/map_50
 data: ../_base_/data/detection_tile.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
       min_lrschedule_patience: 3
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       warmup_iters: 100
       warmup_epochs: 7
@@ -60,7 +60,7 @@ overrides:
     train_subset:
       batch_size: 4
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false
@@ -69,12 +69,12 @@ overrides:
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
       sampler:
-        class_path: otx.algo.samplers.balanced_sampler.BalancedSampler
+        class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false
@@ -83,7 +83,7 @@ overrides:
     test_subset:
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false

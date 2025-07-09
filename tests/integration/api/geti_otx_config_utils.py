@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 
 from omegaconf import OmegaConf
 
-from otx.core.types.task import OTXTaskType
 from otx.tools.converter import TEMPLATE_ID_DICT, ConfigConverter
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -172,11 +172,15 @@ class OTXConfig:
 
         tmp_dict = {}
         for key, value in TEMPLATE_ID_DICT.items():
-            if value["task"] == OTXTaskType.MULTI_CLASS_CLS:
+            if "multi_class_cls" in value:
                 tmp_dict[key] = value
 
                 new_value = deepcopy(value)
-                new_value["task"] = override_cls_task_type
+                model_name = Path(value["model_config_path"]).name
+                parent_classification_path = Path("src/otx/recipe/classification/")
+                new_value["model_config_path"] = (
+                    parent_classification_path / override_cls_task_type.value.lower() / model_name
+                )
                 TEMPLATE_ID_DICT[key] = new_value
 
         yield

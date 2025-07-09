@@ -1,5 +1,6 @@
+task: SEMANTIC_SEGMENTATION
 model:
-  class_path: otx.algo.segmentation.dino_v2_seg.DinoV2Seg
+  class_path: otx.backend.native.models.segmentation.dino_v2_seg.DinoV2Seg
   init_args:
     label_info: 2
     model_name: dinov2-small-seg
@@ -21,7 +22,6 @@ model:
         last_epoch: -1
 
 engine:
-  task: SEMANTIC_SEGMENTATION
   device: auto
 
 callback_monitor: val/Dice
@@ -29,7 +29,7 @@ callback_monitor: val/Dice
 data: ../_base_/data/semantic_segmentation_tile.yaml
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       warmup_iters: 100
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
@@ -49,18 +49,18 @@ overrides:
       - 518
     train_subset:
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
 
     val_subset:
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
 
     test_subset:
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
