@@ -10,6 +10,7 @@ import logging
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -532,7 +533,7 @@ class BenchmarkDashboard:
             },
         )
 
-    def create_epoch_comparison_plot(self, task: OTXTaskType, dataset_name: str):
+    def create_epoch_comparison_plot(self, task: OTXTaskType, dataset_name: str) -> html.Div:
         """Create epoch comparison plot."""
         if not self.benchmark_data:
             return html.Div("No data available")
@@ -635,7 +636,7 @@ class BenchmarkDashboard:
             },
         )
 
-    def create_iter_time_comparison_plot(self, task: OTXTaskType, dataset_name: str):
+    def create_iter_time_comparison_plot(self, task: OTXTaskType, dataset_name: str) -> html.Div:
         """Create iteration time comparison plot."""
         if not self.benchmark_data:
             return html.Div("No data available")
@@ -738,7 +739,7 @@ class BenchmarkDashboard:
             },
         )
 
-    def create_latency_accuracy_scatter(self, task: OTXTaskType, dataset_name: str):
+    def create_latency_accuracy_scatter(self, task: OTXTaskType, dataset_name: str) -> go.Figure:
         """Create a scatter plot showing accuracy vs latency for different versions."""
         if not self.benchmark_data:
             return go.Figure().add_annotation(
@@ -808,13 +809,476 @@ class BenchmarkDashboard:
 
         return fig
 
+    def create_averaged_data(self, task: OTXTaskType) -> dict[str, pd.DataFrame]:
+        """Create averaged data across all datasets for a task."""
+        if not self.benchmark_data:
+            return {}
+
+        averaged_data = {}
+
+        for version in self.available_versions:
+            if version in self.benchmark_data and task.value in self.benchmark_data[version]:
+                version_data = self.benchmark_data[version][task.value]
+                all_datasets_data = []
+
+                # Collect all data from all datasets for this version
+                for dataset_name, df in version_data.items():
+                    if not df.empty:
+                        df_copy = df.copy()
+                        df_copy["dataset"] = dataset_name
+                        all_datasets_data.append(df_copy)
+
+                if all_datasets_data:
+                    # Combine all datasets
+                    combined_df = pd.concat(all_datasets_data, ignore_index=True)
+
+                    # Group by model and calculate mean across datasets
+                    numeric_columns = combined_df.select_dtypes(include=[np.number]).columns
+                    grouped = combined_df.groupby("model")[numeric_columns].mean().reset_index()
+
+                    # Keep other important columns
+                    for col in ["otx_version", "task"]:
+                        if col in combined_df.columns:
+                            grouped[col] = combined_df[col].iloc[0]
+
+                    averaged_data[version] = grouped
+
+        return averaged_data
+
+    def create_averaged_plots(self, task: OTXTaskType, metric_type: str) -> html.Div | dcc.Graph:
+        """Create plots using averaged data across all datasets for a task."""
+        if metric_type == "accuracy":
+            return self.create_averaged_accuracy_comparison_plots(task)
+        if metric_type == "latency":
+            return self.create_averaged_latency_comparison_plots(task)
+        if metric_type == "training_time":
+            return self.create_averaged_training_metric_plot(
+                task,
+                "training:e2e_time_mean",
+                "Training Time",
+                "Training Time (seconds)",
+            )
+        if metric_type == "epoch":
+            return self.create_averaged_training_metric_plot(
+                task,
+                "training:epoch_mean",
+                "Epoch",
+                "Number of Epochs",
+            )
+        if metric_type == "iter_time":
+            return self.create_averaged_training_metric_plot(
+                task,
+                "training:train/iter_time_mean",
+                "Iteration Time",
+                "Iteration Time (seconds)",
+            )
+        if metric_type == "scatter":
+            fig = self.create_averaged_latency_accuracy_scatter(task)
+            return dcc.Graph(figure=fig)
+        return html.Div("Invalid metric type selected")
+
+    def create_averaged_accuracy_comparison_plots(self, task: OTXTaskType) -> html.Div:
+        """Create accuracy comparison plots using averaged data across datasets."""
+        averaged_data = self.create_averaged_data(task)
+
+        if not averaged_data:
+            return html.Div("No data available for averaging")
+
+        # Define the accuracy metrics for different stages
+        accuracy_metric = TASK_METRIC_MAP.get(task, "accuracy")
+        stages = [
+            ("torch", f"torch:test/{accuracy_metric}_mean", "Torch Model"),
+            ("export", f"export:test/{accuracy_metric}_mean", "Exported Model"),
+            ("optimize", f"optimize:test/{accuracy_metric}_mean", "Optimized Model"),
+        ]
+
+        plots = []
+
+        for _, metric_col, stage_title in stages:
+            # Collect averaged data across versions for this stage
+            plot_data = []
+
+            for version, df in averaged_data.items():
+                if metric_col in df.columns:
+                    for _, row in df.iterrows():
+                        if not pd.isna(row[metric_col]):
+                            plot_data.append(
+                                {
+                                    "Version": version,
+                                    "Model": row.get("model", "Unknown"),
+                                    "Metric": row[metric_col],
+                                    "Stage": stage_title,
+                                },
+                            )
+
+            if plot_data:
+                plot_df = pd.DataFrame(plot_data)
+
+                # Create the plot
+                fig = px.bar(
+                    plot_df,
+                    x="Model",
+                    y="Metric",
+                    color="Version",
+                    title=f"{task.value} - Average Across Datasets - {stage_title} Accuracy",
+                    barmode="group",
+                    height=400,
+                )
+
+                fig.update_layout(
+                    xaxis_title="Model",
+                    yaxis_title=f"{accuracy_metric.title()}",
+                    legend_title="OTX Version",
+                    showlegend=True,
+                    margin={"t": 50, "b": 50, "l": 50, "r": 50},
+                )
+
+                plots.append(
+                    html.Div(
+                        [
+                            html.H4(
+                                f"{stage_title} Accuracy Comparison (Averaged)",
+                                style={
+                                    "textAlign": "center",
+                                    "marginTop": "30px",
+                                    "marginBottom": "10px",
+                                    "color": "#2c3e50",
+                                    "fontFamily": "Arial, sans-serif",
+                                },
+                            ),
+                            dcc.Graph(figure=fig),
+                        ],
+                        style={
+                            "marginBottom": "20px",
+                            "border": "1px solid #e0e0e0",
+                            "borderRadius": "5px",
+                            "padding": "15px",
+                            "backgroundColor": "#fafafa",
+                        },
+                    ),
+                )
+            else:
+                plots.append(
+                    html.Div(
+                        [
+                            html.H4(
+                                f"{stage_title} Accuracy Comparison (Averaged)",
+                                style={
+                                    "textAlign": "center",
+                                    "marginTop": "30px",
+                                    "marginBottom": "10px",
+                                    "color": "#2c3e50",
+                                    "fontFamily": "Arial, sans-serif",
+                                },
+                            ),
+                            html.P(
+                                f"No averaged {stage_title.lower()} accuracy data available",
+                                style={
+                                    "textAlign": "center",
+                                    "color": "#7f8c8d",
+                                    "fontStyle": "italic",
+                                },
+                            ),
+                        ],
+                        style={
+                            "marginBottom": "20px",
+                            "border": "1px solid #e0e0e0",
+                            "borderRadius": "5px",
+                            "padding": "15px",
+                            "backgroundColor": "#fafafa",
+                        },
+                    ),
+                )
+
+        return html.Div(plots)
+
+    def create_averaged_latency_comparison_plots(self, task: OTXTaskType) -> html.Div:
+        """Create latency comparison plots using averaged data across datasets."""
+        averaged_data = self.create_averaged_data(task)
+
+        if not averaged_data:
+            return html.Div("No data available for averaging")
+
+        # Define the latency metrics for different stages
+        stages = [
+            ("torch", "torch:test/latency_mean", "Torch Model"),
+            ("export", "export:test/latency_mean", "Exported Model"),
+            ("optimize", "optimize:test/latency_mean", "Optimized Model"),
+        ]
+
+        plots = []
+
+        for _, metric_col, stage_title in stages:
+            # Collect averaged data across versions for this stage
+            plot_data = []
+
+            for version, df in averaged_data.items():
+                if metric_col in df.columns:
+                    for _, row in df.iterrows():
+                        if not pd.isna(row[metric_col]):
+                            plot_data.append(
+                                {
+                                    "Version": version,
+                                    "Model": row.get("model", "Unknown"),
+                                    "Metric": row[metric_col],
+                                    "Stage": stage_title,
+                                },
+                            )
+
+            if plot_data:
+                plot_df = pd.DataFrame(plot_data)
+
+                # Create the plot
+                fig = px.bar(
+                    plot_df,
+                    x="Model",
+                    y="Metric",
+                    color="Version",
+                    title=f"{task.value} - Average Across Datasets - {stage_title} Latency",
+                    barmode="group",
+                    height=400,
+                )
+
+                fig.update_layout(
+                    xaxis_title="Model",
+                    yaxis_title="Latency (ms)",
+                    legend_title="OTX Version",
+                    showlegend=True,
+                    margin={"t": 50, "b": 50, "l": 50, "r": 50},
+                )
+
+                plots.append(
+                    html.Div(
+                        [
+                            html.H4(
+                                f"{stage_title} Latency Comparison (Averaged)",
+                                style={
+                                    "textAlign": "center",
+                                    "marginTop": "30px",
+                                    "marginBottom": "10px",
+                                    "color": "#2c3e50",
+                                    "fontFamily": "Arial, sans-serif",
+                                },
+                            ),
+                            dcc.Graph(figure=fig),
+                        ],
+                        style={
+                            "marginBottom": "20px",
+                            "border": "1px solid #e0e0e0",
+                            "borderRadius": "5px",
+                            "padding": "15px",
+                            "backgroundColor": "#fafafa",
+                        },
+                    ),
+                )
+            else:
+                plots.append(
+                    html.Div(
+                        [
+                            html.H4(
+                                f"{stage_title} Latency Comparison (Averaged)",
+                                style={
+                                    "textAlign": "center",
+                                    "marginTop": "30px",
+                                    "marginBottom": "10px",
+                                    "color": "#2c3e50",
+                                    "fontFamily": "Arial, sans-serif",
+                                },
+                            ),
+                            html.P(
+                                f"No averaged {stage_title.lower()} latency data available",
+                                style={
+                                    "textAlign": "center",
+                                    "color": "#7f8c8d",
+                                    "fontStyle": "italic",
+                                },
+                            ),
+                        ],
+                        style={
+                            "marginBottom": "20px",
+                            "border": "1px solid #e0e0e0",
+                            "borderRadius": "5px",
+                            "padding": "15px",
+                            "backgroundColor": "#fafafa",
+                        },
+                    ),
+                )
+
+        return html.Div(plots)
+
+    def create_averaged_training_metric_plot(
+        self,
+        task: OTXTaskType,
+        metric_col: str,
+        metric_name: str,
+        y_label: str,
+    ) -> html.Div:
+        """Create training metric comparison plot using averaged data across datasets."""
+        averaged_data = self.create_averaged_data(task)
+
+        if not averaged_data:
+            return html.Div("No data available for averaging")
+
+        plot_data = []
+
+        for version, df in averaged_data.items():
+            if metric_col in df.columns:
+                for _, row in df.iterrows():
+                    if not pd.isna(row[metric_col]):
+                        plot_data.append(
+                            {
+                                "Version": version,
+                                "Model": row.get("model", "Unknown"),
+                                "Metric": row[metric_col],
+                            },
+                        )
+
+        if not plot_data:
+            return html.Div(
+                [
+                    html.H4(
+                        f"{metric_name} Comparison (Averaged)",
+                        style={
+                            "textAlign": "center",
+                            "marginTop": "30px",
+                            "marginBottom": "10px",
+                            "color": "#2c3e50",
+                            "fontFamily": "Arial, sans-serif",
+                        },
+                    ),
+                    html.P(
+                        f"No averaged {metric_name.lower()} data available",
+                        style={
+                            "textAlign": "center",
+                            "color": "#7f8c8d",
+                            "fontStyle": "italic",
+                        },
+                    ),
+                ],
+                style={
+                    "marginBottom": "20px",
+                    "border": "1px solid #e0e0e0",
+                    "borderRadius": "5px",
+                    "padding": "15px",
+                    "backgroundColor": "#fafafa",
+                },
+            )
+
+        plot_df = pd.DataFrame(plot_data)
+
+        # Create the plot
+        fig = px.bar(
+            plot_df,
+            x="Model",
+            y="Metric",
+            color="Version",
+            title=f"{task.value} - Average Across Datasets - {metric_name}",
+            barmode="group",
+            height=400,
+        )
+
+        fig.update_layout(
+            xaxis_title="Model",
+            yaxis_title=y_label,
+            legend_title="OTX Version",
+            showlegend=True,
+            margin={"t": 50, "b": 50, "l": 50, "r": 50},
+        )
+
+        return html.Div(
+            [
+                html.H4(
+                    f"{metric_name} Comparison (Averaged)",
+                    style={
+                        "textAlign": "center",
+                        "marginTop": "30px",
+                        "marginBottom": "10px",
+                        "color": "#2c3e50",
+                        "fontFamily": "Arial, sans-serif",
+                    },
+                ),
+                dcc.Graph(figure=fig),
+            ],
+            style={
+                "marginBottom": "20px",
+                "border": "1px solid #e0e0e0",
+                "borderRadius": "5px",
+                "padding": "15px",
+                "backgroundColor": "#fafafa",
+            },
+        )
+
+    def create_averaged_latency_accuracy_scatter(self, task: OTXTaskType) -> go.Figure:
+        """Create scatter plot using averaged data across datasets."""
+        averaged_data = self.create_averaged_data(task)
+
+        if not averaged_data:
+            return go.Figure().add_annotation(
+                text="No data available for averaging",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+            )
+
+        # Determine metric columns
+        accuracy_col = f"torch:test/{TASK_METRIC_MAP.get(task, 'accuracy')}_mean"
+        latency_col = "torch:test/latency_mean"
+
+        plot_data = []
+
+        for version, df in averaged_data.items():
+            if accuracy_col in df.columns and latency_col in df.columns:
+                for _, row in df.iterrows():
+                    if not pd.isna(row[accuracy_col]) and not pd.isna(row[latency_col]):
+                        plot_data.append(
+                            {
+                                "Version": version,
+                                "Model": row.get("model", "Unknown"),
+                                "Accuracy": row[accuracy_col],
+                                "Latency": row[latency_col],
+                            },
+                        )
+
+        if not plot_data:
+            return go.Figure().add_annotation(
+                text="No averaged accuracy vs latency data available",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+            )
+
+        plot_df = pd.DataFrame(plot_data)
+
+        fig = px.scatter(
+            plot_df,
+            x="Latency",
+            y="Accuracy",
+            color="Version",
+            symbol="Model",
+            title=f"{task.value} - Average Across Datasets - Accuracy vs Latency",
+            height=500,
+            hover_data=["Model"],
+        )
+
+        fig.update_layout(
+            xaxis_title="Latency (ms)",
+            yaxis_title="Accuracy",
+            legend_title="OTX Version",
+        )
+
+        return fig
+
     def get_datasets_for_task(self, task: OTXTaskType) -> list[str]:
         """Get available datasets for a specific task."""
         if task not in DATASET_COLLECTIONS:
             return []
         return [dataset.name for dataset in DATASET_COLLECTIONS[task]]
 
-    def setup_layout(self):
+    def setup_layout(self) -> None:
         """Setup the Dash app layout."""
         self.app.layout = html.Div(
             [
@@ -874,14 +1338,14 @@ class BenchmarkDashboard:
             },
         )
 
-    def setup_callbacks(self):
+    def setup_callbacks(self) -> None:
         """Setup Dash callbacks."""
 
         @self.app.callback(
             Output("data-status", "children"),
             Input("refresh-button", "n_clicks"),
         )
-        def refresh_data(n_clicks: int) -> html.Div:
+        def refresh_data(n_clicks: int | None) -> html.Div:
             self.load_all_benchmark_data()
             return html.Div(
                 [
@@ -897,7 +1361,7 @@ class BenchmarkDashboard:
             Output("dataset-tabs-container", "children"),
             Input("task-tabs", "value"),
         )
-        def update_dataset_tabs(selected_task) -> html.Div:
+        def update_dataset_tabs(selected_task: str) -> html.Div | dcc.Tabs:
             if not selected_task:
                 return html.Div("Please select a task")
 
@@ -908,16 +1372,27 @@ class BenchmarkDashboard:
                 if not datasets:
                     return html.Div(f"No datasets available for {selected_task}")
 
+                tabs = [
+                    dcc.Tab(
+                        label=dataset.replace("_", " ").title(),
+                        value=dataset,
+                        id=f"dataset-tab-{dataset}",
+                    )
+                    for dataset in datasets
+                ]
+
+                # Add Average tab
+                tabs.append(
+                    dcc.Tab(
+                        label="Average",
+                        value="average",
+                        id="dataset-tab-average",
+                    ),
+                )
+
                 return dcc.Tabs(
                     id="dataset-tabs",
-                    children=[
-                        dcc.Tab(
-                            label=dataset.replace("_", " ").title(),
-                            value=dataset,
-                            id=f"dataset-tab-{dataset}",
-                        )
-                        for dataset in datasets
-                    ],
+                    children=tabs,
                     style={"marginTop": "10px"},
                 )
             except ValueError:
@@ -927,7 +1402,7 @@ class BenchmarkDashboard:
             Output("plots-container", "children"),
             [Input("dataset-tabs", "value"), Input("task-tabs", "value")],
         )
-        def update_plots(selected_dataset, selected_task) -> html.Div:
+        def update_plots(selected_dataset: str, selected_task: str) -> html.Div:
             if not selected_dataset or not selected_task:
                 return html.Div("Please select both a task and dataset")
 
@@ -938,7 +1413,7 @@ class BenchmarkDashboard:
                 metric_buttons = html.Div(
                     [
                         html.H3(
-                            f"Metrics for {selected_dataset.replace('_', ' ').title()}",
+                            f"Metrics for {selected_dataset.replace('_', ' ').title() if selected_dataset != 'average' else 'Average Across All Datasets'}",
                             style={
                                 "marginTop": "20px",
                                 "marginBottom": "15px",
@@ -1003,13 +1478,18 @@ class BenchmarkDashboard:
             Output("dynamic-plot", "children"),
             [Input("metric-selector", "value"), Input("dataset-tabs", "value"), Input("task-tabs", "value")],
         )
-        def update_dynamic_plot(metric_type, selected_dataset, selected_task) -> html.Div:
+        def update_dynamic_plot(metric_type: str, selected_dataset: str, selected_task: str) -> html.Div:
             if not selected_dataset or not selected_task or not metric_type:
                 return html.Div()
 
             try:
                 task = OTXTaskType(selected_task)
 
+                # Check if "Average" tab is selected
+                if selected_dataset == "average":
+                    return self.create_averaged_plots(task, metric_type)
+
+                # Regular dataset-specific plots
                 if metric_type == "accuracy":
                     # Use the new method that creates multiple accuracy plots
                     return self.create_accuracy_comparison_plots(task, selected_dataset)
@@ -1030,12 +1510,12 @@ class BenchmarkDashboard:
             except ValueError:
                 return html.Div(f"Error creating plot for {selected_task}")
 
-    def run(self, debug=True, port=8050):
+    def run(self, debug: bool = True, port: int = 8050, host: str = "127.0.0.1") -> None:
         """Run the Dash app."""
         logger.info("Loading initial benchmark data...")
         self.load_all_benchmark_data()
         logger.info(f"Starting Dash app on port {port}")
-        self.app.run(debug=debug, port=port)
+        self.app.run(debug=debug, port=port, host=host)
 
 
 def main():
@@ -1052,6 +1532,12 @@ def main():
         default=8050,
         help="Port to run the dashboard on",
     )
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="127.0.0.1",
+        help="Host to run the dashboard on",
+    )
 
     args = parser.parse_args()
 
@@ -1060,7 +1546,8 @@ def main():
         return
 
     dashboard = BenchmarkDashboard(args.benchmark_dir)
-    dashboard.run(debug=True, port=args.port)
+    # Bind to localhost only to avoid S104 Possible binding to all interfaces
+    dashboard.run(debug=True, port=args.port, host=args.host)
 
 
 if __name__ == "__main__":

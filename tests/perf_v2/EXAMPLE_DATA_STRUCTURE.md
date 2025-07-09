@@ -32,15 +32,18 @@ Each `{TASK_NAME}-aggregated.xlsx` file should contain multiple sheets, where ea
 Each sheet should contain the following columns:
 
 #### Essential Columns
+
 - `model`: Model name (e.g., "litehrnet_18", "segnext_b")
 - `otx_version`: OTX version (e.g., "2.4.2", "2.5.0")
 
 #### Accuracy Metrics (task-specific)
+
 - `torch:test/{metric}_mean`: Accuracy for torch models
-- `export:test/{metric}_mean`: Accuracy for exported models  
+- `export:test/{metric}_mean`: Accuracy for exported models
 - `optimize:test/{metric}_mean`: Accuracy for optimized models
 
 Where `{metric}` is the task-specific metric:
+
 - Semantic Segmentation: `Dice`
 - Detection: `f1-score`
 - Instance Segmentation: `f1-score`
@@ -49,11 +52,13 @@ Where `{metric}` is the task-specific metric:
 - Keypoint Detection: `PCK`
 
 #### Latency Metrics
+
 - `torch:test/latency_mean`: Latency for torch models
 - `export:test/latency_mean`: Latency for exported models
 - `optimize:test/latency_mean`: Latency for optimized models
 
 #### Training Metrics
+
 - `training:e2e_time_mean`: End-to-end training time
 - `training:epoch_mean`: Number of training epochs
 - `training:train/iter_time_mean`: Training iteration time
@@ -62,35 +67,41 @@ Where `{metric}` is the task-specific metric:
 
 For a semantic segmentation task with dataset `tiny_cell_labels`:
 
-| model | otx_version | torch:test/Dice_mean | export:test/Dice_mean | optimize:test/Dice_mean | torch:test/latency_mean | export:test/latency_mean | optimize:test/latency_mean | training:e2e_time_mean | training:epoch_mean | training:train/iter_time_mean |
-|-------|-------------|----------------------|----------------------|-------------------------|-------------------------|--------------------------|----------------------------|------------------------|---------------------|-------------------------------|
-| litehrnet_18 | 2.4.2 | 0.850 | 0.848 | 0.845 | 45.2 | 28.1 | 15.3 | 1850.5 | 50 | 0.85 |
-| litehrnet_s | 2.4.2 | 0.820 | 0.818 | 0.815 | 32.1 | 20.5 | 12.8 | 1420.2 | 45 | 0.62 |
-| segnext_b | 2.4.2 | 0.875 | 0.870 | 0.865 | 78.5 | 45.2 | 25.1 | 2150.8 | 60 | 1.15 |
+| model        | otx_version | torch:test/Dice_mean | export:test/Dice_mean | optimize:test/Dice_mean | torch:test/latency_mean | export:test/latency_mean | optimize:test/latency_mean | training:e2e_time_mean | training:epoch_mean | training:train/iter_time_mean |
+| ------------ | ----------- | -------------------- | --------------------- | ----------------------- | ----------------------- | ------------------------ | -------------------------- | ---------------------- | ------------------- | ----------------------------- |
+| litehrnet_18 | 2.4.2       | 0.850                | 0.848                 | 0.845                   | 45.2                    | 28.1                     | 15.3                       | 1850.5                 | 50                  | 0.85                          |
+| litehrnet_s  | 2.4.2       | 0.820                | 0.818                 | 0.815                   | 32.1                    | 20.5                     | 12.8                       | 1420.2                 | 45                  | 0.62                          |
+| segnext_b    | 2.4.2       | 0.875                | 0.870                 | 0.865                   | 78.5                    | 45.2                     | 25.1                       | 2150.8                 | 60                  | 1.15                          |
 
 ## Task-Specific Metrics
 
 ### Semantic Segmentation
+
 - Primary metric: `Dice`
 - Example columns: `torch:test/Dice_mean`, `export:test/Dice_mean`, `optimize:test/Dice_mean`
 
 ### Detection
+
 - Primary metric: `f1-score`
 - Example columns: `torch:test/f1-score_mean`, `export:test/f1-score_mean`, `optimize:test/f1-score_mean`
 
 ### Instance Segmentation
+
 - Primary metric: `f1-score`
 - Example columns: `torch:test/f1-score_mean`, `export:test/f1-score_mean`, `optimize:test/f1-score_mean`
 
 ### Classification (Multi-class, Multi-label, H-label)
+
 - Primary metric: `accuracy`
 - Example columns: `torch:test/accuracy_mean`, `export:test/accuracy_mean`, `optimize:test/accuracy_mean`
 
 ### Anomaly Detection
+
 - Primary metric: `image_F1Score`
 - Example columns: `torch:test/image_F1Score_mean`, `export:test/image_F1Score_mean`, `optimize:test/image_F1Score_mean`
 
 ### Keypoint Detection
+
 - Primary metric: `PCK`
 - Example columns: `torch:test/PCK_mean`, `export:test/PCK_mean`, `optimize:test/PCK_mean`
 
@@ -127,4 +138,4 @@ This will check if your data can be loaded and processed correctly by the dashbo
 
 1. Check the console output when running the dashboard - it will show loading progress and errors
 2. Use the "Refresh Data" button in the dashboard to reload data after making changes
-3. The test script provides detailed information about what data was loaded successfully 
+3. The test script provides detailed information about what data was loaded successfully
