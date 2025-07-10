@@ -31,8 +31,6 @@ from otx.backend.native.models.common.utils.utils import (
 )
 from otx.backend.native.models.detection.heads.rtmdet_head import RTMDetHead
 from otx.backend.native.models.instance_segmentation.utils.roi_extractors import OTXRoIAlign
-from otx.backend.native.models.instance_segmentation.utils.structures.bbox.transforms import get_box_wh, scale_boxes
-from otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util import polygon_to_bitmap
 from otx.backend.native.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
 from otx.backend.native.models.modules import build_activation_layer
 from otx.backend.native.models.modules.base_module import BaseModule
@@ -41,6 +39,8 @@ from otx.backend.native.models.modules.norm import build_norm_layer, is_norm
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.backend.native.models.utils.weight_init import bias_init_with_prob, constant_init, normal_init
 from otx.data.entity.torch import OTXDataBatch
+from otx.data.utils.structures.bbox.transforms import get_box_wh, scale_boxes
+from otx.data.utils.structures.mask.mask_util import polygon_to_bitmap
 
 from .utils import sigmoid_geometric_mean
 
