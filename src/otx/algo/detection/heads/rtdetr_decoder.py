@@ -196,7 +196,7 @@ class TransformerDecoderLayer(nn.Module):
         # self attention
         q = k = self.with_pos_embed(tgt, query_pos_embed)
 
-        tgt2, _ = self.self_attn(q, k, value=tgt, attn_mask=attn_mask)
+        tgt2, _ = self.self_attn(q, k, value=tgt, attn_mask=attn_mask, need_weights=False)
         tgt = tgt + self.dropout1(tgt2)
         tgt = self.norm1(tgt)
 
