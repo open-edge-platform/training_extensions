@@ -41,7 +41,7 @@ class MqttDispatcher(BaseDispatcher):
     def __init__(
         self,
         output_config: MqttOutputConfig,
-        mqtt_client: mqtt.Client | None = None,
+        mqtt_client: "mqtt.Client | None" = None,
         track_messages: bool | None = False,
     ) -> None:
         """
@@ -75,7 +75,7 @@ class MqttDispatcher(BaseDispatcher):
         self.client = mqtt_client or self._create_default_client()
         self._connect()
 
-    def _create_default_client(self) -> mqtt.Client:
+    def _create_default_client(self) -> "mqtt.Client":
         client_id = f"dispatcher_{int(time.time())}"
         client = mqtt.Client(client_id=client_id)
         client.on_connect = self._on_connect
@@ -100,7 +100,7 @@ class MqttDispatcher(BaseDispatcher):
                 time.sleep(RETRY_DELAY * (attempt + 1))
         raise ConnectionError("Failed to connect to MQTT broker")
 
-    def _on_connect(self, _client: mqtt.Client, _userdata: Any, _flags: dict[str, int], rc: int):
+    def _on_connect(self, _client: "mqtt.Client", _userdata: Any, _flags: dict[str, int], rc: int):
         if rc == 0:
             self._connected = True
             self._connection_event.set()
@@ -108,7 +108,7 @@ class MqttDispatcher(BaseDispatcher):
         else:
             logger.error("MQTT connect failed with code %s", rc)
 
-    def _on_disconnect(self, _client: mqtt.Client, _userdata: Any, rc: int):
+    def _on_disconnect(self, _client: "mqtt.Client", _userdata: Any, rc: int):
         self._connected = False
         self._connection_event.clear()
         logger.warning("MQTT disconnected (rc=%s)", rc)

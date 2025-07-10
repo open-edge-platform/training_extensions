@@ -14,9 +14,10 @@ class SystemService(metaclass=Singleton):
         Get the memory usage of the process
 
         Returns:
-            tuple[float, float]: Memory usage in MB and the relative percentage
+            tuple[float, float]: Used memory in MB and total available memory in MB
         """
-        return self.process.memory_info().rss / (1024 * 1024), self.process.memory_percent()
+        memory_info = psutil.virtual_memory()
+        return self.process.memory_info().rss / (1024 * 1024), memory_info.total / (1024 * 1024)
 
     def get_cpu_usage(self) -> float:
         """

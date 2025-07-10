@@ -12,7 +12,7 @@ from testcontainers.compose import DockerCompose
 
 from app.schemas.configuration import OutputFormat
 from app.schemas.configuration.output_config import MqttOutputConfig
-from app.services.dispatchers import MqttDispatcher
+from app.services.dispatchers.mqtt import MqttDispatcher
 
 
 @pytest.fixture(scope="session")

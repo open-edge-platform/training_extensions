@@ -25,7 +25,7 @@ from fastapi.responses import HTMLResponse
 from fastrtc import AdditionalOutputs, Stream
 from pydantic import BaseModel, Field
 
-from app.api.endpoints import configuration, model_management
+from app.api.endpoints import configuration, model_management, system
 from app.utils.ipc import (
     frame_queue,
     mp_config_changed_condition,
@@ -90,9 +90,8 @@ stream = Stream(
     mode="receive",
     additional_outputs=[
         gr.Textbox(label="Predictions"),
-        gr.Textbox(label="Memory Usage (MB)"),
     ],
-    additional_outputs_handler=lambda _c1, _c2, pred, mem: (pred, mem),
+    additional_outputs_handler=lambda _c1, pred: pred,
 )
 
 app = FastAPI(
@@ -113,6 +112,7 @@ app.add_middleware(  # TODO restrict settings in production
 )
 app.include_router(model_management.router)
 app.include_router(configuration.router)
+app.include_router(system.router)
 
 cur_dir = Path(__file__).parent
 

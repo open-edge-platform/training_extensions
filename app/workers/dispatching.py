@@ -8,7 +8,7 @@ from multiprocessing.synchronize import Event as EventClass
 from fastrtc import AdditionalOutputs
 
 from app.schemas.configuration import OutputConfig
-from app.services import ConfigurationService, DispatchService, SystemService
+from app.services import ConfigurationService, DispatchService
 from app.services.dispatchers import Dispatcher
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,6 @@ def dispatching_routine(
     config_changed_condition: ConditionClass,
 ) -> None:
     """Pull predictions from the queue and dispatch them to the configured outputs and WebRTC visualization stream."""
-    system_service = SystemService()
     config_service = ConfigurationService(config_changed_condition=config_changed_condition)
 
     prev_out_config: list[OutputConfig] = []
@@ -51,8 +50,7 @@ def dispatching_routine(
             )
 
         # Dispatch to WebRTC stream
-        mem_mb, _ = system_service.get_memory_usage()
-        additional_outputs = AdditionalOutputs(str(inf_result), f"{mem_mb:.2f} MB")
+        additional_outputs = AdditionalOutputs(str(inf_result))
         try:
             rtc_stream_queue.put((frame_with_detections, additional_outputs), block=False)
         except queue.Full:
