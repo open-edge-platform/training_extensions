@@ -92,10 +92,14 @@ class DataAugSwitch:
 class AugmentationSchedulerCallback(Callback):
     """Callback for data augmentation scheduler."""
 
+    def __init__(self, data_aug_switch: DataAugSwitch | None = None):
+        super().__init__()
+        self.data_aug_switch = data_aug_switch
+
     def on_train_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Set the current epoch."""
-        self.data_aug_switch.epoch = trainer.current_epoch
+        self.data_aug_switch.epoch = trainer.current_epoch  # type: ignore[union-attr]
 
     def set_data_aug_switch(self, data_aug_switch: DataAugSwitch) -> None:
-        """Set data augmentation switch."""
+        """Set the DataAugSwitch for this callback."""
         self.data_aug_switch = data_aug_switch

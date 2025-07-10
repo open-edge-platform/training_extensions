@@ -10,14 +10,14 @@ import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
 
-from otx.backend.native.callbacks.aug_scheduler import DataAugSwitch
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
 
 from .base import OTXDataset
+from .mixins import DataAugSwitchMixin
 
 
-class OTXDetectionDataset(OTXDataset):
+class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
     """OTXDataset class for detection task."""
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
@@ -52,11 +52,7 @@ class OTXDetectionDataset(OTXDataset):
             label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
         )
 
-        if hasattr(self, "data_aug_switch") and isinstance(self.data_aug_switch, DataAugSwitch):
-            # Set the shared epoch for data augmentation
-            self.to_tv_image, self.transforms = self.data_aug_switch.current_transforms
+        # Apply augmentation switch if available
+        if self.has_dynamic_augmentation:
+            self._apply_augmentation_switch()
         return self._apply_transforms(entity)
-
-    def set_data_aug_switch(self, data_aug_switch: DataAugSwitch) -> None:
-        """Set data augmentation switch."""
-        self.data_aug_switch = data_aug_switch

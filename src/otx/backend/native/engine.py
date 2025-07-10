@@ -12,6 +12,7 @@ import logging
 import os
 import time
 from contextlib import contextmanager
+from multiprocessing import Value
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
@@ -23,6 +24,7 @@ from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
 
 from otx.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback
 from otx.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
 from otx.backend.native.callbacks.iteration_timer import IterationTimer
 from otx.backend.native.models.base import DataInputParams, OTXModel
@@ -47,6 +49,7 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
     from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
+    from otx.data.dataset.base import OTXDataset
     from otx.metrics import MetricCallable
     from otx.types.types import DATA, MODEL
 
@@ -271,6 +274,9 @@ class OTXEngine(Engine):
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
+            # Setup DataAugSwitch for datasets before training starts
+            self._setup_data_aug_switch_for_datasets()
+
             self.trainer.fit(
                 model=model,
                 datamodule=self.datamodule,
@@ -1057,6 +1063,61 @@ class OTXEngine(Engine):
             callbacks.append(GPUMemMonitor())
 
         self._cache.args["callbacks"] = callbacks + config_callbacks
+
+        # Setup DataAugSwitch with shared multiprocessing.Value
+        self._setup_augmentation_scheduler()
+
+    def _setup_augmentation_scheduler(self) -> None:
+        """Set up shared memory for DataAugSwitch and AugmentationSchedulerCallback."""
+        aug_scheduler_callback = None
+
+        # Find AugmentationSchedulerCallback in all callbacks
+        all_callbacks = self._cache.args.get("callbacks", [])
+        for callback in all_callbacks:
+            if isinstance(callback, AugmentationSchedulerCallback):
+                aug_scheduler_callback = callback
+                break
+
+        # If AugmentationSchedulerCallback exists and has a data_aug_switch, set up shared memory
+        if aug_scheduler_callback is not None and aug_scheduler_callback.data_aug_switch is not None:
+            # Create shared multiprocessing.Value for epoch tracking
+            shared_epoch = Value("i", 0)
+            aug_scheduler_callback.data_aug_switch.set_shared_epoch(shared_epoch)
+
+    def _setup_data_aug_switch_for_datasets(self) -> None:
+        """Set up DataAugSwitch for datasets before training starts."""
+        if self._trainer is None:
+            return
+
+        # Find AugmentationSchedulerCallback and its DataAugSwitch
+        data_aug_switch = None
+        for callback in self._trainer.callbacks:
+            if isinstance(callback, AugmentationSchedulerCallback) and callback.data_aug_switch is not None:
+                data_aug_switch = callback.data_aug_switch
+                break
+
+        if data_aug_switch is None:
+            msg = "DataAugSwitch not found in AugmentationSchedulerCallback"
+            logging.warning(msg)
+            return
+
+        def set_data_aug_switch_if_supported(dataset: OTXDataset) -> bool:
+            """Set data_aug_switch on a dataset if it supports it."""
+            from otx.data.dataset.mixins import DataAugSwitchMixin
+
+            if isinstance(dataset, DataAugSwitchMixin):
+                dataset.set_data_aug_switch(data_aug_switch)
+                return True
+            return False
+
+        # Set DataAugSwitch for the training dataset
+        if (
+            hasattr(self.datamodule, "subsets")
+            and "train" in self.datamodule.subsets
+            and set_data_aug_switch_if_supported(self.datamodule.subsets["train"])
+        ):
+            msg = "DataAugSwitch set for train_dataset"
+            logging.info(msg)
 
     @property
     def trainer_params(self) -> dict:
