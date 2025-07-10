@@ -5,16 +5,16 @@
 
 from .factory import (
     EfficientNet,
-    TimmModel,
     MobileNetV3,
+    TimmModel,
     TVModel,
     VisionTransformer,
 )
 
 __all__ = [
-    EfficientNet,
-    TimmModel,
-    MobileNetV3,
-    TVModel,
-    VisionTransformer,
+    "EfficientNet",
+    "TimmModel",
+    "MobileNetV3",
+    "TVModel",
+    "VisionTransformer",
 ]

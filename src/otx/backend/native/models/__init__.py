@@ -6,8 +6,8 @@
 from .anomaly import Padim, Stfpm, Uflow
 from .classification import (
     EfficientNet,
-    TimmModel,
     MobileNetV3,
+    TimmModel,
     TVModel,
     VisionTransformer,
 )
