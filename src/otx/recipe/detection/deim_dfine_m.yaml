@@ -1,5 +1,5 @@
 model:
-  class_path: otx.algo.detection.deim.DEIMDFine
+  class_path: otx.backend.native.models.detection.DEIMDFine
   init_args:
     model_name: deim_dfine_hgnetv2_m
     label_info: 80

@@ -12,8 +12,9 @@ import torch.nn.functional as f
 from torch import Tensor
 from torchvision.ops import box_convert
 
-from otx.algo.common.utils.bbox_overlaps import bbox_overlaps
-from otx.algo.detection.losses.dfine_loss import DFINECriterion
+from otx.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+
+from .dfine_loss import DFINECriterion
 
 
 class DEIMCriterion(DFINECriterion):

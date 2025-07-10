@@ -1,5 +1,5 @@
 model:
-  class_path: otx.algo.detection.deim.DEIMDFine
+  class_path: otx.backend.native.models.detection.DEIMDFine
   init_args:
     model_name: deim_dfine_hgnetv2_x
     label_info: 80
@@ -13,7 +13,7 @@ model:
         weight_decay: 0.000125
 
     scheduler:
-      class_path: otx.core.schedulers.LinearWarmupSchedulerCallable
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
       init_args:
         num_warmup_steps: 30
         main_scheduler_callable:
@@ -31,11 +31,11 @@ engine:
 callback_monitor: val/f1-score
 
 callbacks:
-  - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
     init_args:
       max_interval: 1
       min_lrschedule_patience: 3
-  - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 10
@@ -51,21 +51,21 @@ callbacks:
       save_last: true
       auto_insert_metric_name: false
       filename: "checkpoints/epoch_{epoch:03d}"
-  - class_path: otx.algo.callbacks.aug_scheduler.AugmentationSchedulerCallback
+  - class_path: otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback
 
 data_aug_switch:
-  class_path: otx.algo.callbacks.aug_scheduler.DataAugSwitch
+  class_path: otx.backend.native.callbacks.aug_scheduler.DataAugSwitch
   init_args:
     policy_epochs: [4, 23, 40]
     policies:
       no_aug:
         to_tv_image: false
         transforms:
-          - class_path: otx.core.data.transform_libs.torchvision.Resize
+          - class_path: otx.data.transform_libs.torchvision.Resize
             init_args:
               scale: [640, 640]
               keep_ratio: false
-          - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+          - class_path: otx.data.transform_libs.torchvision.RandomFlip
             init_args:
               prob: 0.5
               is_numpy_to_tvtensor: true
@@ -89,19 +89,19 @@ data_aug_switch:
             init_args:
               fill: 0
               p: 0.5
-          - class_path: otx.core.data.transform_libs.torchvision.RandomIoUCrop
+          - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
             init_args:
               p: 0.8
           - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
             init_args:
               min_area: 1
-          - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+          - class_path: otx.data.transform_libs.torchvision.RandomFlip
             init_args:
               prob: 0.5
           - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
             init_args:
               min_area: 1
-          - class_path: otx.core.data.transform_libs.torchvision.Resize
+          - class_path: otx.data.transform_libs.torchvision.Resize
             init_args:
               scale: [640, 640]
               transform_bbox: true
@@ -119,12 +119,12 @@ data_aug_switch:
       strong_aug_1:
         to_tv_image: false
         transforms:
-          - class_path: otx.core.data.transform_libs.torchvision.CachedMosaic
+          - class_path: otx.data.transform_libs.torchvision.CachedMosaic
             init_args:
               random_pop: false
               max_cached_images: 20
               img_scale: [640, 640]
-          - class_path: otx.core.data.transform_libs.torchvision.CachedMixUp
+          - class_path: otx.data.transform_libs.torchvision.CachedMixUp
             init_args:
               img_scale: [640, 640] # (H, W)
               ratio_range:
@@ -136,13 +136,13 @@ data_aug_switch:
           - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
             init_args:
               min_area: 1
-          - class_path: otx.core.data.transform_libs.torchvision.Resize
+          - class_path: otx.data.transform_libs.torchvision.Resize
             init_args:
               scale: [640, 640] # (H, W)
               keep_ratio: false
               transform_bbox: true
-          - class_path: otx.core.data.transform_libs.torchvision.YOLOXHSVRandomAug
-          - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+          - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
+          - class_path: otx.data.transform_libs.torchvision.RandomFlip
             init_args:
               prob: 0.5
               is_numpy_to_tvtensor: true
@@ -166,16 +166,16 @@ data_aug_switch:
             init_args:
               fill: 0
               p: 0.5
-          - class_path: otx.core.data.transform_libs.torchvision.RandomIoUCrop # Can't be used when using CachedMosaic
+          - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop # Can't be used when using CachedMosaic
             init_args:
               p: 0.8
           - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
             init_args:
               min_area: 1
-          - class_path: otx.core.data.transform_libs.torchvision.RandomFlip
+          - class_path: otx.data.transform_libs.torchvision.RandomFlip
             init_args:
               prob: 0.5
-          - class_path: otx.core.data.transform_libs.torchvision.CachedMixUp
+          - class_path: otx.data.transform_libs.torchvision.
             init_args:
               img_scale: [640, 640] # (H, W)
               ratio_range:
@@ -187,7 +187,7 @@ data_aug_switch:
           - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
             init_args:
               min_area: 1
-          - class_path: otx.core.data.transform_libs.torchvision.Resize
+          - class_path: otx.data.transform_libs.torchvision.Resize
             init_args:
               scale: [640, 640]
               transform_bbox: true
@@ -204,18 +204,16 @@ data_aug_switch:
 
 data: ../_base_/data/torchvision_base.yaml
 overrides:
-  log_every_n_steps: 1 # TODO(Eugene): remember to remove this before shipping
-
   callbacks:
-    - class_path: otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
       init_args:
         max_interval: 1
         min_lrschedule_patience: 3
-    - class_path: otx.algo.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    - class_path: otx.backend.native.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
         warmup_iters: 100
         warmup_epochs: 7
-    - class_path: otx.algo.callbacks.aug_scheduler.AugmentationSchedulerCallback
+    - class_path: otx.backend.native.aug_scheduler.AugmentationSchedulerCallback
 
   data:
     input_size:
@@ -228,12 +226,12 @@ overrides:
       num_workers: 4
       transforms: []
       sampler:
-        class_path: otx.algo.samplers.balanced_sampler.BalancedSampler
+        class_path: otx.backend.native.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false
@@ -250,7 +248,7 @@ overrides:
     test_subset:
       batch_size: 8
       transforms:
-        - class_path: otx.core.data.transform_libs.torchvision.Resize
+        - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false

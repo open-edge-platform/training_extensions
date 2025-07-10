@@ -8,12 +8,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection import RTDETR
 from otx.backend.native.models.detection.backbones.hgnetv2 import HGNetv2
 from otx.backend.native.models.detection.detectors import DETR
 from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransformer
 from otx.backend.native.models.detection.losses.dfine_loss import DFINECriterion
 from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
+from otx.backend.native.models.detection.rtdetr import RTDETR
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable

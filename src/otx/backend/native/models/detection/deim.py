@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection import RTDETR
 from otx.backend.native.models.detection.backbones.hgnetv2 import HGNetv2
 from otx.backend.native.models.detection.detectors import DETR
 from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransformer
@@ -17,6 +16,8 @@ from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import Hybri
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+
+from .rtdetr import RTDETR
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
