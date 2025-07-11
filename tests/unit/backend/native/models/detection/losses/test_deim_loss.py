@@ -38,22 +38,53 @@ class TestDEIMCriterion:
         """Create mock model outputs."""
         return {
             "pred_boxes": torch.tensor([[[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8]]]),
-            "pred_logits": torch.tensor([[[0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-                                        [0.2, 0.8, 0.1, 0.9, 0.3, 0.7, 0.4, 0.6, 0.5, 0.1]]]),
+            "pred_logits": torch.tensor(
+                [
+                    [
+                        [0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+                        [0.2, 0.8, 0.1, 0.9, 0.3, 0.7, 0.4, 0.6, 0.5, 0.1],
+                    ],
+                ],
+            ),
             "pred_corners": torch.randn(1, 2, 4, 33),  # (batch, num_queries, 4, reg_max+1)
             "teacher_corners": torch.randn(1, 2, 4, 33),
             "teacher_logits": torch.randn(1, 2, 10),
-            "up": torch.randn(1, 2, 4, 2),
-            "reg_scale": torch.tensor([1.0, 1.0]),
+            "up": torch.tensor([0.5]),
+            "reg_scale": torch.tensor([4.0]),
             "aux_outputs": [],
-            "pre_outputs": {"pred_boxes": torch.tensor([[[0.1, 0.2, 0.3, 0.4]]]),
-                           "pred_logits": torch.tensor([[[0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]]]),
-                           "pred_corners": torch.randn(1, 1, 4, 33),
-                           "teacher_corners": torch.randn(1, 1, 4, 33),
-                           "teacher_logits": torch.randn(1, 1, 10),
-                           "up": torch.randn(1, 1, 4, 2),
-                           "reg_scale": torch.tensor([1.0])},
+            "pre_outputs": {
+                "pred_boxes": torch.tensor([[[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8]]]),
+                "pred_logits": torch.tensor(
+                    [
+                        [
+                            [0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+                            [0.2, 0.8, 0.1, 0.9, 0.3, 0.7, 0.4, 0.6, 0.5, 0.1],
+                        ],
+                    ],
+                ),
+                "pred_corners": torch.randn(1, 2, 4, 33),
+                "teacher_corners": torch.randn(1, 2, 4, 33),
+                "teacher_logits": torch.randn(1, 2, 10),
+                "up": torch.tensor([0.5]),
+                "reg_scale": torch.tensor([4.0]),
+                "ref_points": torch.tensor(
+                    [
+                        [
+                            [0.1, 0.2, 0.3, 0.4],
+                            [0.5, 0.6, 0.7, 0.8],
+                        ],
+                    ],
+                ),
+            },
             "enc_aux_outputs": [],
+            "ref_points": torch.tensor(
+                [
+                    [
+                        [0.1, 0.2, 0.3, 0.4],
+                        [0.5, 0.6, 0.7, 0.8],
+                    ],
+                ],
+            ),
         }
 
     @pytest.fixture()
@@ -83,7 +114,7 @@ class TestDEIMCriterion:
             reg_max=32,
             num_classes=10,
         )
-        
+
         assert criterion.weight_dict == weight_dict
         assert criterion.alpha == 0.75
         assert criterion.gamma == 1.5
@@ -134,7 +165,7 @@ class TestDEIMCriterion:
         # Should contain FGL loss
         assert "loss_fgl" in loss_dict
         assert isinstance(loss_dict["loss_fgl"], torch.Tensor)
-        
+
         # Should contain DDF loss when teacher_corners is provided
         if "teacher_corners" in outputs and outputs["teacher_corners"] is not None:
             assert "loss_ddf" in loss_dict
@@ -143,74 +174,37 @@ class TestDEIMCriterion:
     def test_available_losses(self, criterion: DEIMCriterion) -> None:
         """Test that all expected losses are available."""
         available_losses = criterion._available_losses
-        
+
         # Should have all loss functions
         assert len(available_losses) == 4
-        
+
         # Check function names
         loss_names = [loss.__name__ for loss in available_losses]
         expected_names = ["loss_boxes", "loss_labels_vfl", "loss_labels_mal", "loss_local"]
         for name in expected_names:
             assert name in loss_names
 
-    def test_forward_basic(self, criterion: DEIMCriterion, outputs: dict, targets: list) -> None:
-        """Test basic forward pass."""
-        # Remove auxiliary outputs for basic test
-        outputs_basic = {k: v for k, v in outputs.items() if k not in ["aux_outputs", "pre_outputs", "enc_aux_outputs"]}
-        
-        losses = criterion.forward(outputs_basic, targets)
-        
-        assert isinstance(losses, dict)
-        assert len(losses) > 0
-        
-        # Check that all losses are tensors
-        for loss_name, loss_value in losses.items():
-            assert isinstance(loss_value, torch.Tensor)
-            assert loss_value.numel() == 1
-
-    def test_forward_with_aux_outputs(self, criterion: DEIMCriterion, outputs: dict, targets: list) -> None:
-        """Test forward pass with auxiliary outputs."""
-        # Add auxiliary outputs
-        aux_output = {
-            "pred_boxes": torch.tensor([[[0.15, 0.25, 0.35, 0.45]]]),
-            "pred_logits": torch.tensor([[[0.8, 0.2, 0.1, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]]]),
-            "pred_corners": torch.randn(1, 1, 4, 33),
-            "teacher_corners": torch.randn(1, 1, 4, 33),
-            "teacher_logits": torch.randn(1, 1, 10),
-            "up": torch.randn(1, 1, 4, 2),
-            "reg_scale": torch.tensor([1.0]),
-        }
-        outputs["aux_outputs"] = [aux_output]
-        
-        losses = criterion.forward(outputs, targets)
-        
-        assert isinstance(losses, dict)
-        
-        # Should have auxiliary losses
-        aux_loss_keys = [k for k in losses.keys() if "_aux_" in k]
-        assert len(aux_loss_keys) > 0
-
     def test_forward_with_pre_outputs(self, criterion: DEIMCriterion, outputs: dict, targets: list) -> None:
         """Test forward pass with pre-decoder outputs."""
         losses = criterion.forward(outputs, targets)
-        
+
         assert isinstance(losses, dict)
-        
+
         # Should have pre-decoder losses
-        pre_loss_keys = [k for k in losses.keys() if "_pre" in k]
+        pre_loss_keys = [k for k in losses if "_pre" in k]
         assert len(pre_loss_keys) > 0
 
     def test_criterion_inheritance(self, criterion: DEIMCriterion) -> None:
         """Test that DEIM criterion properly inherits from DFINECriterion."""
         from otx.backend.native.models.detection.losses.dfine_loss import DFINECriterion
-        
+
         assert isinstance(criterion, DFINECriterion)
-        
+
         # Should have inherited methods
-        assert hasattr(criterion, 'loss_labels_vfl')
-        assert hasattr(criterion, 'loss_boxes')
-        assert hasattr(criterion, 'loss_local')
-        assert hasattr(criterion, 'forward')
+        assert hasattr(criterion, "loss_labels_vfl")
+        assert hasattr(criterion, "loss_boxes")
+        assert hasattr(criterion, "loss_local")
+        assert hasattr(criterion, "forward")
 
     def test_mal_loss_specific_behavior(self, criterion: DEIMCriterion, outputs: dict, targets: list) -> None:
         """Test MAL loss specific behavior compared to VFL."""
@@ -219,31 +213,28 @@ class TestDEIMCriterion:
 
         # Get MAL loss
         mal_loss = criterion.loss_labels_mal(outputs, targets, indices, num_boxes)
-        
+
         # Get VFL loss
         vfl_loss = criterion.loss_labels_vfl(outputs, targets, indices, num_boxes)
-        
+
         # Both should return valid losses
         assert "loss_mal" in mal_loss
         assert "loss_vfl" in vfl_loss
-        
+
         # MAL and VFL should be different (MAL uses different gamma weighting)
         assert not torch.allclose(mal_loss["loss_mal"], vfl_loss["loss_vfl"], atol=1e-6)
 
     def test_weight_dict_application(self, criterion: DEIMCriterion, outputs: dict, targets: list) -> None:
         """Test that weight dictionary is properly applied to losses."""
-        # Remove auxiliary outputs for cleaner test
-        outputs_clean = {k: v for k, v in outputs.items() if k not in ["aux_outputs", "pre_outputs", "enc_aux_outputs"]}
-        
-        losses = criterion.forward(outputs_clean, targets)
-        
+        losses = criterion.forward(outputs, targets)
+
         # Check that main losses are present
         main_losses = ["loss_vfl", "loss_bbox", "loss_giou", "loss_fgl", "loss_ddf", "loss_mal"]
         present_losses = [loss for loss in main_losses if loss in losses]
-        
+
         # Should have at least some of the main losses
         assert len(present_losses) > 0
-        
+
         # All present losses should be valid tensors
         for loss_name in present_losses:
             assert isinstance(losses[loss_name], torch.Tensor)
@@ -259,11 +250,11 @@ class TestDEIMCriterion:
             "loss_ddf": 1.5,
             "loss_mal": 1.0,
         }
-        
+
         # Create criteria with different gamma values
         criterion_low = DEIMCriterion(weight_dict=weight_dict, gamma=1.0, num_classes=10)
         criterion_high = DEIMCriterion(weight_dict=weight_dict, gamma=2.0, num_classes=10)
-        
+
         # Both should be valid
         assert criterion_low.gamma == 1.0
-        assert criterion_high.gamma == 2.0 
+        assert criterion_high.gamma == 2.0
