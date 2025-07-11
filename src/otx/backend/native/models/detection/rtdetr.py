@@ -110,12 +110,13 @@ class RTDETR(OTXDetectionModel):
         ]
 
         model = DETR(
-            multi_scale=self.generate_scales(self.data_input_params.input_size[0]) if self.multi_scale else None,
+            multi_scale=self.multi_scale,
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,
             num_classes=num_classes,
             optimizer_configuration=optimizer_configuration,
+            input_size=self.data_input_params.input_size[0],
         )
         model.init_weights()
         load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
