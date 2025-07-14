@@ -15,6 +15,13 @@ class VideoStream(ABC):
             np.ndarray: The latest frame as a numpy array
         """
 
+    @abstractmethod
+    def is_real_time(self) -> bool:
+        """Check if the video stream is real-time.
+        Returns:
+            bool: True if the video stream is real-time, False otherwise
+        """
+
     def __enter__(self) -> "VideoStream":
         return self
 
@@ -52,6 +59,9 @@ class WebcamStream(VideoStream):
             raise RuntimeError("Failed to capture frame from webcam")
         return frame
 
+    def is_real_time(self) -> bool:
+        return True
+
     def release(self) -> None:
         if self.cap is not None:
             self.cap.release()
@@ -78,6 +88,9 @@ class VideoFileStream(VideoStream):
             if not ret:
                 raise RuntimeError("Failed to capture frame from video file")
         return frame
+
+    def is_real_time(self) -> bool:
+        return False
 
     def release(self) -> None:
         if self.cap is not None:

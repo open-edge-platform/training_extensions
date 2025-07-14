@@ -5,6 +5,7 @@ import queue
 import time
 from multiprocessing.synchronize import Condition as ConditionClass
 from multiprocessing.synchronize import Event as EventClass
+from typing import Any
 
 from app.entities.video_stream import VideoStream
 from app.schemas.configuration import InputConfig
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def frame_acquisition_routine(
-    frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass
+    frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass, cleanup: bool = True
 ) -> None:
     """Load frames from the video stream and inject them into the frame queue"""
     config_service = ConfigurationService(config_changed_condition=config_changed_condition)
@@ -34,20 +35,39 @@ def frame_acquisition_routine(
             prev_in_config = copy.deepcopy(in_config)
 
         if video_stream is None:
-            logger.debug("No video stream available... retrying in 1 second")
+            logger.debug("No video stream available, retrying in 1 second...")
             time.sleep(1)
             continue
 
         # Acquire a frame and enqueue it
         try:
             frame = video_stream.get_frame()
-            frame_queue.put(frame, timeout=1)
-        except queue.Full:
-            # TODO for non-real-time streams (e.g. video files) retry after some time instead of skipping
-            #  to ensure that every frame is eventually processed
-            logger.debug("Frame queue is full, skipping frame")
+            _enqueue_frame_with_retry(frame_queue, frame, video_stream, stop_event)
+        except Exception as e:
+            logger.error(f"Error acquiring frame: {e}")
             continue
 
+    if cleanup:
+        _cleanup_resources(frame_queue, video_stream)
+
+
+def _enqueue_frame_with_retry(
+    frame_queue: mp.Queue, frame: Any, video_stream: VideoStream, stop_event: EventClass
+) -> None:
+    """Enqueue frame with retry logic for non-real-time streams"""
+    while not stop_event.is_set():
+        try:
+            frame_queue.put(frame, timeout=1)
+            break
+        except queue.Full:
+            if video_stream.is_real_time():
+                logger.debug("Frame queue is full, skipping frame")
+                break
+            logger.debug("Frame queue is full, retrying...")
+
+
+def _cleanup_resources(frame_queue: mp.Queue, video_stream: VideoStream | None) -> None:
+    """Clean up video stream and frame queue resources"""
     logger.info("Stream acquisition stopped, releasing video stream")
     if video_stream is not None:
         video_stream.release()

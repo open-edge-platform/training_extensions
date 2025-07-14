@@ -22,12 +22,12 @@ def inference_routine(  # noqa: C901
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         original_frame = userdata["original_frame"]
         frame_with_predictions = Visualizer.overlay_predictions(original_image=frame, predictions=inf_result)
-        try:
-            pred_queue.put((original_frame, frame_with_predictions, inf_result), timeout=1)  # noqa: F821
-        except queue.Full:
-            # TODO for non-real-time streams (e.g. video files) retry after some time instead of skipping
-            #  to ensure that every frame is eventually processed
-            logger.debug("Prediction queue is full; skipping")
+        while not stop_event.is_set():
+            try:
+                pred_queue.put((original_frame, frame_with_predictions, inf_result), timeout=1)  # noqa: F821
+                break
+            except queue.Full:
+                logger.debug("Prediction queue is full, retrying...")
 
     model_service = ModelService()
     model: Model | None = None
