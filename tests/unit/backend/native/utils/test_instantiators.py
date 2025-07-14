@@ -7,8 +7,8 @@ from otx.backend.native.utils.instantiators import (
     instantiate_loggers,
     partial_instantiate_class,
 )
-from otx.data.utils import instantiate_sampler
 from otx.config.data import SamplerConfig
+from otx.data.utils import instantiate_sampler
 
 
 def test_instantiate_callbacks() -> None:

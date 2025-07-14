@@ -14,7 +14,6 @@ from otx.backend.native.utils.utils import (
     is_ckpt_from_otx_v1,
     remove_state_dict_prefix,
 )
-
 from otx.data.utils import (
     get_adaptive_num_workers,
     get_idx_list_per_classes,
