@@ -1,71 +1,3 @@
-Auto-configuration
-==================
-
-|
-
-.. figure:: ../../../../utils/images/auto_config.png
-   :align: center
-   :width: 100%
-
-|
-
-Auto-configuration for a deep learning framework means the automatic finding of the most appropriate settings for the training parameters, based on the dataset and the specific task at hand.
-Auto-configuration can help to save time, it eases the process of interaction with OpenVINO™ Training Extensions and gives a better baseline for the given dataset.
-
-At this end, we developed a simple auto-configuration functionality to ease the process of training and validation utilizing our framework.
-Basically, to start the training and obtain a good baseline with the best trade-off between accuracy and speed we need to pass only a dataset in the right format without specifying anything else:
-
-.. tab-set::
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            from otx.engine import Engine
-
-            engine = Engine(data_root="<path_to_data_root>")
-            engine.train()
-
-    .. tab-item:: CLI
-
-        .. code-block:: bash
-
-            (otx) ...$ otx train ... --data_root <path_to_data_root>
-
-
-After dataset preparation, the training will be started with the middle-sized recipe to achieve competitive accuracy preserving fast inference.
-
-
-Supported dataset formats for each task:
-
-- classification: `Imagenet <https://www.image-net.org/>`_, `COCO <https://cocodataset.org/#format-data>`_ (multi-label), :ref:`custom hierarchical <hierarchical_dataset>`
-- object detection: `COCO <https://cocodataset.org/#format-data>`_, `Pascal-VOC <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_, `YOLO <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/yolo.html>`_
-- semantic segmentation: `Common Semantic Segmentation <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/common_semantic_segmentation.html>`_, `Pascal-VOC <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_, `Cityscapes <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/cityscapes.html>`_, `ADE20k <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/ade20k2020.html>`_
-- anomaly: `MVTec <https://www.mvtec.com/company/research/datasets/mvtec-ad>`_
-- instance segmentation: `COCO <https://cocodataset.org/#format-data>`_, `Pascal-VOC <https://open-edge-platform.github.io/datumaro/stable/docs/data-formats/formats/pascal_voc.html>`_
-- keypoint detection: `COCO <https://cocodataset.org/#format-data>`_
-
-If we have a dataset format occluded with other tasks, for example ``COCO`` format, we should directly emphasize the task type. If not, OpenVINO™ Training Extensions automatically chooses the task type that you might not intend:
-
-.. tab-set::
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            from otx.engine import Engine
-
-            engine = Engine(data_root="<path_to_data_root>", task="<TASK_TYPE>")
-            engine.train()
-
-    .. tab-item:: CLI
-
-        .. code-block:: bash
-
-            (otx) ...$ otx train --data_root <path_to_data_root>
-                                 --task {MULTI_CLASS_CLS, MULTI_LABEL_CLS, H_LABEL_CLS, DETECTION, INSTANCE_SEGMENTATION, SEMANTIC_SEGMENTATION,  ANOMALY, KEYPOINT_DETECTION}
-                                 ...
-
 Auto-adapt batch size
 ---------------------
 
@@ -89,7 +21,7 @@ To use this feature, add the following parameter:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             engine = Engine(data_root="<path_to_data_root>")
             engine.train(adaptive_bs="Safe")
@@ -115,7 +47,7 @@ To use this feature, add the following parameter:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             engine = Engine(data_root="<path_to_data_root>")
             engine.train(adaptive_bs="Full")

@@ -14,12 +14,34 @@ There are :doc:`dedicated tutorials <../tutorials/base/how_to_train/index>` in o
     To start with we need to `install OpenVINO™ Training Extensions <https://github.com/open-edge-platform/training_extensions/blob/develop/QUICK_START_GUIDE.md#setup-openvino-training-extensions>`_.
 
 
+*******************
+Dataset preparation
+*******************
+For the demonstration, we will use the `WGISD dataset <https://github.com/thsant/wgisd>_` and object detection model.
+
+1. Clone a repository
+with `WGISD dataset <https://github.com/thsant/wgisd>`_.
+
+.. code-block:: shell
+    cd data
+    git clone https://github.com/thsant/wgisd.git
+    cd wgisd
+    git checkout 6910edc5ae3aae8c20062941b1641821f0c30127
+
+2. We need to rename annotations to
+be distinguished by OpenVINO™ Training Extensions Datumaro manager:
+
+.. code-block:: shell
+    mv data images && mv coco_annotations annotations && mv annotations/train_bbox_instances.json instances_train.json && mv annotations/test_bbox_instances.json instances_val.json
+Now it is all set to use this dataset inside OpenVINO™ Training Extensions
+
 ************************************
 Quick Start with "create_engine"
 ************************************
 
 Once the dataset is ready, we can create an ``Engine`` instance using the ``create_engine`` function, providing the dataset path and the model.
 OpenVINO Training Extensions will prepare an engine based on the provided dataset and model.
+
 .. tab-set::
 
     .. tab-item:: with a config and dataset path
@@ -28,7 +50,7 @@ OpenVINO Training Extensions will prepare an engine based on the provided datase
 
             from otx.engine import create_engine
 
-            engine = create_engine(data="path/to/data", model="path/to/model/config")
+            engine = create_engine(data="data/wgisd", model="path/to/model/config")
             engine.train()
 
     .. tab-item:: with a datamodule and model instances
@@ -36,21 +58,39 @@ OpenVINO Training Extensions will prepare an engine based on the provided datase
         .. code-block:: python
 
             from otx.engine import create_engine
+            from otx.config.data import SubsetConfig
             from otx.backend.native.models import ATSS
             from otx.data.datamodule import OTXDataModule
 
             model = ATSS(model_name="atss_mobilenetv2",
-                        label_info = {"label_names": [...],
-                                     "label_id": [...],
-                                     "label_groups": [...]},
+                        label_info = {"label_names": ["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"],
+                                     "label_id": [0, 1, 2, 3, 4],
+                                     "label_groups": [["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"]]},
                         data_input_params = {"input_size": [800, 992],
                                             "mean": [0.0, 0.0, 0.0],
                                             "std": [255.0, 255.0, 255.0]})
 
-            datamodule = OTXDataModule(data_root="path/to/data", data_format="COCO", task="DETECTION",
-                                       train_subset=SubsetConfig(...),
-                                       val_subset=SubsetConfig(...),
-                                       test_subset=SubsetConfig(...))
+            train_augmentation = v2.Compose([
+                    otx.data.transform_libs.torchvision.Resize(size=(800, 992), transform_bbox=True),
+                    v2.RandomHorizontalFlip(p=0.5),
+                    v2.ToDtype(torch.float32),
+                    v2.Normalize(mean=[0.0, 0.0, 0.0], std=[255.0, 255.0, 255.0]),
+                ])
+            val_augmentation = v2.Compose([
+                    otx.data.transform_libs.torchvision.Resize(size=(800, 992), transform_bbox=True),
+                    v2.ToDtype(torch.float32),
+                    v2.Normalize(mean=[0.0, 0.0, 0.0], std=[255.0, 255.0, 255.0]),
+                ])
+            datamodule = OTXDataModule(data_root="data/wgisd", data_format="COCO", task="DETECTION",
+                                       train_subset=SubsetConfig(subset_name="train",
+                                                                augmentations=train_augmentation,
+                                                                batch_size=8,),
+                                       val_subset=SubsetConfig(subset_name="val",
+                                                                augmentations=val_augmentation,
+                                                                batch_size=8,),
+                                       test_subset=SubsetConfig(subset_name="test",
+                                                                augmentations=val_augmentation,
+                                                                batch_size=8,))
 
             engine = create_engine(data=datamodule, model=model)
             engine.train()
@@ -159,7 +199,7 @@ In this section, we focus on the ``otx.backend.native.engine.OTXEngine`` class �
 
 1. Setting ``work_dir``
 
-Specify ``work_dir``. This is the workspace for that ``Engine``, and where output is stored.
+Specify ``work_dir``. This is the workspace for that ``OTXEngine``, and where output is stored.
 The default value is currently ``./otx-workspace``.
 
 .. code-block:: python
@@ -168,7 +208,7 @@ The default value is currently ``./otx-workspace``.
     from otx.backend.native.models import ATSS
 
     engine = OTXEngine(work_dir="work_dir",
-                       data_root="path/to/data",
+                       data_root="data/wgisd",
                        model=ATSS(...))
 
 
@@ -177,29 +217,52 @@ The default value is currently ``./otx-workspace``.
 You can set the device by referencing the ``DeviceType`` in ``otx.types.device``.
 The current default setting is ``auto``. Native OTX Engine supports ``cpu``, ``gpu``, and ``xpu`` devices for training.
 
+.. note::
+
+    xpu is a generic term used by Intel to refer to heterogeneous compute devices, such as Intel CPUs, GPUs, and AI accelerators (e.g., NPU, VPU).
+
 .. code-block:: python
 
     from otx.types.device import DeviceType
-    from otx.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
-    engine = Engine(..., device=DeviceType.xpu)
-    # or
-    engine = Engine(device="xpu")
+    engine = OTXEngine(..., device=DeviceType.xpu)
+    === "CPU"
+        ```python
+        engine = OTXEngine(device=DeviceType.cpu)
+        # or
+        engine = OTXEngine(device="cpu")
+
+        ```
+
+    === "GPU"
+        ```python
+        engine = OTXEngine(device=DeviceType.gpu)
+        # or
+        engine = OTXEngine(device="gpu")
+        ```
+
+    === "XPU"
+        ```python
+        engine = OTXEngine(device=DeviceType.xpu)
+        # or
+        engine = OTXEngine(device="xpu")
+        ```
 
 
-In addition, the ``Engine`` constructor can be associated with the Trainer's constructor arguments to control the Trainer's functionality.
+In addition, the ``OTXEngine`` constructor can be associated with the Trainer's constructor arguments to control the Trainer's functionality.
 Refer `lightning.Trainer <https://lightning.ai/docs/pytorch/stable/common/trainer.html>`_.
 
 4. Using the OpenVINO™ Training Extension configuration we can configure the Engine.
 
 .. code-block:: python
 
-    from otx.engine import Engine
+    from otx.backend.native.engine import OTXEngine
 
     recipe = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
-    engine = Engine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
-        data_root="path/to/data",
+        data_root="data/wgisd",
         work_dir="./otx-workspace",
     )
 
@@ -217,7 +280,7 @@ Create an output model and start actual training:
     from otx.engine import create_engine
     from otx.backend.native.models import ATSS
 
-    engine = create_engine(data="path/to/data",
+    engine = create_engine(data="data/wgisd",
                            model=ATSS(...))
 
     engine.train()
@@ -230,7 +293,7 @@ Create an output model and start actual training:
 
     config = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
 
-    engine = create_engine(data=config, data="path/to/data")
+    engine = create_engine(data=config, data="data/wgisd")
     engine.train()
 
 .. note::
@@ -244,7 +307,7 @@ Create an output model and start actual training:
 
         from otx.backend.native.engine import OTXEngine
 
-        engine = OTXEngine(data="path/to/data", model=model, work_dir="otx-workspace")
+        engine = OTXEngine(data="data/wgisd", model=model, work_dir="otx-workspace")
         engine.train()
 
 3. If you want to customize model or optimizer, you can do so as shown below:
@@ -265,7 +328,7 @@ The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
                                             "mean": [0.0, 0.0, 0.0],
                                             "std": [255.0, 255.0, 255.0]})
 
-            engine = OTXEngine(data="path/to/data", model=model, checkpoint="<path/to/checkpoint>")
+            engine = OTXEngine(data="data/wgisd", model=model, checkpoint="<path/to/checkpoint>")
             engine.train()
 
     .. tab-item:: Custom Optimizer & Scheduler
@@ -301,7 +364,7 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
     from otx.data.module import OTXDataModule
     from otx.backend.native.engine import OTXEngine
 
-    datamodule = OTXDataModule(data_root="path/to/data", ...)
+    datamodule = OTXDataModule(data_root="data/wgisd", ...)
 
     engine = OTXEngine(data=datamodule, ...)
     engine.train()
@@ -318,7 +381,7 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
 
         from otx.tools.auto_configuration import AutoConfigurator
 
-        datamodule = AutoConfigurator(data_root="path/to/data").get_datamodule()
+        datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
 
 5. You can use train-specific arguments with ``train()`` function.
 
@@ -408,7 +471,7 @@ we just need to use the code below:
 
             from otx.data.module import OTXDataModule
 
-            datamodule = OTXDataModule(data_root="path/to/data", ...)
+            datamodule = OTXDataModule(data_root="data/wgisd", ...)
             engine.test(datamodule=datamodule)
 
     .. tab-item:: Evaluate Model with different metrics
@@ -431,12 +494,12 @@ we just need to use the code below:
 
         # using create_engine
         ov_engine = create_engine(
-            data="path/to/data",
+            data="data/wgisd",
             model="path/to/exported_model.xml",
         )
 
         # or directly with OVEngine
-        ov_engine = OVEngine(model="path/to/exported_model.xml", data="path/to/data")
+        ov_engine = OVEngine(model="path/to/exported_model.xml", data="data/wgisd")
 
         ov_engine.test()
 
@@ -507,7 +570,7 @@ To run the XAI with the OTXEngine, we need to run the following code:
 
             from otx.data.module import OTXDataModule
 
-            datamodule = OTXDataModule(data_root="path/to/data")
+            datamodule = OTXDataModule(data_root="data/wgisd")
             engine.explain(..., datamodule=datamodule)
 
     .. tab-item:: Dump saliency_map
@@ -537,7 +600,7 @@ To run the optimization with PTQ on the OpenVINO™ IR model, we need to use OVE
 
             from otx.data.module import OTXDataModule
 
-            datamodule = OTXDataModule(data_root="path/to/data")
+            datamodule = OTXDataModule(data_root="data/wgisd")
             ov_engine.optimize(..., datamodule=datamodule)
 
 

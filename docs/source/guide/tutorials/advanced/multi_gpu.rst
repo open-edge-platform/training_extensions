@@ -41,9 +41,9 @@ Once the multi-GPU feature is enabled, you can use multi-GPU for model training 
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
-            engine = Engine.from_config(
+            engine = OTXEngine.from_config(
                         ...
                         num_devices=2,
                     )
