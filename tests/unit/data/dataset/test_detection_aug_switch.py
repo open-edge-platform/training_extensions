@@ -31,18 +31,21 @@ class TestOTXDetectionDatasetWithAugSwitch:
             "strong_aug_1": {
                 "to_tv_image": True,
                 "transforms": [
+                    {"class_path": "torchvision.transforms.v2.RandomZoomOut"},
                     {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
                 ],
             },
             "strong_aug_2": {
                 "to_tv_image": False,
                 "transforms": [
+                    {"class_path": "otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"},
                     {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.int32"}},
                 ],
             },
             "light_aug": {
                 "to_tv_image": True,
                 "transforms": [
+                    {"class_path": "torchvision.transforms.v2.RandomPhotometricDistort"},
                     {"class_path": "torchvision.transforms.v2.ToDtype", "init_args": {"dtype": "torch.float32"}},
                 ],
             },
@@ -176,19 +179,18 @@ class TestOTXDetectionDatasetWithAugSwitch:
             data_aug_switch.epoch = epoch
 
             # Apply augmentation switch
-            detection_dataset._apply_augmentation_switch()
+            policy_name = detection_dataset._apply_augmentation_switch()
 
             # Check that transforms were updated
-            current_policy = data_aug_switch.current_policy_name
-            to_tv_image, transforms = data_aug_switch.current_transforms
-
-            assert detection_dataset.to_tv_image == to_tv_image
-            assert detection_dataset.transforms == transforms
-
             if expected_policy_type == "strong_aug":
-                assert current_policy in ["strong_aug_1", "strong_aug_2"]
+                assert policy_name in ["strong_aug_1", "strong_aug_2"]
             else:
-                assert current_policy == expected_policy_type
+                assert policy_name == expected_policy_type
+
+            assert detection_dataset.to_tv_image == data_aug_switch.policies[policy_name]["to_tv_image"]
+            assert (
+                detection_dataset.transforms == data_aug_switch.policies[policy_name]["transforms"]
+            ), f"transforms should be {data_aug_switch.policies[policy_name]['transforms']} but is {detection_dataset.transforms}"
 
     def test_detection_dataset_without_aug_switch(self, detection_dataset):
         """Test that detection dataset works normally without augmentation switch."""
@@ -239,15 +241,13 @@ class TestOTXDetectionDatasetWithAugSwitch:
         dataset2.set_data_aug_switch(data_aug_switch)
 
         # Change epoch
-        data_aug_switch.epoch = 15
+        data_aug_switch.epoch = 50
 
         # Both datasets should see the same policy
-        dataset1._apply_augmentation_switch()
-        policy1 = dataset1.data_aug_switch.current_policy_name
+        policy1 = dataset1._apply_augmentation_switch()
         transforms1 = dataset1.transforms
 
-        dataset2._apply_augmentation_switch()
-        policy2 = dataset2.data_aug_switch.current_policy_name
+        policy2 = dataset2._apply_augmentation_switch()
         transforms2 = dataset2.transforms
 
         # Both should have the same policy and transforms

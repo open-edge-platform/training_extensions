@@ -73,10 +73,10 @@ class TestDataAugSwitchMixin:
         """Test _apply_augmentation_switch when switch is set."""
         mock_dataset.set_data_aug_switch(mock_data_aug_switch)
 
-        mock_dataset._apply_augmentation_switch()
+        policy_name = mock_dataset._apply_augmentation_switch()
 
-        assert mock_dataset.to_tv_image is True
-        assert mock_dataset.transforms is mock_data_aug_switch.current_transforms[1]
+        assert mock_dataset.to_tv_image is mock_data_aug_switch.policies[policy_name]["to_tv_image"]
+        assert mock_dataset.transforms is mock_data_aug_switch.policies[policy_name]["transforms"]
 
     def test_apply_augmentation_switch_updates_transforms(self, mock_dataset, mock_entity):
         """Test that augmentation switch properly updates transforms."""
@@ -86,10 +86,10 @@ class TestDataAugSwitchMixin:
         mock_switch.current_transforms = (False, new_transforms)
 
         mock_dataset.set_data_aug_switch(mock_switch)
-        mock_dataset._apply_augmentation_switch()
+        policy_name = mock_dataset._apply_augmentation_switch()
 
-        assert mock_dataset.to_tv_image is False
-        assert mock_dataset.transforms is new_transforms
+        assert mock_dataset.to_tv_image is mock_switch.policies[policy_name]["to_tv_image"]
+        assert mock_dataset.transforms is mock_switch.policies[policy_name]["transforms"]
 
     def test_multiple_switch_updates(self, mock_dataset):
         """Test multiple updates to the augmentation switch."""
@@ -99,10 +99,10 @@ class TestDataAugSwitchMixin:
         mock_switch1.current_transforms = (True, transforms1)
 
         mock_dataset.set_data_aug_switch(mock_switch1)
-        mock_dataset._apply_augmentation_switch()
+        policy_name = mock_dataset._apply_augmentation_switch()
 
-        assert mock_dataset.to_tv_image is True
-        assert mock_dataset.transforms is transforms1
+        assert mock_dataset.to_tv_image is mock_switch1.policies[policy_name]["to_tv_image"]
+        assert mock_dataset.transforms is mock_switch1.policies[policy_name]["transforms"]
 
         # Second switch
         mock_switch2 = MagicMock()
@@ -110,10 +110,10 @@ class TestDataAugSwitchMixin:
         mock_switch2.current_transforms = (False, transforms2)
 
         mock_dataset.set_data_aug_switch(mock_switch2)
-        mock_dataset._apply_augmentation_switch()
+        policy_name = mock_dataset._apply_augmentation_switch()
 
-        assert mock_dataset.to_tv_image is False
-        assert mock_dataset.transforms is transforms2
+        assert mock_dataset.to_tv_image is mock_switch2.policies[policy_name]["to_tv_image"]
+        assert mock_dataset.transforms is mock_switch2.policies[policy_name]["transforms"]
 
     def test_has_dynamic_augmentation_property_edge_cases(self):
         """Test edge cases for has_dynamic_augmentation property."""

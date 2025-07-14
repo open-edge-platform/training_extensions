@@ -43,17 +43,23 @@ class DataAugSwitchMixin:
         self._ensure_data_aug_switch_initialized()
         self.data_aug_switch = data_aug_switch
 
-    def _apply_augmentation_switch(self) -> None:
+    def _apply_augmentation_switch(self) -> str | None:
         """Update the dataset's transform configuration based on the current augmentation policy.
 
         This method should be called before applying the regular transforms.
         It updates the dataset's transform configuration based on the current
         augmentation policy from DataAugSwitch, if available.
+
+        Returns:
+            str | None: The name of the current policy, or None if no policy is set.
         """
         self._ensure_data_aug_switch_initialized()
         if self.data_aug_switch is None:
-            return
-        self.to_tv_image, self.transforms = self.data_aug_switch.current_transforms
+            return None
+        policy_name = self.data_aug_switch.current_policy_name
+        policy = self.data_aug_switch.policies[policy_name]
+        self.to_tv_image, self.transforms = policy["to_tv_image"], policy["transforms"]
+        return policy_name
 
     @property
     def has_dynamic_augmentation(self) -> bool:
