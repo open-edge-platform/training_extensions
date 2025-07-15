@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#
+
 """DEIM criterion implementations. Modified from https://github.com/ShihuaHuang95/DEIM."""
 
 from __future__ import annotations

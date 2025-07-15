@@ -1068,7 +1068,43 @@ class OTXEngine(Engine):
         self._setup_augmentation_scheduler()
 
     def _setup_augmentation_scheduler(self) -> None:
-        """Set up shared memory for DataAugSwitch and AugmentationSchedulerCallback."""
+        """Set up shared memory for DataAugSwitch and AugmentationSchedulerCallback.
+
+        Why is this handled here in the engine?
+        -------------------------------------------------
+        Data augmentation scheduling is a cross-cutting concern that affects both the data pipeline
+        (datasets, dataloaders) and the training control flow (callbacks, epoch tracking). In
+        distributed or multi-process training (e.g., DDP, multi-worker dataloaders), each process or
+        worker may have its own copy of the dataset and augmentation logic. If the augmentation policy
+        (e.g., which transforms to apply at a given epoch) is not synchronized across all processes,
+        different workers may apply different augmentations for the same epoch, leading to
+        non-deterministic, irreproducible, or even incorrect training.
+
+        The engine is the only component with global visibility and control over:
+          - The full set of callbacks (including augmentation scheduling callbacks)
+          - The configuration and instantiation of datasets and dataloaders
+          - The orchestration of training, including distributed/multiprocessing setup
+
+        By handling augmentation scheduler setup here, we ensure:
+          - The current epoch (which determines augmentation policy) is stored in a shared
+            multiprocessing.Value, so all processes and workers see the same value.
+          - The DataAugSwitch instance used by the callback and (optionally) by datasets
+            is referencing the same shared epoch state.
+          - This setup is performed before training starts, so all components are properly
+            synchronized from the beginning.
+
+        Without this centralized setup, it would be easy for different parts of the system
+        to become unsynchronized, leading to subtle bugs that are hard to debug and reproduce.
+        By making the engine responsible for this, we guarantee correct, deterministic, and
+        reproducible augmentation scheduling across all training processes.
+
+        Implementation:
+        ----------------
+        This method locates the AugmentationSchedulerCallback among the configured callbacks,
+        and if it has a DataAugSwitch instance, it creates a shared integer value for the
+        epoch and assigns it to the DataAugSwitch. This must be done before training starts.
+
+        """
         aug_scheduler_callback = None
 
         # Find AugmentationSchedulerCallback in all callbacks
@@ -1085,7 +1121,17 @@ class OTXEngine(Engine):
             aug_scheduler_callback.data_aug_switch.set_shared_epoch(shared_epoch)
 
     def _setup_data_aug_switch_for_datasets(self) -> None:
-        """Set up DataAugSwitch for datasets before training starts."""
+        """Set up DataAugSwitch for datasets before training starts, ensuring shared memory for augmentation policy.
+
+        By assigning the same DataAugSwitch instance (with its shared epoch value) to the training dataset(s),
+        we guarantee that all data loading workers and processes reference the same epoch state. This prevents
+        inconsistencies where different processes might otherwise apply different augmentation policies due to
+        unsynchronized epoch tracking. Without this setup, augmentation switching could become non-deterministic
+        or incorrect, leading to irreproducible results or degraded training performance.
+
+        This method locates the AugmentationSchedulerCallback and its DataAugSwitch, then attaches the switch
+        to any dataset that supports dynamic augmentation switching (i.e., implements DataAugSwitchMixin).
+        """
         if self._trainer is None:
             return
 
