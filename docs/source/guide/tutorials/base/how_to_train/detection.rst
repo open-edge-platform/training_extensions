@@ -143,7 +143,7 @@ The list of supported recipes for object detection is available with the command
 
         .. code-block:: python
 
-            from otx.engine.utils.api import list_models
+            from otx.backend.native.cli.utils import list_models
 
             model_lists = list_models(task="DETECTION", pattern="atss")
             print(model_lists)
@@ -225,19 +225,19 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             data_root = "data/wgisd"
             recipe = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
 
-            engine = Engine.from_config(
+            engine = OTXEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
                       work_dir="otx-workspace",
                     )
 
             # it is also possible to pass a config as a model to the Engine directly
-            engine = Engine(
+            engine = OTXEngine(
                       model=recipe,
                       data=data_root,
                       work_dir="otx-workspace",

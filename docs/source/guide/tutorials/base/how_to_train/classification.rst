@@ -196,19 +196,19 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             data_root = "data/flower_photos"
             recipe = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
 
-            engine = Engine.from_config(
+            engine = OTXEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
                       work_dir="otx-workspace",
                     )
 
             # it is also possible to pass a config as a model to the Engine directly
-            engine = Engine(
+            engine = OTXEngine(
                       model=recipe,
                       data=data_root,
                       work_dir="otx-workspace",
@@ -228,7 +228,7 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.backend.native.engine import Engine
+            from otx.backend.native.engine import OTXEngine
             from otx.backend.native.models import MobileNetV3MulticlassCls
 
             data_root = "data/flower_photos"
@@ -239,7 +239,7 @@ Here are the main outputs can expect with CLI:
                                                          "mean": [123.675, 116.28, 103.53],
                                                          "std": [58.395, 57.12, 57.375]})
 
-            engine = Engine(
+            engine = OTXEngine(
                       model=model,
                       data=data_root,
                       work_dir="otx-workspace",
@@ -276,11 +276,11 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100, e
 
             from otx.config.data import SubsetConfig
             from otx.data.module import OTXDataModule
-            from otx.backend.native.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = Engine(..., data=datamodule)
+            engine = OTXEngine(..., data=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -325,6 +325,9 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
     .. tab-item:: API
 
         .. code-block:: python
+
+            from otx.backend.native.engine import OTXEngine
+            engine = OTXEngine(model="src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml", data="data/flower_photos", work_dir="otx-workspace")
 
             engine.train(resume=True,
                          checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")

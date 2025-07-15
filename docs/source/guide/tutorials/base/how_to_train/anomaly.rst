@@ -88,7 +88,7 @@ Training
 ***************************
 
 1. For this example let's look at the
-anomaly detection tasks
+anomaly tasks
 
 .. tab-set::
 
@@ -96,39 +96,33 @@ anomaly detection tasks
 
         .. code-block:: shell
 
-            (otx) ...$  otx find --task ANOMALY_DETECTION
+            (otx) ...$  otx find --task ANOMALY
             ┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
             ┃ Task              ┃ Model Name ┃ Recipe Path                                 ┃
             ┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-            │ ANOMALY_DETECTION │ stfpm      │ src/otx/recipe/anomaly_detection/stfpm.yaml │
-            │ ANOMALY_DETECTION │ padim      │ src/otx/recipe/anomaly_detection/padim.yaml │
+            │ ANOMALY           │ stfpm      │ src/otx/recipe/anomaly_detection/stfpm.yaml │
+            │ ANOMALY           │ padim      │ src/otx/recipe/anomaly_detection/padim.yaml │
+            │ ANOMALY           │ uflow      │ src/otx/recipe/anomaly_detection/uflow.yaml │
             └───────────────────┴────────────┴─────────────────────────────────────────────┘
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            from otx.engine.utils.api import list_models
+            from otx.backend.native.cli.utils import list_models
 
-            model_lists = list_models(task="ANOMALY_DETECTION")
+            model_lists = list_models(task="ANOMALY")
             print(model_lists)
             '''
-            ['stfpm', 'padim']
+            ['stfpm', 'padim', "uflow"]
             '''
 
-You can see two anomaly detection models, STFPM and PADIM. For more detail on each model, refer to Anomalib's `STFPM <https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/stfpm.html>`_ and `PADIM <https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/padim.html>`_ documentation.
+You can see two anomaly models, STFPM, PADIM and UFLOW. For more detail on each model, refer to Anomalib's `STFPM <https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/stfpm.html>`_, `PADIM <https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/padim.html>`_  and `UFLOW <https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/uflow.html>`_ documentation.
 
 2. Let's proceed with PADIM for
 this example.
 
 .. tab-set::
-
-    .. tab-item:: CLI (auto-config)
-
-        .. code-block:: shell
-
-            (otx) ...$  otx train --data_root datasets/MVTec/bottle \
-                                  --task ANOMALY_DETECTION
 
     .. tab-item:: CLI (with config)
 
@@ -136,17 +130,18 @@ this example.
 
             (otx) ...$  otx train --config src/otx/recipe/anomaly_detection/padim.yaml \
                                   --data_root datasets/MVTec/bottle
+                                  --work_dir ./otx-workspace
 
     .. tab-item:: API (from_config)
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             data_root = "datasets/MVTec/bottle"
             recipe = "src/otx/recipe/anomaly_detection/padim.yaml"
 
-            engine = Engine.from_config(
+            engine = OTXEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
                       work_dir="otx-workspace",
@@ -158,19 +153,29 @@ this example.
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
+            from otx.backend.native.models import PADIM
 
             data_root = "datasets/MVTec/bottle"
+            model = PADIM(data_input_params = {"input_size": [446, 446],
+                                                         "mean": [123.675, 116.28, 103.53],
+                                                         "std": [58.395, 57.12, 57.375]})
 
-            engine = Engine(
-                        model="padim",
-                        data_root=data_root,
-                        task="ANOMALY_DETECTION",
-                        work_dir="otx-workspace",
+            engine = OTXEngine(
+                      model=model,
+                      data=data_root,
+                      work_dir="otx-workspace",
+                    )
+
+            # one more possibility to obtain the  engine by the given model/dataset
+            # using "create_engine" function
+            from otx.engine import create_engine
+            engine = create_engine(
+                      model=model,
+                      data=data_root,
                     )
 
             engine.train(...)
-
 
 3. ``(Optional)`` Additionally, we can tune training parameters such as batch size, learning rate, patience epochs.
 Learn more about specific parameters using ``otx train --help -v`` or ``otx train --help -vv``.
@@ -192,11 +197,11 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100, e
 
             from otx.config.data import SubsetConfig
             from otx.data.module import OTXDataModule
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = Engine(..., datamodule=datamodule)
+            engine = OTXEngine(..., datamodule=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -260,129 +265,6 @@ The primary metric here is the f-measure computed against the ground-truth bound
 
     All task types report Image-level F-measure as the primary metric. In addition, both localization tasks (anomaly detection and anomaly segmentation) also report localization performance (F-measure for anomaly detection and Dice-coefficient for anomaly segmentation).
 
-*******
-Export
-*******
-
-1. ``otx export`` exports a trained Pytorch `.pth` model to the OpenVINO™ Intermediate Representation (IR) format.
-It allows running the model on the Intel hardware much more efficient, especially on the CPU. Also, the resulting IR model is required to run PTQ optimization. IR model consists of 2 files: ``exported_model.xml`` for weights and ``exported_model.bin`` for architecture.
-
-2. We can run the below command line to export the trained model
-and save the exported model to the ``openvino`` folder:
-
-.. tab-set::
-
-    .. tab-item:: CLI (with work_dir)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export --work_dir otx-workspace
-            ...
-            Elapsed time: 0:00:06.588245
-
-    .. tab-item:: CLI (with config)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export ... --checkpoint otx-workspace/20240313_042421/checkpoints/epoch_010.ckpt
-            ...
-            Elapsed time: 0:00:06.588245
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            engine.export()
-
-Now that we have the exported model, let's check its performance using ``otx test``:
-
-.. tab-set::
-
-    .. tab-item:: CLI (with work_dir)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx test --work_dir otx-workspace \
-                                --checkpoint otx-workspace/20240313_052847/exported_model.xml \
-                                --engine.device cpu
-            ...
-
-    .. tab-item:: CLI (with config)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx test --config src/otx/recipe/anomaly_detection/padim.yamll \
-                                --data_root data/wgisd \
-                                --checkpoint otx-workspace/20240312_052847/exported_model.xml \
-                                --engine.device cpu
-            ...
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            exported_model = engine.export()
-            engine.test(checkpoint=exported_model)
-
-
-************
-Optimization
-************
-
-Anomaly tasks can be optimized either in PTQ or NNCF format. The model will be quantized to ``INT8`` format.
-For more information refer to the :doc:`optimization explanation <../../../explanation/additional_features/models_optimization>` section.
-
-
-1. Let's start with PTQ
-optimization.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx optimize  --work_dir otx-workspace \
-                                     --checkpoint otx-workspace/20240312_052847/exported_model.xml
-
-            ...
-            Statistics collection ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 • 0:00:14 • 0:00:00
-            Applying Fast Bias correction ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 58/58 • 0:00:02 • 0:00:00
-            Elapsed time: 0:00:24.958733
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            ckpt_path = "otx-workspace/20240312_052847/exported_model.xml"
-            engine.optimize(checkpoint=ckpt_path)
-
-Please note, that PTQ will take some time without logging to optimize the model.
-
-3. Finally, we can also evaluate the optimized model by passing
-it to the ``otx test`` function.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx test --work_dir otx-workspace \
-                                --checkpoint otx-workspace/20240313_055042/optimized_model.xml \
-                                --engine.device cpu
-
-            ...
-            Elapsed time: 0:00:10.260521
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            ckpt_path = "otx-workspace/20240313_055042/optimized_model.xml"
-            engine.test(checkpoint=ckpt_path)
-
-
 *******************************
 Segmentation and Classification
 *******************************
@@ -394,4 +276,3 @@ To see what tasks are available, you can pass ``ANOMALY_SEGMENTATION`` and ``ANO
 
     The Segmentation and Detection tasks also require that the ``ground_truth`` masks be present to ensure that the localization metrics are computed correctly.
     The ``ground_truth`` masks are not required for the Classification task.
-

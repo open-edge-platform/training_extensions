@@ -146,7 +146,7 @@ The list of supported recipes for instance segmentation is available with the co
 
         .. code-block:: python
 
-          from otx.engine.utils.api import list_models
+          from otx.backend.native.cli.utils import list_models
 
           model_lists = list_models(task="INSTANCE_SEGMENTATION")
           print(model_lists)
@@ -223,19 +223,19 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             data_root = "data/wgisd"
             recipe = "src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml"
 
-            engine = Engine.from_config(
+            engine = OTXEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
                       work_dir="otx-workspace",
                     )
 
-            # it is also possible to pass a config as a model to the Engine directly
-            engine = Engine(
+            # it is also possible to pass a config as a model to the OTXEngine directly
+            engine = OTXEngine(
                       model=recipe,
                       data=data_root,
                       work_dir="otx-workspace",
@@ -254,7 +254,7 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
             from otx.backend.native.models import MaskRCNN
 
             data_root = "data/wgisd"
@@ -268,7 +268,7 @@ Here are the main outputs can expect with CLI:
                                             "std": [255.0, 255.0, 255.0]}
                     )
 
-            engine = Engine(
+            engine = OTXEngine(
                       model=model,
                       data_root=data_root,
                       work_dir="otx-workspace",
@@ -309,11 +309,11 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100 an
 
             from otx.config.data import SubsetConfig
             from otx.data.module import OTXDataModule
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = Engine(..., data=datamodule)
+            engine = OTXEngine(..., data=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -356,7 +356,8 @@ For this, we can use the ``--resume`` parameter with the path to the checkpoint 
     .. tab-item:: API
 
         .. code-block:: python
-
+            from otx.backend.native.engine import OTXEngine
+            engine = OTXEngine(model="src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml", data="data/wgisd", work_dir="otx-workspace")
             engine.train(resume=True,
                          checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
 

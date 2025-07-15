@@ -25,7 +25,7 @@ To handle this, we have implemented module named ``AdaptiveTrainScheduling``. Th
 
         .. code-block:: shell
 
-            (otx) ...$ otx train ... --callbacks otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+            (otx) ...$ otx train --config path/to/config/model.yaml --data_root  --callbacks otx.algo.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
 
 Auto-adapt batch size
 =====================

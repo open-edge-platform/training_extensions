@@ -8,6 +8,10 @@ As a result of this step, you'll get the exported model together with the self-c
 Export
 ******
 
+.. note::
+
+    "export" method should be implemented within a framework engine like OTXEngine to be able to export the model. Optimization and validation steps are required to use OVEngine.
+
 1. Activate the virtual environment
 created in the previous step.
 
@@ -35,6 +39,9 @@ using the command below. Specify the path to the trained PyTorch model using ``-
 
         .. code-block:: python
 
+            from otx.backend.native.engine import OTXEngine
+
+            engine = OTXEngine(model="path/to/model.yaml", data="path/to/data_root", work_dir="otx-workspace")
             exported_model_path = engine.export()
 
 .. code-block:: shell

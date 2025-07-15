@@ -219,7 +219,8 @@ The current default setting is ``auto``. Native OTX Engine supports ``cpu``, ``g
 
 .. note::
 
-    xpu is a generic term used by Intel to refer to heterogeneous compute devices, such as Intel CPUs, GPUs, and AI accelerators (e.g., NPU, VPU).
+    **XPU** is a generic term used by Intel to refer to heterogeneous compute devices, including Intel GPUs, CPUs, and certain AI accelerators.
+    However, when referring to the PyTorch device, XPU specifically denotes an **Intel GPU**.
 
 .. code-block:: python
 
@@ -227,27 +228,32 @@ The current default setting is ``auto``. Native OTX Engine supports ``cpu``, ``g
     from otx.backend.native.engine import OTXEngine
 
     engine = OTXEngine(..., device=DeviceType.xpu)
-    === "CPU"
-        ```python
-        engine = OTXEngine(device=DeviceType.cpu)
-        # or
-        engine = OTXEngine(device="cpu")
 
-        ```
+.. tabs::
 
-    === "GPU"
-        ```python
-        engine = OTXEngine(device=DeviceType.gpu)
-        # or
-        engine = OTXEngine(device="gpu")
-        ```
+    .. tab:: CPU
 
-    === "XPU"
-        ```python
-        engine = OTXEngine(device=DeviceType.xpu)
-        # or
-        engine = OTXEngine(device="xpu")
-        ```
+        .. code-block:: python
+
+            engine = OTXEngine(device=DeviceType.cpu)
+            # or
+            engine = OTXEngine(device="cpu")
+
+    .. tab:: GPU
+
+        .. code-block:: python
+
+            engine = OTXEngine(device=DeviceType.gpu)
+            # or
+            engine = OTXEngine(device="gpu")
+
+    .. tab:: XPU
+
+        .. code-block:: python
+
+            engine = OTXEngine(device=DeviceType.xpu)
+            # or
+            engine = OTXEngine(device="xpu")
 
 
 In addition, the ``OTXEngine`` constructor can be associated with the Trainer's constructor arguments to control the Trainer's functionality.
@@ -280,8 +286,17 @@ Create an output model and start actual training:
     from otx.engine import create_engine
     from otx.backend.native.models import ATSS
 
+    model = ATSS(
+                model_name="atss_mobilenetv2",
+                label_info = {"label_names": ["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"],
+                                "label_id": [0, 1, 2, 3, 4],
+                                "label_groups": [["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"]]},
+                data_input_params = {"input_size": [800, 992],
+                                    "mean": [0.0, 0.0, 0.0],
+                                    "std": [255.0, 255.0, 255.0]}
+            )
     engine = create_engine(data="data/wgisd",
-                           model=ATSS(...))
+                           model=model)
 
     engine.train()
 
@@ -307,7 +322,7 @@ Create an output model and start actual training:
 
         from otx.backend.native.engine import OTXEngine
 
-        engine = OTXEngine(data="data/wgisd", model=model, work_dir="otx-workspace")
+        engine = OTXEngine(data="data/wgisd", model=config, work_dir="otx-workspace")
         engine.train()
 
 3. If you want to customize model or optimizer, you can do so as shown below:
@@ -323,7 +338,10 @@ The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
             from otx.backend.native.models.detection.atss import ATSS
             from otx.backend.native.engine import OTXEngine
 
-            model = ATSS(label_info=5, model_name="atss_mobilenetv2",
+            model = ATSS(label_info = {"label_names": ["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"],
+                                "label_id": [0, 1, 2, 3, 4],
+                                "label_groups": [["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"]]},
+                         model_name="atss_mobilenetv2",
                          data_input_params={"input_size": [800, 992],
                                             "mean": [0.0, 0.0, 0.0],
                                             "std": [255.0, 255.0, 255.0]})
@@ -592,6 +610,9 @@ To run the optimization with PTQ on the OpenVINO™ IR model, we need to use OVE
 
         .. code-block:: python
 
+            from otx.backend.openvino.engine import OVEngine
+            ov_engine = OVEngine(model="path/to/exported_model.xml", data="data/wgisd")
+
             ov_engine.optimize()
 
     .. tab-item:: Evaluate Model with different datamodule or dataloader
@@ -599,9 +620,11 @@ To run the optimization with PTQ on the OpenVINO™ IR model, we need to use OVE
         .. code-block:: python
 
             from otx.data.module import OTXDataModule
+            from otx.backend.openvino.engine import OVEngine
+            ov_engine = OVEngine(model="path/to/exported_model.xml", data="data/wgisd")
 
-            datamodule = OTXDataModule(data_root="data/wgisd")
-            ov_engine.optimize(..., datamodule=datamodule)
+            datamodule = OTXDataModule(data_root="data/wgisd", ...)
+            ov_engine.optimize(data=datamodule)
 
 
 You can validate the optimized model as the usual model:
@@ -614,7 +637,7 @@ You can validate the optimized model as the usual model:
 Benchmarking
 ************
 
-``Engine`` allows to perform benchmarking of the trained model, and provide theoretical complexity information in case of torch model.
+``OTXEngine`` allows to perform benchmarking of the trained model, and provide theoretical complexity information in case of torch model.
 The estimated by ``Engine.benchmark()`` performance may differ from the performance of the deployed model, since the measurements are conducted
 via OTX inference API, which can introduce additional burden.
 
@@ -624,6 +647,7 @@ via OTX inference API, which can introduce additional burden.
 
         .. code-block:: python
 
+            engine = OTXEngine(data="data/wgisd", model="src/otx/recipe/detection/atss_mobilenetv2.yaml", work_dir="otx-workspace")
             engine.benchmark()
 
 Conclusion
