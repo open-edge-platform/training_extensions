@@ -3,7 +3,7 @@ import { GridList, GridListItem } from 'react-aria-components';
 
 import { paths } from '../../router';
 
-export function Output() {
+export const Output = () => {
     return (
         <Form width='100%'>
             <Flex direction='column' gap='size-400'>
@@ -151,4 +151,4 @@ export function Output() {
             </Flex>
         </Form>
     );
-}
+};

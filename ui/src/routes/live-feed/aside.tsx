@@ -17,7 +17,7 @@ const generateData = (n: number) => {
     return result;
 };
 
-function useData() {
+const useData = () => {
     const [data, setData] = useState(
         generateData(60).map((value, idx) => {
             return { name: `${idx}`, value };
@@ -55,9 +55,9 @@ function useData() {
     });
 
     return data;
-}
+};
 
-function Graph({ label }: { label: string }) {
+const Graph = ({ label }: { label: string }) => {
     const data = useData();
 
     return (
@@ -118,9 +118,9 @@ function Graph({ label }: { label: string }) {
             </LineChart>
         </>
     );
-}
+};
 
-export function Aside() {
+export const Aside = () => {
     const [isHidden, setIsHidden] = useState(false);
 
     return (
@@ -182,4 +182,4 @@ export function Aside() {
             </Tabs>
         </View>
     );
-}
+};

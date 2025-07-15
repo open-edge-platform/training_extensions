@@ -6,7 +6,7 @@ import { Tab, TabList, Tabs } from 'react-aria-components';
 
 import classes from './wizard-steps.module.scss';
 
-export function WizardTab({
+export const WizardTab = ({
     number,
     isCompleted = false,
     children,
@@ -15,19 +15,19 @@ export function WizardTab({
     number: number;
     isCompleted?: boolean;
     children: ReactNode;
-}) {
+}) => {
     return (
         <Tab {...props} className={classes.wizardTab}>
             <Text UNSAFE_className={classes.stepNumber}>{isCompleted ? <Checkmark size='S' /> : number}</Text>
             <Text UNSAFE_className={classes.wizardTabText}>{children}</Text>
         </Tab>
     );
-}
+};
 
-export function WizardTabs(props: ComponentProps<typeof Tabs>) {
+export const WizardTabs = (props: ComponentProps<typeof Tabs>) => {
     return <Tabs {...props} className={classes.wizardTabs} />;
-}
+};
 
-export function WizardTabList(props: ComponentProps<typeof TabList>) {
+export const WizardTabList = (props: ComponentProps<typeof TabList>) => {
     return <TabList {...props} className={classes.tabList} />;
-}
+};

@@ -6,7 +6,7 @@ import { ActionButton, Button, Divider, Flex, Item, Picker } from '@geti/ui';
 import { $api } from '../../api/client';
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
 
-function DebugTooltip() {
+const DebugTooltip = () => {
     const modelsQuery = $api.useSuspenseQuery('get', '/api/models');
     const activeModelMutation = $api.useMutation('post', '/api/models/{model_name}:activate');
 
@@ -46,9 +46,9 @@ function DebugTooltip() {
             </Picker>
         </Flex>
     );
-}
+};
 
-export function DebugTrigger() {
+export const DebugTrigger = () => {
     return (
         <Suspense fallback={'Loading'}>
             <DialogTrigger type='popover'>
@@ -61,4 +61,4 @@ export function DebugTrigger() {
             </DialogTrigger>
         </Suspense>
     );
-}
+};

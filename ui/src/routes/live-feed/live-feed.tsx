@@ -10,7 +10,7 @@ import { Toolbar } from './toolbar';
 
 import classes from './live-feed.module.css';
 
-export function StreamContainer() {
+export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
     const { start, status } = useWebRTCConnection();
 
@@ -45,9 +45,9 @@ export function StreamContainer() {
             )}
         </>
     );
-}
+};
 
-export function LiveFeed() {
+export const LiveFeed = () => {
     return (
         <Grid
             areas={['toolbar aside', 'canvas aside']}
@@ -66,4 +66,4 @@ export function LiveFeed() {
             </View>
         </Grid>
     );
-}
+};

@@ -15,7 +15,7 @@ type WizardStep = {
 };
 type WizardState = Array<WizardStep>;
 
-export function EditPipelineLayout() {
+export const EditPipelineLayout = () => {
     const { pathname } = useLocation();
 
     // TODO: update according to server state
@@ -90,4 +90,4 @@ export function EditPipelineLayout() {
             </View>
         </View>
     );
-}
+};

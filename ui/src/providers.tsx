@@ -24,7 +24,7 @@ const queryClient = new QueryClient({
 // Sync our server state with all browser tabs
 broadcastQueryClient({ queryClient, broadcastChannel: 'geti-edge' });
 
-export function Providers() {
+export const Providers = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider router={router}>
@@ -36,4 +36,4 @@ export function Providers() {
             </ThemeProvider>
         </QueryClientProvider>
     );
-}
+};

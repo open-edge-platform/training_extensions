@@ -3,7 +3,7 @@ import { Button, ButtonGroup, Divider, Flex, Heading, Text, View } from '@geti/u
 import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
-export function Index() {
+export const Index = () => {
     return (
         <View
             backgroundColor={'gray-100'}
@@ -46,4 +46,4 @@ export function Index() {
             </View>
         </View>
     );
-}
+};

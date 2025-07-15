@@ -7,11 +7,11 @@ export const Zoom = createContext<ZoomState>({
 });
 const SetZoom = createContext<Dispatch<SetStateAction<ZoomState>> | null>(null);
 
-export function useZoom() {
+export const useZoom = () => {
     return useContext(Zoom);
-}
+};
 
-export function useSetZoom() {
+export const useSetZoom = () => {
     const context = useContext(SetZoom);
 
     if (!context) {
@@ -19,9 +19,9 @@ export function useSetZoom() {
     }
 
     return context;
-}
+};
 
-export function ZoomProvider({ children }: { children: ReactNode }) {
+export const ZoomProvider = ({ children }: { children: ReactNode }) => {
     // TODO:
     // 1. Add scale restrictions - min max
     // 2. Add translate restrictions - min max
@@ -35,4 +35,4 @@ export function ZoomProvider({ children }: { children: ReactNode }) {
             <SetZoom.Provider value={setZoom}>{children}</SetZoom.Provider>
         </Zoom.Provider>
     );
-}
+};

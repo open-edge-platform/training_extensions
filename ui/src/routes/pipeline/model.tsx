@@ -24,7 +24,7 @@ import { FileTrigger } from 'react-aria-components';
 import { $api } from '../../api/client';
 import { paths } from '../../router';
 
-function ListModels() {
+const ListModels = () => {
     const modelsQuery = $api.useQuery('get', '/api/models');
     const activeModelMutation = $api.useMutation('post', '/api/models/{model_name}:activate');
     const deleteModelMutation = $api.useMutation('delete', '/api/models/{model_name}');
@@ -94,9 +94,17 @@ function ListModels() {
             </ListView>
         </View>
     );
-}
+};
 
-function DropDrop({ label, file, onDrop }: { label: string; file: File | null; onDrop: (file: File | null) => void }) {
+const DropDrop = ({
+    label,
+    file,
+    onDrop,
+}: {
+    label: string;
+    file: File | null;
+    onDrop: (file: File | null) => void;
+}) => {
     const [isFilled, setIsFilled] = useState(false);
 
     return (
@@ -155,7 +163,7 @@ function DropDrop({ label, file, onDrop }: { label: string; file: File | null; o
             </IllustratedMessage>
         </DropZone>
     );
-}
+};
 
 type ModelFormData = {
     name: string;
@@ -163,7 +171,7 @@ type ModelFormData = {
     xmlFile: null | File;
 };
 
-function UplaodModelForm() {
+const UplaodModelForm = () => {
     const [modelFormData, setModelFormData] = useState<ModelFormData>({
         name: '',
         binFile: null,
@@ -224,9 +232,9 @@ function UplaodModelForm() {
             </View>
         </Form>
     );
-}
+};
 
-export function Model() {
+export const Model = () => {
     return (
         <Flex direction='column' gap='size-400'>
             <UplaodModelForm />
@@ -244,4 +252,4 @@ export function Model() {
             </Flex>
         </Flex>
     );
-}
+};

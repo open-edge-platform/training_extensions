@@ -8,7 +8,7 @@ import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-
 import { paths } from '../../router';
 import { DebugTrigger } from './debug-trigger';
 
-function ActiveModel() {
+const ActiveModel = () => {
     const modelsQuery = $api.useSuspenseQuery('get', '/api/models');
 
     return (
@@ -29,9 +29,9 @@ function ActiveModel() {
             </Text>
         </Flex>
     );
-}
+};
 
-function WebRTCConnectionStatus() {
+const WebRTCConnectionStatus = () => {
     const { status, stop } = useWebRTCConnection();
 
     switch (status) {
@@ -75,9 +75,9 @@ function WebRTCConnectionStatus() {
                 </Flex>
             );
     }
-}
+};
 
-export function Toolbar() {
+export const Toolbar = () => {
     return (
         <View
             backgroundColor={'gray-100'}
@@ -109,4 +109,4 @@ export function Toolbar() {
             </Flex>
         </View>
     );
-}
+};

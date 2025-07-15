@@ -2,7 +2,7 @@ import { Button, ButtonGroup, Flex, Form, Item, Picker, TextField } from '@geti/
 
 import { paths } from '../../router';
 
-export function Input() {
+export const Input = () => {
     return (
         <Flex
             justifyContent={'center'}
@@ -39,4 +39,4 @@ export function Input() {
             </Form>
         </Flex>
     );
-}
+};

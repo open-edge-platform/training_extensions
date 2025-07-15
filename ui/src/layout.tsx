@@ -5,7 +5,7 @@ import { ReactComponent as BuildIcon } from './assets/build-icon.svg';
 import { ReactComponent as LiveFeedIcon } from './assets/live-feed-icon.svg';
 import { paths } from './router';
 
-function Header() {
+const Header = () => {
     return (
         <View backgroundColor={'gray-300'} gridArea={'header'}>
             <Flex height='100%' alignItems={'center'} marginX='1rem' gap='size-200'>
@@ -36,14 +36,14 @@ function Header() {
             </Flex>
         </View>
     );
-}
+};
 
-function getFirstPathSegment(path: string): string {
+const getFirstPathSegment = (path: string): string => {
     const segments = path.split('/');
     return segments.length > 1 ? `/${segments[1]}` : '/';
-}
+};
 
-export function Layout() {
+export const Layout = () => {
     const { pathname } = useLocation();
 
     return (
@@ -75,4 +75,4 @@ export function Layout() {
             </Grid>
         </Tabs>
     );
-}
+};

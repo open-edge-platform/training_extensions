@@ -3,10 +3,10 @@ import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef } f
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
 import { ZoomTransform } from '../zoom/zoom-transform';
 
-function useSetTargetSizeBasedOnVideo(
+const useSetTargetSizeBasedOnVideo = (
     setSize: Dispatch<SetStateAction<{ width: number; height: number }>>,
     videoRef: RefObject<HTMLVideoElement | null>
-) {
+) => {
     useEffect(() => {
         const video = videoRef.current;
 
@@ -33,9 +33,9 @@ function useSetTargetSizeBasedOnVideo(
             }
         };
     }, [setSize, videoRef]);
-}
+};
 
-function useStreamToVideo() {
+const useStreamToVideo = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const { status, webrtcConnectionRef } = useWebRTCConnection();
@@ -79,15 +79,15 @@ function useStreamToVideo() {
     }, [webrtcConnectionRef, connect]);
 
     return videoRef;
-}
+};
 
-export function Stream({
+export const Stream = ({
     size,
     setSize,
 }: {
     size: { width: number; height: number };
     setSize: Dispatch<SetStateAction<{ width: number; height: number }>>;
-}) {
+}) => {
     const videoRef = useStreamToVideo();
     useSetTargetSizeBasedOnVideo(setSize, videoRef);
     const { status } = useWebRTCConnection();
@@ -112,4 +112,4 @@ export function Stream({
             </div>
         </ZoomTransform>
     );
-}
+};

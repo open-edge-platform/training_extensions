@@ -11,7 +11,7 @@ export type WebRTCConnectionState = null | {
 
 export const WebRTCConnectionContext = createContext<WebRTCConnectionState>(null);
 
-function useWebRTCConnectionState() {
+const useWebRTCConnectionState = () => {
     const webrtcConnectionRef = useRef<WebRTCConnection | null>(null);
     const [status, setStatus] = useState<WebRTCConnectionStatus>('idle');
 
@@ -71,15 +71,15 @@ function useWebRTCConnectionState() {
         status,
         webrtcConnectionRef,
     };
-}
+};
 
-export function WebRTCConnectionProvider({ children }: { children: ReactNode }) {
+export const WebRTCConnectionProvider = ({ children }: { children: ReactNode }) => {
     const value = useWebRTCConnectionState();
 
     return <WebRTCConnectionContext.Provider value={value}>{children}</WebRTCConnectionContext.Provider>;
-}
+};
 
-export function useWebRTCConnection() {
+export const useWebRTCConnection = () => {
     const context = useContext(WebRTCConnectionContext);
 
     if (context === null) {
@@ -87,4 +87,4 @@ export function useWebRTCConnection() {
     }
 
     return context;
-}
+};

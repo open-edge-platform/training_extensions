@@ -2,7 +2,7 @@ import { RefObject, useState } from 'react';
 
 import { useResizeObserver } from '@react-aria/utils';
 
-export function useContainerSize(ref: RefObject<HTMLElement>) {
+export const useContainerSize = (ref: RefObject<HTMLElement>) => {
     const [size, setSize] = useState({ width: 100, height: 100 });
     useResizeObserver({
         ref,
@@ -24,4 +24,4 @@ export function useContainerSize(ref: RefObject<HTMLElement>) {
     });
 
     return size;
-}
+};

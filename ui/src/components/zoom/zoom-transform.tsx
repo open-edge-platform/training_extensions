@@ -23,7 +23,7 @@ const getCenterCoordinates = (container: Size, target: Size) => {
 };
 
 const INITIAL_ZOOM = { scale: 1.0, translate: { x: 0, y: 0 } };
-function SyncZoom({ container, target }: { container: Size; target: Size }) {
+const SyncZoom = ({ container, target }: { container: Size; target: Size }) => {
     const setZoom = useSetZoom();
 
     const targetZoom = useMemo(() => {
@@ -45,9 +45,9 @@ function SyncZoom({ container, target }: { container: Size; target: Size }) {
     }, [targetZoom.scale, targetZoom.translate.x, targetZoom.translate.y, setZoom]);
 
     return null;
-}
+};
 
-export function ZoomTransform({ children, target }: { children: ReactNode; target: Size }) {
+export const ZoomTransform = ({ children, target }: { children: ReactNode; target: Size }) => {
     const zoom = useZoom();
     const ref = useRef<HTMLDivElement>(null);
     const containerSize = useContainerSize(ref);
@@ -74,4 +74,4 @@ export function ZoomTransform({ children, target }: { children: ReactNode; targe
             </div>
         </div>
     );
-}
+};
