@@ -7,6 +7,7 @@ from multiprocessing.synchronize import Event as EventClass
 
 from fastrtc import AdditionalOutputs
 
+from app.entities.stream_data import StreamData
 from app.schemas.configuration import OutputConfig
 from app.services import ConfigurationService, DispatchService
 from app.services.dispatchers import Dispatcher
@@ -36,23 +37,25 @@ def dispatching_routine(
 
         # Read from the queue
         try:
-            original_frame, frame_with_detections, inf_result = pred_queue.get(timeout=1)
+            stream_data: StreamData = pred_queue.get(timeout=1)
         except queue.Empty:
             logger.debug("Nothing to dispatch yet")
             continue
 
+        image_with_visualization = stream_data.inference_data.visualized_prediction
+        prediction = stream_data.inference_data.prediction
         # Postprocess and dispatch results
         for destination in destinations:
             destination.dispatch(
-                original_image=original_frame,
-                image_with_visualization=frame_with_detections,
-                predictions=inf_result,
+                original_image=stream_data.frame_data,
+                image_with_visualization=image_with_visualization,
+                predictions=prediction,
             )
 
         # Dispatch to WebRTC stream
-        additional_outputs = AdditionalOutputs(str(inf_result))
+        additional_outputs = AdditionalOutputs(str(prediction))
         try:
-            rtc_stream_queue.put((frame_with_detections, additional_outputs), block=False)
+            rtc_stream_queue.put((image_with_visualization, additional_outputs), block=False)
         except queue.Full:
             logger.debug("Visualization queue is full; skipping")
 

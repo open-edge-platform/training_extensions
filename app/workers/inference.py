@@ -7,6 +7,7 @@ from typing import Any
 
 from model_api.models import DetectionResult, Model
 
+from app.entities.stream_data import InferenceData, StreamData
 from app.services import ModelService
 from app.utils.diagnostics import log_threads
 from app.utils.visualization import Visualizer
@@ -20,11 +21,19 @@ def inference_routine(  # noqa: C901
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
 
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
-        original_frame = userdata["original_frame"]
-        frame_with_predictions = Visualizer.overlay_predictions(original_image=frame, predictions=inf_result)
+        stream_data: StreamData = userdata["stream_data"]
+        frame_with_predictions = Visualizer.overlay_predictions(
+            original_image=stream_data.frame_data, predictions=inf_result
+        )
+        inference_data = InferenceData(
+            prediction=inf_result,
+            visualized_prediction=frame_with_predictions,
+            model_name=userdata["model_name"],
+        )
+        stream_data.inference_data = inference_data
         while not stop_event.is_set():
             try:
-                pred_queue.put((original_frame, frame_with_predictions, inf_result), timeout=1)  # noqa: F821
+                pred_queue.put(stream_data, timeout=1)  # noqa: F821
                 break
             except queue.Full:
                 logger.debug("Prediction queue is full, retrying...")
@@ -56,10 +65,13 @@ def inference_routine(  # noqa: C901
 
         if model.inference_adapter.is_ready():
             try:
-                frame = frame_queue.get(timeout=1)
+                queue_data = frame_queue.get(timeout=1)
             except queue.Empty:
                 continue
-            model.infer_async(frame, user_data={"original_frame": frame})
+            model.infer_async(
+                queue_data.frame_data,
+                user_data={"stream_data": queue_data, "model_name": model_service.get_active_model_name()},
+            )
         else:
             model.inference_adapter.await_any()
 

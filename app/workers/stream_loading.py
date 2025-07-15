@@ -5,8 +5,8 @@ import queue
 import time
 from multiprocessing.synchronize import Condition as ConditionClass
 from multiprocessing.synchronize import Event as EventClass
-from typing import Any
 
+from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
 from app.schemas.configuration import InputConfig
 from app.services import ConfigurationService, VideoStreamService
@@ -41,8 +41,8 @@ def frame_acquisition_routine(
 
         # Acquire a frame and enqueue it
         try:
-            frame = video_stream.get_frame()
-            _enqueue_frame_with_retry(frame_queue, frame, video_stream, stop_event)
+            stream_data = video_stream.get_data()
+            _enqueue_frame_with_retry(frame_queue, stream_data, video_stream.is_real_time(), stop_event)
         except Exception as e:
             logger.error(f"Error acquiring frame: {e}")
             continue
@@ -52,15 +52,15 @@ def frame_acquisition_routine(
 
 
 def _enqueue_frame_with_retry(
-    frame_queue: mp.Queue, frame: Any, video_stream: VideoStream, stop_event: EventClass
+    frame_queue: mp.Queue, payload: StreamData, is_real_time: bool, stop_event: EventClass
 ) -> None:
     """Enqueue frame with retry logic for non-real-time streams"""
     while not stop_event.is_set():
         try:
-            frame_queue.put(frame, timeout=1)
+            frame_queue.put(payload, timeout=1)
             break
         except queue.Full:
-            if video_stream.is_real_time():
+            if is_real_time:
                 logger.debug("Frame queue is full, skipping frame")
                 break
             logger.debug("Frame queue is full, retrying...")

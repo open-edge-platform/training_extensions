@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
+from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
 from app.schemas.configuration import InputConfig
 from app.workers import frame_acquisition_routine
@@ -47,11 +48,22 @@ def mock_config():
 
 
 @pytest.fixture
-def mock_video_stream():
+def mock_stream_data():
+    def create_sample():
+        return StreamData(
+            frame_data=np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8),
+            timestamp=time.time(),
+            source_metadata={},
+        )
+
+    yield create_sample
+
+
+@pytest.fixture
+def mock_video_stream(mock_stream_data):
     """Mock video stream fixture"""
     stream = Mock(spec=VideoStream)
-    test_frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-    stream.get_frame.return_value = test_frame
+    stream.get_data.return_value = mock_stream_data()
     stream.is_real_time.return_value = True
     stream.release.return_value = None
     return stream
@@ -81,13 +93,12 @@ def mock_services(mock_config, mock_video_stream):
 class TestFrameAcquisition:
     """Unit tests for the frame acquisition routine"""
 
-    def test_queue_full(self, frame_queue, stop_event, config_changed_condition, mock_services):
+    def test_queue_full(self, frame_queue, mock_stream_data, stop_event, config_changed_condition, mock_services):
         """Test that stream frames are not acquired when queue is full"""
 
-        frame1 = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-        frame2 = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-        frame_queue.put(frame1)
-        frame_queue.put(frame2)
+        data1, data2 = mock_stream_data(), mock_stream_data()
+        frame_queue.put(data1)
+        frame_queue.put(data2)
 
         # Start the process
         process = mp.Process(
@@ -111,7 +122,7 @@ class TestFrameAcquisition:
 
         # Should still have our initial frames, proving new frames were ignored
         assert len(queue_contents) == 2
-        assert np.array_equal(queue_contents, [frame1, frame2])
+        assert all(np.array_equal(el1.frame_data, el2.frame_data) for el1, el2 in zip(queue_contents, [data1, data2]))
         assert not process.is_alive(), "Process should terminate cleanly"
 
     def test_queue_empty(self, frame_queue, stop_event, config_changed_condition, mock_services):
