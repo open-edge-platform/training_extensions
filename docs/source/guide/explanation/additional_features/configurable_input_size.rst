@@ -84,7 +84,7 @@ To activate this feature, use the following command with the desired mode:
             model = YOLOXS(label_info=5, input_size=DataInputParams(input_size=datamodule.input_size,
                                                                     mean=datamodule.input_mean,
                                                                     std=datamodule.input_std))
-            engine = Engine(model=model, datamodule=datamodule)
+            engine = OTXEngine(model=model, data=datamodule)
             engine.train()
 
     .. tab-item:: CLI
