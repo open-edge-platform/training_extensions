@@ -30,6 +30,16 @@ if TYPE_CHECKING:
 class DEIMDFine(RTDETR):
     """OTX Detection model class for DEIMDFine.
 
+    DEIM-DFine is an improved version of D-FINE, which halfed the training time and improved the performance on COCO.
+
+    It is based on the DEIM-DFine paper: https://arxiv.org/abs/2412.04234
+    The original implementation is available at: https://github.com/ShihuaHuang95/DEIM
+
+    The model should be used with
+    :class:`~otx.backend.native.callbacks.aug_scheduler.DataAugSwitch` and
+    :class:`~otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback`
+    for dynamic augmentation scheduling.
+
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
         input_size_multiplier (int): Multiplier for the input size.
