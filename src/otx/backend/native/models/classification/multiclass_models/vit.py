@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import types
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Literal
 from urllib.parse import urlparse
 
 import numpy as np
@@ -207,13 +207,13 @@ class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, OTXMulticlassCls
         data_input_params: DataInputParams,
         model_name: str = "vit-tiny",
         freeze_backbone: bool = False,
-        lora: bool = False,
+        peft: Literal["lora", "dora"] | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-        self.lora = lora
+        self.peft = peft
 
         super().__init__(
             label_info=label_info,
@@ -264,7 +264,7 @@ class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, OTXMulticlassCls
         vit_backbone = VisionTransformer(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
-            lora=self.lora,
+            peft=self.peft,
         )
 
         return ImageClassifier(

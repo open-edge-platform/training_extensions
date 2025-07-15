@@ -113,7 +113,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
         vit_backbone = VisionTransformer(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
-            lora=self.lora,
+            peft=self.peft,
         )
         model = HLabelClassifier(
             backbone=vit_backbone,

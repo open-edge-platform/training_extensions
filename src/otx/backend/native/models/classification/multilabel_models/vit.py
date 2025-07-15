@@ -96,7 +96,7 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         vit_backbone = VisionTransformer(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
-            lora=self.lora,
+            peft=self.peft,
         )
         model = ImageClassifier(
             backbone=vit_backbone,
