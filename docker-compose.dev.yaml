@@ -96,10 +96,13 @@ services:
       - mqtt
     image: emqx/mqttx-web
     restart: unless-stopped
-    ports:
-      - "8082:80"
     environment:
       - MQTT_BROKER_HOST=mosquitto
       - MQTT_BROKER_PORT=9001
     depends_on:
       - mosquitto
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-edge-mqtt-ui.rule=Host(`geti-edge-mqtt.localhost`)"
+      - "traefik.http.routers.geti-edge-mqtt-ui.entrypoints=web"
+      - "traefik.http.services.geti-edge-mqtt-ui.loadbalancer.server.port=80"
