@@ -68,6 +68,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    '/api/inputs': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Input Configuration
+         * @description Get the current input stream configuration.
+         */
+        get: operations['get_input_configuration_api_inputs_get'];
+        put?: never;
+        /**
+         * Configure Input Stream
+         * @description Configure the input stream for the application.
+         */
+        post: operations['configure_input_stream_api_inputs_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/outputs': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Output Configurations
+         * @description Get the current output configurations.
+         */
+        get: operations['get_output_configurations_api_outputs_get'];
+        put?: never;
+        /**
+         * Configure Outputs
+         * @description Configure the destination(s) for the application output.
+         */
+        post: operations['configure_outputs_api_outputs_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/system/metrics/memory': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Memory
+         * @description Returns the used memory in MB and total available memory in MB.
+         */
+        get: operations['get_memory_api_system_metrics_memory_get'];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/docs': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scalar Docs
+         * @description Shows docs for our OpenAPI specification using scalar
+         */
+        get: operations['get_scalar_docs_api_docs_get'];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     '/api/input_hook': {
         parameters: {
             query?: never;
@@ -77,42 +165,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**   */
-        post: operations['__api_input_hook_post'];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    '/api/predictions': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stream Updates */
-        get: operations['stream_updates_api_predictions_get'];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    '/api/predictions/latest': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Latest Updates */
-        get: operations['latest_updates_api_predictions_latest_get'];
-        put?: never;
-        post?: never;
+        /**
+         * Webrtc Input Hook
+         * @description Update webrtc input for user
+         */
+        post: operations['webrtc_input_hook_api_input_hook_post'];
         delete?: never;
         options?: never;
         head?: never;
@@ -208,10 +265,56 @@ export interface components {
              */
             bin_file: string;
         };
+        /** DdsOutputConfig */
+        DdsOutputConfig: {
+            /** Output Formats */
+            output_formats: components['schemas']['OutputFormat'][];
+            /** Rate Limit */
+            rate_limit?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            destination_type: 'dds';
+            /** Dds Topic */
+            dds_topic: string;
+        };
+        /** DisconnectedSourceConfig */
+        DisconnectedSourceConfig: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            source_type: 'disconnected';
+        };
+        /** FolderOutputConfig */
+        FolderOutputConfig: {
+            /** Output Formats */
+            output_formats: components['schemas']['OutputFormat'][];
+            /** Rate Limit */
+            rate_limit?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            destination_type: 'folder';
+            /** Folder Path */
+            folder_path: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components['schemas']['ValidationError'][];
+        };
+        /** ImagesFolderSourceConfig */
+        ImagesFolderSourceConfig: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            source_type: 'images_folder';
+            /** Images Folder Path */
+            images_folder_path: string;
         };
         /** InputData */
         InputData: {
@@ -219,6 +322,16 @@ export interface components {
             webrtc_id: string;
             /** Conf Threshold */
             conf_threshold: number;
+        };
+        /** IpCameraSourceConfig */
+        IpCameraSourceConfig: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            source_type: 'ip_camera';
+            /** Device Url */
+            device_url: string;
         };
         /** ModelResponse */
         ModelResponse: {
@@ -232,6 +345,47 @@ export interface components {
             /** Available Models */
             available_models: string[];
         };
+        /** MqttOutputConfig */
+        MqttOutputConfig: {
+            /** Output Formats */
+            output_formats: components['schemas']['OutputFormat'][];
+            /** Rate Limit */
+            rate_limit?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            destination_type: 'mqtt';
+            /** Broker Host */
+            broker_host: string;
+            /** Broker Port */
+            broker_port: number;
+            /** Topic */
+            topic: string;
+            /** Username */
+            username?: string | null;
+            /** Password */
+            password?: string | null;
+        };
+        /**
+         * OutputFormat
+         * @enum {string}
+         */
+        OutputFormat: 'image_original' | 'image_with_predictions' | 'predictions';
+        /** RosOutputConfig */
+        RosOutputConfig: {
+            /** Output Formats */
+            output_formats: components['schemas']['OutputFormat'][];
+            /** Rate Limit */
+            rate_limit?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            destination_type: 'ros';
+            /** Ros Topic */
+            ros_topic: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -240,6 +394,26 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VideoFileSourceConfig */
+        VideoFileSourceConfig: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            source_type: 'video_file';
+            /** Video Path */
+            video_path: string;
+        };
+        /** WebcamSourceConfig */
+        WebcamSourceConfig: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            source_type: 'webcam';
+            /** Device Id */
+            device_id: number;
         };
     };
     responses: never;
@@ -250,11 +424,21 @@ export interface components {
 }
 export type SchemaBody = components['schemas']['Body'];
 export type SchemaBodyAddModelApiModelsPost = components['schemas']['Body_add_model_api_models_post'];
+export type SchemaDdsOutputConfig = components['schemas']['DdsOutputConfig'];
+export type SchemaDisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfig'];
+export type SchemaFolderOutputConfig = components['schemas']['FolderOutputConfig'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
+export type SchemaImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfig'];
 export type SchemaInputData = components['schemas']['InputData'];
+export type SchemaIpCameraSourceConfig = components['schemas']['IpCameraSourceConfig'];
 export type SchemaModelResponse = components['schemas']['ModelResponse'];
 export type SchemaModelsInfoResponse = components['schemas']['ModelsInfoResponse'];
+export type SchemaMqttOutputConfig = components['schemas']['MqttOutputConfig'];
+export type SchemaOutputFormat = components['schemas']['OutputFormat'];
+export type SchemaRosOutputConfig = components['schemas']['RosOutputConfig'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
+export type SchemaVideoFileSourceConfig = components['schemas']['VideoFileSourceConfig'];
+export type SchemaWebcamSourceConfig = components['schemas']['WebcamSourceConfig'];
 export type $defs = Record<string, never>;
 export interface operations {
     get_models_api_models_get: {
@@ -375,7 +559,175 @@ export interface operations {
             };
         };
     };
-    __api_input_hook_post: {
+    get_input_configuration_api_inputs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['DisconnectedSourceConfig']
+                        | components['schemas']['WebcamSourceConfig']
+                        | components['schemas']['IpCameraSourceConfig']
+                        | components['schemas']['VideoFileSourceConfig']
+                        | components['schemas']['ImagesFolderSourceConfig'];
+                };
+            };
+        };
+    };
+    configure_input_stream_api_inputs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json':
+                    | components['schemas']['DisconnectedSourceConfig']
+                    | components['schemas']['WebcamSourceConfig']
+                    | components['schemas']['IpCameraSourceConfig']
+                    | components['schemas']['VideoFileSourceConfig']
+                    | components['schemas']['ImagesFolderSourceConfig'];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    get_output_configurations_api_outputs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': (
+                        | components['schemas']['FolderOutputConfig']
+                        | components['schemas']['MqttOutputConfig']
+                        | components['schemas']['DdsOutputConfig']
+                        | components['schemas']['RosOutputConfig']
+                    )[];
+                };
+            };
+        };
+    };
+    configure_outputs_api_outputs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': (
+                    | components['schemas']['FolderOutputConfig']
+                    | components['schemas']['MqttOutputConfig']
+                    | components['schemas']['DdsOutputConfig']
+                    | components['schemas']['RosOutputConfig']
+                )[];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    get_memory_api_system_metrics_memory_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_scalar_docs_api_docs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': unknown;
+                };
+            };
+        };
+    };
+    webrtc_input_hook_api_input_hook_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -387,68 +739,6 @@ export interface operations {
                 'application/json': components['schemas']['InputData'];
             };
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['HTTPValidationError'];
-                };
-            };
-        };
-    };
-    stream_updates_api_predictions_get: {
-        parameters: {
-            query: {
-                webrtc_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['HTTPValidationError'];
-                };
-            };
-        };
-    };
-    latest_updates_api_predictions_latest_get: {
-        parameters: {
-            query: {
-                webrtc_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

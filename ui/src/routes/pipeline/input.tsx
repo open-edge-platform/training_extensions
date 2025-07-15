@@ -1,6 +1,8 @@
 import { Button, ButtonGroup, Flex, Form, Item, Picker, TextField } from '@geti/ui';
 
-export function BuildInput({ next }: { next: () => void }) {
+import { paths } from '../../router';
+
+export function Input() {
     return (
         <Flex
             justifyContent={'center'}
@@ -27,8 +29,11 @@ export function BuildInput({ next }: { next: () => void }) {
                     <Item key='rtsp'>RTSP</Item>
                 </Picker>
                 <ButtonGroup marginTop={'size-400'}>
-                    <Button type='submit' variant='accent' onPress={next}>
+                    <Button type='submit' variant='accent'>
                         Save & connect
+                    </Button>
+                    <Button href={paths.pipeline.model({})} variant='secondary'>
+                        Next
                     </Button>
                 </ButtonGroup>
             </Form>

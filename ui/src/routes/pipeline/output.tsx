@@ -1,17 +1,13 @@
 import { Button, ButtonGroup, Checkbox, Divider, Flex, Form, Grid, Heading, Radio, RadioGroup, View } from '@geti/ui';
 import { GridList, GridListItem } from 'react-aria-components';
 
-export function BuildOutput({ next, back }: { next: () => void; back: () => void }) {
+import { paths } from '../../router';
+
+export function Output() {
     return (
-        <Form
-            width='100%'
-            onSubmit={(e) => {
-                e.preventDefault();
-                next();
-            }}
-        >
+        <Form width='100%'>
             <Flex direction='column' gap='size-400'>
-                <Flex alignSelf={'center'} direction='column' width={'100'} maxWidth='size-6000'>
+                <Flex alignSelf={'center'} direction='column' maxWidth='size-6000'>
                     <p>
                         Define how and where the system should deliver its predictions. This configuration enables
                         seamless integration with your existing workflows and infrastructure.
@@ -144,10 +140,10 @@ export function BuildOutput({ next, back }: { next: () => void; back: () => void
                 <Divider size='S' />
                 <Flex justifyContent={'end'}>
                     <ButtonGroup>
-                        <Button type='button' variant='secondary' onPress={back}>
+                        <Button href={paths.pipeline.model({})} type='button' variant='secondary'>
                             Back
                         </Button>
-                        <Button type='submit' variant='accent' onPress={next}>
+                        <Button href={paths.liveFeed.index({})} type='submit' variant='accent'>
                             Submit & run
                         </Button>
                     </ButtonGroup>

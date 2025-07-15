@@ -79,6 +79,11 @@
     }
 }
 
+a.wizardTab {
+    text-decoration: none;
+    color: var(--spectrum-global-color-gray-700);
+}
+
 .wizardTabText {
     position: absolute;
     text-align: center;

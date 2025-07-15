@@ -22,6 +22,7 @@ import {
 import { FileTrigger } from 'react-aria-components';
 
 import { $api } from '../../api/client';
+import { paths } from '../../router';
 
 function ListModels() {
     const modelsQuery = $api.useQuery('get', '/api/models');
@@ -225,7 +226,7 @@ function UplaodModelForm() {
     );
 }
 
-export function BuildModel({ next, back }: { next: () => void; back: () => void }) {
+export function Model() {
     return (
         <Flex direction='column' gap='size-400'>
             <UplaodModelForm />
@@ -233,10 +234,10 @@ export function BuildModel({ next, back }: { next: () => void; back: () => void 
             <ListModels />
             <Flex justifyContent={'end'}>
                 <ButtonGroup>
-                    <Button type='submit' variant='secondary' onPress={back}>
+                    <Button href={paths.pipeline.input({})} type='submit' variant='secondary'>
                         Back
                     </Button>
-                    <Button type='submit' variant='primary' onPress={next}>
+                    <Button href={paths.pipeline.output({})} type='submit' variant='primary'>
                         Next
                     </Button>
                 </ButtonGroup>
