@@ -6,11 +6,10 @@
 from __future__ import annotations
 
 import argparse
-import json
 from copy import deepcopy
-from pathlib import Path
 from typing import Any
 from warnings import warn
+import yaml
 
 from jsonargparse import ArgumentParser, Namespace
 
@@ -21,163 +20,70 @@ from otx.data.module import OTXDataModule
 from otx.engine import Engine, create_engine
 from otx.tools.auto_configurator import AutoConfigurator
 from otx.types import PathLike
-from otx.types.task import OTXTaskType
 
 RECIPE_PATH = get_otx_root_path() / "recipe"
 
-TEMPLATE_ID_DICT = {
+TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
-    "Custom_Image_Classification_DeiT-Tiny": {
-        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
-    },
-    "Custom_Image_Classification_EfficinetNet-B0": {
-        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
-    },
-    "Custom_Image_Classification_EfficientNet-V2-S": {
-        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
-    },
-    "Custom_Image_Classification_MobileNet-V3-large-1x": {
-        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
-    },
-    "Custom_Image_Classification_EfficientNet-B3": {
-        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
-    },
-    "Custom_Image_Classification_EfficientNet-V2-L": {
-        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_v2_l.yaml",
-    },
-    "Custom_Image_Classification_MobileNet-V3-small": {
-        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_mobilenet_v3_small.yaml",
-    },
+    "Custom_Image_Classification_DeiT-Tiny": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
+    "Custom_Image_Classification_EfficinetNet-B0": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
+    "Custom_Image_Classification_EfficientNet-V2-S": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
+    "Custom_Image_Classification_MobileNet-V3-large-1x": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
+    "Custom_Image_Classification_EfficientNet-B3": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
+    "Custom_Image_Classification_EfficientNet-V2-L": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_v2_l.yaml",
+    "Custom_Image_Classification_MobileNet-V3-small": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_mobilenet_v3_small.yaml",
     # DETECTION
-    "Custom_Object_Detection_Gen3_ATSS": {
-        "model_config_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
-    },
-    "Object_Detection_ResNeXt101_ATSS": {
-        "model_config_path": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
-    },
-    "Custom_Object_Detection_Gen3_SSD": {
-        "model_config_path": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
-    },
-    "Object_Detection_YOLOX_X": {
-        "model_config_path": RECIPE_PATH / "detection" / "yolox_x.yaml",
-    },
-    "Object_Detection_YOLOX_L": {
-        "model_config_path": RECIPE_PATH / "detection" / "yolox_l.yaml",
-    },
-    "Object_Detection_YOLOX_S": {
-        "model_config_path": RECIPE_PATH / "detection" / "yolox_s.yaml",
-    },
-    "Custom_Object_Detection_YOLOX": {
-        "model_config_path": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
-    },
-    "Object_Detection_RTDetr_18": {
-        "model_config_path": RECIPE_PATH / "detection" / "rtdetr_18.yaml",
-    },
-    "Object_Detection_RTDetr_50": {
-        "model_config_path": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
-    },
-    "Object_Detection_RTDetr_101": {
-        "model_config_path": RECIPE_PATH / "detection" / "rtdetr_101.yaml",
-    },
-    "Object_Detection_RTMDet_tiny": {
-        "model_config_path": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
-    },
-    "Object_Detection_DFine_X": {
-        "model_config_path": RECIPE_PATH / "detection" / "dfine_x.yaml",
-    },
+    "Custom_Object_Detection_Gen3_ATSS": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
+    "Object_Detection_ResNeXt101_ATSS": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
+    "Custom_Object_Detection_Gen3_SSD": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
+    "Object_Detection_YOLOX_X": RECIPE_PATH / "detection" / "yolox_x.yaml",
+    "Object_Detection_YOLOX_L": RECIPE_PATH / "detection" / "yolox_l.yaml",
+    "Object_Detection_YOLOX_S": RECIPE_PATH / "detection" / "yolox_s.yaml",
+    "Custom_Object_Detection_YOLOX": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
+    "Object_Detection_RTDetr_18": RECIPE_PATH / "detection" / "rtdetr_18.yaml",
+    "Object_Detection_RTDetr_50": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
+    "Object_Detection_RTDetr_101": RECIPE_PATH / "detection" / "rtdetr_101.yaml",
+    "Object_Detection_RTMDet_tiny": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
+    "Object_Detection_DFine_X": RECIPE_PATH / "detection" / "dfine_x.yaml",
     # INSTANCE_SEGMENTATION
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
-    },
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
-        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
-    },
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
-    },
-    "Custom_Instance_Segmentation_RTMDet_tiny": {
-        "model_config_path": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
-    },
-    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
-        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
-    },
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
+    "Custom_Instance_Segmentation_RTMDet_tiny": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
+    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
     # ROTATED_DETECTION
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
-    },
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_efficientnetb2b.yaml",
-    },
-    "Rotated_Detection_MaskRCNN_ResNet50_V2": {
-        "model_config_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
-    },
+    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
+    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH / "rotated_detection" / "maskrcnn_efficientnetb2b.yaml",
+    "Rotated_Detection_MaskRCNN_ResNet50_V2": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
     # SEMANTIC_SEGMENTATION
-    "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
-    },
-    "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
-    },
-    "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_s.yaml",
-    },
-    "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_x.yaml",
-    },
-    "Custom_Semantic_Segmentation_SegNext_t": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "segnext_t.yaml",
-    },
-    "Custom_Semantic_Segmentation_SegNext_s": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "segnext_s.yaml",
-    },
-    "Custom_Semantic_Segmentation_SegNext_B": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "segnext_b.yaml",
-    },
-    "Custom_Semantic_Segmentation_DINOV2_S": {
-        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "dino_v2.yaml",
-    },
+    "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
+    "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
+    "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_s.yaml",
+    "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_x.yaml",
+    "Custom_Semantic_Segmentation_SegNext_t": RECIPE_PATH / "semantic_segmentation" / "segnext_t.yaml",
+    "Custom_Semantic_Segmentation_SegNext_s": RECIPE_PATH / "semantic_segmentation" / "segnext_s.yaml",
+    "Custom_Semantic_Segmentation_SegNext_B": RECIPE_PATH / "semantic_segmentation" / "segnext_b.yaml",
+    "Custom_Semantic_Segmentation_DINOV2_S": RECIPE_PATH / "semantic_segmentation" / "dino_v2.yaml",
     # ANOMALY
-    "ote_anomaly_padim": {
-        "model_config_path": RECIPE_PATH / "anomaly" / "padim.yaml",
-    },
-    "ote_anomaly_stfpm": {
-        "model_config_path": RECIPE_PATH / "anomaly" / "stfpm.yaml",
-    },
-    "ote_anomaly_uflow": {
-        "model_config_path": RECIPE_PATH / "anomaly" / "uflow.yaml",
-    },
+    "ote_anomaly_padim": RECIPE_PATH / "anomaly" / "padim.yaml",
+    "ote_anomaly_stfpm": RECIPE_PATH / "anomaly" / "stfpm.yaml",
+    "ote_anomaly_uflow": RECIPE_PATH / "anomaly" / "uflow.yaml",
     # ANOMALY CLASSIFICATION
-    "ote_anomaly_classification_padim": {
-        "model_config_path": RECIPE_PATH / "anomaly_classification" / "padim.yaml",
-    },
-    "ote_anomaly_classification_stfpm": {
-        "model_config_path": RECIPE_PATH / "anomaly_classification" / "stfpm.yaml",
-    },
+    "ote_anomaly_classification_padim": RECIPE_PATH / "anomaly_classification" / "padim.yaml",
+    "ote_anomaly_classification_stfpm": RECIPE_PATH / "anomaly_classification" / "stfpm.yaml",
     # ANOMALY_DETECTION
-    "ote_anomaly_detection_padim": {
-        "model_config_path": RECIPE_PATH / "anomaly_detection" / "padim.yaml",
-    },
-    "ote_anomaly_detection_stfpm": {
-        "model_config_path": RECIPE_PATH / "anomaly_detection" / "stfpm.yaml",
-    },
+    "ote_anomaly_detection_padim": RECIPE_PATH / "anomaly_detection" / "padim.yaml",
+    "ote_anomaly_detection_stfpm": RECIPE_PATH / "anomaly_detection" / "stfpm.yaml",
     # ANOMALY_SEGMENTATION
-    "ote_anomaly_segmentation_padim": {
-        "model_config_path": RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
-    },
-    "ote_anomaly_segmentation_stfpm": {
-        "model_config_path": RECIPE_PATH / "anomaly_segmentation" / "stfpm.yaml",
-    },
+    "ote_anomaly_segmentation_padim": RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
+    "ote_anomaly_segmentation_stfpm": RECIPE_PATH / "anomaly_segmentation" / "stfpm.yaml",
     # KEYPOINT_DETECTION
-    "Keypoint_Detection_RTMPose_Tiny": {
-        "model_config_path": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
-    },
+    "Keypoint_Detection_RTMPose_Tiny": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
 
-class ConfigConverter:
-    """Convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.
-
-    This class is used to convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.
+class GetiConfigConverter:
+    """Convert Geti model manifest to OTXv2 recipe dictionary.
 
     Example:
         The following examples show how to use the Converter class.
@@ -185,8 +91,8 @@ class ConfigConverter:
 
         Convert template.json to dictionary::
 
-            converter = ConfigConverter()
-            config = converter.convert("template.json")
+            converter = GetiConfigConverter()
+            config = converter.convert("train_config.yaml")
 
         Instantiate an object from the configuration dictionary::
 
@@ -202,71 +108,34 @@ class ConfigConverter:
     """
 
     @staticmethod
-    def convert(config_path: str, task: OTXTaskType | None = None) -> dict:
-        """Convert a configuration file to a default configuration dictionary.
+    def convert(config: dict) -> dict:
+        """Convert a geti configuration file to a default configuration dictionary.
 
         Args:
-            config_path (str): The path to the configuration file.
+            config (dict): The path to the Geti yaml configuration file.
             task (OTXTaskType | None): Value to override the task.
 
         Returns:
             dict: The default configuration dictionary.
 
         """
-        with Path(config_path).open() as f:
-            template_config = json.load(f)
+        hyper_parameters = config["hyper_parameters"]
+        param_dict = GetiConfigConverter._get_params(hyper_parameters)
 
-        hyperparameters = template_config["hyperparameters"]
-        param_dict = ConfigConverter._get_params(hyperparameters)
-
-        task_info = TEMPLATE_ID_DICT[template_config["model_template_id"]]
-        model_config_path = Path(task_info["model_config_path"])
+        model_config_path = TEMPLATE_ID_MAPPING[config["model_template_id"]]
         # override necessary parameters for config
         if param_dict.get("enable_tiling", None) and "_tile" not in model_config_path.stem:
             tile_name = model_config_path.stem + "_tile.yaml"
             model_config_path = model_config_path.parent / tile_name
         # classification task type can't be deducted from template name, try to extract from config
-        if "sub_task_type" in template_config and "_cls" in model_config_path.parent.name:
-            new_task = template_config["sub_task_type"].lower()
-            model_config_path = RECIPE_PATH / "classification" / new_task / model_config_path.name
-        if task is not None:
-            # override the task for the given model
-            parent_path = (
-                model_config_path.parent.parent if "_cls" in model_config_path.parent.name else model_config_path.parent
-            )
-            name_of_model = model_config_path.name
-            model_config_path = parent_path / task.value.lower() / name_of_model
-            if not model_config_path.exists():
-                msg = (
-                    f"Overrided model config file: {model_config_path} "
-                    "with the given task: {task.value} does not exist."
-                )
-                raise FileNotFoundError(msg)
-        # assign back the modified model config path to the task_info
-        task_info["model_config_path"] = model_config_path
-        default_config = ConfigConverter._get_default_config(task_info)
-        ConfigConverter._update_params(default_config, param_dict)
-        ConfigConverter._remove_unused_key(default_config)
+        if sub_task_type := config.get("sub_task_type", None) and "_cls" in model_config_path.parent.name:
+            model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
+        if model_config_path.suffix != ".yaml":
+            model_config_path = model_config_path / ".yaml"
+        default_config = AutoConfigurator(model_config_path=model_config_path).config
+        GetiConfigConverter._update_params(default_config, param_dict)
+        GetiConfigConverter._remove_unused_key(default_config)
         return default_config
-
-    @staticmethod
-    def _get_default_config(task_info: dict) -> dict:
-        """Return default otx conifg for template use."""
-        if Path(task_info["model_config_path"]).suffix != ".yaml":
-            task_info["model_config_path"] = str(task_info["model_config_path"]) + ".yaml"
-        if "task" in task_info:
-            # override the task with the same model
-            path_to_task_parent = Path(task_info["model_config_path"]).parent.parent
-            name_of_file = Path(task_info["model_config_path"]).name
-            task_info["model_config_path"] = path_to_task_parent / task_info["task"].lower() / name_of_file
-            if not task_info["model_config_path"].exists():
-                msg = (
-                    f"Overrided model config file: {task_info['model_config_path']} "
-                    "with the given task: {task_info['task']} does not exist."
-                )
-                raise FileNotFoundError(msg)
-
-        return AutoConfigurator(**task_info).config  # type: ignore[arg-type]
 
     @staticmethod
     def _get_params(hyperparameters: dict) -> dict:
@@ -277,7 +146,7 @@ class ConfigConverter:
                 if "value" in param_info:
                     param_dict[param_name] = param_info["value"]
                 else:
-                    param_dict = param_dict | ConfigConverter._get_params(param_info)
+                    param_dict = param_dict | GetiConfigConverter._get_params(param_info)
 
         return param_dict
 
@@ -320,7 +189,7 @@ class ConfigConverter:
             config["data"]["test_subset"]["num_workers"] = param_value
 
         def update_enable_early_stopping(param_value: bool) -> None:
-            idx = ConfigConverter._get_callback_idx(
+            idx = GetiConfigConverter._get_callback_idx(
                 config["callbacks"],
                 "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
             )
@@ -338,7 +207,7 @@ class ConfigConverter:
                     break
 
         def update_use_adaptive_interval(param_value: bool) -> None:
-            idx = ConfigConverter._get_callback_idx(
+            idx = GetiConfigConverter._get_callback_idx(
                 config["callbacks"],
                 "otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
             )
@@ -503,8 +372,10 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--data_root", help="Input dataset root path")
     parser.add_argument("-o", "--work_dir", help="Input work directory path")
     args = parser.parse_args()
-    otx_config = ConfigConverter.convert(config_path=args.config)
-    engine, train_kwargs = ConfigConverter.instantiate(
+    with open(args.config, "r") as f:
+        config = yaml.safe_load(f)
+    otx_config = GetiConfigConverter.convert(config=config)
+    engine, train_kwargs = GetiConfigConverter.instantiate(
         config=otx_config,
         data_root=args.data_root,
         work_dir=args.work_dir,
