@@ -808,7 +808,6 @@ class DoRALayer(torch.nn.Module):
 
     def __init__(self, in_dim: int, out_dim: int, rank: int, alpha: float):
         super().__init__()
-        # LoRA 파라미터들을 직접 정의
         std = torch.sqrt(torch.tensor(rank).float())
         self.A = torch.nn.Parameter(torch.randn(in_dim, rank) / std)
         self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))
@@ -846,7 +845,6 @@ class AttentionWithDoRA(torch.nn.Module):
         self.weight = qkv.weight
         self.bias = qkv.bias
 
-        # Initialize magnitude vector
         self._initialize_magnitudes()
 
     def _initialize_magnitudes(self) -> None:
