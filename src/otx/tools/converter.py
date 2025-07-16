@@ -14,7 +14,7 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.backend.native.engine import OTXEngine
+from otx.backend.native.cli.utils import get_otx_root_path
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.data.module import OTXDataModule
@@ -23,151 +23,153 @@ from otx.tools.auto_configurator import AutoConfigurator
 from otx.types import PathLike
 from otx.types.task import OTXTaskType
 
+RECIPE_PATH = get_otx_root_path() / "recipe"
+
 TEMPLATE_ID_DICT = {
     # MULTI_CLASS_CLS
     "Custom_Image_Classification_DeiT-Tiny": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml",
+        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
     },
     "Custom_Image_Classification_EfficinetNet-B0": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
     },
     "Custom_Image_Classification_EfficientNet-V2-S": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml",
+        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
     },
     "Custom_Image_Classification_MobileNet-V3-large-1x": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
+        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
     },
     "Custom_Image_Classification_EfficientNet-B3": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml",
+        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
     },
     "Custom_Image_Classification_EfficientNet-V2-L": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml",
+        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_v2_l.yaml",
     },
     "Custom_Image_Classification_MobileNet-V3-small": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
+        "model_config_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_mobilenet_v3_small.yaml",
     },
     # DETECTION
     "Custom_Object_Detection_Gen3_ATSS": {
-        "model_config_path": "src/otx/recipe/detection/atss_mobilenetv2.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
     },
     "Object_Detection_ResNeXt101_ATSS": {
-        "model_config_path": "src/otx/recipe/detection/atss_resnext101.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
     },
     "Custom_Object_Detection_Gen3_SSD": {
-        "model_config_path": "src/otx/recipe/detection/ssd_mobilenetv2.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
     },
     "Object_Detection_YOLOX_X": {
-        "model_config_path": "src/otx/recipe/detection/yolox_x.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "yolox_x.yaml",
     },
     "Object_Detection_YOLOX_L": {
-        "model_config_path": "src/otx/recipe/detection/yolox_l.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "yolox_l.yaml",
     },
     "Object_Detection_YOLOX_S": {
-        "model_config_path": "src/otx/recipe/detection/yolox_s.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "yolox_s.yaml",
     },
     "Custom_Object_Detection_YOLOX": {
-        "model_config_path": "src/otx/recipe/detection/yolox_tiny.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
     },
     "Object_Detection_RTDetr_18": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_18.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "rtdetr_18.yaml",
     },
     "Object_Detection_RTDetr_50": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_50.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
     },
     "Object_Detection_RTDetr_101": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_101.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "rtdetr_101.yaml",
     },
     "Object_Detection_RTMDet_tiny": {
-        "model_config_path": "src/otx/recipe/detection/rtmdet_tiny.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
     },
     "Object_Detection_DFine_X": {
-        "model_config_path": "src/otx/recipe/detection/dfine_x.yaml",
+        "model_config_path": RECIPE_PATH / "detection" / "dfine_x.yaml",
     },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml",
+        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml",
+        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml",
+        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
     },
     "Custom_Instance_Segmentation_RTMDet_tiny": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml",
+        "model_config_path": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
     },
     "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml",
+        "model_config_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
     },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50.yaml",
+        "model_config_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
     },
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b.yaml",
+        "model_config_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_efficientnetb2b.yaml",
     },
     "Rotated_Detection_MaskRCNN_ResNet50_V2": {
-        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50_v2.yaml",
+        "model_config_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
     },
     # SEMANTIC_SEGMENTATION
     "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_s.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_s.yaml",
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_x.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_x.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_t": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_t.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "segnext_t.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_s": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_s.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "segnext_s.yaml",
     },
     "Custom_Semantic_Segmentation_SegNext_B": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_b.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "segnext_b.yaml",
     },
     "Custom_Semantic_Segmentation_DINOV2_S": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/dino_v2.yaml",
+        "model_config_path": RECIPE_PATH / "semantic_segmentation" / "dino_v2.yaml",
     },
     # ANOMALY
     "ote_anomaly_padim": {
-        "model_config_path": "src/otx/recipe/anomaly/padim.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly" / "padim.yaml",
     },
     "ote_anomaly_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly/stfpm.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly" / "stfpm.yaml",
     },
     "ote_anomaly_uflow": {
-        "model_config_path": "src/otx/recipe/anomaly/uflow.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly" / "uflow.yaml",
     },
     # ANOMALY CLASSIFICATION
     "ote_anomaly_classification_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_classification/padim.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly_classification" / "padim.yaml",
     },
     "ote_anomaly_classification_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_classification/stfpm.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly_classification" / "stfpm.yaml",
     },
     # ANOMALY_DETECTION
     "ote_anomaly_detection_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_detection/padim.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly_detection" / "padim.yaml",
     },
     "ote_anomaly_detection_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_detection/stfpm.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly_detection" / "stfpm.yaml",
     },
     # ANOMALY_SEGMENTATION
     "ote_anomaly_segmentation_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_segmentation/padim.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
     },
     "ote_anomaly_segmentation_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_segmentation/stfpm.yaml",
+        "model_config_path": RECIPE_PATH / "anomaly_segmentation" / "stfpm.yaml",
     },
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
-        "model_config_path": "src/otx/recipe/keypoint_detection/rtmpose_tiny.yaml",
+        "model_config_path": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
     },
 }
 
@@ -226,7 +228,7 @@ class ConfigConverter:
         # classification task type can't be deducted from template name, try to extract from config
         if "sub_task_type" in template_config and "_cls" in model_config_path.parent.name:
             new_task = template_config["sub_task_type"].lower()
-            model_config_path = Path("src/otx/recipe/classification") / new_task / model_config_path.name
+            model_config_path = RECIPE_PATH / "classification" / new_task / model_config_path.name
         if task is not None:
             # override the task for the given model
             parent_path = (
@@ -241,7 +243,7 @@ class ConfigConverter:
                 )
                 raise FileNotFoundError(msg)
         # assign back the modified model config path to the task_info
-        task_info["model_config_path"] = str(model_config_path)
+        task_info["model_config_path"] = model_config_path
         default_config = ConfigConverter._get_default_config(task_info)
         ConfigConverter._update_params(default_config, param_dict)
         ConfigConverter._remove_unused_key(default_config)
@@ -472,7 +474,7 @@ class ConfigConverter:
         # Instantiate Engine.train Arguments
         engine_parser = ArgumentParser()
         train_arguments = engine_parser.add_method_arguments(
-            OTXEngine,
+            engine.__class__,
             "train",
             skip={"accelerator", "devices"},
             fail_untyped=False,
