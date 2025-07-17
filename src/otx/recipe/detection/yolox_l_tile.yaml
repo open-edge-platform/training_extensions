@@ -37,6 +37,7 @@ callbacks:
       mode: max
       patience: 10
       check_on_train_epoch_end: false
+      monitor: val/map_50
       min_delta: 0.001
       warmup_iters: 30
       warmup_epochs: 3
