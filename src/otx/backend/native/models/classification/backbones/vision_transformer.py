@@ -24,9 +24,13 @@ from timm.layers import (
     trunc_normal_,
 )
 from timm.models._manipulate import adapt_input_conv
-from timm.models.vision_transformer import Attention, Block
+from timm.models.vision_transformer import Block
 from torch import nn
 
+from otx.backend.native.models.classification.utils.peft import (
+    AttentionWithDoRA,
+    AttentionWithLoRA,
+)
 from otx.backend.native.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
@@ -302,28 +306,20 @@ class VisionTransformer(BaseModule):
         self.norm = norm_layer(self.embed_dim)
 
         self.peft = peft
-        if self.peft is None:
-            pass
-        elif self.peft in ["lora", "dora"]:
+        if self.peft is not None:
+            if self.peft not in ["lora", "dora"]:
+                msg = f"Unsupported `peft` value '{self.peft}', please choose from 'lora' or 'dora'."
+                raise ValueError(msg)
+
+            attention_func = AttentionWithLoRA if self.peft == "lora" else AttentionWithDoRA
+            target_attrs = ["lora_q", "lora_v"] if self.peft == "lora" else ["dora_q", "dora_v"]
+
             lora_rank = 8
             lora_alpha = 1.0
 
-            peft_config: dict[str, dict[str, Any]] = {
-                "lora": {
-                    "assign_func": partial(AttentionWithLoRA, rank=lora_rank, alpha=lora_alpha),
-                    "target_attrs": ["lora_q", "lora_v"],
-                },
-                "dora": {
-                    "assign_func": partial(AttentionWithDoRA, rank=lora_rank, alpha=lora_alpha),
-                    "target_attrs": ["dora_q", "dora_v"],
-                },
-            }
-
-            config = peft_config[self.peft]
-
             # Apply PEFT to all blocks
             for block in self.blocks:
-                block.attn.qkv = config["assign_func"](block.attn.qkv)
+                block.attn.qkv = attention_func(block.attn.qkv, rank=lora_rank, alpha=lora_alpha)
 
             # Freeze all parameters
             for param in self.parameters():
@@ -331,13 +327,10 @@ class VisionTransformer(BaseModule):
 
             # Unfreeze PEFT layers
             for block in self.blocks:
-                for attr_name in config["target_attrs"]:
+                for attr_name in target_attrs:
                     peft_layer = getattr(block.attn.qkv, attr_name)
                     for param in peft_layer.parameters():
                         param.requires_grad = True
-        else:
-            msg = f"Unsupported `peft` value '{self.peft}', please choose from 'lora' or 'dora'."
-            raise ValueError(msg)
 
     def init_weights(self) -> None:
         """Initializes the weights of the VisionTransformer."""
@@ -766,112 +759,3 @@ class VisionTransformer(BaseModule):
                     getattr(block.mlp, f"fc{r + 1}").bias.copy_(
                         _n2p(w[f"{block_prefix}MlpBlock_{b_sub}/Dense_{r}/bias"], idx=idx),
                     )
-
-
-class LoRALayer(torch.nn.Module):
-    """LoRA layer implementation for computing A, B composition."""
-
-    def __init__(self, in_dim: int, out_dim: int, rank: int, alpha: float):
-        super().__init__()
-        std = torch.sqrt(torch.tensor(rank).float())
-        self.A = torch.nn.Parameter(torch.randn(in_dim, rank) / std)
-        self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))
-        self.alpha = alpha
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the LoRA layer."""
-        return self.alpha * (x @ self.A @ self.B)
-
-
-class AttentionWithLoRA(torch.nn.Module):
-    """Add LoRA layer into QKV attention layer in VisionTransformer."""
-
-    def __init__(self, qkv: Attention, rank: int, alpha: float):
-        super().__init__()
-        self.qkv = qkv
-        self.dim = qkv.in_features
-        self.lora_q = LoRALayer(self.dim, self.dim, rank, alpha)
-        self.lora_v = LoRALayer(self.dim, self.dim, rank, alpha)
-        self.weight = qkv.weight
-        self.bias = qkv.bias
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the AttentionWithLoRA."""
-        qkv = self.qkv(x)
-        qkv[:, :, : self.dim] += self.lora_q(x)
-        qkv[:, :, -self.dim :] += self.lora_v(x)
-        return qkv
-
-
-class DoRALayer(torch.nn.Module):
-    """DoRA layer implementation for Weight-Decomposed Low-Rank Adaptation."""
-
-    def __init__(self, in_dim: int, out_dim: int, rank: int, alpha: float):
-        super().__init__()
-        std = torch.sqrt(torch.tensor(rank).float())
-        self.A = torch.nn.Parameter(torch.randn(in_dim, rank) / std)
-        self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))
-        self.alpha = alpha
-        self.magnitude = torch.nn.Parameter(torch.ones(out_dim))
-
-    def forward(self, x: torch.Tensor, pretrained_weight: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the DoRA layer."""
-        lora_weight = self.alpha * (self.A @ self.B)
-        combined_weight = pretrained_weight.T + lora_weight
-        weight_norm = torch.norm(combined_weight, dim=0, keepdim=True)
-        normalized_weight = combined_weight / weight_norm
-        final_weight = self.magnitude.unsqueeze(0) * normalized_weight
-        return x @ final_weight
-
-    def initialize_magnitude(self, pretrained_weight: torch.Tensor) -> None:
-        """Initialize the DoRA magnitude vector based on the pretrained weight."""
-        with torch.no_grad():
-            weight_norms = torch.norm(pretrained_weight.T, dim=0)
-            self.magnitude.data = weight_norms
-
-
-class AttentionWithDoRA(torch.nn.Module):
-    """Add DoRA layer into QKV attention layer in VisionTransformer."""
-
-    def __init__(self, qkv: Attention, rank: int, alpha: float):
-        super().__init__()
-        self.dim = qkv.in_features
-        self.out_features = qkv.out_features
-
-        # DoRA layers for Query and Value respectively
-        self.dora_q = DoRALayer(self.dim, self.dim, rank, alpha)
-        self.dora_v = DoRALayer(self.dim, self.dim, rank, alpha)
-
-        self.weight = qkv.weight
-        self.bias = qkv.bias
-
-        self._initialize_magnitudes()
-
-    def _initialize_magnitudes(self) -> None:
-        """Initialize DoRA magnitude vector for q, v respectively."""
-        q_weight = self.weight[: self.dim, :]
-        v_weight = self.weight[-self.dim :, :]
-
-        self.dora_q.initialize_magnitude(q_weight)
-        self.dora_v.initialize_magnitude(v_weight)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the AttentionWithDoRA."""
-        # Split the original weight into Query, Key, Value
-        q_weight = self.weight[: self.dim, :]
-        k_weight = self.weight[self.dim : 2 * self.dim, :]
-        v_weight = self.weight[-self.dim :, :]
-
-        # Apply DoRA to Query and Value
-        q_output = self.dora_q(x, q_weight)
-        k_output = x @ k_weight.T
-        v_output = self.dora_v(x, v_weight)
-
-        # Concatenate Query, Key, Value
-        qkv = torch.cat([q_output, k_output, v_output], dim=-1)
-
-        # Add bias
-        if self.bias is not None:
-            qkv = qkv + self.bias
-
-        return qkv
