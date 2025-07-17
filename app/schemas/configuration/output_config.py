@@ -10,6 +10,7 @@ class DestinationType(str, Enum):
     MQTT = "mqtt"
     DDS = "dds"
     ROS = "ros"
+    WEBHOOK = "webhook"
 
 
 class OutputFormat(str, Enum):
@@ -21,6 +22,10 @@ class OutputFormat(str, Enum):
 class BaseOutputConfig(BaseModel):
     output_formats: list[OutputFormat]
     rate_limit: float | None = None  # Rate limit in Hz, None means no limit
+
+
+class DisconnectedOutputConfig(BaseOutputConfig):
+    destination_type: Literal[DestinationType.DISCONNECTED]
 
 
 class FolderOutputConfig(BaseOutputConfig):
@@ -47,6 +52,17 @@ class RosOutputConfig(BaseOutputConfig):
     ros_topic: str
 
 
+class WebhookOutputConfig(BaseOutputConfig):
+    destination_type: Literal[DestinationType.WEBHOOK]
+    webhook_url: str
+
+
 OutputConfig = Annotated[
-    FolderOutputConfig | MqttOutputConfig | DdsOutputConfig | RosOutputConfig, Field(discriminator="destination_type")
+    DisconnectedOutputConfig
+    | FolderOutputConfig
+    | MqttOutputConfig
+    | DdsOutputConfig
+    | RosOutputConfig
+    | WebhookOutputConfig,
+    Field(discriminator="destination_type"),
 ]

@@ -12,6 +12,7 @@ class DispatchService:
         DestinationType.MQTT: lambda config: MqttDispatcher(output_config=config),
         DestinationType.DDS: lambda _: _raise_not_implemented("DDS output is not implemented yet"),
         DestinationType.ROS: lambda _: _raise_not_implemented("ROS output is not implemented yet"),
+        DestinationType.WEBHOOK: lambda _: _raise_not_implemented("WEBHOOK output is not implemented yet"),
     }
 
     @classmethod

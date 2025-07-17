@@ -279,6 +279,18 @@ export interface components {
             /** Dds Topic */
             dds_topic: string;
         };
+        /** DisconnectedOutputConfig */
+        DisconnectedOutputConfig: {
+            /** Output Formats */
+            output_formats: components['schemas']['OutputFormat'][];
+            /** Rate Limit */
+            rate_limit?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            destination_type: 'disconnected';
+        };
         /** DisconnectedSourceConfig */
         DisconnectedSourceConfig: {
             /**
@@ -415,6 +427,20 @@ export interface components {
             /** Device Id */
             device_id: number;
         };
+        /** WebhookOutputConfig */
+        WebhookOutputConfig: {
+            /** Output Formats */
+            output_formats: components['schemas']['OutputFormat'][];
+            /** Rate Limit */
+            rate_limit?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            destination_type: 'webhook';
+            /** Webhook Url */
+            webhook_url: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -425,6 +451,7 @@ export interface components {
 export type SchemaBody = components['schemas']['Body'];
 export type SchemaBodyAddModelApiModelsPost = components['schemas']['Body_add_model_api_models_post'];
 export type SchemaDdsOutputConfig = components['schemas']['DdsOutputConfig'];
+export type SchemaDisconnectedOutputConfig = components['schemas']['DisconnectedOutputConfig'];
 export type SchemaDisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfig'];
 export type SchemaFolderOutputConfig = components['schemas']['FolderOutputConfig'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
@@ -439,6 +466,7 @@ export type SchemaRosOutputConfig = components['schemas']['RosOutputConfig'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
 export type SchemaVideoFileSourceConfig = components['schemas']['VideoFileSourceConfig'];
 export type SchemaWebcamSourceConfig = components['schemas']['WebcamSourceConfig'];
+export type SchemaWebhookOutputConfig = components['schemas']['WebhookOutputConfig'];
 export type $defs = Record<string, never>;
 export interface operations {
     get_models_api_models_get: {
@@ -638,10 +666,12 @@ export interface operations {
                 };
                 content: {
                     'application/json': (
+                        | components['schemas']['DisconnectedOutputConfig']
                         | components['schemas']['FolderOutputConfig']
                         | components['schemas']['MqttOutputConfig']
                         | components['schemas']['DdsOutputConfig']
                         | components['schemas']['RosOutputConfig']
+                        | components['schemas']['WebhookOutputConfig']
                     )[];
                 };
             };
@@ -657,10 +687,12 @@ export interface operations {
         requestBody: {
             content: {
                 'application/json': (
+                    | components['schemas']['DisconnectedOutputConfig']
                     | components['schemas']['FolderOutputConfig']
                     | components['schemas']['MqttOutputConfig']
                     | components['schemas']['DdsOutputConfig']
                     | components['schemas']['RosOutputConfig']
+                    | components['schemas']['WebhookOutputConfig']
                 )[];
             };
         };
