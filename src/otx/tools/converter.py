@@ -120,20 +120,20 @@ class GetiConfigConverter:
 
         """
         hyper_parameters = config["hyper_parameters"]
-        param_dict = GetiConfigConverter._get_params(hyper_parameters)
 
-        model_config_path = TEMPLATE_ID_MAPPING[config["model_template_id"]]
+        model_config_path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]
         # override necessary parameters for config
-        if param_dict.get("enable_tiling", None) and "_tile" not in model_config_path.stem:
+        if hyper_parameters and hyper_parameters["dataset_preparation"]["augmentation"]["tiling"]["enable"] and "_tile" not in model_config_path.stem:
             tile_name = model_config_path.stem + "_tile.yaml"
             model_config_path = model_config_path.parent / tile_name
         # classification task type can't be deducted from template name, try to extract from config
-        if sub_task_type := config.get("sub_task_type", None) and "_cls" in model_config_path.parent.name:
+        if sub_task_type := config["sub_task_type"] and "_cls" in model_config_path.parent.name:
             model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
         if model_config_path.suffix != ".yaml":
             model_config_path = model_config_path / ".yaml"
         default_config = AutoConfigurator(model_config_path=model_config_path).config
-        GetiConfigConverter._update_params(default_config, param_dict)
+        if hyper_parameters:
+            GetiConfigConverter._update_params(default_config, hyper_parameters)
         GetiConfigConverter._remove_unused_key(default_config)
         return default_config
 
@@ -155,13 +155,6 @@ class GetiConfigConverter:
         """Update params of OTX recipe from Geit configurable params."""
         unused_params = deepcopy(param_dict)
 
-        def update_batch_size(param_value: int) -> None:
-            config["data"]["train_subset"]["batch_size"] = param_value
-
-        def update_inference_batch_size(param_value: int) -> None:
-            config["data"]["val_subset"]["batch_size"] = param_value
-            config["data"]["test_subset"]["batch_size"] = param_value
-
         def update_learning_rate(param_value: float) -> None:
             optimizer = config["model"]["init_args"]["optimizer"]
             if isinstance(optimizer, dict) and "init_args" in optimizer:
@@ -169,99 +162,68 @@ class GetiConfigConverter:
             else:
                 warn("Warning: learning_rate is not updated", stacklevel=1)
 
-        def update_learning_rate_warmup_iters(param_value: int) -> None:
-            scheduler = config["model"]["init_args"]["scheduler"]
-            if (
-                isinstance(scheduler, dict)
-                and "class_path" in scheduler
-                and scheduler["class_path"] == "otx.backend.native.schedulers.LinearWarmupSchedulerCallable"
-            ):
-                scheduler["init_args"]["num_warmup_steps"] = param_value
-            else:
-                warn("Warning: learning_rate_warmup_iters is not updated", stacklevel=1)
-
         def update_num_iters(param_value: int) -> None:
             config["max_epochs"] = param_value
 
-        def update_num_workers(param_value: int) -> None:
-            config["data"]["train_subset"]["num_workers"] = param_value
-            config["data"]["val_subset"]["num_workers"] = param_value
-            config["data"]["test_subset"]["num_workers"] = param_value
+        def update_early_stopping(early_stopping_cfg: dict) -> None:
+            enable = early_stopping_cfg["enable"]
+            patience = early_stopping_cfg["patience"]
 
-        def update_enable_early_stopping(param_value: bool) -> None:
             idx = GetiConfigConverter._get_callback_idx(
                 config["callbacks"],
                 "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
             )
-            if not param_value and idx > -1:
+            if not enable and idx > -1:
                 config["callbacks"].pop(idx)
+                return
 
-        def update_early_stop_patience(param_value: int) -> None:
-            if "callbacks" in config and config["callbacks"] is not None:
-                for callback in config["callbacks"]:
-                    if (
-                        callback["class_path"]
-                        == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
-                    ):
-                        callback["init_args"]["patience"] = param_value
-                    break
+            config["callbacks"][idx]["init_args"]["patience"] = patience
 
-        def update_use_adaptive_interval(param_value: bool) -> None:
-            idx = GetiConfigConverter._get_callback_idx(
-                config["callbacks"],
-                "otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
-            )
-            if not param_value and idx > -1:
-                config["callbacks"].pop(idx)
-
-        def update_auto_num_workers(param_value: bool) -> None:
-            config["data"]["auto_num_workers"] = param_value
-
-        def update_auto_adapt_batch_size(param_value: str) -> None:
-            config["adaptive_bs"] = param_value
-
-        def update_enable_tiling(param_value: bool) -> None:
-            config["data"]["tile_config"]["enable_tiler"] = param_value
-            if param_value:
-                config["data"]["tile_config"]["enable_adaptive_tiling"] = param_dict["enable_adaptive_params"]
+        def update_tiling(tiling_dict: dict) -> None:
+            config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
+            if tiling_dict["enable"]:
+                config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["adaptive_tiling"]
                 config["data"]["tile_config"]["tile_size"] = (
-                    param_dict["tile_size"],
-                    param_dict["tile_size"],
+                    tiling_dict["tile_size"],
+                    tiling_dict["tile_size"],
                 )
-                config["data"]["tile_config"]["overlap"] = param_dict["tile_overlap"]
-                config["data"]["tile_config"]["max_num_instances"] = param_dict["tile_max_number"]
-                config["data"]["tile_config"]["sampling_ratio"] = param_dict["tile_sampling_ratio"]
-                config["data"]["tile_config"]["object_tile_ratio"] = param_dict["object_tile_ratio"]
-                tile_params = [
-                    "enable_adaptive_params",
-                    "tile_size",
-                    "tile_overlap",
-                    "tile_max_number",
-                    "tile_sampling_ratio",
-                    "object_tile_ratio",
-                ]
-                for tile_param in tile_params:
-                    unused_params.pop(tile_param)
+                config["data"]["tile_config"]["overlap"] = tiling_dict["tile_overlap"]
 
-        param_update_funcs = {
-            "batch_size": update_batch_size,
-            "inference_batch_size": update_inference_batch_size,
-            "learning_rate": update_learning_rate,
-            "learning_rate_warmup_iters": update_learning_rate_warmup_iters,
-            "num_iters": update_num_iters,
-            "num_workers": update_num_workers,
-            "enable_early_stopping": update_enable_early_stopping,
-            "early_stop_patience": update_early_stop_patience,
-            "use_adaptive_interval": update_use_adaptive_interval,
-            "auto_num_workers": update_auto_num_workers,
-            "enable_tiling": update_enable_tiling,
-            "auto_adapt_batch_size": update_auto_adapt_batch_size,
-        }
-        for param_name, param_value in param_dict.items():
-            update_func = param_update_funcs.get(param_name)
-            if update_func:
-                update_func(param_value)  # type: ignore[operator]
-                unused_params.pop(param_name)
+        def update_input_size(height: int, width: int) -> None:
+            """Update input size in the config."""
+            config["data"]["input_size"] = (height, width)
+
+        def update_augmentations(augmentation_params: dict) -> None:
+            """Update augmentations in the config."""
+            if not augmentation_params:
+                return
+
+            augs_mapping_list = {
+                "random_affine": "otx.data.transform_libs.torchvision.RandomAffine",
+                "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
+                "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
+                "gaussian_blur": "torchvision.transforms.v2.GaussianBlur",
+                "gaussian_noise": "torchvision.transforms.v2.GaussianNoise",
+                "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
+            }
+
+            for aug_name, aug_value in augmentation_params.items():
+                aug_class = augs_mapping_list[aug_name]
+                for aug_config in config["data"]["train_subset"]["transforms"]:
+                    if aug_class == aug_config["class_path"]:
+                        aug_config["enable"] = aug_value["enable"]
+                        break
+
+        augmentation_params = param_dict["dataset_preparation"]["augmentation"]
+        tiling = augmentation_params.pop("tiling")
+        training_parameters = param_dict["training"]
+
+        update_augmentations(augmentation_params)
+        update_tiling(tiling)
+        update_learning_rate(training_parameters["learning_rate"])
+        update_num_iters(training_parameters["max_epochs"])
+        update_early_stopping(training_parameters["early_stopping"])
+        update_input_size(training_parameters["input_size_height"], training_parameters["input_size_width"])
 
         warn("Warning: These parameters are not updated", stacklevel=1)
         for param_name, param_value in unused_params.items():
@@ -286,6 +248,29 @@ class GetiConfigConverter:
         config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
 
     @staticmethod
+    def instantiate_datamodule(config: dict,
+                               data_root: PathLike | None = None, **kwargs) -> OTXDataModule:
+        """Instantiate an OTXDataModule with arrow data format."""
+        config.update(kwargs)
+
+        # Instantiate datamodule
+        data_config = config.pop("data")
+        if data_root is not None:
+            data_config["data_root"] = data_root
+
+        train_config = data_config.pop("train_subset")
+        val_config = data_config.pop("val_subset")
+        test_config = data_config.pop("test_subset")
+        return OTXDataModule(
+            train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
+            val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
+            test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
+            tile_config=TileConfig(**data_config.pop("tile_config", {})),
+            **data_config,
+        )
+
+
+    @staticmethod
     def instantiate(
         config: dict,
         work_dir: PathLike | None = None,
@@ -302,22 +287,10 @@ class GetiConfigConverter:
         Returns:
             tuple: A tuple containing the engine and the train kwargs dictionary.
         """
-        config.update(kwargs)
-
-        # Instantiate datamodule
-        data_config = config.pop("data")
-        if data_root is not None:
-            data_config["data_root"] = data_root
-
-        train_config = data_config.pop("train_subset")
-        val_config = data_config.pop("val_subset")
-        test_config = data_config.pop("test_subset")
-        datamodule = OTXDataModule(
-            train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
-            val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
-            test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
-            tile_config=TileConfig(**data_config.pop("tile_config", {})),
-            **data_config,
+        datamodule = GetiConfigConverter.instantiate_datamodule(
+            config=config,
+            data_root=data_root,
+            **kwargs,
         )
 
         # Update num_classes & Instantiate Model
