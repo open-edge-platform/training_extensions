@@ -1,4 +1,4 @@
-# Rsbuild project
+# Geti Edge
 
 ## Setup
 
@@ -13,17 +13,17 @@ npm install
 Start the dev server:
 
 ```bash
-npm dev
+npm run dev
 ```
 
 Build the app for production:
 
 ```bash
-npm build
+npm run build
 ```
 
 Preview the production build locally:
 
 ```bash
-npm preview
+npm run preview
 ```

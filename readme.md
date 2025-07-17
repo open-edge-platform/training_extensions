@@ -85,14 +85,14 @@ PUT /api/pipeline/inputs/{:input_id}
     </table>
 </p>
 
-A user can upload t heir model by simply importing a zip file containing the model's `.xml` and `.bin` files (e.g. the downloaded OpenVINO model from Geti). 
+A user can upload their model by simply importing a zip file containing the model's `.xml` and `.bin` files (e.g. the downloaded OpenVINO model from Geti). 
 Additionally the user can provide extra metadata such as the model name, version and original(?) model accuracy.
 After importing the model the server should be able to determine the model's:
 - Labels
 - Size
 
 > Note:
-> The MVP will focus only on supporting OpenVINO models. At a later stage we can look into adding ONNX support or improting from a model deployment (Geti SDK, OVMS) file
+> The MVP will focus only on supporting OpenVINO models. At a later stage we can look into adding ONNX support or importing from a model deployment (Geti SDK, OVMS) file
 > Another option is to download directly from Geti, but as edge scenarios are likely to be air gapped we should assume the application can not connect to their Geti instance.
 
 ```

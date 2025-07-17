@@ -6,23 +6,23 @@ export type WebRTCConnectionState = null | {
     status: WebRTCConnectionStatus;
     start: () => Promise<void>;
     stop: () => Promise<void>;
-    webrtcConnectionRef: RefObject<WebRTCConnection>;
+    webRTCConnectionRef: RefObject<WebRTCConnection>;
 };
 
 export const WebRTCConnectionContext = createContext<WebRTCConnectionState>(null);
 
 const useWebRTCConnectionState = () => {
-    const webrtcConnectionRef = useRef<WebRTCConnection | null>(null);
+    const webRTCConnectionRef = useRef<WebRTCConnection | null>(null);
     const [status, setStatus] = useState<WebRTCConnectionStatus>('idle');
 
     // Initialize WebRTCConnection on mount
     useEffect(() => {
-        if (webrtcConnectionRef.current) {
+        if (webRTCConnectionRef.current) {
             return;
         }
 
         const webRTCConnection = new WebRTCConnection();
-        webrtcConnectionRef.current = webRTCConnection;
+        webRTCConnectionRef.current = webRTCConnection;
 
         const unsubscribe = webRTCConnection.subscribe((event) => {
             if (event.type === 'status_change') {
@@ -32,7 +32,7 @@ const useWebRTCConnectionState = () => {
             if (event.type === 'error') {
                 console.error('WebRTC Connection Error:', event.error);
                 // Optionally update status to 'failed' if not already
-                if (webrtcConnectionRef.current?.getStatus() !== 'failed') {
+                if (webRTCConnectionRef.current?.getStatus() !== 'failed') {
                     setStatus('failed');
                 }
             }
@@ -41,16 +41,17 @@ const useWebRTCConnectionState = () => {
         return () => {
             unsubscribe();
             webRTCConnection.stop(); // Ensure connection is closed on unmount
-            webrtcConnectionRef.current = null;
+            webRTCConnectionRef.current = null;
         };
     }, []);
 
     const start = useCallback(async () => {
-        if (!webrtcConnectionRef.current) {
+        if (!webRTCConnectionRef.current) {
             return;
         }
+
         try {
-            await webrtcConnectionRef.current.start();
+            await webRTCConnectionRef.current.start();
         } catch (error) {
             console.error('Failed to start WebRTC connection:', error);
             setStatus('failed');
@@ -58,18 +59,18 @@ const useWebRTCConnectionState = () => {
     }, []);
 
     const stop = useCallback(async () => {
-        if (!webrtcConnectionRef.current) {
+        if (!webRTCConnectionRef.current) {
             return;
         }
 
-        await webrtcConnectionRef.current.stop();
+        await webRTCConnectionRef.current.stop();
     }, []);
 
     return {
         start,
         stop,
         status,
-        webrtcConnectionRef,
+        webRTCConnectionRef,
     };
 };
 

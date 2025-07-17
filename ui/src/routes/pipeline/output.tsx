@@ -50,7 +50,7 @@ export const Output = () => {
                                 <Checkbox>Confidence (%)</Checkbox>
                             </View>
                         </GridListItem>
-                        <GridListItem textValue='Emtpy'>
+                        <GridListItem textValue='Empty'>
                             <View
                                 backgroundColor={'gray-50'}
                                 borderColor='gray-500'
@@ -134,7 +134,7 @@ export const Output = () => {
                         Predictions format
                     </Heading>
 
-                    <Checkbox>JSON endoced predictions</Checkbox>
+                    <Checkbox>JSON encoded predictions</Checkbox>
                     <Checkbox>Input image with predictions drawn on</Checkbox>
                 </Flex>
                 <Divider size='S' />
