@@ -18,11 +18,11 @@ class LoRALayer(torch.nn.Module):
     """
 
     def __init__(
-            self,
-            in_dim: int,
-            out_dim: int,
-            rank: int,
-            alpha: float
+        self,
+        in_dim: int,
+        out_dim: int,
+        rank: int,
+        alpha: float,
     ):
         super().__init__()
         std = torch.sqrt(torch.tensor(rank).float())
@@ -44,11 +44,7 @@ class AttentionWithLoRA(torch.nn.Module):
         alpha (float): Scaling factor applied to the output.
     """
 
-    def __init__(
-            self,
-            qkv: Attention,
-            rank: int,
-            alpha: float):
+    def __init__(self, qkv: Attention, rank: int, alpha: float):
         super().__init__()
         self.qkv = qkv
         self.dim = qkv.in_features
@@ -76,11 +72,11 @@ class DoRALayer(torch.nn.Module):
     """
 
     def __init__(
-            self,
-            in_dim: int,
-            out_dim: int,
-            rank: int,
-            alpha: float
+        self,
+        in_dim: int,
+        out_dim: int,
+        rank: int,
+        alpha: float,
     ):
         super().__init__()
         std = torch.sqrt(torch.tensor(rank).float())
@@ -114,10 +110,7 @@ class AttentionWithDoRA(torch.nn.Module):
         alpha (float): Scaling factor applied to the output.
     """
 
-    def __init__(self,
-                 qkv: Attention,
-                 rank: int,
-                 alpha: float):
+    def __init__(self, qkv: Attention, rank: int, alpha: float):
         super().__init__()
         self.dim = qkv.in_features
         self.out_features = qkv.out_features

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from torch import nn

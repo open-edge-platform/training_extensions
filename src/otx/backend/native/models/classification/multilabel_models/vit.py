@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from torch.hub import download_url_to_file
@@ -65,7 +65,6 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,

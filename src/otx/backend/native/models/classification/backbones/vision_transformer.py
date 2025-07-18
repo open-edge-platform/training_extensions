@@ -714,7 +714,7 @@ class VisionTransformer(BaseModule):
                 mha_prefix = block_prefix + f"MultiHeadDotProductAttention_{mha_sub}/"
                 block.norm1.weight.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/scale"], idx=idx))
                 block.norm1.bias.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/bias"], idx=idx))
-                if not self.peft == 'lora':
+                if self.peft != "lora":
                     block.attn.qkv.weight.copy_(
                         torch.cat(
                             [
