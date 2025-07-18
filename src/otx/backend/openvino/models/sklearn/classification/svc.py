@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for the Support Vector Classifier with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import joblib
 from time import time
-from sklearn.svm import SVC as SkSVC
+from sklearnex.svm import SVC as SkSVC
 from sklearn.metrics import classification_report
 
 class SVC:
@@ -19,18 +18,8 @@ class SVC:
             **kwargs: Keyword arguments for sklearn's SVC.
         """
         self.use_openvino = use_openvino
-        self._patched = False
-
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except Exception:
-                print("⚠️ sklearnex patch failed.")
-
         self.model = SkSVC(*args, **kwargs)
-        print("📦 SVC model initialized.")
+        print("📦 SVC model initialized (sklearnex version).")
 
     def fit(self, X, y):
         """

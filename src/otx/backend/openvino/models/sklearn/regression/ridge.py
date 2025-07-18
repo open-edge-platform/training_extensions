@@ -1,13 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for the Linear Regression model with OpenVINO optimization for OTX."""
+"""Class definition for the Ridge regression model with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import os
 import joblib
-import numpy as np
 from time import time
-from sklearn.linear_model import LinearRegression as SkModel
+from sklearnex.linear_model import Ridge as SkModel
 from sklearn.metrics import r2_score
 from sklearn.neural_network import MLPRegressor
 from skl2onnx import convert_sklearn
@@ -18,34 +16,26 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-class LinearRegression:
+class Ridge:
     def __init__(self, *args, use_openvino=True, **kwargs):
         """
-        Initialize the LinearRegression wrapper.
+        Initialize the Ridge wrapper.
 
         Args:
-            *args: Positional arguments for sklearn's LinearRegression.
+            *args: Positional arguments for sklearn's Ridge.
             use_openvino (bool): Whether to enable OpenVINO optimizations.
-            **kwargs: Keyword arguments for sklearn's LinearRegression.
+            **kwargs: Keyword arguments for sklearn's Ridge.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
 
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except Exception:
-                print("⚠️ sklearnex patch failed.")
-
+        # Always use the optimized class if available
         self.model = SkModel(*args, **kwargs)
-        print("📦 LinearRegression model initialized.")
+        print("📦 Ridge model initialized (OpenVINO version).")
 
     def fit(self, X, y):
         """
-        Fit the linear regression model.
+        Fit the Ridge model.
 
         Args:
             X (array-like): Training data.
@@ -100,7 +90,7 @@ class LinearRegression:
         print(f"📈 Inference time: {elapsed:.4f} seconds.")
         return score
 
-    def save_model(self, path="linearregression_model.joblib"):
+    def save_model(self, path="ridge_model.joblib"):
         """
         Save the trained model to a file.
 
@@ -110,7 +100,7 @@ class LinearRegression:
         joblib.dump(self.model, path)
         print(f"💾 Model saved to {path}")
 
-    def load_model(self, path="linearregression_model.joblib"):
+    def load_model(self, path="ridge_model.joblib"):
         """
         Load a model from a file.
 
@@ -120,17 +110,16 @@ class LinearRegression:
         self.model = joblib.load(path)
         print(f"📂 Model loaded from {path}")
 
-    def convert_to_ir(self, X_train, model_name="linear_regression"):
+    def convert_to_ir(self, X_train, model_name="ridge"):
         """
-        Export LinearRegression to OpenVINO IR via an equivalent MLPRegressor.
-        The function creates an ONNX file, converts it to IR, and zips the IR files.
+        Convert the trained Ridge model to OpenVINO IR format via an equivalent neural network.
 
         Args:
-            X_train (array-like): Training data for shape reference.
-            model_name (str): Base name for the exported model files.
+            X_train (array-like): Training data.
+            model_name (str): Name for the exported model.
 
         Returns:
-            str: Path to the zipped IR model.
+            str: Path to the zipped IR files, or None if not supported.
         """
         if hasattr(self.model, "coef_") and hasattr(self.model, "intercept_"):
             print("🔄 Creating equivalent neural network for export...")
@@ -149,7 +138,6 @@ class LinearRegression:
                 f.write(onnx_model.SerializeToString())
             print(f"📦 ONNX model saved to {onnx_path}")
 
-            # Convert ONNX to IR using Model Optimizer (Python subprocess)
             ir_output_dir = f"{model_name}_ir"
             os.makedirs(ir_output_dir, exist_ok=True)
 
@@ -164,7 +152,6 @@ class LinearRegression:
             subprocess.run(command, check=True)
             print("✅ IR conversion completed!")
 
-            # Zip IR files
             zip_path = f"{model_name}_ir.zip"
             with zipfile.ZipFile(zip_path, 'w') as zipf:
                 zipf.write(f"{ir_output_dir}/model.xml", arcname="model.xml")

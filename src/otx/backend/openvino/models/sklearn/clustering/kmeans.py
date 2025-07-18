@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for the KMeans clustering model with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import joblib
 from time import time
-from sklearn.cluster import KMeans as SkKMeans
+from sklearnex.cluster import KMeans as SkKMeans
 
 class KMeans:
     def __init__(self, *args, use_openvino=True, **kwargs):
@@ -18,19 +17,10 @@ class KMeans:
             **kwargs: Keyword arguments for sklearn's KMeans.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
 
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except ImportError:
-                print("⚠️ sklearnex is not installed. Running without OpenVINO optimization.")
-
         self.model = SkKMeans(*args, **kwargs)
-        print("📦 KMeans model initialized.")
+        print("📦 KMeans model initialized (sklearnex version).")
 
     def fit(self, X, y=None):
         """

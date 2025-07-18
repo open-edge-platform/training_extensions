@@ -1,42 +1,31 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for the K-Nearest Neighbors regressor with OpenVINO optimization for OTX."""
+"""Class definition for the Random Forest regressor with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import os
 import joblib
 from time import time
-from sklearn.neighbors import KNeighborsRegressor as SkModel
+from sklearnex.ensemble import RandomForestRegressor as SkModel
 from sklearn.metrics import r2_score
 
-class KNeighborsRegressor:
+class RandomForestRegressor:
     def __init__(self, *args, use_openvino=True, **kwargs):
         """
-        Initialize the KNeighborsRegressor wrapper.
+        Initialize the RandomForestRegressor wrapper.
 
         Args:
-            *args: Positional arguments for sklearn's KNeighborsRegressor.
+            *args: Positional arguments for sklearn's RandomForestRegressor.
             use_openvino (bool): Whether to enable OpenVINO optimizations.
-            **kwargs: Keyword arguments for sklearn's KNeighborsRegressor.
+            **kwargs: Keyword arguments for sklearn's RandomForestRegressor.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
-
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except Exception:
-                print("⚠️ sklearnex patch failed.")
-
         self.model = SkModel(*args, **kwargs)
-        print("📦 KNeighborsRegressor model initialized.")
+        print("📦 RandomForestRegressor model initialized (OpenVINO version).")
 
     def fit(self, X, y):
         """
-        Fit the KNeighborsRegressor model.
+        Fit the RandomForestRegressor model.
 
         Args:
             X (array-like): Training data.
@@ -91,7 +80,7 @@ class KNeighborsRegressor:
         print(f"📈 Inference time: {elapsed:.4f} seconds.")
         return score
 
-    def save_model(self, path="kneighborsregressor_model.joblib"):
+    def save_model(self, path="randomforestregressor_model.joblib"):
         """
         Save the trained model to a file.
 
@@ -101,7 +90,7 @@ class KNeighborsRegressor:
         joblib.dump(self.model, path)
         print(f"💾 Model saved to {path}")
 
-    def load_model(self, path="kneighborsregressor_model.joblib"):
+    def load_model(self, path="randomforestregressor_model.joblib"):
         """
         Load a model from a file.
 
@@ -111,12 +100,12 @@ class KNeighborsRegressor:
         self.model = joblib.load(path)
         print(f"📂 Model loaded from {path}")
 
-    def convert_to_ir(self, X_train, model_name="kneighbors_regressor"):
+    def convert_to_ir(self, X_train, model_name="random_forest_regressor"):
         """
-        Not supported: Exporting KNeighborsRegressor to IR via neural network is not possible.
+        Not supported: Exporting RandomForestRegressor to IR via neural network is not possible.
 
         Args:
             X_train (array-like): Training data (unused).
             model_name (str): Model name (unused).
         """
-        print("❌ Export to IR via neural network is not supported for KNeighborsRegressor.")
+        print("❌ Export to IR via neural network is not supported for RandomForestRegressor.")

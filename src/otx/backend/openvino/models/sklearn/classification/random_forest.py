@@ -1,44 +1,49 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for the Nu-Support Vector Classifier with OpenVINO optimization for OTX."""
+"""Class definition for the Random Forest classifier with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import joblib
 from time import time
-from sklearn.svm import NuSVC as SkNuSVC
+from sklearnex.ensemble import RandomForestClassifier as SkModel
 from sklearn.metrics import accuracy_score
-import warnings
-from sklearn.exceptions import ConvergenceWarning
-warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-class NuSVC:
+class RandomForestClassifier:
     def __init__(self, *args, use_openvino=True, **kwargs):
         """
-        Initialize the NuSVC wrapper.
+        Initialize the RandomForestClassifier wrapper.
 
         Args:
-            *args: Positional arguments for sklearn's NuSVC.
+            *args: Positional arguments for sklearn's RandomForestClassifier.
             use_openvino (bool): Whether to enable OpenVINO optimizations.
-            **kwargs: Keyword arguments for sklearn's NuSVC.
+            **kwargs: Keyword arguments for sklearn's RandomForestClassifier.
         """
         self.use_openvino = use_openvino
-        self._patched = False
-        self._ir_model = None
+        self.model = SkModel(*args, **kwargs)
+        print("📦 RandomForestClassifier model initialized (sklearnex version).")
+        self._warn_if_not_fully_supported(**kwargs)
 
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except Exception:
-                print("⚠️ sklearnex patch failed.")
+    def _warn_if_not_fully_supported(self, **kwargs):
+        """
+        Warns if any parameter is not fully supported for OpenVINO optimization.
 
-        self.model = SkNuSVC(*args, **kwargs)
-        print("📦 NuSVC model initialized.")
+        Args:
+            **kwargs: Keyword arguments passed to the model.
+        """
+        unsupported = []
+        if kwargs.get("criterion", "gini") != "gini":
+            unsupported.append("criterion ≠ 'gini'")
+        if kwargs.get("ccp_alpha", 0) != 0:
+            unsupported.append("ccp_alpha ≠ 0")
+        if kwargs.get("warm_start", False):
+            unsupported.append("warm_start = True")
+        if unsupported:
+            print("⚠️ The following parameters are not supported by OpenVINO optimization and may fall back to sklearn:")
+            for u in unsupported:
+                print(f"   - {u}")
 
     def fit(self, X, y):
         """
-        Fit the NuSVC model.
+        Fit the random forest classifier.
 
         Args:
             X (array-like): Training data.
@@ -70,14 +75,8 @@ class NuSVC:
 
         Returns:
             array: Probability estimates.
-
-        Raises:
-            AttributeError: If probability estimates are not supported.
         """
-        if hasattr(self.model, "predict_proba"):
-            return self.model.predict_proba(X)
-        else:
-            raise AttributeError("This NuSVC model does not support probability estimates.")
+        return self.model.predict_proba(X)
 
     def score(self, X, y):
         """
@@ -90,8 +89,8 @@ class NuSVC:
         Returns:
             float: Mean accuracy.
         """
-        acc = accuracy_score(y, self.predict(X))
-        print(f"📊 Accuracy: {acc:.4f}")
+        acc = self.model.score(X, y)
+        print(f"📊 Model score: {acc:.4f}")
         return acc
 
     def evaluate(self, X, y):
@@ -106,12 +105,13 @@ class NuSVC:
             float: Mean accuracy.
         """
         start = time()
-        acc = self.score(X, y)
+        y_pred = self.predict(X)
         elapsed = time() - start
-        print(f"📈 Inference time: {elapsed:.4f} seconds.")
+        acc = accuracy_score(y, y_pred)
+        print(f"📈 Accuracy: {acc:.4f} | Inference time: {elapsed:.4f} seconds.")
         return acc
 
-    def save_model(self, path="nusvc_model.joblib"):
+    def save_model(self, path="rf_model.joblib"):
         """
         Save the trained model to a file.
 
@@ -121,7 +121,7 @@ class NuSVC:
         joblib.dump(self.model, path)
         print(f"💾 Model saved to {path}")
 
-    def load_model(self, path="nusvc_model.joblib"):
+    def load_model(self, path="rf_model.joblib"):
         """
         Load a model from a file.
 
@@ -131,12 +131,12 @@ class NuSVC:
         self.model = joblib.load(path)
         print(f"📂 Model loaded from {path}")
 
-    def convert_to_ir(self, X_train, model_name="nusvc_model"):
+    def convert_to_ir(self, X_train, model_name="rf_model"):
         """
-        Not supported: Exporting NuSVC to IR via neural network is not possible.
+        Not supported: Exporting RandomForestClassifier to IR via neural network is not possible.
 
         Args:
             X_train (array-like): Training data (unused).
             model_name (str): Model name (unused).
         """
-        print("❌ Export to IR via neural network is not supported for NuSVC.")
+        print("❌ Export to IR via neural network is not supported for RandomForestClassifier.")

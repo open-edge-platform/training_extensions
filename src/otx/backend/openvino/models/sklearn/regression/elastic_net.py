@@ -1,13 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for the Lasso regression model with OpenVINO optimization for OTX."""
+"""Class definition for the Elastic Net regression model with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import os
 import joblib
-import numpy as np
 from time import time
-from sklearn.linear_model import Lasso as SkModel
+from sklearnex.linear_model import ElasticNet as SkModel
 from sklearn.metrics import r2_score
 from sklearn.neural_network import MLPRegressor
 from skl2onnx import convert_sklearn
@@ -18,34 +16,24 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-class Lasso:
+class ElasticNet:
     def __init__(self, *args, use_openvino=True, **kwargs):
         """
-        Initialize the Lasso wrapper.
+        Initialize the ElasticNet wrapper.
 
         Args:
-            *args: Positional arguments for sklearn's Lasso.
+            *args: Positional arguments for sklearn's ElasticNet.
             use_openvino (bool): Whether to enable OpenVINO optimizations.
-            **kwargs: Keyword arguments for sklearn's Lasso.
+            **kwargs: Keyword arguments for sklearn's ElasticNet.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
-
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except Exception:
-                print("⚠️ sklearnex patch failed.")
-
         self.model = SkModel(*args, **kwargs)
-        print("📦 Lasso model initialized.")
+        print("📦 ElasticNet model initialized (OpenVINO version).")
 
     def fit(self, X, y):
         """
-        Fit the lasso regression model.
+        Fit the ElasticNet model.
 
         Args:
             X (array-like): Training data.
@@ -100,7 +88,7 @@ class Lasso:
         print(f"📈 Inference time: {elapsed:.4f} seconds.")
         return score
 
-    def save_model(self, path="lasso_model.joblib"):
+    def save_model(self, path="elasticnet_model.joblib"):
         """
         Save the trained model to a file.
 
@@ -110,7 +98,7 @@ class Lasso:
         joblib.dump(self.model, path)
         print(f"💾 Model saved to {path}")
 
-    def load_model(self, path="lasso_model.joblib"):
+    def load_model(self, path="elasticnet_model.joblib"):
         """
         Load a model from a file.
 
@@ -120,17 +108,16 @@ class Lasso:
         self.model = joblib.load(path)
         print(f"📂 Model loaded from {path}")
 
-    def convert_to_ir(self, X_train, model_name="lasso"):
+    def convert_to_ir(self, X_train, model_name="elastic_net"):
         """
-        Export Lasso to OpenVINO IR via an equivalent MLPRegressor.
-        The function creates an ONNX file, converts it to IR, and zips the IR files.
+        Convert the trained ElasticNet model to OpenVINO IR format via an equivalent neural network.
 
         Args:
-            X_train (array-like): Training data for shape reference.
-            model_name (str): Base name for the exported model files.
+            X_train (array-like): Training data.
+            model_name (str): Name for the exported model.
 
         Returns:
-            str: Path to the zipped IR model.
+            str: Path to the zipped IR files, or None if not supported.
         """
         if hasattr(self.model, "coef_") and hasattr(self.model, "intercept_"):
             print("🔄 Creating equivalent neural network for export...")
@@ -149,7 +136,6 @@ class Lasso:
                 f.write(onnx_model.SerializeToString())
             print(f"📦 ONNX model saved to {onnx_path}")
 
-            # Convert ONNX to IR using Model Optimizer (Python subprocess)
             ir_output_dir = f"{model_name}_ir"
             os.makedirs(ir_output_dir, exist_ok=True)
 
@@ -164,7 +150,6 @@ class Lasso:
             subprocess.run(command, check=True)
             print("✅ IR conversion completed!")
 
-            # Zip IR files
             zip_path = f"{model_name}_ir.zip"
             with zipfile.ZipFile(zip_path, 'w') as zipf:
                 zipf.write(f"{ir_output_dir}/model.xml", arcname="model.xml")

@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for the Logistic Regression classifier with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import os
 import joblib
+import numpy as np
 from time import time
-from sklearn.linear_model import LogisticRegression as SkModel
+from sklearnex.linear_model import LogisticRegression as SkModel
 from sklearn.metrics import accuracy_score
 from sklearn.neural_network import MLPClassifier
 from skl2onnx import convert_sklearn
@@ -15,7 +15,6 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 import subprocess
 import zipfile
-
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 class LogisticRegression:
@@ -29,22 +28,10 @@ class LogisticRegression:
             **kwargs: Keyword arguments for sklearn's LogisticRegression.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
-
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except Exception:
-                print("⚠️ sklearnex patch failed.")
-
         self.model = SkModel(*args, **kwargs)
-        print("📦 LogisticRegression model initialized.")
-
-        if self.use_openvino:
-            self._warn_if_not_fully_supported(**kwargs)
+        print("📦 LogisticRegression model initialized (sklearnex version).")
+        self._warn_if_not_fully_supported(**kwargs)
 
     def _warn_if_not_fully_supported(self, **kwargs):
         """
@@ -224,15 +211,4 @@ class LogisticRegression:
         else:
             print("❌ Model not trained or not supported for export via equivalent neural network.")
 
-    def _predict_ir(self, X, proba=False):
-        """
-        Placeholder for IR inference.
-
-        Args:
-            X (array-like): Input data.
-            proba (bool): If True, return probabilities.
-
-        Raises:
-            NotImplementedError: Always, as IR inference is not implemented.
-        """
-        raise NotImplementedError("IR inference not implemented for LogisticRegression.")
+  

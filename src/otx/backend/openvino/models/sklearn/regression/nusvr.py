@@ -1,42 +1,31 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Class definition for the Random Forest regressor with OpenVINO optimization for OTX."""
+"""Class definition for the NuSVR regression model with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import os
 import joblib
 from time import time
-from sklearn.ensemble import RandomForestRegressor as SkModel
+from sklearnex.svm import NuSVR as SkModel
 from sklearn.metrics import r2_score
 
-class RandomForestRegressor:
+class NuSVR:
     def __init__(self, *args, use_openvino=True, **kwargs):
         """
-        Initialize the RandomForestRegressor wrapper.
+        Initialize the NuSVR wrapper.
 
         Args:
-            *args: Positional arguments for sklearn's RandomForestRegressor.
+            *args: Positional arguments for sklearn's NuSVR.
             use_openvino (bool): Whether to enable OpenVINO optimizations.
-            **kwargs: Keyword arguments for sklearn's RandomForestRegressor.
+            **kwargs: Keyword arguments for sklearn's NuSVR.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
-
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except Exception:
-                print("⚠️ sklearnex patch failed.")
-
         self.model = SkModel(*args, **kwargs)
-        print("📦 RandomForestRegressor model initialized.")
+        print("📦 NuSVR model initialized (OpenVINO version).")
 
     def fit(self, X, y):
         """
-        Fit the random forest regressor.
+        Fit the NuSVR model.
 
         Args:
             X (array-like): Training data.
@@ -91,7 +80,7 @@ class RandomForestRegressor:
         print(f"📈 Inference time: {elapsed:.4f} seconds.")
         return score
 
-    def save_model(self, path="randomforestregressor_model.joblib"):
+    def save_model(self, path="nusvr_model.joblib"):
         """
         Save the trained model to a file.
 
@@ -101,7 +90,7 @@ class RandomForestRegressor:
         joblib.dump(self.model, path)
         print(f"💾 Model saved to {path}")
 
-    def load_model(self, path="randomforestregressor_model.joblib"):
+    def load_model(self, path="nusvr_model.joblib"):
         """
         Load a model from a file.
 
@@ -111,12 +100,12 @@ class RandomForestRegressor:
         self.model = joblib.load(path)
         print(f"📂 Model loaded from {path}")
 
-    def convert_to_ir(self, X_train, model_name="random_forest_regressor"):
+    def convert_to_ir(self, X_train, model_name="nusvr"):
         """
-        Not supported: Exporting RandomForestRegressor to IR via neural network is not possible.
+        Not supported: Exporting NuSVR to IR via neural network is not possible.
 
         Args:
             X_train (array-like): Training data (unused).
             model_name (str): Model name (unused).
         """
-        print("❌ Export to IR via neural network is not supported for RandomForestRegressor.")
+        print("❌ Export to IR via neural network is not supported for NuSVR.")

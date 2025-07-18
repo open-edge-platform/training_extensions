@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for the t-SNE model with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import joblib
 from time import time
-from sklearn.manifold import TSNE as SkTSNE
+from sklearnex.manifold import TSNE as SkTSNE
 
 class TSNE:
     def __init__(self, *args, use_openvino=True, **kwargs):
@@ -18,19 +17,10 @@ class TSNE:
             **kwargs: Keyword arguments for sklearn's TSNE.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
 
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except ImportError:
-                print("⚠️ sklearnex is not installed. Running without OpenVINO optimization.")
-
         self.model = SkTSNE(*args, **kwargs)
-        print("📦 TSNE model initialized.")
+        print("📦 TSNE model initialized (sklearnex version).")
 
     def fit_transform(self, X, y=None):
         """

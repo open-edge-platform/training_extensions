@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Class definition for the DBSCAN clustering model with OpenVINO optimization for OTX."""
 
-from sklearnex import patch_sklearn
 import joblib
 from time import time
-from sklearn.cluster import DBSCAN as SkDBSCAN
+from sklearnex.cluster import DBSCAN as SkDBSCAN
 
 class DBSCAN:
     def __init__(self, *args, use_openvino=True, **kwargs):
@@ -18,19 +17,10 @@ class DBSCAN:
             **kwargs: Keyword arguments for sklearn's DBSCAN.
         """
         self.use_openvino = use_openvino
-        self._patched = False
         self._ir_model = None
 
-        if self.use_openvino:
-            try:
-                patch_sklearn()
-                self._patched = True
-                print("✅ sklearnex patch applied successfully.")
-            except ImportError:
-                print("⚠️ sklearnex is not installed. Running without OpenVINO optimization.")
-
         self.model = SkDBSCAN(*args, **kwargs)
-        print("📦 DBSCAN model initialized.")
+        print("📦 DBSCAN model initialized (sklearnex version).")
 
     def fit(self, X, y=None):
         """
@@ -114,4 +104,4 @@ class DBSCAN:
             model_name (str): Base name for the exported model files.
         """
         self._check_export_support(X_train)
-        print("⚠️ DBSCAN OpenVINO IR export is not implemented yet.")
+        print("⚠️ DBSCAN does not support ONNX/IR conversion directly. Skipping export.")

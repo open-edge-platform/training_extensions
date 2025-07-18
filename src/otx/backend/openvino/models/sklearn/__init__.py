@@ -15,11 +15,9 @@ from .regression.elastic_net import ElasticNet
 from .regression.random_forest_regressor import RandomForestRegressor
 from .regression.svr import SVR
 from .regression.nusvr import NuSVR
-from .regression.kneighbors_regressor import KNeighborsRegressor
 from .clustering.kmeans import KMeans
 from .clustering.dbscan import DBSCAN
 from .decomposition.pca import PCA
-from .decomposition.incremental_pca import IncrementalPCA
 from .decomposition.tsne import TSNE
 from .neighbors.nearest_neighbors import NearestNeighbors
 
