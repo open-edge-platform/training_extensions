@@ -54,6 +54,7 @@ from otx.data.transform_libs.utils import (
     is_inside_bboxes,
     overlap_bboxes,
     project_bboxes,
+    project_polygons,
     rescale_bboxes,
     rescale_keypoints,
     rescale_masks,
@@ -1055,7 +1056,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/datasets/transforms/transforms.py#L2736-L2901
 
-    RandomAffine only supports images and bounding boxes in mmdetection.
+    RandomAffine supports images, bounding boxes, masks, and polygons.
 
     TODO : optimize logic to torcivision pipeline
 
@@ -1077,6 +1078,9 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             the border of the image. In some dataset like MOT17, the gt bboxes
             are allowed to cross the border of images. Therefore, we don't
             need to clip the gt bboxes in these cases. Defaults to True.
+        transform_mask (bool): Whether to transform the mask. Defaults to True.
+        mask_fill_value (int): Fill value for mask. Defaults to 0.
+        transform_polygon (bool): Whether to transform polygons. Defaults to True.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
     """
 
@@ -1089,6 +1093,9 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         border: tuple[int, int] = (0, 0),  # (H, W)
         border_val: tuple[int, int, int] = (114, 114, 114),
         bbox_clip_border: bool = True,
+        transform_mask: bool = True,
+        transform_polygon: bool = True,
+        mask_fill_value: int = 0,
         is_numpy_to_tvtensor: bool = False,
     ) -> None:
         super().__init__()
@@ -1103,6 +1110,9 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.border = border  # (H, W)
         self.border_val = border_val
         self.bbox_clip_border = bbox_clip_border
+        self.transform_mask = transform_mask
+        self.mask_fill_value = mask_fill_value
+        self.transform_polygon = transform_polygon
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
     @cache_randomness
@@ -1153,6 +1163,27 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_index], format="XYXY", canvas_size=(height, width))  # type: ignore[union-attr]
             inputs.label = inputs.label[valid_index]  # type: ignore[union-attr,index]
 
+        if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
+            masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
+            transformed_masks = []
+            for mask in masks:
+                # Apply the same warp matrix used for the image
+                warped_mask = cv2.warpPerspective(
+                    mask,
+                    warp_matrix,
+                    dsize=(width, height),
+                    borderValue=self.mask_fill_value,
+                    flags=cv2.INTER_NEAREST,  # Use nearest neighbor for masks
+                )
+                transformed_masks.append(warped_mask)
+            inputs.masks = tv_tensors.Mask(np.stack(transformed_masks))
+
+        # Transform polygons
+        if self.transform_polygon and (polygons := getattr(inputs, "polygons", None)) is not None and len(polygons) > 0:
+            # Transform polygons using the same warp matrix
+            transformed_polygons = project_polygons(polygons, warp_matrix, (height, width))
+            inputs.polygons = transformed_polygons  # type: ignore[union-attr]
+
         return self.convert(inputs)
 
     def __repr__(self):
@@ -1164,6 +1195,9 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         repr_str += f"border={self.border}, "
         repr_str += f"border_val={self.border_val}, "
         repr_str += f"bbox_clip_border={self.bbox_clip_border}, "
+        repr_str += f"transform_mask={self.transform_mask}, "
+        repr_str += f"mask_fill_value={self.mask_fill_value}, "
+        repr_str += f"transform_polygon={self.transform_polygon}, "
         repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
         return repr_str
 
