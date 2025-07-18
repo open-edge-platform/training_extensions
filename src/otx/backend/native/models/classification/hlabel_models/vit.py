@@ -55,7 +55,6 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
 
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
-        lora (bool): Whether to use LoRA (Low-Rank Adaptation) for the model.
         model_name (str): Name of the Vision Transformer model to use.
         data_input_params (DataInputParams): Parameters for data input.
         optimizer (OptimizerCallable): Callable for the optimizer.
@@ -71,13 +70,11 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
         label_info: HLabelInfo,
         data_input_params: DataInputParams,
         model_name: str = "vit-tiny",
-        peft: Literal["lora", "dora"] | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-        self.peft = peft
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,

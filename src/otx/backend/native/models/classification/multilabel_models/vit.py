@@ -60,13 +60,11 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
         model_name: str = "vit-tiny",
-        peft: Literal["lora", "dora"] | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-        self.peft = peft
 
         super().__init__(
             label_info=label_info,

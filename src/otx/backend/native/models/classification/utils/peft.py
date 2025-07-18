@@ -8,9 +8,22 @@ from timm.models.vision_transformer import Attention
 
 
 class LoRALayer(torch.nn.Module):
-    """LoRA layer implementation for computing A, B composition."""
+    """LoRA layer implementation for computing A, B composition.
 
-    def __init__(self, in_dim: int, out_dim: int, rank: int, alpha: float):
+    Args:
+        in_dim (int): Input feature dimension.
+        out_dim (int): Output feature dimension.
+        rank (int): Rank of the low-rank matrices A, B.
+        alpha (float): Scaling factor applied to the output.
+    """
+
+    def __init__(
+            self,
+            in_dim: int,
+            out_dim: int,
+            rank: int,
+            alpha: float
+    ):
         super().__init__()
         std = torch.sqrt(torch.tensor(rank).float())
         self.A = torch.nn.Parameter(torch.randn(in_dim, rank) / std)
@@ -23,9 +36,19 @@ class LoRALayer(torch.nn.Module):
 
 
 class AttentionWithLoRA(torch.nn.Module):
-    """Add LoRA layer into QKV attention layer in VisionTransformer."""
+    """Add LoRA layer into QKV attention layer in VisionTransformer.
 
-    def __init__(self, qkv: Attention, rank: int, alpha: float):
+    Args:
+        qkv (Attention): The original QKV attention layer.
+        rank (int): Rank of the low-rank matrices A, B.
+        alpha (float): Scaling factor applied to the output.
+    """
+
+    def __init__(
+            self,
+            qkv: Attention,
+            rank: int,
+            alpha: float):
         super().__init__()
         self.qkv = qkv
         self.dim = qkv.in_features
@@ -43,9 +66,22 @@ class AttentionWithLoRA(torch.nn.Module):
 
 
 class DoRALayer(torch.nn.Module):
-    """DoRA layer implementation for Weight-Decomposed Low-Rank Adaptation."""
+    """DoRA layer implementation for Weight-Decomposed Low-Rank Adaptation.
 
-    def __init__(self, in_dim: int, out_dim: int, rank: int, alpha: float):
+    Args:
+        in_dim (int): Input feature dimension.
+        out_dim (int): Output feature dimension.
+        rank (int): Rank of the low-rank matrices A, B.
+        alpha (float): Scaling factor applied to the output.
+    """
+
+    def __init__(
+            self,
+            in_dim: int,
+            out_dim: int,
+            rank: int,
+            alpha: float
+    ):
         super().__init__()
         std = torch.sqrt(torch.tensor(rank).float())
         self.A = torch.nn.Parameter(torch.randn(in_dim, rank) / std)
@@ -70,9 +106,18 @@ class DoRALayer(torch.nn.Module):
 
 
 class AttentionWithDoRA(torch.nn.Module):
-    """Add DoRA layer into QKV attention layer in VisionTransformer."""
+    """Add DoRA layer into QKV attention layer in VisionTransformer.
 
-    def __init__(self, qkv: Attention, rank: int, alpha: float):
+    Args:
+        qkv (Attention): The original QKV attention layer.
+        rank (int): Rank of the low-rank matrices A, B.
+        alpha (float): Scaling factor applied to the output.
+    """
+
+    def __init__(self,
+                 qkv: Attention,
+                 rank: int,
+                 alpha: float):
         super().__init__()
         self.dim = qkv.in_features
         self.out_features = qkv.out_features

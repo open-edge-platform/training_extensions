@@ -72,7 +72,7 @@ class VisionTransformer(BaseModule):
         act_layer: MLP activation layer.
         block_fn: Transformer block layer.
         interpolate_offset: work-around offset to apply when interpolating positional embeddings
-        lora: Enable LoRA training.
+        peft: Selects PEFT method ("lora" or "dora")
     """
 
     model_zoo: ClassVar[dict[str, dict[str, Any]]] = {
@@ -714,7 +714,7 @@ class VisionTransformer(BaseModule):
                 mha_prefix = block_prefix + f"MultiHeadDotProductAttention_{mha_sub}/"
                 block.norm1.weight.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/scale"], idx=idx))
                 block.norm1.bias.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/bias"], idx=idx))
-                if not self.lora:
+                if not self.peft == 'lora':
                     block.attn.qkv.weight.copy_(
                         torch.cat(
                             [
