@@ -1,22 +1,23 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""D-Fine model implementations."""
+"""DEIM-DFine model implementations."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.detection.backbones.hgnetv2 import HGNetv2
 from otx.backend.native.models.detection.detectors import DETR
 from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransformer
-from otx.backend.native.models.detection.losses.dfine_loss import DFINECriterion
+from otx.backend.native.models.detection.losses.deim_loss import DEIMCriterion
 from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
-from otx.backend.native.models.detection.rtdetr import RTDETR
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+
+from .rtdetr import RTDETR
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -26,8 +27,18 @@ if TYPE_CHECKING:
     from otx.types.label import LabelInfoTypes
 
 
-class DFine(RTDETR):
-    """OTX Detection model class for DFine.
+class DEIMDFine(RTDETR):
+    """OTX Detection model class for DEIMDFine.
+
+    DEIM-DFine is an improved version of D-FINE, which halfed the training time and improved the performance on COCO.
+
+    It is based on the DEIM-DFine paper: https://arxiv.org/abs/2412.04234
+    The original implementation is available at: https://github.com/ShihuaHuang95/DEIM
+
+    The model should be used with
+    :class:`~otx.backend.native.callbacks.aug_scheduler.DataAugSwitch` and
+    :class:`~otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback`
+    for dynamic augmentation scheduling.
 
     Attributes:
         pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
@@ -36,7 +47,7 @@ class DFine(RTDETR):
     Args:
         label_info (LabelInfoTypes): Information about the labels.
         data_input_params (DataInputParams): Parameters for data input.
-        model_name (literal, optional): Name of the model to use. Defaults to "dfine_hgnetv2_x".
+        model_name (literal, optional): Name of the model to use. Defaults to "deim_dfine_hgnetv2_x".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
             Defaults to DefaultSchedulerCallable.
@@ -47,11 +58,11 @@ class DFine(RTDETR):
     """
 
     pretrained_weights: ClassVar[dict[str, str]] = {
-        "dfine_hgnetv2_n": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_n_coco.pth",
-        "dfine_hgnetv2_s": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_s_coco.pth",
-        "dfine_hgnetv2_m": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_m_coco.pth",
-        "dfine_hgnetv2_l": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_l_coco.pth",
-        "dfine_hgnetv2_x": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_x_coco.pth",
+        "deim_dfine_hgnetv2_n": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_n_coco_160e.pth",
+        "deim_dfine_hgnetv2_s": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_s_coco_120e.pth",
+        "deim_dfine_hgnetv2_m": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_m_coco_90e.pth",
+        "deim_dfine_hgnetv2_l": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_l_coco_50e.pth",
+        "deim_dfine_hgnetv2_x": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_x_coco_50e.pth",
     }
     input_size_multiplier = 32
 
@@ -60,12 +71,12 @@ class DFine(RTDETR):
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
         model_name: Literal[
-            "dfine_hgnetv2_n",
-            "dfine_hgnetv2_s",
-            "dfine_hgnetv2_m",
-            "dfine_hgnetv2_l",
-            "dfine_hgnetv2_x",
-        ] = "dfine_hgnetv2_x",
+            "deim_dfine_hgnetv2_n",
+            "deim_dfine_hgnetv2_s",
+            "deim_dfine_hgnetv2_m",
+            "deim_dfine_hgnetv2_l",
+            "deim_dfine_hgnetv2_x",
+        ] = "deim_dfine_hgnetv2_x",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -80,12 +91,13 @@ class DFine(RTDETR):
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
-            multi_scale=multi_scale,
             torch_compile=torch_compile,
             tile_config=tile_config,
+            multi_scale=multi_scale,
         )
 
     def _create_model(self, num_classes: int | None = None) -> DETR:
+        """Create DEIM-DFine model."""
         num_classes = num_classes if num_classes is not None else self.num_classes
         backbone = HGNetv2(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
@@ -93,26 +105,27 @@ class DFine(RTDETR):
             model_name=self.model_name,
             num_classes=num_classes,
         )
-        criterion = DFINECriterion(
+        criterion = DEIMCriterion(
             weight_dict={
                 "loss_vfl": 1,
                 "loss_bbox": 5,
                 "loss_giou": 2,
                 "loss_fgl": 0.15,
                 "loss_ddf": 1.5,
+                "loss_mal": 1.0,
             },
             alpha=0.75,
-            gamma=2.0,
+            gamma=1.5,
             reg_max=32,
             num_classes=num_classes,
         )
 
         backbone_lr_mapping = {
-            "dfine_hgnetv2_n": 0.0004,
-            "dfine_hgnetv2_s": 0.0001,
-            "dfine_hgnetv2_m": 0.00002,
-            "dfine_hgnetv2_l": 0.0000125,
-            "dfine_hgnetv2_x": 0.0000125,
+            "deim_dfine_hgnetv2_n": 0.0004,
+            "deim_dfine_hgnetv2_s": 0.0002,
+            "deim_dfine_hgnetv2_m": 0.0001,
+            "deim_dfine_hgnetv2_l": 0.000025,
+            "deim_dfine_hgnetv2_x": 0.000005,
         }
 
         try:
@@ -122,13 +135,15 @@ class DFine(RTDETR):
             raise ValueError(msg) from err
 
         optimizer_configuration = [
-            # no weight decay for norm layers in backbone
-            {"params": "^(?=.*backbone)(?=.*norm).*$", "weight_decay": 0.0, "lr": backbone_lr},
-            # lr for the backbone, but not norm layers is 0.00001
-            {"params": "^(?=.*backbone)(?!.*norm).*$", "lr": backbone_lr},
-            # no weight decay for norm layers and biases in encoder and decoder layers
-            {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
+            {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
+            {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
         ]
+        if self.model_name == "deim_dfine_hgnetv2_n":
+            optimizer_configuration = [
+                {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
+                {"params": "^(?=.*backbone)(?=.*norm|bn).*$", "lr": backbone_lr, "weight_decay": 0.0},
+                {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$", "weight_decay": 0.0},
+            ]
 
         model = DETR(
             multi_scale=self.multi_scale,
@@ -144,16 +159,3 @@ class DFine(RTDETR):
         load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
 
         return model
-
-    @property
-    def _optimization_config(self) -> dict[str, Any]:
-        """PTQ config for D-FINE."""
-        return {
-            "model_type": "transformer",
-            "advanced_parameters": {
-                "activations_range_estimator_params": {
-                    "min": {"statistics_type": "QUANTILE", "aggregator_type": "MIN", "quantile_outlier_prob": 1e-4},
-                    "max": {"statistics_type": "QUANTILE", "aggregator_type": "MAX", "quantile_outlier_prob": 1e-4},
-                },
-            },
-        }

@@ -14,9 +14,10 @@ from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
 
 from .base import OTXDataset
+from .mixins import DataAugSwitchMixin
 
 
-class OTXDetectionDataset(OTXDataset):
+class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
     """OTXDataset class for detection task."""
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
@@ -51,4 +52,7 @@ class OTXDetectionDataset(OTXDataset):
             label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
         )
 
+        # Apply augmentation switch if available
+        if self.has_dynamic_augmentation:
+            self._apply_augmentation_switch()
         return self._apply_transforms(entity)
