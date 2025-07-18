@@ -34,7 +34,7 @@ def is_ckpt_from_otx_v1(ckpt: dict) -> bool:
     Returns:
         bool: True means the checkpoint comes from otx1
     """
-    return "model" in ckpt and ckpt["VERSION"] == 1
+    return "model" in ckpt and "VERSION" in ckpt and ckpt["VERSION"] == 1
 
 
 def is_ckpt_for_finetuning(ckpt: dict) -> bool:

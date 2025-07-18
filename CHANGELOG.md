@@ -2,7 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
-## \[Unreleased\]
+## \[2.4.6\]
+
+### Bug fixes
+
+- Fix label info dispatching
+  (<https://github.com/open-edge-platform/training_extensions/pull/4443>)
+
+## \[2.4.5\]
+
+### Bug fixes
+
+- Fix UFlow by adding self.\_setup in UFlow model
+  (<https://github.com/open-edge-platform/training_extensions/pull/4431>)
+- Fix loading/saving checkpoints in OTX
+  (<https://github.com/open-edge-platform/training_extensions/pull/4433>,
+  <https://github.com/open-edge-platform/training_extensions/pull/4438>)
+
+## \[2.4.4\]
+
+### Bug fixes
+
+- Fix torch.load() to be able to load all OTX custom snapshots
+  (<https://github.com/open-edge-platform/training_extensions/pull/4392>)
+
+## \[2.4.3\]
+
+### Enhancements
+
+- Bump torch to 2.7.0
+
+## \[2.4.2\]
+
+### Bug fixes
+
+- Fix torchmetrics to 1.6.0
+
+## \[2.4.1\]
+
+### Bug fixes
+
+- Update Datumaro from 1.10.0rc0 to 1.10.0
+
+## \[2.4.0\]
 
 ### Enhancements
 

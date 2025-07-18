@@ -15,7 +15,11 @@
 
 [![python](https://img.shields.io/badge/python-3.10%2B-green)]()
 [![pytorch](https://img.shields.io/badge/pytorch-2.7%2B-orange)]()
+<<<<<<< HEAD
 [![openvino](https://img.shields.io/badge/openvino-2025.1-purple)]()
+=======
+[![openvino](https://img.shields.io/badge/openvino-2025.0-purple)]()
+>>>>>>> 2.4.6
 
 <!-- markdownlint-enable  MD042 -->
 
