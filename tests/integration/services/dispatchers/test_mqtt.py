@@ -34,8 +34,6 @@ def mqtt_broker():
     else:
         raise TimeoutError("MQTT broker did not start within timeout")
 
-    time.sleep(2)  # Additional wait for broker to be fully ready
-
     # Get the exposed port
     mqtt_port = compose.get_service_port("mqtt", 1883)
 

@@ -1,6 +1,9 @@
 import logging
 
-from app.entities.video_stream import VideoFileStream, VideoStream, WebcamStream
+from app.entities.ip_camera_stream import IPCameraStream
+from app.entities.video_file_stream import VideoFileStream
+from app.entities.video_stream import VideoStream
+from app.entities.webcam_stream import WebcamStream
 from app.schemas.configuration.input_config import InputConfig, SourceType
 
 logger = logging.getLogger(__name__)
@@ -17,7 +20,7 @@ class VideoStreamService:
             case SourceType.WEBCAM:
                 video_stream = WebcamStream(device_id=input_config.device_id)
             case SourceType.IP_CAMERA:
-                raise NotImplementedError("IP cameras are not supported yet")
+                video_stream = IPCameraStream(config=input_config)
             case SourceType.VIDEO_FILE:
                 video_stream = VideoFileStream(input_config.video_path)
             case SourceType.IMAGES_FOLDER:

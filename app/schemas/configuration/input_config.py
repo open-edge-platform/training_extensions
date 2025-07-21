@@ -1,7 +1,12 @@
 from enum import Enum
+from os import getenv
 from typing import Annotated, Literal
+from urllib.parse import urlparse, urlunparse
 
 from pydantic import BaseModel, Field
+
+IP_CAMERA_USERNAME = "IP_CAMERA_USERNAME"
+IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
 
 
 class SourceType(str, Enum):
@@ -21,9 +26,26 @@ class WebcamSourceConfig(BaseModel):
     device_id: int
 
 
-class IpCameraSourceConfig(BaseModel):
+class IPCameraSourceConfig(BaseModel):
     source_type: Literal[SourceType.IP_CAMERA]
-    device_url: str
+    stream_url: str
+    auth_required: bool = False
+
+    def get_configured_stream_url(self) -> str:
+        """Configure stream URL with authentication if required."""
+        if not self.auth_required:
+            return self.stream_url
+
+        username = getenv(IP_CAMERA_USERNAME)
+        password = getenv(IP_CAMERA_PASSWORD)
+
+        if not username or not password:
+            raise RuntimeError("IP camera credentials not provided.")
+
+        # Modify the stream URL to include authentication
+        uri = urlparse(self.stream_url)
+        netloc = f"{username}:{password}@{uri.netloc}"
+        return urlunparse((uri.scheme, netloc, uri.path, uri.params, uri.query, uri.fragment))
 
 
 class VideoFileSourceConfig(BaseModel):
@@ -39,7 +61,7 @@ class ImagesFolderSourceConfig(BaseModel):
 InputConfig = Annotated[
     DisconnectedSourceConfig
     | WebcamSourceConfig
-    | IpCameraSourceConfig
+    | IPCameraSourceConfig
     | VideoFileSourceConfig
     | ImagesFolderSourceConfig,
     Field(discriminator="source_type"),
