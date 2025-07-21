@@ -73,7 +73,4 @@ class TestVisionTransformer:
             peft_param_names = [n for n, _ in model.named_parameters() if method in n]
             assert len(peft_param_names) > 0
 
-            assert all(
-                param.requires_grad == (method in name)
-                for name, param in model.named_parameters()
-            )
+            assert all(param.requires_grad == (method in name) for name, param in model.named_parameters())
