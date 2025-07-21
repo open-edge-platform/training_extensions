@@ -57,7 +57,7 @@ class TestDeitTiny:
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
 
         model = VisionTransformerMulticlassCls(
-            label_info="fxt_multiclass_labelinfo",
+            label_info=4,
             data_input_params=data_input_params,
             freeze_backbone=True,
         )
@@ -66,7 +66,7 @@ class TestDeitTiny:
         assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
 
         model = VisionTransformerMulticlassCls(
-            label_info="fxt_multiclass_labelinfo",
+            label_info=4,
             data_input_params=data_input_params,
             freeze_backbone=False,
         )
