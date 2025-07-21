@@ -11,8 +11,8 @@ import inspect
 import logging
 import warnings
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Literal
 from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 import torch
 from datumaro import LabelCategories
@@ -166,7 +166,7 @@ class OTXModel(LightningModule):
         self._tile_config = tile_config.clone()
         self.save_hyperparameters(
             logger=False,
-            ignore=["optimizer", "scheduler", "metric", "label_info", "tile_config"],
+            ignore=["optimizer", "scheduler", "metric", "label_info", "tile_config", "data_input_params"],
         )
 
     def training_step(self, batch: OTXDataBatch, batch_idx: int) -> Tensor:
@@ -410,6 +410,7 @@ class OTXModel(LightningModule):
         checkpoint["hyper_parameters"]["label_info"] = asdict(self.label_info)
         checkpoint["otx_version"] = __version__
         checkpoint["hyper_parameters"]["tile_config"] = asdict(self.tile_config)
+        checkpoint["hyper_parameters"]["data_input_params"] = asdict(self.data_input_params)
         checkpoint.pop("datamodule_hparams_name", None)
         checkpoint.pop(
             "datamodule_hyper_parameters",

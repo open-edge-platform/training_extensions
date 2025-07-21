@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import importlib
 import inspect
-from collections import defaultdict
 from pathlib import Path
 
 import pytest

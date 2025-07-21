@@ -19,7 +19,8 @@
 [![openvino](https://img.shields.io/badge/openvino-2025.1-purple)]()
 =======
 [![openvino](https://img.shields.io/badge/openvino-2025.0-purple)]()
->>>>>>> 2.4.6
+
+> > > > > > > 2.4.6
 
 <!-- markdownlint-enable  MD042 -->
 

@@ -11,10 +11,9 @@ from lightning.pytorch.utilities.types import LRSchedulerConfig
 from pytest_mock import MockerFixture
 
 from otx.backend.native.models.base import DataInputParams, OTXModel
+from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
 from otx.backend.native.models.classification.multiclass_models.base import OTXMulticlassClsModel
 from otx.backend.native.models.segmentation.base import OTXSegmentationModel
-from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
-
 from otx.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler
 from otx.types.label import HLabelInfo, LabelInfo, SegLabelInfo
 
@@ -95,7 +94,10 @@ class TestOTXModel:
     def test_label_info_dispatch(self, mocker):
         with mocker.patch.object(OTXModel, "_create_model", return_value=MockNNModule(3)):
             with pytest.raises(TypeError, match="invalid_label_info"):
-                OTXModel(label_info="invalid_label_info")
+                OTXModel(
+                    label_info="invalid_label_info",
+                    data_input_params={"input_size": (224, 224), "mean": (0.0, 0.0, 0.0), "std": (1.0, 1.0, 1.0)},
+                )
 
             # Test with LabelInfo
             label_info = OTXModel(
@@ -104,11 +106,15 @@ class TestOTXModel:
                     label_ids=["1", "2"],
                     label_groups=[["label_1", "label_2"]],
                 ),
+                data_input_params={"input_size": (224, 224), "mean": (0.0, 0.0, 0.0), "std": (1.0, 1.0, 1.0)},
             )
             assert isinstance(label_info.label_info, LabelInfo)
 
             # Test with SegLabelInfo
-            seg_label_info = OTXModel(label_info=SegLabelInfo.from_num_classes(3))
+            seg_label_info = OTXModel(
+                label_info=SegLabelInfo.from_num_classes(3),
+                data_input_params={"input_size": (224, 224), "mean": (0.0, 0.0, 0.0), "std": (1.0, 1.0, 1.0)},
+            )
             assert isinstance(seg_label_info.label_info, SegLabelInfo)
 
         with mocker.patch.object(OTXMulticlassClsModel, "_create_model", return_value=MockNNModule(3)):
@@ -119,7 +125,7 @@ class TestOTXModel:
                     label_ids=["1", "2"],
                     label_groups=[["label_1", "label_2"]],
                 ),
-                input_size=(224, 224),
+                data_input_params={"input_size": (224, 224), "mean": (0.0, 0.0, 0.0), "std": (1.0, 1.0, 1.0)},
             )
             label_info_dict = {
                 "label_ids": ["1", "2"],
@@ -141,7 +147,7 @@ class TestOTXModel:
             # test segmentation model loading checkpoint with SegLabelInfo
             segmentation_model = OTXSegmentationModel(
                 label_info=SegLabelInfo.from_num_classes(3),
-                input_size=(224, 224),
+                data_input_params={"input_size": (224, 224), "mean": (0.0, 0.0, 0.0), "std": (1.0, 1.0, 1.0)},
                 model_name="segmentation_model",
             )
             segmentation_model.load_state_dict_incrementally(
@@ -176,7 +182,10 @@ class TestOTXModel:
         hlabel_dict_label_info = hlabel_info.as_dict(normalize_label_names=True)
 
         with mocker.patch.object(OTXHlabelClsModel, "_create_model", return_value=MockNNModule(3)):
-            hlabel_model = OTXHlabelClsModel(hlabel_dict_label_info, input_size=(224, 224))
+            hlabel_model = OTXHlabelClsModel(
+                hlabel_dict_label_info,
+                data_input_params={"input_size": (224, 224), "mean": (0.0, 0.0, 0.0), "std": (1.0, 1.0, 1.0)},
+            )
             hlabel_model.load_state_dict_incrementally(
                 {"state_dict": hlabel_model.state_dict(), "hyper_parameters": {"label_info": hlabel_dict_label_info}},
             )
