@@ -67,7 +67,7 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
         .. code-block:: shell
 
             # Create a virtual environment using uv
-            uv venv .otx --python 3.10 # or 3.11
+            uv venv .otx --python 3.11 # or 3.12
             source .otx/bin/activate
 
             # Install from PyPI
@@ -82,7 +82,7 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
             cd training_extensions
 
             # Create a virtual environment with uv
-            uv venv .otx --python 3.10 # or 3.11
+            uv venv .otx --python 3.11 # or 3.12
             source .otx/bin/activate
 
             # Install the package in editable mode with base dependencies
@@ -109,7 +109,7 @@ Install OpenVINO™ Training Extensions for users (Intel GPUs)
     git clone https://github.com/open-edge-platform/training_extensions.git
     cd training_extensions
 
-    uv venv .otx --python 3.10 # or 3.11
+    uv venv .otx --python 3.11 # or 3.12
     source .otx/bin/activate
 
     uv pip install -e .[xpu]
@@ -139,8 +139,8 @@ Install OpenVINO™ Training Extensions for developers
 
 .. code-block:: shell
 
-    # Replace '310' with '311' if using Python 3.11
-    tox devenv venv/otx -e unit-test-py310
+    # Replace '312' with '312' if using Python 3.12
+    tox devenv venv/otx -e unit-test-py311
     source venv/otx/bin/activate
 
 Now you're ready to develop, test, and make changes — all reflected live in the editable install.
