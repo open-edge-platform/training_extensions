@@ -12,7 +12,7 @@ import logging
 import warnings
 from abc import abstractmethod
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import torch
 from datumaro import LabelCategories
@@ -117,7 +117,7 @@ class OTXModel(LightningModule):
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | dict,
         task: OTXTaskType | None = None,
         model_name: str = "OTXModel",
@@ -130,7 +130,9 @@ class OTXModel(LightningModule):
         """Initialize the base model with the given parameters.
 
         Args:
-            label_info (LabelInfoTypes): Information about the labels used in the model.
+            label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+                If `int` is given, label info will be constructed from number of classes,
+                if `Sequence` is given, label info will be constructed from the sequence of label names.
             data_input_params (DataInputParams | dict): Parameters of the input data such as input size, mean, and std.
             model_name (str, optional): Name of the model. Defaults to "OTXModel".
             optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.

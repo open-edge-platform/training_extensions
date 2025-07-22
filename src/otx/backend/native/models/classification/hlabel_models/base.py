@@ -37,14 +37,14 @@ class OTXHlabelClsModel(OTXModel):
     """H-label classification models used in OTX.
 
     Args:
-    label_info (HLabelInfo): Information about the hierarchical labels.
-    data_input_params (DataInputParams): Parameters for data input.
-    model_name (str, optional): Name of the model. Defaults to "hlabel_classification_model".
-    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
-    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
-    Defaults to DefaultSchedulerCallable.
-    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
-    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        label_info (HLabelInfo): Information about the hierarchical labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "hlabel_classification_model".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
     """
 
     label_info: HLabelInfo

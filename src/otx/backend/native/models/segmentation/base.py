@@ -42,7 +42,9 @@ class OTXSegmentationModel(OTXModel):
     """Semantic Segmentation model used in OTX.
 
     Args:
-        label_info (LabelInfoTypes): Information about the hierarchical labels.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
         data_input_params (DataInputParams): Parameters for data input.
         model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -55,7 +57,7 @@ class OTXSegmentationModel(OTXModel):
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "otx_segmentation_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

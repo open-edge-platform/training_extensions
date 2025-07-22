@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import importlib
 from collections import defaultdict
-from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Any
 from contextlib import contextmanager
+from multiprocessing import cpu_count
+from typing import TYPE_CHECKING, Any, Iterator
 
 import torch
 from datumaro.components.annotation import AnnotationType, LabelCategories
@@ -98,10 +98,11 @@ def ensure_callable(func: Callable[[_T], _V]) -> Callable[[_T], _V]:
 
 
 @contextmanager
-def mock_modules_for_chkpt():
+def mock_modules_for_chkpt() -> Iterator[None]:
     """Context manager to mock modules for OTX v2.2-2.4 checkpoint loading and restore sys.modules after."""
     import sys
     import types
+
     import otx
     from otx.types.label import AnomalyLabelInfo, HLabelInfo, LabelInfo, SegLabelInfo
 
