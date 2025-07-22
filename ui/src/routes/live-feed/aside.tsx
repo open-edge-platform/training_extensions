@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { ActionButton, Flex, Heading, Item, TabList, TabPanels, Tabs, View } from '@geti/ui';
+import { ActionButton, Flex, Grid, Heading, View } from '@geti/ui';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 
 import { ReactComponent as DoubleChevronRight } from './../../assets/double-chevron-right-icon.svg';
@@ -61,7 +61,7 @@ const Graph = ({ label }: { label: string }) => {
     const data = useData();
 
     return (
-        <>
+        <View padding={{ top: 'size-250', left: 'size-200', right: 'size-200', bottom: 'size-125' }}>
             <LineChart width={500} height={200} data={data}>
                 <XAxis
                     minTickGap={32}
@@ -116,7 +116,7 @@ const Graph = ({ label }: { label: string }) => {
                     strokeWidth='3'
                 />
             </LineChart>
-        </>
+        </View>
     );
 };
 
@@ -124,62 +124,68 @@ export const Aside = () => {
     const [isHidden, setIsHidden] = useState(false);
 
     return (
-        <View backgroundColor={'gray-100'} gridArea='aside' padding={isHidden ? 'size-200' : 'size-400'}>
-            <Tabs aria-label='Aside view' density='compact'>
-                <Flex alignItems='center' gap='size-400'>
-                    <ActionButton
-                        isQuiet
-                        onPress={() => setIsHidden((hidden) => !hidden)}
-                        UNSAFE_style={{
-                            transform: isHidden ? 'scaleX(-1)' : 'scaleX(1)',
-                        }}
-                    >
-                        <DoubleChevronRight />
-                    </ActionButton>
-                    <TabList
-                        isHidden={isHidden}
-                        width='100%'
-                        UNSAFE_style={{
-                            '--spectrum-tabs-rule-height': '3px',
-                            '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)',
-                        }}
-                    >
-                        <Item key='monitoring'>Monitoring</Item>
-                        <Item key='data-collection'>Data collection</Item>
-                    </TabList>
-                </Flex>
-                <TabPanels marginTop='size-200' isHidden={isHidden}>
-                    <Item key='monitoring'>
-                        <Flex height='100%' justifyContent={'space-between'} direction={'column'}>
-                            <View paddingX='size-200'>
-                                <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)' }} level={4}>
-                                    Troughput
-                                </Heading>
-                                <Graph label='fps' />
-                            </View>
-                            <View paddingX='size-200'>
-                                <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)' }} level={4}>
-                                    Latency per frame
-                                </Heading>
-                                <Graph label='ms per frame' />
-                            </View>
-                            <View paddingX='size-200'>
-                                <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)' }} level={4}>
-                                    Model confidence
-                                </Heading>
-                                <Graph label='Score' />
-                            </View>
-                            <View paddingX='size-200'>
-                                <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)' }} level={4}>
-                                    Resource utilization
-                                </Heading>
-                                <Graph label='CPU' />
-                            </View>
-                        </Flex>
-                    </Item>
-                    <Item key='data-collection'>Senatus Populusque Romanus.</Item>
-                </TabPanels>
-            </Tabs>
-        </View>
+        <Grid
+            gridArea={'aside'}
+            height={'90vh'}
+            areas={['header', 'graphs']}
+            rows={['min-content', 'minmax(0, 1fr)']}
+            UNSAFE_style={{
+                padding: 'var(--spectrum-global-dimension-size-200)',
+                paddingLeft: isHidden
+                    ? 'var(--spectrum-global-dimension-size-100)'
+                    : 'var(--spectrum-global-dimension-size-200)',
+                paddingRight: isHidden
+                    ? 'var(--spectrum-global-dimension-size-100)'
+                    : 'var(--spectrum-global-dimension-size-200)',
+                backgroundColor: 'var(--spectrum-global-color-gray-100)',
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                width: isHidden
+                    ? 'var(--spectrum-global-dimension-size-400)'
+                    : 'var(--spectrum-global-dimension-size-6000)',
+            }}
+        >
+            <Flex gridArea={'header'} alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
+                <ActionButton
+                    isQuiet
+                    onPress={() => setIsHidden((hidden) => !hidden)}
+                    UNSAFE_style={{
+                        transform: isHidden ? 'scaleX(-1)' : 'scaleX(1)',
+                        cursor: 'pointer',
+                    }}
+                >
+                    <DoubleChevronRight />
+                </ActionButton>
+                <Heading level={4} isHidden={isHidden}>
+                    Model statistics
+                </Heading>
+            </Flex>
+            <View gridArea={'graphs'} isHidden={isHidden} UNSAFE_style={{ overflow: 'hidden auto' }}>
+                {/* TODO: Extract these into a shared component */}
+                <View paddingY='size-200'>
+                    <Heading level={4} marginBottom={'size-300'}>
+                        Throughput
+                    </Heading>
+                    <Graph label='fps' />
+                </View>
+                <View paddingY='size-200'>
+                    <Heading level={4} marginBottom={'size-300'}>
+                        Latency per frame
+                    </Heading>
+                    <Graph label='ms per frame' />
+                </View>
+                <View paddingY='size-200'>
+                    <Heading level={4} marginBottom={'size-300'}>
+                        Model confidence
+                    </Heading>
+                    <Graph label='Score' />
+                </View>
+                <View paddingY='size-200'>
+                    <Heading level={4} marginBottom={'size-300'}>
+                        Resource utilization
+                    </Heading>
+                    <Graph label='CPU' />
+                </View>
+            </View>
+        </Grid>
     );
 };

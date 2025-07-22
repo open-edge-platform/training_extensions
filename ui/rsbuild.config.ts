@@ -31,4 +31,8 @@ export default defineConfig({
             'process.env': {},
         },
     },
+    html: {
+        title: 'Geti Edge',
+        favicon: './src/assets/build-icon.svg',
+    },
 });

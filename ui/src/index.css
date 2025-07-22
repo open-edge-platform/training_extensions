@@ -1,14 +1,3 @@
-body,
-html {
-    margin: 0;
-    padding: 0;
-    background-color: #313236;
-}
-
-body {
-    background-color: #313236;
-}
-
 :root {
     --energy-blue-light: #7bdeff;
     --energy-blue: rgb(0, 199, 253);
@@ -26,4 +15,22 @@ body {
 
     --annotation-fill: #e9611580;
     --annotation-stroke: #7bdeff;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    background-color: #313236;
+}
+
+body {
+    background-color: #313236;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    margin: 0;
 }

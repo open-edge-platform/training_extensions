@@ -15,7 +15,7 @@ export const StreamContainer = () => {
     const { start, status } = useWebRTCConnection();
 
     return (
-        <>
+        <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
             {status === 'idle' && (
                 <div className={classes.canvasContainer}>
                     <View backgroundColor={'gray-200'} width='90%' height='90%'>
@@ -43,7 +43,7 @@ export const StreamContainer = () => {
                     <Stream size={size} setSize={setSize} />
                 </div>
             )}
-        </>
+        </View>
     );
 };
 
@@ -54,16 +54,14 @@ export const LiveFeed = () => {
             UNSAFE_style={{
                 gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
                 gridTemplateColumns: 'auto min-content',
+                height: '100%',
+                overflow: 'hidden',
+                gap: '1px',
             }}
-            height={'100%'}
-            gap='1px'
         >
-            <Aside />
             <Toolbar />
-
-            <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
-                <StreamContainer />
-            </View>
+            <StreamContainer />
+            <Aside />
         </Grid>
     );
 };

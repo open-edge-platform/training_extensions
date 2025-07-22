@@ -52,7 +52,6 @@ export const Layout = () => {
                 areas={['header', 'content']}
                 UNSAFE_style={{
                     gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
-                    overflowY: 'auto',
                 }}
                 minHeight={'100vh'}
                 maxHeight={'100vh'}
