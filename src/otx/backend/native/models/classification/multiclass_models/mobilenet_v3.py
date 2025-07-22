@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from torch import Tensor, nn
 
@@ -32,7 +32,8 @@ class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
     Args:
         label_info (LabelInfoTypes): The label information.
         data_input_params (DataInputParams): The data input parameters such as input size and normalization.
-        model_name (str, optional): The model name. Defaults to "mobilenetv3_large".
+        model_name (Literal["mobilenetv3_large", "mobilenetv3_small"], optional): The model name.
+            Defaults to "mobilenetv3_large".
         optimizer (OptimizerCallable, optional): The optimizer callable. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): The learning rate scheduler callable.
             Defaults to DefaultSchedulerCallable.
@@ -44,7 +45,7 @@ class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str = "mobilenetv3_large",
+        model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

@@ -14,7 +14,7 @@ from torch import nn
 from torch.hub import download_url_to_file
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformer
+from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformerBackbone
 from otx.backend.native.models.classification.classifier import HLabelClassifier
 from otx.backend.native.models.classification.heads import (
     HierarchicalLinearClsHead,
@@ -110,7 +110,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
             {"std": 0.2, "layer": "Linear", "type": "TruncNormal"},
             {"bias": 0.0, "val": 1.0, "layer": "LayerNorm", "type": "Constant"},
         ]
-        vit_backbone = VisionTransformer(
+        vit_backbone = VisionTransformerBackbone(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
             lora=self.lora,
