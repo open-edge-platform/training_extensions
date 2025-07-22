@@ -9,6 +9,7 @@ import importlib
 from collections import defaultdict
 from multiprocessing import cpu_count
 from typing import TYPE_CHECKING, Any
+from contextlib import contextmanager
 
 import torch
 from datumaro.components.annotation import AnnotationType, LabelCategories
@@ -96,32 +97,42 @@ def ensure_callable(func: Callable[[_T], _V]) -> Callable[[_T], _V]:
     return func
 
 
-def mock_modules_for_chkpt() -> None:
-    """Mock modules for OTX v2.2-2.4 checkpoint loading."""
+@contextmanager
+def mock_modules_for_chkpt():
+    """Context manager to mock modules for OTX v2.2-2.4 checkpoint loading and restore sys.modules after."""
     import sys
     import types
-
     import otx
     from otx.types.label import AnomalyLabelInfo, HLabelInfo, LabelInfo, SegLabelInfo
 
-    # Fake modules
-    OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
-    UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
-    VisualPromptingConfig = type("VisualPromptingConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+    # Save original sys.modules
+    original_sys_modules = dict(sys.modules)
 
-    # Register all missing modules in sys.modules
-    # setattr for unexisting modules
-    setattr(sys.modules["otx.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
-    setattr(sys.modules["otx.config.data"], "VisualPromptingConfig", VisualPromptingConfig)  # noqa: B010
-    setattr(sys.modules["otx.types.label"], "LabelInfo", LabelInfo)  # noqa: B010
-    setattr(sys.modules["otx.types.label"], "HLabelInfo", HLabelInfo)  # noqa: B010
-    setattr(sys.modules["otx.types.label"], "SegLabelInfo", SegLabelInfo)  # noqa: B010
-    setattr(sys.modules["otx.types.label"], "AnomalyLabelInfo", AnomalyLabelInfo)  # noqa: B010
-    setattr(sys.modules["otx.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
-    # register missing modules in sys.modules
-    sys.modules["otx.core"] = types.ModuleType("otx.core")
-    sys.modules["otx.core.config"] = otx.config
-    sys.modules["otx.core.config.data"] = otx.config.data
-    sys.modules["otx.core.types"] = otx.types
-    sys.modules["otx.core.types.task"] = otx.types.task
-    sys.modules["otx.core.types.label"] = otx.types.label
+    try:
+        # Fake modules
+        OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
+        UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+        VisualPromptingConfig = type("VisualPromptingConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+
+        # Register all missing modules in sys.modules
+        setattr(sys.modules["otx.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
+        setattr(sys.modules["otx.config.data"], "VisualPromptingConfig", VisualPromptingConfig)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "LabelInfo", LabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "HLabelInfo", HLabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "SegLabelInfo", SegLabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "AnomalyLabelInfo", AnomalyLabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
+
+        sys.modules["otx.core"] = types.ModuleType("otx.core")
+        sys.modules["otx.core.config"] = otx.config
+        sys.modules["otx.core.config.data"] = otx.config.data
+        sys.modules["otx.core.types"] = otx.types
+        sys.modules["otx.core.types.task"] = otx.types.task
+        sys.modules["otx.core.types.label"] = otx.types.label
+        sys.modules["otx.core.model"] = otx.backend.native.models
+        sys.modules["otx.core.metrics"] = otx.metrics
+
+        yield
+    finally:
+        sys.modules.clear()
+        sys.modules.update(original_sys_modules)

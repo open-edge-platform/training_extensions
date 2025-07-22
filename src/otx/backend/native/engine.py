@@ -1087,8 +1087,8 @@ class OTXEngine(Engine):
         except UnpicklingError:
             from otx.backend.native.utils.utils import mock_modules_for_chkpt
 
-            mock_modules_for_chkpt()
-            ckpt = torch.load(checkpoint, map_location=map_location, weights_only=False)
+            with mock_modules_for_chkpt():
+                ckpt = torch.load(checkpoint, map_location=map_location, weights_only=False)
         except Exception as e:
             msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
             raise RuntimeError(e) from None

@@ -109,6 +109,7 @@ class TestEngine:
             "tests/assets/test_snapshots/dummy_checkpoint_cls_2.2.0.ckpt",
             "tests/assets/test_snapshots/dummy_checkpoint_is_2.2.0.ckpt",
             "tests/assets/test_snapshots/dummy_checkpoint_det_2.2.0.ckpt",
+            "tests/assets/test_snapshots/dummy_checkpoint_anomaly_2.2.0.ckpt",
             "tests/assets/test_snapshots/dummy_checkpoint_det_2.4.5.ckpt",
         ],
     )
