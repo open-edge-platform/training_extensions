@@ -20,12 +20,12 @@ from torch import Tensor, nn
 from otx.backend.native.models.common.utils.nms import batched_nms, multiclass_nms
 from otx.backend.native.models.common.utils.utils import dynamic_topk, gather_topk
 from otx.backend.native.models.detection.heads.anchor_head import AnchorHead
-from otx.backend.native.models.instance_segmentation.utils.structures.bbox import empty_box_as, get_box_wh
 from otx.backend.native.models.instance_segmentation.utils.utils import unpack_inst_seg_entity
 from otx.backend.native.models.modules import build_activation_layer
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.data.entity.torch import OTXDataBatch
+from otx.data.utils.structures.bbox import empty_box_as, get_box_wh
 
 if TYPE_CHECKING:
     from otx.backend.native.models.common.utils.assigners import MaxIoUAssigner

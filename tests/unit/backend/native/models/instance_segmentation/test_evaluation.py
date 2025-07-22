@@ -4,7 +4,7 @@
 import torch
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
-from otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util import encode_rle
+from otx.data.utils.structures.mask.mask_util import encode_rle
 from otx.metrics.mean_ap import MaskRLEMeanAveragePrecision
 
 
