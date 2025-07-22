@@ -409,7 +409,6 @@ class TestRandomAffine:
     ) -> None:
         """Test forward with polygons when transform_polygon is True."""
         original_entity = deepcopy(det_data_entity_with_polygons)
-        original_num_polygons = len(original_entity.polygons)
         results = random_affine_with_polygon_transform(original_entity)
 
         # Check that polygons are present and transformed
@@ -567,7 +566,6 @@ class TestRandomAffine:
     ) -> None:
         """Test forward with masks when transform_mask is False."""
         original_entity = deepcopy(det_data_entity_with_masks)
-        original_masks = original_entity.masks.clone()
         results = random_affine_without_mask_transform(original_entity)
 
         # Check that masks are present but not transformed

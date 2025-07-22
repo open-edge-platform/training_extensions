@@ -1099,10 +1099,10 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         is_numpy_to_tvtensor: bool = False,
     ) -> None:
         super().__init__()
-
         assert 0 <= max_translate_ratio <= 1  # noqa: S101
         assert scaling_ratio_range[0] <= scaling_ratio_range[1]  # noqa: S101
         assert scaling_ratio_range[0] > 0  # noqa: S101
+
         self.max_rotate_degree = max_rotate_degree
         self.max_translate_ratio = max_translate_ratio
         self.scaling_ratio_range = scaling_ratio_range
@@ -1111,8 +1111,8 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.border_val = border_val
         self.bbox_clip_border = bbox_clip_border
         self.transform_mask = transform_mask
-        self.mask_fill_value = mask_fill_value
         self.transform_polygon = transform_polygon
+        self.mask_fill_value = mask_fill_value
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
     @cache_randomness
@@ -1152,9 +1152,8 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         inputs.image = img
         inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
 
-        bboxes = inputs.bboxes
-        num_bboxes = len(bboxes) if bboxes is not None else 0
-        if num_bboxes:
+        # Handle bboxes first to get valid_index for filtering other annotations
+        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
             bboxes = project_bboxes(bboxes, warp_matrix)
             if self.bbox_clip_border:
                 bboxes = clip_bboxes(bboxes, (height, width))
@@ -1163,26 +1162,52 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_index], format="XYXY", canvas_size=(height, width))  # type: ignore[union-attr]
             inputs.label = inputs.label[valid_index]  # type: ignore[union-attr,index]
 
-        if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
-            masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
-            transformed_masks = []
-            for mask in masks:
-                # Apply the same warp matrix used for the image
-                warped_mask = cv2.warpPerspective(
-                    mask,
-                    warp_matrix,
-                    dsize=(width, height),
-                    borderValue=self.mask_fill_value,
-                    flags=cv2.INTER_NEAREST,  # Use nearest neighbor for masks
-                )
-                transformed_masks.append(warped_mask)
-            inputs.masks = tv_tensors.Mask(np.stack(transformed_masks))
+            # Transform masks - filter first, then transform for efficiency
+            if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
+                # Filter masks using valid_index first to avoid unnecessary computation
+                masks = masks[valid_index]
+                masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
+                if isinstance(masks, np.ndarray) and masks.ndim == 3:
+                    masks = list(masks)
 
-        # Transform polygons
-        if self.transform_polygon and (polygons := getattr(inputs, "polygons", None)) is not None and len(polygons) > 0:
-            # Transform polygons using the same warp matrix
-            transformed_polygons = project_polygons(polygons, warp_matrix, (height, width))
-            inputs.polygons = transformed_polygons  # type: ignore[union-attr]
+                # Smart mask warping: binary masks get 255/127 treatment, others use INTER_NEAREST
+                transformed_masks = []
+                for mask in masks:
+                    unique_values = np.unique(mask)
+                    if len(unique_values) <= 2 and np.max(unique_values) <= 1:
+                        # Binary mask: use 255/127 approach for cleaner results
+                        warped_mask = (
+                            cv2.warpPerspective(
+                                mask.astype(np.uint8) * 255,
+                                warp_matrix,
+                                dsize=(width, height),
+                                borderValue=0,  # Always 0 for binary masks to avoid artifacts
+                            )
+                            > 127
+                        )
+                    else:
+                        # Multi-class mask: use INTER_NEAREST to preserve discrete values
+                        warped_mask = cv2.warpPerspective(
+                            mask.astype(np.uint8),
+                            warp_matrix,
+                            dsize=(width, height),
+                            borderValue=self.mask_fill_value,  # Use configurable fill value
+                            flags=cv2.INTER_NEAREST,
+                        )
+                    transformed_masks.append(warped_mask)
+                masks = np.stack(transformed_masks).astype(np.uint8)
+                inputs.masks = tv_tensors.Mask(torch.from_numpy(masks > 0).to(torch.bool))
+
+            # Transform polygons - filter first, then use project_polygons for clean implementation
+            if (
+                self.transform_polygon
+                and (polygons := getattr(inputs, "polygons", None)) is not None
+                and len(polygons) > 0
+            ):
+                # Filter polygons using valid_index first to avoid unnecessary computation
+                filtered_polygons = [p for p, keep in zip(polygons, valid_index) if keep]
+                # Use existing project_polygons function for clean, tested implementation
+                inputs.polygons = project_polygons(filtered_polygons, warp_matrix, (height, width))
 
         return self.convert(inputs)
 
@@ -1196,8 +1221,8 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         repr_str += f"border_val={self.border_val}, "
         repr_str += f"bbox_clip_border={self.bbox_clip_border}, "
         repr_str += f"transform_mask={self.transform_mask}, "
-        repr_str += f"mask_fill_value={self.mask_fill_value}, "
         repr_str += f"transform_polygon={self.transform_polygon}, "
+        repr_str += f"mask_fill_value={self.mask_fill_value}, "
         repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
         return repr_str
 
