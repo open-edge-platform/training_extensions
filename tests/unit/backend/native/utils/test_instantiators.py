@@ -5,10 +5,10 @@
 from otx.backend.native.utils.instantiators import (
     instantiate_callbacks,
     instantiate_loggers,
-    instantiate_sampler,
     partial_instantiate_class,
 )
 from otx.config.data import SamplerConfig
+from otx.data.utils import instantiate_sampler
 
 
 def test_instantiate_callbacks() -> None:

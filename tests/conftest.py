@@ -23,7 +23,7 @@ from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
 
-def pytest_addoption(parser: pytest.Parser):
+def pytest_addoption(parser: pytest):
     """Add custom options for perf tests."""
     parser.addoption(
         "--model-category",

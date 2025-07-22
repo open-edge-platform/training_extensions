@@ -20,11 +20,11 @@ from torch import Tensor, nn
 from torch.nn.modules.utils import _pair
 
 from otx.backend.native.models.common.utils.structures import SamplingResult
-from otx.backend.native.models.instance_segmentation.utils.structures.mask import mask_target
 from otx.backend.native.models.instance_segmentation.utils.utils import empty_instances
 from otx.backend.native.models.modules.base_module import BaseModule, ModuleList
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.modules.norm import build_norm_layer
+from otx.data.utils.structures.mask import mask_target
 
 BYTES_PER_FLOAT = 4
 #  determine it based on available resources.

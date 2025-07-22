@@ -21,7 +21,6 @@ from torchvision.models.detection.image_list import ImageList
 from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
 from otx.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
-from otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
 from otx.backend.native.models.utils.utils import InstanceData, load_checkpoint
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
@@ -31,6 +30,7 @@ from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.tile import OTXTileBatchDataEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.entity.utils import stack_batch
+from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
 from otx.metrics import MetricInput
 from otx.metrics.fmeasure import FMeasure
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable

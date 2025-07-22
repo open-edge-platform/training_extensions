@@ -25,10 +25,10 @@ from otx.backend.native.models.detection.heads.class_incremental_mixin import (
     ClassIncrementalMixin,
 )
 from otx.backend.native.models.instance_segmentation.layers import multiclass_nms_torch
-from otx.backend.native.models.instance_segmentation.utils.structures.bbox import scale_boxes
 from otx.backend.native.models.instance_segmentation.utils.utils import empty_instances
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.utils.utils import InstanceData
+from otx.data.utils.structures.bbox import scale_boxes
 
 if TYPE_CHECKING:
     from otx.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
