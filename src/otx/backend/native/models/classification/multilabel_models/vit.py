@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlparse
 
 from torch.hub import download_url_to_file
@@ -59,7 +59,16 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str = "vit-tiny",
+        model_name: Literal[
+            "vit-tiny",
+            "vit-small",
+            "vit-base",
+            "vit-large",
+            "dinov2-small",
+            "dinov2-base",
+            "dinov2-large",
+            "dinov2-giant",
+        ] = "vit-tiny",
         lora: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

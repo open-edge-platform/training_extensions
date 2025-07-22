@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import types
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Literal
 from urllib.parse import urlparse
 
 import numpy as np
@@ -205,7 +205,16 @@ class VisionTransformerMulticlassCls(ForwardExplainMixInForViT, OTXMulticlassCls
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str = "vit-tiny",
+        model_name: Literal[
+            "vit-tiny",
+            "vit-small",
+            "vit-base",
+            "vit-large",
+            "dinov2-small",
+            "dinov2-base",
+            "dinov2-large",
+            "dinov2-giant",
+        ] = "vit-tiny",
         freeze_backbone: bool = False,
         lora: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
