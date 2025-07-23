@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## \[2.5.0\]
 
 ### Enhancements
+
 - Refactor OTXModels
   (<https://github.com/open-edge-platform/training_extensions/pull/4241>)
 - Introduce Native OTX Engine, refactor folders structure
@@ -15,7 +16,7 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/open-edge-platform/training_extensions/pull/4374>),
   (<https://github.com/open-edge-platform/training_extensions/pull/4436>)
 - Refactor OTX DataEntities
-  (<https://github.com/open-edge-platform/training_extensions/pull/4322>), 
+  (<https://github.com/open-edge-platform/training_extensions/pull/4322>),
   (<https://github.com/open-edge-platform/training_extensions/pull/4282>),
   (<https://github.com/open-edge-platform/training_extensions/pull/4239>),
   (<https://github.com/open-edge-platform/training_extensions/pull/4412>)
