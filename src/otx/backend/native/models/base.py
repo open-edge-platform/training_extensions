@@ -118,7 +118,7 @@ class OTXModel(LightningModule):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | dict,
         task: OTXTaskType | None = None,
         model_name: str = "OTXModel",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -131,7 +131,7 @@ class OTXModel(LightningModule):
 
         Args:
             label_info (LabelInfoTypes): Information about the labels used in the model.
-            data_input_params (DataInputParams): Parameters of the input data such as input size, mean, and std.
+            data_input_params (DataInputParams | dict): Parameters of the input data such as input size, mean, and std.
             model_name (str, optional): Name of the model. Defaults to "OTXModel".
             optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
             scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
@@ -146,6 +146,8 @@ class OTXModel(LightningModule):
         super().__init__()
 
         self._label_info = self._dispatch_label_info(label_info)
+        if isinstance(data_input_params, dict):
+            data_input_params = DataInputParams(**data_input_params)
         self._check_preprocessing_params(data_input_params)
         self.data_input_params = data_input_params
         self.model_name = model_name

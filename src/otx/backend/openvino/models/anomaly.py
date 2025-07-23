@@ -99,7 +99,7 @@ class OVAnomalyModel(OVModel):
         """
         score_dict = {
             "pred_scores": torch.tensor(
-                [score if label == "Anomaly" else 1 - score for score, label in zip(preds.scores, preds.labels)],
+                [score if label == 1 else 1 - score for score, label in zip(preds.scores, preds.labels)],
             ),
             "labels": torch.tensor(inputs.labels) if inputs.batch_size == 1 else torch.vstack(inputs.labels),
         }

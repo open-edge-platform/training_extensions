@@ -147,11 +147,11 @@ class OTXEngine(Engine):
 
     def train(
         self,
-        max_epochs: int = 200,
+        max_epochs: int | None = None,
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = "16",
+        precision: _PRECISION_INPUT | None = None,
         val_check_interval: int | float | None = None,
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
@@ -199,31 +199,31 @@ class OTXEngine(Engine):
             ... )
 
         CLI Usage:
-            1. Can train with data_root only. then OTX will provide default training configuration.
-                ```shell
-                >>> otx train --data_root <DATASET_PATH, str>
-                ```
-            2. Can pick a model or datamodule as Config file or Class.
+            1. Can pick a model or datamodule as Config file.
                 ```shell
                 >>> otx train \
                 ...     --data_root <DATASET_PATH, str> \
-                ...     --model <CONFIG | CLASS_PATH_OR_NAME, OTXModel> \
-                ...     --data <CONFIG | CLASS_PATH_OR_NAME, OTXDataModule>
+                ...     --config <CONFIG, str> \
                 ```
-            3. Of course, can override the various values with commands.
+            2. Of course, can override the various values with commands.
                 ```shell
                 >>> otx train \
+                ...     --config <CONFIG, str> \
                 ...     --data_root <DATASET_PATH, str> \
                 ...     --max_epochs <EPOCHS, int> \
                 ...     --checkpoint <CKPT_PATH, str>
                 ```
-            4. To train with configuration file, run
-                ```shell
-                >>> otx train --data_root <DATASET_PATH, str> --config <CONFIG_PATH, str>
-                ```
-            5. To reproduce the existing training with work_dir, run
+            3. To reproduce the existing training with work_dir, run
                 ```shell
                 >>> otx train --work_dir <WORK_DIR_PATH, str>
+                ```
+            4. To resume training, run
+                ```shell
+                >>> otx train \
+                ...     --config <CONFIG, str> \
+                ...     --data_root <DATASET_PATH, str> \
+                ...     --checkpoint <CKPT_PATH, str>
+                ...     --resume True
                 ```
         """
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
@@ -327,13 +327,9 @@ class OTXEngine(Engine):
             3. Can pick a model.
                 ```shell
                 >>> otx test \
-                ...     --model <CONFIG | CLASS_PATH_OR_NAME> \
+                ...     --config <CONFIG | CLASS_PATH_OR_NAME> \
                 ...     --data_root <DATASET_PATH, str> \
                 ...     --checkpoint <CKPT_PATH, str>
-                ```
-            4. To eval with configuration file, run
-                ```shell
-                >>> otx test --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str>
                 ```
         """
         model = self.model
@@ -511,7 +507,9 @@ class OTXEngine(Engine):
                 ```
             2. To export a specific checkpoint, run
                 ```shell
-                >>> otx export --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str>
+                >>> otx export \
+                    --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str> \
+                    --data_root <DATASET_PATH, str>
                 ```
             3. To export a model with precision FP16 and format ONNX, run
                 ```shell

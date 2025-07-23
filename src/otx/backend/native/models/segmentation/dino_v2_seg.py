@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from torch.hub import download_url_to_file
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformer
+from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformerBackbone
 from otx.backend.native.models.segmentation.base import OTXSegmentationModel
 from otx.backend.native.models.segmentation.heads import FCNHead
 from otx.backend.native.models.segmentation.losses import CrossEntropyLossWithIgnore
@@ -75,7 +75,7 @@ class DinoV2Seg(OTXSegmentationModel):
         # initialize backbones
         num_classes = num_classes if num_classes is not None else self.num_classes
 
-        backbone = VisionTransformer(model_name=self.model_name, img_size=self.data_input_params.input_size)
+        backbone = VisionTransformerBackbone(model_name=self.model_name, img_size=self.data_input_params.input_size)
         backbone.forward = partial(  # type: ignore[method-assign]
             backbone.get_intermediate_layers,
             n=[8, 9, 10, 11],

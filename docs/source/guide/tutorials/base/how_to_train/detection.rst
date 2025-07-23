@@ -1,15 +1,16 @@
 Object Detection model
 ======================
 
-This tutorial reveals end-to-end solution from installation to model export and optimization for object detection task on a specific example.
+This tutorial provides a step-by-step guide — from installation to model training — for the object detection task using a specific example.
 
-To learn more about Object Detection task, refer to :doc:`../../../explanation/algorithms/object_detection/object_detection`.
+To learn more about the object detection task, refer to :doc:`../../../explanation/algorithms/object_detection/object_detection`.
 
-On this page, we show how to train, validate, export and optimize ATSS model on WGISD public dataset.
+In this tutorial, we demonstrate how to train and validate the **ATSS** model on the publicly available **WGISD** dataset.
+For details on how to export, optimize, and deploy the trained model, refer to :doc:`../export`.
 
-To have a specific example in this tutorial, all commands will be run on the ATSS model. It's a medium model, that achieves relatively high accuracy while keeping the inference fast.
+To provide a concrete example, all commands in this tutorial use the **ATSS** model — a medium-sized architecture that offers a good trade-off between accuracy and inference speed.
 
-The process has been tested on the following configuration.
+This process has been tested with the following configuration:
 
 - Ubuntu 20.04
 - NVIDIA GeForce RTX 3090
@@ -142,7 +143,7 @@ The list of supported recipes for object detection is available with the command
 
         .. code-block:: python
 
-            from otx.engine.utils.api import list_models
+            from otx.backend.native.cli.utils import list_models
 
             model_lists = list_models(task="DETECTION", pattern="atss")
             print(model_lists)
@@ -224,14 +225,29 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             data_root = "data/wgisd"
             recipe = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
 
-            engine = Engine.from_config(
+            engine = OTXEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
+                      work_dir="otx-workspace",
+                    )
+
+            # it is also possible to pass a config as a model to the Engine directly
+            engine = OTXEngine(
+                      model=recipe,
+                      data=data_root,
+                      work_dir="otx-workspace",
+                    )
+
+            # one more possibility to obtain the right engine by the given model/dataset
+            from otx.engine import create_engine
+            engine = create_engine(
+                      model=recipe,
+                      data=data_root,
                       work_dir="otx-workspace",
                     )
 
@@ -241,13 +257,32 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
+            from otx.backend.native.models import ATSS
 
             data_root = "data/wgisd"
+            model = ATSS(
+                        model_name="atss_mobilenetv2",
+                        label_info = {"label_names": ["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"],
+                                     "label_id": [0, 1, 2, 3, 4],
+                                     "label_groups": [["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"]]},
+                        data_input_params = {"input_size": [800, 992],
+                                            "mean": [0.0, 0.0, 0.0],
+                                            "std": [255.0, 255.0, 255.0]}
+                    )
 
-            engine = Engine(
-                      model="atss_mobilenetv2",
+            engine = OTXEngine(
+                      model=model,
                       data_root=data_root,
+                      work_dir="otx-workspace",
+                    )
+
+            # one more possibility to obtain the right engine by the given model/dataset
+            # using "create_engine" function
+            from otx.engine import create_engine
+            engine = create_engine(
+                      model=model,
+                      data=data_root,
                       work_dir="otx-workspace",
                     )
 
@@ -274,11 +309,11 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100, e
 
             from otx.config.data import SubsetConfig
             from otx.data.module import OTXDataModule
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = Engine(..., datamodule=datamodule)
+            engine = OTXEngine(..., datamodule=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -305,6 +340,27 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
 The training time highly relies on the hardware characteristics, for example on 1 NVIDIA GeForce RTX 3090 the training took about 3 minutes.
 
 After that, we have the PyTorch object detection model trained with OpenVINO™ Training Extensions, which we can use for evaluation, export, optimization and deployment.
+
+6. It is also possible to resume training from the last checkpoint.
+For this, we can use the ``--resume`` parameter with the path to the checkpoint file.
+
+.. tab-set::
+
+    .. tab-item:: CLI
+
+        .. code-block:: shell
+
+            (otx) ...$ otx train --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
+                                  --data_root data/flower_photos \
+                                  --checkpoint otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
+                                  --resume True
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            engine.train(resume=True,
+                         checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
 
 ***********
 Evaluation
@@ -360,213 +416,4 @@ folder on WGISD dataset and save results to ``otx-workspace``:
 3. The output of ``{work_dir}/{timestamp}/csv/version_0/metrics.csv`` consists of
 a dict with target metric name and its value.
 
-
-*********
-Export
-*********
-
-1. ``otx export`` exports a trained Pytorch `.pth` model to the OpenVINO™ Intermediate Representation (IR) format.
-It allows to efficiently run it on Intel hardware, especially on CPU, using OpenVINO™ runtime.
-Also, the resulting IR model is required to run PTQ optimization in the section below. IR model contains 2 files: ``exported_model.xml`` for architecture and ``exported_model.bin`` for weights.
-
-2. That's how we can export the trained model ``{work_dir}/{timestamp}/checkpoints/epoch_*.ckpt``
-from the previous section and save the exported model to the ``{work_dir}/{timestamp}/`` folder.
-
-.. tab-set::
-
-    .. tab-item:: CLI (with work_dir)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export --work_dir otx-workspace
-            ...
-            Elapsed time: 0:00:06.588245
-
-    .. tab-item:: CLI (with config)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export ... --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt
-            ...
-            Elapsed time: 0:00:06.588245
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            engine.export()
-
-
-3. We can check the accuracy of the IR model and the consistency between the exported model and the PyTorch model,
-using ``otx test`` and passing the IR model path to the ``--checkpoint`` parameter.
-
-.. tab-set::
-
-    .. tab-item:: CLI (with work_dir)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx test --work_dir otx-workspace \
-                                --checkpoint otx-workspace/20240312_052847/exported_model.xml \
-            ...
-            ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-            ┃        Test metric        ┃       DataLoader 0        ┃
-            ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-            │         test/map          │    0.5444773435592651     │
-            │        test/map_50        │    0.8693901896476746     │
-            │        test/map_75        │    0.5761404037475586     │
-            │      test/map_large       │     0.561242401599884     │
-            │      test/map_medium      │    0.2926788330078125     │
-            │    test/map_per_class     │           -1.0            │
-            │      test/map_small       │           -1.0            │
-            │        test/mar_1         │   0.055956535041332245    │
-            │        test/mar_10        │    0.45759353041648865    │
-            │       test/mar_100        │    0.6809769868850708     │
-            │  test/mar_100_per_class   │           -1.0            │
-            │      test/mar_large       │    0.6932432055473328     │
-            │      test/mar_medium      │    0.46584922075271606    │
-            │      test/mar_small       │           -1.0            │
-            └───────────────────────────┴───────────────────────────┘
-
-    .. tab-item:: CLI (with config)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx test --config src/otx/recipe/detection/atss_mobilenetv2.yaml \
-                                --data_root data/wgisd \
-                                --checkpoint otx-workspace/20240312_052847/exported_model.xml \
-            ...
-            ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-            ┃        Test metric        ┃       DataLoader 0        ┃
-            ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-            │         test/map          │    0.5444773435592651     │
-            │        test/map_50        │    0.8693901896476746     │
-            │        test/map_75        │    0.5761404037475586     │
-            │      test/map_large       │     0.561242401599884     │
-            │      test/map_medium      │    0.2926788330078125     │
-            │    test/map_per_class     │           -1.0            │
-            │      test/map_small       │           -1.0            │
-            │        test/mar_1         │   0.055956535041332245    │
-            │        test/mar_10        │    0.45759353041648865    │
-            │       test/mar_100        │    0.6809769868850708     │
-            │  test/mar_100_per_class   │           -1.0            │
-            │      test/mar_large       │    0.6932432055473328     │
-            │      test/mar_medium      │    0.46584922075271606    │
-            │      test/mar_small       │           -1.0            │
-            └───────────────────────────┴───────────────────────────┘
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            exported_model = engine.export()
-            engine.test(checkpoint=exported_model)
-
-
-4. ``Optional`` Additionally, we can tune confidence threshold via the command line.
-Learn more about recipe-specific parameters using ``otx export --help``.
-
-For example, If you want to get the ONNX model format you can run it like below.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export ... --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt --export_format ONNX
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            engine.export(..., export_format="ONNX")
-
-If you also want to export ``saliency_map``, a feature related to explain, and ``feature_vector`` information for XAI, you can do the following.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export ... --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt --explain True
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            engine.export(..., explain=True)
-
-
-*************
-Optimization
-*************
-
-1. We can further optimize the model with ``otx optimize``.
-It uses PTQ depending on the model and transforms it to ``INT8`` format.
-
-``PTQ`` optimization is used for models exported in the OpenVINO™ IR format. It decreases the floating-point precision to integer precision of the exported model by performing the post-training optimization.
-
-To learn more about optimization, refer to `NNCF repository <https://github.com/openvinotoolkit/nncf>`_.
-
-2.  Command example for optimizing OpenVINO™ model (.xml)
-with OpenVINO™ PTQ.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx optimize  --work_dir otx-workspace \
-                                     --checkpoint otx-workspace/20240312_052847/exported_model.xml
-
-            ...
-            Statistics collection ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 • 0:00:14 • 0:00:00
-            Applying Fast Bias correction ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 58/58 • 0:00:02 • 0:00:00
-            Elapsed time: 0:00:24.958733
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            ckpt_path = "otx-workspace/20240312_052847/exported_model.xml"
-            engine.optimize(checkpoint=ckpt_path)
-
-
-The optimization time highly relies on the hardware characteristics, for example on Intel(R) Core(TM) i9-11900 it took about 25 seconds.
-Please note, that PTQ will take some time without logging to optimize the model.
-
-.. note::
-
-    You can also pass ``export_demo_package=True`` parameter to obtain ``exportable_code.zip`` archive with packed optimized model and demo package. Please refer to :doc:`export tutorial <../export>`.
-
-3. Finally, we can also evaluate the optimized model by passing
-it to the ``otx test`` function.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx test --work_dir otx-workspace \
-                                --checkpoint otx-workspace/20240312_055042/optimized_model.xml \
-
-            ...
-            ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-            ┃        Test metric        ┃       DataLoader 0        ┃
-            ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-            │       test/map_50         │    0.8693901896476746     │
-            └───────────────────────────┴───────────────────────────┘
-            Elapsed time: 0:00:10.260521
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            ckpt_path = "otx-workspace/20240312_055042/optimized_model.xml"
-            engine.test(checkpoint=ckpt_path)
-
-Now we have fully trained, optimized and exported an efficient model representation ready-to-use object detection model.
+The next tutorial on how to export, optimize, and deploy the model is available at :doc:`../export`.

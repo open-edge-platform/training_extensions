@@ -12,7 +12,7 @@ To be specific, this tutorial uses as an example of the ATSS model trained throu
 
 For visualization we use images from WGISD dataset from the :doc:`object detection tutorial <how_to_train/detection>` together with trained model.
 
-1. Activate the virtual environment 
+1. Activate the virtual environment
 created in the previous step.
 
 .. code-block:: shell
@@ -21,7 +21,7 @@ created in the previous step.
   # or by this line, if you created an environment, using tox
   . venv/otx/bin/activate
 
-2. ``otx explain`` command returns saliency maps, 
+2. ``otx explain`` command returns saliency maps,
 which are heatmaps with red-colored areas indicating focus. Here's an example how to generate saliency maps from trained checkpoint:
 
 .. tab-set::
@@ -53,8 +53,8 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
                 dump=True # Wherether to save saliency map images or not
               )
 
-3. The generated saliency maps will appear in  ``otx-workspace/.latest/explain/saliency_maps`` folder. 
-It will contain a pair of generated images with saliency maps for each image used for the explanation process: 
+3. The generated saliency maps will appear in  ``otx-workspace/.latest/explain/saliency_maps`` folder.
+It will contain a pair of generated images with saliency maps for each image used for the explanation process:
 
 - saliency map - where red color means more attention of the model
 - overlay - where the saliency map is combined with the original image:
@@ -64,26 +64,7 @@ It will contain a pair of generated images with saliency maps for each image use
 
 |
 
-4. To explain the exported IR model, it should be converted with additional outputs ``saliency_map`` and ``feature_map``.
-To do that we should use ``--explain True`` parameter during export.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export ... --explain True
-            (otx) ...$ otx explain ... --checkpoint otx-workspace/20240312_052847/exported_model.xml
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            engine.export(..., explain=True)
-            engine.explain(..., checkpoint="<xml_weights_path>")
-
-5. We can parametrize the explanation process by specifying 
+4. We can parametrize the explanation process by specifying
 the following parameters in ``ExplainConfig``:
 
 - ``target_explain_group`` - for which target saliency maps will be generated:
@@ -103,7 +84,7 @@ the following parameters in ``ExplainConfig``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx explain ... --explain_config.postprocess True 
+            (otx) ...$ otx explain ... --explain_config.postprocess True
                                        --explain_config.target_explain_group PREDICTIONS
 
     .. tab-item:: API
@@ -117,7 +98,7 @@ the following parameters in ``ExplainConfig``:
                            )
               )
 
-6. The explanation algorithm is chosen automatically 
+5. The explanation algorithm is chosen automatically
 based on the used model:
 
 - ``Recipro-CAM`` - for CNN classification models
