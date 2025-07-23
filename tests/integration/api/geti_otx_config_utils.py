@@ -130,7 +130,7 @@ class OTXConfig:
 
     @classmethod
     def from_yaml_file(cls, config_file_path: Path) -> OTXConfig:
-        with open(config_file_path) as fp:
+        with Path(config_file_path).open() as fp:
             config: dict = yaml.safe_load(fp)
 
         return OTXConfig(
