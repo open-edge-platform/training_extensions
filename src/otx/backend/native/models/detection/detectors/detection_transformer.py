@@ -29,8 +29,7 @@ class DETR(BaseModule):
             If None then default DetrCriterion is used.
         optimizer_configuration (list[dict], optional): Optimizer configuration.
             Defaults to None.
-        multi_scale (list[int], optional): List of image sizes.
-            Defaults to None.
+        multi_scale (bool, optional): Whether to use multi-scale training.
         num_top_queries (int, optional): Number of top queries to return.
             Defaults to 300.
         input_size (int, optional): The input size of the model. Default to 640.
@@ -44,7 +43,7 @@ class DETR(BaseModule):
         num_classes: int,
         criterion: nn.Module | None = None,
         optimizer_configuration: list[dict] | None = None,
-        multi_scale: list[int] | None = None,
+        multi_scale: bool = False,
         num_top_queries: int = 300,
         input_size: int = 640,
     ) -> None:
@@ -53,10 +52,7 @@ class DETR(BaseModule):
         self.backbone = backbone
         self.decoder = decoder
         self.encoder = encoder
-        if multi_scale is not None:
-            self.multi_scale = multi_scale
-        else:
-            self.multi_scale = [input_size - i * 32 for i in range(-5, 6)] + [input_size] * 2
+        self.multi_scale = self.generate_scales(input_size) if multi_scale else []
 
         self.num_classes = num_classes
         self.num_top_queries = num_top_queries
@@ -71,6 +67,14 @@ class DETR(BaseModule):
             )
         )
         self.optimizer_configuration = optimizer_configuration
+
+    def generate_scales(self, input_size: int, base_size_repeat: int = 3) -> list[int]:
+        """Generates scales for multi-scale training."""
+        scale_repeat = (input_size - int(input_size * 0.75 / 32) * 32) // 32
+        scales = [int(input_size * 0.75 / 32) * 32 + i * 32 for i in range(scale_repeat)]
+        scales += [input_size] * base_size_repeat
+        scales += [int(input_size * 1.25 / 32) * 32 - i * 32 for i in range(scale_repeat)]
+        return scales
 
     def _forward_features(self, images: Tensor, targets: dict[str, Any] | None = None) -> dict[str, Tensor]:
         images = self.backbone(images)

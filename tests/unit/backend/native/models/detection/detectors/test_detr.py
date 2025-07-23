@@ -109,8 +109,33 @@ class TestDETR:
             decoder=MagicMock(),
             num_classes=10,
             input_size=input_size,
+            multi_scale=True,
         )
 
-        expected_multi_scale = sorted([input_size - i * 32 for i in range(-5, 6)] + [input_size] * 2)
+        expected_multi_scale = [
+            960,
+            992,
+            1024,
+            1056,
+            1088,
+            1120,
+            1152,
+            1184,
+            1216,
+            1248,
+            1280,
+            1280,
+            1280,
+            1312,
+            1344,
+            1376,
+            1408,
+            1440,
+            1472,
+            1504,
+            1536,
+            1568,
+            1600,
+        ]
 
         assert sorted(model.multi_scale) == expected_multi_scale
