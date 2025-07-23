@@ -61,3 +61,18 @@ class TestVisionTransformer:
         assert len(outs) == 1
         feat = outs[-1]
         assert feat.shape == (1, 197, model.embed_dim)
+
+    def test_peft(self, config):
+        # test PEFT methods (LoRA, DoRA)
+        peft_methods = ["lora", "dora"]
+
+        for method in peft_methods:
+            cfg = deepcopy(config)
+            model = VisionTransformer(**cfg, peft=method)
+
+            # check PEFT parameters are created
+            peft_param_names = [n for n, _ in model.named_parameters() if method in n]
+            assert len(peft_param_names) > 0
+
+            # check only PEFT parameters are trainable
+            assert all(param.requires_grad == (method in name) for name, param in model.named_parameters())
