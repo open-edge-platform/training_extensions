@@ -312,7 +312,6 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (HLabelInfo): Information about the hierarchical labels.</span>
-<span class="sd">        lora (bool): Whether to use LoRA (Low-Rank Adaptation) for the model.</span>
 <span class="sd">        model_name (str): Name of the Vision Transformer model to use.</span>
 <span class="sd">        data_input_params (DataInputParams): Parameters for data input.</span>
 <span class="sd">        optimizer (OptimizerCallable): Callable for the optimizer.</span>
@@ -328,14 +327,11 @@
         <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span><span class="p">,</span>
         <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
-        <span class="n">lora</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">HLabelClsMetricCallable</span><span class="p">,</span>
         <span class="n">torch_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lora</span> <span class="o">=</span> <span class="n">lora</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">label_info</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span>
             <span class="n">data_input_params</span><span class="o">=</span><span class="n">data_input_params</span><span class="p">,</span>
@@ -373,7 +369,6 @@
         <span class="n">vit_backbone</span> <span class="o">=</span> <span class="n">VisionTransformer</span><span class="p">(</span>
             <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
             <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
-            <span class="n">lora</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lora</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">HLabelClassifier</span><span class="p">(</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">vit_backbone</span><span class="p">,</span>
