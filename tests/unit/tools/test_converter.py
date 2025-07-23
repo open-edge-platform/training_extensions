@@ -14,7 +14,7 @@ class TestGetiConfigConverter:
         otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/detection.yaml")
         config = GetiConfigConverter.convert(asdict(otx_config))
 
-        assert config["data"]["input_size"] == (800, 992)
+        assert config["data"]["input_size"] == (992, 800)
         assert config["data"]["train_subset"]["batch_size"] == 8
         assert config["data"]["val_subset"]["batch_size"] == 8
         assert config["data"]["test_subset"]["batch_size"] == 8
@@ -106,8 +106,8 @@ class TestGetiConfigConverter:
         assert engine.datamodule.test_subset.num_workers == 2
         assert engine.datamodule.tile_config.enable_tiler
         assert engine.datamodule.tile_config.enable_adaptive_tiling is True
-        assert engine.datamodule.input_size == (800, 992)
-        assert engine.model.data_input_params.input_size == (800, 992)
+        assert engine.datamodule.input_size == (992, 800)
+        assert engine.model.data_input_params.input_size == (992, 800)
 
         assert len(train_kwargs["callbacks"]) == len(config["callbacks"])
         assert train_kwargs["callbacks"][0].patience == 10
