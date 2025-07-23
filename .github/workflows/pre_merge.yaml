@@ -106,8 +106,8 @@ jobs:
           python-version: "3.12"
       - name: Install system build dependencies
         run: |
-          sudo apt update
-          sudo apt install -y build-essential
+          apt update
+          apt install -y build-essential
       - name: Install tox
         run: |
           pip install '.[ci_tox]'
