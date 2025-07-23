@@ -2,6 +2,54 @@
 
 All notable changes to this project will be documented in this file.
 
+## \[2.5.0\]
+
+### Enhancements
+- Refactor OTXModels
+  (<https://github.com/open-edge-platform/training_extensions/pull/4241>)
+- Introduce Native OTX Engine, refactor folders structure
+  (<https://github.com/open-edge-platform/training_extensions/pull/4414>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4408>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4339>)
+- Introduce OVEngine
+  (<https://github.com/open-edge-platform/training_extensions/pull/4374>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4436>)
+- Refactor OTX DataEntities
+  (<https://github.com/open-edge-platform/training_extensions/pull/4322>), 
+  (<https://github.com/open-edge-platform/training_extensions/pull/4282>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4239>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4412>)
+- Introduce new preformance benchmark v2
+  (<https://github.com/open-edge-platform/training_extensions/pull/4435>,
+  <https://github.com/open-edge-platform/training_extensions/pull/4400>,
+  <https://github.com/open-edge-platform/training_extensions/pull/4435>)
+- Update documentation
+  (<https://github.com/open-edge-platform/training_extensions/pull/4447>)
+- Bump OV and NNCF to 2025.2
+  (<https://github.com/open-edge-platform/training_extensions/pull/4423>)
+- Bump torch to 2.7.0
+  (<https://github.com/open-edge-platform/training_extensions/pull/4361>)
+- Add model arch name to exported model metadata
+  (<https://github.com/open-edge-platform/training_extensions/pull/4407>)
+
+### Bug fixes
+
+- Fix otx install by moving base dependencies
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4285>)
+- Fix DataInputParams Serialization
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4293>)
+- Align KP detection validation with ModelAPI post processing
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4300>)
+- Fix missing mAP score reporting for instance segmentation
+  (<https://github.com/open-edge-platform/training_extensions/pull/4364>)
+- Provide XPU workarounds for object detection task
+  (<https://github.com/open-edge-platform/training_extensions/pull/4464>)
+
+### Removed
+
+- Remove Visual Prompting
+  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>,<https://github.com/open-edge-platform/training_extensions/pull/4370>)
+
 ## \[2.4.6\]
 
 ### Bug fixes
@@ -43,33 +91,6 @@ All notable changes to this project will be documented in this file.
 ### Bug fixes
 
 - Update Datumaro from 1.10.0rc0 to 1.10.0
-
-## \[2.4.0\]
-
-### Enhancements
-
-- Bump OV and NNCF to 2025.2
-  (https://github.com/open-edge-platform/training_extensions/pull/4423)
-- Bump torch to 2.7.0
-  (https://github.com/open-edge-platform/training_extensions/pull/4361)
-- Add model arch name to exported model metadata
-  (https://github.com/open-edge-platform/training_extensions/pull/4407)
-
-### Bug fixes
-
-- Fix otx install by moving base dependencies
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4285>)
-- Fix DataInputParams Serialization
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4293>)
-- Align KP detection validation with ModelAPI post processing
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4300>)
-- Fix missing mAP score reporting for instance segmentation
-  (<https://github.com/open-edge-platform/training_extensions/pull/4364>)
-
-### Removed
-
-- Remove Visual Prompting
-  (<https://github.com/openvinotoolkit/training_extensions/pull/4291>,<https://github.com/open-edge-platform/training_extensions/pull/4370>)
 
 ## \[2.4.0\]
 
