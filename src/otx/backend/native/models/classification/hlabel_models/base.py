@@ -79,9 +79,9 @@ class OTXHlabelClsModel(OTXModel):
         # identify classification layers
         sample_config = deepcopy(self.label_info.as_head_config_dict())
         sample_config["num_classes"] = 5
-        sample_model_dict = self._build_model(head_config=sample_config).state_dict()
+        sample_model_dict = self._create_model(head_config=sample_config).state_dict()
         sample_config["num_classes"] = 6
-        incremental_model_dict = self._build_model(head_config=sample_config).state_dict()
+        incremental_model_dict = self._create_model(head_config=sample_config).state_dict()
         # iterate over the model dict and compare the shapes.
         # Add the key to the list if the shapes are different
         return [

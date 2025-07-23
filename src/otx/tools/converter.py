@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+from enum import Enum
 from pathlib import Path
 from typing import Any
 from warnings import warn
@@ -24,90 +25,215 @@ from otx.types import PathLike
 
 RECIPE_PATH = get_otx_root_path() / "recipe"
 
+
+class ModelStatus(str, Enum):
+    """Enum for model status."""
+
+    SPEED = "speed"
+    BALANCE = "balance"
+    ACCURACY = "accuracy"
+    DEPRECATED = "deprecated"
+    ACTIVE = "active"
+
+
 TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
-    "Custom_Image_Classification_DeiT-Tiny": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
-    "Custom_Image_Classification_EfficinetNet-B0": RECIPE_PATH
-    / "classification"
-    / "multi_class_cls"
-    / "efficientnet_b0.yaml",
-    "Custom_Image_Classification_EfficientNet-V2-S": RECIPE_PATH
-    / "classification"
-    / "multi_class_cls"
-    / "efficientnet_v2.yaml",
-    "Custom_Image_Classification_MobileNet-V3-large-1x": RECIPE_PATH
-    / "classification"
-    / "multi_class_cls"
-    / "mobilenet_v3_large.yaml",
-    "Custom_Image_Classification_EfficientNet-B3": RECIPE_PATH
-    / "classification"
-    / "multi_class_cls"
-    / "tv_efficientnet_b3.yaml",
-    "Custom_Image_Classification_EfficientNet-V2-L": RECIPE_PATH
-    / "classification"
-    / "multi_class_cls"
-    / "tv_efficientnet_v2_l.yaml",
-    "Custom_Image_Classification_MobileNet-V3-small": RECIPE_PATH
-    / "classification"
-    / "multi_class_cls"
-    / "tv_mobilenet_v3_small.yaml",
+    "Custom_Image_Classification_DeiT-Tiny": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Custom_Image_Classification_EfficinetNet-B0": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": True,
+    },
+    "Custom_Image_Classification_EfficientNet-V2-S": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
+    },
+    "Custom_Image_Classification_MobileNet-V3-large-1x": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
+    },
+    "Custom_Image_Classification_EfficientNet-B3": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Custom_Image_Classification_EfficientNet-V2-L": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_v2_l.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Custom_Image_Classification_MobileNet-V3-small": {
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_mobilenet_v3_small.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
     # DETECTION
-    "Custom_Object_Detection_Gen3_ATSS": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
-    "Object_Detection_ResNeXt101_ATSS": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
-    "Custom_Object_Detection_Gen3_SSD": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
-    "Object_Detection_YOLOX_X": RECIPE_PATH / "detection" / "yolox_x.yaml",
-    "Object_Detection_YOLOX_L": RECIPE_PATH / "detection" / "yolox_l.yaml",
-    "Object_Detection_YOLOX_S": RECIPE_PATH / "detection" / "yolox_s.yaml",
-    "Custom_Object_Detection_YOLOX": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
-    "Object_Detection_RTDetr_18": RECIPE_PATH / "detection" / "rtdetr_18.yaml",
-    "Object_Detection_RTDetr_50": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
-    "Object_Detection_RTDetr_101": RECIPE_PATH / "detection" / "rtdetr_101.yaml",
-    "Object_Detection_RTMDet_tiny": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
-    "Object_Detection_DFine_X": RECIPE_PATH / "detection" / "dfine_x.yaml",
+    "Custom_Object_Detection_Gen3_ATSS": {
+        "recipe_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": True,
+    },
+    "Object_Detection_ResNeXt101_ATSS": {
+        "recipe_path": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Custom_Object_Detection_Gen3_SSD": {
+        "recipe_path": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Object_Detection_YOLOX_X": {
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_x.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Object_Detection_YOLOX_L": {
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_l.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Object_Detection_YOLOX_S": {
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_s.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
+    },
+    "Custom_Object_Detection_YOLOX": {
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Object_Detection_RTDetr_18": {
+        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_18.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Object_Detection_RTDetr_50": {
+        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Object_Detection_RTDetr_101": {
+        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_101.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Object_Detection_RTMDet_tiny": {
+        "recipe_path": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Object_Detection_DFine_X": {
+        "recipe_path": RECIPE_PATH / "detection" / "dfine_x.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
+    },
     # INSTANCE_SEGMENTATION
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH
-    / "instance_segmentation"
-    / "maskrcnn_r50.yaml",
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": RECIPE_PATH
-    / "instance_segmentation"
-    / "maskrcnn_swint.yaml",
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH
-    / "instance_segmentation"
-    / "maskrcnn_efficientnetb2b.yaml",
-    "Custom_Instance_Segmentation_RTMDet_tiny": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
-    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
+    },
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
+    },
+    "Custom_Instance_Segmentation_RTMDet_tiny": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
+    },
     # ROTATED_DETECTION
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH
-    / "rotated_detection"
-    / "maskrcnn_r50.yaml",
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH
-    / "rotated_detection"
-    / "maskrcnn_efficientnetb2b.yaml",
-    "Rotated_Detection_MaskRCNN_ResNet50_V2": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
+    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
+        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
+        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_efficientnetb2b.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
+    },
+    "Rotated_Detection_MaskRCNN_ResNet50_V2": {
+        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
+    },
     # SEMANTIC_SEGMENTATION
-    "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
-    "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
-    "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_s.yaml",
-    "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_x.yaml",
-    "Custom_Semantic_Segmentation_SegNext_t": RECIPE_PATH / "semantic_segmentation" / "segnext_t.yaml",
-    "Custom_Semantic_Segmentation_SegNext_s": RECIPE_PATH / "semantic_segmentation" / "segnext_s.yaml",
-    "Custom_Semantic_Segmentation_SegNext_B": RECIPE_PATH / "semantic_segmentation" / "segnext_b.yaml",
-    "Custom_Semantic_Segmentation_DINOV2_S": RECIPE_PATH / "semantic_segmentation" / "dino_v2.yaml",
+    "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": True,
+    },
+    "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_s.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
+    },
+    "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_x.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
+    },
+    "Custom_Semantic_Segmentation_SegNext_t": {
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_t.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Custom_Semantic_Segmentation_SegNext_s": {
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_s.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Custom_Semantic_Segmentation_SegNext_B": {
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_b.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Custom_Semantic_Segmentation_DINOV2_S": {
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "dino_v2.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
+    },
     # ANOMALY
-    "ote_anomaly_padim": RECIPE_PATH / "anomaly" / "padim.yaml",
-    "ote_anomaly_stfpm": RECIPE_PATH / "anomaly" / "stfpm.yaml",
-    "ote_anomaly_uflow": RECIPE_PATH / "anomaly" / "uflow.yaml",
-    # ANOMALY CLASSIFICATION
-    "ote_anomaly_classification_padim": RECIPE_PATH / "anomaly_classification" / "padim.yaml",
-    "ote_anomaly_classification_stfpm": RECIPE_PATH / "anomaly_classification" / "stfpm.yaml",
-    # ANOMALY_DETECTION
-    "ote_anomaly_detection_padim": RECIPE_PATH / "anomaly_detection" / "padim.yaml",
-    "ote_anomaly_detection_stfpm": RECIPE_PATH / "anomaly_detection" / "stfpm.yaml",
-    # ANOMALY_SEGMENTATION
-    "ote_anomaly_segmentation_padim": RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
-    "ote_anomaly_segmentation_stfpm": RECIPE_PATH / "anomaly_segmentation" / "stfpm.yaml",
+    "ote_anomaly_padim": {
+        "recipe_path": RECIPE_PATH / "anomaly" / "padim.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
+    },
+    "ote_anomaly_stfpm": {
+        "recipe_path": RECIPE_PATH / "anomaly" / "stfpm.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
+    },
+    "ote_anomaly_uflow": {
+        "recipe_path": RECIPE_PATH / "anomaly" / "uflow.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
+    },
     # KEYPOINT_DETECTION
-    "Keypoint_Detection_RTMPose_Tiny": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
+    "Keypoint_Detection_RTMPose_Tiny": {
+        "recipe_path": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
+    },
 }
 
 
@@ -150,9 +276,9 @@ class GetiConfigConverter:
         """
         hyper_parameters = config["hyper_parameters"]
 
-        model_config_path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]
+        model_config_path: Path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]["recipe_path"]  # type: ignore[assignment]
         # override necessary parameters for config
-        tile_enabled = hyper_parameters and hyper_parameters["dataset_preparation"].get("augmentation", {}).get(
+        tile_enabled = hyper_parameters and hyper_parameters.get("dataset_preparation", {}).get("augmentation", {}).get(
             "tiling",
             {},
         ).get("enable", False)

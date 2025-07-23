@@ -8,7 +8,6 @@ from enum import Enum
 from pathlib import Path
 
 import yaml
-from omegaconf import OmegaConf
 
 from otx.tools.converter import GetiConfigConverter
 
@@ -159,66 +158,3 @@ class OTXConfig:
         otx2_config["data"]["test_subset"]["subset_name"] = "TESTING"
 
         return otx2_config
-
-
-def substitute_parameter_overrides(override_dict: dict, parameter_dict: dict):
-    """Substitutes parameters form override_dict into parameter_dict.
-
-    Recursively substitutes overridden parameter values specified in `override_dict` into the base set of
-    hyper parameters passed in as `parameter_dict`
-
-    Args:
-        override_dict (Dict): dictionary containing the parameter overrides
-        parameter_dict (Dict): dictionary that contains the base set of hyper parameters, in which the overridden
-            values are substituted
-    """
-    for key, value in override_dict.items():
-        if isinstance(value, dict) and not allows_dictionary_values(key):
-            if key in parameter_dict:
-                substitute_parameter_overrides(value, parameter_dict[key])
-            else:
-                msg = f"Unable to perform parameter override. Parameter or parameter group named {key}."
-                raise ValueError(msg)
-        elif allows_model_template_override(key):
-            parameter_dict[key] = value
-        else:
-            msg = f"{key} is not a valid keyword for hyper parameter overrides"
-            raise KeyError(msg)
-
-
-def load_hyper_parameters(model_template_path: Path) -> tuple[str, dict]:
-    """Load hyper parameters.
-
-    Loads the actual hyper parameters defined in the file at `base_path`, and performs any overrides specified in
-    the `parameter_overrides`.
-
-    Args:
-        model_template_path (Path): file path to the model template file in which the HyperParameters live.
-
-    Returns:
-        tuple[str, dict]: A tuple containing the model template ID and the loaded hyper parameters.
-    """
-
-    model_template = OmegaConf.load(model_template_path)
-    model_template = OmegaConf.to_container(model_template)
-
-    base_hyper_parameter_path = model_template_path.parent / model_template["hyper_parameters"]["base_path"]
-
-    config_dict = OmegaConf.load(base_hyper_parameter_path)
-    data = OmegaConf.to_container(config_dict)
-    if model_template.get("hyper_parameters", {}).get("parameter_overrides"):
-
-        def add_value_key(d: dict) -> None:
-            for k, v in list(d.items()):  # Use list to avoid modifying during iteration
-                if isinstance(v, dict):
-                    add_value_key(v)
-                if k == "default_value":
-                    d["value"] = v
-
-        add_value_key(model_template["hyper_parameters"]["parameter_overrides"])
-
-        substitute_parameter_overrides(
-            model_template["hyper_parameters"]["parameter_overrides"],
-            data,
-        )
-    return (model_template["model_template_id"], data)

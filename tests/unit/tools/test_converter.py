@@ -11,10 +11,10 @@ from tests.integration.api.geti_otx_config_utils import OTXConfig
 
 class TestGetiConfigConverter:
     def test_convert(self):
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti-configs/det.yaml")
+        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/detection.yaml")
         config = GetiConfigConverter.convert(asdict(otx_config))
 
-        assert config["data"]["input_size"] == (640, 640)
+        assert config["data"]["input_size"] == (800, 992)
         assert config["data"]["train_subset"]["batch_size"] == 8
         assert config["data"]["val_subset"]["batch_size"] == 8
         assert config["data"]["test_subset"]["batch_size"] == 8
@@ -29,7 +29,7 @@ class TestGetiConfigConverter:
         assert config["data"]["tile_config"]["tile_size"] == (800, 800)
 
     def test_convert_task_overriding(self):
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti-configs/cls.yaml")
+        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/classification.yaml")
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert default_config["task"] == "MULTI_CLASS_CLS"
 
@@ -53,7 +53,7 @@ class TestGetiConfigConverter:
             "torchvision.transforms.v2.GaussianNoise",
             "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
         ]
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti-configs/cls.yaml")
+        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/classification.yaml")
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 9
         # default values
@@ -88,7 +88,7 @@ class TestGetiConfigConverter:
 
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti-configs/det.yaml")
+        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/detection.yaml")
         config = GetiConfigConverter.convert(asdict(otx_config))
         engine, train_kwargs = GetiConfigConverter.instantiate(
             config=config,
@@ -106,8 +106,8 @@ class TestGetiConfigConverter:
         assert engine.datamodule.test_subset.num_workers == 2
         assert engine.datamodule.tile_config.enable_tiler
         assert engine.datamodule.tile_config.enable_adaptive_tiling is True
-        assert engine.datamodule.input_size == (640, 640)
-        assert engine.model.data_input_params.input_size == (640, 640)
+        assert engine.datamodule.input_size == (800, 992)
+        assert engine.model.data_input_params.input_size == (800, 992)
 
         assert len(train_kwargs["callbacks"]) == len(config["callbacks"])
         assert train_kwargs["callbacks"][0].patience == 10
