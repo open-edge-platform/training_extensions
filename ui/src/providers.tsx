@@ -1,6 +1,6 @@
 import { ThemeProvider } from '@geti/ui/theme';
 import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 
 import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
@@ -13,12 +13,12 @@ const queryClient = new QueryClient({
             gcTime: 30 * 60 * 1000,
             staleTime: 5 * 60 * 1000,
         },
-        mutations: {
-            onSuccess: async () => {
-                await queryClient.invalidateQueries();
-            },
-        },
     },
+    mutationCache: new MutationCache({
+        onSuccess: () => {
+            queryClient.invalidateQueries();
+        },
+    }),
 });
 
 // Sync our server state with all browser tabs

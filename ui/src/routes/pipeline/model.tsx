@@ -1,20 +1,15 @@
 import { FormEventHandler, useState } from 'react';
 
-import { ActionMenu, StatusLight } from '@adobe/react-spectrum';
 import {
-    AlertDialog,
     Button,
     ButtonGroup,
     Content,
-    DialogContainer,
     Divider,
     DropZone,
     Flex,
     Form,
     Heading,
     IllustratedMessage,
-    Item,
-    ListView,
     Text,
     TextField,
     View,
@@ -23,78 +18,6 @@ import { FileTrigger } from 'react-aria-components';
 
 import { $api } from '../../api/client';
 import { paths } from '../../router';
-
-const ListModels = () => {
-    const modelsQuery = $api.useQuery('get', '/api/models');
-    const activeModelMutation = $api.useMutation('post', '/api/models/{model_name}:activate');
-    const deleteModelMutation = $api.useMutation('delete', '/api/models/{model_name}');
-
-    const [modelToBeDeleted, setModelToBeDeleted] = useState<string | null>(null);
-
-    return (
-        <View>
-            <DialogContainer onDismiss={() => setModelToBeDeleted(null)}>
-                {modelToBeDeleted && (
-                    <AlertDialog
-                        title='Delete model'
-                        variant='warning'
-                        primaryActionLabel='Confirm'
-                        secondaryActionLabel='Cancel'
-                        onPrimaryAction={() => {
-                            deleteModelMutation.mutate({
-                                params: { path: { model_name: modelToBeDeleted } },
-                            });
-                        }}
-                    >
-                        Are you sure you want to delete {modelToBeDeleted}?
-                    </AlertDialog>
-                )}
-            </DialogContainer>
-
-            <ListView
-                selectionMode='none'
-                aria-label='Available models'
-                loadingState={modelsQuery.isLoading ? 'loading' : 'idle'}
-            >
-                {(modelsQuery.data?.available_models ?? []).map((model) => {
-                    const isActive = modelsQuery.data?.active_model === model;
-
-                    return (
-                        <Item key={model}>
-                            <Flex alignItems={'center'} gap='size-200'>
-                                {isActive ? <StatusLight variant='positive'>Active</StatusLight> : null}
-                                <Text>{model}</Text>
-                            </Flex>
-                            <ActionMenu
-                                onAction={(key) => {
-                                    if (key === 'delete') {
-                                        setModelToBeDeleted(model);
-                                        return;
-                                    }
-
-                                    if (key === 'activate') {
-                                        activeModelMutation.mutate({
-                                            params: {
-                                                path: { model_name: String(model) },
-                                            },
-                                        });
-                                    }
-                                }}
-                            >
-                                <Item key='activate' textValue='Activate'>
-                                    Activate
-                                </Item>
-                                <Item key='delete' textValue='Delete'>
-                                    <Text>Delete</Text>
-                                </Item>
-                            </ActionMenu>
-                        </Item>
-                    );
-                })}
-            </ListView>
-        </View>
-    );
-};
 
 const DropDrop = ({
     label,
@@ -171,7 +94,7 @@ type ModelFormData = {
     xmlFile: null | File;
 };
 
-const UplaodModelForm = () => {
+const UploadModelForm = () => {
     const [modelFormData, setModelFormData] = useState<ModelFormData>({
         name: '',
         binFile: null,
@@ -225,8 +148,13 @@ const UplaodModelForm = () => {
                         />
                     </Flex>
 
-                    <ButtonGroup>
-                        <Button type='submit'>Submit</Button>
+                    <ButtonGroup align={'end'}>
+                        <Button
+                            type='submit'
+                            isDisabled={!modelFormData.name || !modelFormData.binFile || !modelFormData.xmlFile}
+                        >
+                            Submit
+                        </Button>
                     </ButtonGroup>
                 </Flex>
             </View>
@@ -237,9 +165,17 @@ const UplaodModelForm = () => {
 export const Model = () => {
     return (
         <Flex direction='column' gap='size-400'>
-            <UplaodModelForm />
+            <Text
+                UNSAFE_style={{
+                    color: 'var(--spectrum-global-color-gray-700)',
+                    textAlign: 'center',
+                }}
+            >
+                Please upload your trained model to proceed. Ensure the model file is in a supported format and
+                compatible with the system.
+            </Text>
+            <UploadModelForm />
             <Divider size='S' />
-            <ListModels />
             <Flex justifyContent={'end'}>
                 <ButtonGroup>
                     <Button href={paths.pipeline.input({})} type='submit' variant='secondary'>

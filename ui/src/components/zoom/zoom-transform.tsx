@@ -56,8 +56,8 @@ export const ZoomTransform = ({ children, target }: { children: ReactNode; targe
         <div
             ref={ref}
             className={classes.wrapper}
-            // Enable hardware acceleration
             style={{
+                // Enable hardware acceleration
                 transform: 'translate3d(0, 0, 0)',
                 '--zoom-scale': zoom.scale,
             }}

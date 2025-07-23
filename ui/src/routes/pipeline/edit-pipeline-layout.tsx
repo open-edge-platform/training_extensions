@@ -1,4 +1,6 @@
-import { View } from '@geti/ui';
+import { Suspense } from 'react';
+
+import { Loading, View } from '@geti/ui';
 import { TabPanel } from 'react-aria-components';
 import { Outlet, useLocation } from 'react-router';
 
@@ -15,6 +17,7 @@ type WizardStep = {
 };
 type WizardState = Array<WizardStep>;
 
+const maxWidth = '1200px';
 export const EditPipelineLayout = () => {
     const { pathname } = useLocation();
 
@@ -57,10 +60,18 @@ export const EditPipelineLayout = () => {
             height='100%'
             width='100%'
         >
-            <View maxWidth={'1024px'} marginX='auto' paddingY='size-900'>
+            <View marginX='auto' paddingY='size-900'>
                 <View UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
-                    <WizardTabs selectedKey={pathname}>
-                        <WizardTabList aria-label='Pipeline wizard'>
+                    <WizardTabs
+                        selectedKey={pathname}
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            width: '100%',
+                        }}
+                    >
+                        <WizardTabList aria-label='Pipeline wizard' style={{ maxWidth, flexGrow: '1', width: '100%' }}>
                             {wizardState.map((step, idx) => {
                                 return (
                                     <WizardTab
@@ -76,15 +87,17 @@ export const EditPipelineLayout = () => {
                                 );
                             })}
                         </WizardTabList>
-                        <TabPanel id={paths.pipeline.input({})} style={{ display: 'flex', justifyContent: 'center' }}>
-                            <Outlet />
-                        </TabPanel>
-                        <TabPanel id={paths.pipeline.model({})}>
-                            <Outlet />
-                        </TabPanel>
-                        <TabPanel id={paths.pipeline.output({})}>
-                            <Outlet />
-                        </TabPanel>
+                        <Suspense fallback={<Loading mode='inline' />}>
+                            <TabPanel id={paths.pipeline.input({})} style={{ width: '100%', maxWidth: '1320px' }}>
+                                <Outlet />
+                            </TabPanel>
+                            <TabPanel id={paths.pipeline.model({})} style={{ width: '100%', maxWidth }}>
+                                <Outlet />
+                            </TabPanel>
+                            <TabPanel id={paths.pipeline.output({})} style={{ width: '100%', maxWidth }}>
+                                <Outlet />
+                            </TabPanel>
+                        </Suspense>
                     </WizardTabs>
                 </View>
             </View>
