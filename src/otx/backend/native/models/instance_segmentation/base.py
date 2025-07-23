@@ -10,7 +10,7 @@ from __future__ import annotations
 import copy
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
 from torch import Tensor
@@ -50,7 +50,9 @@ class OTXInstanceSegModel(OTXModel):
     """Base class for the Instance Segmentation models used in OTX.
 
     Args:
-        label_info (LabelInfoTypes): Information about the labels used in the model.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
         data_input_params (DataInputParams): Parameters for the data input.
         model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
@@ -65,7 +67,7 @@ class OTXInstanceSegModel(OTXModel):
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "inst_segm_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -251,6 +253,7 @@ class OTXInstanceSegModel(OTXModel):
         # Instance segmentation needs to add empty label to satisfy MAPI wrapper requirements
         modified_label_info.label_names.insert(0, "otx_empty_lbl")
         modified_label_info.label_ids.insert(0, "None")
+        modified_label_info.label_groups[0].insert(0, "otx_empty_lbl")
 
         return super()._export_parameters.wrap(
             model_type="MaskRCNN",

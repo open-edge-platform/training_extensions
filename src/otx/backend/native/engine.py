@@ -13,6 +13,7 @@ import os
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
@@ -267,7 +268,7 @@ class OTXEngine(Engine):
             # load the model state from the checkpoint incrementally.
             # This means only the model weights are loaded. If there is a mismatch in label_info,
             # perform incremental weight loading for the model's classification layer.
-            ckpt = torch.load(checkpoint, weights_only=False)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
@@ -342,10 +343,8 @@ class OTXEngine(Engine):
         # NOTE, trainer.test takes only lightning based checkpoint.
         # So, it can't take the OTX1.x checkpoint.
         if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             if (
@@ -432,10 +431,8 @@ class OTXEngine(Engine):
         datamodule = datamodule if datamodule is not None else self.datamodule
 
         if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -534,20 +531,8 @@ class OTXEngine(Engine):
             warn(msg, stacklevel=1)
             export_demo_package = False
 
-        kwargs_user_input: dict[str, Any] = {}
-
-        model_cls = self.model.__class__
-        if hasattr(self.model, "model_name"):
-            # NOTE: This is a solution to fix backward compatibility issue.
-            # If the model has `model_name` attribute, it will be passed to the `load_from_checkpoint` method,
-            # making sure previous model trained without model_name can be loaded.
-            kwargs_user_input["model_name"] = self.model.model_name
-
-        self._model = model_cls.load_from_checkpoint(
-            checkpoint_path=checkpoint,
-            map_location="cpu",
-            **kwargs_user_input,
-        )
+        ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+        self.model.load_state_dict(ckpt)
         self.model.eval()
 
         self.model.explain_mode = explain
@@ -617,10 +602,8 @@ class OTXEngine(Engine):
         datamodule = datamodule if datamodule is not None else self.datamodule
 
         if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -706,14 +689,8 @@ class OTXEngine(Engine):
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
 
         if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = self.model.__class__
-            self._model = model_cls.load_from_checkpoint(
-                checkpoint_path=checkpoint,
-                map_location="cpu",
-                **kwargs_user_input,
-            )
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            self.model.load_state_dict(ckpt)
         self.model.eval()
 
         def dummy_infer(model: OTXModel, batch_size: int = 1) -> float:
@@ -1090,3 +1067,30 @@ class OTXEngine(Engine):
     def is_supported(model: MODEL, data: DATA) -> bool:
         """Check if the engine is supported for the given model and data."""
         return bool(isinstance(model, OTXModel) and isinstance(data, OTXDataModule))
+
+    @staticmethod
+    def _load_model_checkpoint(checkpoint: PathLike, map_location: str | None = None) -> dict[str, Any]:
+        """Load model checkpoint from the given path.
+
+        Args:
+            checkpoint (PathLike): Path to the checkpoint file.
+
+        Returns:
+            dict[str, Any]: The loaded state dictionary from the checkpoint.
+        """
+        if not Path(checkpoint).exists():
+            msg = f"Checkpoint file does not exist: {checkpoint}"
+            raise FileNotFoundError(msg)
+
+        try:
+            ckpt = torch.load(checkpoint, map_location=map_location)
+        except UnpicklingError:
+            from otx.backend.native.utils.utils import mock_modules_for_chkpt
+
+            with mock_modules_for_chkpt():
+                ckpt = torch.load(checkpoint, map_location=map_location, weights_only=False)
+        except Exception as e:
+            msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
+            raise RuntimeError(e) from None
+
+        return ckpt

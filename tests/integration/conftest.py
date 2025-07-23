@@ -72,10 +72,7 @@ def get_model_category_list(task: str) -> list[str]:
     Args:
         task (str): The task for which to retrieve model categories.
         default_model_only (bool): If True, only include default models. Defaults to False.
-
     Raises:
-        FileNotFoundError: If no recipe is found for the specified task.
-
     Returns:
         list[str]: A list of recipe paths.
     """
