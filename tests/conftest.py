@@ -16,7 +16,7 @@ from torchvision.tv_tensors import Image, Mask
 
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataBatch, OTXDataItem, OTXPredBatch, OTXPredItem
-from otx.tools.converter import TEMPLATE_ID_DICT
+from otx.tools.converter import TEMPLATE_ID_MAPPING
 from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
@@ -483,11 +483,11 @@ def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskT
             template = yaml.safe_load(file)
 
         model_id = template.get("model_template_id")
-        if not model_id or model_id not in TEMPLATE_ID_DICT:
+        if not model_id or model_id not in TEMPLATE_ID_MAPPING:
             continue
 
-        model_info = TEMPLATE_ID_DICT[model_id]
-        model_task = OTXTaskType(Path(model_info["model_config_path"]).parent.name.upper())
+        model_config_path = TEMPLATE_ID_MAPPING[model_id]
+        model_task = OTXTaskType(model_config_path.parent.name.upper())
 
         if model_category_only and "model_category" not in template:
             continue

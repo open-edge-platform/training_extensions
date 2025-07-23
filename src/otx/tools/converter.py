@@ -6,11 +6,12 @@
 from __future__ import annotations
 
 import argparse
-from copy import deepcopy
+import logging
+from pathlib import Path
 from typing import Any
 from warnings import warn
-import yaml
 
+import yaml
 from jsonargparse import ArgumentParser, Namespace
 
 from otx.backend.native.cli.utils import get_otx_root_path
@@ -26,12 +27,30 @@ RECIPE_PATH = get_otx_root_path() / "recipe"
 TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
     "Custom_Image_Classification_DeiT-Tiny": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
-    "Custom_Image_Classification_EfficinetNet-B0": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
-    "Custom_Image_Classification_EfficientNet-V2-S": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
-    "Custom_Image_Classification_MobileNet-V3-large-1x": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
-    "Custom_Image_Classification_EfficientNet-B3": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
-    "Custom_Image_Classification_EfficientNet-V2-L": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_v2_l.yaml",
-    "Custom_Image_Classification_MobileNet-V3-small": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_mobilenet_v3_small.yaml",
+    "Custom_Image_Classification_EfficinetNet-B0": RECIPE_PATH
+    / "classification"
+    / "multi_class_cls"
+    / "efficientnet_b0.yaml",
+    "Custom_Image_Classification_EfficientNet-V2-S": RECIPE_PATH
+    / "classification"
+    / "multi_class_cls"
+    / "efficientnet_v2.yaml",
+    "Custom_Image_Classification_MobileNet-V3-large-1x": RECIPE_PATH
+    / "classification"
+    / "multi_class_cls"
+    / "mobilenet_v3_large.yaml",
+    "Custom_Image_Classification_EfficientNet-B3": RECIPE_PATH
+    / "classification"
+    / "multi_class_cls"
+    / "tv_efficientnet_b3.yaml",
+    "Custom_Image_Classification_EfficientNet-V2-L": RECIPE_PATH
+    / "classification"
+    / "multi_class_cls"
+    / "tv_efficientnet_v2_l.yaml",
+    "Custom_Image_Classification_MobileNet-V3-small": RECIPE_PATH
+    / "classification"
+    / "multi_class_cls"
+    / "tv_mobilenet_v3_small.yaml",
     # DETECTION
     "Custom_Object_Detection_Gen3_ATSS": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
     "Object_Detection_ResNeXt101_ATSS": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
@@ -46,14 +65,24 @@ TEMPLATE_ID_MAPPING = {
     "Object_Detection_RTMDet_tiny": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
     "Object_Detection_DFine_X": RECIPE_PATH / "detection" / "dfine_x.yaml",
     # INSTANCE_SEGMENTATION
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH
+    / "instance_segmentation"
+    / "maskrcnn_r50.yaml",
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": RECIPE_PATH
+    / "instance_segmentation"
+    / "maskrcnn_swint.yaml",
+    "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH
+    / "instance_segmentation"
+    / "maskrcnn_efficientnetb2b.yaml",
     "Custom_Instance_Segmentation_RTMDet_tiny": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
     "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
     # ROTATED_DETECTION
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH / "rotated_detection" / "maskrcnn_efficientnetb2b.yaml",
+    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": RECIPE_PATH
+    / "rotated_detection"
+    / "maskrcnn_r50.yaml",
+    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": RECIPE_PATH
+    / "rotated_detection"
+    / "maskrcnn_efficientnetb2b.yaml",
     "Rotated_Detection_MaskRCNN_ResNet50_V2": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
     # SEMANTIC_SEGMENTATION
     "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
@@ -123,7 +152,11 @@ class GetiConfigConverter:
 
         model_config_path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]
         # override necessary parameters for config
-        if hyper_parameters and hyper_parameters["dataset_preparation"]["augmentation"]["tiling"]["enable"] and "_tile" not in model_config_path.stem:
+        tile_enabled = hyper_parameters and hyper_parameters["dataset_preparation"].get("augmentation", {}).get(
+            "tiling",
+            {},
+        ).get("enable", False)
+        if tile_enabled and "_tile" not in model_config_path.stem:
             tile_name = model_config_path.stem + "_tile.yaml"
             model_config_path = model_config_path.parent / tile_name
         # classification task type can't be deducted from template name, try to extract from config
@@ -151,21 +184,33 @@ class GetiConfigConverter:
         return param_dict
 
     @staticmethod
-    def _update_params(config: dict, param_dict: dict) -> None:  # noqa: C901
+    def _update_params(config: dict, param_dict: dict) -> None:
         """Update params of OTX recipe from Geit configurable params."""
-        unused_params = deepcopy(param_dict)
 
-        def update_learning_rate(param_value: float) -> None:
+        def update_learning_rate(param_value: float | None) -> None:
+            """Update learning rate in the config."""
+            if param_value is None:
+                logging.info("Learning rate is not provided, skipping update.")
+                return
             optimizer = config["model"]["init_args"]["optimizer"]
             if isinstance(optimizer, dict) and "init_args" in optimizer:
                 optimizer["init_args"]["lr"] = param_value
             else:
                 warn("Warning: learning_rate is not updated", stacklevel=1)
 
-        def update_num_iters(param_value: int) -> None:
+        def update_num_iters(param_value: int | None) -> None:
+            """Update max_epochs in the config."""
+            if param_value is None:
+                logging.info("Max epochs is not provided, skipping update.")
+                return
             config["max_epochs"] = param_value
 
-        def update_early_stopping(early_stopping_cfg: dict) -> None:
+        def update_early_stopping(early_stopping_cfg: dict | None) -> None:
+            """Update early stopping parameters in the config."""
+            if early_stopping_cfg is None:
+                logging.info("Early stopping parameters are not provided, skipping update.")
+                return
+
             enable = early_stopping_cfg["enable"]
             patience = early_stopping_cfg["patience"]
 
@@ -179,7 +224,12 @@ class GetiConfigConverter:
 
             config["callbacks"][idx]["init_args"]["patience"] = patience
 
-        def update_tiling(tiling_dict: dict) -> None:
+        def update_tiling(tiling_dict: dict | None) -> None:
+            """Update tiling parameters in the config."""
+            if tiling_dict is None:
+                logging.info("Tiling parameters are not provided, skipping update.")
+                return
+
             config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
             if tiling_dict["enable"]:
                 config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["adaptive_tiling"]
@@ -189,8 +239,11 @@ class GetiConfigConverter:
                 )
                 config["data"]["tile_config"]["overlap"] = tiling_dict["tile_overlap"]
 
-        def update_input_size(height: int, width: int) -> None:
+        def update_input_size(height: int | None, width: int | None) -> None:
             """Update input size in the config."""
+            if height is None or width is None:
+                logging.info("Input size is not provided, skipping update.")
+                return
             config["data"]["input_size"] = (height, width)
 
         def update_augmentations(augmentation_params: dict) -> None:
@@ -214,20 +267,19 @@ class GetiConfigConverter:
                         aug_config["enable"] = aug_value["enable"]
                         break
 
-        augmentation_params = param_dict["dataset_preparation"]["augmentation"]
-        tiling = augmentation_params.pop("tiling")
-        training_parameters = param_dict["training"]
+        augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
+        tiling = augmentation_params.pop("tiling", None)
+        training_parameters = param_dict.get("training", {})
 
         update_augmentations(augmentation_params)
         update_tiling(tiling)
-        update_learning_rate(training_parameters["learning_rate"])
-        update_num_iters(training_parameters["max_epochs"])
-        update_early_stopping(training_parameters["early_stopping"])
-        update_input_size(training_parameters["input_size_height"], training_parameters["input_size_width"])
-
-        warn("Warning: These parameters are not updated", stacklevel=1)
-        for param_name, param_value in unused_params.items():
-            print(f"\t {param_name}: {param_value}")
+        update_learning_rate(training_parameters.get("learning_rate", None))
+        update_num_iters(training_parameters.get("max_epochs", None))
+        update_early_stopping(training_parameters.get("early_stopping", None))
+        update_input_size(
+            training_parameters.get("input_size_height", None),
+            training_parameters.get("input_size_width", None),
+        )
 
     @staticmethod
     def _get_callback_idx(callbacks: list, name: str) -> int:
@@ -248,8 +300,7 @@ class GetiConfigConverter:
         config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
 
     @staticmethod
-    def instantiate_datamodule(config: dict,
-                               data_root: PathLike | None = None, **kwargs) -> OTXDataModule:
+    def instantiate_datamodule(config: dict, data_root: PathLike | None = None, **kwargs) -> OTXDataModule:
         """Instantiate an OTXDataModule with arrow data format."""
         config.update(kwargs)
 
@@ -268,7 +319,6 @@ class GetiConfigConverter:
             tile_config=TileConfig(**data_config.pop("tile_config", {})),
             **data_config,
         )
-
 
     @staticmethod
     def instantiate(
@@ -345,7 +395,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--data_root", help="Input dataset root path")
     parser.add_argument("-o", "--work_dir", help="Input work directory path")
     args = parser.parse_args()
-    with open(args.config, "r") as f:
+    with Path(args.config).open() as f:
         config = yaml.safe_load(f)
     otx_config = GetiConfigConverter.convert(config=config)
     engine, train_kwargs = GetiConfigConverter.instantiate(

@@ -16,7 +16,7 @@ from model_api.models import Model
 from otx.backend.native.models.base import OTXModel
 from otx.data.module import OTXDataModule
 from otx.engine import create_engine
-from otx.tools.converter import ConfigConverter
+from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
@@ -99,10 +99,10 @@ class TestEngineAPI:
             else OTXTaskType.MULTI_CLASS_CLS
         )
 
-        # Matching geti config.json style
+        # Matching geti config.yaml style
         otx_config = OTXConfig(
             job_type=JobType.TRAIN,
-            model_template_id=model_template_id,
+            model_manifest_id=model_template_id,
             hyper_parameters=hyper_parameters,
             export_parameters=[
                 ExportParameter(ExportFormat.OPENVINO, PrecisionType.FP32, with_xai=True),
@@ -113,10 +113,10 @@ class TestEngineAPI:
             optimization_type=None,
             sub_task_type=sub_task_type,
         )
-        return otx_config.to_otx_config(self.tmp_path)
+        return otx_config.to_otx_config()
 
     def _instantiate_engine(self) -> tuple[OTXEngine, dict[str, Any]]:
-        return ConfigConverter.instantiate(
+        return GetiConfigConverter.instantiate(
             config=self.otx_config,
             work_dir=self.tmp_path,
             data_root=self.arrow_file_path,
@@ -196,16 +196,10 @@ class TestEngineAPI:
         """Test optimizing the OpenVINO model with FP32 precision."""
         fp32_export_dir = self.tmp_path / "fp32_export"
         fp32_export_dir.mkdir(parents=True, exist_ok=True)
-        exported_path = self.engine.export(
+        self.engine.export(
             export_format=OTXExportFormatType.OPENVINO,
             export_precision=OTXPrecisionType.FP32,
             explain=True,
-            export_demo_package=True,
-        )
-        unzip_exportable_code(
-            work_dir=self.tmp_path,
-            exported_path=exported_path,
-            dst_dir=fp32_export_dir,
         )
         # instantiate the OpenVINO engine
         ov_engine = create_engine(
@@ -213,9 +207,7 @@ class TestEngineAPI:
             data=self.engine.datamodule,
             work_dir=self.tmp_path,
         )
-        optimized_path = ov_engine.optimize(
-            checkpoint=fp32_export_dir / "exported_model.xml",
-        )
+        optimized_path = ov_engine.optimize()
         assert optimized_path.exists()
 
         # Test Model API

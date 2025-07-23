@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from otx.tools.converter import TEMPLATE_ID_DICT
+from otx.tools.converter import TEMPLATE_ID_MAPPING
 from otx.types.task import OTXTaskType
 
 
@@ -103,21 +103,20 @@ def get_model_category_list(task: str, default_model_only: bool = False) -> list
         if not model_id or "model_category" not in template:
             continue
 
-        model_info = TEMPLATE_ID_DICT.get(model_id)
-        if not model_info:
+        model_config_path = TEMPLATE_ID_MAPPING.get(model_id)
+        if not model_config_path:
             continue
 
-        config_path = model_info["model_config_path"]
-        task = OTXTaskType(config_path.split("/")[-2].upper())  # Extract task from the path
+        task = OTXTaskType(str(model_config_path).split("/")[-2].upper())  # Extract task from the path
         if task in task_list:
-            recipes.append(config_path)
+            recipes.append(model_config_path)
 
         if task == OTXTaskType.MULTI_CLASS_CLS:
             # Add multi_label_cls and h_label_cls configs as well if they are in the list
             if OTXTaskType.MULTI_LABEL_CLS in task_list:
-                recipes.append(config_path.replace("multi_class_cls", "multi_label_cls"))
+                recipes.append(str(model_config_path).replace("multi_class_cls", "multi_label_cls"))
             if OTXTaskType.H_LABEL_CLS in task_list:
-                recipes.append(config_path.replace("multi_class_cls", "h_label_cls"))
+                recipes.append(str(model_config_path).replace("multi_class_cls", "h_label_cls"))
 
     return recipes
 
