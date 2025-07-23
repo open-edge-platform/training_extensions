@@ -119,7 +119,7 @@ def str2bool(value: str | bool) -> bool:
     raise TypeError(value)
 
 
-@dataclass(frozen=True)
+@dataclass
 class OTXConfig:
     job_type: JobType
     model_manifest_id: str

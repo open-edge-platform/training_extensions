@@ -160,8 +160,8 @@ class GetiConfigConverter:
             tile_name = model_config_path.stem + "_tile.yaml"
             model_config_path = model_config_path.parent / tile_name
         # classification task type can't be deducted from template name, try to extract from config
-        if sub_task_type := config["sub_task_type"] and "_cls" in model_config_path.parent.name:
-            model_config_path = RECIPE_PATH / "classification" / str(sub_task_type).lower() / model_config_path.name
+        if (sub_task_type := config["sub_task_type"]) and "_cls" in model_config_path.parent.name:
+            model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
         if model_config_path.suffix != ".yaml":
             model_config_path = model_config_path / ".yaml"
         default_config = AutoConfigurator(model_config_path=model_config_path).config
