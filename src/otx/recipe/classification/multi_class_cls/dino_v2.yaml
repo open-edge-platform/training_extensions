@@ -4,7 +4,7 @@ model:
   init_args:
     label_info: 1000
     model_name: "dinov2-small"
-    peft: null
+    peft: ""
 
     optimizer:
       class_path: torch.optim.AdamW
