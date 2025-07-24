@@ -39,7 +39,7 @@ jobs:
 
       - name: Upload SARIF file
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@d6bbdef45e766d081b84a2def353b0055f728d3e # v3.28.8
+        uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v3.28.8
         with:
           sarif_file: "trivy-results-vuln.sarif"
 
@@ -86,7 +86,7 @@ jobs:
 
       - name: Upload SARIF file
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@d6bbdef45e766d081b84a2def353b0055f728d3e # v3.28.8
+        uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v3.28.8
         with:
           sarif_file: "trivy-results-misconfig.sarif"
 
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload SARIF file
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@d6bbdef45e766d081b84a2def353b0055f728d3e # v3.28.8
+        uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v3.28.8
         with:
           sarif_file: .tox/bandit-results.sarif
 
