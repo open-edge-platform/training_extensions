@@ -8,7 +8,7 @@ Prerequisites
 The current version of OpenVINO™ Training Extensions was tested in the following environment:
 
 - Ubuntu 20.04
-- Python >= 3.10
+- Python >= 3.11
 - [`uv`](https://github.com/astral-sh/uv) for dependency and environment management
 
 .. note::
@@ -67,7 +67,7 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
         .. code-block:: shell
 
             # Create a virtual environment using uv
-            uv venv .otx --python 3.10 # or 3.11
+            uv venv .otx --python 3.12 # or 3.11
             source .otx/bin/activate
 
             # Install from PyPI
@@ -82,7 +82,7 @@ Install OpenVINO™ Training Extensions for users (CUDA/CPU)
             cd training_extensions
 
             # Create a virtual environment with uv
-            uv venv .otx --python 3.10 # or 3.11
+            uv venv .otx --python 3.11 # or 3.12
             source .otx/bin/activate
 
             # Install the package in editable mode with base dependencies
@@ -109,7 +109,7 @@ Install OpenVINO™ Training Extensions for users (Intel GPUs)
     git clone https://github.com/open-edge-platform/training_extensions.git
     cd training_extensions
 
-    uv venv .otx --python 3.10 # or 3.11
+    uv venv .otx --python 3.11 # or 3.12
     source .otx/bin/activate
 
     uv pip install -e .[xpu]
@@ -139,8 +139,8 @@ Install OpenVINO™ Training Extensions for developers
 
 .. code-block:: shell
 
-    # Replace '310' with '311' if using Python 3.11
-    tox devenv venv/otx -e unit-test-py310
+    # Replace '312' with '311' if using Python 3.11
+    tox devenv venv/otx -e unit-test-py312
     source venv/otx/bin/activate
 
 Now you're ready to develop, test, and make changes — all reflected live in the editable install.

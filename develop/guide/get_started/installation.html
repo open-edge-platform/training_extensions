@@ -419,7 +419,7 @@
 <p>The current version of OpenVINO™ Training Extensions was tested in the following environment:</p>
 <ul class="simple">
 <li><p>Ubuntu 20.04</p></li>
-<li><p>Python &gt;= 3.10</p></li>
+<li><p>Python &gt;= 3.11</p></li>
 <li><p>[<cite>uv</cite>](<a class="github reference external" href="https://github.com/astral-sh/uv">astral-sh/uv</a>) for dependency and environment management</p></li>
 </ul>
 <div class="admonition note">
@@ -473,7 +473,7 @@ Verify Installation</label><div class="sd-tab-content docutils">
 <label class="sd-tab-label" for="sd-tab-item-3">
 PyPI</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a virtual environment using uv</span>
-uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.10<span class="w"> </span><span class="c1"># or 3.11</span>
+uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.12<span class="w"> </span><span class="c1"># or 3.11</span>
 <span class="nb">source</span><span class="w"> </span>.otx/bin/activate
 
 <span class="c1"># Install from PyPI</span>
@@ -489,7 +489,7 @@ git<span class="w"> </span>clone<span class="w"> </span>https://github.com/open-
 <span class="nb">cd</span><span class="w"> </span>training_extensions
 
 <span class="c1"># Create a virtual environment with uv</span>
-uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.10<span class="w"> </span><span class="c1"># or 3.11</span>
+uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.11<span class="w"> </span><span class="c1"># or 3.12</span>
 <span class="nb">source</span><span class="w"> </span>.otx/bin/activate
 
 <span class="c1"># Install the package in editable mode with base dependencies</span>
@@ -515,7 +515,7 @@ OpenVINO™ Training Extensions command line functionality.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/open-edge-platform/training_extensions.git
 <span class="nb">cd</span><span class="w"> </span>training_extensions
 
-uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.10<span class="w"> </span><span class="c1"># or 3.11</span>
+uv<span class="w"> </span>venv<span class="w"> </span>.otx<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.11<span class="w"> </span><span class="c1"># or 3.12</span>
 <span class="nb">source</span><span class="w"> </span>.otx/bin/activate
 
 uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>xpu<span class="o">]</span>
@@ -544,8 +544,8 @@ to install prerequisites and resolve any potential issues.</p>
 <ol class="arabic simple" start="2">
 <li><p>Create a development environment using <code class="docutils literal notranslate"><span class="pre">tox</span></code>:</p></li>
 </ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace &#39;310&#39; with &#39;311&#39; if using Python 3.11</span>
-tox<span class="w"> </span>devenv<span class="w"> </span>venv/otx<span class="w"> </span>-e<span class="w"> </span>unit-test-py310
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace &#39;312&#39; with &#39;311&#39; if using Python 3.11</span>
+tox<span class="w"> </span>devenv<span class="w"> </span>venv/otx<span class="w"> </span>-e<span class="w"> </span>unit-test-py312
 <span class="nb">source</span><span class="w"> </span>venv/otx/bin/activate
 </pre></div>
 </div>
