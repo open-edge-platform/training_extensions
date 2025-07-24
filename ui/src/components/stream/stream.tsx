@@ -41,12 +41,10 @@ const useSetTargetSizeBasedOnVideo = (
 const useStreamToVideo = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    const { status, webRTCConnectionRef } = useWebRTCConnection();
+    const { status, peerConnection } = useWebRTCConnection();
 
     const connect = useCallback(async () => {
         const videoOutput = videoRef.current;
-        const webrtcConnection = webRTCConnectionRef.current;
-        const peerConnection = webrtcConnection?.getPeerConnection();
 
         if (!peerConnection) {
             return;
@@ -58,7 +56,7 @@ const useStreamToVideo = () => {
         if (videoOutput && videoOutput.srcObject !== stream) {
             videoOutput.srcObject = stream;
         }
-    }, [videoRef, webRTCConnectionRef]);
+    }, [videoRef, peerConnection]);
 
     useEffect(() => {
         if (status === 'connected') {
@@ -67,9 +65,6 @@ const useStreamToVideo = () => {
     }, [status, connect]);
 
     useEffect(() => {
-        const webrtcConnection = webRTCConnectionRef.current;
-        const peerConnection = webrtcConnection?.getPeerConnection();
-
         if (!peerConnection) {
             return;
         }
@@ -79,7 +74,7 @@ const useStreamToVideo = () => {
         return () => {
             peerConnection.removeEventListener('track', connect);
         };
-    }, [webRTCConnectionRef, connect]);
+    }, [peerConnection, connect]);
 
     return videoRef;
 };

@@ -12,7 +12,17 @@ type WebRTCConnectionEvent =
           error: Error;
       };
 
-type Listener = (event: WebRTCConnectionEvent) => void;
+export type Listener = (event: WebRTCConnectionEvent) => void;
+
+type SessionData =
+    | RTCSessionDescriptionInit
+    | {
+          status: 'failed';
+          meta: { error: 'concurrency_limit_reached'; limit: number };
+      };
+
+const CONNECTION_TIMEOUT = 5000;
+const CLOSE_CONNECTION_DELAY = 500;
 
 export class WebRTCConnection {
     private peerConnection: RTCPeerConnection | undefined;
@@ -23,6 +33,7 @@ export class WebRTCConnection {
     private listeners: Array<Listener> = [];
 
     constructor() {
+        // TODO: replace with uuid
         this.webrtcId = Math.random().toString(36).substring(7);
     }
 
@@ -39,105 +50,34 @@ export class WebRTCConnection {
     }
 
     public async start(): Promise<void> {
-        if (this.peerConnection && this.status !== 'idle' && this.status !== 'disconnected') {
+        if (this.hasActiveConnection()) {
             console.warn('WebRTC connection is already active or in progress.');
             return;
         }
 
-        this.updateStatus('connecting');
+        this.setStatus('connecting');
         this.peerConnection = new RTCPeerConnection();
-
         const timeoutId = setTimeout(() => {
             console.warn('Connection is taking longer than usual. Are you on a VPN?');
-        }, 5000);
+        }, CONNECTION_TIMEOUT);
 
         try {
-            this.peerConnection.addTransceiver('video', { direction: 'recvonly' });
+            this.setupPeerConnection();
 
-            this.dataChannel = this.peerConnection.createDataChannel('text');
-            this.dataChannel.onopen = () => {
-                this.dataChannel?.send('handshake');
-            };
+            await this.createAndSetOffer();
+            await this.waitForIceGathering();
 
-            const offer = await this.peerConnection.createOffer();
-            await this.peerConnection.setLocalDescription(offer);
+            const data = await this.sendOffer();
 
-            await new Promise<void>((resolve) => {
-                if (!this.peerConnection) {
-                    resolve();
-                    return;
-                }
-                if (this.peerConnection.iceGatheringState === 'complete') {
-                    resolve();
-                } else {
-                    const checkState = () => {
-                        if (this.peerConnection && this.peerConnection.iceGatheringState === 'complete') {
-                            this.peerConnection.removeEventListener('icegatheringstatechange', checkState);
-                            resolve();
-                        }
-                    };
-                    this.peerConnection.addEventListener('icegatheringstatechange', checkState);
-                }
-            });
-
-            const response = await fetchClient.POST('/api/webrtc/offer', {
-                body: {
-                    sdp: this.peerConnection.localDescription?.sdp,
-                    type: this.peerConnection.localDescription?.type ?? '',
-                    webrtc_id: this.webrtcId,
-                },
-            });
-
-            const data = response.data as
-                | RTCSessionDescriptionInit
-                | {
-                      status: 'failed';
-                      meta: { error: 'concurrency_limit_reached'; limit: number };
-                  };
-
-            if ('status' in data && data.status === 'failed') {
-                const errorMessage =
-                    data.meta.error === 'concurrency_limit_reached'
-                        ? `Too many connections. Maximum limit is ${data.meta.limit}`
-                        : data.meta.error;
-                console.error(errorMessage);
-
-                this.emit({ type: 'error', error: new Error(errorMessage) });
-                return;
-            }
-
-            await this.peerConnection.setRemoteDescription(data as RTCSessionDescriptionInit);
+            if (!this.handleOfferResponse(data)) return;
 
             await this.updateConfThreshold(0.5); // Initial confidence threshold
-
-            this.peerConnection.addEventListener('connectionstatechange', () => {
-                if (!this.peerConnection) return;
-                switch (this.peerConnection.connectionState) {
-                    case 'connected':
-                        this.updateStatus('connected');
-                        clearTimeout(timeoutId);
-                        break;
-                    case 'disconnected':
-                        this.updateStatus('disconnected');
-                        break;
-                    case 'failed':
-                        this.updateStatus('failed');
-                        this.emit({ type: 'error', error: new Error('WebRTC connection failed.') });
-                        break;
-                    case 'closed':
-                        this.updateStatus('disconnected');
-                        break;
-                    default:
-                        // 'new', 'connecting'
-                        this.updateStatus('connecting');
-                        break;
-                }
-            });
+            this.setupConnectionStateListener(timeoutId);
         } catch (err) {
             clearTimeout(timeoutId);
             console.error('Error setting up WebRTC:', err);
             this.emit({ type: 'error', error: err as Error });
-            this.updateStatus('failed');
+            this.setStatus('failed');
             this.stop();
         }
 
@@ -146,23 +86,132 @@ export class WebRTCConnection {
         }
     }
 
+    private setupPeerConnection() {
+        if (!this.peerConnection) return;
+
+        this.peerConnection.addTransceiver('video', { direction: 'recvonly' });
+        this.dataChannel = this.peerConnection.createDataChannel('text');
+        this.dataChannel.onopen = () => {
+            this.dataChannel?.send('handshake');
+        };
+    }
+
+    private async createAndSetOffer() {
+        if (!this.peerConnection) return;
+
+        const offer = await this.peerConnection.createOffer();
+
+        await this.peerConnection.setLocalDescription(offer);
+    }
+
+    private async waitForIceGathering(): Promise<void> {
+        await new Promise<void>((resolve) => {
+            if (!this.peerConnection || this.peerConnection.iceGatheringState === 'complete') {
+                resolve();
+                return;
+            }
+
+            const checkState = () => {
+                if (this.peerConnection && this.peerConnection.iceGatheringState === 'complete') {
+                    this.peerConnection.removeEventListener('icegatheringstatechange', checkState);
+                    resolve();
+                }
+            };
+
+            this.peerConnection?.addEventListener('icegatheringstatechange', checkState);
+        });
+    }
+
+    private async sendOffer(): Promise<SessionData | undefined> {
+        if (!this.peerConnection) return;
+
+        const { data } = await fetchClient.POST('/api/webrtc/offer', {
+            body: {
+                sdp: this.peerConnection.localDescription?.sdp,
+                type: this.peerConnection.localDescription?.type ?? '',
+                webrtc_id: this.webrtcId,
+            },
+        });
+
+        return data as SessionData;
+    }
+
+    private async handleOfferResponse(data: SessionData | undefined): Promise<boolean> {
+        if (!data) return false;
+
+        if ('status' in data && data.status === 'failed') {
+            const errorMessage =
+                data.meta.error === 'concurrency_limit_reached'
+                    ? `Too many connections. Maximum limit is ${data.meta.limit}`
+                    : data.meta.error;
+
+            console.error(errorMessage);
+
+            this.emit({ type: 'error', error: new Error(errorMessage) });
+
+            return false;
+        }
+
+        if (this.peerConnection) {
+            await this.peerConnection.setRemoteDescription(data as RTCSessionDescriptionInit);
+        }
+
+        return true;
+    }
+
+    private setupConnectionStateListener(timeoutId: ReturnType<typeof setTimeout>) {
+        if (!this.peerConnection) return;
+
+        this.peerConnection.addEventListener('connectionstatechange', () => {
+            if (!this.peerConnection) return;
+
+            switch (this.peerConnection.connectionState) {
+                case 'connected':
+                    this.setStatus('connected');
+                    clearTimeout(timeoutId);
+                    break;
+                case 'disconnected':
+                    this.setStatus('disconnected');
+                    break;
+                case 'failed':
+                    this.setStatus('failed');
+                    this.emit({ type: 'error', error: new Error('WebRTC connection failed.') });
+                    break;
+                case 'closed':
+                    this.setStatus('disconnected');
+                    break;
+                default:
+                    this.setStatus('connecting');
+                    break;
+            }
+        });
+    }
+
     public async stop(): Promise<void> {
         if (!this.peerConnection) {
             return;
         }
 
         if (this.peerConnection.getTransceivers) {
-            this.peerConnection.getTransceivers().forEach((transceiver) => {
-                if (transceiver.stop) {
-                    transceiver.stop();
-                }
-            });
+            const transceivers = this.peerConnection.getTransceivers();
+
+            if (transceivers.length > 0) {
+                transceivers.forEach((transceiver) => {
+                    if (transceiver.stop) {
+                        transceiver.stop();
+                    }
+                });
+            }
         }
 
         if (this.peerConnection.getSenders) {
-            this.peerConnection.getSenders().forEach((sender) => {
-                if (sender.track && sender.track.stop) sender.track.stop();
-            });
+            const senders = this.peerConnection.getSenders();
+
+            if (senders.length > 0) {
+                this.peerConnection.getSenders().forEach((sender) => {
+                    if (sender.track && sender.track.stop) sender.track.stop();
+                });
+            }
         }
 
         // Give a brief moment for tracks to stop before closing the connection
@@ -171,29 +220,33 @@ export class WebRTCConnection {
                 if (this.peerConnection) {
                     this.peerConnection.close();
                     this.peerConnection = undefined;
-                    this.updateStatus('idle');
+                    this.setStatus('idle');
                 }
 
                 resolve();
-            }, 500)
+            }, CLOSE_CONNECTION_DELAY)
         );
     }
 
     public subscribe(listener: Listener): () => void {
         this.listeners.push(listener);
 
-        return () => this.off(listener);
+        return () => this.unsubscribe(listener);
     }
 
-    private off(listener: Listener) {
-        this.listeners = this.listeners.filter((l) => l !== listener);
+    private hasActiveConnection(): boolean {
+        return this.peerConnection !== undefined && this.status !== 'idle' && this.status !== 'disconnected';
+    }
+
+    private unsubscribe(listener: Listener) {
+        this.listeners = this.listeners.filter((currentListener) => currentListener !== listener);
     }
 
     private emit(event: WebRTCConnectionEvent) {
         this.listeners.forEach((listener) => listener(event));
     }
 
-    private updateStatus(newStatus: WebRTCConnectionStatus) {
+    private setStatus(newStatus: WebRTCConnectionStatus) {
         if (this.status !== newStatus) {
             this.status = newStatus;
             this.emit({ type: 'status_change', status: newStatus });

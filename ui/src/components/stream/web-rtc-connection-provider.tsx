@@ -1,81 +1,81 @@
-import { createContext, ReactNode, RefObject, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
-import { WebRTCConnection, WebRTCConnectionStatus } from './web-rtc-connection'; // Adjust path
+import { WebRTCConnection, WebRTCConnectionStatus } from './web-rtc-connection';
 
-export type WebRTCConnectionState = null | {
+type WebRTCConnectionContextType = {
     status: WebRTCConnectionStatus;
+    peerConnection: RTCPeerConnection | undefined;
     start: () => Promise<void>;
     stop: () => Promise<void>;
-    webRTCConnectionRef: RefObject<WebRTCConnection>;
 };
 
-export const WebRTCConnectionContext = createContext<WebRTCConnectionState>(null);
+const WebRTCConnectionContext = createContext<WebRTCConnectionContextType | null>(null);
 
-const useWebRTCConnectionState = () => {
+export const useWebRTCConnectionState = (ConnectionClass: new () => WebRTCConnection = WebRTCConnection) => {
     const webRTCConnectionRef = useRef<WebRTCConnection | null>(null);
     const [status, setStatus] = useState<WebRTCConnectionStatus>('idle');
+    const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | undefined>(undefined);
 
-    // Initialize WebRTCConnection on mount
     useEffect(() => {
-        if (webRTCConnectionRef.current) {
-            return;
+        if (!webRTCConnectionRef.current) {
+            webRTCConnectionRef.current = new ConnectionClass();
         }
 
-        const webRTCConnection = new WebRTCConnection();
-        webRTCConnectionRef.current = webRTCConnection;
+        const webRTCConnection = webRTCConnectionRef.current;
+
+        setStatus(webRTCConnection.getStatus());
+        setPeerConnection(webRTCConnection.getPeerConnection());
 
         const unsubscribe = webRTCConnection.subscribe((event) => {
             if (event.type === 'status_change') {
                 setStatus(event.status);
+                setPeerConnection(webRTCConnection.getPeerConnection());
             }
 
             if (event.type === 'error') {
                 console.error('WebRTC Connection Error:', event.error);
-                // Optionally update status to 'failed' if not already
-                if (webRTCConnectionRef.current?.getStatus() !== 'failed') {
-                    setStatus('failed');
-                }
             }
         });
 
         return () => {
             unsubscribe();
-            webRTCConnection.stop(); // Ensure connection is closed on unmount
+            webRTCConnection.stop();
             webRTCConnectionRef.current = null;
+            setStatus('idle');
+            setPeerConnection(undefined);
         };
-    }, []);
+    }, [ConnectionClass]);
 
-    const start = useCallback(async () => {
-        if (!webRTCConnectionRef.current) {
-            return;
-        }
+    const start = async () => {
+        if (!webRTCConnectionRef.current) return;
 
         try {
             await webRTCConnectionRef.current.start();
         } catch (error) {
             console.error('Failed to start WebRTC connection:', error);
-            setStatus('failed');
         }
-    }, []);
+    };
 
-    const stop = useCallback(async () => {
-        if (!webRTCConnectionRef.current) {
-            return;
+    const stop = async () => {
+        if (!webRTCConnectionRef.current) return;
+
+        try {
+            await webRTCConnectionRef.current.stop();
+        } catch (error) {
+            console.error('Failed to stop WebRTC connection:', error);
         }
-
-        await webRTCConnectionRef.current.stop();
-    }, []);
+    };
 
     return {
+        status,
+        peerConnection,
         start,
         stop,
-        status,
-        webRTCConnectionRef,
     };
 };
 
 export const WebRTCConnectionProvider = ({ children }: { children: ReactNode }) => {
-    const value = useWebRTCConnectionState();
+    const value = useWebRTCConnectionState(WebRTCConnection);
 
     return <WebRTCConnectionContext.Provider value={value}>{children}</WebRTCConnectionContext.Provider>;
 };
