@@ -61,6 +61,7 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.RandomAffine
           enable: false
         - class_path: otx.data.transform_libs.torchvision.RandomFlip
+          enable: true
           init_args:
             prob: 0.5
             is_numpy_to_tvtensor: true
@@ -70,6 +71,8 @@ overrides:
           enable: false
           init_args:
             kernel_size: 5
+        - class_path: torchvision.transforms.v2.GaussianNoise
+          enable: false
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -78,5 +81,4 @@ overrides:
           init_args:
             mean: [123.675, 116.28, 103.53]
             std: [58.395, 57.12, 57.375]
-        - class_path: torchvision.transforms.v2.GaussianNoise
-          enable: false
+
