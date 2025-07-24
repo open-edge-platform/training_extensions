@@ -1,5 +1,6 @@
 import logging
 
+from app.entities.images_folder_stream import ImagesFolderStream
 from app.entities.ip_camera_stream import IPCameraStream
 from app.entities.video_file_stream import VideoFileStream
 from app.entities.video_stream import VideoStream
@@ -24,7 +25,10 @@ class VideoStreamService:
             case SourceType.VIDEO_FILE:
                 video_stream = VideoFileStream(input_config.video_path)
             case SourceType.IMAGES_FOLDER:
-                raise NotImplementedError("Input from a folder of images is not supported yet")
+                video_stream = ImagesFolderStream(
+                    folder_path=input_config.images_folder_path,
+                    ignore_existing_images=input_config.ignore_existing_images,
+                )
             case _:
                 raise ValueError(f"Unrecognized source type: {input_config.source_type}")
 

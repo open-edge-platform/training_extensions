@@ -42,7 +42,10 @@ def frame_acquisition_routine(
         # Acquire a frame and enqueue it
         try:
             stream_data = video_stream.get_data()
-            _enqueue_frame_with_retry(frame_queue, stream_data, video_stream.is_real_time(), stop_event)
+            if stream_data is not None:
+                _enqueue_frame_with_retry(frame_queue, stream_data, video_stream.is_real_time(), stop_event)
+            else:
+                time.sleep(0.1)
         except Exception as e:
             logger.error(f"Error acquiring frame: {e}")
             continue

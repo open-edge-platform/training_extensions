@@ -8,10 +8,10 @@ class VideoStream(ABC):
     """Abstract base class for video stream implementations."""
 
     @abstractmethod
-    def get_data(self) -> StreamData:
-        """Get the latest frame from the video stream.
+    def get_data(self) -> StreamData | None:
+        """Get the latest frame from the video stream if available.
         Returns:
-            np.ndarray: The latest frame as a numpy array
+            np.ndarray: The latest frame as a numpy array or None if no frame is available
         """
 
     @abstractmethod
@@ -31,7 +31,7 @@ class VideoStream(ABC):
     def release(self) -> None:
         """Release the video stream resources."""
 
-    def __iter__(self) -> Iterator[StreamData]:
+    def __iter__(self) -> Iterator[StreamData | None]:
         while True:
             try:
                 yield self.get_data()

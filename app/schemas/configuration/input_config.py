@@ -56,6 +56,7 @@ class VideoFileSourceConfig(BaseModel):
 class ImagesFolderSourceConfig(BaseModel):
     source_type: Literal[SourceType.IMAGES_FOLDER]
     images_folder_path: str
+    ignore_existing_images: bool
 
 
 InputConfig = Annotated[
