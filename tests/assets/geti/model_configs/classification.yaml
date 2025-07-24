@@ -21,17 +21,17 @@ hyperparameters:
   dataset_preparation:
     augmentation:
       random_affine:
-        enable: true
+        enable: false
       color_jitter:
-        enable: true
+        enable: false
       gaussian_blur:
-        enable: true
+        enable: false
       random_horizontal_flip:
         enable: true
       random_vertical_flip:
-        enable: true
+        enable: false
       gaussian_noise:
-        enable: true
+        enable: false
   training:
     max_epochs: 200
     early_stopping:

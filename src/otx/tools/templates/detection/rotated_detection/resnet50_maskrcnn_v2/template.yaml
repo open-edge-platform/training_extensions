@@ -1,0 +1,42 @@
+# Description.
+model_template_id: Rotated_Detection_MaskRCNN_ResNet50_V2
+name: MaskRCNN-ResNet50-V2
+task_type: ROTATED_DETECTION
+task_family: VISION
+instantiation: "CLASS"
+summary: Rotated object detection for MaskRCNN-ResNet50v2 from TorchVision
+application: ~
+
+# Algo backend.
+framework: OTXDetection v2.9.1
+
+# Capabilities.
+capabilities:
+  - compute_representations
+
+# Hyperparameters.
+hyper_parameters:
+  base_path: ../configuration.yaml
+  parameter_overrides:
+    learning_parameters:
+      batch_size:
+        default_value: 4
+      inference_batch_size:
+        default_value: 4
+      learning_rate:
+        default_value: 0.007
+      num_iters:
+        default_value: 100
+
+# Training resources.
+max_nodes: 1
+training_targets:
+  - GPU
+  - CPU
+
+# Stats.
+gigaflops: 560.5
+size: 178.0
+
+# Model spec
+model_category: ACCURACY
