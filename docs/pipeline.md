@@ -2,7 +2,7 @@
 
 A pipeline consists of a series of stages that process a stream of data.
 
-![pipeline](media/stream.jpg)
+![Diagram showing the sequence of processing stages](media/pipeline-stages.jpg)
 
 Within a pipeline we can identify three main elements:
 - A _source_, namely the origin of the stream. This could be, for example, a camera or a video file. 
@@ -19,9 +19,9 @@ source and sink independently, then choose which ones to enable in a pipeline.
 
 Furthermore, the ability to define multiple pipelines can be useful in various cases, for example to distinguish between
 a production pipeline and an experimental one. In practice, a pipeline can be seen as a combination of source, 
-sinks and model, to be configured and activated as desired.
+sink and model, to be configured and activated as desired.
 
-![pipeline](media/pipelines.jpg)
+![Diagram showing pipeline components](media/pipeline-components.jpg)
 
 ## Entities
 
@@ -69,25 +69,23 @@ A model is identified by a unique id, and optionally a friendly name chosen by t
 
 ### Pipelines
 
-A pipeline is a combination of a source, a model and one or more sinks. These components can be replaced as needed.
+A pipeline is a combination of a source, a model and a sink. These components can be replaced as needed.
 
 The configuration of a pipeline looks like the following:
 ```yaml
 source: <source_id>
 model: <model_id>
-sinks:
-  - <sink_1_id>
-  - <sink_2_id> 
+sink: <sink_id>
 ```
 
 A pipeline is identified by a unique id, and optionally a friendly name chosen by the user (e.g. "Production").
 
 Users can export a pipeline to a zip file, so that they can later import it to another environment. 
-The exported archive includes a full YAML definition of the source and sinks. The user may decide to include the model
+The exported archive includes a full YAML definition of the source and sink. The user may decide to include the model
 or not: if included, then the archive also contains the model binaries.
 
 The status of a pipeline can be 'running' or 'idle'. A running pipeline constantly tries to load frames, process them
-and output to the sinks; conversely, an idle pipeline does not perform any work until activated. Multiple pipelines
+and output to the sink; conversely, an idle pipeline does not perform any work until activated. Multiple pipelines
 may be running at the same time, provided that they don't share an _exclusive_ component: for example, two pipelines
 configured to read from the same camera cannot run together. Exclusivity is a property of the source/sink type: e.g.
 a physical camera requires exclusive access, whereas an IP camera or a topic does not.
@@ -130,14 +128,14 @@ a physical camera requires exclusive access, whereas an IP camera or a topic doe
 
 ### Pipeline management
 
-| Method   | Path                          | Payload                     | Return            | Description                         |
-|----------|-------------------------------|-----------------------------|-------------------|-------------------------------------|
-| `POST`   | `/api/pipelines`              | ids of source, sinks, model | pipeline id       | Create and configure a new pipeline |
-| `GET`    | `/api/pipelines`              | -                           | list of pipelines | List the available pipelines        |
-| `GET`    | `/api/pipelines/<id>`         | -                           | pipeline info     | Get info about a given pipeline     |
-| `PATCH`  | `/api/pipelines/<id>`         | ids of source, sinks, model | -                 | Reconfigure an existing pipeline    |
-| `POST`   | `/api/pipelines/<id>:enable`  | -                           | -                 | Activate a pipeline                 |
-| `POST`   | `/api/pipelines/<id>:disable` | -                           | -                 | Stop a pipeline                     |
-| `POST`   | `/api/pipelines/<id>:export`  | -                           | zip               | Export a pipeline to file           |
-| `POST`   | `/api/pipelines:import`       | zip                         | -                 | Import a pipeline from file         |
-| `DELETE` | `/api/pipelines/<id>`         | -                           | -                 | Delete a pipeline                   |
+| Method   | Path                          | Payload                    | Return            | Description                         |
+|----------|-------------------------------|----------------------------|-------------------|-------------------------------------|
+| `POST`   | `/api/pipelines`              | ids of source, sink, model | pipeline id       | Create and configure a new pipeline |
+| `GET`    | `/api/pipelines`              | -                          | list of pipelines | List the available pipelines        |
+| `GET`    | `/api/pipelines/<id>`         | -                          | pipeline info     | Get info about a given pipeline     |
+| `PATCH`  | `/api/pipelines/<id>`         | ids of source, sink, model | -                 | Reconfigure an existing pipeline    |
+| `POST`   | `/api/pipelines/<id>:enable`  | -                          | -                 | Activate a pipeline                 |
+| `POST`   | `/api/pipelines/<id>:disable` | -                          | -                 | Stop a pipeline                     |
+| `POST`   | `/api/pipelines/<id>:export`  | -                          | zip               | Export a pipeline to file           |
+| `POST`   | `/api/pipelines:import`       | zip                        | -                 | Import a pipeline from file         |
+| `DELETE` | `/api/pipelines/<id>`         | -                          | -                 | Delete a pipeline                   |
