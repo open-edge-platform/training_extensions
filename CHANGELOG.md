@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Enhancements
 
+- Refactor GetiConfigConverter. Update integration tests
+  (<https://github.com/open-edge-platform/training_extensions/pull/4477>)
 - Refactor OTXModels
   (<https://github.com/open-edge-platform/training_extensions/pull/4241>)
 - Introduce Native OTX Engine, refactor folders structure

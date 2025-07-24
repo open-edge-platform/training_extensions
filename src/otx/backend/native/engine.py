@@ -140,7 +140,8 @@ class OTXEngine(Engine):
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
-            self._model.load_state_dict_incrementally(torch.load(self.checkpoint))
+            chkpt = self._load_model_checkpoint(self.checkpoint, map_location="cpu")
+            self._model.load_state_dict_incrementally(chkpt)
 
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points

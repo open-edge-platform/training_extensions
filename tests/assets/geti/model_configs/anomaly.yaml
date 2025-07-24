@@ -1,0 +1,23 @@
+job_type: train
+model_manifest_id: ote_anomaly_padim
+export_parameters:
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe3
+    precision: FP16
+    with_xai: true
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe4
+    precision: FP32
+    with_xai: false
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe5
+    precision: FP16
+    with_xai: false
+  - format: onnx
+    output_model_id: 687dde02ee0628d82f9fdfe6
+    precision: FP32
+    with_xai: false
+hyperparameters:
+  evaluation:
+    metric: f_measure
+sub_task_type: MULTI_CLASS_CLS

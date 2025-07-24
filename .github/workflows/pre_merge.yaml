@@ -108,4 +108,4 @@ jobs:
         run: |
           pip install '.[ci_tox]'
       - name: Run Integration Test
-        run: tox -vv -e integration-test-${{ matrix.task }} -- --run-category-only
+        run: tox -vv -e integration-test-${{ matrix.task }} -- --task ${{ matrix.task }} --run-category-only
