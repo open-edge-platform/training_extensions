@@ -1,12 +1,12 @@
 from collections.abc import Callable, Sequence
 
-from app.schemas.configuration import OutputConfig
+from app.schemas.configuration import Sink
 from app.schemas.configuration.output_config import DestinationType
 from app.services.dispatchers import Dispatcher, FolderDispatcher, MqttDispatcher
 
 
 class DispatchService:
-    _dispatcher_registry: dict[DestinationType, Callable[[OutputConfig], Dispatcher | None]] = {
+    _dispatcher_registry: dict[DestinationType, Callable[[Sink], Dispatcher | None]] = {
         DestinationType.DISCONNECTED: lambda _: None,
         DestinationType.FOLDER: lambda config: FolderDispatcher(output_config=config),
         DestinationType.MQTT: lambda config: MqttDispatcher(output_config=config),
@@ -16,7 +16,7 @@ class DispatchService:
     }
 
     @classmethod
-    def get_destination(cls, output_config: OutputConfig) -> Dispatcher | None:
+    def get_destination(cls, output_config: Sink) -> Dispatcher | None:
         # TODO handle exceptions: if some output cannot be initialized, exclude it and raise a warning
         factory = cls._dispatcher_registry.get(output_config.destination_type)
         if factory is None:
@@ -25,7 +25,7 @@ class DispatchService:
         return factory(output_config)
 
     @classmethod
-    def get_destinations(cls, output_configs: Sequence[OutputConfig]) -> list[Dispatcher]:
+    def get_destinations(cls, output_configs: Sequence[Sink]) -> list[Dispatcher]:
         """
         Get a list of dispatchers based on the provided output configurations.
 

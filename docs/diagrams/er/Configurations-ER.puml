@@ -1,0 +1,58 @@
+@startuml "JSONB-Option1"
+!define table(x) class x << (T,#FFAAAA) >>
+!define pk(x) <u>x</u>
+!define fk(x) <i>x</i>
+
+title
+<size:16><b>Geti Edge - Database Schema</b></size>
+<size:12>JSONB Option</size>
+end title
+
+table(sources) {
+  pk(id) : UUID
+  source_type : VARCHAR(50) NOT NULL
+  config_data : JSONB NOT NULL
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+table(pipelines) {
+  pk(id) : UUID
+  fk(source_id) : UUID
+  fk(sink_id) : UUID
+  name : VARCHAR(255) UNIQUE NOT NULL
+  description : TEXT
+  is_running : BOOLEAN DEFAULT FALSE
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+table(sinks) {
+  pk(id) : UUID
+  destination_type : VARCHAR(50)
+  rate_limit : FLOAT DEFAULT NULL
+  config_data : JSONB NOT NULL
+  output_formats : JSONB NOT NULL
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+sources ||--o{ pipelines : "one source can have many pipelines"
+sinks ||--o{ pipelines : "one sink can have many sinks"
+
+note right of sources
+  Stores configuration for
+  different data sources
+end note
+
+note right of pipelines
+  Main orchestration entity
+  with source and sink references
+end note
+
+note right of sinks
+  Output destinations
+  for pipeline data
+end note
+
+@enduml

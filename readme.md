@@ -6,8 +6,8 @@ Each reference implementation is purpose-built to address a specific machine lea
 ## MVP Scope
 
 The MVP scope for Geti Edge will be a minimal application that allows users to setup an inference pipeline by configuring an input source (focus on IP Camera or RTSP stream), upload a model and configure output hooks.
-After configuring the pipeline the server runs inference on the input source and broadcasts data to its configured outputs. 
-The `Input -> Inference -> Outputs[]`
+After configuring the pipeline the server runs inference on the input source and broadcasts data to its configured sinks. 
+The `Source -> Inference -> Sink`
 
 ### Configuration wizard
 
@@ -16,21 +16,49 @@ We assume the user only has a single pipeline.
 
 #### Configuring dispatchers
 
-- MQTT:
+**MQTT:**
 
-```yaml
-  - destination_type: mqtt  # configuration for a destination that sends data to an MQTT broker
-    broker_host: localhost  # the hostname or IP address of the MQTT broker
-    broker_port: 1883  # the port number of the MQTT broker
-    topic: predictions  # the MQTT topic to which the data will be published
-    output_formats:  # the formats in which the output data will be generated
-      - image_original  # output the original image
-      - image_with_predictions  # output the image with predictions overlaid
-      - predictions  # output the prediction data
-    rate_limit: 0.2  # output every 5 seconds
+```bash
+curl -X POST "http://localhost:8000/api/outputs" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "destination_type": "mqtt",
+    "broker_host": "localhost",
+    "broker_port": 1883,
+    "topic": "predictions",
+    "output_formats": [
+        "image_original",
+        "image_with_predictions",
+        "predictions"
+    ],
+    "rate_limit": 0.2
+  }'
 ```
 
-#### Input
+**Folder:**
+
+```bash
+curl -X POST "http://localhost:8000/api/outputs" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "destination_type": "folder",
+    "folder_path": "data/out",
+    "output_formats": [
+        "image_original",
+        "image_with_predictions",
+        "predictions"
+    ],
+    "rate_limit": 0.1
+  }'
+```
+
+**Verify Configuration:**
+
+```bash
+curl -X GET "http://localhost:8000/api/outputs"
+```
+
+#### Source
 
 The user can configure a single input source.
 

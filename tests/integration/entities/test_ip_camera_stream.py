@@ -39,7 +39,7 @@ def ip_camera() -> str:
 
 
 class TestIPCameraStream:
-    """Test suite for IPCameraStream functionality."""
+    """Integration tests for IPCameraStream functionality."""
 
     @pytest.fixture()
     def config(self, ip_camera: str) -> IPCameraSourceConfig:

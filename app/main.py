@@ -1,4 +1,7 @@
 # export no_proxy="localhost, 127.0.0.1, ::1"
+# Before first run, make sure to run database migration with alembic:
+#   uv run alembic -c app/alembic.ini upgrade head
+# or use the run.sh script in project root folder
 # Start with:
 #  - uv run app/main.py  (UI_MODE=True)
 #  - uv run fastapi run  (UI_MODE=False)

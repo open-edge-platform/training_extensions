@@ -20,12 +20,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # Copy project files
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock run.sh ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable
 
-COPY config.yaml ./config.yaml
 COPY app ./app
 
 #######
@@ -37,4 +36,4 @@ FROM base AS server
 EXPOSE 7860
 
 # Set the entry point
-CMD ["uv", "run", "fastapi", "run", "--port", "7860"]
+CMD ["/app/run.sh"]

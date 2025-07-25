@@ -128,7 +128,7 @@ def mqtt_test_subscriber(mqtt_broker):
 
 
 class TestMqttDispatcher:
-    """Test cases for MqttDispatcher."""
+    """Integration tests for MqttDispatcher."""
 
     def test_init_successful_connection(self, mqtt_config):
         """Test successful initialization and connection."""

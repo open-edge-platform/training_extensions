@@ -5,14 +5,14 @@ from app.entities.ip_camera_stream import IPCameraStream
 from app.entities.video_file_stream import VideoFileStream
 from app.entities.video_stream import VideoStream
 from app.entities.webcam_stream import WebcamStream
-from app.schemas.configuration.input_config import InputConfig, SourceType
+from app.schemas.configuration.input_config import Source, SourceType
 
 logger = logging.getLogger(__name__)
 
 
 class VideoStreamService:
     @staticmethod
-    def get_video_stream(input_config: InputConfig) -> VideoStream | None:
+    def get_video_stream(input_config: Source) -> VideoStream | None:
         video_stream: VideoStream | None
         # TODO handle exceptions: if stream cannot be initialized, fallback to disconnected state
         match input_config.source_type:

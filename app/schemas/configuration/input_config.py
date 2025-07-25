@@ -18,7 +18,7 @@ class SourceType(str, Enum):
 
 
 class DisconnectedSourceConfig(BaseModel):
-    source_type: Literal[SourceType.DISCONNECTED]
+    source_type: Literal[SourceType.DISCONNECTED] = SourceType.DISCONNECTED
 
 
 class WebcamSourceConfig(BaseModel):
@@ -59,7 +59,7 @@ class ImagesFolderSourceConfig(BaseModel):
     ignore_existing_images: bool
 
 
-InputConfig = Annotated[
+Source = Annotated[
     DisconnectedSourceConfig
     | WebcamSourceConfig
     | IPCameraSourceConfig

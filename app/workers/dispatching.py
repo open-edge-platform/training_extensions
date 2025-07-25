@@ -8,7 +8,7 @@ from multiprocessing.synchronize import Event as EventClass
 from fastrtc import AdditionalOutputs
 
 from app.entities.stream_data import StreamData
-from app.schemas.configuration import OutputConfig
+from app.schemas.configuration import Sink
 from app.services import ConfigurationService, DispatchService
 from app.services.dispatchers import Dispatcher
 
@@ -24,16 +24,16 @@ def dispatching_routine(
     """Pull predictions from the queue and dispatch them to the configured outputs and WebRTC visualization stream."""
     config_service = ConfigurationService(config_changed_condition=config_changed_condition)
 
-    prev_out_config: list[OutputConfig] = []
+    prev_sink_config: list[Sink] = []
     destinations: list[Dispatcher] = []
 
     while not stop_event.is_set():
-        out_config = config_service.get_output_config()
+        sink_config = config_service.get_sink_config()
 
-        if not prev_out_config or out_config != prev_out_config:
-            logger.debug(f"Output config changed from {prev_out_config} to {out_config}")
-            destinations = DispatchService.get_destinations(output_configs=out_config)
-            prev_out_config = copy.deepcopy(out_config)
+        if not prev_sink_config or sink_config != prev_sink_config:
+            logger.debug(f"Sink config changed from {prev_sink_config} to {sink_config}")
+            destinations = DispatchService.get_destinations(output_configs=[sink_config])
+            prev_sink_config = copy.deepcopy(sink_config)
 
         # Read from the queue
         try:

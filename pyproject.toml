@@ -17,6 +17,8 @@ dependencies = [
     "pyyaml~=6.0.2",
     "openvino==2025.2.0",
     "watchdog==6.0.0",
+    "sqlalchemy~=2.0.41",
+    "alembic~=1.16.4",
 ]
 
 [project.optional-dependencies]

@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.configuration import OutputConfig
+from app.schemas.configuration import Sink
 
 
 class DispatchError(Exception):
@@ -20,7 +20,7 @@ class BaseDispatcher(metaclass=ABCMeta):
     This class should be inherited by all dispatcher classes.
     """
 
-    def __init__(self, output_config: OutputConfig) -> None:
+    def __init__(self, output_config: Sink) -> None:
         """
         Initialize the dispatcher.
         Args:

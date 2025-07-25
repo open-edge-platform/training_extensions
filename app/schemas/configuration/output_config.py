@@ -25,7 +25,7 @@ class BaseOutputConfig(BaseModel):
 
 
 class DisconnectedOutputConfig(BaseOutputConfig):
-    destination_type: Literal[DestinationType.DISCONNECTED]
+    destination_type: Literal[DestinationType.DISCONNECTED] = DestinationType.DISCONNECTED
 
 
 class FolderOutputConfig(BaseOutputConfig):
@@ -57,7 +57,7 @@ class WebhookOutputConfig(BaseOutputConfig):
     webhook_url: str
 
 
-OutputConfig = Annotated[
+Sink = Annotated[
     DisconnectedOutputConfig
     | FolderOutputConfig
     | MqttOutputConfig

@@ -8,7 +8,7 @@ import pytest
 
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
-from app.schemas.configuration import InputConfig
+from app.schemas.configuration import Source
 from app.workers import frame_acquisition_routine
 
 
@@ -41,7 +41,7 @@ def config_changed_condition():
 @pytest.fixture
 def mock_config():
     """Mock configuration fixture"""
-    config = Mock(spec=InputConfig)
+    config = Mock(spec=Source)
     config.source = "test_camera"
     config.resolution = (1920, 1080)
     return config

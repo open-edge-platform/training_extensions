@@ -1,5 +1,5 @@
 from .full_config import AppConfig
-from .input_config import InputConfig
-from .output_config import OutputConfig, OutputFormat
+from .input_config import Source
+from .output_config import OutputFormat, Sink
 
-__all__ = ["AppConfig", "InputConfig", "OutputConfig", "OutputFormat"]
+__all__ = ["AppConfig", "OutputFormat", "Sink", "Source"]
