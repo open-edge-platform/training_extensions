@@ -755,7 +755,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> tuple(Engine, dict[str, Any]):
+    ) -> tuple[Engine, dict[str, Any]]:
         """Builds the engine from a configuration file.
 
         Args:
@@ -836,7 +836,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> tuple(Engine, dict[str, Any]):
+    ) -> tuple[Engine, dict[str, Any]]:
         """Builds the engine from a model name.
 
         Args:
@@ -963,7 +963,7 @@ class OTXEngine(Engine):
             self.work_dir = self._trainer.default_root_dir
 
     def configure_accelerator(self) -> None:
-        """Updates the cache arguments based on the device type.""" 
+        """Updates the cache arguments based on the device type."""
         if self._device.accelerator == DeviceType.xpu:
             self._cache.update(strategy="xpu_single")
             # add plugin for Automatic Mixed Precision on XPU
