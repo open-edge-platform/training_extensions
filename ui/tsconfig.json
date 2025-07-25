@@ -1,4 +1,4 @@
 {
     "extends": "@geti/config/typescript",
-    "include": ["src", "tests", "rsbuild.config.ts"]
+    "include": ["src", "tests", "rsbuild.config.ts", "playwright.config.ts"]
 }

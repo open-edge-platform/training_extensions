@@ -318,6 +318,21 @@ export interface components {
             /** Detail */
             detail?: components['schemas']['ValidationError'][];
         };
+        /** IPCameraSourceConfig */
+        IPCameraSourceConfig: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            source_type: 'ip_camera';
+            /** Stream Url */
+            stream_url: string;
+            /**
+             * Auth Required
+             * @default false
+             */
+            auth_required: boolean;
+        };
         /** ImagesFolderSourceConfig */
         ImagesFolderSourceConfig: {
             /**
@@ -334,16 +349,6 @@ export interface components {
             webrtc_id: string;
             /** Conf Threshold */
             conf_threshold: number;
-        };
-        /** IpCameraSourceConfig */
-        IpCameraSourceConfig: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            source_type: 'ip_camera';
-            /** Device Url */
-            device_url: string;
         };
         /** ModelResponse */
         ModelResponse: {
@@ -455,9 +460,9 @@ export type SchemaDisconnectedOutputConfig = components['schemas']['Disconnected
 export type SchemaDisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfig'];
 export type SchemaFolderOutputConfig = components['schemas']['FolderOutputConfig'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
+export type SchemaIpCameraSourceConfig = components['schemas']['IPCameraSourceConfig'];
 export type SchemaImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfig'];
 export type SchemaInputData = components['schemas']['InputData'];
-export type SchemaIpCameraSourceConfig = components['schemas']['IpCameraSourceConfig'];
 export type SchemaModelResponse = components['schemas']['ModelResponse'];
 export type SchemaModelsInfoResponse = components['schemas']['ModelsInfoResponse'];
 export type SchemaMqttOutputConfig = components['schemas']['MqttOutputConfig'];
@@ -605,7 +610,7 @@ export interface operations {
                     'application/json':
                         | components['schemas']['DisconnectedSourceConfig']
                         | components['schemas']['WebcamSourceConfig']
-                        | components['schemas']['IpCameraSourceConfig']
+                        | components['schemas']['IPCameraSourceConfig']
                         | components['schemas']['VideoFileSourceConfig']
                         | components['schemas']['ImagesFolderSourceConfig'];
                 };
@@ -624,7 +629,7 @@ export interface operations {
                 'application/json':
                     | components['schemas']['DisconnectedSourceConfig']
                     | components['schemas']['WebcamSourceConfig']
-                    | components['schemas']['IpCameraSourceConfig']
+                    | components['schemas']['IPCameraSourceConfig']
                     | components['schemas']['VideoFileSourceConfig']
                     | components['schemas']['ImagesFolderSourceConfig'];
             };

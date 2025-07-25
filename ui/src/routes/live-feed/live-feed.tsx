@@ -20,7 +20,7 @@ export const StreamContainer = () => {
                 <div className={classes.canvasContainer}>
                     <View backgroundColor={'gray-200'} width='90%' height='90%'>
                         <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Button onPress={start} UNSAFE_className={classes.playButton}>
+                            <Button onPress={start} UNSAFE_className={classes.playButton} aria-label={'Start stream'}>
                                 <Play width='128px' height='128px' />
                             </Button>
                         </Flex>

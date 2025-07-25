@@ -17,3 +17,9 @@ dist/
 
 # We clone our geti packages during the npm install phase
 packages/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

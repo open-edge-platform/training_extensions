@@ -1,0 +1,592 @@
+{
+    "openapi": "3.1.0",
+    "info": { "title": "GETI Edge", "description": "Edge inference server for GETI models", "version": "0.1.0" },
+    "paths": {
+        "/api/models": {
+            "post": {
+                "summary": "Add Model",
+                "description": "Upload a new model",
+                "operationId": "add_model_api_models_post",
+                "parameters": [
+                    {
+                        "name": "model_name",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Name for the model files",
+                            "title": "Model Name"
+                        },
+                        "description": "Name for the model files"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": { "$ref": "#/components/schemas/Body_add_model_api_models_post" }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/ModelResponse" } }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "summary": "Get Models",
+                "description": "Get information about available models",
+                "operationId": "get_models_api_models_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/ModelsInfoResponse" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model_name}": {
+            "delete": {
+                "summary": "Delete Model",
+                "description": "Delete a model",
+                "operationId": "delete_model_api_models__model_name__delete",
+                "parameters": [
+                    {
+                        "name": "model_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Model Name" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model_name}\\:activate": {
+            "post": {
+                "summary": "Activate Model",
+                "description": "Activate a model",
+                "operationId": "activate_model_api_models__model_name__activate_post",
+                "parameters": [
+                    {
+                        "name": "model_name",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string", "title": "Model Name" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/ModelResponse" } }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/inputs": {
+            "get": {
+                "summary": "Get Input Configuration",
+                "description": "Get the current input stream configuration.",
+                "operationId": "get_input_configuration_api_inputs_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/DisconnectedSourceConfig" },
+                                        { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                        { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                        { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                        { "$ref": "#/components/schemas/ImagesFolderSourceConfig" }
+                                    ],
+                                    "title": "Response Get Input Configuration Api Inputs Get",
+                                    "discriminator": {
+                                        "propertyName": "source_type",
+                                        "mapping": {
+                                            "disconnected": "#/components/schemas/DisconnectedSourceConfig",
+                                            "webcam": "#/components/schemas/WebcamSourceConfig",
+                                            "ip_camera": "#/components/schemas/IPCameraSourceConfig",
+                                            "video_file": "#/components/schemas/VideoFileSourceConfig",
+                                            "images_folder": "#/components/schemas/ImagesFolderSourceConfig"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Configure Input Stream",
+                "description": "Configure the input stream for the application.",
+                "operationId": "configure_input_stream_api_inputs_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    { "$ref": "#/components/schemas/DisconnectedSourceConfig" },
+                                    { "$ref": "#/components/schemas/WebcamSourceConfig" },
+                                    { "$ref": "#/components/schemas/IPCameraSourceConfig" },
+                                    { "$ref": "#/components/schemas/VideoFileSourceConfig" },
+                                    { "$ref": "#/components/schemas/ImagesFolderSourceConfig" }
+                                ],
+                                "title": "Input Config",
+                                "discriminator": {
+                                    "propertyName": "source_type",
+                                    "mapping": {
+                                        "disconnected": "#/components/schemas/DisconnectedSourceConfig",
+                                        "webcam": "#/components/schemas/WebcamSourceConfig",
+                                        "ip_camera": "#/components/schemas/IPCameraSourceConfig",
+                                        "video_file": "#/components/schemas/VideoFileSourceConfig",
+                                        "images_folder": "#/components/schemas/ImagesFolderSourceConfig"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/outputs": {
+            "get": {
+                "summary": "Get Output Configurations",
+                "description": "Get the current output configurations.",
+                "operationId": "get_output_configurations_api_outputs_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "oneOf": [
+                                            { "$ref": "#/components/schemas/DisconnectedOutputConfig" },
+                                            { "$ref": "#/components/schemas/FolderOutputConfig" },
+                                            { "$ref": "#/components/schemas/MqttOutputConfig" },
+                                            { "$ref": "#/components/schemas/DdsOutputConfig" },
+                                            { "$ref": "#/components/schemas/RosOutputConfig" },
+                                            { "$ref": "#/components/schemas/WebhookOutputConfig" }
+                                        ],
+                                        "discriminator": {
+                                            "propertyName": "destination_type",
+                                            "mapping": {
+                                                "disconnected": "#/components/schemas/DisconnectedOutputConfig",
+                                                "folder": "#/components/schemas/FolderOutputConfig",
+                                                "mqtt": "#/components/schemas/MqttOutputConfig",
+                                                "dds": "#/components/schemas/DdsOutputConfig",
+                                                "ros": "#/components/schemas/RosOutputConfig",
+                                                "webhook": "#/components/schemas/WebhookOutputConfig"
+                                            }
+                                        }
+                                    },
+                                    "type": "array",
+                                    "title": "Response Get Output Configurations Api Outputs Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Configure Outputs",
+                "description": "Configure the destination(s) for the application output.",
+                "operationId": "configure_outputs_api_outputs_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "items": {
+                                    "oneOf": [
+                                        { "$ref": "#/components/schemas/DisconnectedOutputConfig" },
+                                        { "$ref": "#/components/schemas/FolderOutputConfig" },
+                                        { "$ref": "#/components/schemas/MqttOutputConfig" },
+                                        { "$ref": "#/components/schemas/DdsOutputConfig" },
+                                        { "$ref": "#/components/schemas/RosOutputConfig" },
+                                        { "$ref": "#/components/schemas/WebhookOutputConfig" }
+                                    ],
+                                    "discriminator": {
+                                        "propertyName": "destination_type",
+                                        "mapping": {
+                                            "disconnected": "#/components/schemas/DisconnectedOutputConfig",
+                                            "folder": "#/components/schemas/FolderOutputConfig",
+                                            "mqtt": "#/components/schemas/MqttOutputConfig",
+                                            "dds": "#/components/schemas/DdsOutputConfig",
+                                            "ros": "#/components/schemas/RosOutputConfig",
+                                            "webhook": "#/components/schemas/WebhookOutputConfig"
+                                        }
+                                    }
+                                },
+                                "type": "array",
+                                "title": "Outputs"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/system/metrics/memory": {
+            "get": {
+                "summary": "Get Memory",
+                "description": "Returns the used memory in MB and total available memory in MB.",
+                "operationId": "get_memory_api_system_metrics_memory_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Get Memory Api System Metrics Memory Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/docs": {
+            "get": {
+                "summary": "Get Scalar Docs",
+                "description": "Shows docs for our OpenAPI specification using scalar",
+                "operationId": "get_scalar_docs_api_docs_get",
+                "responses": {
+                    "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+                }
+            }
+        },
+        "/api/input_hook": {
+            "post": {
+                "tags": ["webrtc"],
+                "summary": "Webrtc Input Hook",
+                "description": "Update webrtc input for user",
+                "operationId": "webrtc_input_hook_api_input_hook_post",
+                "requestBody": {
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InputData" } } },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/webrtc/offer": {
+            "post": {
+                "summary": "Offer",
+                "description": "Handle an incoming WebRTC offer via HTTP POST.\n\nProcesses the SDP offer and ICE candidates from the client to establish\na WebRTC connection.\n\nArgs:\n    body: A Pydantic model containing the SDP offer, optional ICE candidate,\n          type ('offer'), and a unique WebRTC ID.\n\nReturns:\n    A dictionary containing the SDP answer generated by the server.",
+                "operationId": "offer_api_webrtc_offer_post",
+                "requestBody": {
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body" } } },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": { "application/json": { "schema": {} } }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/telephone/incoming": {
+            "post": {
+                "summary": "Handle Incoming Call",
+                "description": "Handle incoming telephone calls (e.g., via Twilio).\n\nGenerates TwiML instructions to connect the incoming call to the\nWebSocket handler (`/telephone/handler`) for audio streaming.\n\nArgs:\n    request: The FastAPI Request object for the incoming call webhook.\n\nReturns:\n    An HTMLResponse containing the TwiML instructions as XML.",
+                "operationId": "handle_incoming_call_api_telephone_incoming_post",
+                "responses": {
+                    "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Body": {
+                "properties": {
+                    "sdp": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Sdp" },
+                    "candidate": {
+                        "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+                        "title": "Candidate"
+                    },
+                    "type": { "type": "string", "title": "Type" },
+                    "webrtc_id": { "type": "string", "title": "Webrtc Id" }
+                },
+                "type": "object",
+                "required": ["type", "webrtc_id"],
+                "title": "Body"
+            },
+            "Body_add_model_api_models_post": {
+                "properties": {
+                    "xml_file": { "type": "string", "format": "binary", "title": "Xml File" },
+                    "bin_file": { "type": "string", "format": "binary", "title": "Bin File" }
+                },
+                "type": "object",
+                "required": ["xml_file", "bin_file"],
+                "title": "Body_add_model_api_models_post"
+            },
+            "DdsOutputConfig": {
+                "properties": {
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "destination_type": { "type": "string", "const": "dds", "title": "Destination Type" },
+                    "dds_topic": { "type": "string", "title": "Dds Topic" }
+                },
+                "type": "object",
+                "required": ["output_formats", "destination_type", "dds_topic"],
+                "title": "DdsOutputConfig"
+            },
+            "DisconnectedOutputConfig": {
+                "properties": {
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "destination_type": { "type": "string", "const": "disconnected", "title": "Destination Type" }
+                },
+                "type": "object",
+                "required": ["output_formats", "destination_type"],
+                "title": "DisconnectedOutputConfig"
+            },
+            "DisconnectedSourceConfig": {
+                "properties": { "source_type": { "type": "string", "const": "disconnected", "title": "Source Type" } },
+                "type": "object",
+                "required": ["source_type"],
+                "title": "DisconnectedSourceConfig"
+            },
+            "FolderOutputConfig": {
+                "properties": {
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "destination_type": { "type": "string", "const": "folder", "title": "Destination Type" },
+                    "folder_path": { "type": "string", "title": "Folder Path" }
+                },
+                "type": "object",
+                "required": ["output_formats", "destination_type", "folder_path"],
+                "title": "FolderOutputConfig"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": { "$ref": "#/components/schemas/ValidationError" },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "IPCameraSourceConfig": {
+                "properties": {
+                    "source_type": { "type": "string", "const": "ip_camera", "title": "Source Type" },
+                    "stream_url": { "type": "string", "title": "Stream Url" },
+                    "auth_required": { "type": "boolean", "title": "Auth Required", "default": false }
+                },
+                "type": "object",
+                "required": ["source_type", "stream_url"],
+                "title": "IPCameraSourceConfig"
+            },
+            "ImagesFolderSourceConfig": {
+                "properties": {
+                    "source_type": { "type": "string", "const": "images_folder", "title": "Source Type" },
+                    "images_folder_path": { "type": "string", "title": "Images Folder Path" }
+                },
+                "type": "object",
+                "required": ["source_type", "images_folder_path"],
+                "title": "ImagesFolderSourceConfig"
+            },
+            "InputData": {
+                "properties": {
+                    "webrtc_id": { "type": "string", "title": "Webrtc Id" },
+                    "conf_threshold": { "type": "number", "maximum": 1.0, "minimum": 0.0, "title": "Conf Threshold" }
+                },
+                "type": "object",
+                "required": ["webrtc_id", "conf_threshold"],
+                "title": "InputData"
+            },
+            "ModelResponse": {
+                "properties": { "model_name": { "type": "string", "title": "Model Name" } },
+                "type": "object",
+                "required": ["model_name"],
+                "title": "ModelResponse"
+            },
+            "ModelsInfoResponse": {
+                "properties": {
+                    "active_model": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Active Model" },
+                    "available_models": { "items": { "type": "string" }, "type": "array", "title": "Available Models" }
+                },
+                "type": "object",
+                "required": ["active_model", "available_models"],
+                "title": "ModelsInfoResponse"
+            },
+            "MqttOutputConfig": {
+                "properties": {
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "destination_type": { "type": "string", "const": "mqtt", "title": "Destination Type" },
+                    "broker_host": { "type": "string", "title": "Broker Host" },
+                    "broker_port": { "type": "integer", "title": "Broker Port" },
+                    "topic": { "type": "string", "title": "Topic" },
+                    "username": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Username" },
+                    "password": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Password" }
+                },
+                "type": "object",
+                "required": ["output_formats", "destination_type", "broker_host", "broker_port", "topic"],
+                "title": "MqttOutputConfig"
+            },
+            "OutputFormat": {
+                "type": "string",
+                "enum": ["image_original", "image_with_predictions", "predictions"],
+                "title": "OutputFormat"
+            },
+            "RosOutputConfig": {
+                "properties": {
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "destination_type": { "type": "string", "const": "ros", "title": "Destination Type" },
+                    "ros_topic": { "type": "string", "title": "Ros Topic" }
+                },
+                "type": "object",
+                "required": ["output_formats", "destination_type", "ros_topic"],
+                "title": "RosOutputConfig"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": { "type": "string", "title": "Message" },
+                    "type": { "type": "string", "title": "Error Type" }
+                },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError"
+            },
+            "VideoFileSourceConfig": {
+                "properties": {
+                    "source_type": { "type": "string", "const": "video_file", "title": "Source Type" },
+                    "video_path": { "type": "string", "title": "Video Path" }
+                },
+                "type": "object",
+                "required": ["source_type", "video_path"],
+                "title": "VideoFileSourceConfig"
+            },
+            "WebcamSourceConfig": {
+                "properties": {
+                    "source_type": { "type": "string", "const": "webcam", "title": "Source Type" },
+                    "device_id": { "type": "integer", "title": "Device Id" }
+                },
+                "type": "object",
+                "required": ["source_type", "device_id"],
+                "title": "WebcamSourceConfig"
+            },
+            "WebhookOutputConfig": {
+                "properties": {
+                    "output_formats": {
+                        "items": { "$ref": "#/components/schemas/OutputFormat" },
+                        "type": "array",
+                        "title": "Output Formats"
+                    },
+                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
+                    "destination_type": { "type": "string", "const": "webhook", "title": "Destination Type" },
+                    "webhook_url": { "type": "string", "title": "Webhook Url" }
+                },
+                "type": "object",
+                "required": ["output_formats", "destination_type", "webhook_url"],
+                "title": "WebhookOutputConfig"
+            }
+        }
+    }
+}

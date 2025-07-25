@@ -45,7 +45,8 @@ const DEFAULT_INPUT_FORMS: InputFormRecord = {
     },
     ip_camera: {
         source_type: 'ip_camera',
-        device_url: '',
+        stream_url: '',
+        auth_required: false,
     },
     video_file: {
         source_type: 'video_file',
@@ -135,8 +136,8 @@ const ConfigureIpCameraInput = ({
         <TextField
             label='Device URL'
             name='device_url'
-            value={input.device_url}
-            onChange={(device_url) => setInput({ ...input, device_url })}
+            value={input.stream_url}
+            onChange={(stream_url) => setInput({ ...input, stream_url })}
         />
     );
 };
