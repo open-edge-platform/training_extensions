@@ -209,7 +209,7 @@ class OTXDetectionModel(OTXModel):
                 scores=scores,
                 bboxes=bboxes,
                 labels=labels,
-                saliency_map=[saliency_map.detach().to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                saliency_map=outputs["saliency_map"],
                 feature_vector=[
                     feature_vector.detach().unsqueeze(0).to(torch.float32)
                     for feature_vector in outputs["feature_vector"]

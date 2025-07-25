@@ -21,7 +21,7 @@ created in the previous step.
   # or by this line, if you created an environment, using tox
   . venv/otx/bin/activate
 
-2. ``otx explain`` command returns saliency maps, 
+2. ``otx predict`` with the ``--explain True`` parameter returns saliency maps, 
 which are heatmaps with red-colored areas indicating focus. Here's an example how to generate saliency maps from trained checkpoint:
 
 .. tab-set::
@@ -30,27 +30,29 @@ which are heatmaps with red-colored areas indicating focus. Here's an example ho
 
         .. code-block:: shell
 
-            (otx) ...$ otx explain --work_dir otx-workspace \
+            (otx) ...$ otx predict --work_dir otx-workspace \
+                                   --explain True \
                                    --explain_config.postprocess True # Resizes and applies colormap to the saliency map
 
     .. tab-item:: CLI (with config)
 
         .. code-block:: shell
 
-            (otx) ...$ otx explain --config  src/otx/recipe/detection/atss_mobilenetv2.yaml \
+            (otx) ...$ otx predict --config src/otx/recipe/detection/atss_mobilenetv2.yaml \
                                    --data_root data/wgisd \
-                                   --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt \
+                                   --checkpoint otx-workspace/.latest/train/best_checkpoint.ckpt \
+                                   --explain True \
                                    --explain_config.postprocess True # Resizes and applies colormap to the saliency map
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            engine.explain(
-                checkpoint="<checkpoint-path>",
+            engine.predict(
+                checkpoint="otx-workspace/.latest/train/best_checkpoint.ckpt",
                 datamodule=OTXDataModule(...), # The data module to use for predictions
+                explain=True,
                 explain_config=ExplainConfig(postprocess=True), # Resizes and applies colormap to the saliency map
-                dump=True # Wherether to save saliency map images or not
               )
 
 3. The generated saliency maps will appear in  ``otx-workspace/.latest/explain/saliency_maps`` folder. 
@@ -64,8 +66,8 @@ It will contain a pair of generated images with saliency maps for each image use
 
 |
 
-4. To explain the exported IR model, it should be converted with additional outputs ``saliency_map`` and ``feature_map``.
-To do that we should use ``--explain True`` parameter during export.
+4. To use the exported OpenVINO IR model for explanation, PyTorch weights should be converted to OpenVINO IR model with additional outputs ``saliency_map`` and ``feature_map``.
+To do that we should use ``otx export --explain True`` parameter during export.
 
 .. tab-set::
 
@@ -74,14 +76,19 @@ To do that we should use ``--explain True`` parameter during export.
         .. code-block:: shell
 
             (otx) ...$ otx export ... --explain True
-            (otx) ...$ otx explain ... --checkpoint otx-workspace/20240312_052847/exported_model.xml
+            (otx) ...$ otx predict ... --checkpoint otx-workspace/20240312_052847/exported_model.xml --explain True
 
     .. tab-item:: API
 
         .. code-block:: python
-
+            # Use .pth when instantiating the engine with OTXEngine
+            engine = OTXEngine(model="checkpoint.pth", ...)
             engine.export(..., explain=True)
-            engine.explain(..., checkpoint="<xml_weights_path>")
+            engine.predict(..., explain=True)
+
+  
+            engine = OVEngine(model="exported_model.xml", ...)
+            engine.predict(..., explain=True)
 
 5. We can parametrize the explanation process by specifying 
 the following parameters in ``ExplainConfig``:
@@ -103,14 +110,16 @@ the following parameters in ``ExplainConfig``:
 
         .. code-block:: shell
 
-            (otx) ...$ otx explain ... --explain_config.postprocess True 
+            (otx) ...$ otx predict ... --explain True \
+                                       --explain_config.postprocess True \
                                        --explain_config.target_explain_group PREDICTIONS
 
     .. tab-item:: API
 
         .. code-block:: python
 
-            engine.explain(...,
+            engine.predict(...,
+                           explain=True,
                            explain_config=ExplainConfig(
                              postprocess=True,
                              target_explain_group=TargetExplainGroup.PREDICTIONS

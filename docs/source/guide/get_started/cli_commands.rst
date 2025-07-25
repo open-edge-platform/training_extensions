@@ -27,7 +27,7 @@ Help
 
     (otx) ...$ otx --help
     ╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    │ Usage: otx [-h] [-v] {find,train,test,predict,export,optimize,explain} ...                              │
+    │ Usage: otx [-h] [-v] {find,train,test,predict,export,optimize} ...                                      │
     │                                                                                                                 │
     │                                                                                                                 │
     │ OpenVINO Training-Extension command line tool                                                                   │
@@ -48,7 +48,6 @@ Help
     │     predict             Run predictions using the specified model and data.                                     │
     │     export              Export the trained model to OpenVINO Intermediate Representation (IR) or ONNX formats.  │
     │     optimize            Applies NNCF.PTQ to the underlying models (now works only for OV models).               │
-    │     explain             Run XAI using the specified model and data (test subset).                               │
     |     benchmark           Executes model micro benchmarking on random data.                                       |
     │                                                                                                                 │
     ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
@@ -389,7 +388,7 @@ The command below performs exporting to the ``{work_dir}/`` path.
 
 The command results in ``exported_model.xml``, ``exported_model.bin``.
 
-To use the exported model as an input for ``otx explain``, please dump additional outputs with internal information, using ``--explain``:
+To use the exported model for explainable AI (XAI), please dump additional outputs with internal information, using ``--explain``:
 
 .. code-block:: shell
 
@@ -466,31 +465,35 @@ The command below will evaluate the trained model on the provided dataset:
         # OR if you are in the workspace root
         (otx) ...$ otx test
 
-***********
-Explanation
-***********
+**********
+Prediction
+**********
 
-``otx explain`` runs the explainable AI (XAI) algorithm on a specific model-dataset pair. It helps explain the model's decision-making process in a way that is easily understood by humans.
+``otx predict`` runs inference on a dataset and optionally generates explainable AI (XAI) saliency maps.
 
-
-The command below will generate saliency maps (heatmaps with red colored areas of focus) of the trained model on the provided dataset and save the resulting images to ``output`` path:
+The command below will run predictions on the provided dataset:
 
 .. code-block:: shell
 
-    (otx) ...$ otx explain --config <path/to/config> \
-                           --checkpoint <path/to/model_weights>
+    (otx) ...$ otx predict ... --data_root <path/to/test/root> \
+                               --checkpoint <path/to/model_weights>
+
+To generate saliency maps for explainability (XAI), use the ``--explain True`` parameter:
+
+.. code-block:: shell
+
+    (otx) ...$ otx predict ... --data_root <path/to/test/root> \
+                               --checkpoint <path/to/model_weights> \
+                               --explain True \
+                               --explain_config.postprocess True
+
+.. note::
+
+    For exported OpenVINO™ IR models, make sure the model was exported with ``otx export --explain True`` to include the necessary outputs for XAI functionality.
 
 .. note::
 
     It is possible to pass both PyTorch weights ``.ckpt`` or OpenVINO™ IR ``exported_model.xml`` to ``--checkpoint`` option.
-
-By default, the model is exported to the OpenVINO™ IR format without extra feature information needed for the ``explain`` function. To use OpenVINO™ IR model in ``otx explain``, please first export it with ``--explain`` parameter:
-
-.. code-block:: shell
-
-    (otx) ...$ otx export ... --checkpoint <path/to/trained/weights.ckpt> \
-                              --explain True
-    (otx) ...$ otx explain ... --checkpoint outputs/openvino/with_features \
 
 *******************
 Micro-benchmarking

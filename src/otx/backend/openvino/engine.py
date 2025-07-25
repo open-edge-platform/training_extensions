@@ -270,10 +270,7 @@ class OVEngine(Engine):
             ValueError: If input data is invalid or label information does not match.
             TypeError: If input data type is unsupported.
         """
-        from otx.backend.native.models.utils.xai_utils import (
-            process_saliency_maps_in_pred_entity,
-            set_crop_padded_map_flag,
-        )
+        from otx.backend.native.models.utils.xai_utils import process_saliency_maps_in_pred_entity
 
         model = self._update_checkpoint(checkpoint)
         if isinstance(data, (str, os.PathLike)):
@@ -329,7 +326,6 @@ class OVEngine(Engine):
         if explain and isinstance(datamodule, OTXDataModule):
             if explain_config is None:
                 explain_config = ExplainConfig()
-            explain_config = set_crop_padded_map_flag(explain_config, datamodule)
             predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
 
         return predict_result

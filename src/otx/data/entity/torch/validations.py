@@ -310,17 +310,6 @@ class ValidateBatchMixin:
         """
         if all(saliency_map is None for saliency_map in saliency_map_batch):
             return []
-        # TODO(ashwinvaidya17): use only one dtype. Kept for OV Classification compatibility
-        if not isinstance(saliency_map_batch, list) or not isinstance(
-            saliency_map_batch[0],
-            (torch.Tensor, np.ndarray),
-        ):
-            msg = f"Saliency map batch must be a list of torch tensors. Got {type(saliency_map_batch)}"
-            raise TypeError(msg)
-        # assumes homogeneous data so validation is done only for the first element
-        if isinstance(saliency_map_batch[0], torch.Tensor) and not saliency_map_batch[0].dtype.is_floating_point:
-            msg = f"Saliency map must have a floating point dtype. Got {saliency_map_batch[0].dtype}"
-            raise ValueError(msg)
         return saliency_map_batch
 
     @staticmethod
