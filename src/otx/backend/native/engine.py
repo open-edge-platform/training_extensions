@@ -853,18 +853,19 @@ class OTXEngine(Engine):
             dict[str, Any]: Training arguments for OTXEngine.train method.
 
         Example:
-            >>> engine = OTXEngine.from_model_name(
+            >>> engine, train_kwargs = OTXEngine.from_model_name(
             ...     model_name="atss_mobilenetv2",
             ...     task="DETECTION",
             ...     data_root=<dataset/path>,
             ... )
+            ... engine.train(**train_kwargs)
 
             If you want to override configuration from default config:
                 >>> overriding = {
                 ...     "data.train_subset.batch_size": 2,
                 ...     "data.test_subset.subset_name": "TESTING",
                 ... }
-                >>> engine = OTXEngine(
+                >>> engine, train_kwargs = OTXEngine(
                 ...     model_name="atss_mobilenetv2",
                 ...     task="DETECTION",
                 ...     data_root=<dataset/path>,
