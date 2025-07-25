@@ -127,7 +127,7 @@ def test_predict_with_explain(
         pytest.skip("yolov9 on detection is not supported yet.")
 
     tmp_path = tmp_path / f"otx_xai_{model_name}"
-    engine = OTXEngine.from_config(
+    engine, _ = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,

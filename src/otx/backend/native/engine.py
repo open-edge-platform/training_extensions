@@ -149,7 +149,7 @@ class OTXEngine(Engine):
 
     def train(
         self,
-        max_epochs: int | None = None,
+        max_epochs: int | None = 200,
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
@@ -229,7 +229,6 @@ class OTXEngine(Engine):
                 ```
         """
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -756,7 +755,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> Engine:
+    ) -> tuple(Engine, dict[str, Any]):
         """Builds the engine from a configuration file.
 
         Args:
@@ -769,11 +768,13 @@ class OTXEngine(Engine):
 
         Returns:
             Engine: An instance of the Engine class.
+            dict[str, Any]: Training arguments for OTXEngine.train method.
 
         Example:
-            >>> engine = OTXEngine.from_config(
+            >>> engine, train_kwargs = OTXEngine.from_config(
             ...     config="config.yaml",
             ... )
+            ... engine.train(**train_kwargs)
         """
         from otx.cli.utils.jsonargparse import get_instantiated_classes
 
@@ -825,7 +826,7 @@ class OTXEngine(Engine):
             data=datamodule,
             model=model,
             **engine_kwargs,
-        )
+        ), train_kwargs
 
     @classmethod
     def from_model_name(
@@ -835,7 +836,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> Engine:
+    ) -> tuple(Engine, dict[str, Any]):
         """Builds the engine from a model name.
 
         Args:
@@ -849,6 +850,7 @@ class OTXEngine(Engine):
 
         Returns:
             Engine: An instance of the Engine class.
+            dict[str, Any]: Training arguments for OTXEngine.train method.
 
         Example:
             >>> engine = OTXEngine.from_model_name(
@@ -961,7 +963,7 @@ class OTXEngine(Engine):
             self.work_dir = self._trainer.default_root_dir
 
     def configure_accelerator(self) -> None:
-        """Updates the cache arguments based on the device type."""
+        """Updates the cache arguments based on the device type.""" 
         if self._device.accelerator == DeviceType.xpu:
             self._cache.update(strategy="xpu_single")
             # add plugin for Automatic Mixed Precision on XPU

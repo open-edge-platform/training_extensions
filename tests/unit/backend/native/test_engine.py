@@ -245,7 +245,7 @@ class TestEngine:
             "data.test_subset.subset_name": "TESTING",
         }
 
-        engine = OTXEngine.from_model_name(
+        engine, _ = OTXEngine.from_model_name(
             model_name=model_name,
             data_root=data_root,
             task=task_type,
@@ -258,7 +258,7 @@ class TestEngine:
         assert engine.datamodule.test_subset.subset_name == "TESTING"
 
         with pytest.raises(FileNotFoundError):
-            engine = OTXEngine.from_model_name(
+            engine, _ = OTXEngine.from_model_name(
                 model_name="wrong_model",
                 task=task_type,
                 data_root=data_root,
@@ -275,7 +275,7 @@ class TestEngine:
             "data.test_subset.subset_name": "TESTING",
         }
 
-        engine = OTXEngine.from_config(
+        engine, train_kwargs = OTXEngine.from_config(
             config_path=recipe_path,
             data_root=data_root,
             work_dir=tmp_path,
@@ -285,6 +285,8 @@ class TestEngine:
         assert engine is not None
         assert engine.datamodule.train_subset.batch_size == 3
         assert engine.datamodule.test_subset.subset_name == "TESTING"
+        assert "max_epochs" in train_kwargs
+        assert "callbacks" in train_kwargs
 
     def test_benchmark(self, fxt_engine, mocker: MockerFixture) -> None:
         checkpoint = "path/to/checkpoint.ckpt"

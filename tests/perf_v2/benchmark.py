@@ -144,7 +144,7 @@ class Benchmark:
             float: Total time for training
         """
 
-        engine = self._initialize_engine(
+        engine, train_kwargs = self._initialize_engine(
             model_info=model_info,
             dataset_info=dataset_info,
             work_dir=sub_work_dir / SubCommand.TRAIN.value,
@@ -161,7 +161,8 @@ class Benchmark:
 
         # ======Train======
         start_time = time()
-        engine.train(**kwargs)
+        train_kwargs.update(kwargs)
+        engine.train(**train_kwargs)
         total_time = time() - start_time
         # =================
 
@@ -204,7 +205,7 @@ class Benchmark:
 
         work_dir = sub_work_dir / SubCommand.TEST.value / test_type
         if what2test == RunTestType.TORCH:
-            engine = self._initialize_engine(
+            engine, _ = self._initialize_engine(
                 model_info=model_info,
                 dataset_info=dataset_info,
                 work_dir=work_dir,
@@ -258,7 +259,7 @@ class Benchmark:
         dataset_info: DatasetInfo,
         sub_work_dir: Path,
     ) -> None:
-        engine = self._initialize_engine(
+        engine, _ = self._initialize_engine(
             model_info=model_info,
             dataset_info=dataset_info,
             work_dir=sub_work_dir / SubCommand.EXPORT.value,
@@ -321,7 +322,7 @@ class Benchmark:
         model_info: ModelInfo,
         dataset_info: DatasetInfo,
         work_dir: Path,
-    ) -> OTXEngine:
+    ) -> tuple(OTXEngine, dict[str, Any]):
         """Initialise engine with given model and dataset settings.
 
         Args:
@@ -331,6 +332,7 @@ class Benchmark:
 
         Returns:
             Engine: Initialised engine
+            dict[str, Any]: Training arguments for OTXEngine.train method.
         """
 
         return OTXEngine.from_config(
