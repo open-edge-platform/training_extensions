@@ -1,26 +1,25 @@
 from collections.abc import Callable, Sequence
 
 from app.schemas.configuration import Sink
-from app.schemas.configuration.output_config import DestinationType
+from app.schemas.configuration.output_config import SinkType
 from app.services.dispatchers import Dispatcher, FolderDispatcher, MqttDispatcher
 
 
 class DispatchService:
-    _dispatcher_registry: dict[DestinationType, Callable[[Sink], Dispatcher | None]] = {
-        DestinationType.DISCONNECTED: lambda _: None,
-        DestinationType.FOLDER: lambda config: FolderDispatcher(output_config=config),
-        DestinationType.MQTT: lambda config: MqttDispatcher(output_config=config),
-        DestinationType.DDS: lambda _: _raise_not_implemented("DDS output is not implemented yet"),
-        DestinationType.ROS: lambda _: _raise_not_implemented("ROS output is not implemented yet"),
-        DestinationType.WEBHOOK: lambda _: _raise_not_implemented("WEBHOOK output is not implemented yet"),
+    _dispatcher_registry: dict[SinkType, Callable[[Sink], Dispatcher | None]] = {
+        SinkType.DISCONNECTED: lambda _: None,
+        SinkType.FOLDER: lambda config: FolderDispatcher(output_config=config),
+        SinkType.MQTT: lambda config: MqttDispatcher(output_config=config),
+        SinkType.ROS: lambda _: _raise_not_implemented("ROS output is not implemented yet"),
+        SinkType.WEBHOOK: lambda _: _raise_not_implemented("WEBHOOK output is not implemented yet"),
     }
 
     @classmethod
     def get_destination(cls, output_config: Sink) -> Dispatcher | None:
         # TODO handle exceptions: if some output cannot be initialized, exclude it and raise a warning
-        factory = cls._dispatcher_registry.get(output_config.destination_type)
+        factory = cls._dispatcher_registry.get(output_config.sink_type)
         if factory is None:
-            raise ValueError(f"Unrecognized destination type: {output_config.destination_type}")
+            raise ValueError(f"Unrecognized sink type: {output_config.sink_type}")
 
         return factory(output_config)
 

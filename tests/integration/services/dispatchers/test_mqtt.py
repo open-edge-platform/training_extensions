@@ -47,7 +47,7 @@ def mqtt_config(mqtt_broker) -> MqttOutputConfig:
     """Create MQTT configuration for testing."""
     host, port = mqtt_broker
     return MqttOutputConfig(
-        destination_type="mqtt",
+        sink_type="mqtt",
         broker_host=host,
         broker_port=port,
         topic="topic",
@@ -62,7 +62,7 @@ def mqtt_config_with_auth(mqtt_broker) -> MqttOutputConfig:
     """Create MQTT configuration with authentication."""
     host, port = mqtt_broker
     return MqttOutputConfig(
-        destination_type="mqtt",
+        sink_type="mqtt",
         broker_host=host,
         broker_port=port,
         topic="topic",
@@ -161,7 +161,7 @@ class TestMqttDispatcher:
     def test_connection_failure(self):
         """Test connection failure to invalid broker."""
         config = MqttOutputConfig(
-            destination_type="mqtt",
+            sink_type="mqtt",
             broker_host="invalid_host",
             broker_port=1883,
             topic="topic",

@@ -24,7 +24,7 @@ class BaseOpenCVStream(VideoStream, ABC):
         self.source = source
         self.source_type = source_type
         self.metadata = metadata
-        self.cap: cv2.VideoCapture | None = None
+        self.cap: cv2.VideoCapture
         self._initialize_capture()
 
     def _initialize_capture(self) -> None:

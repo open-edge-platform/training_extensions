@@ -70,7 +70,7 @@ class MqttDispatcher(BaseDispatcher):
         self._connection_lock = threading.Lock()
         self._connection_event = threading.Event()
         self._track_messages = track_messages
-        self._published_messages = []
+        self._published_messages: list[dict] = []
 
         self.client = mqtt_client or self._create_default_client()
         self._connect()

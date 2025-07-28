@@ -4,11 +4,10 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 
-class DestinationType(str, Enum):
+class SinkType(str, Enum):
     DISCONNECTED = "disconnected"
     FOLDER = "folder"
     MQTT = "mqtt"
-    DDS = "dds"
     ROS = "ros"
     WEBHOOK = "webhook"
 
@@ -25,16 +24,16 @@ class BaseOutputConfig(BaseModel):
 
 
 class DisconnectedOutputConfig(BaseOutputConfig):
-    destination_type: Literal[DestinationType.DISCONNECTED] = DestinationType.DISCONNECTED
+    sink_type: Literal[SinkType.DISCONNECTED] = SinkType.DISCONNECTED
 
 
 class FolderOutputConfig(BaseOutputConfig):
-    destination_type: Literal[DestinationType.FOLDER]
+    sink_type: Literal[SinkType.FOLDER]
     folder_path: str
 
 
 class MqttOutputConfig(BaseOutputConfig):
-    destination_type: Literal[DestinationType.MQTT]
+    sink_type: Literal[SinkType.MQTT]
     broker_host: str
     broker_port: int
     topic: str
@@ -42,27 +41,17 @@ class MqttOutputConfig(BaseOutputConfig):
     password: str | None = None
 
 
-class DdsOutputConfig(BaseOutputConfig):
-    destination_type: Literal[DestinationType.DDS]
-    dds_topic: str
-
-
 class RosOutputConfig(BaseOutputConfig):
-    destination_type: Literal[DestinationType.ROS]
+    sink_type: Literal[SinkType.ROS]
     ros_topic: str
 
 
 class WebhookOutputConfig(BaseOutputConfig):
-    destination_type: Literal[DestinationType.WEBHOOK]
+    sink_type: Literal[SinkType.WEBHOOK]
     webhook_url: str
 
 
 Sink = Annotated[
-    DisconnectedOutputConfig
-    | FolderOutputConfig
-    | MqttOutputConfig
-    | DdsOutputConfig
-    | RosOutputConfig
-    | WebhookOutputConfig,
-    Field(discriminator="destination_type"),
+    DisconnectedOutputConfig | FolderOutputConfig | MqttOutputConfig | RosOutputConfig | WebhookOutputConfig,
+    Field(discriminator="sink_type"),
 ]

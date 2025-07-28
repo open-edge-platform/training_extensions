@@ -3,7 +3,7 @@ import multiprocessing as mp
 import pytest
 
 from app.schemas.configuration.input_config import SourceType, WebcamSourceConfig
-from app.schemas.configuration.output_config import DestinationType, MqttOutputConfig
+from app.schemas.configuration.output_config import MqttOutputConfig, SinkType
 from app.services.configuration_service import ConfigurationService
 
 
@@ -17,7 +17,7 @@ def sample_source_config() -> WebcamSourceConfig:
 def sample_sink_config() -> MqttOutputConfig:
     """Sample sink configuration data."""
     return MqttOutputConfig(
-        destination_type=DestinationType.MQTT,
+        sink_type=SinkType.MQTT,
         rate_limit=0.1,
         output_formats=["image_with_predictions"],
         broker_host="localhost",
@@ -39,7 +39,7 @@ class TestConfigurationServiceIntegration:
         assert app_config.input is not None
         assert app_config.output is not None
         assert app_config.input.source_type == SourceType.VIDEO_FILE
-        assert app_config.output.destination_type == DestinationType.FOLDER
+        assert app_config.output.sink_type == SinkType.FOLDER
 
     def test_set_source_success(self, mock_get_db_session, sample_source_config):
         """Test setting source configuration successfully."""

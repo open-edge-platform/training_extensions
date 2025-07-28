@@ -1,3 +1,5 @@
+from typing import Any
+
 from app.db.schema import SourceDB
 from app.schemas.configuration.input_config import (
     ImagesFolderSourceConfig,
@@ -47,7 +49,7 @@ class SourceMapper(BaseMapper):
         if source is None:
             raise ValueError("Source config cannot be None")
 
-        config_data = {}
+        config_data: dict[str, Any] = {}
         match source.source_type:
             case SourceType.VIDEO_FILE:
                 config_data["video_path"] = source.video_path
