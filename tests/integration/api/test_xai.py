@@ -53,7 +53,7 @@ def test_forward_explain(
 
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
-        pytest.skip("rtmdet_tiny on detection is not supported yet.") 
+        pytest.skip("rtmdet_tiny on detection is not supported yet.")
 
     engine, _ = OTXEngine.from_config(
         config_path=recipe,
