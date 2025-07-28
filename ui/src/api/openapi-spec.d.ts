@@ -265,20 +265,6 @@ export interface components {
              */
             bin_file: string;
         };
-        /** DdsOutputConfig */
-        DdsOutputConfig: {
-            /** Output Formats */
-            output_formats: components['schemas']['OutputFormat'][];
-            /** Rate Limit */
-            rate_limit?: number | null;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            destination_type: 'dds';
-            /** Dds Topic */
-            dds_topic: string;
-        };
         /** DisconnectedOutputConfig */
         DisconnectedOutputConfig: {
             /** Output Formats */
@@ -289,7 +275,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            destination_type: 'disconnected';
+            sink_type: 'disconnected';
         };
         /** DisconnectedSourceConfig */
         DisconnectedSourceConfig: {
@@ -309,7 +295,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            destination_type: 'folder';
+            sink_type: 'folder';
             /** Folder Path */
             folder_path: string;
         };
@@ -374,7 +360,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            destination_type: 'mqtt';
+            sink_type: 'mqtt';
             /** Broker Host */
             broker_host: string;
             /** Broker Port */
@@ -401,7 +387,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            destination_type: 'ros';
+            sink_type: 'ros';
             /** Ros Topic */
             ros_topic: string;
         };
@@ -444,7 +430,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            destination_type: 'webhook';
+            sink_type: 'webhook';
             /** Webhook Url */
             webhook_url: string;
         };
@@ -457,7 +443,6 @@ export interface components {
 }
 export type SchemaBody = components['schemas']['Body'];
 export type SchemaBodyAddModelApiModelsPost = components['schemas']['Body_add_model_api_models_post'];
-export type SchemaDdsOutputConfig = components['schemas']['DdsOutputConfig'];
 export type SchemaDisconnectedOutputConfig = components['schemas']['DisconnectedOutputConfig'];
 export type SchemaDisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfig'];
 export type SchemaFolderOutputConfig = components['schemas']['FolderOutputConfig'];
@@ -676,7 +661,6 @@ export interface operations {
                         | components['schemas']['DisconnectedOutputConfig']
                         | components['schemas']['FolderOutputConfig']
                         | components['schemas']['MqttOutputConfig']
-                        | components['schemas']['DdsOutputConfig']
                         | components['schemas']['RosOutputConfig']
                         | components['schemas']['WebhookOutputConfig'];
                 };
@@ -696,7 +680,6 @@ export interface operations {
                     | components['schemas']['DisconnectedOutputConfig']
                     | components['schemas']['FolderOutputConfig']
                     | components['schemas']['MqttOutputConfig']
-                    | components['schemas']['DdsOutputConfig']
                     | components['schemas']['RosOutputConfig']
                     | components['schemas']['WebhookOutputConfig'];
             };

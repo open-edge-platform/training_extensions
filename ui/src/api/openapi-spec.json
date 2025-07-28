@@ -208,18 +208,16 @@
                                         { "$ref": "#/components/schemas/DisconnectedOutputConfig" },
                                         { "$ref": "#/components/schemas/FolderOutputConfig" },
                                         { "$ref": "#/components/schemas/MqttOutputConfig" },
-                                        { "$ref": "#/components/schemas/DdsOutputConfig" },
                                         { "$ref": "#/components/schemas/RosOutputConfig" },
                                         { "$ref": "#/components/schemas/WebhookOutputConfig" }
                                     ],
                                     "title": "Response Get Sink Config Api Outputs Get",
                                     "discriminator": {
-                                        "propertyName": "destination_type",
+                                        "propertyName": "sink_type",
                                         "mapping": {
                                             "disconnected": "#/components/schemas/DisconnectedOutputConfig",
                                             "folder": "#/components/schemas/FolderOutputConfig",
                                             "mqtt": "#/components/schemas/MqttOutputConfig",
-                                            "dds": "#/components/schemas/DdsOutputConfig",
                                             "ros": "#/components/schemas/RosOutputConfig",
                                             "webhook": "#/components/schemas/WebhookOutputConfig"
                                         }
@@ -242,18 +240,16 @@
                                     { "$ref": "#/components/schemas/DisconnectedOutputConfig" },
                                     { "$ref": "#/components/schemas/FolderOutputConfig" },
                                     { "$ref": "#/components/schemas/MqttOutputConfig" },
-                                    { "$ref": "#/components/schemas/DdsOutputConfig" },
                                     { "$ref": "#/components/schemas/RosOutputConfig" },
                                     { "$ref": "#/components/schemas/WebhookOutputConfig" }
                                 ],
                                 "title": "Sink",
                                 "discriminator": {
-                                    "propertyName": "destination_type",
+                                    "propertyName": "sink_type",
                                     "mapping": {
                                         "disconnected": "#/components/schemas/DisconnectedOutputConfig",
                                         "folder": "#/components/schemas/FolderOutputConfig",
                                         "mqtt": "#/components/schemas/MqttOutputConfig",
-                                        "dds": "#/components/schemas/DdsOutputConfig",
                                         "ros": "#/components/schemas/RosOutputConfig",
                                         "webhook": "#/components/schemas/WebhookOutputConfig"
                                     }
@@ -391,21 +387,6 @@
                 "required": ["xml_file", "bin_file"],
                 "title": "Body_add_model_api_models_post"
             },
-            "DdsOutputConfig": {
-                "properties": {
-                    "output_formats": {
-                        "items": { "$ref": "#/components/schemas/OutputFormat" },
-                        "type": "array",
-                        "title": "Output Formats"
-                    },
-                    "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
-                    "destination_type": { "type": "string", "const": "dds", "title": "Destination Type" },
-                    "dds_topic": { "type": "string", "title": "Dds Topic" }
-                },
-                "type": "object",
-                "required": ["output_formats", "destination_type", "dds_topic"],
-                "title": "DdsOutputConfig"
-            },
             "DisconnectedOutputConfig": {
                 "properties": {
                     "output_formats": {
@@ -414,10 +395,10 @@
                         "title": "Output Formats"
                     },
                     "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
-                    "destination_type": {
+                    "sink_type": {
                         "type": "string",
                         "const": "disconnected",
-                        "title": "Destination Type",
+                        "title": "Sink Type",
                         "default": "disconnected"
                     }
                 },
@@ -445,11 +426,11 @@
                         "title": "Output Formats"
                     },
                     "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
-                    "destination_type": { "type": "string", "const": "folder", "title": "Destination Type" },
+                    "sink_type": { "type": "string", "const": "folder", "title": "Sink Type" },
                     "folder_path": { "type": "string", "title": "Folder Path" }
                 },
                 "type": "object",
-                "required": ["output_formats", "destination_type", "folder_path"],
+                "required": ["output_formats", "sink_type", "folder_path"],
                 "title": "FolderOutputConfig"
             },
             "HTTPValidationError": {
@@ -515,7 +496,7 @@
                         "title": "Output Formats"
                     },
                     "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
-                    "destination_type": { "type": "string", "const": "mqtt", "title": "Destination Type" },
+                    "sink_type": { "type": "string", "const": "mqtt", "title": "Sink Type" },
                     "broker_host": { "type": "string", "title": "Broker Host" },
                     "broker_port": { "type": "integer", "title": "Broker Port" },
                     "topic": { "type": "string", "title": "Topic" },
@@ -523,7 +504,7 @@
                     "password": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Password" }
                 },
                 "type": "object",
-                "required": ["output_formats", "destination_type", "broker_host", "broker_port", "topic"],
+                "required": ["output_formats", "sink_type", "broker_host", "broker_port", "topic"],
                 "title": "MqttOutputConfig"
             },
             "OutputFormat": {
@@ -539,11 +520,11 @@
                         "title": "Output Formats"
                     },
                     "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
-                    "destination_type": { "type": "string", "const": "ros", "title": "Destination Type" },
+                    "sink_type": { "type": "string", "const": "ros", "title": "Sink Type" },
                     "ros_topic": { "type": "string", "title": "Ros Topic" }
                 },
                 "type": "object",
-                "required": ["output_formats", "destination_type", "ros_topic"],
+                "required": ["output_formats", "sink_type", "ros_topic"],
                 "title": "RosOutputConfig"
             },
             "ValidationError": {
@@ -586,11 +567,11 @@
                         "title": "Output Formats"
                     },
                     "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
-                    "destination_type": { "type": "string", "const": "webhook", "title": "Destination Type" },
+                    "sink_type": { "type": "string", "const": "webhook", "title": "Sink Type" },
                     "webhook_url": { "type": "string", "title": "Webhook Url" }
                 },
                 "type": "object",
-                "required": ["output_formats", "destination_type", "webhook_url"],
+                "required": ["output_formats", "sink_type", "webhook_url"],
                 "title": "WebhookOutputConfig"
             }
         }

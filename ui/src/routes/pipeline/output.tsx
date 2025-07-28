@@ -17,7 +17,6 @@ import { useNavigate } from 'react-router';
 
 import { $api } from '../../api/client';
 import {
-    SchemaDdsOutputConfig,
     SchemaDisconnectedOutputConfig,
     SchemaFolderOutputConfig,
     SchemaMqttOutputConfig,
@@ -29,47 +28,41 @@ import { paths } from '../../router';
 
 type OutputConfig =
     | SchemaDisconnectedOutputConfig
-    | SchemaDdsOutputConfig
     | SchemaFolderOutputConfig
     | SchemaMqttOutputConfig
     | SchemaWebhookOutputConfig
     | SchemaRosOutputConfig;
 
-type OutputType = OutputConfig['destination_type'];
+type OutputType = OutputConfig['sink_type'];
 
-type ConfigByDestinationType<T extends OutputType> = Extract<OutputConfig, { destination_type: T }>;
+type ConfigBySinkType<T extends OutputType> = Extract<OutputConfig, { sink_type: T }>;
 type OutputFormRecord = {
-    [DestinationTypeKey in OutputType]: ConfigByDestinationType<DestinationTypeKey>;
+    [SinkTypeKey in OutputType]: ConfigBySinkType<SinkTypeKey>;
 };
 const DEFAULT_OUTPUT_FORMS: OutputFormRecord = {
     disconnected: {
-        destination_type: 'disconnected',
+        sink_type: 'disconnected',
         output_formats: [],
     },
     folder: {
-        destination_type: 'folder',
+        sink_type: 'folder',
         folder_path: '',
         output_formats: [],
     },
-    dds: {
-        destination_type: 'dds',
-        dds_topic: '',
-        output_formats: [],
-    },
     mqtt: {
-        destination_type: 'mqtt',
+        sink_type: 'mqtt',
         broker_host: '',
         broker_port: 1883,
         topic: '',
         output_formats: [],
     },
     ros: {
-        destination_type: 'ros',
+        sink_type: 'ros',
         ros_topic: '',
         output_formats: [],
     },
     webhook: {
-        destination_type: 'webhook',
+        sink_type: 'webhook',
         webhook_url: '',
         output_formats: [],
     },
@@ -97,23 +90,6 @@ const ConfigureFolderOutput = ({
             name='folder_path'
             value={output.folder_path}
             onChange={(folder_path) => setOutput({ ...output, folder_path })}
-        />
-    );
-};
-
-const ConfigureDDSOutput = ({
-    output,
-    setOutput,
-}: {
-    output: SchemaDdsOutputConfig;
-    setOutput: (input: SchemaDdsOutputConfig) => void;
-}) => {
-    return (
-        <TextField
-            label='Topic'
-            name='dds_topic'
-            value={output.dds_topic}
-            onChange={(dds_topic) => setOutput({ ...output, dds_topic })}
         />
     );
 };
@@ -206,13 +182,11 @@ const ConfigureOutput = ({
     output: OutputConfig;
     setOutput: (output: OutputConfig) => void;
 }) => {
-    switch (output.destination_type) {
+    switch (output.sink_type) {
         case 'disconnected':
             return <ConfigureDisconnectedOutput output={output} setOutput={setOutput} />;
         case 'folder':
             return <ConfigureFolderOutput output={output} setOutput={setOutput} />;
-        case 'dds':
-            return <ConfigureDDSOutput output={output} setOutput={setOutput} />;
         case 'mqtt':
             return <ConfigureMQTTOutput output={output} setOutput={setOutput} />;
         case 'ros':
@@ -222,35 +196,35 @@ const ConfigureOutput = ({
     }
 };
 
-const Destinations = ({
+const Sinks = ({
     forms,
     setForms,
-    selectedDestinationType,
-    setSelectedDestinationType,
+    selectedSinkType,
+    setSelectedSinkType,
 }: {
     forms: OutputFormRecord;
     setForms: Dispatch<SetStateAction<OutputFormRecord>>;
-    selectedDestinationType: OutputType;
-    setSelectedDestinationType: Dispatch<SetStateAction<OutputType>>;
+    selectedSinkType: OutputType;
+    setSelectedSinkType: Dispatch<SetStateAction<OutputType>>;
 }) => {
     return (
         <View>
             <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)' }} level={2}>
-                Destinations
+                Sinks
             </Heading>
             <RadioDisclosure
-                value={selectedDestinationType}
-                setValue={setSelectedDestinationType}
+                value={selectedSinkType}
+                setValue={setSelectedSinkType}
                 items={OUTPUT_ITEMS.map((item) => {
                     return {
-                        value: item.destination_type,
+                        value: item.sink_type,
                         label: <>{item.name}</>,
                         content: (
                             <ConfigureOutput
-                                output={forms[item.destination_type]}
+                                output={forms[item.sink_type]}
                                 setOutput={(newOutput) => {
                                     setForms((oldOutput) => {
-                                        return { ...oldOutput, [item.destination_type]: newOutput };
+                                        return { ...oldOutput, [item.sink_type]: newOutput };
                                     });
                                 }}
                             />
@@ -263,13 +237,12 @@ const Destinations = ({
 };
 
 const OUTPUT_ITEMS = [
-    { destination_type: 'disconnected', name: 'Disconnected' },
-    { destination_type: 'folder', name: 'Folder path' },
-    { destination_type: 'dds', name: 'DDS message bus' },
-    { destination_type: 'mqtt', name: 'MQTT message bus' },
-    { destination_type: 'ros', name: 'ROS2 message bus' },
-    { destination_type: 'webhook', name: 'Webhook URL' },
-] satisfies Array<{ destination_type: OutputType; name: string }>;
+    { sink_type: 'disconnected', name: 'Disconnected' },
+    { sink_type: 'folder', name: 'Folder path' },
+    { sink_type: 'mqtt', name: 'MQTT message bus' },
+    { sink_type: 'ros', name: 'ROS2 message bus' },
+    { sink_type: 'webhook', name: 'Webhook URL' },
+] satisfies Array<{ sink_type: OutputType; name: string }>;
 
 export const Output = () => {
     const navigate = useNavigate();
@@ -278,12 +251,12 @@ export const Output = () => {
     const outputMutation = $api.useMutation('post', '/api/outputs');
     const currentOutput: OutputConfig = outputs.data;
 
-    const [selectedDestinationType, setSelectedDestinationType] = useState<OutputType>(currentOutput.destination_type);
+    const [selectedSinkType, setSelectedSinkType] = useState<OutputType>(currentOutput.sink_type);
     const [forms, setForms] = useState<OutputFormRecord>(() => {
         if (currentOutput !== undefined) {
             return {
                 ...DEFAULT_OUTPUT_FORMS,
-                [currentOutput.destination_type]: currentOutput,
+                [currentOutput.sink_type]: currentOutput,
             };
         }
 
@@ -294,7 +267,7 @@ export const Output = () => {
         event.preventDefault();
 
         outputMutation.mutateAsync({
-            body: forms[selectedDestinationType],
+            body: forms[selectedSinkType],
         });
 
         navigate(paths.liveFeed.index({}));
@@ -313,11 +286,11 @@ export const Output = () => {
                     integration with your existing workflows and infrastructure.
                 </Text>
 
-                <Destinations
+                <Sinks
                     forms={forms}
                     setForms={setForms}
-                    selectedDestinationType={selectedDestinationType}
-                    setSelectedDestinationType={setSelectedDestinationType}
+                    selectedSinkType={selectedSinkType}
+                    setSelectedSinkType={setSelectedSinkType}
                 />
 
                 <View>
