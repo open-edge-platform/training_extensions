@@ -1,9 +1,29 @@
-import { createNetworkFixture, type NetworkFixture } from '@msw/playwright';
+import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { fromOpenApi } from '@mswjs/source/open-api';
-import { test as base } from '@playwright/test';
-import { http, HttpResponse } from 'msw';
+import { expect, test as testBase } from '@playwright/test';
+import { createOpenApiHttp, OpenApiHttpHandlers } from 'openapi-msw';
 
+import { paths } from '../src/api/openapi-spec';
 import spec from '../src/api/openapi-spec.json' with { type: 'json' };
+
+const getOpenApiHttp = (): OpenApiHttpHandlers<paths> => {
+    const http = createOpenApiHttp<paths>({
+        baseUrl: process.env.PUBLIC_API_BASE_URL ?? 'http://localhost:3000',
+    });
+
+    return {
+        ...http,
+        post: (path, ...other) => {
+            // @ts-expect-error MSW internal parsing function does not accept paths like
+            // `/api/modles/{model_name}:activate`
+            // to get around this we escape the colon character with `\\`
+            // @see https://github.com/mswjs/msw/discussions/739
+            return http.post(path.replace('}:', '}\\:'), ...other);
+        },
+    };
+};
+
+const http = getOpenApiHttp();
 
 const handlers = await fromOpenApi(JSON.stringify(spec).replace('}:', '}//:'));
 
@@ -11,26 +31,29 @@ interface Fixtures {
     network: NetworkFixture;
 }
 
-const defaultHandlers = [
-    ...handlers,
-    http.get('**/api/models', () => {
-        return HttpResponse.json({ models: [{ id: 1, name: 'Test Model' }] });
-    }),
-    http.post('**/webrtc/offer', () => {
-        return HttpResponse.json({
-            sdp: 'test',
-            type: 'answer',
-        });
-    }),
-    http.post('**/webrtc/input_hook', () => {
-        return HttpResponse.json({});
-    }),
-];
-
-export const test = base.extend<Fixtures>({
+const test = testBase.extend<Fixtures>({
     network: createNetworkFixture({
-        initialHandlers: defaultHandlers,
+        initialHandlers: [
+            ...handlers,
+            http.get('/api/system/metrics/memory', ({ response }) => {
+                return response(200).json({});
+            }),
+            http.get('/api/models', ({ response }) => {
+                return response(200).json({
+                    active_model: '1',
+                    available_models: [],
+                });
+            }),
+            http.post('/api/webrtc/offer', ({ response }) => {
+                // Schema is empty, so we return an empty object
+                return response(200).json({} as never);
+            }),
+            http.post('/api/input_hook', ({ response }) => {
+                // Schema is empty, so we return an empty object
+                return response(200).json({} as never);
+            }),
+        ],
     }),
 });
 
-export { expect } from '@playwright/test';
+export { expect, test, http };

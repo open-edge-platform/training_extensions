@@ -276,7 +276,6 @@ export const Output = () => {
 
     const outputs = $api.useSuspenseQuery('get', '/api/outputs');
     const outputMutation = $api.useMutation('post', '/api/outputs');
-
     const currentOutput: OutputConfig = outputs.data;
 
     const [selectedDestinationType, setSelectedDestinationType] = useState<OutputType>(currentOutput.destination_type);
@@ -295,13 +294,7 @@ export const Output = () => {
         event.preventDefault();
 
         outputMutation.mutateAsync({
-            body: {
-                ...forms[selectedDestinationType],
-                output_formats: ['image_original', 'image_with_predictions', 'predictions'] as Array<
-                    'image_original' | 'image_with_predictions' | 'predictions'
-                >,
-                rate_limit: 0.02,
-            },
+            body: forms[selectedDestinationType],
         });
 
         navigate(paths.liveFeed.index({}));
