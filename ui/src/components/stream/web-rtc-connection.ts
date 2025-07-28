@@ -31,6 +31,7 @@ export class WebRTCConnection {
     private dataChannel: RTCDataChannel | undefined;
 
     private listeners: Array<Listener> = [];
+    private timeoutId?: ReturnType<typeof setTimeout>;
 
     constructor() {
         // TODO: replace with uuid
@@ -55,9 +56,9 @@ export class WebRTCConnection {
             return;
         }
 
-        this.setStatus('connecting');
+        this.updateStatus('connecting');
         this.peerConnection = new RTCPeerConnection();
-        const timeoutId = setTimeout(() => {
+        this.timeoutId = setTimeout(() => {
             console.warn('Connection is taking longer than usual. Are you on a VPN?');
         }, CONNECTION_TIMEOUT);
 
@@ -72,12 +73,12 @@ export class WebRTCConnection {
             if (!this.handleOfferResponse(data)) return;
 
             await this.updateConfThreshold(0.5); // Initial confidence threshold
-            this.setupConnectionStateListener(timeoutId);
+            this.setupConnectionStateListener();
         } catch (err) {
-            clearTimeout(timeoutId);
+            clearTimeout(this.timeoutId);
             console.error('Error setting up WebRTC:', err);
             this.emit({ type: 'error', error: err as Error });
-            this.setStatus('failed');
+            this.updateStatus('failed');
             this.stop();
         }
 
@@ -159,7 +160,7 @@ export class WebRTCConnection {
         return true;
     }
 
-    private setupConnectionStateListener(timeoutId: ReturnType<typeof setTimeout>) {
+    private setupConnectionStateListener() {
         if (!this.peerConnection) return;
 
         this.peerConnection.addEventListener('connectionstatechange', () => {
@@ -167,21 +168,21 @@ export class WebRTCConnection {
 
             switch (this.peerConnection.connectionState) {
                 case 'connected':
-                    this.setStatus('connected');
-                    clearTimeout(timeoutId);
+                    this.updateStatus('connected');
+                    clearTimeout(this.timeoutId);
                     break;
                 case 'disconnected':
-                    this.setStatus('disconnected');
+                    this.updateStatus('disconnected');
                     break;
                 case 'failed':
-                    this.setStatus('failed');
+                    this.updateStatus('failed');
                     this.emit({ type: 'error', error: new Error('WebRTC connection failed.') });
                     break;
                 case 'closed':
-                    this.setStatus('disconnected');
+                    this.updateStatus('disconnected');
                     break;
                 default:
-                    this.setStatus('connecting');
+                    this.updateStatus('connecting');
                     break;
             }
         });
@@ -192,27 +193,19 @@ export class WebRTCConnection {
             return;
         }
 
-        if (this.peerConnection.getTransceivers) {
-            const transceivers = this.peerConnection.getTransceivers();
+        const transceivers = this.peerConnection.getTransceivers();
 
-            if (transceivers.length > 0) {
-                transceivers.forEach((transceiver) => {
-                    if (transceiver.stop) {
-                        transceiver.stop();
-                    }
-                });
+        transceivers.forEach((transceiver) => {
+            if (transceiver.stop) {
+                transceiver.stop();
             }
-        }
+        });
 
-        if (this.peerConnection.getSenders) {
-            const senders = this.peerConnection.getSenders();
+        const senders = this.peerConnection.getSenders();
 
-            if (senders.length > 0) {
-                this.peerConnection.getSenders().forEach((sender) => {
-                    if (sender.track && sender.track.stop) sender.track.stop();
-                });
-            }
-        }
+        senders.forEach((sender) => {
+            if (sender.track && sender.track.stop) sender.track.stop();
+        });
 
         // Give a brief moment for tracks to stop before closing the connection
         await new Promise<void>((resolve) =>
@@ -220,7 +213,7 @@ export class WebRTCConnection {
                 if (this.peerConnection) {
                     this.peerConnection.close();
                     this.peerConnection = undefined;
-                    this.setStatus('idle');
+                    this.updateStatus('idle');
                 }
 
                 resolve();
@@ -246,7 +239,7 @@ export class WebRTCConnection {
         this.listeners.forEach((listener) => listener(event));
     }
 
-    private setStatus(newStatus: WebRTCConnectionStatus) {
+    private updateStatus(newStatus: WebRTCConnectionStatus) {
         if (this.status !== newStatus) {
             this.status = newStatus;
             this.emit({ type: 'status_change', status: newStatus });

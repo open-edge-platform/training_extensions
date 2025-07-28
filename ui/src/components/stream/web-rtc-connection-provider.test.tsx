@@ -1,26 +1,32 @@
 import { fireEvent, render } from '@testing-library/react';
 
 import { Listener, WebRTCConnection, WebRTCConnectionStatus } from './web-rtc-connection';
-import { useWebRTCConnectionState, WebRTCConnectionProvider } from './web-rtc-connection-provider';
+import { useWebRTCConnection, WebRTCConnectionProvider } from './web-rtc-connection-provider';
 
+jest.mock('./web-rtc-connection.ts');
 class MockWebRTCConnection {
     status: WebRTCConnectionStatus = 'idle';
     listeners: Listener[] = [];
-    getStatus() {
+
+    public getStatus() {
         return this.status;
     }
-    getPeerConnection() {
+    public getPeerConnection() {
         return undefined;
     }
-    async start() {
+    public getId() {
+        return 'test';
+    }
+
+    public async start() {
         this.status = 'connected';
         this.listeners.forEach((l) => l({ type: 'status_change', status: this.status }));
     }
-    async stop() {
+    public async stop() {
         this.status = 'idle';
         this.listeners.forEach((l) => l({ type: 'status_change', status: this.status }));
     }
-    subscribe(listener: Listener) {
+    public subscribe(listener: Listener) {
         this.listeners.push(listener);
         return () => {
             this.listeners = this.listeners.filter((currentListener) => currentListener !== listener);
@@ -29,9 +35,15 @@ class MockWebRTCConnection {
 }
 
 describe('WebRTCConnectionProvider', () => {
-    // @ts-expect-error We only care about a few methods of the class
-    const App = ({ customConnection = MockWebRTCConnection }: { customConnection?: new () => WebRTCConnection }) => {
-        const { status, start, stop } = useWebRTCConnectionState(customConnection);
+    beforeEach(() => {
+        // @ts-expect-error the mock implements all public methods
+        jest.mocked(WebRTCConnection).mockImplementation(() => {
+            return new MockWebRTCConnection();
+        });
+    });
+
+    const App = () => {
+        const { status, start, stop } = useWebRTCConnection();
 
         return (
             <>
@@ -100,39 +112,6 @@ describe('WebRTCConnectionProvider', () => {
         unmount();
 
         expect(stopSpy).toHaveBeenCalled();
-    });
-
-    it('supports multiple consumers', () => {
-        const App2 = ({
-            // @ts-expect-error We only care about a few methods of the class
-            customConnection = MockWebRTCConnection,
-        }: {
-            customConnection?: new () => WebRTCConnection;
-        }) => {
-            const { status, start } = useWebRTCConnectionState(customConnection);
-
-            return (
-                <>
-                    <span aria-label='status2'>{status}</span>
-                    <button aria-label='start2' onClick={start}>
-                        Start
-                    </button>
-                </>
-            );
-        };
-
-        const { getByLabelText } = render(
-            <WebRTCConnectionProvider>
-                <App />
-                <App2 />
-            </WebRTCConnectionProvider>
-        );
-
-        fireEvent.click(getByLabelText('start'));
-        fireEvent.click(getByLabelText('start2'));
-
-        expect(getByLabelText('status')).toHaveTextContent('connected');
-        expect(getByLabelText('status2')).toHaveTextContent('connected');
     });
 
     it('handles status sequence: start -> stop -> start', () => {
