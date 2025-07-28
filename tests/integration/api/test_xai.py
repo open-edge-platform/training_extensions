@@ -48,21 +48,14 @@ def test_forward_explain(
     model_name = recipe_split[-1].split(".")[0]
     task = recipe_split[-2]
 
-    if "maskdino" in model_name:
-        # TODO(Eugene): maskdino not support yet.
-        pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
-
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
-        pytest.skip("rtmdet_tiny on detection is not supported yet.")
+        pytest.skip("rtmdet_tiny on detection is not supported yet.") 
 
-    if "yolov9" in recipe:
-        pytest.skip("yolov9 on detection is not supported yet.")
-
-    engine = OTXEngine.from_config(
+    engine, _ = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
@@ -111,10 +104,6 @@ def test_predict_with_explain(
     if "dino" in model_name:
         pytest.skip("DINO is not supported.")
 
-    if "maskdino" in model_name:
-        # TODO(Eugene): maskdino not support yet.
-        pytest.skip(f"There's issue with inst-seg: {model_name}. Skip for now.")
-
     if "rtmdet_tiny" in recipe:
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
         pytest.skip("rtmdet_tiny on detection is not supported yet.")
@@ -122,9 +111,6 @@ def test_predict_with_explain(
     if "yolox_tiny_tile" in recipe:
         # TODO (Galina): required to update model-api to 2.1
         pytest.skip("yolox_tiny_tile on detection requires model-api update")
-
-    if "yolov9" in recipe:
-        pytest.skip("yolov9 on detection is not supported yet.")
 
     tmp_path = tmp_path / f"otx_xai_{model_name}"
     engine, _ = OTXEngine.from_config(
