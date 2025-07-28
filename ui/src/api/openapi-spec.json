@@ -84,7 +84,7 @@
                 }
             }
         },
-        "/api/models/{model_name}\\:activate": {
+        "/api/models/{model_name}:activate": {
             "post": {
                 "summary": "Activate Model",
                 "description": "Activate a model",
@@ -115,9 +115,9 @@
         },
         "/api/inputs": {
             "get": {
-                "summary": "Get Input Configuration",
+                "summary": "Get Source Config",
                 "description": "Get the current input stream configuration.",
-                "operationId": "get_input_configuration_api_inputs_get",
+                "operationId": "get_source_config_api_inputs_get",
                 "responses": {
                     "200": {
                         "description": "Successful Response",
@@ -131,7 +131,7 @@
                                         { "$ref": "#/components/schemas/VideoFileSourceConfig" },
                                         { "$ref": "#/components/schemas/ImagesFolderSourceConfig" }
                                     ],
-                                    "title": "Response Get Input Configuration Api Inputs Get",
+                                    "title": "Response Get Source Config Api Inputs Get",
                                     "discriminator": {
                                         "propertyName": "source_type",
                                         "mapping": {
@@ -149,9 +149,9 @@
                 }
             },
             "post": {
-                "summary": "Configure Input Stream",
+                "summary": "Configure Source",
                 "description": "Configure the input stream for the application.",
-                "operationId": "configure_input_stream_api_inputs_post",
+                "operationId": "configure_source_api_inputs_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -163,7 +163,7 @@
                                     { "$ref": "#/components/schemas/VideoFileSourceConfig" },
                                     { "$ref": "#/components/schemas/ImagesFolderSourceConfig" }
                                 ],
-                                "title": "Input Config",
+                                "title": "Source",
                                 "discriminator": {
                                     "propertyName": "source_type",
                                     "mapping": {
@@ -195,53 +195,15 @@
         },
         "/api/outputs": {
             "get": {
-                "summary": "Get Output Configurations",
+                "summary": "Get Sink Config",
                 "description": "Get the current output configurations.",
-                "operationId": "get_output_configurations_api_outputs_get",
+                "operationId": "get_sink_config_api_outputs_get",
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "items": {
-                                        "oneOf": [
-                                            { "$ref": "#/components/schemas/DisconnectedOutputConfig" },
-                                            { "$ref": "#/components/schemas/FolderOutputConfig" },
-                                            { "$ref": "#/components/schemas/MqttOutputConfig" },
-                                            { "$ref": "#/components/schemas/DdsOutputConfig" },
-                                            { "$ref": "#/components/schemas/RosOutputConfig" },
-                                            { "$ref": "#/components/schemas/WebhookOutputConfig" }
-                                        ],
-                                        "discriminator": {
-                                            "propertyName": "destination_type",
-                                            "mapping": {
-                                                "disconnected": "#/components/schemas/DisconnectedOutputConfig",
-                                                "folder": "#/components/schemas/FolderOutputConfig",
-                                                "mqtt": "#/components/schemas/MqttOutputConfig",
-                                                "dds": "#/components/schemas/DdsOutputConfig",
-                                                "ros": "#/components/schemas/RosOutputConfig",
-                                                "webhook": "#/components/schemas/WebhookOutputConfig"
-                                            }
-                                        }
-                                    },
-                                    "type": "array",
-                                    "title": "Response Get Output Configurations Api Outputs Get"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "summary": "Configure Outputs",
-                "description": "Configure the destination(s) for the application output.",
-                "operationId": "configure_outputs_api_outputs_post",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "items": {
                                     "oneOf": [
                                         { "$ref": "#/components/schemas/DisconnectedOutputConfig" },
                                         { "$ref": "#/components/schemas/FolderOutputConfig" },
@@ -250,6 +212,7 @@
                                         { "$ref": "#/components/schemas/RosOutputConfig" },
                                         { "$ref": "#/components/schemas/WebhookOutputConfig" }
                                     ],
+                                    "title": "Response Get Sink Config Api Outputs Get",
                                     "discriminator": {
                                         "propertyName": "destination_type",
                                         "mapping": {
@@ -261,9 +224,40 @@
                                             "webhook": "#/components/schemas/WebhookOutputConfig"
                                         }
                                     }
-                                },
-                                "type": "array",
-                                "title": "Outputs"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Configure Sink",
+                "description": "Configure the destination(s) for the application output.",
+                "operationId": "configure_sink_api_outputs_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    { "$ref": "#/components/schemas/DisconnectedOutputConfig" },
+                                    { "$ref": "#/components/schemas/FolderOutputConfig" },
+                                    { "$ref": "#/components/schemas/MqttOutputConfig" },
+                                    { "$ref": "#/components/schemas/DdsOutputConfig" },
+                                    { "$ref": "#/components/schemas/RosOutputConfig" },
+                                    { "$ref": "#/components/schemas/WebhookOutputConfig" }
+                                ],
+                                "title": "Sink",
+                                "discriminator": {
+                                    "propertyName": "destination_type",
+                                    "mapping": {
+                                        "disconnected": "#/components/schemas/DisconnectedOutputConfig",
+                                        "folder": "#/components/schemas/FolderOutputConfig",
+                                        "mqtt": "#/components/schemas/MqttOutputConfig",
+                                        "dds": "#/components/schemas/DdsOutputConfig",
+                                        "ros": "#/components/schemas/RosOutputConfig",
+                                        "webhook": "#/components/schemas/WebhookOutputConfig"
+                                    }
+                                }
                             }
                         }
                     },
@@ -420,16 +414,27 @@
                         "title": "Output Formats"
                     },
                     "rate_limit": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Rate Limit" },
-                    "destination_type": { "type": "string", "const": "disconnected", "title": "Destination Type" }
+                    "destination_type": {
+                        "type": "string",
+                        "const": "disconnected",
+                        "title": "Destination Type",
+                        "default": "disconnected"
+                    }
                 },
                 "type": "object",
-                "required": ["output_formats", "destination_type"],
+                "required": ["output_formats"],
                 "title": "DisconnectedOutputConfig"
             },
             "DisconnectedSourceConfig": {
-                "properties": { "source_type": { "type": "string", "const": "disconnected", "title": "Source Type" } },
+                "properties": {
+                    "source_type": {
+                        "type": "string",
+                        "const": "disconnected",
+                        "title": "Source Type",
+                        "default": "disconnected"
+                    }
+                },
                 "type": "object",
-                "required": ["source_type"],
                 "title": "DisconnectedSourceConfig"
             },
             "FolderOutputConfig": {
@@ -471,10 +476,11 @@
             "ImagesFolderSourceConfig": {
                 "properties": {
                     "source_type": { "type": "string", "const": "images_folder", "title": "Source Type" },
-                    "images_folder_path": { "type": "string", "title": "Images Folder Path" }
+                    "images_folder_path": { "type": "string", "title": "Images Folder Path" },
+                    "ignore_existing_images": { "type": "boolean", "title": "Ignore Existing Images" }
                 },
                 "type": "object",
-                "required": ["source_type", "images_folder_path"],
+                "required": ["source_type", "images_folder_path", "ignore_existing_images"],
                 "title": "ImagesFolderSourceConfig"
             },
             "InputData": {

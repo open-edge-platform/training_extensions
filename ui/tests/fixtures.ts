@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 
 import spec from '../src/api/openapi-spec.json' with { type: 'json' };
 
-const handlers = await fromOpenApi(JSON.stringify(spec));
+const handlers = await fromOpenApi(JSON.stringify(spec).replace('}:', '}//:'));
 
 interface Fixtures {
     network: NetworkFixture;

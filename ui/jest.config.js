@@ -13,17 +13,17 @@ export default {
                     'ts-jest',
                     {
                         diagnostics: {
-                            ignoreCodes: [1343]
+                            ignoreCodes: [1343],
                         },
                         astTransformers: {
                             before: [
                                 {
                                     path: 'ts-jest-mock-import-meta',
-                                    options: { metaObjectReplacement: { url: 'some-url', env: 'some-env' } }
-                                }
-                            ]
-                        }
-                    }
+                                    options: { metaObjectReplacement: { url: 'some-url', env: 'some-env' } },
+                                },
+                            ],
+                        },
+                    },
                 ],
                 ...sharedConfig.transform,
             },

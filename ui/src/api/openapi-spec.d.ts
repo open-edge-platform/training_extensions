@@ -76,16 +76,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Input Configuration
+         * Get Source Config
          * @description Get the current input stream configuration.
          */
-        get: operations['get_input_configuration_api_inputs_get'];
+        get: operations['get_source_config_api_inputs_get'];
         put?: never;
         /**
-         * Configure Input Stream
+         * Configure Source
          * @description Configure the input stream for the application.
          */
-        post: operations['configure_input_stream_api_inputs_post'];
+        post: operations['configure_source_api_inputs_post'];
         delete?: never;
         options?: never;
         head?: never;
@@ -100,16 +100,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Output Configurations
+         * Get Sink Config
          * @description Get the current output configurations.
          */
-        get: operations['get_output_configurations_api_outputs_get'];
+        get: operations['get_sink_config_api_outputs_get'];
         put?: never;
         /**
-         * Configure Outputs
+         * Configure Sink
          * @description Configure the destination(s) for the application output.
          */
-        post: operations['configure_outputs_api_outputs_post'];
+        post: operations['configure_sink_api_outputs_post'];
         delete?: never;
         options?: never;
         head?: never;
@@ -342,6 +342,8 @@ export interface components {
             source_type: 'images_folder';
             /** Images Folder Path */
             images_folder_path: string;
+            /** Ignore Existing Images */
+            ignore_existing_images: boolean;
         };
         /** InputData */
         InputData: {
@@ -592,7 +594,7 @@ export interface operations {
             };
         };
     };
-    get_input_configuration_api_inputs_get: {
+    get_source_config_api_inputs_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -617,7 +619,7 @@ export interface operations {
             };
         };
     };
-    configure_input_stream_api_inputs_post: {
+    configure_source_api_inputs_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -655,7 +657,7 @@ export interface operations {
             };
         };
     };
-    get_output_configurations_api_outputs_get: {
+    get_sink_config_api_outputs_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -670,19 +672,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    'application/json': (
+                    'application/json':
                         | components['schemas']['DisconnectedOutputConfig']
                         | components['schemas']['FolderOutputConfig']
                         | components['schemas']['MqttOutputConfig']
                         | components['schemas']['DdsOutputConfig']
                         | components['schemas']['RosOutputConfig']
-                        | components['schemas']['WebhookOutputConfig']
-                    )[];
+                        | components['schemas']['WebhookOutputConfig'];
                 };
             };
         };
     };
-    configure_outputs_api_outputs_post: {
+    configure_sink_api_outputs_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -691,14 +692,13 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': (
+                'application/json':
                     | components['schemas']['DisconnectedOutputConfig']
                     | components['schemas']['FolderOutputConfig']
                     | components['schemas']['MqttOutputConfig']
                     | components['schemas']['DdsOutputConfig']
                     | components['schemas']['RosOutputConfig']
-                    | components['schemas']['WebhookOutputConfig']
-                )[];
+                    | components['schemas']['WebhookOutputConfig'];
             };
         };
         responses: {

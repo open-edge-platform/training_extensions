@@ -17,6 +17,9 @@ const compat = new FlatCompat({
 });
 
 export default [
+    {
+        ignores: [...sharedEslintConfig[0].ignores, 'src/api/openapi-spec.d.ts'],
+    },
     ...sharedEslintConfig,
     {
         rules: {

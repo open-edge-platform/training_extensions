@@ -276,7 +276,8 @@ export const Output = () => {
 
     const outputs = $api.useSuspenseQuery('get', '/api/outputs');
     const outputMutation = $api.useMutation('post', '/api/outputs');
-    const currentOutput: OutputConfig = outputs.data.at(0) ?? { destination_type: 'disconnected', output_formats: [] };
+
+    const currentOutput: OutputConfig = outputs.data;
 
     const [selectedDestinationType, setSelectedDestinationType] = useState<OutputType>(currentOutput.destination_type);
     const [forms, setForms] = useState<OutputFormRecord>(() => {
@@ -294,14 +295,13 @@ export const Output = () => {
         event.preventDefault();
 
         outputMutation.mutateAsync({
-            body: [
-                {
-                    ...forms[selectedDestinationType],
-                    // TODO: handle extra fields
-                    output_formats: ['image_original', 'image_with_predictions', 'predictions'],
-                    rate_limit: 0.02,
-                },
-            ],
+            body: {
+                ...forms[selectedDestinationType],
+                output_formats: ['image_original', 'image_with_predictions', 'predictions'] as Array<
+                    'image_original' | 'image_with_predictions' | 'predictions'
+                >,
+                rate_limit: 0.02,
+            },
         });
 
         navigate(paths.liveFeed.index({}));

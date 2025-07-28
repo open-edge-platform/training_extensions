@@ -42,6 +42,7 @@ const DEFAULT_INPUT_FORMS: InputFormRecord = {
     images_folder: {
         source_type: 'images_folder',
         images_folder_path: '',
+        ignore_existing_images: false,
     },
     ip_camera: {
         source_type: 'ip_camera',
@@ -134,8 +135,8 @@ const ConfigureIpCameraInput = ({
 }) => {
     return (
         <TextField
-            label='Device URL'
-            name='device_url'
+            label='Stream URL'
+            name='stream_url'
             value={input.stream_url}
             onChange={(stream_url) => setInput({ ...input, stream_url })}
         />
