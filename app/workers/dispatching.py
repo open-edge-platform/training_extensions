@@ -42,6 +42,10 @@ def dispatching_routine(
             logger.debug("Nothing to dispatch yet")
             continue
 
+        if stream_data.inference_data is None:
+            logger.error("Missing inference data in stream_data; skipping dispatch")
+            continue
+
         image_with_visualization = stream_data.inference_data.visualized_prediction
         prediction = stream_data.inference_data.prediction
         # Postprocess and dispatch results

@@ -28,7 +28,7 @@ from fastapi.responses import HTMLResponse
 from fastrtc import AdditionalOutputs, Stream
 from pydantic import BaseModel, Field
 
-from app.api.endpoints import configuration, model_management, system
+from app.api.endpoints import configuration, models, pipelines, sinks, sources, system
 from app.utils.ipc import (
     frame_queue,
     mp_config_changed_condition,
@@ -113,14 +113,18 @@ app.add_middleware(  # TODO restrict settings in production
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(model_management.router)
+
+app.include_router(sources.router)
+app.include_router(sinks.router)
+app.include_router(pipelines.router)
+app.include_router(models.router)
 app.include_router(configuration.router)
 app.include_router(system.router)
 
 cur_dir = Path(__file__).parent
 
 
-@app.get("/api/docs")
+@app.get("/api/docs", include_in_schema=False)
 async def get_scalar_docs() -> HTMLResponse:
     """Shows docs for our OpenAPI specification using scalar"""
     async with await anyio.open_file(cur_dir / "scalar.html") as file:
@@ -133,6 +137,7 @@ class InputData(BaseModel):
     conf_threshold: float = Field(ge=0, le=1)
 
 
+# TODO remove this endpoint, make sure the UI does not require it
 @app.post("/api/input_hook", tags=["webrtc"])
 async def webrtc_input_hook(data: InputData) -> None:
     """Update webrtc input for user"""
