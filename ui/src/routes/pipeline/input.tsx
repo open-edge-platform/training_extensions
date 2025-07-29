@@ -261,6 +261,7 @@ export const Input = () => {
             </View>
             <Form gridArea={'form'} onSubmit={onSubmit}>
                 <RadioDisclosure
+                    ariaLabel={'Select your input source'}
                     value={selectedSourceType}
                     setValue={setSelectedSourceType}
                     items={INPUT_ITEMS.map((item) => {

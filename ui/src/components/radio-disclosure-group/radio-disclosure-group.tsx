@@ -8,6 +8,7 @@ export const RadioDisclosure = <ValueType extends string>({
     value,
     setValue,
     items,
+    ariaLabel,
 }: {
     value: ValueType;
     setValue: (value: ValueType) => void;
@@ -16,6 +17,7 @@ export const RadioDisclosure = <ValueType extends string>({
         label: ReactNode;
         content: ReactNode;
     }>;
+    ariaLabel?: string;
 }) => {
     return (
         <RadioGroup
@@ -24,6 +26,7 @@ export const RadioDisclosure = <ValueType extends string>({
             onChange={(newValue) => {
                 setValue(newValue as ValueType);
             }}
+            aria-label={ariaLabel}
             value={value}
         >
             <Flex direction='column' gap='size-200' minWidth={'size-6000'}>

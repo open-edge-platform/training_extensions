@@ -60,7 +60,7 @@ export const EditPipelineLayout = () => {
             height='100%'
             width='100%'
         >
-            <View marginX='auto' paddingY='size-900'>
+            <View marginX='auto' paddingY='size-800'>
                 <View UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
                     <WizardTabs
                         selectedKey={pathname}

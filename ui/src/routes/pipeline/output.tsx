@@ -214,6 +214,7 @@ const Sinks = ({
             </Heading>
             <RadioDisclosure
                 value={selectedSinkType}
+                ariaLabel={'Select the type of sink'}
                 setValue={setSelectedSinkType}
                 items={OUTPUT_ITEMS.map((item) => {
                     return {

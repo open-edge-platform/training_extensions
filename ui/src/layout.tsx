@@ -20,13 +20,21 @@ const Header = () => {
                         '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)',
                     }}
                 >
-                    <Item key={paths.liveFeed.index({})} href={paths.liveFeed.index({})}>
+                    <Item
+                        textValue='"Live feed page showing live inference on your pipeline'
+                        key={paths.liveFeed.index({})}
+                        href={paths.liveFeed.index({})}
+                    >
                         <Flex alignItems='center' gap='size-100'>
                             <LiveFeedIcon />
                             Livefeed
                         </Flex>
                     </Item>
-                    <Item key={paths.dataCollection.index({})} href={paths.dataCollection.index({})}>
+                    <Item
+                        textValue='Data collection page to visualise your media items'
+                        key={paths.dataCollection.index({})}
+                        href={paths.dataCollection.index({})}
+                    >
                         <Flex alignItems='center' gap='size-100'>
                             <BuildIcon />
                             Data collection
@@ -60,13 +68,13 @@ export const Layout = () => {
                 <Header />
                 <View backgroundColor={'gray-50'} gridArea={'content'}>
                     <TabPanels height={'100%'} UNSAFE_style={{ border: 'none' }}>
-                        <Item key={paths.pipeline.index({})}>
+                        <Item textValue='index' key={paths.pipeline.index({})}>
                             <Outlet />
                         </Item>
-                        <Item key={paths.liveFeed.index({})}>
+                        <Item textValue='live-feed' key={paths.liveFeed.index({})}>
                             <Outlet />
                         </Item>
-                        <Item key={paths.dataCollection.index({})}>
+                        <Item textValue='data-collection' key={paths.dataCollection.index({})}>
                             <Outlet />
                         </Item>
                     </TabPanels>
