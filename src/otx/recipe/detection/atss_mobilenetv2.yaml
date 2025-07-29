@@ -58,7 +58,6 @@ callbacks:
 
 overrides:
   gradient_clip_val: 35.0
-  max_epochs: 90
 
   data:
     train_subset:
