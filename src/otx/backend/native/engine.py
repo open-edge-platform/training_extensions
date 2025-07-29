@@ -185,6 +185,7 @@ class OTXEngine(Engine):
             adaptive_bs (Literal["None", "Safe", "Full"]):
                 Change the actual batch size depending on the current GPU status.
                 Safe => Prevent GPU out of memory. Full => Find a batch size using most of GPU memory.
+                Defaults to "None".
             check_val_every_n_epoch (int | None, optional): How often to check validation. Defaults to 1.
             num_sanity_val_steps (int | None, optional): Number of validation steps to run before training starts.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.

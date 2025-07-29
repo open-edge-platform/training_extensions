@@ -511,6 +511,8 @@ class GetiConfigConverter:
         instantiated_kwargs = engine_parser.instantiate_classes(Namespace(**config))
 
         train_kwargs = {k: v for k, v in instantiated_kwargs.items() if k in train_arguments}
+        # enable auto batch size for training
+        train_kwargs["adaptive_bs"] = "Safe"
 
         return engine, train_kwargs
 
