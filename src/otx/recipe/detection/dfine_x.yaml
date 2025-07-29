@@ -4,7 +4,7 @@ model:
   init_args:
     model_name: dfine_hgnetv2_x
     label_info: 80
-    multi_scale: true
+    multi_scale: false
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -38,6 +38,10 @@ callbacks:
       min_lrschedule_patience: 3
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
+      mode: max
+      patience: 10
+      check_on_train_epoch_end: false
+      min_delta: 0.001
       warmup_iters: 100
       warmup_epochs: 7
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint

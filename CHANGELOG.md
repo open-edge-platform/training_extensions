@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### New features
+
+- Add DoRA support for ViT classification model (DINOv2 and DeIT)
+  (https://github.com/open-edge-platform/training_extensions/pull/4466)
+
 ### Enhancements
 
 - Bump OV and NNCF to 2025.2

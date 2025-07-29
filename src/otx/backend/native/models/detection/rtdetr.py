@@ -71,9 +71,11 @@ class RTDETR(OTXDetectionModel):
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
+        multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
+        self.multi_scale = multi_scale
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -108,6 +110,7 @@ class RTDETR(OTXDetectionModel):
         ]
 
         model = DETR(
+            multi_scale=self.multi_scale,
             backbone=backbone,
             encoder=encoder,
             decoder=decoder,

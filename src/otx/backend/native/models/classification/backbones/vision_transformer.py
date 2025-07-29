@@ -24,9 +24,13 @@ from timm.layers import (
     trunc_normal_,
 )
 from timm.models._manipulate import adapt_input_conv
-from timm.models.vision_transformer import Attention, Block
+from timm.models.vision_transformer import Block
 from torch import nn
 
+from otx.backend.native.models.classification.utils.peft import (
+    AttentionWithDoRA,
+    AttentionWithLoRA,
+)
 from otx.backend.native.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
@@ -68,7 +72,7 @@ class VisionTransformer(BaseModule):
         act_layer: MLP activation layer.
         block_fn: Transformer block layer.
         interpolate_offset: work-around offset to apply when interpolating positional embeddings
-        lora: Enable LoRA training.
+        peft: Selects PEFT method ("lora" or "dora")
     """
 
     model_zoo: ClassVar[dict[str, dict[str, Any]]] = {
@@ -215,7 +219,7 @@ class VisionTransformer(BaseModule):
         act_layer: LayerType | None = None,
         norm_layer: LayerType | None = None,
         interpolate_offset: float = 0.1,
-        lora: bool = False,
+        peft: Literal["lora", "dora"] | None = None,
     ) -> None:
         super().__init__()
         if isinstance(model_name, str):
@@ -301,24 +305,32 @@ class VisionTransformer(BaseModule):
 
         self.norm = norm_layer(self.embed_dim)
 
-        self.lora = lora
-        if self.lora:
+        self.peft = peft
+        if self.peft is not None:
+            if self.peft not in ["lora", "dora"]:
+                msg = f"Unsupported `peft` value '{self.peft}', please choose from 'lora' or 'dora'."
+                raise ValueError(msg)
+
+            attention_func = AttentionWithLoRA if self.peft == "lora" else AttentionWithDoRA
+            target_attrs = ["lora_q", "lora_v"] if self.peft == "lora" else ["dora_q", "dora_v"]
+
             lora_rank = 8
             lora_alpha = 1.0
-            assign_lora = partial(AttentionWithLoRA, rank=lora_rank, alpha=lora_alpha)
-            for block in self.blocks:
-                block.attn.qkv = assign_lora(block.attn.qkv)
 
-            # Freeze all params
+            # Apply PEFT to all blocks
+            for block in self.blocks:
+                block.attn.qkv = attention_func(block.attn.qkv, rank=lora_rank, alpha=lora_alpha)
+
+            # Freeze all parameters
             for param in self.parameters():
                 param.requires_grad = False
 
-            # Unfreeze LoRA layers
+            # Unfreeze PEFT layers
             for block in self.blocks:
-                for param in block.attn.qkv.lora_q.parameters():
-                    param.requires_grad = True
-                for param in block.attn.qkv.lora_v.parameters():
-                    param.requires_grad = True
+                for attr_name in target_attrs:
+                    peft_layer = getattr(block.attn.qkv, attr_name)
+                    for param in peft_layer.parameters():
+                        param.requires_grad = True
 
     def init_weights(self) -> None:
         """Initializes the weights of the VisionTransformer."""
@@ -702,7 +714,7 @@ class VisionTransformer(BaseModule):
                 mha_prefix = block_prefix + f"MultiHeadDotProductAttention_{mha_sub}/"
                 block.norm1.weight.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/scale"], idx=idx))
                 block.norm1.bias.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/bias"], idx=idx))
-                if not self.lora:
+                if self.peft != "lora":
                     block.attn.qkv.weight.copy_(
                         torch.cat(
                             [
@@ -747,36 +759,3 @@ class VisionTransformer(BaseModule):
                     getattr(block.mlp, f"fc{r + 1}").bias.copy_(
                         _n2p(w[f"{block_prefix}MlpBlock_{b_sub}/Dense_{r}/bias"], idx=idx),
                     )
-
-
-class LoRALayer(torch.nn.Module):
-    """LoRA layer implementation for computing A, B composition."""
-
-    def __init__(self, in_dim: int, out_dim: int, rank: int, alpha: float):
-        super().__init__()
-        std = torch.sqrt(torch.tensor(rank).float())
-        self.A = torch.nn.Parameter(torch.randn(in_dim, rank) / std)
-        self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))
-        self.alpha = alpha
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the LoRA layer."""
-        return self.alpha * (x @ self.A @ self.B)
-
-
-class AttentionWithLoRA(torch.nn.Module):
-    """Add LoRA layer into QKV attention layer in VisionTransformer."""
-
-    def __init__(self, qkv: Attention, rank: int, alpha: float):
-        super().__init__()
-        self.qkv = qkv
-        self.dim = qkv.in_features
-        self.lora_q = LoRALayer(self.dim, self.dim, rank, alpha)
-        self.lora_v = LoRALayer(self.dim, self.dim, rank, alpha)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the AttentionWithLoRA."""
-        qkv = self.qkv(x)
-        qkv[:, :, : self.dim] += self.lora_q(x)
-        qkv[:, :, -self.dim :] += self.lora_v(x)
-        return qkv

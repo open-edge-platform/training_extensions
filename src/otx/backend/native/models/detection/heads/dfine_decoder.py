@@ -500,7 +500,7 @@ class DFINETransformerModule(nn.Module):
             hidden_dim=2 * hidden_dim,
             output_dim=hidden_dim,
             num_layers=2,
-            activation=partial(nn.ReLU, inplace=True),
+            activation=partial(activation, inplace=True),
         )
 
         # encoder head
@@ -518,7 +518,7 @@ class DFINETransformerModule(nn.Module):
             hidden_dim=hidden_dim,
             output_dim=4,
             num_layers=3,
-            activation=partial(nn.ReLU, inplace=True),
+            activation=partial(activation, inplace=True),
         )
 
         # decoder head
@@ -532,7 +532,7 @@ class DFINETransformerModule(nn.Module):
                     hidden_dim=hidden_dim,
                     output_dim=4 * (self.reg_max + 1),
                     num_layers=3,
-                    activation=partial(nn.ReLU, inplace=True),
+                    activation=partial(activation, inplace=True),
                 )
                 for _ in range(num_decoder_layers)
             ],
@@ -542,14 +542,16 @@ class DFINETransformerModule(nn.Module):
             hidden_dim=hidden_dim,
             output_dim=4,
             num_layers=3,
-            activation=partial(nn.ReLU, inplace=True),
+            activation=partial(activation, inplace=True),
         )
 
         self.integral = Integral(self.reg_max)
 
         # init encoder output anchors and valid_mask
         if self.eval_spatial_size:
-            self.anchors, self.valid_mask = self._generate_anchors()
+            anchors, valid_mask = self._generate_anchors()
+            self.register_buffer("anchors", anchors)
+            self.register_buffer("valid_mask", valid_mask)
 
         self._reset_parameters(feat_channels)
 
@@ -823,6 +825,8 @@ class DFINETransformerModule(nn.Module):
             attn_mask=attn_mask,
         )
 
+        out_bboxes = out_bboxes.clamp(min=1e-8)
+
         if self.training and dn_meta is not None:
             dn_pre_logits, pre_logits = torch.split(pre_logits, dn_meta["dn_num_split"], dim=1)
             dn_pre_bboxes, pre_bboxes = torch.split(pre_bboxes, dn_meta["dn_num_split"], dim=1)
@@ -949,6 +953,42 @@ class DFINETransformer:
             "reg_scale": 8.0,
             "eval_idx": -1,
             "eval_spatial_size": [640, 640],
+        },
+        "deim_dfine_hgnetv2_n": {
+            "feat_channels": [128, 128],
+            "feat_strides": [16, 32],
+            "hidden_dim": 128,
+            "dim_feedforward": 512,
+            "num_levels": 2,
+            "num_decoder_layers": 3,
+            "eval_idx": -1,
+            "num_points_list": [6, 6],
+            "eval_spatial_size": [640, 640],
+            "activation": nn.SiLU,
+        },
+        "deim_dfine_hgnetv2_s": {
+            "feat_channels": [256, 256, 256],
+            "num_decoder_layers": 3,
+            "eval_idx": -1,
+            "eval_spatial_size": [640, 640],
+            "num_points_list": [3, 6, 3],
+            "activation": nn.SiLU,
+        },
+        "deim_dfine_hgnetv2_m": {
+            "num_decoder_layers": 4,
+            "eval_idx": -1,
+            "eval_spatial_size": [640, 640],
+            "activation": nn.SiLU,
+        },
+        "deim_dfine_hgnetv2_l": {
+            "activation": nn.SiLU,
+        },
+        "deim_dfine_hgnetv2_x": {
+            "feat_channels": [384, 384, 384],
+            "reg_scale": 8.0,
+            "eval_idx": -1,
+            "eval_spatial_size": [640, 640],
+            "activation": nn.SiLU,
         },
     }
 

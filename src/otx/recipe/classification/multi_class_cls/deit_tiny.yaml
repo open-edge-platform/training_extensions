@@ -4,7 +4,6 @@ model:
   init_args:
     label_info: 1000
     model_name: "vit-tiny"
-    lora: false
 
     optimizer:
       class_path: torch.optim.AdamW

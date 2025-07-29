@@ -60,14 +60,11 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
         model_name: str = "vit-tiny",
-        lora: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-        self.lora = lora
-
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -96,7 +93,6 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         vit_backbone = VisionTransformer(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
-            lora=self.lora,
         )
         model = ImageClassifier(
             backbone=vit_backbone,
