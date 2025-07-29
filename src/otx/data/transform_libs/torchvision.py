@@ -1065,14 +1065,14 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             Defaults to 10.
         max_translate_ratio (float): Maximum ratio of translation.
             Defaults to 0.1.
-        scaling_ratio_range (tuple[float]): Min and max ratio of
+        scaling_ratio_range (tuple[float, float]): Min and max ratio of
             scaling transform. Defaults to (0.5, 1.5).
         max_shear_degree (float): Maximum degrees of shear
             transform. Defaults to 2.
-        border (tuple[int]): Distance from height and width sides of input
+        border (tuple[int, int]): Distance from height and width sides of input
             image to adjust output shape. Only used in mosaic dataset.
             Defaults to (0, 0).
-        border_val (tuple[int]): Border padding values of 3 channels.
+        border_val (tuple[int, int, int]): Border padding values of 3 channels.
             Defaults to (114, 114, 114).
         bbox_clip_border (bool, optional): Whether to clip the objects outside
             the border of the image. In some dataset like MOT17, the gt bboxes
@@ -1099,9 +1099,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         is_numpy_to_tvtensor: bool = False,
     ) -> None:
         super().__init__()
-        assert 0 <= max_translate_ratio <= 1  # noqa: S101
-        assert scaling_ratio_range[0] <= scaling_ratio_range[1]  # noqa: S101
-        assert scaling_ratio_range[0] > 0  # noqa: S101
+        self._validate_parameters(max_translate_ratio, scaling_ratio_range)
 
         self.max_rotate_degree = max_rotate_degree
         self.max_translate_ratio = max_translate_ratio
@@ -1115,141 +1113,327 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.mask_fill_value = mask_fill_value
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
+    @staticmethod
+    def _validate_parameters(max_translate_ratio: float, scaling_ratio_range: tuple[float, float]) -> None:
+        """Validate input parameters."""
+        if not 0 <= max_translate_ratio <= 1:
+            msg = f"max_translate_ratio must be between 0 and 1, got {max_translate_ratio}"
+            raise ValueError(msg)
+        if scaling_ratio_range[0] > scaling_ratio_range[1]:
+            msg = f"scaling_ratio_range[0] must be <= scaling_ratio_range[1], got {scaling_ratio_range}"
+            raise ValueError(msg)
+        if scaling_ratio_range[0] <= 0:
+            msg = f"scaling_ratio_range[0] must be > 0, got {scaling_ratio_range[0]}"
+            raise ValueError(msg)
+
     @cache_randomness
     def _get_random_homography_matrix(self, height: int, width: int) -> np.ndarray:
-        # Rotation
+        """Generate random homography matrix for affine transformation.
+
+        Args:
+            height (int): Image height including border.
+            width (int): Image width including border.
+
+        Returns:
+            np.ndarray: 3x3 homography matrix.
+        """
+        # Generate transformation parameters
         rotation_degree = random.uniform(-self.max_rotate_degree, self.max_rotate_degree)
-        rotation_matrix = self._get_rotation_matrix(rotation_degree)
-
-        # Scaling
         scaling_ratio = random.uniform(self.scaling_ratio_range[0], self.scaling_ratio_range[1])
-        scaling_matrix = self._get_scaling_matrix(scaling_ratio)
-
-        # Shear
-        x_degree = random.uniform(-self.max_shear_degree, self.max_shear_degree)
-        y_degree = random.uniform(-self.max_shear_degree, self.max_shear_degree)
-        shear_matrix = self._get_shear_matrix(x_degree, y_degree)
-
-        # Translation
+        x_shear_degree = random.uniform(-self.max_shear_degree, self.max_shear_degree)
+        y_shear_degree = random.uniform(-self.max_shear_degree, self.max_shear_degree)
         trans_x = random.uniform(-self.max_translate_ratio, self.max_translate_ratio) * width
         trans_y = random.uniform(-self.max_translate_ratio, self.max_translate_ratio) * height
+
+        # Create transformation matrices
+        rotation_matrix = self._get_rotation_matrix(rotation_degree)
+        scaling_matrix = self._get_scaling_matrix(scaling_ratio)
+        shear_matrix = self._get_shear_matrix(x_shear_degree, y_shear_degree)
         translate_matrix = self._get_translation_matrix(trans_x, trans_y)
 
+        # Combine transformations: T * Sh * R * S
         return translate_matrix @ shear_matrix @ rotation_matrix @ scaling_matrix
 
-    def forward(self, *_inputs: OTXDataItem) -> OTXDataItem | None:
-        """Forward for RandomAffine."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
+    def forward(self, inputs: OTXDataItem) -> OTXDataItem:
+        """Forward pass of RandomAffine transform.
 
-        img: np.ndarray = to_np_image(inputs.image)
-        height = img.shape[0] + self.border[0] * 2
-        width = img.shape[1] + self.border[1] * 2
+        Args:
+            inputs: Input data containing image and annotations.
 
-        warp_matrix = self._get_random_homography_matrix(height, width)
+        Returns:
+            Transformed data item or original input if no valid annotations remain.
 
-        img = cv2.warpPerspective(img, warp_matrix, dsize=(width, height), borderValue=self.border_val)
-        inputs.image = img
-        inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+        Raises:
+            ValueError: If inputs format is invalid.
+        """
+        _inputs = self.extract(inputs)
+        if len(_inputs) != 1:
+            msg = f"RandomAffine can only transform single input, got {len(_inputs)}"
+            raise ValueError(msg)
 
-        # Handle bboxes first to get valid_index for filtering other annotations
-        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
-            bboxes = project_bboxes(bboxes, warp_matrix)
-            if self.bbox_clip_border:
-                bboxes = clip_bboxes(bboxes, (height, width))
-            # remove outside bbox
-            valid_index = is_inside_bboxes(bboxes, (height, width))
-            inputs.bboxes = tv_tensors.BoundingBoxes(bboxes[valid_index], format="XYXY", canvas_size=(height, width))  # type: ignore[union-attr]
-            inputs.label = inputs.label[valid_index]  # type: ignore[union-attr,index]
+        data_item = _inputs[0]
 
-            # Transform masks - filter first, then transform for efficiency
-            if self.transform_mask and (masks := getattr(inputs, "masks", None)) is not None and len(masks) > 0:
-                # Filter masks using valid_index first to avoid unnecessary computation
-                masks = masks[valid_index]
-                masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
-                if isinstance(masks, np.ndarray) and masks.ndim == 3:
-                    masks = list(masks)
+        # Check if there are any transformable objects at all
+        has_bboxes = hasattr(data_item, "bboxes") and data_item.bboxes is not None and len(data_item.bboxes) > 0
+        has_masks = hasattr(data_item, "masks") and data_item.masks is not None and len(data_item.masks) > 0
+        has_polygons = hasattr(data_item, "polygons") and data_item.polygons is not None and len(data_item.polygons) > 0
 
-                # Smart mask warping: binary masks get 255/127 treatment, others use INTER_NEAREST
-                transformed_masks = []
-                for mask in masks:
-                    unique_values = np.unique(mask)
-                    if len(unique_values) <= 2 and np.max(unique_values) <= 1:
-                        # Binary mask: use 255/127 approach for cleaner results
-                        warped_mask = (
-                            cv2.warpPerspective(
-                                mask.astype(np.uint8) * 255,
-                                warp_matrix,
-                                dsize=(width, height),
-                                borderValue=0,  # Always 0 for binary masks to avoid artifacts
-                            )
-                            > 127
-                        )
-                    else:
-                        # Multi-class mask: use INTER_NEAREST to preserve discrete values
-                        warped_mask = cv2.warpPerspective(
-                            mask.astype(np.uint8),
-                            warp_matrix,
-                            dsize=(width, height),
-                            borderValue=self.mask_fill_value,  # Use configurable fill value
-                            flags=cv2.INTER_NEAREST,
-                        )
-                    transformed_masks.append(warped_mask)
-                masks = np.stack(transformed_masks).astype(np.uint8)
-                inputs.masks = tv_tensors.Mask(torch.from_numpy(masks > 0).to(torch.bool))
+        # If no transformable objects exist, skip the entire transformation
+        if not (has_bboxes or has_masks or has_polygons):
+            return self.convert(inputs)  # type: ignore[return-value]
 
-            # Transform polygons - filter first, then use project_polygons for clean implementation
-            if (
-                self.transform_polygon
-                and (polygons := getattr(inputs, "polygons", None)) is not None
-                and len(polygons) > 0
-            ):
-                # Filter polygons using valid_index first to avoid unnecessary computation
-                filtered_polygons = [p for p, keep in zip(polygons, valid_index) if keep]
-                # Use existing project_polygons function for clean, tested implementation
-                inputs.polygons = project_polygons(filtered_polygons, warp_matrix, (height, width))
+        # Get random homography matrix for affine transformation
+        height, width = data_item.img.shape[:2]
+        homography_matrix = self._get_random_homography_matrix(height, width)
+        output_shape = (height + self.border[0] * 2, width + self.border[1] * 2)
 
-        return self.convert(inputs)
+        if has_bboxes:
+            # Test transform bboxes to see if any remain valid
+            valid_index = self._transform_bboxes(data_item, homography_matrix, output_shape)
+            # If no valid annotations will remain after transformation, skip entirely
+            if not valid_index.any():
+                return self.convert(inputs)  # type: ignore[return-value]
 
-    def __repr__(self):
-        repr_str = self.__class__.__name__
-        repr_str += f"(max_rotate_degree={self.max_rotate_degree}, "
-        repr_str += f"max_translate_ratio={self.max_translate_ratio}, "
-        repr_str += f"scaling_ratio_range={self.scaling_ratio_range}, "
-        repr_str += f"max_shear_degree={self.max_shear_degree}, "
-        repr_str += f"border={self.border}, "
-        repr_str += f"border_val={self.border_val}, "
-        repr_str += f"bbox_clip_border={self.bbox_clip_border}, "
-        repr_str += f"transform_mask={self.transform_mask}, "
-        repr_str += f"transform_polygon={self.transform_polygon}, "
-        repr_str += f"mask_fill_value={self.mask_fill_value}, "
-        repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
-        return repr_str
+            # If we reach here, transformation will produce valid results, so proceed
+            # Transform image
+            transformed_img = self._warp_image(data_item.img, homography_matrix)
+            data_item.img = transformed_img
+
+            if has_masks:
+                self._transform_masks(data_item, homography_matrix, output_shape, valid_index)
+
+            if has_polygons:
+                self._transform_polygons(data_item, homography_matrix, output_shape, valid_index)
+
+        return self.convert(inputs)  # type: ignore[return-value]
+
+    def _transform_bboxes(
+        self,
+        inputs: OTXDataItem,
+        warp_matrix: np.ndarray,
+        output_shape: tuple[int, int],
+    ) -> np.ndarray:
+        """Transform bounding boxes and return valid indices.
+
+        Args:
+            inputs: Input data item.
+            warp_matrix: Transformation matrix.
+            output_shape: Output image shape (height, width).
+
+        Returns:
+            np.ndarray: Boolean array indicating valid bboxes.
+        """
+        bboxes = project_bboxes(inputs.bboxes, warp_matrix)
+
+        if self.bbox_clip_border:
+            bboxes = clip_bboxes(bboxes, output_shape)
+
+        # Get valid indices and filter
+        valid_index = is_inside_bboxes(bboxes, output_shape)
+
+        if valid_index.any():
+            inputs.bboxes = tv_tensors.BoundingBoxes(
+                bboxes[valid_index],
+                format="XYXY",
+                canvas_size=output_shape,
+            )
+            inputs.label = inputs.label[valid_index]  # type: ignore[index]
+
+        return valid_index
+
+    def _transform_masks(
+        self,
+        inputs: OTXDataItem,
+        warp_matrix: np.ndarray,
+        output_size: tuple[int, int],
+        valid_index: np.ndarray,
+    ) -> None:
+        """Transform masks using the warp matrix.
+
+        Args:
+            inputs: Input data item.
+            warp_matrix: Transformation matrix.
+            output_size: Output size (width, height).
+            valid_index: Boolean array indicating valid objects.
+        """
+        if not self.transform_mask or not hasattr(inputs, "masks") or inputs.masks is None or len(inputs.masks) == 0:
+            return
+
+        # Filter masks using valid_index first
+        masks = inputs.masks[valid_index]
+        masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
+
+        if masks.ndim == 3:
+            masks = list(masks)
+
+        transformed_masks = []
+        for mask in masks:
+            transformed_mask = self._warp_single_mask(mask, warp_matrix, output_size)
+            transformed_masks.append(transformed_mask)
+
+        if transformed_masks:
+            masks_array = np.stack(transformed_masks).astype(np.uint8)
+            inputs.masks = tv_tensors.Mask(torch.from_numpy(masks_array > 0).to(torch.bool))
+
+    def _warp_single_mask(self, mask: np.ndarray, warp_matrix: np.ndarray, output_size: tuple[int, int]) -> np.ndarray:
+        """Warp a single mask using appropriate interpolation.
+
+        Args:
+            mask: Input mask.
+            warp_matrix: Transformation matrix.
+            output_size: Output size (width, height).
+
+        Returns:
+            np.ndarray: Warped mask.
+        """
+        unique_values = np.unique(mask)
+
+        # Binary mask: use 255/127 threshold for cleaner results
+        if len(unique_values) <= 2 and np.max(unique_values) <= 1:
+            warped_mask = cv2.warpPerspective(
+                mask.astype(np.uint8) * 255,
+                warp_matrix,
+                dsize=output_size,
+                borderValue=0,
+            )
+            return warped_mask > 127
+
+        # Multi-class mask: use nearest neighbor to preserve discrete values
+        return cv2.warpPerspective(
+            mask.astype(np.uint8),
+            warp_matrix,
+            dsize=output_size,
+            borderValue=self.mask_fill_value,
+            flags=cv2.INTER_NEAREST,
+        )
+
+    def _transform_polygons(
+        self,
+        inputs: OTXDataItem,
+        warp_matrix: np.ndarray,
+        output_shape: tuple[int, int],
+        valid_index: np.ndarray,
+    ) -> None:
+        """Transform polygons using the warp matrix.
+
+        Args:
+            inputs: Input data item.
+            warp_matrix: Transformation matrix.
+            output_shape: Output shape (height, width).
+            valid_index: Boolean array indicating valid objects.
+        """
+        if (
+            not self.transform_polygon
+            or not hasattr(inputs, "polygons")
+            or inputs.polygons is None
+            or len(inputs.polygons) == 0
+        ):
+            return
+
+        # Filter polygons using valid_index
+        filtered_polygons = [p for p, keep in zip(inputs.polygons, valid_index) if keep]
+
+        if filtered_polygons:
+            inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
+
+    def __repr__(self) -> str:
+        """Return string representation of the transform."""
+        params = [
+            f"max_rotate_degree={self.max_rotate_degree}",
+            f"max_translate_ratio={self.max_translate_ratio}",
+            f"scaling_ratio_range={self.scaling_ratio_range}",
+            f"max_shear_degree={self.max_shear_degree}",
+            f"border={self.border}",
+            f"border_val={self.border_val}",
+            f"bbox_clip_border={self.bbox_clip_border}",
+            f"transform_mask={self.transform_mask}",
+            f"transform_polygon={self.transform_polygon}",
+            f"mask_fill_value={self.mask_fill_value}",
+            f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor}",
+        ]
+        return f"{self.__class__.__name__}({', '.join(params)})"
 
     @staticmethod
     def _get_rotation_matrix(rotate_degrees: float) -> np.ndarray:
+        """Create rotation transformation matrix.
+
+        Args:
+            rotate_degrees: Rotation angle in degrees.
+
+        Returns:
+            np.ndarray: 3x3 rotation matrix.
+        """
         radian = math.radians(rotate_degrees)
+        cos_val, sin_val = np.cos(radian), np.sin(radian)
         return np.array(
-            [[np.cos(radian), -np.sin(radian), 0.0], [np.sin(radian), np.cos(radian), 0.0], [0.0, 0.0, 1.0]],
+            [
+                [cos_val, -sin_val, 0.0],
+                [sin_val, cos_val, 0.0],
+                [0.0, 0.0, 1.0],
+            ],
             dtype=np.float32,
         )
 
     @staticmethod
     def _get_scaling_matrix(scale_ratio: float) -> np.ndarray:
-        return np.array([[scale_ratio, 0.0, 0.0], [0.0, scale_ratio, 0.0], [0.0, 0.0, 1.0]], dtype=np.float32)
+        """Create scaling transformation matrix.
+
+        Args:
+            scale_ratio: Scaling factor.
+
+        Returns:
+            np.ndarray: 3x3 scaling matrix.
+        """
+        return np.array(
+            [
+                [scale_ratio, 0.0, 0.0],
+                [0.0, scale_ratio, 0.0],
+                [0.0, 0.0, 1.0],
+            ],
+            dtype=np.float32,
+        )
 
     @staticmethod
     def _get_shear_matrix(x_shear_degrees: float, y_shear_degrees: float) -> np.ndarray:
+        """Create shear transformation matrix.
+
+        Args:
+            x_shear_degrees: Shear angle in x direction (degrees).
+            y_shear_degrees: Shear angle in y direction (degrees).
+
+        Returns:
+            np.ndarray: 3x3 shear matrix.
+        """
         x_radian = math.radians(x_shear_degrees)
         y_radian = math.radians(y_shear_degrees)
         return np.array(
-            [[1, np.tan(x_radian), 0.0], [np.tan(y_radian), 1, 0.0], [0.0, 0.0, 1.0]],
+            [
+                [1, np.tan(x_radian), 0.0],
+                [np.tan(y_radian), 1, 0.0],
+                [0.0, 0.0, 1.0],
+            ],
             dtype=np.float32,
         )
 
     @staticmethod
     def _get_translation_matrix(x: float, y: float) -> np.ndarray:
-        return np.array([[1, 0.0, x], [0.0, 1, y], [0.0, 0.0, 1.0]], dtype=np.float32)
+        """Create translation transformation matrix.
+
+        Args:
+            x: Translation in x direction.
+            y: Translation in y direction.
+
+        Returns:
+            np.ndarray: 3x3 translation matrix.
+        """
+        return np.array(
+            [
+                [1, 0.0, x],
+                [0.0, 1, y],
+                [0.0, 0.0, 1.0],
+            ],
+            dtype=np.float32,
+        )
 
 
 class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):

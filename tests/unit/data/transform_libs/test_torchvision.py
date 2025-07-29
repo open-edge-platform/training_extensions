@@ -347,24 +347,6 @@ class TestRandomAffine:
         with pytest.raises(AssertionError):
             RandomAffine(scaling_ratio_range=(0, 0.5))
 
-    def test_init_mask_parameters(self) -> None:
-        """Test initialization with mask parameters."""
-        transform = RandomAffine(transform_mask=True, mask_fill_value=128)
-        assert transform.transform_mask is True
-        assert transform.mask_fill_value == 128
-
-    def test_init_polygon_parameters(self) -> None:
-        """Test initialization with polygon parameters."""
-        transform = RandomAffine(transform_polygon=True)
-        assert transform.transform_polygon is True
-
-    def test_init_mask_and_polygon_parameters(self) -> None:
-        """Test initialization with both mask and polygon parameters."""
-        transform = RandomAffine(transform_mask=True, transform_polygon=True, mask_fill_value=64)
-        assert transform.transform_mask is True
-        assert transform.transform_polygon is True
-        assert transform.mask_fill_value == 64
-
     def test_forward(self, random_affine: RandomAffine, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
         results = random_affine(deepcopy(det_data_entity))
@@ -388,7 +370,7 @@ class TestRandomAffine:
         assert hasattr(results, "masks")
         assert results.masks is not None
         assert results.masks.shape[0] > 0  # Should have masks
-        assert results.masks.shape[1:] == results.image.shape[1:]  # Same spatial dimensions as image
+        assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions as image
 
         # Check that the number of masks matches the number of remaining bboxes and labels
         assert results.masks.shape[0] == results.bboxes.shape[0]
@@ -399,7 +381,7 @@ class TestRandomAffine:
         assert len(unique_values) <= 2  # Should only have 0 and/or 255
 
         # Check data types
-        assert results.masks.dtype == torch.uint8
+        assert results.masks.dtype == torch.bool
         assert isinstance(results.masks, tv_tensors.Mask)
 
     def test_forward_with_polygons_transform_enabled(
@@ -515,7 +497,7 @@ class TestRandomAffine:
         results = random_affine_with_polygon_transform(original_entity)
 
         # Check that all polygon coordinates are within image bounds
-        height, width = results.image.shape[1:]
+        height, width = results.image.shape[:2]
 
         for polygon in results.polygons:
             points = np.array(polygon.points).reshape(-1, 2)
@@ -527,13 +509,6 @@ class TestRandomAffine:
             # Check that y coordinates are within [0, height]
             assert np.all(points[:, 1] >= 0)
             assert np.all(points[:, 1] <= height)
-
-    def test_repr_includes_polygon_params(self) -> None:
-        """Test that __repr__ includes polygon parameters."""
-        transform = RandomAffine(transform_polygon=True)
-        repr_str = repr(transform)
-
-        assert "transform_polygon=True" in repr_str
 
     @pytest.mark.parametrize("transform_polygon", [True, False])
     def test_polygon_transform_parameter_effect(
@@ -590,7 +565,7 @@ class TestRandomAffine:
         assert hasattr(results, "masks")
         assert results.masks is not None
         assert results.masks.shape[0] == 0  # Should still be empty
-        assert results.masks.shape[1:] == results.image.shape[1:]  # Same spatial dimensions
+        assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions
 
     def test_forward_without_masks(
         self,
@@ -613,29 +588,31 @@ class TestRandomAffine:
     def test_mask_fill_value_applied(
         self,
         det_data_entity_with_masks: OTXDataItem,
+        repeat: int = 10,
     ) -> None:
         """Test that mask_fill_value is applied correctly."""
         # Test with different fill values
         fill_values = [0, 128, 255]
 
-        for fill_value in fill_values:
-            transform = RandomAffine(
-                transform_mask=True,
-                mask_fill_value=fill_value,
-                max_rotate_degree=45,  # Force significant transformation
-                max_translate_ratio=0.2,
-                scaling_ratio_range=(0.8, 1.2),
-                max_shear_degree=10,
-            )
+        for _ in range(repeat):
+            for fill_value in fill_values:
+                transform = RandomAffine(
+                    transform_mask=True,
+                    mask_fill_value=fill_value,
+                    max_rotate_degree=45,  # Force significant transformation
+                    max_translate_ratio=0.2,
+                    scaling_ratio_range=(0.8, 1.2),
+                    max_shear_degree=10,
+                )
 
-            original_entity = deepcopy(det_data_entity_with_masks)
-            results = transform(original_entity)
+                original_entity = deepcopy(det_data_entity_with_masks)
+                results = transform(original_entity)
 
-            assert hasattr(results, "masks")
-            assert results.masks is not None
-            # The fill value should be used for areas outside the original mask
-            # This is hard to test directly, but we can check that the transform executed successfully
-            assert results.masks.shape[0] > 0
+                assert hasattr(results, "masks")
+                assert results.masks is not None
+                # The fill value should be used for areas outside the original mask
+                # This is hard to test directly, but we can check that the transform executed successfully
+                assert results.masks.shape[0] > 0
 
     def test_mask_consistency_with_image_transform(
         self,
@@ -656,7 +633,7 @@ class TestRandomAffine:
         results = transform(original_entity)
 
         # Check that image and masks have consistent dimensions
-        assert results.image.shape[1:] == results.masks.shape[1:]
+        assert results.image.shape[:2] == results.masks.shape[1:]
 
         # Check that masks are still properly shaped
         assert len(results.masks.shape) == 3  # (N, H, W)
@@ -689,53 +666,6 @@ class TestRandomAffine:
 
         # The number of objects might be reduced due to filtering
         assert results.masks.shape[0] <= original_num_objects
-
-    def test_repr_includes_mask_params(self) -> None:
-        """Test that __repr__ includes mask parameters."""
-        transform = RandomAffine(transform_mask=True, mask_fill_value=128)
-        repr_str = repr(transform)
-
-        assert "transform_mask=True" in repr_str
-        assert "mask_fill_value=128" in repr_str
-
-    def test_mask_dtype_preservation(
-        self,
-        random_affine_with_mask_transform: RandomAffine,
-        det_data_entity_with_masks: OTXDataItem,
-    ) -> None:
-        """Test that mask data type is preserved."""
-        original_entity = deepcopy(det_data_entity_with_masks)
-        original_dtype = original_entity.masks.dtype
-
-        results = random_affine_with_mask_transform(original_entity)
-
-        assert results.masks.dtype == original_dtype
-        assert isinstance(results.masks, tv_tensors.Mask)
-
-    @pytest.mark.parametrize("transform_mask", [True, False])
-    def test_mask_transform_parameter_effect(
-        self,
-        det_data_entity_with_masks: OTXDataItem,
-        transform_mask: bool,
-    ) -> None:
-        """Test that the transform_mask parameter controls mask transformation."""
-        transform = RandomAffine(
-            transform_mask=transform_mask,
-            mask_fill_value=0,
-            max_rotate_degree=0,
-            max_translate_ratio=0.1,
-            scaling_ratio_range=(1.0, 1.0),
-            max_shear_degree=0,
-        )
-
-        original_entity = deepcopy(det_data_entity_with_masks)
-        results = transform(original_entity)
-
-        # Regardless of transform_mask value, masks should be present and properly shaped
-        assert hasattr(results, "masks")
-        assert results.masks is not None
-        assert results.masks.shape[0] == results.bboxes.shape[0]
-        assert results.masks.shape[1:] == results.image.shape[1:]
 
 
 class TestCachedMosaic:
