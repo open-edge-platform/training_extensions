@@ -134,7 +134,6 @@ class OTXEngine(Engine):
 
         self._model: OTXModel = model
         self.task = self._model.task
-
         self.checkpoint = checkpoint
         if self.checkpoint:
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
@@ -962,25 +961,15 @@ class OTXEngine(Engine):
 
     def _apply_param_overrides(self, param_kwargs: dict[str, Any]) -> dict[str, Any]:
         """Apply parameter overrides based on the current local variables."""
-        result = {}
         sig = inspect.signature(self.train)
 
         for param_name, param in sig.parameters.items():
             if param_name not in {"self", "kwargs"} and param_name in param_kwargs:
                 current_value = param_kwargs[param_name]
                 # Apply override if current value matches default and we have an override
-                if (
-                    param.default != inspect.Parameter.empty
-                    and current_value == param.default
-                    and param_name in self._cache.args
-                ):
-                    result[param_name] = self._cache.args[param_name]
-                else:
-                    result[param_name] = current_value
-                    if param_name in self._cache.args:
-                        # If the parameter is overridden, update the cache
-                        self._cache.args[param_name] = current_value
-        return result
+                if (current_value != param.default) or (param_name not in self._cache.args):
+                    self._cache.args[param_name] = current_value
+        return self._cache.args
 
     def configure_accelerator(self) -> None:
         """Updates the cache arguments based on the device type."""
