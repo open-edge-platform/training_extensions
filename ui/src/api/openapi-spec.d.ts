@@ -4,6 +4,323 @@
  */
 
 export interface paths {
+    '/api/sources': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sources
+         * @description List the available sources
+         */
+        get: operations['list_sources_api_sources_get'];
+        put?: never;
+        /**
+         * Create Source
+         * @description Create and configure a new source
+         */
+        post: operations['create_source_api_sources_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/sources/{source_id}': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Source
+         * @description Get info about a source
+         */
+        get: operations['get_source_api_sources__source_id__get'];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Source
+         * @description Remove a source
+         */
+        delete: operations['delete_source_api_sources__source_id__delete'];
+        options?: never;
+        head?: never;
+        /**
+         * Update Source
+         * @description Reconfigure an existing source
+         */
+        patch: operations['update_source_api_sources__source_id__patch'];
+        trace?: never;
+    };
+    '/api/sources/{source_id}:export': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Source
+         * @description Export a source to file
+         */
+        post: operations['export_source_api_sources__source_id__export_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/sources:import': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Source
+         * @description Import a source from file
+         */
+        post: operations['import_source_api_sources_import_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/sinks': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sinks
+         * @description List the available sinks
+         */
+        get: operations['list_sinks_api_sinks_get'];
+        put?: never;
+        /**
+         * Create Sink
+         * @description Create and configure a new sink
+         */
+        post: operations['create_sink_api_sinks_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/sinks/{sink_id}': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Sink
+         * @description Get info about a sink
+         */
+        get: operations['get_sink_api_sinks__sink_id__get'];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Sink
+         * @description Remove a sink
+         */
+        delete: operations['delete_sink_api_sinks__sink_id__delete'];
+        options?: never;
+        head?: never;
+        /**
+         * Update Sink
+         * @description Reconfigure an existing sink
+         */
+        patch: operations['update_sink_api_sinks__sink_id__patch'];
+        trace?: never;
+    };
+    '/api/sinks/{sink_id}:export': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Sink
+         * @description Export a sink to file
+         */
+        post: operations['export_sink_api_sinks__sink_id__export_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/sinks:import': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Sink
+         * @description Import a sink from file
+         */
+        post: operations['import_sink_api_sinks_import_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/pipelines': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Pipelines
+         * @description List the available pipelines
+         */
+        get: operations['list_pipelines_api_pipelines_get'];
+        put?: never;
+        /**
+         * Create Pipeline
+         * @description Create and configure a new pipeline
+         */
+        post: operations['create_pipeline_api_pipelines_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/pipelines/{pipeline_id}': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pipeline
+         * @description Get info about a given pipeline
+         */
+        get: operations['get_pipeline_api_pipelines__pipeline_id__get'];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Pipeline
+         * @description Delete a pipeline. Pipelines must be first disabled (status must be idle) before deletion.
+         */
+        delete: operations['delete_pipeline_api_pipelines__pipeline_id__delete'];
+        options?: never;
+        head?: never;
+        /**
+         * Update Pipeline
+         * @description Reconfigure an existing pipeline
+         */
+        patch: operations['update_pipeline_api_pipelines__pipeline_id__patch'];
+        trace?: never;
+    };
+    '/api/pipelines/{pipeline_id}:enable': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enable Pipeline
+         * @description Activate a pipeline.
+         *     The pipeline will start processing data from the source, run it through the model, and send results to the sink.
+         */
+        post: operations['enable_pipeline_api_pipelines__pipeline_id__enable_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/pipelines/{pipeline_id}:disable': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable Pipeline
+         * @description Stop a pipeline. The pipeline will become idle and it won't process any data until re-enabled.
+         */
+        post: operations['disable_pipeline_api_pipelines__pipeline_id__disable_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/pipelines/{pipeline_id}:export': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Pipeline
+         * @description Export a pipeline to file
+         */
+        post: operations['export_pipeline_api_pipelines__pipeline_id__export_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/api/pipelines:import': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Pipeline
+         * @description Import a pipeline from file
+         */
+        post: operations['import_pipeline_api_pipelines_import_post'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     '/api/models': {
         parameters: {
             query?: never;
@@ -12,10 +329,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Models
+         * List Models
          * @description Get information about available models
          */
-        get: operations['get_models_api_models_get'];
+        get: operations['list_models_api_models_get'];
         put?: never;
         /**
          * Add Model
@@ -26,6 +343,34 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    '/api/models/{model_id}': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Model
+         * @description Get information about a specific model
+         */
+        get: operations['get_model_api_models__model_id__get'];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Model
+         * @description Delete a model
+         */
+        delete: operations['delete_model_api_models__model_id__delete'];
+        options?: never;
+        head?: never;
+        /**
+         * Update Model Metadata
+         * @description Update the metadata of an existing model
+         */
+        patch: operations['update_model_metadata_api_models__model_id__patch'];
         trace?: never;
     };
     '/api/models/{model_name}': {
@@ -39,10 +384,13 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Delete Model
-         * @description Delete a model
+         * Delete Model By Name
+         * @deprecated
+         * @description Delete a model by name
+         *
+         *     NOTE: this endpoint will be removed; use `DELETE /api/models/{model_id}` instead
          */
-        delete: operations['delete_model_api_models__model_name__delete'];
+        delete: operations['delete_model_by_name_api_models__model_name__delete'];
         options?: never;
         head?: never;
         patch?: never;
@@ -59,7 +407,10 @@ export interface paths {
         put?: never;
         /**
          * Activate Model
+         * @deprecated
          * @description Activate a model
+         *
+         *     NOTE: this endpoint will be removed; use instead `PATCH /api/pipelines/{pipeline_id}` to change the active model
          */
         post: operations['activate_model_api_models__model_name__activate_post'];
         delete?: never;
@@ -77,13 +428,24 @@ export interface paths {
         };
         /**
          * Get Source Config
+         * @deprecated
          * @description Get the current input stream configuration.
+         *
+         *     NOTE: this endpoint will be removed; you should use instead:
+         *         - `GET /api/sources` to list the sources
+         *         - `GET /api/pipelines/{pipeline_id}` to find the source used in a given pipeline
          */
         get: operations['get_source_config_api_inputs_get'];
         put?: never;
         /**
          * Configure Source
+         * @deprecated
          * @description Configure the input stream for the application.
+         *
+         *     NOTE: this endpoint will be removed; you should use instead:
+         *         - `POST /api/sources` to create a new source
+         *         - `PATCH /api/sources/{source_id}` to update an existing source
+         *         - `PATCH /api/pipelines/{pipeline_id}` to change the source used in a pipeline
          */
         post: operations['configure_source_api_inputs_post'];
         delete?: never;
@@ -101,13 +463,24 @@ export interface paths {
         };
         /**
          * Get Sink Config
+         * @deprecated
          * @description Get the current output configurations.
+         *
+         *     NOTE: this endpoint will be removed; you should use instead:
+         *         - `GET /api/sinks` to list the sinks
+         *         - `GET /api/pipelines/{pipeline_id}` to find the sink used in a given pipeline
          */
         get: operations['get_sink_config_api_outputs_get'];
         put?: never;
         /**
          * Configure Sink
+         * @deprecated
          * @description Configure the destination(s) for the application output.
+         *
+         *     NOTE: this endpoint will be removed; you should use instead:
+         *         - `POST /api/sinks` to create a new sink
+         *         - `PATCH /api/sinks/{sink_id}` to update an existing sink
+         *         - `PATCH /api/pipelines/{pipeline_id}` to change the sink used in a pipeline
          */
         post: operations['configure_sink_api_outputs_post'];
         delete?: never;
@@ -128,26 +501,6 @@ export interface paths {
          * @description Returns the used memory in MB and total available memory in MB.
          */
         get: operations['get_memory_api_system_metrics_memory_get'];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    '/api/docs': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Scalar Docs
-         * @description Shows docs for our OpenAPI specification using scalar
-         */
-        get: operations['get_scalar_docs_api_docs_get'];
         put?: never;
         post?: never;
         delete?: never;
@@ -265,9 +618,56 @@ export interface components {
              */
             bin_file: string;
         };
-        /** DisconnectedOutputConfig */
+        /** Body_import_pipeline_api_pipelines_import_post */
+        Body_import_pipeline_api_pipelines_import_post: {
+            /**
+             * Zip File
+             * Format: binary
+             * @description ZIP file containing the pipeline configuration and optionally model binaries
+             */
+            zip_file: string;
+        };
+        /** Body_import_sink_api_sinks_import_post */
+        Body_import_sink_api_sinks_import_post: {
+            /**
+             * Yaml File
+             * Format: binary
+             * @description YAML file containing the sink configuration
+             */
+            yaml_file: string;
+        };
+        /** Body_import_source_api_sources_import_post */
+        Body_import_source_api_sources_import_post: {
+            /**
+             * Yaml File
+             * Format: binary
+             * @description YAML file containing the source configuration
+             */
+            yaml_file: string;
+        };
+        /**
+         * DisconnectedOutputConfig
+         * @example {
+         *       "id": "00000000-0000-0000-0000-000000000000",
+         *       "name": "No Sink",
+         *       "sink_type": "disconnected"
+         *     }
+         */
         DisconnectedOutputConfig: {
-            /** Output Formats */
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default No Sink
+             */
+            name: string;
+            /**
+             * Output Formats
+             * @default []
+             */
             output_formats: components['schemas']['OutputFormat'][];
             /** Rate Limit */
             rate_limit?: number | null;
@@ -280,13 +680,47 @@ export interface components {
         /** DisconnectedSourceConfig */
         DisconnectedSourceConfig: {
             /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default No Source
+             */
+            name: string;
+            /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
             source_type: 'disconnected';
         };
-        /** FolderOutputConfig */
+        /**
+         * FolderOutputConfig
+         * @example {
+         *       "folder_path": "/path/to/output",
+         *       "id": "b5787c06-964b-4097-8eca-238b8cf79fc8",
+         *       "name": "Local Folder",
+         *       "output_formats": [
+         *         "image_original",
+         *         "image_with_predictions",
+         *         "predictions"
+         *       ],
+         *       "rate_limit": 0.2,
+         *       "sink_type": "folder"
+         *     }
+         */
         FolderOutputConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /** Output Formats */
             output_formats: components['schemas']['OutputFormat'][];
             /** Rate Limit */
@@ -304,8 +738,27 @@ export interface components {
             /** Detail */
             detail?: components['schemas']['ValidationError'][];
         };
-        /** IPCameraSourceConfig */
+        /**
+         * IPCameraSourceConfig
+         * @example {
+         *       "auth_required": true,
+         *       "id": "3d055c8a-2536-46ea-8f3c-832bd6f8bbdc",
+         *       "name": "Street Camera 123",
+         *       "source_type": "ip_camera",
+         *       "stream_url": "http://example.com/stream"
+         *     }
+         */
         IPCameraSourceConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -319,8 +772,27 @@ export interface components {
              */
             auth_required: boolean;
         };
-        /** ImagesFolderSourceConfig */
+        /**
+         * ImagesFolderSourceConfig
+         * @example {
+         *       "id": "4a580a0e-b841-4c70-bf88-2d68a28f780d",
+         *       "ignore_existing_images": true,
+         *       "images_folder_path": "/path/to/images",
+         *       "name": "Best Photos",
+         *       "source_type": "images_folder"
+         *     }
+         */
         ImagesFolderSourceConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -338,6 +810,27 @@ export interface components {
             /** Conf Threshold */
             conf_threshold: number;
         };
+        /**
+         * Model
+         * @description Base model schema that includes common fields for all models.
+         *     This can be extended by other schemas to include additional fields.
+         * @example {
+         *       "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
+         *       "name": "YOLO-X for Vehicle Detection"
+         *     }
+         */
+        Model: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
+        };
         /** ModelResponse */
         ModelResponse: {
             /** Model Name */
@@ -350,8 +843,31 @@ export interface components {
             /** Available Models */
             available_models: string[];
         };
-        /** MqttOutputConfig */
+        /**
+         * MqttOutputConfig
+         * @example {
+         *       "broker_host": "localhost",
+         *       "broker_port": 1883,
+         *       "id": "c1a70159-9c9e-4f02-821a-02576321056c",
+         *       "name": "Local MQTT Broker",
+         *       "output_formats": [
+         *         "predictions"
+         *       ],
+         *       "sink_type": "mqtt",
+         *       "topic": "predictions"
+         *     }
+         */
         MqttOutputConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /** Output Formats */
             output_formats: components['schemas']['OutputFormat'][];
             /** Rate Limit */
@@ -377,8 +893,65 @@ export interface components {
          * @enum {string}
          */
         OutputFormat: 'image_original' | 'image_with_predictions' | 'predictions';
-        /** RosOutputConfig */
+        /**
+         * Pipeline
+         * @example {
+         *       "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+         *       "model_id": "b0feaabc-da2b-442e-9b3e-55c11c2c2ff2",
+         *       "name": "Production Pipeline",
+         *       "sink_id": "b5787c06-964b-4097-8eca-238b8cf79fc8",
+         *       "source_id": "d2cbd8d0-17b8-463e-85a2-4aaed031674d",
+         *       "status": "running"
+         *     }
+         */
+        Pipeline: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
+            /** Source Id */
+            source_id?: string | null;
+            /** Sink Id */
+            sink_id?: string | null;
+            /** Model Id */
+            model_id?: string | null;
+            /** @default idle */
+            status: components['schemas']['PipelineStatus'];
+        };
+        /**
+         * PipelineStatus
+         * @enum {string}
+         */
+        PipelineStatus: 'idle' | 'running';
+        /**
+         * RosOutputConfig
+         * @example {
+         *       "id": "6f1d96ac-db38-42a9-9a11-142d404f493f",
+         *       "name": "ROS2 Predictions Topic",
+         *       "output_formats": [
+         *         "predictions"
+         *       ],
+         *       "sink_type": "ros",
+         *       "topic": "/predictions"
+         *     }
+         */
         RosOutputConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /** Output Formats */
             output_formats: components['schemas']['OutputFormat'][];
             /** Rate Limit */
@@ -388,8 +961,8 @@ export interface components {
              * @enum {string}
              */
             sink_type: 'ros';
-            /** Ros Topic */
-            ros_topic: string;
+            /** Topic */
+            topic: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -400,8 +973,26 @@ export interface components {
             /** Error Type */
             type: string;
         };
-        /** VideoFileSourceConfig */
+        /**
+         * VideoFileSourceConfig
+         * @example {
+         *       "id": "712750b2-5a82-47ee-8fba-f3dc96cb615d",
+         *       "name": "Sample Video",
+         *       "source_type": "video_file",
+         *       "video_path": "/path/to/video.mp4"
+         *     }
+         */
         VideoFileSourceConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -410,8 +1001,26 @@ export interface components {
             /** Video Path */
             video_path: string;
         };
-        /** WebcamSourceConfig */
+        /**
+         * WebcamSourceConfig
+         * @example {
+         *       "device_id": 0,
+         *       "id": "f9e0ae4f-d96c-4304-baab-2ab845362d03",
+         *       "name": "Webcam 0",
+         *       "source_type": "webcam"
+         *     }
+         */
         WebcamSourceConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -420,8 +1029,29 @@ export interface components {
             /** Device Id */
             device_id: number;
         };
-        /** WebhookOutputConfig */
+        /**
+         * WebhookOutputConfig
+         * @example {
+         *       "id": "39ba53e5-9a03-44fc-b78a-83245cf14676",
+         *       "name": "Webhook Endpoint",
+         *       "output_formats": [
+         *         "predictions"
+         *       ],
+         *       "sink_type": "webhook",
+         *       "webhook_url": "https://example.com/webhook"
+         *     }
+         */
         WebhookOutputConfig: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
+             * Name
+             * @default Default Name
+             */
+            name: string;
             /** Output Formats */
             output_formats: components['schemas']['OutputFormat'][];
             /** Rate Limit */
@@ -443,6 +1073,11 @@ export interface components {
 }
 export type SchemaBody = components['schemas']['Body'];
 export type SchemaBodyAddModelApiModelsPost = components['schemas']['Body_add_model_api_models_post'];
+export type SchemaBodyImportPipelineApiPipelinesImportPost =
+    components['schemas']['Body_import_pipeline_api_pipelines_import_post'];
+export type SchemaBodyImportSinkApiSinksImportPost = components['schemas']['Body_import_sink_api_sinks_import_post'];
+export type SchemaBodyImportSourceApiSourcesImportPost =
+    components['schemas']['Body_import_source_api_sources_import_post'];
 export type SchemaDisconnectedOutputConfig = components['schemas']['DisconnectedOutputConfig'];
 export type SchemaDisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfig'];
 export type SchemaFolderOutputConfig = components['schemas']['FolderOutputConfig'];
@@ -450,10 +1085,13 @@ export type SchemaHttpValidationError = components['schemas']['HTTPValidationErr
 export type SchemaIpCameraSourceConfig = components['schemas']['IPCameraSourceConfig'];
 export type SchemaImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfig'];
 export type SchemaInputData = components['schemas']['InputData'];
+export type SchemaModel = components['schemas']['Model'];
 export type SchemaModelResponse = components['schemas']['ModelResponse'];
 export type SchemaModelsInfoResponse = components['schemas']['ModelsInfoResponse'];
 export type SchemaMqttOutputConfig = components['schemas']['MqttOutputConfig'];
 export type SchemaOutputFormat = components['schemas']['OutputFormat'];
+export type SchemaPipeline = components['schemas']['Pipeline'];
+export type SchemaPipelineStatus = components['schemas']['PipelineStatus'];
 export type SchemaRosOutputConfig = components['schemas']['RosOutputConfig'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
 export type SchemaVideoFileSourceConfig = components['schemas']['VideoFileSourceConfig'];
@@ -461,7 +1099,769 @@ export type SchemaWebcamSourceConfig = components['schemas']['WebcamSourceConfig
 export type SchemaWebhookOutputConfig = components['schemas']['WebhookOutputConfig'];
 export type $defs = Record<string, never>;
 export interface operations {
-    get_models_api_models_get: {
+    list_sources_api_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': (
+                        | components['schemas']['WebcamSourceConfig']
+                        | components['schemas']['IPCameraSourceConfig']
+                        | components['schemas']['VideoFileSourceConfig']
+                        | components['schemas']['ImagesFolderSourceConfig']
+                        | components['schemas']['DisconnectedSourceConfig']
+                    )[];
+                };
+            };
+        };
+    };
+    create_source_api_sources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json':
+                    | components['schemas']['WebcamSourceConfig']
+                    | components['schemas']['IPCameraSourceConfig']
+                    | components['schemas']['VideoFileSourceConfig']
+                    | components['schemas']['ImagesFolderSourceConfig']
+                    | components['schemas']['DisconnectedSourceConfig'];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['WebcamSourceConfig']
+                        | components['schemas']['IPCameraSourceConfig']
+                        | components['schemas']['VideoFileSourceConfig']
+                        | components['schemas']['ImagesFolderSourceConfig']
+                        | components['schemas']['DisconnectedSourceConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    get_source_api_sources__source_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['WebcamSourceConfig']
+                        | components['schemas']['IPCameraSourceConfig']
+                        | components['schemas']['VideoFileSourceConfig']
+                        | components['schemas']['ImagesFolderSourceConfig']
+                        | components['schemas']['DisconnectedSourceConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    delete_source_api_sources__source_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    update_source_api_sources__source_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['WebcamSourceConfig']
+                        | components['schemas']['IPCameraSourceConfig']
+                        | components['schemas']['VideoFileSourceConfig']
+                        | components['schemas']['ImagesFolderSourceConfig']
+                        | components['schemas']['DisconnectedSourceConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    export_source_api_sources__source_id__export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Source configuration exported as a YAML file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/x-yaml': string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    import_source_api_sources_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'multipart/form-data': components['schemas']['Body_import_source_api_sources_import_post'];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['WebcamSourceConfig']
+                        | components['schemas']['IPCameraSourceConfig']
+                        | components['schemas']['VideoFileSourceConfig']
+                        | components['schemas']['ImagesFolderSourceConfig']
+                        | components['schemas']['DisconnectedSourceConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    list_sinks_api_sinks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': (
+                        | components['schemas']['FolderOutputConfig']
+                        | components['schemas']['MqttOutputConfig']
+                        | components['schemas']['RosOutputConfig']
+                        | components['schemas']['WebhookOutputConfig']
+                        | components['schemas']['DisconnectedOutputConfig']
+                    )[];
+                };
+            };
+        };
+    };
+    create_sink_api_sinks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json':
+                    | components['schemas']['FolderOutputConfig']
+                    | components['schemas']['MqttOutputConfig']
+                    | components['schemas']['RosOutputConfig']
+                    | components['schemas']['WebhookOutputConfig']
+                    | components['schemas']['DisconnectedOutputConfig'];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['FolderOutputConfig']
+                        | components['schemas']['MqttOutputConfig']
+                        | components['schemas']['RosOutputConfig']
+                        | components['schemas']['WebhookOutputConfig']
+                        | components['schemas']['DisconnectedOutputConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    get_sink_api_sinks__sink_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sink_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['FolderOutputConfig']
+                        | components['schemas']['MqttOutputConfig']
+                        | components['schemas']['RosOutputConfig']
+                        | components['schemas']['WebhookOutputConfig']
+                        | components['schemas']['DisconnectedOutputConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    delete_sink_api_sinks__sink_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sink_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    update_sink_api_sinks__sink_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sink_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['FolderOutputConfig']
+                        | components['schemas']['MqttOutputConfig']
+                        | components['schemas']['RosOutputConfig']
+                        | components['schemas']['WebhookOutputConfig']
+                        | components['schemas']['DisconnectedOutputConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    export_sink_api_sinks__sink_id__export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sink_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sink configuration exported as a YAML file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/x-yaml': string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    import_sink_api_sinks_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'multipart/form-data': components['schemas']['Body_import_sink_api_sinks_import_post'];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json':
+                        | components['schemas']['FolderOutputConfig']
+                        | components['schemas']['MqttOutputConfig']
+                        | components['schemas']['RosOutputConfig']
+                        | components['schemas']['WebhookOutputConfig']
+                        | components['schemas']['DisconnectedOutputConfig'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    list_pipelines_api_pipelines_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Pipeline'][];
+                };
+            };
+        };
+    };
+    create_pipeline_api_pipelines_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['Pipeline'];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Pipeline'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    get_pipeline_api_pipelines__pipeline_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Pipeline'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    delete_pipeline_api_pipelines__pipeline_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    update_pipeline_api_pipelines__pipeline_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Pipeline'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    enable_pipeline_api_pipelines__pipeline_id__enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    disable_pipeline_api_pipelines__pipeline_id__disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    export_pipeline_api_pipelines__pipeline_id__export_post: {
+        parameters: {
+            query?: {
+                include_model?: boolean;
+            };
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pipeline configuration exported as a ZIP file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/zip': string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    import_pipeline_api_pipelines_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'multipart/form-data': components['schemas']['Body_import_pipeline_api_pipelines_import_post'];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    list_models_api_models_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -498,7 +1898,7 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -517,7 +1917,104 @@ export interface operations {
             };
         };
     };
-    delete_model_api_models__model_name__delete: {
+    get_model_api_models__model_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Model'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    delete_model_api_models__model_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    update_model_metadata_api_models__model_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Model'];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['HTTPValidationError'];
+                };
+            };
+        };
+    };
+    delete_model_by_name_api_models__model_name__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -595,11 +2092,11 @@ export interface operations {
                 };
                 content: {
                     'application/json':
-                        | components['schemas']['DisconnectedSourceConfig']
                         | components['schemas']['WebcamSourceConfig']
                         | components['schemas']['IPCameraSourceConfig']
                         | components['schemas']['VideoFileSourceConfig']
-                        | components['schemas']['ImagesFolderSourceConfig'];
+                        | components['schemas']['ImagesFolderSourceConfig']
+                        | components['schemas']['DisconnectedSourceConfig'];
                 };
             };
         };
@@ -614,11 +2111,11 @@ export interface operations {
         requestBody: {
             content: {
                 'application/json':
-                    | components['schemas']['DisconnectedSourceConfig']
                     | components['schemas']['WebcamSourceConfig']
                     | components['schemas']['IPCameraSourceConfig']
                     | components['schemas']['VideoFileSourceConfig']
-                    | components['schemas']['ImagesFolderSourceConfig'];
+                    | components['schemas']['ImagesFolderSourceConfig']
+                    | components['schemas']['DisconnectedSourceConfig'];
             };
         };
         responses: {
@@ -658,11 +2155,11 @@ export interface operations {
                 };
                 content: {
                     'application/json':
-                        | components['schemas']['DisconnectedOutputConfig']
                         | components['schemas']['FolderOutputConfig']
                         | components['schemas']['MqttOutputConfig']
                         | components['schemas']['RosOutputConfig']
-                        | components['schemas']['WebhookOutputConfig'];
+                        | components['schemas']['WebhookOutputConfig']
+                        | components['schemas']['DisconnectedOutputConfig'];
                 };
             };
         };
@@ -677,11 +2174,11 @@ export interface operations {
         requestBody: {
             content: {
                 'application/json':
-                    | components['schemas']['DisconnectedOutputConfig']
                     | components['schemas']['FolderOutputConfig']
                     | components['schemas']['MqttOutputConfig']
                     | components['schemas']['RosOutputConfig']
-                    | components['schemas']['WebhookOutputConfig'];
+                    | components['schemas']['WebhookOutputConfig']
+                    | components['schemas']['DisconnectedOutputConfig'];
             };
         };
         responses: {
@@ -723,26 +2220,6 @@ export interface operations {
                     'application/json': {
                         [key: string]: unknown;
                     };
-                };
-            };
-        };
-    };
-    get_scalar_docs_api_docs_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': unknown;
                 };
             };
         };

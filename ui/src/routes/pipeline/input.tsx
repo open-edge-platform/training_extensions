@@ -37,23 +37,28 @@ type InputFormRecord = {
 };
 const DEFAULT_INPUT_FORMS: InputFormRecord = {
     disconnected: {
+        name: 'Disconnected',
         source_type: 'disconnected',
     },
     images_folder: {
+        name: 'Images folder',
         source_type: 'images_folder',
         images_folder_path: '',
         ignore_existing_images: false,
     },
     ip_camera: {
+        name: 'Ip camera',
         source_type: 'ip_camera',
         stream_url: '',
         auth_required: false,
     },
     video_file: {
+        name: 'Video file',
         source_type: 'video_file',
         video_path: '',
     },
     webcam: {
+        name: 'Webcam',
         source_type: 'webcam',
         device_id: 0,
     },

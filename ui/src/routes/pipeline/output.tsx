@@ -42,26 +42,31 @@ type OutputFormRecord = {
 const DEFAULT_OUTPUT_FORMS: OutputFormRecord = {
     disconnected: {
         sink_type: 'disconnected',
+        name: 'Disconnected',
         output_formats: [],
     },
     folder: {
         sink_type: 'folder',
+        name: 'Folder',
         folder_path: '',
         output_formats: [],
     },
     mqtt: {
         sink_type: 'mqtt',
+        name: 'MQTT',
         broker_host: '',
         broker_port: 1883,
         topic: '',
         output_formats: [],
     },
     ros: {
+        name: 'Ros',
         sink_type: 'ros',
-        ros_topic: '',
+        topic: '',
         output_formats: [],
     },
     webhook: {
+        name: 'Webhook',
         sink_type: 'webhook',
         webhook_url: '',
         output_formats: [],
@@ -151,9 +156,9 @@ const ConfigureROSOutput = ({
     return (
         <TextField
             label='Topic'
-            name='ros_topic'
-            value={output.ros_topic}
-            onChange={(ros_topic) => setOutput({ ...output, ros_topic })}
+            name='topic'
+            value={output.topic}
+            onChange={(topic) => setOutput({ ...output, topic })}
         />
     );
 };
