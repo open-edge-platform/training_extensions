@@ -213,7 +213,6 @@ class OTXCLI:
             "test": {"datamodule"}.union(device_kwargs),
             "predict": {"datamodule"}.union(device_kwargs),
             "export": device_kwargs,
-            "explain": {"datamodule"}.union(device_kwargs),
             "benchmark": device_kwargs,
         }
 
