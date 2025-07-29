@@ -73,9 +73,9 @@ def det_data_entity_with_masks() -> OTXDataItem:
     fake_labels = LongTensor([1, 2])
 
     # Create meaningful masks that correspond to the bounding boxes
-    masks = torch.zeros(size=(2, *img_size), dtype=torch.uint8)
-    masks[0, 10:50, 10:50] = 255  # First mask
-    masks[1, 60:100, 60:100] = 255  # Second mask
+    masks = torch.zeros(size=(2, *img_size), dtype=torch.bool)
+    masks[0, 10:50, 10:50] = True  # First mask
+    masks[1, 60:100, 60:100] = True  # Second mask
     fake_masks = tv_tensors.Mask(masks)
 
     return OTXDataItem(
@@ -122,9 +122,9 @@ def det_data_entity_with_polygons() -> OTXDataItem:
     fake_labels = LongTensor([1, 2])
 
     # Create meaningful masks that correspond to the bounding boxes
-    masks = torch.zeros(size=(2, *img_size), dtype=torch.uint8)
-    masks[0, 10:50, 10:50] = 255  # First mask
-    masks[1, 60:100, 60:100] = 255  # Second mask
+    masks = torch.zeros(size=(2, *img_size), dtype=torch.bool)
+    masks[0, 10:50, 10:50] = True  # First mask
+    masks[1, 60:100, 60:100] = True  # Second mask
     fake_masks = tv_tensors.Mask(masks)
 
     # Create corresponding polygons
@@ -336,15 +336,15 @@ class TestRandomAffine:
         return RandomAffine(transform_mask=True, transform_polygon=True, mask_fill_value=0)
 
     def test_init_invalid_translate_ratio(self) -> None:
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(max_translate_ratio=1.5)
 
     def test_init_invalid_scaling_ratio_range_inverse_order(self) -> None:
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(scaling_ratio_range=(1.5, 0.5))
 
     def test_init_invalid_scaling_ratio_range_zero_value(self) -> None:
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(scaling_ratio_range=(0, 0.5))
 
     def test_forward(self, random_affine: RandomAffine, det_data_entity: OTXDataItem) -> None:
@@ -549,8 +549,12 @@ class TestRandomAffine:
 
         # Since transform_mask is False, masks should remain unchanged
         # However, they might still be filtered based on valid bounding boxes
-        assert results.masks.shape[0] == results.bboxes.shape[0]
-        assert results.masks.shape[0] == results.label.shape[0]
+        assert (
+            results.masks.shape[0] == results.bboxes.shape[0]
+        ), f"results.masks.shape[0] = {results.masks.shape[0]}, results.bboxes.shape[0] = {results.bboxes.shape[0]}"
+        assert (
+            results.masks.shape[0] == results.label.shape[0]
+        ), f"results.masks.shape[0] = {results.masks.shape[0]}, results.label.shape[0] = {results.label.shape[0]}"
 
     def test_forward_with_empty_masks(
         self,

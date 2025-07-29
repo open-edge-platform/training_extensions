@@ -1154,7 +1154,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         # Combine transformations: T * Sh * R * S
         return translate_matrix @ shear_matrix @ rotation_matrix @ scaling_matrix
 
-    def forward(self, inputs: OTXDataItem) -> OTXDataItem:
+    def forward(self, *_inputs: OTXDataItem) -> OTXDataItem:
         """Forward pass of RandomAffine transform.
 
         Args:
@@ -1166,46 +1166,58 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         Raises:
             ValueError: If inputs format is invalid.
         """
-        _inputs = self.extract(inputs)
         if len(_inputs) != 1:
             msg = f"RandomAffine can only transform single input, got {len(_inputs)}"
             raise ValueError(msg)
 
-        data_item = _inputs[0]
-
-        # Check if there are any transformable objects at all
-        has_bboxes = hasattr(data_item, "bboxes") and data_item.bboxes is not None and len(data_item.bboxes) > 0
-        has_masks = hasattr(data_item, "masks") and data_item.masks is not None and len(data_item.masks) > 0
-        has_polygons = hasattr(data_item, "polygons") and data_item.polygons is not None and len(data_item.polygons) > 0
-
-        # If no transformable objects exist, skip the entire transformation
-        if not (has_bboxes or has_masks or has_polygons):
-            return self.convert(inputs)  # type: ignore[return-value]
+        inputs = _inputs[0]
+        img = to_np_image(inputs.image)
 
         # Get random homography matrix for affine transformation
-        height, width = data_item.img.shape[:2]
+        height, width = img.shape[:2]  # type: ignore[union-attr]
         homography_matrix = self._get_random_homography_matrix(height, width)
         output_shape = (height + self.border[0] * 2, width + self.border[1] * 2)
 
-        if has_bboxes:
+        if hasattr(inputs, "bboxes") and inputs.bboxes is not None and len(inputs.bboxes) > 0:
             # Test transform bboxes to see if any remain valid
-            valid_index = self._transform_bboxes(data_item, homography_matrix, output_shape)
+            valid_index = self._transform_bboxes(inputs, homography_matrix, output_shape)
             # If no valid annotations will remain after transformation, skip entirely
             if not valid_index.any():
+                inputs.image = img
                 return self.convert(inputs)  # type: ignore[return-value]
 
             # If we reach here, transformation will produce valid results, so proceed
             # Transform image
-            transformed_img = self._warp_image(data_item.img, homography_matrix)
-            data_item.img = transformed_img
+            transformed_img = self._warp_image(img, homography_matrix, output_shape)
+            inputs.image = transformed_img
+            inputs.img_info = _resize_image_info(inputs.img_info, transformed_img.shape[:2])
 
-            if has_masks:
-                self._transform_masks(data_item, homography_matrix, output_shape, valid_index)
+            if hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0:
+                self._transform_masks(inputs, homography_matrix, output_shape, valid_index)
 
-            if has_polygons:
-                self._transform_polygons(data_item, homography_matrix, output_shape, valid_index)
+            if hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0:
+                self._transform_polygons(inputs, homography_matrix, output_shape, valid_index)
 
         return self.convert(inputs)  # type: ignore[return-value]
+
+    def _warp_image(
+        self,
+        image: np.ndarray,
+        homography_matrix: np.ndarray,
+        output_shape: tuple[int, int],
+    ) -> np.ndarray:
+        """Warp image using the homography matrix.
+
+        Args:
+            image: Input image.
+            homography_matrix: Homography matrix.
+            output_shape: Output shape (height, width).
+
+        Returns:
+            np.ndarray: Warped image.
+        """
+        height, width = output_shape
+        return cv2.warpPerspective(image, homography_matrix, dsize=(width, height), borderValue=self.border_val)
 
     def _transform_bboxes(
         self,
@@ -1287,25 +1299,20 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             np.ndarray: Warped mask.
         """
         unique_values = np.unique(mask)
+        height, width = output_size
 
         # Binary mask: use 255/127 threshold for cleaner results
         if len(unique_values) <= 2 and np.max(unique_values) <= 1:
             warped_mask = cv2.warpPerspective(
                 mask.astype(np.uint8) * 255,
                 warp_matrix,
-                dsize=output_size,
+                dsize=(width, height),
                 borderValue=0,
             )
             return warped_mask > 127
 
-        # Multi-class mask: use nearest neighbor to preserve discrete values
-        return cv2.warpPerspective(
-            mask.astype(np.uint8),
-            warp_matrix,
-            dsize=output_size,
-            borderValue=self.mask_fill_value,
-            flags=cv2.INTER_NEAREST,
-        )
+        msg = "Multi-class masks are not supported yet."
+        raise NotImplementedError(msg)
 
     def _transform_polygons(
         self,
