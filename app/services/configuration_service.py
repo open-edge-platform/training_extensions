@@ -1,14 +1,14 @@
 import logging
 import multiprocessing as mp
 from collections.abc import Callable
-from datetime import datetime
 from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
 
-from sqlalchemy.orm import Session
-
 from app.db.database import get_db_session
-from app.db.schema import PipelineDB, SinkDB, SourceDB
+from app.db.schema import SinkDB, SourceDB
+from app.repositories import PipelineRepository
+from app.repositories.sink_repo import SinkRepository
+from app.repositories.source_repo import SourceRepository
 from app.schemas.configuration import AppConfig, Sink, Source
 from app.services.mappers.sink_mapper import SinkMapper
 from app.services.mappers.source_mapper import SourceMapper
@@ -48,9 +48,9 @@ class ConfigurationService(metaclass=Singleton):
         self.config_changed_condition = config_changed_condition
         self._source_mapper = SourceMapper()
         self._sink_mapper = SinkMapper()
-        self._active_pipeline_id: int | None = None
-        self._source_id: int | None = None
-        self._sink_id: int | None = None
+        self._active_pipeline_id: str | None = None
+        self._source_id: str | None = None
+        self._sink_id: str | None = None
         self._app_config = self._load_app_config()
 
         # For child processes, start a daemon to monitor configuration changes and reload it when necessary.
@@ -70,18 +70,13 @@ class ConfigurationService(metaclass=Singleton):
         if not self.__is_parent_process():
             raise ConfigUpdateFromChildProcessError
 
-    @staticmethod
-    def _get_active_pipeline(db: Session) -> PipelineDB | None:
-        """Get the active pipeline from database."""
-        return db.query(PipelineDB).filter(PipelineDB.is_running).first()
-
     def _load_app_config(self) -> AppConfig:
         logger.info("Loading configuration from database")
         app_config = AppConfig()
         with get_db_session() as db:
-            # Get the active pipeline
-            pipeline = self._get_active_pipeline(db)
+            repo = PipelineRepository(db)
 
+            pipeline = repo.get_active_pipeline()
             if pipeline is None:
                 raise ValueError("No active pipeline found")
 
@@ -89,13 +84,15 @@ class ConfigurationService(metaclass=Singleton):
 
             # Get the source for this pipeline
             if pipeline.source_id:
-                source = db.query(SourceDB).filter(SourceDB.id == pipeline.source_id).first()
+                source_repo = SourceRepository(db)
+                source = source_repo.get_by_id(pipeline.source_id)
                 self._source_id = source.id
                 app_config.input = self._source_mapper.to_schema(source)
 
             # Get the sink for this pipeline
             if pipeline.sink_id:
-                sink = db.query(SinkDB).filter(SinkDB.id == pipeline.sink_id).first()
+                sink_repo = SinkRepository(db)
+                sink = sink_repo.get_by_id(pipeline.sink_id)
                 self._sink_id = sink.id
                 app_config.output = self._sink_mapper.to_schema(sink)
 
@@ -131,28 +128,21 @@ class ConfigurationService(metaclass=Singleton):
 
     def __set_config(self, config: SourceDB | SinkDB, on_success: Callable[[], None]) -> None:
         with get_db_session() as db:
-            try:
-                config.updated_at = datetime.now()
-                db.add(config)
-                db.flush()
-                pipeline_db = db.query(PipelineDB).filter(PipelineDB.id == self._active_pipeline_id).first()
-                if pipeline_db is None:
-                    raise ValueError(f"Active pipeline with ID {self._active_pipeline_id} not found")
+            pipeline_repo = PipelineRepository(db)
 
-                if isinstance(config, SourceDB):
-                    pipeline_db.source_id = config.id
-                elif isinstance(config, SinkDB):
-                    pipeline_db.sink_id = config.id
-                else:
-                    raise TypeError(f"Unsupported config type: {type(config)}")
+            if isinstance(config, SourceDB):
+                source_repo = SourceRepository(db)
+                source_repo.save(config)
+                pipeline_repo.update_source(self._active_pipeline_id, config.id)
+            elif isinstance(config, SinkDB):
+                sink_repo = SinkRepository(db)
+                sink_repo.save(config)
+                pipeline_repo.update_sink(self._active_pipeline_id, config.id)
+            else:
+                raise TypeError(f"Unsupported config type: {type(config)}")
 
-                pipeline_db.updated_at = datetime.now()
-                db.commit()
-                on_success()
-            except Exception:
-                logger.exception("Failed to update configuration")
-                db.rollback()
-                raise
+            db.commit()
+            on_success()
 
     def set_source_config(self, source_config: Source) -> None:
         """Creating new source and attaching to the active pipeline."""

@@ -20,6 +20,7 @@ table(pipelines) {
   pk(id) : UUID
   fk(source_id) : UUID
   fk(sink_id) : UUID
+  fk(model_id) : UUID
   name : VARCHAR(255) UNIQUE NOT NULL
   description : TEXT
   is_running : BOOLEAN DEFAULT FALSE
@@ -37,8 +38,17 @@ table(sinks) {
   updated_at : TIMESTAMP
 }
 
+table(models) {
+  pk(id) : UUID
+  name : VARCHAR(255) UNIQUE NOT NULL
+  format : VARCHAR(50) NOT NULL
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
 sources ||--o{ pipelines : "one source can have many pipelines"
 sinks ||--o{ pipelines : "one sink can have many sinks"
+pipelines }o--|| models : "one model can have many sinks"
 
 note right of sources
   Stores configuration for
@@ -47,12 +57,17 @@ end note
 
 note right of pipelines
   Main orchestration entity
-  with source and sink references
+  that connects models with sources and sinks
 end note
 
 note right of sinks
   Output destinations
   for pipeline data
+end note
+
+note right of models
+  Models available
+  for inference
 end note
 
 @enduml

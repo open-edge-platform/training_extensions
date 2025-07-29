@@ -6,10 +6,10 @@ from app.services.mappers.base_mapper import BaseMapper
 
 
 class SinkMapper(BaseMapper):
-    """Mapper for Sink model <-> OutputConfig schema conversions."""
+    """Mapper for Sink model <-> Sink schema conversions."""
 
     def to_schema(self, sink_db: SinkDB) -> Sink:
-        """Convert Sink model to OutputConfig schema."""
+        """Convert Sink model to Sink schema."""
 
         match sink_db.sink_type:
             case SinkType.FOLDER.value:
@@ -32,7 +32,7 @@ class SinkMapper(BaseMapper):
                 raise ValueError(f"Unsupported sink type: {sink_db.sink_type}")
 
     def from_schema(self, sink: Sink, sink_id: str | None = None) -> SinkDB:
-        """Convert OutputConfig schema to Sink model."""
+        """Convert Sink schema to Sink model."""
         if sink is None:
             raise ValueError("Sink config cannot be None")
 

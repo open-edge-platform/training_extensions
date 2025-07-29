@@ -26,5 +26,8 @@ def get_db_session() -> Session:
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()

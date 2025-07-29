@@ -13,10 +13,10 @@ from app.services.mappers.base_mapper import BaseMapper
 
 
 class SourceMapper(BaseMapper):
-    """Mapper for Source model <-> InputConfig schema conversions."""
+    """Mapper for Source model <-> Source schema conversions."""
 
     def to_schema(self, source_db: SourceDB) -> Source:
-        """Convert Source model to InputConfig schema."""
+        """Convert Source model to Source schema."""
 
         match source_db.source_type:
             case SourceType.VIDEO_FILE.value:
@@ -45,7 +45,7 @@ class SourceMapper(BaseMapper):
                 raise ValueError(f"Unsupported source type: {source_db.source_type}")
 
     def from_schema(self, source: Source, source_id: str | None = None) -> SourceDB:
-        """Convert InputConfig schema to Source model."""
+        """Convert Source schema to Source model."""
         if source is None:
             raise ValueError("Source config cannot be None")
 

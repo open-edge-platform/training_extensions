@@ -1,10 +1,20 @@
 import multiprocessing as mp
+from unittest.mock import patch
 
 import pytest
 
 from app.schemas.configuration.input_config import SourceType, WebcamSourceConfig
 from app.schemas.configuration.output_config import MqttOutputConfig, SinkType
 from app.services.configuration_service import ConfigurationService
+
+
+@pytest.fixture(scope="function", autouse=True)
+def mock_get_db_session(db_session):
+    """Mock the get_db_session to use test database."""
+    with patch("app.services.configuration_service.get_db_session") as mock:
+        mock.return_value.__enter__.return_value = db_session
+        mock.return_value.__exit__.return_value = None
+        yield mock
 
 
 @pytest.fixture
@@ -29,7 +39,7 @@ def sample_sink_config() -> MqttOutputConfig:
 class TestConfigurationServiceIntegration:
     """Integration tests for ConfigurationService."""
 
-    def test_load_app_config_success(self, mock_get_db_session):
+    def test_load_app_config_success(self):
         """Test successful loading of application configuration after migration applied."""
         config_service = ConfigurationService()
 
@@ -41,7 +51,7 @@ class TestConfigurationServiceIntegration:
         assert app_config.input.source_type == SourceType.VIDEO_FILE
         assert app_config.output.sink_type == SinkType.FOLDER
 
-    def test_set_source_success(self, mock_get_db_session, sample_source_config):
+    def test_set_source_success(self, sample_source_config):
         """Test setting source configuration successfully."""
         config_service = ConfigurationService()
         config_service.config_changed_condition = mp.Condition()
@@ -54,7 +64,7 @@ class TestConfigurationServiceIntegration:
         source_config = config_service.get_source_config()
         assert source_config.device_id == sample_source_config.device_id
 
-    def test_set_sink_success(self, mock_get_db_session, sample_sink_config):
+    def test_set_sink_success(self, sample_sink_config):
         """Test setting sink configuration successfully."""
         config_service = ConfigurationService()
         config_service.config_changed_condition = mp.Condition()

@@ -1,14 +1,18 @@
-import json
+import asyncio
 import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
 
-import anyio
+import aiofiles
 from fastapi import UploadFile
 from model_api.models import Model
 
+from app.db.database import get_db_session
+from app.db.schema import ModelDB
+from app.repositories import ModelRepository
+from app.schemas.model import ModelFormat
 from app.schemas.model_activation import ModelActivationState
 from app.utils.ipc import mp_reload_model_event
 from app.utils.singleton import Singleton
@@ -38,33 +42,43 @@ class ModelService(metaclass=Singleton):
 
     def __init__(self) -> None:
         self.models_dir = Path("data/models")
-        self.state_file = Path("data/models_state.json")
 
         self._model_activation_state: ModelActivationState = self._load_state()
         self._model_activation_state_lock = Lock()
 
         self._loaded_model: LoadedModel | None = None
 
-    def _load_state(self) -> ModelActivationState:
+    @staticmethod
+    def _load_state() -> ModelActivationState:
         """Load the state from the file if it exists, otherwise initialize an empty state"""
-        if self.state_file.exists():
-            try:
-                return ModelActivationState.from_json_dict(json.load(self.state_file.open()))
-            except json.JSONDecodeError as e:
-                logger.error(f"Error loading models state from {self.state_file}: {e}")
-        return ModelActivationState(active_model=None, available_models=[])
-
-    def _save_state(self) -> None:
-        """Save the state to the file"""
-        with open(self.state_file, "w") as f:
-            json.dump(self._model_activation_state.to_json_dict(), f)
-        mp_reload_model_event.set()
+        with get_db_session() as db:
+            repo = ModelRepository(db)
+            active_model = repo.get_active_model()
+            available_models = repo.list_all()
+            return ModelActivationState(
+                active_model=active_model.name,
+                available_models=[m.name for m in available_models],
+            )
 
     def _get_model_xml_path(self, model_name: str) -> Path:
         return self.models_dir / f"{model_name}.xml"
 
     def _get_model_bin_path(self, model_name: str) -> Path:
         return self.models_dir / f"{model_name}.bin"
+
+    async def _save_files(self, model_name: str, model_xml_file: UploadFile, model_bin_file: UploadFile) -> None:
+        xml_path = self._get_model_xml_path(model_name)
+        bin_path = self._get_model_bin_path(model_name)
+
+        async def save_file(file_reader: UploadFile, path: Path):
+            async with aiofiles.open(path, "wb") as f:
+                while chunk := await file_reader.read(1024 * 1024):  # 1MB chunks
+                    f.write(chunk)
+
+        await asyncio.gather(
+            save_file(model_xml_file, xml_path),
+            save_file(model_bin_file, bin_path),
+        )
 
     async def add_model(self, model_name: str, model_xml_file: UploadFile, model_bin_file: UploadFile) -> None:
         """
@@ -78,31 +92,31 @@ class ModelService(metaclass=Singleton):
         # Create models directory if it doesn't exist
         self.models_dir.mkdir(parents=True, exist_ok=True)
 
-        xml_path = self._get_model_xml_path(model_name)
-        bin_path = self._get_model_bin_path(model_name)
-
         # If a model is already registered with the same name, raise an error
         if model_name in self._model_activation_state.available_models:
             raise ModelAlreadyExistsError(f"A model with the name '{model_name}' already exists")
 
         with self._model_activation_state_lock:
             # Save the files
-            async with await anyio.open_file(xml_path, "wb") as f:
-                while chunk := await model_xml_file.read(1024 * 1024):  # 1MB chunks
-                    await f.write(chunk)
-            async with await anyio.open_file(bin_path, "wb") as f:
-                while chunk := await model_bin_file.read(1024 * 1024):  # 1MB chunks
-                    await f.write(chunk)
+            await self._save_files(model_name, model_xml_file, model_bin_file)
 
             # Add the model to the inference state
             self._model_activation_state.available_models.append(model_name)
 
             # Activate the model if it is the first model to be added
-            if self._model_activation_state.active_model is None:
+            is_first_model = self._model_activation_state.active_model is None
+            if is_first_model:
                 self._model_activation_state.active_model = model_name
 
-            # Store the state
-            self._save_state()
+            # Store the model in db
+            model = ModelDB(name=model_name, format=ModelFormat.OPENVINO.value)
+            with get_db_session() as db:
+                repo = ModelRepository(db)
+                repo.save(model)
+                if is_first_model:
+                    repo.set_active_model(model_name)
+                db.commit()
+                mp_reload_model_event.set()
 
     def remove_model(self, model_name: str) -> None:
         """
@@ -120,6 +134,7 @@ class ModelService(metaclass=Singleton):
             self._model_activation_state.available_models.remove(model_name)
 
             # If the model is active, deactivate it and activate the next available model
+            next_model = None
             if self._model_activation_state.active_model == model_name:
                 logger.info(f"Deactivating model '{model_name}'")
                 if len(self._model_activation_state.available_models) > 0:
@@ -136,8 +151,12 @@ class ModelService(metaclass=Singleton):
             xml_path.unlink()
             bin_path.unlink()
 
-            # Store the state
-            self._save_state()
+            with get_db_session() as db:
+                repo = ModelRepository(db)
+                repo.remove(model_name)
+                if next_model:
+                    repo.set_active_model(next_model)
+                db.commit()
 
     def get_available_model_names(self) -> list[str]:
         """Get the names of all available models"""
@@ -159,7 +178,10 @@ class ModelService(metaclass=Singleton):
             self._model_activation_state.active_model = model_name
 
             # Store the state
-            self._save_state()
+            with get_db_session() as db:
+                repo = ModelRepository(db)
+                repo.set_active_model(model_name)
+                db.commit()
 
     def get_inference_model(self, force_reload: bool = False) -> Model | None:
         """
