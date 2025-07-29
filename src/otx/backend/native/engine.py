@@ -756,7 +756,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> tuple[Engine, dict[str, Any]]:
+    ) -> OTXEngine:
         """Builds the engine from a configuration file.
 
         Args:
@@ -769,13 +769,12 @@ class OTXEngine(Engine):
 
         Returns:
             Engine: An instance of the Engine class.
-            dict[str, Any]: Training arguments for OTXEngine.train method.
 
         Example:
-            >>> engine, train_kwargs = OTXEngine.from_config(
+            >>> engine = OTXEngine.from_config(
             ...     config="config.yaml",
             ... )
-            ... engine.train(**train_kwargs)
+            ... engine.train()
         """
         from otx.cli.utils.jsonargparse import get_instantiated_classes
 
@@ -827,7 +826,7 @@ class OTXEngine(Engine):
             data=datamodule,
             model=model,
             **engine_kwargs,
-        ), train_kwargs
+        )
 
     @classmethod
     def from_model_name(
@@ -837,7 +836,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> tuple[Engine, dict[str, Any]]:
+    ) -> OTXEngine:
         """Builds the engine from a model name.
 
         Args:
@@ -850,16 +849,15 @@ class OTXEngine(Engine):
             kwargs: Arguments that can override the engine's arguments.
 
         Returns:
-            Engine: An instance of the Engine class.
-            dict[str, Any]: Training arguments for OTXEngine.train method.
+            OTXEngine: An instance of the OTXEngine class.
 
         Example:
-            >>> engine, train_kwargs = OTXEngine.from_model_name(
+            >>> engine = OTXEngine.from_model_name(
             ...     model_name="atss_mobilenetv2",
             ...     task="DETECTION",
             ...     data_root=<dataset/path>,
             ... )
-            ... engine.train(**train_kwargs)
+            ... engine.train()
 
             If you want to override configuration from default config:
                 >>> overriding = {
@@ -949,8 +947,6 @@ class OTXEngine(Engine):
     def _build_trainer(self, logger: Logger | Iterable[Logger] | bool | None = None, **kwargs) -> None:
         """Instantiate the trainer based on the model parameters."""
         if self._cache.requires_update(**kwargs) or self._trainer is None:
-            self._cache.update(**kwargs)
-
             # set up xpu device
             self.configure_accelerator()
             # setup default loggers
@@ -958,11 +954,33 @@ class OTXEngine(Engine):
             # set up default callbacks
             self.configure_callbacks()
 
-            kwargs = self._cache.args
-            self._trainer = Trainer(logger=logger, **kwargs)
+            trainer_kwargs = self._apply_param_overrides(kwargs)
+            self._trainer = Trainer(logger=logger, **trainer_kwargs)
             self._cache.is_trainer_args_identical = True
             self._trainer.task = self.task
             self.work_dir = self._trainer.default_root_dir
+
+    def _apply_param_overrides(self, param_kwargs: dict[str, Any]) -> dict[str, Any]:
+        """Apply parameter overrides based on the current local variables."""
+        result = {}
+        sig = inspect.signature(self.train)
+
+        for param_name, param in sig.parameters.items():
+            if param_name not in {"self", "kwargs"} and param_name in param_kwargs:
+                current_value = param_kwargs[param_name]
+                # Apply override if current value matches default and we have an override
+                if (
+                    param.default != inspect.Parameter.empty
+                    and current_value == param.default
+                    and param_name in self._cache.args
+                ):
+                    result[param_name] = self._cache.args[param_name]
+                else:
+                    result[param_name] = current_value
+                    if param_name in self._cache.args:
+                        # If the parameter is overridden, update the cache
+                        self._cache.args[param_name] = current_value
+        return result
 
     def configure_accelerator(self) -> None:
         """Updates the cache arguments based on the device type."""

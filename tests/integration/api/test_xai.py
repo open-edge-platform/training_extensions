@@ -55,7 +55,7 @@ def test_forward_explain(
         # TODO (sungchul): enable xai for rtmdet_tiny (CVS-142651)
         pytest.skip("rtmdet_tiny on detection is not supported yet.")
 
-    engine, _ = OTXEngine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,
@@ -113,7 +113,7 @@ def test_predict_with_explain(
         pytest.skip("yolox_tiny_tile on detection requires model-api update")
 
     tmp_path = tmp_path / f"otx_xai_{model_name}"
-    engine, _ = OTXEngine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=fxt_target_dataset_per_task[task],
         device=fxt_accelerator,

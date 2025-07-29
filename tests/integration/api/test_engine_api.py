@@ -127,14 +127,13 @@ def test_engine_from_tile_recipe(
         data_root = tmp_path / "tiling_detection_css"
         dataset.export(data_root, format=CommonSemanticSegmentationExporter, save_media=True)
 
-    engine, train_kwargs = OTXEngine.from_config(
+    engine = OTXEngine.from_config(
         config_path=recipe,
         data_root=data_root,
         work_dir=tmp_path / task,
         device=fxt_accelerator,
     )
-    train_kwargs["max_epochs"] = 1
-    engine.train(**train_kwargs)
+    engine.train()
     exported_model_path = engine.export()
     assert exported_model_path.exists()
 
