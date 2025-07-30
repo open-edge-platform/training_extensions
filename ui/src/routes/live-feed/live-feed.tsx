@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button, Flex, Grid, Loading, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
 
+import { Notification, notify } from '../../components/notification/notification.component';
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
 import { Stream } from './../../components/stream/stream';
 import { Aside } from './aside';
@@ -13,6 +14,12 @@ import classes from './live-feed.module.css';
 export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
     const { start, status } = useWebRTCConnection();
+
+    useEffect(() => {
+        if (status === 'failed') {
+            notify('error', 'Failed to connect to the stream');
+        }
+    }, [status]);
 
     return (
         <View gridArea={'canvas'} overflow={'hidden'} maxHeight={'100%'}>
@@ -62,6 +69,7 @@ export const LiveFeed = () => {
             <Toolbar />
             <StreamContainer />
             <Aside />
+            <Notification />
         </Grid>
     );
 };

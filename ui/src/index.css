@@ -1,4 +1,7 @@
 :root {
+    --background: #313236;
+    --background-inverse: #3c3e42;
+    --coral: #ff5662;
     --energy-blue-light: #7bdeff;
     --energy-blue: rgb(0, 199, 253);
 
@@ -15,17 +18,19 @@
 
     --annotation-fill: #e9611580;
     --annotation-stroke: #7bdeff;
+
+    --moss-tint-1: #b1d272;
 }
 
 body,
 html {
     margin: 0;
     padding: 0;
-    background-color: #313236;
+    background-color: var(--background);
 }
 
 body {
-    background-color: #313236;
+    background-color: var(--background);
 }
 
 h1,

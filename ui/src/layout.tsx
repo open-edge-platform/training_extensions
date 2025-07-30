@@ -1,8 +1,8 @@
 import { Flex, Grid, Item, TabList, TabPanels, Tabs, View } from '@geti/ui';
 import { Outlet, useLocation } from 'react-router';
 
-import { ReactComponent as BuildIcon } from './assets/build-icon.svg';
-import { ReactComponent as LiveFeedIcon } from './assets/live-feed-icon.svg';
+import { ReactComponent as BuildIcon } from './assets/icons/build-icon.svg';
+import { ReactComponent as LiveFeedIcon } from './assets/icons/live-feed-icon.svg';
 import { paths } from './router';
 
 const Header = () => {

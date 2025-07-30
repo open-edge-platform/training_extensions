@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActionButton, Flex, Grid, Heading, View } from '@geti/ui';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 
-import { ReactComponent as DoubleChevronRight } from './../../assets/double-chevron-right-icon.svg';
+import { ReactComponent as DoubleChevronRight } from './../../assets/icons/double-chevron-right-icon.svg';
 
 const generateData = (n: number) => {
     const result = new Array(n);
