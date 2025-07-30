@@ -80,7 +80,7 @@ jobs:
         run: npm run type-check
 
   unit-tests:
-    name: Jest tests
+    name: Unit tests
     runs-on: innersource.prod.amr.dind
     permissions:
       contents: read # to checkout code

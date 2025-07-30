@@ -1,9 +1,10 @@
 import { fireEvent, render } from '@testing-library/react';
+import { vi } from 'vitest';
 
 import { Listener, WebRTCConnection, WebRTCConnectionStatus } from './web-rtc-connection';
 import { useWebRTCConnection, WebRTCConnectionProvider } from './web-rtc-connection-provider';
 
-jest.mock('./web-rtc-connection.ts');
+vi.mock('./web-rtc-connection.ts');
 class MockWebRTCConnection {
     status: WebRTCConnectionStatus = 'idle';
     listeners: Listener[] = [];
@@ -37,7 +38,7 @@ class MockWebRTCConnection {
 describe('WebRTCConnectionProvider', () => {
     beforeEach(() => {
         // @ts-expect-error the mock implements all public methods
-        jest.mocked(WebRTCConnection).mockImplementation(() => {
+        vi.mocked(WebRTCConnection).mockImplementation(() => {
             return new MockWebRTCConnection();
         });
     });
@@ -59,7 +60,7 @@ describe('WebRTCConnectionProvider', () => {
     };
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('provides initial status as idle', () => {
@@ -101,7 +102,7 @@ describe('WebRTCConnectionProvider', () => {
     });
 
     it('cleans up on unmount', () => {
-        const stopSpy = jest.spyOn(MockWebRTCConnection.prototype, 'stop');
+        const stopSpy = vi.spyOn(MockWebRTCConnection.prototype, 'stop');
 
         const { unmount } = render(
             <WebRTCConnectionProvider>

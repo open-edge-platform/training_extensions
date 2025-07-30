@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 
 import { useContainerSize } from './use-container-size';
 import { ZoomProvider } from './zoom';
 import { ZoomTransform } from './zoom-transform';
 
-jest.mock('./use-container-size', () => ({
-    useContainerSize: jest.fn(),
+vi.mock('./use-container-size', () => ({
+    useContainerSize: vi.fn(),
 }));
 
 describe('Zoom', () => {
@@ -14,7 +15,7 @@ describe('Zoom', () => {
         const contentSize = { width: 300, height: 200 };
         const expectedZoom = { translate: { x: -100, y: 150 }, scale: 0.3 };
 
-        jest.mocked(useContainerSize).mockImplementation(() => screenSize);
+        vi.mocked(useContainerSize).mockImplementation(() => screenSize);
 
         render(
             <ZoomProvider>
