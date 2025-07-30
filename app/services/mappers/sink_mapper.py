@@ -2,10 +2,9 @@ from typing import Any
 
 from app.db.schema import SinkDB
 from app.schemas.configuration.output_config import FolderOutputConfig, MqttOutputConfig, Sink, SinkType
-from app.services.mappers.base_mapper import BaseMapper
 
 
-class SinkMapper(BaseMapper):
+class SinkMapper:
     """Mapper for Sink model <-> Sink schema conversions."""
 
     def to_schema(self, sink_db: SinkDB) -> Sink:

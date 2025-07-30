@@ -19,7 +19,7 @@ dependencies = [
     "watchdog==6.0.0",
     "sqlalchemy~=2.0.41",
     "alembic~=1.16.4",
-    "aiofiles>=23.2.1",
+    "aiofiles==24.1.0",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +32,7 @@ dev = [
     "testcontainers~=4.10.0",
     "pytest~=8.4",
     "pytest-asyncio~=1.1.0",
+    "types-aiofiles==24.1.0.20240626",
 ]
 lint = [
     "ruff~=0.12.0",

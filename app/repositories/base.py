@@ -16,13 +16,13 @@ class BaseRepository(Generic[ModelType]):
         self.model = model
 
     def get_by_id(self, obj_id: str) -> ModelType | None:
-        return self.db.query(self.model).filter(self.model.id == obj_id).first()
+        return self.db.query(self.model).filter(self.model.id == obj_id).first()  # type: ignore[attr-defined]
 
     def list_all(self) -> list[ModelType]:
         return self.db.query(self.model).all()
 
     def save(self, item: ModelType) -> ModelType:
-        item.updated_at = datetime.now()
+        item.updated_at = datetime.now()  # type: ignore[attr-defined]
         self.db.add(item)
         self.db.flush()
         return item

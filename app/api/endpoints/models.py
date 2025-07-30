@@ -39,9 +39,9 @@ async def add_model(
 ) -> ModelResponse:  # TODO return schemas.model.Model
     """Upload a new model"""
     # Validate file extensions
-    if not xml_file.filename.endswith(".xml"):
+    if not xml_file.filename or not xml_file.filename.endswith(".xml"):
         raise HTTPException(status_code=400, detail="The model XML file must have .xml extension")
-    if not bin_file.filename.endswith(".bin"):
+    if not bin_file.filename or not bin_file.filename.endswith(".bin"):
         raise HTTPException(status_code=400, detail="The model BIN file must have .bin extension")
 
     try:

@@ -56,7 +56,7 @@ class ModelService(metaclass=Singleton):
             active_model = repo.get_active_model()
             available_models = repo.list_all()
             return ModelActivationState(
-                active_model=active_model.name,
+                active_model=active_model.name if active_model is not None else None,
                 available_models=[m.name for m in available_models],
             )
 
@@ -73,7 +73,7 @@ class ModelService(metaclass=Singleton):
         async def save_file(file_reader: UploadFile, path: Path):
             async with aiofiles.open(path, "wb") as f:
                 while chunk := await file_reader.read(1024 * 1024):  # 1MB chunks
-                    f.write(chunk)
+                    await f.write(chunk)
 
         await asyncio.gather(
             save_file(model_xml_file, xml_path),

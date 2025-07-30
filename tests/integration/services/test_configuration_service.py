@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from app.schemas.configuration import OutputFormat
 from app.schemas.configuration.input_config import SourceType, WebcamSourceConfig
 from app.schemas.configuration.output_config import MqttOutputConfig, SinkType
 from app.services.configuration_service import ConfigurationService
@@ -29,7 +30,7 @@ def sample_sink_config() -> MqttOutputConfig:
     return MqttOutputConfig(
         sink_type=SinkType.MQTT,
         rate_limit=0.1,
-        output_formats=["image_with_predictions"],
+        output_formats=[OutputFormat.IMAGE_WITH_PREDICTIONS],
         broker_host="localhost",
         broker_port=1883,
         topic="topic",

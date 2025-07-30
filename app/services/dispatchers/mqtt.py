@@ -17,7 +17,7 @@ from app.services.dispatchers.base import BaseDispatcher
 try:
     import paho.mqtt.client as mqtt
 except ImportError:
-    mqtt = None
+    mqtt = None  # type: ignore[assignment]
 
 
 logger = logging.getLogger(__name__)

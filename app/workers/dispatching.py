@@ -24,7 +24,7 @@ def dispatching_routine(
     """Pull predictions from the queue and dispatch them to the configured outputs and WebRTC visualization stream."""
     config_service = ConfigurationService(config_changed_condition=config_changed_condition)
 
-    prev_sink_config: list[Sink] = []
+    prev_sink_config: Sink | None = None
     destinations: list[Dispatcher] = []
 
     while not stop_event.is_set():
@@ -46,8 +46,13 @@ def dispatching_routine(
             logger.error("Missing inference data in stream_data; skipping dispatch")
             continue
 
-        image_with_visualization = stream_data.inference_data.visualized_prediction
-        prediction = stream_data.inference_data.prediction
+        inference_data = stream_data.inference_data
+        if inference_data is None:
+            logger.error("No inference data available")
+            continue
+
+        image_with_visualization = inference_data.visualized_prediction
+        prediction = inference_data.prediction
         # Postprocess and dispatch results
         for destination in destinations:
             destination.dispatch(

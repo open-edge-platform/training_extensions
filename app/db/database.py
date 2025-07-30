@@ -1,4 +1,5 @@
 import os
+from collections.abc import Iterator
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
@@ -21,7 +22,7 @@ Base = declarative_base()
 
 
 @contextmanager
-def get_db_session() -> Session:
+def get_db_session() -> Iterator[Session]:
     """Context manager to get a database session."""
     db = SessionLocal()
     try:

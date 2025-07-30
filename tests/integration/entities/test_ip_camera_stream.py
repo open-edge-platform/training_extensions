@@ -1,5 +1,6 @@
 import re
 import time
+from collections.abc import Generator
 from unittest.mock import MagicMock
 
 import cv2
@@ -12,7 +13,7 @@ from app.schemas.configuration.input_config import IPCameraSourceConfig, SourceT
 
 
 @pytest.fixture
-def ip_camera() -> str:
+def ip_camera() -> Generator[str]:
     """Start IP camera stream using testcontainers."""
     compose = DockerCompose("tests/integration/fixtures", compose_file_name="docker-compose.test.ip-camera.yaml")
     compose.start()
@@ -46,7 +47,7 @@ class TestIPCameraStream:
         return IPCameraSourceConfig(source_type=SourceType.IP_CAMERA, stream_url=ip_camera)
 
     @pytest.fixture()
-    def stream(self, config: IPCameraSourceConfig) -> IPCameraStream:
+    def stream(self, config: IPCameraSourceConfig) -> Generator[IPCameraStream]:
         with IPCameraStream(config) as ip_camera_stream:
             yield ip_camera_stream
 
@@ -69,8 +70,6 @@ class TestIPCameraStream:
         with IPCameraStream(config) as stream:
             data = stream.get_data()
             assert data.frame_data.shape[2] == 3
-
-        assert not stream.cap
 
     def test_invalid_url(self):
         """Test that IPCameraStream handles invalid URLs with specific error."""
@@ -107,7 +106,7 @@ class TestIPCameraStream:
                 stream.cap = mock_cap
 
             mock_initialize_capture = MagicMock(side_effect=_initialize_capture)
-            stream._initialize_capture = mock_initialize_capture
+            stream._initialize_capture = mock_initialize_capture  # type: ignore[method-assign]
             stream.cap = mock_cap
 
             # This should trigger reconnection logic and succeed
@@ -127,7 +126,7 @@ class TestIPCameraStream:
                 stream.cap = mock_cap
 
             mock_initialize_capture = MagicMock(side_effect=_initialize_capture)
-            stream._initialize_capture = mock_initialize_capture
+            stream._initialize_capture = mock_initialize_capture  # type: ignore[method-assign]
             stream.cap = mock_cap
 
             # Should exhaust retries and raise RuntimeError

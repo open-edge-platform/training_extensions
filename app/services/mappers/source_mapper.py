@@ -9,10 +9,9 @@ from app.schemas.configuration.input_config import (
     VideoFileSourceConfig,
     WebcamSourceConfig,
 )
-from app.services.mappers.base_mapper import BaseMapper
 
 
-class SourceMapper(BaseMapper):
+class SourceMapper:
     """Mapper for Source model <-> Source schema conversions."""
 
     def to_schema(self, source_db: SourceDB) -> Source:

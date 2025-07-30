@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.db.schema import SinkDB
+from app.schemas.configuration import OutputFormat
 from app.schemas.configuration.output_config import FolderOutputConfig, MqttOutputConfig, SinkType
 from app.services.mappers.sink_mapper import SinkMapper
 
@@ -22,13 +23,21 @@ class TestSinkMapper:
                 FolderOutputConfig(
                     sink_type=SinkType.FOLDER,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     folder_path="/test/path",
                 ),
                 SinkDB(
                     sink_type=SinkType.FOLDER.value,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     config_data={"folder_path": "/test/path"},
                 ),
             ),
@@ -36,7 +45,11 @@ class TestSinkMapper:
                 MqttOutputConfig(
                     sink_type=SinkType.MQTT,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     broker_host="localhost",
                     broker_port=1883,
                     topic="topic",
@@ -44,7 +57,11 @@ class TestSinkMapper:
                 SinkDB(
                     sink_type=SinkType.MQTT.value,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
                 ),
             ),
@@ -82,13 +99,21 @@ class TestSinkMapper:
                 SinkDB(
                     sink_type=SinkType.FOLDER.value,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     config_data={"folder_path": "/test/path"},
                 ),
                 FolderOutputConfig(
                     sink_type=SinkType.FOLDER,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     folder_path="/test/path",
                 ),
             ),
@@ -96,13 +121,21 @@ class TestSinkMapper:
                 SinkDB(
                     sink_type=SinkType.MQTT.value,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
                 ),
                 MqttOutputConfig(
                     sink_type=SinkType.MQTT,
                     rate_limit=0.2,
-                    output_formats=["image_original", "image_with_predictions", "predictions"],
+                    output_formats=[
+                        OutputFormat.IMAGE_ORIGINAL,
+                        OutputFormat.IMAGE_WITH_PREDICTIONS,
+                        OutputFormat.PREDICTIONS,
+                    ],
                     broker_host="localhost",
                     broker_port=1883,
                     topic="topic",

@@ -8,8 +8,8 @@ from app.services.dispatchers import Dispatcher, FolderDispatcher, MqttDispatche
 class DispatchService:
     _dispatcher_registry: dict[SinkType, Callable[[Sink], Dispatcher | None]] = {
         SinkType.DISCONNECTED: lambda _: None,
-        SinkType.FOLDER: lambda config: FolderDispatcher(output_config=config),
-        SinkType.MQTT: lambda config: MqttDispatcher(output_config=config),
+        SinkType.FOLDER: lambda config: FolderDispatcher(output_config=config),  # type: ignore[union-attr, arg-type]
+        SinkType.MQTT: lambda config: MqttDispatcher(output_config=config),  # type: ignore[union-attr, arg-type]
         SinkType.ROS: lambda _: _raise_not_implemented("ROS output is not implemented yet"),
         SinkType.WEBHOOK: lambda _: _raise_not_implemented("WEBHOOK output is not implemented yet"),
     }

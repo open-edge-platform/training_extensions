@@ -86,15 +86,17 @@ class ConfigurationService(metaclass=Singleton):
             if pipeline.source_id:
                 source_repo = SourceRepository(db)
                 source = source_repo.get_by_id(pipeline.source_id)
-                self._source_id = source.id
-                app_config.input = self._source_mapper.to_schema(source)
+                if source is not None:
+                    self._source_id = source.id
+                    app_config.input = self._source_mapper.to_schema(source)
 
             # Get the sink for this pipeline
             if pipeline.sink_id:
                 sink_repo = SinkRepository(db)
                 sink = sink_repo.get_by_id(pipeline.sink_id)
-                self._sink_id = sink.id
-                app_config.output = self._sink_mapper.to_schema(sink)
+                if sink is not None:
+                    self._sink_id = sink.id
+                    app_config.output = self._sink_mapper.to_schema(sink)
 
             return app_config
 
@@ -133,11 +135,13 @@ class ConfigurationService(metaclass=Singleton):
             if isinstance(config, SourceDB):
                 source_repo = SourceRepository(db)
                 source_repo.save(config)
-                pipeline_repo.update_source(self._active_pipeline_id, config.id)
+                if self._active_pipeline_id is not None:
+                    pipeline_repo.update_source(self._active_pipeline_id, config.id)
             elif isinstance(config, SinkDB):
                 sink_repo = SinkRepository(db)
                 sink_repo.save(config)
-                pipeline_repo.update_sink(self._active_pipeline_id, config.id)
+                if self._active_pipeline_id is not None:
+                    pipeline_repo.update_sink(self._active_pipeline_id, config.id)
             else:
                 raise TypeError(f"Unsupported config type: {type(config)}")
 

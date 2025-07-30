@@ -11,7 +11,7 @@ import pytest
 from testcontainers.compose import DockerCompose
 
 from app.schemas.configuration import OutputFormat
-from app.schemas.configuration.output_config import MqttOutputConfig
+from app.schemas.configuration.output_config import MqttOutputConfig, SinkType
 from app.services.dispatchers.mqtt import MqttDispatcher
 
 
@@ -47,7 +47,7 @@ def mqtt_config(mqtt_broker) -> MqttOutputConfig:
     """Create MQTT configuration for testing."""
     host, port = mqtt_broker
     return MqttOutputConfig(
-        sink_type="mqtt",
+        sink_type=SinkType.MQTT,
         broker_host=host,
         broker_port=port,
         topic="topic",
@@ -62,7 +62,7 @@ def mqtt_config_with_auth(mqtt_broker) -> MqttOutputConfig:
     """Create MQTT configuration with authentication."""
     host, port = mqtt_broker
     return MqttOutputConfig(
-        sink_type="mqtt",
+        sink_type=SinkType.MQTT,
         broker_host=host,
         broker_port=port,
         topic="topic",

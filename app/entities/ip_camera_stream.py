@@ -45,3 +45,6 @@ class IPCameraStream(BaseOpenCVStream):
 
     def is_real_time(self) -> bool:
         return True
+
+    def __enter__(self) -> "IPCameraStream":
+        return self

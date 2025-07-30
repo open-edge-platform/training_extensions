@@ -52,6 +52,10 @@ jobs:
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
+      - name: Check source code with mypy
+        run: |
+          uv run mypy . --config-file=pyproject.toml
+
       - name: Run tests
         run: |
           uv run pytest tests

@@ -22,7 +22,7 @@ class ModelRepository(BaseRepository[ModelDB]):
             return None
         return self.db.query(ModelDB).filter(ModelDB.id == pipeline.model_id).first()
 
-    def get_by_name(self, model_name: str) -> ModelDB:
+    def get_by_name(self, model_name: str) -> ModelDB | None:
         return self.db.query(ModelDB).filter(ModelDB.name == model_name).first()
 
     def remove(self, model_name: str) -> None:
