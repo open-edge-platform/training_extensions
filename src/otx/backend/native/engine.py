@@ -962,9 +962,10 @@ class OTXEngine(Engine):
     def _apply_param_overrides(self, param_kwargs: dict[str, Any]) -> None:
         """Apply parameter overrides based on the current local variables."""
         sig = inspect.signature(self.train)
-
+        add_kwargs = param_kwargs.pop("kwargs", {})
+        self._cache.update(**add_kwargs)
         for param_name, param in sig.parameters.items():
-            if param_name not in {"self", "kwargs"} and param_name in param_kwargs:
+            if param_name in param_kwargs:
                 current_value = param_kwargs[param_name]
                 # Apply override if current value matches default and we have an override
                 if (current_value != param.default) or (param_name not in self._cache.args):
