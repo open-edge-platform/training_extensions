@@ -63,7 +63,7 @@ from otx.data.transform_libs.utils import (
     translate_masks,
     translate_polygons,
 )
-from otx.data.utils.utils import import_object_from_module
+from otx.data.utils import import_object_from_module
 
 if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
