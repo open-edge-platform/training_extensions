@@ -25,8 +25,7 @@ from otx.backend.native.models.detection.heads.class_incremental_mixin import (
 )
 from otx.backend.native.models.detection.utils.prior_generators.utils import anchor_inside_flags
 from otx.backend.native.models.detection.utils.utils import unmap
-from otx.backend.native.models.modules.conv_module import Conv2dModule, PatchedConv2d
-from otx.backend.native.models.modules.norm import build_norm_layer
+from otx.backend.native.models.modules import Conv2dModule, PatchedConv2d, build_norm_layer
 from otx.backend.native.models.modules.scale import Scale
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.data.entity.torch import OTXDataBatch
