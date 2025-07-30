@@ -9,10 +9,6 @@ All possible OpenVINO™ Training Extensions CLI commands are presented below al
     Also, by default, the OpenVINO™ Training Extensions CLI is written using jsonargparse, see jsonargparse or LightningCLI.
     Please refer `Jsonargparse Documentation <https://jsonargparse.readthedocs.io/en/v4.27.4/#configuration-files>`_
 
-.. note::
-
-    Since OTX v2.5, a new concept of multiple backends has been introduced. Currently, only the native OTX backend supports CLI functionality. Support for additional backends will be added in future releases.
-
 |
 
 .. figure:: ../../../utils/images/cli.png
@@ -31,7 +27,7 @@ Help
 
     (otx) ...$ otx --help
     ╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    │ Usage: otx [-h] [-v] {find,train,test,predict,export,optimize,explain} ...                              │
+    │ Usage: otx [-h] [-v] {find,train,test,predict,export,optimize} ...                                      │
     │                                                                                                                 │
     │                                                                                                                 │
     │ OpenVINO Training-Extension command line tool                                                                   │
@@ -52,7 +48,6 @@ Help
     │     predict             Run predictions using the specified model and data.                                     │
     │     export              Export the trained model to OpenVINO Intermediate Representation (IR) or ONNX formats.  │
     │     optimize            Applies NNCF.PTQ to the underlying models (now works only for OV models).               │
-    │     explain             Run XAI using the specified model and data (test subset).                               │
     |     benchmark           Executes model micro benchmarking on random data.                                       |
     │                                                                                                                 │
     ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
@@ -73,15 +68,23 @@ For basic subcommand help, the Verbosity Level is 0. In this case, the CLI provi
     A better guide is provided by the documentation.
     ╭─ Quick-Start ─────────────────────────────────────────────────────────╮
     │                                                                       │
-    │  1 you can pick a model or datamodule as Config file or Class.        │
+    │  1 you can train with data_root only. then OTX will provide default   │
+    │    model.                                                             │
+    │                                                                       │
+    │                                                                       │
+    │  otx train --data_root <DATASET_PATH>                                 │
+    │                                                                       │
+    │                                                                       │
+    │  2 you can pick a model or datamodule as Config file or Class.        │
     │                                                                       │
     │                                                                       │
     │  otx train                                                            │
     │  --data_root <DATASET_PATH>                                           │
-    │  --config <CONFIG | CLASS_PATH_OR_NAME>                               │
+    │  --model <CONFIG | CLASS_PATH_OR_NAME> --data <CONFIG |               │
+    │  CLASS_PATH_OR_NAME>                                                  │
     │                                                                       │
     │                                                                       │
-    │  2 Of course, you can override the various values with commands.      │
+    │  3 Of course, you can override the various values with commands.      │
     │                                                                       │
     │                                                                       │
     │  otx train                                                            │
@@ -89,29 +92,20 @@ For basic subcommand help, the Verbosity Level is 0. In this case, the CLI provi
     │  --max_epochs <EPOCHS, int> --checkpoint <CKPT_PATH, str>             │
     │                                                                       │
     │                                                                       │
-    │  3 To reproduce the existing training with work_dir, run              │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │  otx train --work_dir <WORK_DIR_PATH, str>                            │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │  4 To resume training, run                                            │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │  otx train \                                                          │                                                                                                                                                                                                                                                                                                                    │
-    │  ...     --config <CONFIG, str> \                                     │                                                                                                                                                                                                                                                                                                                    │
-    │  ...     --data_root <DATASET_PATH, str> \                            │                                                                                                                                                                                                                                                                                                                    │
-    │  ...     --checkpoint <CKPT_PATH, str>                                │                                                                                                                                                                                                                                                                                                                    │
-    │  ...     --resume True                                                │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │ To get more overridable argument information, run the command below.  │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │                                                                       │                                                                                                                                                                                                                                                                                                                    │
-    │  # Verbosity Level 1                                                  │                                                                                                                                                                                                                                                                                                                    │
-    │  >>> otx train [optional_arguments] -h -v                             │                                                                                                                                                                                                                                                                                                                    │
-    │  # Verbosity Level 2                                                  │                                                                                                                                                                                                                                                                                                                    │
-    │  >>> otx train [optional_arguments] -h -vv                            │
+    │  4 If you have a complete configuration file, run it like this.       │
+    │                                                                       │
+    │                                                                       │
+    │  otx train --data_root <DATASET_PATH> --config <CONFIG_PATH, str>     │
+    │                                                                       │
+    │                                                                       │
+    │ To get more overridable argument information, run the command below.  │
+    │                                                                       │
+    │                                                                       │
+    │  # Verbosity Level 1                                                  │
+    │  otx train [optional_arguments] -h -v                                 │
+    │  # Verbosity Level 2                                                  │
+    │  otx train [optional_arguments] -h -vv                                │
+    │                                                                       │
     ╰───────────────────────────────────────────────────────────────────────╯
 
 For Verbosity Level 1, it shows Quick-Guide & the essential arguments.
@@ -137,7 +131,11 @@ For Verbosity Level 1, it shows Quick-Guide & the essential arguments.
     │                            [--work_dir WORK_DIR]                                                │
     │                            [--engine.checkpoint CHECKPOINT]                                     │
     │                            [--engine.device {auto,gpu,cpu,tpu,ipu,hpu,mps}]                     │
+    │                            [--model.help CLASS_PATH_OR_NAME]                                    │
+    │                            [--model CONFIG | CLASS_PATH_OR_NAME | .INIT_ARG_NAME VALUE]         │
     │                            [--data CONFIG]                                                      │
+    │                            [--optimizer CONFIG | CLASS_PATH_OR_NAME | .INIT_ARG_NAME VALUE]     │
+    │                            [--scheduler CONFIG | CLASS_PATH_OR_NAME | .INIT_ARG_NAME VALUE]     │
     │                                                                                                 │
     ...
 
@@ -321,6 +319,14 @@ The results will be saved in ``./otx-workspace/`` folder by default. The output 
 
 .. tab-set::
 
+    .. tab-item:: Auto-Configuration
+
+        Example of the command line to start training using Auto-Configuration:
+
+        .. code-block:: shell
+
+            (otx) ...$ otx train --data_root <dataset-root> --task <TASK>
+
     .. tab-item:: With Configuration
 
         You can use the recipe configuration provided by OpenVINO™ Training Extensions. The corresponding configuration file can be found via ``otx find``.
@@ -329,8 +335,32 @@ The results will be saved in ``./otx-workspace/`` folder by default. The output 
 
             (otx) ...$ otx train --config <config-file-path> --data_root <dataset-root>
 
+    .. tab-item:: With Custom Model
+
+        You can also use a custom model and data module. The model and data module can be passed as a class path or a configuration file.
+
+        .. code-block:: shell
+
+            (otx) ...$ otx train --model <model-class-path-or-name> --task <task-type> --data_root <dataset-root>
+
+        For example, if you want to use the ``otx.algo.classification.torchvision_model.TVModelForMulticlassCls`` model class, you can train it as shown below.
+
+        .. code-block:: shell
+
+            (otx) ...$ otx train --model otx.algo.classification.torchvision_model.TVModelForMulticlassCls --model.backbone mobilenet_v3_small ...
+
 .. note::
     You also can visualize the training using ``Tensorboard`` as these logs are located in ``<work_dir>/tensorboard``.
+
+.. note::
+    ``--data.mem_cache_size`` provides in-memory caching for decoded images in main memory.
+    If the batch size is large, such as for classification tasks, or if your dataset contains high-resolution images,
+    image decoding can account for a non-negligible overhead in data pre-processing.
+    This option can be useful for maximizing GPU utilization and reducing model training time in those cases.
+    If your machine has enough main memory, we recommend increasing this value as much as possible.
+    For example, you can cache approximately 10,000 of ``500x375~500x439`` sized images with ``--data.mem_cache_size 8GB``.
+
+It is also possible to start training by omitting the recipe and just passing the paths to dataset roots, then the :doc:`auto-configuration <../explanation/additional_features/auto_configuration>` will be enabled. Based on the dataset, OpenVINO™ Training Extensions will choose the task type and recipe with the best accuracy/speed trade-off.
 
 You can override the configurable arguments.
 For example, that is how you can change the max epochs and the batch size for the training:
@@ -354,11 +384,11 @@ The command below performs exporting to the ``{work_dir}/`` path.
 
 .. code-block:: shell
 
-    (otx) ...$ otx export --config <config-file-path> --data_root <dataset-root> --checkpoint <path/to/trained/weights.ckpt>
+    (otx) ...$ otx export ... --checkpoint <path/to/trained/weights.ckpt>
 
 The command results in ``exported_model.xml``, ``exported_model.bin``.
 
-To use the exported model as an input for ``otx explain``, please dump additional outputs with internal information, using ``--explain``:
+To use the exported model for explainable AI (XAI), please dump additional outputs with internal information, using ``--explain``:
 
 .. code-block:: shell
 
@@ -376,6 +406,36 @@ To use the exported model as an input for ``otx explain``, please dump additiona
         # OR if you are in the workspace root
         (otx) ...$ otx export
 
+
+************
+Optimization
+************
+
+``otx optimize`` optimizes a model using `PTQ <https://github.com/openvinotoolkit/nncf#post-training-quantization>`_ depending on the model and transforms it to ``INT8`` format.
+
+- PTQ optimization used for models exported in the OpenVINO™ IR format
+
+Command example for optimizing OpenVINO™ model (.xml) with OpenVINO™ PTQ:
+
+.. code-block:: shell
+
+    (otx) ...$ otx optimize ... --checkpoint <path/to/exported_model.xml> \
+                                --data_root <path/to/val/root>
+
+
+Thus, to use PTQ pass the path to exported IR (.xml) model.
+
+.. note::
+    If ``.latest`` exists in work_dir, you can omit checkpoint and config.
+    You can also omit ``--work_dir`` if you run from the root of the workspace that contains ``.latest``.
+
+    .. code-block:: shell
+
+        (otx) ...$ otx optimize --work_dir <workspace-path>
+
+        # OR if you are in the workspace root
+        (otx) ...$ otx optimize
+
 ***********
 Evaluation
 ***********
@@ -391,7 +451,7 @@ The command below will evaluate the trained model on the provided dataset:
 
 .. note::
 
-    OpenVINO™ IR model validation is not supported for now in CLI.
+    It is possible to pass both PyTorch weights ``.ckpt`` or OpenVINO™ IR ``exported_model.xml`` to ``--checkpoint`` option.
 
 
 .. note::
@@ -405,27 +465,35 @@ The command below will evaluate the trained model on the provided dataset:
         # OR if you are in the workspace root
         (otx) ...$ otx test
 
-***********
-Explanation
-***********
+**********
+Prediction
+**********
 
-``otx explain`` runs the explainable AI (XAI) algorithm on a specific model-dataset pair. It helps explain the model's decision-making process in a way that is easily understood by humans.
+``otx predict`` runs inference on a dataset and optionally generates explainable AI (XAI) saliency maps.
 
-
-The command below will generate saliency maps (heatmaps with red colored areas of focus) of the trained model on the provided dataset and save the resulting images to ``output`` path:
-
-.. code-block:: shell
-
-    (otx) ...$ otx explain --config <path/to/config> \
-                           --checkpoint <path/to/pytorch_model_weights>
-
-
-By default, the model is exported to the OpenVINO™ IR format without extra feature information needed for the ``explain`` functionality. To use OpenVINO™ IR model with feature information, you need to export the model with ``--explain True`` option.
+The command below will run predictions on the provided dataset:
 
 .. code-block:: shell
 
-    (otx) ...$ otx export ... --checkpoint <path/to/trained/weights.ckpt> \
-                              --explain True
+    (otx) ...$ otx predict ... --data_root <path/to/test/root> \
+                               --checkpoint <path/to/model_weights>
+
+To generate saliency maps for explainability (XAI), use the ``--explain True`` parameter:
+
+.. code-block:: shell
+
+    (otx) ...$ otx predict ... --data_root <path/to/test/root> \
+                               --checkpoint <path/to/model_weights> \
+                               --explain True \
+                               --explain_config.postprocess True
+
+.. note::
+
+    For exported OpenVINO™ IR models, make sure the model was exported with ``otx export --explain True`` to include the necessary outputs for XAI functionality.
+
+.. note::
+
+    It is possible to pass both PyTorch weights ``.ckpt`` or OpenVINO™ IR ``exported_model.xml`` to ``--checkpoint`` option.
 
 *******************
 Micro-benchmarking
@@ -444,7 +512,7 @@ It worth noticing that the latency and throughput are depend on batch size. Vary
 
 .. note::
 
-    OTX benchmark works only with PyTorch model. To benchmark OpenVINO™ IR models, use `OpenVINO benchmark app <https://docs.openvino.ai/nightly/get-started/learn-openvino/openvino-samples/benchmark-tool.html>_`.
+    It is possible to pass both PyTorch weights ``.ckpt`` or OpenVINO™ IR ``exported_model.xml`` to ``--checkpoint`` option.
 
 ***********
 Workspace

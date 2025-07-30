@@ -332,6 +332,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             inputs.image = img
             inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+            inputs.img_info.keep_ratio = self.keep_ratio  # type: ignore[union-attr]
             scale_factor = (scale[0] / img_shape[0], scale[1] / img_shape[1])
         return inputs, scale_factor
 

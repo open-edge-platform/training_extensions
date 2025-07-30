@@ -421,10 +421,7 @@ class OTXEngine(Engine):
                 ...     --checkpoint <CKPT_PATH, str>
                 ```
         """
-        from otx.backend.native.models.utils.xai_utils import (
-            process_saliency_maps_in_pred_entity,
-            set_crop_padded_map_flag,
-        )
+        from otx.backend.native.models.utils.xai_utils import process_saliency_maps_in_pred_entity
 
         model = self.model
 
@@ -462,7 +459,6 @@ class OTXEngine(Engine):
         if explain:
             if explain_config is None:
                 explain_config = ExplainConfig()
-            explain_config = set_crop_padded_map_flag(explain_config, datamodule)
 
             predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
 
@@ -547,91 +543,6 @@ class OTXEngine(Engine):
 
         self.model.explain_mode = False
         return exported_model_path
-
-    def explain(
-        self,
-        checkpoint: PathLike | None = None,
-        datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
-        explain_config: ExplainConfig | None = None,
-        **kwargs,
-    ) -> list | None:
-        r"""Run XAI using the specified model and data (test subset).
-
-        Args:
-            checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
-            datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.
-            explain_config (ExplainConfig | None, optional): Config used to handle saliency maps.
-            **kwargs: Additional keyword arguments for pl.Trainer configuration.
-
-        Returns:
-            list: Saliency maps.
-
-        Example:
-            >>> engine.explain(
-            ...     datamodule=OTXDataModule(),
-            ...     checkpoint=<checkpoint/path>,
-            ...     explain_config=ExplainConfig(),
-            ... )
-
-        CLI Usage:
-            1. To run XAI with the torch model in work_dir, run
-                ```shell
-                >>> otx explain \
-                ...     --work_dir <WORK_DIR_PATH, str>
-                ```
-            2. To run XAI using the specified model (torch or IR), run
-                ```shell
-                >>> otx explain \
-                ...     --work_dir <WORK_DIR_PATH, str> \
-                ...     --checkpoint <CKPT_PATH, str>
-                ```
-            3. To run XAI using the configuration, run
-                ```shell
-                >>> otx explain \
-                ...     --config <CONFIG_PATH> --data_root <DATASET_PATH, str> \
-                ...     --checkpoint <CKPT_PATH, str>
-                ```
-        """
-        from otx.backend.native.models.utils.xai_utils import (
-            process_saliency_maps_in_pred_entity,
-            set_crop_padded_map_flag,
-        )
-
-        model = self.model
-
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-        datamodule = datamodule if datamodule is not None else self.datamodule
-
-        if checkpoint is not None:
-            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
-            model.load_state_dict(ckpt)
-
-        if model.label_info != self.datamodule.label_info:
-            msg = (
-                "To launch a explain pipeline, the label information should be same "
-                "between the training and testing datasets. "
-                "Please check whether you use the same dataset: "
-                f"model.label_info={model.label_info}, "
-                f"datamodule.label_info={self.datamodule.label_info}"
-            )
-            raise ValueError(msg)
-
-        model.explain_mode = True
-
-        self._build_trainer(**kwargs)
-
-        predict_result = self.trainer.predict(
-            model=model,
-            datamodule=datamodule,
-        )
-
-        if explain_config is None:
-            explain_config = ExplainConfig()
-        explain_config = set_crop_padded_map_flag(explain_config, datamodule)
-
-        predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
-        model.explain_mode = False
-        return predict_result
 
     def benchmark(
         self,

@@ -230,7 +230,7 @@ class TestEngine:
 
         # Correct label_info from the checkpoint
         mock_model.label_info = fxt_engine.datamodule.label_info
-        fxt_engine.explain(checkpoint=checkpoint)
+        fxt_engine.predict(checkpoint=checkpoint, explain=True)
         mock_predict.assert_called_once()
 
         mock_process_saliency_maps.assert_called_once()
