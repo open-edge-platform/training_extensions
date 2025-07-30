@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - id: files
-        uses: tj-actions/changed-files@a0370f61698fcac830a08949da9fdf96ea0f3ab7 # v45.0.7
+        uses: tj-actions/changed-files@db8d0bfea5a44e51abd5dc1454386c668ae901f9 # v45.0.7
         with:
           files: |
             **/*.py
