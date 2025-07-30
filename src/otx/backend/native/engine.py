@@ -954,7 +954,8 @@ class OTXEngine(Engine):
             # set up default callbacks
             self.configure_callbacks()
 
-            self._trainer = Trainer(logger=logger, **self._cache.args)
+            kwargs = self._cache.args
+            self._trainer = Trainer(logger=logger, **kwargs)
             self._cache.is_trainer_args_identical = True
             self._trainer.task = self.task
             self.work_dir = self._trainer.default_root_dir
@@ -1009,6 +1010,8 @@ class OTXEngine(Engine):
         """Sets up the OTX callbacks for the trainer."""
         callbacks: list[Callback] = []
         config_callbacks = self._cache.args.get("callbacks", [])
+        if config_callbacks is None:
+            return
         has_callback: Callable[[Callback], bool] = lambda callback: any(
             isinstance(c, callback) for c in config_callbacks
         )
