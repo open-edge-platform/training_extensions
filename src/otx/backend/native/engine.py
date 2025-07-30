@@ -1095,4 +1095,3 @@ class OTXEngine(Engine):
             raise RuntimeError(e) from None
 
         return ckpt
-    

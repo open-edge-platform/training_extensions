@@ -133,7 +133,7 @@ def test_engine_from_tile_recipe(
         work_dir=tmp_path / task,
         device=fxt_accelerator,
     )
-    engine.train()
+    engine.train(max_epochs=1)
     exported_model_path = engine.export()
     assert exported_model_path.exists()
 

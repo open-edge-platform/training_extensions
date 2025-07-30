@@ -331,7 +331,6 @@ class Benchmark:
 
         Returns:
             Engine: Initialised engine
-            dict[str, Any]: Training arguments for OTXEngine.train method.
         """
 
         return OTXEngine.from_config(
