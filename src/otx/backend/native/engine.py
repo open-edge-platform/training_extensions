@@ -134,6 +134,7 @@ class OTXEngine(Engine):
 
         self._model: OTXModel = model
         self.task = self._model.task
+
         self.checkpoint = checkpoint
         if self.checkpoint:
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
@@ -148,7 +149,7 @@ class OTXEngine(Engine):
 
     def train(
         self,
-        max_epochs: int | None = 200,
+        max_epochs: int | None = None,
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
@@ -184,7 +185,6 @@ class OTXEngine(Engine):
             adaptive_bs (Literal["None", "Safe", "Full"]):
                 Change the actual batch size depending on the current GPU status.
                 Safe => Prevent GPU out of memory. Full => Find a batch size using most of GPU memory.
-                Defaults to "None".
             check_val_every_n_epoch (int | None, optional): How often to check validation. Defaults to 1.
             num_sanity_val_steps (int | None, optional): Number of validation steps to run before training starts.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
@@ -229,6 +229,7 @@ class OTXEngine(Engine):
                 ```
         """
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
+
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -755,7 +756,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> OTXEngine:
+    ) -> Engine:
         """Builds the engine from a configuration file.
 
         Args:
@@ -773,7 +774,6 @@ class OTXEngine(Engine):
             >>> engine = OTXEngine.from_config(
             ...     config="config.yaml",
             ... )
-            ... engine.train()
         """
         from otx.cli.utils.jsonargparse import get_instantiated_classes
 
@@ -835,7 +835,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> OTXEngine:
+    ) -> Engine:
         """Builds the engine from a model name.
 
         Args:
@@ -848,7 +848,7 @@ class OTXEngine(Engine):
             kwargs: Arguments that can override the engine's arguments.
 
         Returns:
-            OTXEngine: An instance of the OTXEngine class.
+            Engine: An instance of the Engine class.
 
         Example:
             >>> engine = OTXEngine.from_model_name(
@@ -856,14 +856,13 @@ class OTXEngine(Engine):
             ...     task="DETECTION",
             ...     data_root=<dataset/path>,
             ... )
-            ... engine.train()
 
             If you want to override configuration from default config:
                 >>> overriding = {
                 ...     "data.train_subset.batch_size": 2,
                 ...     "data.test_subset.subset_name": "TESTING",
                 ... }
-                >>> engine, train_kwargs = OTXEngine(
+                >>> engine = OTXEngine(
                 ...     model_name="atss_mobilenetv2",
                 ...     task="DETECTION",
                 ...     data_root=<dataset/path>,
@@ -946,6 +945,8 @@ class OTXEngine(Engine):
     def _build_trainer(self, logger: Logger | Iterable[Logger] | bool | None = None, **kwargs) -> None:
         """Instantiate the trainer based on the model parameters."""
         if self._cache.requires_update(**kwargs) or self._trainer is None:
+            self._cache.update(**kwargs)
+
             # set up xpu device
             self.configure_accelerator()
             # setup default loggers
@@ -953,23 +954,11 @@ class OTXEngine(Engine):
             # set up default callbacks
             self.configure_callbacks()
 
-            trainer_kwargs = self._apply_param_overrides(kwargs)
-            self._trainer = Trainer(logger=logger, **trainer_kwargs)
+            kwargs = self._cache.args
+            self._trainer = Trainer(logger=logger, **kwargs)
             self._cache.is_trainer_args_identical = True
             self._trainer.task = self.task
             self.work_dir = self._trainer.default_root_dir
-
-    def _apply_param_overrides(self, param_kwargs: dict[str, Any]) -> dict[str, Any]:
-        """Apply parameter overrides based on the current local variables."""
-        sig = inspect.signature(self.train)
-
-        for param_name, param in sig.parameters.items():
-            if param_name not in {"self", "kwargs"} and param_name in param_kwargs:
-                current_value = param_kwargs[param_name]
-                # Apply override if current value matches default and we have an override
-                if (current_value != param.default) or (param_name not in self._cache.args):
-                    self._cache.args[param_name] = current_value
-        return self._cache.args
 
     def configure_accelerator(self) -> None:
         """Updates the cache arguments based on the device type."""
@@ -1106,3 +1095,4 @@ class OTXEngine(Engine):
             raise RuntimeError(e) from None
 
         return ckpt
+    
