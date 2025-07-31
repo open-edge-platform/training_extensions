@@ -25,8 +25,7 @@ from otx.backend.native.models.detection.heads.class_incremental_mixin import (
 )
 from otx.backend.native.models.detection.utils.prior_generators.utils import anchor_inside_flags
 from otx.backend.native.models.detection.utils.utils import unmap
-from otx.backend.native.models.modules.conv_module import Conv2dModule
-from otx.backend.native.models.modules.norm import build_norm_layer
+from otx.backend.native.models.modules import Conv2dModule, PatchedConv2d, build_norm_layer
 from otx.backend.native.models.modules.scale import Scale
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.data.entity.torch import OTXDataBatch
@@ -123,19 +122,19 @@ class ATSSHeadModule(ClassIncrementalMixin, AnchorHead):
                 ),
             )
         pred_pad_size = self.pred_kernel_size // 2
-        self.atss_cls = nn.Conv2d(
+        self.atss_cls = PatchedConv2d(
             self.feat_channels,
             self.num_anchors * self.cls_out_channels,
             self.pred_kernel_size,
             padding=pred_pad_size,
         )
-        self.atss_reg = nn.Conv2d(
+        self.atss_reg = PatchedConv2d(
             self.feat_channels,
             self.num_base_priors * 4,
             self.pred_kernel_size,
             padding=pred_pad_size,
         )
-        self.atss_centerness = nn.Conv2d(
+        self.atss_centerness = PatchedConv2d(
             self.feat_channels,
             self.num_base_priors * 1,
             self.pred_kernel_size,

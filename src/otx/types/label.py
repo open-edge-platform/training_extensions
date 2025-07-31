@@ -149,7 +149,10 @@ class LabelInfo:
     @classmethod
     def from_json(cls, serialized: str) -> LabelInfo:
         """Reconstruct it from the JSON serialized string."""
-        return cls(**json.loads(serialized))
+        labels_info = json.loads(serialized)
+        if "label_ids" not in labels_info:
+            labels_info["label_ids"] = labels_info["label_names"]
+        return cls(**labels_info)
 
 
 @dataclass

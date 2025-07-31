@@ -96,6 +96,9 @@ def _train_model(bs: int, engine: OTXEngine, callbacks: list[Callback] | Callbac
         engine._cache.update(devices=1)  # noqa: SLF001
 
     engine.datamodule.train_subset.batch_size = bs
+    engine.datamodule.val_subset.batch_size = bs
+    engine.datamodule.test_subset.batch_size = bs
+    train_args["adaptive_bs"] = "None"
     engine.train(callbacks=_register_callback(callbacks), **train_args)
 
 
@@ -113,4 +116,6 @@ def _apply_new_batch_size(engine: OTXEngine, new_batch_size: int) -> None:
     if new_batch_size == origin_bs:
         return
     engine.datamodule.train_subset.batch_size = new_batch_size
+    engine.datamodule.val_subset.batch_size = new_batch_size
+    engine.datamodule.test_subset.batch_size = new_batch_size
     engine.model.optimizer_callable.optimizer_kwargs["lr"] *= sqrt(new_batch_size / origin_bs)  # type: ignore[attr-defined]
