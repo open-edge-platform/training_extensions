@@ -275,7 +275,7 @@ class TestEngine:
         overriding = {
             "data.train_subset.batch_size": 3,
             "data.test_subset.subset_name": "TESTING",
-            "max_epochs": 50
+            "max_epochs": 50,
         }
 
         engine = OTXEngine.from_config(
@@ -292,12 +292,11 @@ class TestEngine:
         engine.train()
         assert engine._cache.args["max_epochs"] == 50
         assert engine.trainer.max_epochs == 50
-        assert engine._cache.args["deterministic"] == False
-        engine.train(max_epochs=100, deterministic = True)
+        assert not engine._cache.args["deterministic"]
+        engine.train(max_epochs=100, deterministic=True)
         assert engine._cache.args["max_epochs"] == 100
         assert engine.trainer.max_epochs == 100
-        assert engine._cache.args["deterministic"] == True
-
+        assert engine._cache.args["deterministic"]
 
     def test_benchmark(self, fxt_engine, mocker: MockerFixture) -> None:
         checkpoint = "path/to/checkpoint.ckpt"
