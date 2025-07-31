@@ -266,13 +266,16 @@ class TestEngine:
                 **overriding,
             )
 
-    def test_from_config(self, tmp_path) -> None:
+    def test_from_config(self, tmp_path, mocker) -> None:
         recipe_path = "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml"
         data_root = "tests/assets/classification_dataset"
+        mocker.patch("pathlib.Path.symlink_to")
+        mocker.patch("otx.backend.native.engine.Trainer.fit")
 
         overriding = {
             "data.train_subset.batch_size": 3,
             "data.test_subset.subset_name": "TESTING",
+            "max_epochs": 50,
         }
 
         engine = OTXEngine.from_config(
@@ -285,6 +288,15 @@ class TestEngine:
         assert engine is not None
         assert engine.datamodule.train_subset.batch_size == 3
         assert engine.datamodule.test_subset.subset_name == "TESTING"
+        # test overriding train_kwargs with config
+        engine.train()
+        assert engine._cache.args["max_epochs"] == 50
+        assert engine.trainer.max_epochs == 50
+        assert not engine._cache.args["deterministic"]
+        engine.train(max_epochs=100, deterministic=True)
+        assert engine._cache.args["max_epochs"] == 100
+        assert engine.trainer.max_epochs == 100
+        assert engine._cache.args["deterministic"]
 
     def test_benchmark(self, fxt_engine, mocker: MockerFixture) -> None:
         checkpoint = "path/to/checkpoint.ckpt"
