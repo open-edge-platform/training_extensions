@@ -1095,6 +1095,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         bbox_clip_border: bool = True,
         transform_mask: bool = True,
         transform_polygon: bool = True,
+        recompute_bbox: bool = True,
         mask_fill_value: int = 0,
         is_numpy_to_tvtensor: bool = False,
     ) -> None:
@@ -1110,6 +1111,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.bbox_clip_border = bbox_clip_border
         self.transform_mask = transform_mask
         self.transform_polygon = transform_polygon
+        self.recompute_bbox = recompute_bbox
         self.mask_fill_value = mask_fill_value
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
@@ -1197,6 +1199,9 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             if hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0:
                 self._transform_polygons(inputs, homography_matrix, output_shape, valid_index)
+            
+            if self.recompute_bbox:
+                self._recompute_bboxes(inputs, output_shape)
 
         return self.convert(inputs)  # type: ignore[return-value]
 
@@ -1342,6 +1347,52 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         if filtered_polygons:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
+
+    def _recompute_bboxes(self, inputs: OTXDataItem, output_shape: tuple[int, int],) -> None:
+        """Recomputes the bounding boxes after tranforming from the mask or polygons if available.
+
+        Args:
+            inputs: Input data item.
+            output_shape: Output shape (height, width).
+        """
+                
+        has_polygons = hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0
+        has_masks = hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0
+
+        if not has_polygons and not has_masks:
+            return
+        
+        # bboxes here are XYXY format
+        bboxes = inputs.bboxes
+        bboxes = bboxes.numpy() if not isinstance(bboxes, np.ndarray) else bboxes
+
+        if has_masks:
+            masks = inputs.masks
+            masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
+            for i, mask in enumerate(masks):
+                points = cv2.findNonZero(mask)
+                if points is not None:
+                    x, y, w, h = cv2.boundingRect(points)
+                    bboxXYXY = [x, y, x + w, y + h]
+                    bboxes[i] = np.array(bboxXYXY)
+
+        elif has_polygons:
+            polygons = inputs.polygons
+            for i, polygon in enumerate(polygons):
+                points_1d = np.array(polygon.points, dtype=np.float32)
+                if len(points_1d) % 2 != 0:
+                    continue
+
+                points = points_1d.reshape(-1, 2)
+                x, y, w, h = cv2.boundingRect(points)
+                bboxXYXY = [x, y, x + w, y + h]
+                bboxes[i] = np.array(bboxXYXY)
+
+        inputs.bboxes = tv_tensors.BoundingBoxes(
+            bboxes,
+            format="XYXY",
+            canvas_size=output_shape,
+        )
 
     def __repr__(self) -> str:
         """Return string representation of the transform."""
