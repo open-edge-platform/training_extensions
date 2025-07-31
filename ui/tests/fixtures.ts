@@ -1,35 +1,11 @@
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
-import { fromOpenApi } from '@mswjs/source/open-api';
 import { expect, test as testBase } from '@playwright/test';
-import { createOpenApiHttp, OpenApiHttpHandlers } from 'openapi-msw';
 
-import { paths } from '../src/api/openapi-spec';
-import spec from '../src/api/openapi-spec.json' with { type: 'json' };
-
-const handlers = await fromOpenApi(JSON.stringify(spec).replace(/}:/g, '}//:'));
+import { handlers, http } from '../src/api/utils';
 
 interface Fixtures {
     network: NetworkFixture;
 }
-
-const getOpenApiHttp = (): OpenApiHttpHandlers<paths> => {
-    const http = createOpenApiHttp<paths>({
-        baseUrl: process.env.PUBLIC_API_BASE_URL ?? 'http://localhost:3000',
-    });
-
-    return {
-        ...http,
-        post: (path, ...other) => {
-            // @ts-expect-error MSW internal parsing function does not accept paths like
-            // `/api/models/{model_name}:activate`
-            // to get around this we escape the colon character with `\\`
-            // @see https://github.com/mswjs/msw/discussions/739
-            return http.post(path.replace(/}:/g, '}\\:'), ...other);
-        },
-    };
-};
-
-const http = getOpenApiHttp();
 
 const test = testBase.extend<Fixtures>({
     network: createNetworkFixture({

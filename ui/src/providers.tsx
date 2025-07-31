@@ -1,7 +1,9 @@
+import { ReactNode } from 'react';
+
 import { ThemeProvider } from '@geti/ui/theme';
-import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental';
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from 'react-router';
+import { MemoryRouterProps, RouterProvider } from 'react-router';
+import { MemoryRouter as Router } from 'react-router-dom';
 
 import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
 import { ZoomProvider } from './components/zoom/zoom';
@@ -21,9 +23,6 @@ const queryClient = new QueryClient({
     }),
 });
 
-// Sync our server state with all browser tabs
-broadcastQueryClient({ queryClient, broadcastChannel: 'geti-edge' });
-
 export const Providers = () => {
     return (
         <QueryClientProvider client={queryClient}>
@@ -33,6 +32,18 @@ export const Providers = () => {
                         <RouterProvider router={router} />
                     </ZoomProvider>
                 </WebRTCConnectionProvider>
+            </ThemeProvider>
+        </QueryClientProvider>
+    );
+};
+
+export const TestProviders = ({ children, routerProps }: { children: ReactNode; routerProps?: MemoryRouterProps }) => {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+                <Router {...routerProps}>
+                    <WebRTCConnectionProvider>{children}</WebRTCConnectionProvider>
+                </Router>
             </ThemeProvider>
         </QueryClientProvider>
     );
