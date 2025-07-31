@@ -24,7 +24,7 @@ const getOpenApiHttp = (): OpenApiHttpHandlers<paths> => {
             // `/api/models/{model_name}:activate`
             // to get around this we escape the colon character with `\\`
             // @see https://github.com/mswjs/msw/discussions/739
-            return http.post(path.replace('}:', '}\\:'), ...other);
+            return http.post(path.replace(/}:/g, '}\\:'), ...other);
         },
     };
 };

@@ -16,3 +16,6 @@ TODO*
 data/
 .idea
 .DS_Store
+
+ui/src/api/openapi-spec.d.ts
+ui/src/api/openapi-spec.json
