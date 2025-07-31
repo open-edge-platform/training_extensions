@@ -1370,7 +1370,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             masks = inputs.masks
             masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
             for i, mask in enumerate(masks):
-                points = cv2.findNonZero(mask)
+                points = cv2.findNonZero(mask.astype(np.uint8))
                 if points is not None:
                     x, y, w, h = cv2.boundingRect(points)
                     bboxXYXY = [x, y, x + w, y + h]
