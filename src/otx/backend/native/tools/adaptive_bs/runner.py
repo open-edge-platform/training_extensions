@@ -43,7 +43,7 @@ def adapt_batch_size(
     """
     if not (is_cuda_available() or is_xpu_available()):
         msg = "Adaptive batch size supports only CUDA or XPU."
-        logging.warning(msg)
+        logger.warning(msg)
         return
 
     engine.model.patch_optimizer_and_scheduler_for_adaptive_bs()
