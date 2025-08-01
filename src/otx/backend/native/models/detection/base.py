@@ -82,24 +82,6 @@ class OTXDetectionModel(OTXModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-    def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """Perform a single validation step on a batch of data from the validation set.
-
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
-        """
-        return self._filter_outputs_by_threshold(super().validation_step(batch, batch_idx))
-
-    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """Perform a single test step on a batch of data from the test set.
-
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
-        """
-        return self._filter_outputs_by_threshold(super().test_step(batch, batch_idx))
-
     def predict_step(
         self,
         batch: OTXDataBatch | OTXTileBatchDataEntity,
@@ -118,6 +100,10 @@ class OTXDetectionModel(OTXModel):
         return outputs
 
     def _filter_outputs_by_threshold(self, outputs: OTXPredBatch) -> OTXPredBatch:
+        # NOTE: best_confidence_threshold comes from:
+        # 1. During validation: FMeasure metric computes optimal threshold, stored in hparams via _log_metrics
+        # 2. During test/predict: Uses the threshold computed during validation (from hparams)
+        # 3. If no threshold available: defaults to 0.5
         scores = []
         bboxes = []
         labels = []
@@ -295,6 +281,11 @@ class OTXDetectionModel(OTXModel):
         preds: OTXPredBatch,  # type: ignore[override]
         inputs: OTXDataBatch,  # type: ignore[override]
     ) -> MetricInput:
+        # FILTER SHOULD BE DONE HERE
+        # OTHERWISE, THE METRIC WILL BE CALCULATED ON THE WHOLE BATCH
+        # AND THE BEST CONFIDENCE THRESHOLD WILL NOT BE UPDATED
+        preds = self._filter_outputs_by_threshold(preds)
+
         return {
             "preds": [
                 {
@@ -316,12 +307,15 @@ class OTXDetectionModel(OTXModel):
     def on_load_checkpoint(self, ckpt: dict[str, Any]) -> None:
         """Load state_dict from checkpoint.
 
-        For detection, it is need to update confidence threshold information when
+        For detection, it is needed to update confidence threshold and F1 score information when
         the metric is FMeasure.
         """
-        if best_confidence_threshold := ckpt.get("confidence_threshold", None) or (
-            (hyper_parameters := ckpt.get("hyper_parameters", None))
-            and (best_confidence_threshold := hyper_parameters.get("best_confidence_threshold", None))
+        hyper_parameters = ckpt.get("hyper_parameters", {})
+
+        # Load best confidence threshold (legacy and new format)
+        if best_confidence_threshold := ckpt.get("confidence_threshold", None) or hyper_parameters.get(
+            "best_confidence_threshold",
+            None,
         ):
             self.hparams["best_confidence_threshold"] = best_confidence_threshold
         super().on_load_checkpoint(ckpt)
@@ -330,16 +324,15 @@ class OTXDetectionModel(OTXModel):
         if key == "val":
             retval = super()._log_metrics(meter, key)
 
-            # NOTE: Validation metric logging can update `best_confidence_threshold`
-            if (
-                isinstance(meter, MetricCollection)
-                and (fmeasure := getattr(meter, "FMeasure", None))
-                and (best_confidence_threshold := getattr(fmeasure, "best_confidence_threshold", None))
-            ) or (
-                isinstance(meter, FMeasure)
-                and (best_confidence_threshold := getattr(meter, "best_confidence_threshold", None))
-            ):
-                self.hparams["best_confidence_threshold"] = best_confidence_threshold
+            # NOTE: Only update best_confidence_threshold when we achieve a NEW best F1 score
+            fmeasure = None
+            if isinstance(meter, MetricCollection) and (fmeasure := getattr(meter, "FMeasure", None)):
+                pass  # fmeasure is set
+            elif isinstance(meter, FMeasure):
+                fmeasure = meter
+
+            if fmeasure is not None and hasattr(fmeasure, "best_confidence_threshold"):
+                self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
 
             return retval
 
@@ -356,13 +349,19 @@ class OTXDetectionModel(OTXModel):
 
     @property
     def best_confidence_threshold(self) -> float:
-        """Best confidence threshold to filter outputs."""
-        if not hasattr(self, "_best_confidence_threshold"):
-            self._best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
-            if self._best_confidence_threshold is None:
+        """Best confidence threshold to filter outputs.
+
+        Always returns the current value from hparams, with 0.5 as fallback.
+        This ensures the threshold is always up-to-date after validation updates it.
+        """
+        threshold = self.hparams.get("best_confidence_threshold", None)
+        if threshold is None:
+            # Only log warning once to avoid spam
+            if not getattr(self, "_threshold_warning_logged", False):
                 log.warning("There is no predefined best_confidence_threshold, 0.5 will be used as default.")
-                self._best_confidence_threshold = 0.5
-        return self._best_confidence_threshold
+                self._threshold_warning_logged = True
+            return 0.5
+        return float(threshold)
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
         """Returns a dummy input for detection model."""
