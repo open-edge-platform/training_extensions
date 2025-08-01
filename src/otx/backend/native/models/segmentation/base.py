@@ -160,6 +160,7 @@ class OTXSegmentationModel(OTXModel):
         self,
         preds: OTXPredBatch,  # type: ignore[override]
         inputs: OTXDataBatch,  # type: ignore[override]
+        stage: Literal[val, test],
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 

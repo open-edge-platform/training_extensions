@@ -280,11 +280,12 @@ class OTXDetectionModel(OTXModel):
         self,
         preds: OTXPredBatch,  # type: ignore[override]
         inputs: OTXDataBatch,  # type: ignore[override]
+        stage: Literal["val", "test"],
     ) -> MetricInput:
-        # FILTER SHOULD BE DONE HERE
-        # OTHERWISE, THE METRIC WILL BE CALCULATED ON THE WHOLE BATCH
-        # AND THE BEST CONFIDENCE THRESHOLD WILL NOT BE UPDATED
-        preds = self._filter_outputs_by_threshold(preds)
+        # Only filter outputs for test stage
+        # In val stage, the metric is computed on the whole batch
+        if stage == "test":
+            preds = self._filter_outputs_by_threshold(preds)
 
         return {
             "preds": [

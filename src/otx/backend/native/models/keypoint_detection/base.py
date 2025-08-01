@@ -136,6 +136,7 @@ class OTXKeypointDetectionModel(OTXModel):
         self,
         preds: OTXPredBatch,
         inputs: OTXDataBatch,
+        stage: Literal[val, test],
     ) -> MetricInput:
         if inputs.keypoints is None:
             msg = "The input ground truth keypoints are not provided."
