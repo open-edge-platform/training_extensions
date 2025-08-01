@@ -221,7 +221,7 @@ class OTXModel(LightningModule):
         if isinstance(preds, OTXBatchLossEntity):
             raise TypeError(preds)
 
-        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch, "val")
+        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         if isinstance(metric_inputs, dict):
             self.metric.update(**metric_inputs)
@@ -246,7 +246,7 @@ class OTXModel(LightningModule):
         if isinstance(preds, OTXBatchLossEntity):
             raise TypeError(preds)
 
-        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch, "test")
+        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         if isinstance(metric_inputs, dict):
             self.metric.update(**metric_inputs)
@@ -372,7 +372,6 @@ class OTXModel(LightningModule):
         self,
         preds: OTXPredBatch,
         inputs: OTXDataBatch,
-        stage: Literal["val", "test"],
     ) -> MetricInput:
         """Convert given inputs to a Python dictionary for the metric computation."""
         raise NotImplementedError

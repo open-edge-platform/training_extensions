@@ -13,6 +13,7 @@ import types
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
+import numpy as np
 import torch
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
@@ -270,6 +271,51 @@ class OTXInstanceSegModel(OTXModel):
             label_info=modified_label_info,
         )
 
+    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
+        """Perform a single test step on a batch of data from the test set.
+
+        :param batch: A batch of data (a tuple) containing the input tensor of images and target
+            labels.
+        :param batch_idx: The index of the current batch.
+        """
+        preds = self.forward(inputs=batch)
+
+        if isinstance(preds, OTXBatchLossEntity):
+            raise TypeError(preds)
+
+        # 1. Filter outputs by threshold
+        preds = self._filter_outputs_by_threshold(preds)
+        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
+
+        # 2. Update metric
+        if isinstance(metric_inputs, dict):
+            self.metric.update(**metric_inputs)
+            return preds
+
+        if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
+            for inp in metric_inputs:
+                self.metric.update(**inp)
+            return preds
+
+        raise TypeError(metric_inputs)
+
+    def predict_step(
+        self,
+        batch: OTXDataBatch | OTXTileBatchDataEntity,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ) -> OTXPredBatch:
+        """Step function called during PyTorch Lightning Trainer's predict."""
+        if self.explain_mode:
+            return self._filter_outputs_by_threshold(self.forward_explain(inputs=batch))  # type: ignore[arg-type]
+
+        outputs = self._filter_outputs_by_threshold(self.forward(inputs=batch))  # type: ignore[arg-type]
+
+        if isinstance(outputs, OTXBatchLossEntity):
+            raise TypeError(outputs)
+
+        return outputs
+
     @property
     def best_confidence_threshold(self) -> float:
         """Best confidence threshold to filter outputs.
@@ -304,7 +350,7 @@ class OTXInstanceSegModel(OTXModel):
 
     def _log_metrics(self, meter: Metric, key: Literal["val", "test"], **compute_kwargs) -> None:
         if key == "val":
-            retval = super()._log_metrics(meter, key)
+            super()._log_metrics(meter, key)
 
             # NOTE: Only update best_confidence_threshold when we achieve a NEW best F1 score
             fmeasure = None
@@ -314,9 +360,15 @@ class OTXInstanceSegModel(OTXModel):
                 fmeasure = meter
 
             if fmeasure is not None and hasattr(fmeasure, "best_confidence_threshold"):
-                self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
-
-            return retval
+                # Instead of using only the last best_confidence_threshold,
+                # we now average the last N values to get a more stable estimate,
+                # especially helpful for small datasets where it can vary greatly across epochs.
+                if "best_confidence_threshold_list" not in self.hparams:
+                    self.hparams["best_confidence_threshold_list"] = []
+                self.hparams["best_confidence_threshold_list"].append(fmeasure.best_confidence_threshold)
+                self.hparams["best_confidence_threshold"] = np.mean(
+                    self.hparams["best_confidence_threshold_list"][-10:],
+                )
 
         if key == "test":
             # NOTE: Test metric logging should use `best_confidence_threshold` found previously.
@@ -325,14 +377,9 @@ class OTXInstanceSegModel(OTXModel):
                 {"best_confidence_threshold": best_confidence_threshold} if best_confidence_threshold else {}
             )
 
-            return super()._log_metrics(meter, key, **compute_kwargs)
-
-        raise ValueError(key)
+            super()._log_metrics(meter, key, **compute_kwargs)
 
     def _filter_outputs_by_threshold(self, outputs: OTXPredBatch) -> OTXPredBatch:
-        # FILTER SHOULD BE DONE HERE
-        # OTHERWISE, THE METRIC WILL BE CALCULATED ON THE WHOLE BATCH
-        # AND THE BEST CONFIDENCE THRESHOLD WILL NOT BE UPDATED
         scores = []
         bboxes = []
         labels = []
@@ -364,7 +411,6 @@ class OTXInstanceSegModel(OTXModel):
         self,
         preds: OTXPredBatch,  # type: ignore[override]
         inputs: OTXDataBatch,  # type: ignore[override]
-        stage: Literal["val", "test"],
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
@@ -377,11 +423,6 @@ class OTXInstanceSegModel(OTXModel):
         Returns:
             dict[str, list[dict[str, Tensor]]]: The converted predictions and ground truth.
         """
-        # Only filter outputs for test stage
-        # In val stage, the metric is computed on the whole batch
-        if stage == "test":
-            preds = self._filter_outputs_by_threshold(preds)
-
         pred_info = []
         target_info = []
         for i in range(len(preds.imgs_info)):  # type: ignore[arg-type]
