@@ -1199,7 +1199,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             if hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0:
                 self._transform_polygons(inputs, homography_matrix, output_shape, valid_index)
-            
+
             if self.recompute_bbox:
                 self._recompute_bboxes(inputs, output_shape)
 
@@ -1348,45 +1348,42 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         if filtered_polygons:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
 
-    def _recompute_bboxes(self, inputs: OTXDataItem, output_shape: tuple[int, int],) -> None:
+    def _recompute_bboxes(self, inputs: OTXDataItem, output_shape: tuple[int, int]) -> None:
         """Recomputes the bounding boxes after tranforming from the mask or polygons if available.
 
         Args:
             inputs: Input data item.
             output_shape: Output shape (height, width).
         """
-                
         has_polygons = hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0
         has_masks = hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0
 
         if not has_polygons and not has_masks:
             return
-        
+
         # bboxes here are XYXY format
         bboxes = inputs.bboxes
-        bboxes = bboxes.numpy() if not isinstance(bboxes, np.ndarray) else bboxes
+        bboxes = bboxes.numpy() if not isinstance(bboxes, np.ndarray) else bboxes  # type: ignore[union-attr]
 
         if has_masks:
             masks = inputs.masks
-            masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
+            masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks  # type: ignore[union-attr]
             for i, mask in enumerate(masks):
                 points = cv2.findNonZero(mask.astype(np.uint8))
                 if points is not None:
                     x, y, w, h = cv2.boundingRect(points)
-                    bboxXYXY = [x, y, x + w, y + h]
-                    bboxes[i] = np.array(bboxXYXY)
+                    bboxes[i] = np.array([x, y, x + w, y + h])
 
         elif has_polygons:
             polygons = inputs.polygons
-            for i, polygon in enumerate(polygons):
+            for i, polygon in enumerate(polygons):  # type: ignore[arg-type]
                 points_1d = np.array(polygon.points, dtype=np.float32)
                 if len(points_1d) % 2 != 0:
                     continue
 
                 points = points_1d.reshape(-1, 2)
                 x, y, w, h = cv2.boundingRect(points)
-                bboxXYXY = [x, y, x + w, y + h]
-                bboxes[i] = np.array(bboxXYXY)
+                bboxes[i] = np.array([x, y, x + w, y + h])
 
         inputs.bboxes = tv_tensors.BoundingBoxes(
             bboxes,
