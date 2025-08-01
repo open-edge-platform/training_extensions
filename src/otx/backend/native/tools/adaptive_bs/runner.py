@@ -42,8 +42,9 @@ def adapt_batch_size(
         callbacks (list[Callback] | Callback | None, optional): callbacks used during training. Defaults to None.
     """
     if not (is_cuda_available() or is_xpu_available()):
-        msg = "Adaptive batch size supports CUDA or XPU."
-        raise RuntimeError(msg)
+        msg = "Adaptive batch size supports only CUDA or XPU."
+        logging.warning(msg)
+        return
 
     engine.model.patch_optimizer_and_scheduler_for_adaptive_bs()
     default_bs = engine.datamodule.train_subset.batch_size
