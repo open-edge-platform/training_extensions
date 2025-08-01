@@ -386,19 +386,21 @@ class OTXInstanceSegModel(OTXModel):
         masks = []
         polygons = []
 
-        for score, bbox, label, mask, polygon in zip(  # type: ignore[misc]
-            outputs.scores,  # type: ignore[arg-type]
-            outputs.bboxes,  # type: ignore[arg-type]
-            outputs.labels,  # type: ignore[arg-type]
-            outputs.masks,  # type: ignore[arg-type]
-            outputs.polygons,  # type: ignore[arg-type]
-        ):
-            filtered_idx = torch.where(score > self.best_confidence_threshold)
-            scores.append(score[filtered_idx])
-            bboxes.append(tv_tensors.wrap(bbox[filtered_idx], like=bbox))
-            labels.append(label[filtered_idx])
-            masks.append(mask[filtered_idx])
-            polygons.append(polygon[filtered_idx])
+        for i in range(len(outputs.imgs_info)):  # type: ignore[arg-type]
+            _scores = outputs.scores[i] if outputs.scores is not None else None
+            _bboxes = outputs.bboxes[i] if outputs.bboxes is not None else None
+            _masks = outputs.masks[i] if outputs.masks is not None else None
+            _polygons = outputs.polygons[i] if outputs.polygons is not None else None
+            _labels = outputs.labels[i] if outputs.labels is not None else None
+
+            filtered_idx = torch.where(_scores > self.best_confidence_threshold)
+            scores.append(_scores[filtered_idx])
+            bboxes.append(_bboxes[filtered_idx])
+            labels.append(_labels[filtered_idx])
+            if _masks is not None and len(_masks) > 0:
+                masks.append(_masks[filtered_idx])
+            if _polygons is not None and len(_polygons) > 0:
+                polygons.append(_polygons[filtered_idx])
 
         outputs.scores = scores
         outputs.bboxes = bboxes
