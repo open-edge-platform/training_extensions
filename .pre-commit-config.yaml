@@ -12,4 +12,4 @@ repos:
   rev: v1.16.1
   hooks:
     - id: mypy
-      additional_dependencies: [types-pyyaml==6.0.12]
+      additional_dependencies: [types-pyyaml==6.0.12, types-aiofiles==24.1.0.20240626]

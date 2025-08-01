@@ -1,7 +1,6 @@
 from collections.abc import Callable, Sequence
 
-from app.schemas.configuration import Sink
-from app.schemas.configuration.output_config import SinkType
+from app.schemas.configuration import Sink, SinkType
 from app.services.dispatchers import Dispatcher, FolderDispatcher, MqttDispatcher
 
 

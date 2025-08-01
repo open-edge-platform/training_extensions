@@ -20,7 +20,7 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def mock_upload_file():
+def fxt_upload_file():
     """Create a mock UploadFile for testing."""
     return UploadFile(
         file=io.BytesIO(b"some_content"),
@@ -29,7 +29,7 @@ def mock_upload_file():
 
 
 @pytest.fixture
-def model_service():
+def fxt_model_service(default_pipeline):
     with TemporaryDirectory(suffix="models") as tmpdir:
         service = ModelService()
         service.models_dir = Path(tmpdir)
@@ -41,35 +41,33 @@ class TestModelServiceIntegration:
     """Integration tests for ModelService."""
 
     @pytest.mark.asyncio
-    async def test_add_model_success(self, mock_upload_file, model_service):
+    async def test_add_model_success(self, fxt_upload_file, fxt_model_service):
         """Test successfully adding a new model."""
         model_name = "new_detection_model"
-        xml_file = mock_upload_file
-        bin_file = mock_upload_file
 
-        await model_service.add_model(model_name, xml_file, bin_file)
+        await fxt_model_service.add_model(model_name, fxt_upload_file, fxt_upload_file)
 
-        assert model_name in model_service.get_available_model_names()
-        assert model_service.get_active_model_name() == "new_detection_model"
-        assert (model_service.models_dir / f"{model_name}.bin").exists()
-        assert (model_service.models_dir / f"{model_name}.xml").exists()
+        assert model_name in fxt_model_service.get_available_model_names()
+        assert fxt_model_service.get_active_model_name() == "new_detection_model"
+        assert (fxt_model_service.models_dir / f"{model_name}.bin").exists()
+        assert (fxt_model_service.models_dir / f"{model_name}.xml").exists()
 
     @pytest.mark.asyncio
-    async def test_add_model_already_exists_error(self, mock_upload_file, model_service):
+    async def test_add_model_already_exists_error(self, fxt_upload_file, fxt_model_service):
         """Test adding a model that already exists raises error."""
         model_name = "card-detection-ssd"
 
-        await model_service.add_model(model_name, mock_upload_file, mock_upload_file)
+        await fxt_model_service.add_model(model_name, fxt_upload_file, fxt_upload_file)
 
         with pytest.raises(ModelAlreadyExistsError, match=f"A model with the name '{model_name}' already exists"):
-            await model_service.add_model(model_name, mock_upload_file, mock_upload_file)
+            await fxt_model_service.add_model(model_name, fxt_upload_file, fxt_upload_file)
 
     @pytest.mark.asyncio
-    async def test_remove_model_success(self, mock_upload_file, model_service):
+    async def test_remove_model_success(self, fxt_upload_file):
         """Test successfully removing a model."""
         model_name = "remove_model"
         model_service = ModelService()
-        await model_service.add_model(model_name, mock_upload_file, mock_upload_file)
+        await model_service.add_model(model_name, fxt_upload_file, fxt_upload_file)
 
         model_service.remove_model(model_name)
         assert model_name not in model_service.get_available_model_names()
@@ -85,39 +83,39 @@ class TestModelServiceIntegration:
             model_service.remove_model(model_name)
 
     @pytest.mark.asyncio
-    async def test_remove_active_model_activates_next(self, mock_upload_file, model_service):
+    async def test_remove_active_model_activates_next(self, fxt_upload_file, fxt_model_service):
         """Test removing active model activates the next available model."""
-        await model_service.add_model("model1", mock_upload_file, mock_upload_file)
-        await model_service.add_model("model2", mock_upload_file, mock_upload_file)
+        await fxt_model_service.add_model("model1", fxt_upload_file, fxt_upload_file)
+        await fxt_model_service.add_model("model2", fxt_upload_file, fxt_upload_file)
 
-        available_models = model_service.get_available_model_names()
+        available_models = fxt_model_service.get_available_model_names()
         assert len(available_models) == 2
         assert "model1" in available_models
         assert "model2" in available_models
-        assert model_service.get_active_model_name() == "model1"
+        assert fxt_model_service.get_active_model_name() == "model1"
 
-        model_service.remove_model("model1")
+        fxt_model_service.remove_model("model1")
 
-        assert model_service.get_active_model_name() == "model2"
+        assert fxt_model_service.get_active_model_name() == "model2"
         assert len(available_models) == 1
-        assert "model1" not in model_service.get_available_model_names()
-        assert "model2" in model_service.get_available_model_names()
+        assert "model1" not in fxt_model_service.get_available_model_names()
+        assert "model2" in fxt_model_service.get_available_model_names()
 
     @pytest.mark.asyncio
-    async def test_activate_model_success(self, mock_upload_file, model_service):
+    async def test_activate_model_success(self, fxt_upload_file, fxt_model_service):
         """Test successfully activating an available model."""
-        await model_service.add_model("model1", mock_upload_file, mock_upload_file)
-        await model_service.add_model("model2", mock_upload_file, mock_upload_file)
+        await fxt_model_service.add_model("model1", fxt_upload_file, fxt_upload_file)
+        await fxt_model_service.add_model("model2", fxt_upload_file, fxt_upload_file)
 
-        assert model_service.get_active_model_name() == "model1"
+        assert fxt_model_service.get_active_model_name() == "model1"
 
-        model_service.activate_model("model2")
+        fxt_model_service.activate_model("model2")
 
-        assert model_service.get_active_model_name() == "model2"
+        assert fxt_model_service.get_active_model_name() == "model2"
 
-    def test_activate_model_not_found_error(self, model_service):
+    def test_activate_model_not_found_error(self, fxt_model_service):
         """Test activating a non-existent model raises error."""
         model_name = "non_existent_model"
 
         with pytest.raises(ModelNotFoundError, match=f"Model '{model_name}' not found"):
-            model_service.activate_model(model_name)
+            fxt_model_service.activate_model(model_name)

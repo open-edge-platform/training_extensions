@@ -1,10 +1,13 @@
 import tempfile
+from collections.abc import Generator
 
 import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from app.db.schema import PipelineDB
 
 
 @pytest.fixture(scope="session")
@@ -49,3 +52,17 @@ def db_session(migrated_db_engine):
     finally:
         session.rollback()
         session.close()
+
+
+@pytest.fixture(scope="function")
+def default_pipeline(db_session) -> Generator[PipelineDB]:
+    """Seed the database with default pipeline."""
+    pipeline = PipelineDB(name="Default Pipeline", is_running=True)
+    db_session.add(pipeline)
+    db_session.commit()
+    try:
+        yield pipeline
+    finally:
+        obj = db_session.query(PipelineDB).filter_by(is_running=True).one()
+        db_session.delete(obj)
+        db_session.commit()

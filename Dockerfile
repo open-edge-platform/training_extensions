@@ -7,11 +7,14 @@ COPY --from=ghcr.io/astral-sh/uv:0.7.14@sha256:cda0fdc9b6066975ba4c791597870d18b
 # Set working directory
 WORKDIR /app
 
+ENV PYTHONPATH=/app
+
 # Install system dependencies required for OpenCV
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -20,7 +23,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # Copy project files
-COPY pyproject.toml uv.lock run.sh ./
+COPY pyproject.toml uv.lock ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable
@@ -36,4 +39,4 @@ FROM base AS server
 EXPOSE 7860
 
 # Set the entry point
-CMD ["/app/run.sh"]
+CMD ["uv", "run", "./app/main.py"]

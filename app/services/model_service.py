@@ -9,7 +9,7 @@ import aiofiles
 from fastapi import UploadFile
 from model_api.models import Model
 
-from app.db.database import get_db_session
+from app.db import get_db_session
 from app.db.schema import ModelDB
 from app.repositories import ModelRepository
 from app.schemas.model import ModelFormat
@@ -116,6 +116,7 @@ class ModelService(metaclass=Singleton):
                 if is_first_model:
                     repo.set_active_model(model_name)
                 db.commit()
+            if is_first_model:
                 mp_reload_model_event.set()
 
     def remove_model(self, model_name: str) -> None:
@@ -157,6 +158,8 @@ class ModelService(metaclass=Singleton):
                 if next_model:
                     repo.set_active_model(next_model)
                 db.commit()
+            if next_model:
+                mp_reload_model_event.set()
 
     def get_available_model_names(self) -> list[str]:
         """Get the names of all available models"""
@@ -182,6 +185,7 @@ class ModelService(metaclass=Singleton):
                 repo = ModelRepository(db)
                 repo.set_active_model(model_name)
                 db.commit()
+            mp_reload_model_event.set()
 
     def get_inference_model(self, force_reload: bool = False) -> Model | None:
         """

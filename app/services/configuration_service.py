@@ -4,7 +4,7 @@ from collections.abc import Callable
 from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
 
-from app.db.database import get_db_session
+from app.db import get_db_session
 from app.db.schema import SinkDB, SourceDB
 from app.repositories import PipelineRepository
 from app.repositories.sink_repo import SinkRepository
@@ -78,7 +78,7 @@ class ConfigurationService(metaclass=Singleton):
 
             pipeline = repo.get_active_pipeline()
             if pipeline is None:
-                raise ValueError("No active pipeline found")
+                return AppConfig()
 
             self._active_pipeline_id = pipeline.id
 

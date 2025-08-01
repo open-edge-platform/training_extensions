@@ -19,13 +19,13 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def sample_source_config() -> WebcamSourceConfig:
+def fxt_source_config() -> WebcamSourceConfig:
     """Sample source configuration data."""
     return WebcamSourceConfig(source_type=SourceType.WEBCAM, device_id=1)
 
 
 @pytest.fixture
-def sample_sink_config() -> MqttOutputConfig:
+def fxt_sink_config() -> MqttOutputConfig:
     """Sample sink configuration data."""
     return MqttOutputConfig(
         sink_type=SinkType.MQTT,
@@ -37,6 +37,16 @@ def sample_sink_config() -> MqttOutputConfig:
     )
 
 
+@pytest.fixture(scope="function")
+def fxt_config_service(default_pipeline) -> ConfigurationService:
+    config_service = ConfigurationService()
+    config_service.config_changed_condition = mp.Condition()
+    config_service._load_app_config()
+    assert config_service._active_pipeline_id == default_pipeline.id
+
+    return config_service
+
+
 class TestConfigurationServiceIntegration:
     """Integration tests for ConfigurationService."""
 
@@ -46,38 +56,32 @@ class TestConfigurationServiceIntegration:
 
         app_config = config_service.get_app_config()
 
-        assert app_config is not None
-        assert app_config.input is not None
-        assert app_config.output is not None
-        assert app_config.input.source_type == SourceType.VIDEO_FILE
-        assert app_config.output.sink_type == SinkType.FOLDER
+        assert app_config
+        assert app_config.input
+        assert app_config.output
+        assert app_config.input.source_type == SourceType.DISCONNECTED
+        assert app_config.output.sink_type == SinkType.DISCONNECTED
 
-    def test_set_source_success(self, sample_source_config):
+    def test_set_source_success(self, fxt_config_service, fxt_source_config):
         """Test setting source configuration successfully."""
-        config_service = ConfigurationService()
-        config_service.config_changed_condition = mp.Condition()
+        old_source_id = fxt_config_service._source_id
+        fxt_config_service.set_source_config(fxt_source_config)
+        fxt_config_service._load_app_config()  # trigger DB loading explicitly
+        assert old_source_id != fxt_config_service._source_id
 
-        old_source_id = config_service._source_id
-        config_service.set_source_config(sample_source_config)
-        config_service._load_app_config()  # trigger DB loading explicitly
-        assert old_source_id != config_service._source_id
+        source_config = fxt_config_service.get_source_config()
+        assert source_config.device_id == fxt_source_config.device_id
 
-        source_config = config_service.get_source_config()
-        assert source_config.device_id == sample_source_config.device_id
-
-    def test_set_sink_success(self, sample_sink_config):
+    def test_set_sink_success(self, fxt_config_service, fxt_sink_config):
         """Test setting sink configuration successfully."""
-        config_service = ConfigurationService()
-        config_service.config_changed_condition = mp.Condition()
+        old_sink_id = fxt_config_service._sink_id
+        fxt_config_service.set_sink_config(fxt_sink_config)
+        fxt_config_service._load_app_config()  # trigger DB loading explicitly
+        assert old_sink_id != fxt_config_service._sink_id
 
-        old_sink_id = config_service._sink_id
-        config_service.set_sink_config(sample_sink_config)
-        config_service._load_app_config()  # trigger DB loading explicitly
-        assert old_sink_id != config_service._sink_id
-
-        sink_config = config_service.get_sink_config()
-        assert sink_config.rate_limit == sample_sink_config.rate_limit
-        assert sink_config.output_formats == sample_sink_config.output_formats
-        assert sink_config.broker_host == sample_sink_config.broker_host
-        assert sink_config.broker_port == sample_sink_config.broker_port
-        assert sink_config.topic == sample_sink_config.topic
+        sink_config = fxt_config_service.get_sink_config()
+        assert sink_config.rate_limit == fxt_sink_config.rate_limit
+        assert sink_config.output_formats == fxt_sink_config.output_formats
+        assert sink_config.broker_host == fxt_sink_config.broker_host
+        assert sink_config.broker_port == fxt_sink_config.broker_port
+        assert sink_config.topic == fxt_sink_config.topic
