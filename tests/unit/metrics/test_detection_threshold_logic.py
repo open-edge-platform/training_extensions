@@ -132,7 +132,7 @@ class TestLogMetrics:
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Make the mock return None (no-op) to avoid compute() calls
             mock_super.return_value = None
-            
+
             # Call the actual method - this will run the real implementation
             detection_model._log_metrics(fmeasure, "val")
 
@@ -156,7 +156,7 @@ class TestLogMetrics:
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Make the mock return None (no-op) to avoid compute() calls
             mock_super.return_value = None
-            
+
             # Call method
             detection_model._log_metrics(metric_collection, "val")
 
@@ -175,7 +175,7 @@ class TestLogMetrics:
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Make the mock return None (no-op) to avoid compute() calls
             mock_super.return_value = None
-            
+
             # Simulate multiple validation epochs
             thresholds = [0.5, 0.6, 0.7, 0.8, 0.9]
             for threshold in thresholds:
@@ -200,7 +200,7 @@ class TestLogMetrics:
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Make the mock return None (no-op) to avoid compute() calls
             mock_super.return_value = None
-            
+
             # Simulate 15 validation epochs
             thresholds = [0.1 * i for i in range(1, 16)]  # 0.1, 0.2, ..., 1.5
             for threshold in thresholds:
@@ -223,7 +223,7 @@ class TestLogMetrics:
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Make the mock return None (no-op) to avoid compute() calls
             mock_super.return_value = None
-            
+
             # Call method
             detection_model._log_metrics(other_metric, "val")
 
@@ -242,7 +242,7 @@ class TestLogMetrics:
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Make the mock return None (no-op) to avoid compute() calls
             mock_super.return_value = None
-            
+
             # Call method
             detection_model._log_metrics(metric, "test")
 
@@ -257,7 +257,7 @@ class TestLogMetrics:
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Make the mock return None (no-op) to avoid compute() calls
             mock_super.return_value = None
-            
+
             # Call method
             detection_model._log_metrics(metric, "test")
 
