@@ -127,6 +127,8 @@ class TestLogMetrics:
         fmeasure.best_confidence_threshold = 0.7
         # Ensure hasattr works correctly
         fmeasure.configure_mock(best_confidence_threshold=0.7)
+        # CRITICAL: Set compute return value for Python 3.10 compatibility
+        fmeasure.compute.return_value = {"f1-score": torch.tensor([0.75])}
 
         # Mock only the super()._log_metrics call
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
@@ -144,6 +146,8 @@ class TestLogMetrics:
         # Setup - Create proper mock that supports hasattr
         fmeasure = Mock(spec=FMeasure)
         fmeasure.configure_mock(best_confidence_threshold=0.6)
+        # Ensure hasattr works correctly for Python 3.10 compatibility
+        fmeasure.best_confidence_threshold = 0.6
 
         metric_collection = Mock(spec=MetricCollection)
         metric_collection.FMeasure = fmeasure
@@ -163,6 +167,8 @@ class TestLogMetrics:
         # Setup
         fmeasure = Mock(spec=FMeasure)
         fmeasure.compute.return_value = {"f1-score": torch.tensor([0.75])}
+        # Ensure hasattr works correctly for Python 3.10 compatibility
+        fmeasure.best_confidence_threshold = 0.5  # Initial value
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Simulate multiple validation epochs
@@ -184,6 +190,8 @@ class TestLogMetrics:
         # Setup
         fmeasure = Mock(spec=FMeasure)
         fmeasure.compute.return_value = {"f1-score": torch.tensor([0.75])}
+        # Ensure hasattr works correctly for Python 3.10 compatibility
+        fmeasure.best_confidence_threshold = 0.1  # Initial value
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
             # Simulate 15 validation epochs
