@@ -384,7 +384,13 @@ class GetiConfigConverter:
                 "gaussian_blur": "torchvision.transforms.v2.GaussianBlur",
                 "gaussian_noise": "torchvision.transforms.v2.GaussianNoise",
                 "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
-            }
+                "iou_random_crop" : "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+                "pad_to_square": "otx.data.transform_libs.torchvision.Pad",
+                "random_zoom_out": "torchvision.transforms.v2.RandomZoomOut",
+                "random_hsv_aug": "otx.data.transform_libs.torchvision.YOLOXHSVRandomAug",
+                "cached_mixup": "otx.data.transform_libs.torchvision.CachedMixUp",
+                "cached_mosaic": "otx.data.transform_libs.torchvision.CachedMosaic"
+              } 
 
             for aug_name, aug_value in augmentation_params.items():
                 aug_class = augs_mapping_list[aug_name]

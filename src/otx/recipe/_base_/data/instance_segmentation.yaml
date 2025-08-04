@@ -24,10 +24,12 @@ train_subset:
     - class_path: otx.data.transform_libs.torchvision.RandomAffine
       enable: false
     - class_path: otx.data.transform_libs.torchvision.Pad
+      enable: true
       init_args:
         pad_to_square: true
         transform_mask: true
     - class_path: otx.data.transform_libs.torchvision.RandomFlip
+      enable: true
       init_args:
         prob: 0.5
         is_numpy_to_tvtensor: true

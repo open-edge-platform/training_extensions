@@ -13,6 +13,7 @@ train_subset:
   to_tv_image: false
   transforms:
     - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
+      enable: true
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         scale: $(input_size)
@@ -22,6 +23,7 @@ train_subset:
     - class_path: otx.data.transform_libs.torchvision.RandomAffine
       enable: false
     - class_path: otx.data.transform_libs.torchvision.RandomFlip
+      enable: true
       init_args:
         prob: 0.5
         is_numpy_to_tvtensor: true
@@ -31,6 +33,8 @@ train_subset:
       enable: false
       init_args:
         kernel_size: 5
+    - class_path: torchvision.transforms.v2.GaussianNoise
+      enable: false
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
@@ -38,8 +42,7 @@ train_subset:
       init_args:
         mean: [0.0, 0.0, 0.0]
         std: [255.0, 255.0, 255.0]
-    - class_path: torchvision.transforms.v2.GaussianNoise
-      enable: false
+
   sampler:
     class_path: torch.utils.data.RandomSampler
 
