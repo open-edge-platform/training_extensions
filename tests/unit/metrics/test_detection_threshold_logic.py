@@ -127,7 +127,7 @@ class TestLogMetrics:
         fmeasure.best_confidence_threshold = 0.7
         # Ensure hasattr works correctly
         fmeasure.configure_mock(best_confidence_threshold=0.7)
-        # CRITICAL: Set compute return value for Python 3.10 compatibility
+        # Set compute return value for Python 3.10 compatibility
         fmeasure.compute.return_value = {"f1-score": torch.tensor([0.75])}
 
         # Mock only the super()._log_metrics call
