@@ -127,11 +127,12 @@ class TestLogMetrics:
         fmeasure.best_confidence_threshold = 0.7
         # Ensure hasattr works correctly
         fmeasure.configure_mock(best_confidence_threshold=0.7)
-        # Set compute return value for Python 3.10 compatibility
-        fmeasure.compute.return_value = {"f1-score": torch.tensor([0.75])}
 
-        # Mock only the super()._log_metrics call
+        # Mock the super()._log_metrics call to avoid Python version compatibility issues
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
+            
             # Call the actual method - this will run the real implementation
             detection_model._log_metrics(fmeasure, "val")
 
@@ -151,9 +152,11 @@ class TestLogMetrics:
 
         metric_collection = Mock(spec=MetricCollection)
         metric_collection.FMeasure = fmeasure
-        metric_collection.compute.return_value = {"f1-score": torch.tensor([0.75])}
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
+            
             # Call method
             detection_model._log_metrics(metric_collection, "val")
 
@@ -166,11 +169,13 @@ class TestLogMetrics:
         """Test that confidence thresholds are averaged over multiple epochs."""
         # Setup
         fmeasure = Mock(spec=FMeasure)
-        fmeasure.compute.return_value = {"f1-score": torch.tensor([0.75])}
         # Ensure hasattr works correctly for Python 3.10 compatibility
         fmeasure.best_confidence_threshold = 0.5  # Initial value
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
+            
             # Simulate multiple validation epochs
             thresholds = [0.5, 0.6, 0.7, 0.8, 0.9]
             for threshold in thresholds:
@@ -189,11 +194,13 @@ class TestLogMetrics:
         """Test that only last 10 values are used for averaging."""
         # Setup
         fmeasure = Mock(spec=FMeasure)
-        fmeasure.compute.return_value = {"f1-score": torch.tensor([0.75])}
         # Ensure hasattr works correctly for Python 3.10 compatibility
         fmeasure.best_confidence_threshold = 0.1  # Initial value
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
+            
             # Simulate 15 validation epochs
             thresholds = [0.1 * i for i in range(1, 16)]  # 0.1, 0.2, ..., 1.5
             for threshold in thresholds:
@@ -212,9 +219,11 @@ class TestLogMetrics:
         """Test validation logging without FMeasure metric."""
         # Setup
         other_metric = Mock()
-        other_metric.compute.return_value = {"accuracy": torch.tensor([0.95])}
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
+            
             # Call method
             detection_model._log_metrics(other_metric, "val")
 
@@ -229,9 +238,11 @@ class TestLogMetrics:
         # Setup
         detection_model.hparams["best_confidence_threshold"] = 0.75
         metric = Mock()
-        metric.compute.return_value = {"accuracy": torch.tensor([0.95])}
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
+            
             # Call method
             detection_model._log_metrics(metric, "test")
 
@@ -242,9 +253,11 @@ class TestLogMetrics:
         """Test test logging without existing threshold."""
         # Setup - no threshold in hparams
         metric = Mock()
-        metric.compute.return_value = {"accuracy": torch.tensor([0.95])}
 
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
+            
             # Call method
             detection_model._log_metrics(metric, "test")
 
@@ -503,10 +516,11 @@ class TestIntegration:
         # Setup FMeasure mock
         fmeasure = Mock(spec=FMeasure)
         fmeasure.best_confidence_threshold = 0.7
-        fmeasure.compute.return_value = {"f1-score": torch.tensor([0.85])}
 
         # Simulate validation epoch
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics"):
+        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
+            # Make the mock return None (no-op) to avoid compute() calls
+            mock_super.return_value = None
             fmeasure.configure_mock(best_confidence_threshold=0.7)
             detection_model._log_metrics(fmeasure, "val")
 
