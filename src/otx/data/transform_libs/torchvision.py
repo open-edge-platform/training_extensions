@@ -1277,9 +1277,9 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             return
 
         # Convert valid_index to numpy boolean array if it's a tensor
-        if hasattr(valid_index, 'numpy'):
+        if hasattr(valid_index, "numpy"):
             valid_index = valid_index.numpy()
-        
+
         # Filter masks using valid_index first
         masks = inputs.masks[valid_index]
         masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
@@ -1347,7 +1347,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             return
 
         # Convert valid_index to numpy boolean array if it's a tensor
-        if hasattr(valid_index, 'numpy'):
+        if hasattr(valid_index, "numpy"):
             valid_index = valid_index.numpy()
 
         # Filter polygons using valid_index
