@@ -2263,22 +2263,32 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
             pad_val = self.pad_val.get("mask", 0)
             padding = inputs.img_info.padding
 
-            padded_masks = np.stack(
-                [
-                    cv2.copyMakeBorder(
-                        mask,
-                        padding[1],
-                        padding[3],
-                        padding[0],
-                        padding[2],
-                        self.border_type[self.padding_mode],
-                        value=pad_val,
-                    )
-                    for mask in masks
-                ],
-            )
+            padded_masks = []
+            for mask in masks:
+                orig_dtype = mask.dtype
+                # cv2.copyMakeBorder does not support bool, so cast to uint8 if needed
+                if mask.dtype == np.bool_:
+                    mask_to_pad = mask.astype(np.uint8)
+                    pad_val_cast = int(bool(pad_val))
+                else:
+                    mask_to_pad = mask
+                    pad_val_cast = pad_val
 
-            inputs.masks = padded_masks
+                padded = cv2.copyMakeBorder(
+                    mask_to_pad,
+                    padding[1],
+                    padding[3],
+                    padding[0],
+                    padding[2],
+                    self.border_type[self.padding_mode],
+                    value=pad_val_cast,
+                )
+                # Cast back to original dtype if needed
+                if orig_dtype == np.bool_:
+                    padded = padded.astype(np.bool_)
+                padded_masks.append(padded)
+
+            inputs.masks = np.stack(padded_masks)
 
         return inputs
 
