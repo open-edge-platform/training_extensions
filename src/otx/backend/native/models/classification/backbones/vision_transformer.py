@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-class VisionTransformer(BaseModule):
+class VisionTransformerBackbone(BaseModule):
     """Implementation of Vision Transformer from Timm.
 
     A PyTorch impl of : `An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale`
@@ -565,7 +565,7 @@ class VisionTransformer(BaseModule):
     @torch.no_grad()
     def _load_npz_weights(  # noqa: C901
         self,
-        model: VisionTransformer,
+        model: VisionTransformerBackbone,
         checkpoint_path: str,
         prefix: str = "",
     ) -> None:

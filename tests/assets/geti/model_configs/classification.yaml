@@ -1,0 +1,45 @@
+job_type: train
+model_manifest_id: Custom_Image_Classification_EfficinetNet-B0
+export_parameters:
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe3
+    precision: FP16
+    with_xai: true
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe4
+    precision: FP32
+    with_xai: false
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe5
+    precision: FP16
+    with_xai: false
+  - format: onnx
+    output_model_id: 687dde02ee0628d82f9fdfe6
+    precision: FP32
+    with_xai: false
+hyperparameters:
+  dataset_preparation:
+    augmentation:
+      random_affine:
+        enable: false
+      color_jitter:
+        enable: false
+      gaussian_blur:
+        enable: false
+      random_horizontal_flip:
+        enable: true
+      random_vertical_flip:
+        enable: false
+      gaussian_noise:
+        enable: false
+  training:
+    max_epochs: 200
+    early_stopping:
+      enable: true
+      patience: 10
+    learning_rate: 0.0049
+    input_size_width: 224
+    input_size_height: 224
+  evaluation:
+    metric: accuracy
+sub_task_type: MULTI_CLASS_CLS

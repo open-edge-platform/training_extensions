@@ -180,15 +180,18 @@ def test_adapt_batch_size_dist_sub_proc(
     assert int(mock_os.environ["ADAPTIVE_BS_FOR_DIST"]) == cur_bs
 
 
-def test_adapt_batch_size_no_accelerator(
+def test_adapt_batch_size_cpu(
     mock_is_cuda_available,
     mock_is_xpu_available,
     mock_engine,
     train_args,
+    mocker,
 ):
     mock_is_cuda_available.return_value = False
-    with pytest.raises(RuntimeError, match="Adaptive batch size supports CUDA or XPU."):
-        adapt_batch_size(mock_engine, **train_args)
+    mock_is_xpu_available.return_value = False
+    mock_logger = mocker.patch("otx.backend.native.tools.adaptive_bs.runner.logger")
+    adapt_batch_size(mock_engine, **train_args)
+    mock_logger.warning.assert_called_once_with("Adaptive batch size supports only CUDA or XPU.")
 
 
 def test_adjust_train_args(train_args):

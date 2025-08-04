@@ -426,7 +426,7 @@ If the training is already in place, we just need to use the code below:
 
             from otx.metrics.fmeasure import FMeasure
 
-            metric = FMeasue(label_info=5)
+            metric = FMeasure(label_info=5)
             engine.test(metric=metric)
 
 
@@ -488,8 +488,8 @@ To run the XAI with the OpenVINO™ IR model, we need to create an output model 
     .. tab-item:: Run XAI
 
         .. code-block:: python
-
-            engine.explain(checkpoint="<path/to/ir/xml>")
+            engine = OVEngine(model="exported_model.xml", ...)
+            engine.predict(explain=True)
 
     .. tab-item:: Evaluate Model with different datamodule or dataloader
 
@@ -498,13 +498,15 @@ To run the XAI with the OpenVINO™ IR model, we need to create an output model 
             from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(data_root="data/wgisd")
-            engine.explain(..., datamodule=datamodule)
+            engine.predict(..., datamodule=datamodule, explain=True)
 
-    .. tab-item:: Dump saliency_map
+    .. tab-item:: Use ExplainConfig
 
         .. code-block:: python
 
-            engine.explain(..., dump=True)
+            from otx.config.explain import ExplainConfig
+            
+            engine.predict(..., explain=True, explain_config=ExplainConfig(postprocess=True))
 
 
 ************

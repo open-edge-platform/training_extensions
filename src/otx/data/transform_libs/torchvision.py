@@ -28,7 +28,6 @@ from torchvision import tv_tensors
 from torchvision._utils import sequence_to_str
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.backend.native.utils.utils import import_object_from_module
 from otx.data.entity.base import (
     Points,
     _crop_image_info,
@@ -64,6 +63,7 @@ from otx.data.transform_libs.utils import (
     translate_masks,
     translate_polygons,
 )
+from otx.data.utils import import_object_from_module
 
 if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
@@ -332,6 +332,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             inputs.image = img
             inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
+            inputs.img_info.keep_ratio = self.keep_ratio  # type: ignore[union-attr]
             scale_factor = (scale[0] / img_shape[0], scale[1] / img_shape[1])
         return inputs, scale_factor
 

@@ -91,7 +91,7 @@ jobs:
           - task: "multi_class_cls"
           - task: "multi_label_cls"
           - task: "h_label_cls"
-          - task: "anomaly_classification"
+          - task: "anomaly"
           - task: "keypoint_detection"
           - task: "detection"
           - task: "instance_segmentation"
@@ -108,4 +108,4 @@ jobs:
         run: |
           pip install '.[ci_tox]'
       - name: Run Integration Test
-        run: tox -vv -e integration-test-${{ matrix.task }} -- --run-category-only
+        run: tox -vv -e integration-test-${{ matrix.task }} -- --task ${{ matrix.task }} --run-category-only

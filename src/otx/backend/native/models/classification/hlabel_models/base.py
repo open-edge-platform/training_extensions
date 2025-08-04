@@ -37,14 +37,14 @@ class OTXHlabelClsModel(OTXModel):
     """H-label classification models used in OTX.
 
     Args:
-    label_info (HLabelInfo): Information about the hierarchical labels.
-    data_input_params (DataInputParams): Parameters for data input.
-    model_name (str, optional): Name of the model. Defaults to "hlabel_classification_model".
-    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
-    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
-    Defaults to DefaultSchedulerCallable.
-    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
-    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        label_info (HLabelInfo): Information about the hierarchical labels.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "hlabel_classification_model".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
     """
 
     label_info: HLabelInfo
@@ -79,9 +79,9 @@ class OTXHlabelClsModel(OTXModel):
         # identify classification layers
         sample_config = deepcopy(self.label_info.as_head_config_dict())
         sample_config["num_classes"] = 5
-        sample_model_dict = self._build_model(head_config=sample_config).state_dict()
+        sample_model_dict = self._create_model(head_config=sample_config).state_dict()
         sample_config["num_classes"] = 6
-        incremental_model_dict = self._build_model(head_config=sample_config).state_dict()
+        incremental_model_dict = self._create_model(head_config=sample_config).state_dict()
         # iterate over the model dict and compare the shapes.
         # Add the key to the list if the shapes are different
         return [
@@ -188,10 +188,18 @@ class OTXHlabelClsModel(OTXModel):
 
     @staticmethod
     def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
-        if not isinstance(label_info, HLabelInfo):
-            raise TypeError(label_info)
+        if isinstance(label_info, dict):
+            if "label_ids" not in label_info:
+                # NOTE: This is for backward compatibility
+                label_info["label_ids"] = label_info["label_names"]
+            return HLabelInfo(**label_info)
+        if isinstance(label_info, HLabelInfo):
+            if not hasattr(label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                label_info.label_ids = label_info.label_names
+            return label_info
 
-        return label_info
+        raise TypeError(label_info)
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
         """Returns a dummy input for classification OV model."""

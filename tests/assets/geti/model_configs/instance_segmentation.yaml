@@ -1,0 +1,38 @@
+job_type: train
+model_manifest_id: Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B
+export_parameters:
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe3
+    precision: FP16
+    with_xai: true
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe4
+    precision: FP32
+    with_xai: false
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe5
+    precision: FP16
+    with_xai: false
+  - format: onnx
+    output_model_id: 687dde02ee0628d82f9fdfe6
+    precision: FP32
+    with_xai: false
+hyperparameters:
+  dataset_preparation:
+    augmentation:
+      tiling:
+        enable: false
+        adaptive_tiling: true
+        tile_size: 512
+        tile_overlap: 0.2
+  training:
+    max_epochs: 200
+    early_stopping:
+      enable: true
+      patience: 10
+    learning_rate: 0.007
+    input_size_width: 1024
+    input_size_height: 1024
+  evaluation:
+    metric: dice
+sub_task_type: MULTI_CLASS_CLS

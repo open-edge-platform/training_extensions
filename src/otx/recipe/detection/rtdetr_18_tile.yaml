@@ -37,6 +37,9 @@ callbacks:
       min_lrschedule_patience: 3
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
+      mode: max
+      monitor: val/map_50
+      min_delta: 0.001
       warmup_iters: 100
       warmup_epochs: 7
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint

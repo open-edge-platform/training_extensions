@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import torch
 from torch.utils.data import Sampler
 
-from otx.backend.native.utils.utils import get_idx_list_per_classes
+from otx.data.utils import get_idx_list_per_classes
 
 if TYPE_CHECKING:
     from otx.data.dataset.base import OTXDataset

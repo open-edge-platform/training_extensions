@@ -11,8 +11,8 @@ import numpy as np
 import torch
 from torch.utils.data import Sampler
 
-from otx.backend.native.utils.utils import get_idx_list_per_classes
 from otx.data.dataset.base import OTXDataset
+from otx.data.utils import get_idx_list_per_classes
 
 
 class ClassIncrementalSampler(Sampler):

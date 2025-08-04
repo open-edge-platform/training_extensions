@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
 from torchmetrics import Metric, MetricCollection
@@ -42,21 +42,23 @@ class OTXDetectionModel(OTXModel):
     """Base class for the detection models used in OTX.
 
     Args:
-    label_info (LabelInfoTypes): Information about the labels.
-    data_input_params (DataInputParams): Parameters for data input.
-    model_name (str, optional): Name of the model. Defaults to "otx_detection_model".
-    optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
-    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
-    Defaults to DefaultSchedulerCallable.
-    metric (MetricCallable, optional): Metric callable. Defaults to MeanAveragePrecisionFMeasureCallable.
-    torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
-    tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
-    explain_mode (bool, optional): Whether to enable explain mode. Defaults to False.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "otx_detection_model".
+        optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric callable. Defaults to MeanAveragePrecisionFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explain mode. Defaults to False.
     """
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "otx_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -209,7 +211,7 @@ class OTXDetectionModel(OTXModel):
                 scores=scores,
                 bboxes=bboxes,
                 labels=labels,
-                saliency_map=[saliency_map.detach().to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                saliency_map=outputs["saliency_map"],
                 feature_vector=[
                     feature_vector.detach().unsqueeze(0).to(torch.float32)
                     for feature_vector in outputs["feature_vector"]

@@ -63,3 +63,4 @@ class Uflow(AnomalyMixin, AnomalibUflow, OTXAnomaly):
             affine_subnet_channels_ratio=affine_subnet_channels_ratio,
             permute_soft=permute_soft,
         )
+        self._setup()
