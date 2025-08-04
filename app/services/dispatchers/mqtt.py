@@ -10,8 +10,7 @@ import cv2
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.configuration import OutputFormat
-from app.schemas.configuration.output_config import MqttOutputConfig
+from app.schemas.sink import MqttSinkConfig, OutputFormat
 from app.services.dispatchers.base import BaseDispatcher
 
 try:
@@ -40,7 +39,7 @@ def _create_mqtt_payload(data_type: str, **kwargs) -> dict[str, Any]:
 class MqttDispatcher(BaseDispatcher):
     def __init__(
         self,
-        output_config: MqttOutputConfig,
+        output_config: MqttSinkConfig,
         mqtt_client: "mqtt.Client | None" = None,
         track_messages: bool | None = False,
     ) -> None:

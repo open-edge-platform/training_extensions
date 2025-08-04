@@ -8,8 +8,7 @@ from multiprocessing.synchronize import Event as EventClass
 
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
-from app.schemas.configuration import Source
-from app.schemas.configuration.input_config import SourceType
+from app.schemas import Source, SourceType
 from app.services import ConfigurationService, VideoStreamService
 from app.utils import flush_queue, log_threads
 

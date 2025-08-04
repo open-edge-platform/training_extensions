@@ -17,21 +17,21 @@ import { useNavigate } from 'react-router';
 
 import { $api } from '../../api/client';
 import {
-    SchemaDisconnectedOutputConfig,
-    SchemaFolderOutputConfig,
-    SchemaMqttOutputConfig,
-    SchemaRosOutputConfig,
-    SchemaWebhookOutputConfig,
+    SchemaDisconnectedSinkConfig,
+    SchemaFolderSinkConfig,
+    SchemaMqttSinkConfig,
+    SchemaRosSinkConfig,
+    SchemaWebhookSinkConfig,
 } from '../../api/openapi-spec';
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
 import { paths } from '../../router';
 
 type OutputConfig =
-    | SchemaDisconnectedOutputConfig
-    | SchemaFolderOutputConfig
-    | SchemaMqttOutputConfig
-    | SchemaWebhookOutputConfig
-    | SchemaRosOutputConfig;
+    | SchemaDisconnectedSinkConfig
+    | SchemaFolderSinkConfig
+    | SchemaMqttSinkConfig
+    | SchemaWebhookSinkConfig
+    | SchemaRosSinkConfig;
 
 type OutputType = OutputConfig['sink_type'];
 
@@ -75,9 +75,9 @@ const DEFAULT_OUTPUT_FORMS: OutputFormRecord = {
 
 const ConfigureDisconnectedOutput = ({}: {
     // eslint-disable-next-line react/no-unused-prop-types
-    output: SchemaDisconnectedOutputConfig;
+    output: SchemaDisconnectedSinkConfig;
     // eslint-disable-next-line react/no-unused-prop-types
-    setOutput: (input: SchemaDisconnectedOutputConfig) => void;
+    setOutput: (input: SchemaDisconnectedSinkConfig) => void;
 }) => {
     return null;
 };
@@ -86,8 +86,8 @@ const ConfigureFolderOutput = ({
     output,
     setOutput,
 }: {
-    output: SchemaFolderOutputConfig;
-    setOutput: (input: SchemaFolderOutputConfig) => void;
+    output: SchemaFolderSinkConfig;
+    setOutput: (input: SchemaFolderSinkConfig) => void;
 }) => {
     return (
         <TextField
@@ -103,8 +103,8 @@ const ConfigureMQTTOutput = ({
     output,
     setOutput,
 }: {
-    output: SchemaMqttOutputConfig;
-    setOutput: (input: SchemaMqttOutputConfig) => void;
+    output: SchemaMqttSinkConfig;
+    setOutput: (input: SchemaMqttSinkConfig) => void;
 }) => {
     return (
         <Flex gap='size-200'>
@@ -150,8 +150,8 @@ const ConfigureROSOutput = ({
     output,
     setOutput,
 }: {
-    output: SchemaRosOutputConfig;
-    setOutput: (input: SchemaRosOutputConfig) => void;
+    output: SchemaRosSinkConfig;
+    setOutput: (input: SchemaRosSinkConfig) => void;
 }) => {
     return (
         <TextField
@@ -167,8 +167,8 @@ const ConfigureWebhookOutput = ({
     output,
     setOutput,
 }: {
-    output: SchemaWebhookOutputConfig;
-    setOutput: (input: SchemaWebhookOutputConfig) => void;
+    output: SchemaWebhookSinkConfig;
+    setOutput: (input: SchemaWebhookSinkConfig) => void;
 }) => {
     return (
         <TextField

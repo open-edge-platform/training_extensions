@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.configuration import Sink
+from app.schemas import Sink
 
 
 class DispatchError(Exception):

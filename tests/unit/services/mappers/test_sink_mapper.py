@@ -4,8 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.db.schema import SinkDB
-from app.schemas.configuration import OutputFormat
-from app.schemas.configuration.output_config import FolderOutputConfig, MqttOutputConfig, SinkType
+from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkType
 from app.services.mappers.sink_mapper import SinkMapper
 
 
@@ -20,7 +19,7 @@ class TestSinkMapper:
         "schema_instance,expected_model",
         [
             (
-                FolderOutputConfig(
+                FolderSinkConfig(
                     sink_type=SinkType.FOLDER,
                     rate_limit=0.2,
                     output_formats=[
@@ -42,7 +41,7 @@ class TestSinkMapper:
                 ),
             ),
             (
-                MqttOutputConfig(
+                MqttSinkConfig(
                     sink_type=SinkType.MQTT,
                     rate_limit=0.2,
                     output_formats=[
@@ -106,7 +105,7 @@ class TestSinkMapper:
                     ],
                     config_data={"folder_path": "/test/path"},
                 ),
-                FolderOutputConfig(
+                FolderSinkConfig(
                     sink_type=SinkType.FOLDER,
                     rate_limit=0.2,
                     output_formats=[
@@ -128,7 +127,7 @@ class TestSinkMapper:
                     ],
                     config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
                 ),
-                MqttOutputConfig(
+                MqttSinkConfig(
                     sink_type=SinkType.MQTT,
                     rate_limit=0.2,
                     output_formats=[
@@ -152,10 +151,10 @@ class TestSinkMapper:
         assert result.output_formats == expected_schema.output_formats
         match result.sink_type:
             case SinkType.FOLDER:
-                assert isinstance(result, FolderOutputConfig)
+                assert isinstance(result, FolderSinkConfig)
                 assert result.folder_path == expected_schema.folder_path
             case SinkType.MQTT:
-                assert isinstance(result, MqttOutputConfig)
+                assert isinstance(result, MqttSinkConfig)
                 assert result.broker_host == expected_schema.broker_host
                 assert result.broker_port == expected_schema.broker_port
                 assert result.topic == expected_schema.topic

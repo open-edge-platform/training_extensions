@@ -7,8 +7,7 @@ import click
 
 from app.db import get_db_session, migration_manager
 from app.db.schema import ModelDB, PipelineDB, SinkDB, SourceDB
-from app.schemas.configuration import OutputFormat, SinkType, SourceType
-from app.schemas.model import ModelFormat
+from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

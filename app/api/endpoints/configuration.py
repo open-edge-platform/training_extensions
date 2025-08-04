@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.configuration import Sink, Source
+from app.schemas import Sink, Source
 from app.services import ConfigurationService
 
 logger = logging.getLogger(__name__)

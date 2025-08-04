@@ -20,12 +20,12 @@ class OutputFormat(str, Enum):
     PREDICTIONS = "predictions"
 
 
-class BaseOutputConfig(BaseIDNameModel):
+class BaseSinkConfig(BaseIDNameModel):
     output_formats: list[OutputFormat]
     rate_limit: float | None = None  # Rate limit in Hz, None means no limit
 
 
-class DisconnectedOutputConfig(BaseOutputConfig):
+class DisconnectedSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.DISCONNECTED] = SinkType.DISCONNECTED
     name: str = "No Sink"
     output_formats: list[OutputFormat] = []
@@ -41,7 +41,7 @@ class DisconnectedOutputConfig(BaseOutputConfig):
     }
 
 
-class FolderOutputConfig(BaseOutputConfig):
+class FolderSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.FOLDER]
     folder_path: str
 
@@ -59,7 +59,7 @@ class FolderOutputConfig(BaseOutputConfig):
     }
 
 
-class MqttOutputConfig(BaseOutputConfig):
+class MqttSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.MQTT]
     broker_host: str
     broker_port: int
@@ -82,7 +82,7 @@ class MqttOutputConfig(BaseOutputConfig):
     }
 
 
-class RosOutputConfig(BaseOutputConfig):
+class RosSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.ROS]
     topic: str
 
@@ -99,7 +99,7 @@ class RosOutputConfig(BaseOutputConfig):
     }
 
 
-class WebhookOutputConfig(BaseOutputConfig):
+class WebhookSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.WEBHOOK]
     webhook_url: str
 
@@ -117,6 +117,6 @@ class WebhookOutputConfig(BaseOutputConfig):
 
 
 Sink = Annotated[
-    FolderOutputConfig | MqttOutputConfig | RosOutputConfig | WebhookOutputConfig | DisconnectedOutputConfig,
+    FolderSinkConfig | MqttSinkConfig | RosSinkConfig | WebhookSinkConfig | DisconnectedSinkConfig,
     Field(discriminator="sink_type"),
 ]

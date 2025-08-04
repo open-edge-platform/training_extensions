@@ -6,8 +6,7 @@ import cv2
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.configuration import OutputFormat
-from app.schemas.configuration.output_config import FolderOutputConfig
+from app.schemas.sink import FolderSinkConfig, OutputFormat
 from app.services.dispatchers.base import BaseDispatcher
 
 logger = logging.getLogger(__name__)
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class FolderDispatcher(BaseDispatcher):
     """FolderDispatcher allows outputting to a folder in the local filesystem."""
 
-    def __init__(self, output_config: FolderOutputConfig) -> None:
+    def __init__(self, output_config: FolderSinkConfig) -> None:
         """
         Initialize the FolderDispatcher.
         Args:

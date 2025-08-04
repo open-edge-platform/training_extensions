@@ -1,5 +1,5 @@
 from app.entities.base_opencv_stream import BaseOpenCVStream
-from app.schemas.configuration.input_config import SourceType
+from app.schemas import SourceType
 
 
 class WebcamStream(BaseOpenCVStream):

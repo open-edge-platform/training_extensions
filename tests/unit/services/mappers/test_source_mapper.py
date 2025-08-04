@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.db.schema import SourceDB
-from app.schemas.configuration.input_config import (
+from app.schemas.source import (
     ImagesFolderSourceConfig,
     IPCameraSourceConfig,
     SourceType,

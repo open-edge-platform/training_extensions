@@ -9,7 +9,7 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse
 
 from app.api.dependencies import get_sink_id
-from app.schemas.configuration import Sink
+from app.schemas import Sink
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sinks", tags=["Sinks"])

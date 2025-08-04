@@ -10,8 +10,7 @@ import paho.mqtt.client as mqtt
 import pytest
 from testcontainers.compose import DockerCompose
 
-from app.schemas.configuration import OutputFormat
-from app.schemas.configuration.output_config import MqttOutputConfig, SinkType
+from app.schemas.sink import MqttSinkConfig, OutputFormat, SinkType
 from app.services.dispatchers.mqtt import MqttDispatcher
 
 
@@ -43,10 +42,10 @@ def mqtt_broker():
 
 
 @pytest.fixture
-def mqtt_config(mqtt_broker) -> MqttOutputConfig:
+def mqtt_config(mqtt_broker) -> MqttSinkConfig:
     """Create MQTT configuration for testing."""
     host, port = mqtt_broker
-    return MqttOutputConfig(
+    return MqttSinkConfig(
         sink_type=SinkType.MQTT,
         broker_host=host,
         broker_port=port,
@@ -58,10 +57,10 @@ def mqtt_config(mqtt_broker) -> MqttOutputConfig:
 
 
 @pytest.fixture
-def mqtt_config_with_auth(mqtt_broker) -> MqttOutputConfig:
+def mqtt_config_with_auth(mqtt_broker) -> MqttSinkConfig:
     """Create MQTT configuration with authentication."""
     host, port = mqtt_broker
-    return MqttOutputConfig(
+    return MqttSinkConfig(
         sink_type=SinkType.MQTT,
         broker_host=host,
         broker_port=port,
@@ -160,7 +159,7 @@ class TestMqttDispatcher:
 
     def test_connection_failure(self):
         """Test connection failure to invalid broker."""
-        config = MqttOutputConfig(
+        config = MqttSinkConfig(
             sink_type="mqtt",
             broker_host="invalid_host",
             broker_port=1883,

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, File, UploadFile, status
 from fastapi.responses import FileResponse
 
 from app.api.dependencies import get_source_id
-from app.schemas.configuration import Source
+from app.schemas import Source
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])

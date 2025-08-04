@@ -9,7 +9,7 @@ from app.db.schema import SinkDB, SourceDB
 from app.repositories import PipelineRepository
 from app.repositories.sink_repo import SinkRepository
 from app.repositories.source_repo import SourceRepository
-from app.schemas.configuration import AppConfig, Sink, Source
+from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
 from app.services.mappers.sink_mapper import SinkMapper
 from app.services.mappers.source_mapper import SourceMapper
 from app.utils.singleton import Singleton
@@ -49,9 +49,9 @@ class ConfigurationService(metaclass=Singleton):
         self._source_mapper = SourceMapper()
         self._sink_mapper = SinkMapper()
         self._active_pipeline_id: str | None = None
-        self._source_id: str | None = None
-        self._sink_id: str | None = None
-        self._app_config = self._load_app_config()
+        self._source: Source = DisconnectedSourceConfig()
+        self._sink: Sink = DisconnectedSinkConfig()
+        self._load_app_config()
 
         # For child processes, start a daemon to monitor configuration changes and reload it when necessary.
         if not self.__is_parent_process():
@@ -70,15 +70,14 @@ class ConfigurationService(metaclass=Singleton):
         if not self.__is_parent_process():
             raise ConfigUpdateFromChildProcessError
 
-    def _load_app_config(self) -> AppConfig:
+    def _load_app_config(self) -> None:
         logger.info("Loading configuration from database")
-        app_config = AppConfig()
         with get_db_session() as db:
             repo = PipelineRepository(db)
 
             pipeline = repo.get_active_pipeline()
             if pipeline is None:
-                return AppConfig()
+                return
 
             self._active_pipeline_id = pipeline.id
 
@@ -87,18 +86,14 @@ class ConfigurationService(metaclass=Singleton):
                 source_repo = SourceRepository(db)
                 source = source_repo.get_by_id(pipeline.source_id)
                 if source is not None:
-                    self._source_id = source.id
-                    app_config.input = self._source_mapper.to_schema(source)
+                    self._source = self._source_mapper.to_schema(source)
 
             # Get the sink for this pipeline
             if pipeline.sink_id:
                 sink_repo = SinkRepository(db)
                 sink = sink_repo.get_by_id(pipeline.sink_id)
                 if sink is not None:
-                    self._sink_id = sink.id
-                    app_config.output = self._sink_mapper.to_schema(sink)
-
-            return app_config
+                    self._sink = self._sink_mapper.to_schema(sink)
 
     def _reload_config_daemon_routine(self) -> None:
         """Daemon thread to reload the configuration file when it changes."""
@@ -109,7 +104,7 @@ class ConfigurationService(metaclass=Singleton):
                 notified = self.config_changed_condition.wait(timeout=3)
                 if not notified:  # awakened before of timeout
                     continue
-                self._app_config = self._load_app_config()
+                self._load_app_config()
 
     def _notify_config_changed(self) -> None:
         """Notify child processes that the configuration has changed."""
@@ -119,14 +114,11 @@ class ConfigurationService(metaclass=Singleton):
             logger.debug("Notifying other processes about configuration changes")
             self.config_changed_condition.notify_all()
 
-    def get_app_config(self) -> AppConfig:
-        return self._app_config
-
     def get_source_config(self) -> Source:
-        return self._app_config.input
+        return self._source
 
     def get_sink_config(self) -> Sink:
-        return self._app_config.output
+        return self._sink
 
     def __set_config(self, config: SourceDB | SinkDB, on_success: Callable[[], None]) -> None:
         with get_db_session() as db:
@@ -151,13 +143,13 @@ class ConfigurationService(metaclass=Singleton):
     def set_source_config(self, source_config: Source) -> None:
         """Creating new source and attaching to the active pipeline."""
         self.__ensure_parent_process()
-        self._app_config.input = source_config
+        self._source = source_config
         source_db = self._source_mapper.from_schema(source_config)
         self.__set_config(source_db, self._notify_config_changed)
 
     def set_sink_config(self, sink_config: Sink) -> None:
         """Creating new sink and attaching to the active pipeline."""
         self.__ensure_parent_process()
-        self._app_config.output = sink_config
+        self._sink = sink_config
         sink_db = self._sink_mapper.from_schema(sink_config)
         self.__set_config(sink_db, self._notify_config_changed)

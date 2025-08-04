@@ -7,7 +7,7 @@ import numpy as np
 
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
-from app.schemas.configuration.input_config import SourceType
+from app.schemas import SourceType
 
 
 class BaseOpenCVStream(VideoStream, ABC):

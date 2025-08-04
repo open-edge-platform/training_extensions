@@ -8,7 +8,7 @@ import pytest
 
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
-from app.schemas.configuration import Source
+from app.schemas import Source
 from app.workers import frame_acquisition_routine
 
 

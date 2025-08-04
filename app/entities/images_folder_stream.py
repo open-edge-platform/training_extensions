@@ -9,7 +9,7 @@ from watchdog.observers import Observer
 
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
-from app.schemas.configuration.input_config import SourceType
+from app.schemas.source import SourceType
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 from typing import Any
 
 from app.db.schema import SinkDB
-from app.schemas.configuration.output_config import FolderOutputConfig, MqttOutputConfig, Sink, SinkType
+from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, Sink, SinkType
 
 
 class SinkMapper:
@@ -12,14 +12,14 @@ class SinkMapper:
 
         match sink_db.sink_type:
             case SinkType.FOLDER.value:
-                return FolderOutputConfig(
+                return FolderSinkConfig(
                     sink_type=SinkType.FOLDER,
                     output_formats=sink_db.output_formats,
                     rate_limit=sink_db.rate_limit,
                     folder_path=sink_db.config_data.get("folder_path", ""),
                 )
             case SinkType.MQTT.value:
-                return MqttOutputConfig(
+                return MqttSinkConfig(
                     sink_type=SinkType.MQTT,
                     output_formats=sink_db.output_formats,
                     rate_limit=sink_db.rate_limit,

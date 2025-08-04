@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 import pytest
 
-from app.schemas.configuration import OutputFormat
-from app.schemas.configuration.input_config import SourceType, WebcamSourceConfig
-from app.schemas.configuration.output_config import MqttOutputConfig, SinkType
+from app.schemas import OutputFormat, SinkType, SourceType
+from app.schemas.sink import MqttSinkConfig
+from app.schemas.source import WebcamSourceConfig
 from app.services.configuration_service import ConfigurationService
 
 
@@ -25,9 +25,9 @@ def fxt_source_config() -> WebcamSourceConfig:
 
 
 @pytest.fixture
-def fxt_sink_config() -> MqttOutputConfig:
+def fxt_sink_config() -> MqttSinkConfig:
     """Sample sink configuration data."""
-    return MqttOutputConfig(
+    return MqttSinkConfig(
         sink_type=SinkType.MQTT,
         rate_limit=0.1,
         output_formats=[OutputFormat.IMAGE_WITH_PREDICTIONS],
@@ -53,33 +53,30 @@ class TestConfigurationServiceIntegration:
     def test_load_app_config_success(self):
         """Test successful loading of application configuration after migration applied."""
         config_service = ConfigurationService()
+        source = config_service.get_source_config()
+        sink = config_service.get_sink_config()
 
-        app_config = config_service.get_app_config()
-
-        assert app_config
-        assert app_config.input
-        assert app_config.output
-        assert app_config.input.source_type == SourceType.DISCONNECTED
-        assert app_config.output.sink_type == SinkType.DISCONNECTED
+        assert source.source_type == SourceType.DISCONNECTED
+        assert sink.sink_type == SinkType.DISCONNECTED
 
     def test_set_source_success(self, fxt_config_service, fxt_source_config):
         """Test setting source configuration successfully."""
-        old_source_id = fxt_config_service._source_id
+        old_source_id = fxt_config_service.get_source_config().id
         fxt_config_service.set_source_config(fxt_source_config)
         fxt_config_service._load_app_config()  # trigger DB loading explicitly
-        assert old_source_id != fxt_config_service._source_id
 
         source_config = fxt_config_service.get_source_config()
+        assert old_source_id != source_config.id
         assert source_config.device_id == fxt_source_config.device_id
 
     def test_set_sink_success(self, fxt_config_service, fxt_sink_config):
         """Test setting sink configuration successfully."""
-        old_sink_id = fxt_config_service._sink_id
+        old_sink_id = fxt_config_service.get_sink_config().id
         fxt_config_service.set_sink_config(fxt_sink_config)
         fxt_config_service._load_app_config()  # trigger DB loading explicitly
-        assert old_sink_id != fxt_config_service._sink_id
 
         sink_config = fxt_config_service.get_sink_config()
+        assert old_sink_id != sink_config.id
         assert sink_config.rate_limit == fxt_sink_config.rate_limit
         assert sink_config.output_formats == fxt_sink_config.output_formats
         assert sink_config.broker_host == fxt_sink_config.broker_host

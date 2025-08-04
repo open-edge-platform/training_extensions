@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 from app.entities.base_opencv_stream import BaseOpenCVStream
-from app.schemas.configuration.input_config import IPCameraSourceConfig, SourceType
+from app.schemas.source import IPCameraSourceConfig, SourceType
 
 logger = logging.getLogger(__name__)
 

@@ -26,3 +26,10 @@ def flush_queue(queue_obj: mp.Queue) -> None:
 
     if flushed_count > 0:
         logger.info("Flushed %d items from queue", flushed_count)
+
+    # https://docs.python.org/3/library/multiprocessing.html#all-start-methods
+    # section: Joining processes that use queues
+    # After flushing, call cancel_join_thread() to prevent the parent process from blocking
+    # indefinitely when joining child processes that used this queue. This avoids potential
+    # deadlocks if the queue's background thread adds more items during the flush.
+    queue_obj.cancel_join_thread()

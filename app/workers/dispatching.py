@@ -9,8 +9,7 @@ from multiprocessing.synchronize import Event as EventClass
 from fastrtc import AdditionalOutputs
 
 from app.entities.stream_data import StreamData
-from app.schemas.configuration import Sink
-from app.schemas.configuration.output_config import SinkType
+from app.schemas import Sink, SinkType
 from app.services import ConfigurationService, DispatchService
 from app.services.dispatchers import Dispatcher
 

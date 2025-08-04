@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Upload
 from pydantic import BaseModel
 
 from app.api.dependencies import get_model_id
-from app.schemas.model import Model
+from app.schemas import Model
 from app.services.model_service import ModelAlreadyExistsError, ModelNotFoundError, ModelService
 
 router = APIRouter(prefix="/api/models", tags=["Models"])

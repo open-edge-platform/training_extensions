@@ -5,7 +5,7 @@ from app.entities.ip_camera_stream import IPCameraStream
 from app.entities.video_file_stream import VideoFileStream
 from app.entities.video_stream import VideoStream
 from app.entities.webcam_stream import WebcamStream
-from app.schemas.configuration.input_config import Source, SourceType
+from app.schemas import Source, SourceType
 
 logger = logging.getLogger(__name__)
 
