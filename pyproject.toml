@@ -89,10 +89,6 @@ docs = [
     "linkify-it-py",
 ]
 
-ci_tox = [
-    "tox==4.25.0",
-]
-
 ci_publish = [
     "build==1.2.2.post1",
 ]

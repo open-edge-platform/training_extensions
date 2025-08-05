@@ -85,7 +85,7 @@ jobs:
 
       - name: Install tox
         run: |
-          pip install '.[ci_tox]'
+          pip install '.[dev]'
 
       - name: Extract, Validate, and Run Integration Test
         id: tests
