@@ -127,20 +127,16 @@ class TestLogMetrics:
         fmeasure.best_confidence_threshold = 0.7
         # Ensure hasattr works correctly
         fmeasure.configure_mock(best_confidence_threshold=0.7)
+        # Mock compute() to return a proper dictionary to avoid TypeError
+        fmeasure.compute.return_value = {"f1-score": torch.tensor(0.85)}
 
-        # Mock the super()._log_metrics call to avoid Python version compatibility issues
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
+        # Call the actual method - this will run the real implementation
+        detection_model._log_metrics(fmeasure, "val")
 
-            # Call the actual method - this will run the real implementation
-            detection_model._log_metrics(fmeasure, "val")
-
-            # Assertions
-            mock_super.assert_called_once_with(fmeasure, "val")
-            assert "best_confidence_threshold_list" in detection_model.hparams
-            assert detection_model.hparams["best_confidence_threshold_list"] == [0.7]
-            assert detection_model.hparams["best_confidence_threshold"] == 0.7
+        # Assertions
+        assert "best_confidence_threshold_list" in detection_model.hparams
+        assert detection_model.hparams["best_confidence_threshold_list"] == [0.7]
+        assert detection_model.hparams["best_confidence_threshold"] == 0.7
 
     def test_validation_with_metric_collection(self, detection_model):
         """Test validation logging with MetricCollection containing FMeasure."""
@@ -152,18 +148,15 @@ class TestLogMetrics:
 
         metric_collection = Mock(spec=MetricCollection)
         metric_collection.FMeasure = fmeasure
+        # Mock compute() to return proper dictionary
+        metric_collection.compute.return_value = {"f1-score": torch.tensor(0.80)}
 
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
+        # Call method
+        detection_model._log_metrics(metric_collection, "val")
 
-            # Call method
-            detection_model._log_metrics(metric_collection, "val")
-
-            # Assertions
-            mock_super.assert_called_once_with(metric_collection, "val")
-            assert detection_model.hparams["best_confidence_threshold"] == 0.6
-            assert detection_model.hparams["best_confidence_threshold_list"] == [0.6]
+        # Assertions
+        assert detection_model.hparams["best_confidence_threshold"] == 0.6
+        assert detection_model.hparams["best_confidence_threshold_list"] == [0.6]
 
     def test_validation_averaging_behavior(self, detection_model):
         """Test that confidence thresholds are averaged over multiple epochs."""
@@ -171,24 +164,20 @@ class TestLogMetrics:
         fmeasure = Mock(spec=FMeasure)
         # Ensure hasattr works correctly for Python 3.10 compatibility
         fmeasure.best_confidence_threshold = 0.5  # Initial value
+        # Mock compute() to return proper dictionary
+        fmeasure.compute.return_value = {"f1-score": torch.tensor(0.75)}
 
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
+        # Simulate multiple validation epochs
+        thresholds = [0.5, 0.6, 0.7, 0.8, 0.9]
+        for threshold in thresholds:
+            fmeasure.configure_mock(best_confidence_threshold=threshold)
+            detection_model._log_metrics(fmeasure, "val")
 
-            # Simulate multiple validation epochs
-            thresholds = [0.5, 0.6, 0.7, 0.8, 0.9]
-            for threshold in thresholds:
-                fmeasure.configure_mock(best_confidence_threshold=threshold)
-                detection_model._log_metrics(fmeasure, "val")
-
-            # Check that super was called for each epoch
-            assert mock_super.call_count == len(thresholds)
-            # Check that all thresholds are stored
-            assert detection_model.hparams["best_confidence_threshold_list"] == thresholds
-            # Check that the average is computed correctly
-            expected_avg = np.mean(thresholds)
-            assert abs(detection_model.hparams["best_confidence_threshold"] - expected_avg) < 1e-6
+        # Check that all thresholds are stored
+        assert detection_model.hparams["best_confidence_threshold_list"] == thresholds
+        # Check that the average is computed correctly
+        expected_avg = np.mean(thresholds)
+        assert abs(detection_model.hparams["best_confidence_threshold"] - expected_avg) < 1e-6
 
     def test_validation_averaging_last_10_values(self, detection_model):
         """Test that only last 10 values are used for averaging."""
@@ -196,53 +185,45 @@ class TestLogMetrics:
         fmeasure = Mock(spec=FMeasure)
         # Ensure hasattr works correctly for Python 3.10 compatibility
         fmeasure.best_confidence_threshold = 0.1  # Initial value
+        # Mock compute() to return proper dictionary
+        fmeasure.compute.return_value = {"f1-score": torch.tensor(0.75)}
 
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
+        # Simulate 15 validation epochs
+        thresholds = [0.1 * i for i in range(1, 16)]  # 0.1, 0.2, ..., 1.5
+        for threshold in thresholds:
+            fmeasure.configure_mock(best_confidence_threshold=threshold)
+            detection_model._log_metrics(fmeasure, "val")
 
-            # Simulate 15 validation epochs
-            thresholds = [0.1 * i for i in range(1, 16)]  # 0.1, 0.2, ..., 1.5
-            for threshold in thresholds:
-                fmeasure.configure_mock(best_confidence_threshold=threshold)
-                detection_model._log_metrics(fmeasure, "val")
-
-            # Check that super was called for each epoch
-            assert mock_super.call_count == len(thresholds)
-            # Check that all 15 thresholds are stored
-            assert len(detection_model.hparams["best_confidence_threshold_list"]) == 15
-            # Check that only last 10 are used for averaging
-            expected_avg = np.mean(thresholds[-10:])  # Last 10 values: 0.6, 0.7, ..., 1.5
-            assert abs(detection_model.hparams["best_confidence_threshold"] - expected_avg) < 1e-6
+        # Check that all 15 thresholds are stored
+        assert len(detection_model.hparams["best_confidence_threshold_list"]) == 15
+        # Check that only last 10 are used for averaging
+        expected_avg = np.mean(thresholds[-10:])  # Last 10 values: 0.6, 0.7, ..., 1.5
+        assert abs(detection_model.hparams["best_confidence_threshold"] - expected_avg) < 1e-6
 
     def test_validation_without_fmeasure(self, detection_model):
         """Test validation logging without FMeasure metric."""
         # Setup
         other_metric = Mock()
+        # Mock compute() to return proper dictionary
+        other_metric.compute.return_value = {"accuracy": torch.tensor(0.95)}
 
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
+        # Call method
+        detection_model._log_metrics(other_metric, "val")
 
-            # Call method
-            detection_model._log_metrics(other_metric, "val")
-
-            # Assertions
-            mock_super.assert_called_once_with(other_metric, "val")
-            # Should not modify hparams
-            assert "best_confidence_threshold_list" not in detection_model.hparams
-            assert "best_confidence_threshold" not in detection_model.hparams
+        # Should not modify hparams
+        assert "best_confidence_threshold_list" not in detection_model.hparams
+        assert "best_confidence_threshold" not in detection_model.hparams
 
     def test_test_logging_with_existing_threshold(self, detection_model):
         """Test test logging uses existing best_confidence_threshold."""
         # Setup
         detection_model.hparams["best_confidence_threshold"] = 0.75
         metric = Mock()
+        # Mock compute() to return proper dictionary
+        metric.compute.return_value = {"accuracy": torch.tensor(0.90)}
 
+        # Mock the base class method to capture the call with kwargs
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
-
             # Call method
             detection_model._log_metrics(metric, "test")
 
@@ -253,11 +234,11 @@ class TestLogMetrics:
         """Test test logging without existing threshold."""
         # Setup - no threshold in hparams
         metric = Mock()
+        # Mock compute() to return proper dictionary
+        metric.compute.return_value = {"accuracy": torch.tensor(0.90)}
 
+        # Mock the base class method to capture the call
         with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
-
             # Call method
             detection_model._log_metrics(metric, "test")
 
@@ -516,13 +497,12 @@ class TestIntegration:
         # Setup FMeasure mock
         fmeasure = Mock(spec=FMeasure)
         fmeasure.best_confidence_threshold = 0.7
+        # Mock compute() to return proper dictionary
+        fmeasure.compute.return_value = {"f1-score": torch.tensor(0.85)}
 
         # Simulate validation epoch
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Make the mock return None (no-op) to avoid compute() calls
-            mock_super.return_value = None
-            fmeasure.configure_mock(best_confidence_threshold=0.7)
-            detection_model._log_metrics(fmeasure, "val")
+        fmeasure.configure_mock(best_confidence_threshold=0.7)
+        detection_model._log_metrics(fmeasure, "val")
 
         # Verify threshold was stored
         assert detection_model.best_confidence_threshold == 0.7
