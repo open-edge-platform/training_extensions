@@ -377,27 +377,42 @@ class GetiConfigConverter:
             if not augmentation_params:
                 return
 
+            # this list maps Geti user frendly naming to OTX aug classes
             augs_mapping_list = {
-                "random_affine": "otx.data.transform_libs.torchvision.RandomAffine",
-                "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
-                "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
-                "gaussian_blur": "torchvision.transforms.v2.GaussianBlur",
-                "gaussian_noise": "torchvision.transforms.v2.GaussianNoise",
-                "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
-                "iou_random_crop" : "otx.data.transform_libs.torchvision.MinIoURandomCrop",
-                "pad_to_square": "otx.data.transform_libs.torchvision.Pad",
-                "random_zoom_out": "torchvision.transforms.v2.RandomZoomOut",
-                "random_hsv_aug": "otx.data.transform_libs.torchvision.YOLOXHSVRandomAug",
-                "cached_mixup": "otx.data.transform_libs.torchvision.CachedMixUp",
-                "cached_mosaic": "otx.data.transform_libs.torchvision.CachedMosaic"
+                "random_resize_crop": ["otx.data.transform_libs.torchvision.EfficientNetRandomCrop", 
+                                       "otx.data.transform_libs.torchvision.RandomResizedCrop"],
+                "random_affine": ["otx.data.transform_libs.torchvision.RandomAffine"],
+                "random_horizontal_flip": ["otx.data.transform_libs.torchvision.RandomFlip"],
+                "random_vertical_flip": ["torchvision.transforms.v2.RandomVerticalFlip"],
+                "gaussian_blur": ["torchvision.transforms.v2.GaussianBlur"],
+                "gaussian_noise": ["torchvision.transforms.v2.GaussianNoise"],
+                "color_jitter": ["otx.data.transform_libs.torchvision.PhotoMetricDistortion"],
+                "iou_random_crop" : ["otx.data.transform_libs.torchvision.MinIoURandomCrop"],
+                "pad_to_square": ["otx.data.transform_libs.torchvision.Pad"],
+                "random_zoom_out": ["torchvision.transforms.v2.RandomZoomOut"],
+                "random_hsv_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
+                "cached_mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
+                "cached_mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"]
               } 
 
             for aug_name, aug_value in augmentation_params.items():
                 aug_class = augs_mapping_list[aug_name]
+                found = False
                 for aug_config in config["data"]["train_subset"]["transforms"]:
-                    if aug_class == aug_config["class_path"]:
+                    if aug_config["class_path"] in aug_class:
+                        found = True
                         aug_config["enable"] = aug_value["enable"]
+                        for parameter in aug_value:
+                            if parameter not in aug_config["init_args"]:
+                                msg = f"Configuration '{parameter}' is not found in {aug_name} augmentation."
+                                raise ValueError(msg)
+                            aug_config["init_args"][parameter] = aug_value[parameter]
+                        # if aug_name == "random_resize_crop" and not aug_value["enable"]:
+
                         break
+                if not found:
+                    msg = f"Augmentation {aug_name} is not found for this model."
+                    raise ValueError(msg)
 
         augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
         tiling = augmentation_params.pop("tiling", None)
