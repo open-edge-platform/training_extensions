@@ -111,7 +111,7 @@ jobs:
           python-version: "3.12"
       - name: Install tox
         run: |
-          pip install '.[ci_tox]'
+          pip install '.[dev]'
       - name: Bandit Scanning
         run: tox -e bandit-scan
 
