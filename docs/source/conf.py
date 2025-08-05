@@ -1,15 +1,14 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""Configuration file for the Sphinx documentation builder.
 
-# -- Path setup -------------------------------------------------------------- #
+For the full list of built-in configuration values, see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
+-- Project information -----------------------------------------------------
+https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+"""
+
+# Copyright (C) 2022-2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 import sys
@@ -44,7 +43,6 @@ extensions = [
     "sphinx_design",
     "myst_parser",  # Enhanced markdown support
     "sphinx.ext.todo",  # Support for TODO items
-    "sphinx.ext.githubpages",  # GitHub Pages support
     "sphinx.ext.coverage",  # Documentation coverage check
 ]
 
