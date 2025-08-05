@@ -35,4 +35,11 @@ export default defineConfig({
         title: 'Geti Edge',
         favicon: './src/assets/icons/build-icon.svg',
     },
+    tools: {
+        rspack: {
+            watchOptions: {
+                ignored: ['**/src-tauri/**'],
+            },
+        },
+    },
 });
