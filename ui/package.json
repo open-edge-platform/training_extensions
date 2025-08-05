@@ -13,7 +13,7 @@
         "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:7860/api/openapi.json && prettier --write src/api/openapi-spec.json",
         "clone-geti-ui-packages": "npx degit git@github.com:open-edge-platform/geti.git/web_ui/packages/config packages/config --force && npx degit git@github.com:open-edge-platform/geti.git/web_ui/packages/ui packages/ui --force",
         "cyclic-deps-check": "npx madge --circular src/**/*.ts*",
-        "dev": "rsbuild dev",
+        "start": "rsbuild dev",
         "server": "uv --directory ../ run fastapi run --port 7860",
         "format": "prettier --write .",
         "format:check": "prettier --check --cache \"./src/**/*.{js,ts,jsx,tsx,css,scss,sass}\"",

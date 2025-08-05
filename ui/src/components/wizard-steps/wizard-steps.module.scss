@@ -2,9 +2,10 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 3rem;
+    max-width: 1052px;
 }
 
-.wizardTabs {
+.wizardSteps {
     display: flex;
     flex-direction: column;
     gap: var(--spectrum-global-dimension-size-400, var(--spectrum-alias-size-400));
@@ -20,7 +21,7 @@
     background-color: var(--spectrum-global-color-gray-300);
 }
 
-.wizardTab {
+.wizardStep {
     position: relative;
     width: 100%;
     z-index: 10;
@@ -75,12 +76,12 @@
     }
 }
 
-a.wizardTab {
+a.wizardStep {
     text-decoration: none;
     color: var(--spectrum-global-color-gray-700);
 }
 
-.wizardTabText {
+.wizardStepText {
     position: absolute;
     text-align: center;
     width: 30ch;

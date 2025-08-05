@@ -4,22 +4,16 @@ import { Loading, View } from '@geti/ui';
 import { TabPanel } from 'react-aria-components';
 import { Outlet, useLocation } from 'react-router';
 
-import { WizardTab, WizardTabList, WizardTabs } from '../../components/wizard-tabs/wizard-steps';
+import { WizardSteps } from '../../components/wizard-steps/wizard-steps';
+import { WizardTabs } from '../../components/wizard-tabs/wizard-tabs';
 import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
-type WizardStep = {
-    href: string;
-    name: string;
-    isDisabled: boolean;
-    isCompleted: boolean;
-    isSelected: boolean;
-};
-type WizardState = Array<WizardStep>;
-
-const maxWidth = '1200px';
 export const EditPipelineLayout = () => {
     const { pathname } = useLocation();
+
+    // TODO: Replace this hardcoded value by $api.useQuery('get', '/api/pipelines') once available
+    const hasActivePipeline = true;
 
     // TODO: update according to server state
     const wizardState = [
@@ -44,7 +38,27 @@ export const EditPipelineLayout = () => {
             isDisabled: false,
             isSelected: false,
         },
-    ] satisfies WizardState;
+    ];
+
+    const tabsContent = {
+        pathname,
+        state: wizardState,
+        content: (
+            <View width={'100%'} height={'100%'} marginTop={'size-150'} maxWidth={'1320px'}>
+                <Suspense fallback={<Loading mode='inline' />}>
+                    <TabPanel id={paths.pipeline.input({})}>
+                        <Outlet />
+                    </TabPanel>
+                    <TabPanel id={paths.pipeline.model({})}>
+                        <Outlet />
+                    </TabPanel>
+                    <TabPanel id={paths.pipeline.output({})}>
+                        <Outlet />
+                    </TabPanel>
+                </Suspense>
+            </View>
+        ),
+    };
 
     return (
         <View
@@ -60,45 +74,13 @@ export const EditPipelineLayout = () => {
             height='100%'
             width='100%'
         >
-            <View marginX='auto' paddingY='size-800'>
-                <View UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
-                    <WizardTabs
-                        selectedKey={pathname}
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            width: '100%',
-                        }}
-                    >
-                        <WizardTabList aria-label='Pipeline wizard' style={{ maxWidth, flexGrow: '1', width: '100%' }}>
-                            {wizardState.map((step, idx) => {
-                                return (
-                                    <WizardTab
-                                        key={step.href}
-                                        id={step.href}
-                                        href={step.href}
-                                        number={idx + 1}
-                                        isDisabled={step.isDisabled}
-                                        isCompleted={step.isCompleted}
-                                    >
-                                        {step.name}
-                                    </WizardTab>
-                                );
-                            })}
-                        </WizardTabList>
-                        <Suspense fallback={<Loading mode='inline' />}>
-                            <TabPanel id={paths.pipeline.input({})} style={{ width: '100%', maxWidth: '1320px' }}>
-                                <Outlet />
-                            </TabPanel>
-                            <TabPanel id={paths.pipeline.model({})} style={{ width: '100%', maxWidth }}>
-                                <Outlet />
-                            </TabPanel>
-                            <TabPanel id={paths.pipeline.output({})} style={{ width: '100%', maxWidth }}>
-                                <Outlet />
-                            </TabPanel>
-                        </Suspense>
-                    </WizardTabs>
+            <View paddingY='size-800'>
+                <View
+                    UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}
+                    maxWidth={'1320px'}
+                    marginX='auto'
+                >
+                    {hasActivePipeline ? <WizardTabs {...tabsContent} /> : <WizardSteps {...tabsContent} />}
                 </View>
             </View>
         </View>

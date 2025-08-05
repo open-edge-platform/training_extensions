@@ -66,7 +66,7 @@ npm install
 ```
 
 ```
-npm run dev
+npm run start
 ```
 
 ##### Testing the UI
@@ -77,9 +77,8 @@ Use the following commands to test your changes.
 npm run format
 npm run type-check
 npm run test:unit
+npm run test:component
 ```
-
-> TBD: Component and end to end testing with Playwright
 
 ### Docker
 

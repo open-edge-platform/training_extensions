@@ -1,23 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import { TabPanel } from 'react-aria-components';
 
-import { WizardTab, WizardTabList, WizardTabs } from './wizard-steps';
+import { Step, StepList, Steps } from './wizard-steps';
 
-describe('WizardTabs', () => {
+describe('Tabs', () => {
     it('Acts like a Tab', () => {
         render(
-            <WizardTabs>
-                <WizardTabList>
-                    <WizardTab id='input' number={1} isCompleted>
+            <Steps>
+                <StepList>
+                    <Step id='input' number={1} isCompleted>
                         Input
-                    </WizardTab>
-                    <WizardTab id='models' number={2}>
+                    </Step>
+                    <Step id='models' number={2}>
                         Models
-                    </WizardTab>
-                </WizardTabList>
+                    </Step>
+                </StepList>
                 <TabPanel id={'input'}>Input</TabPanel>
                 <TabPanel id={'models'}>Models</TabPanel>
-            </WizardTabs>
+            </Steps>
         );
 
         const input = screen.getByRole('tab', { name: /Input/ });

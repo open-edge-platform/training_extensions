@@ -1,5 +1,5 @@
 import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
-import { capitalize, isBoolean, isNumber, isObject, isString } from 'lodash-es';
+import { capitalize, isObject, startsWith } from 'lodash-es';
 
 import { $api } from '../../api/client';
 import { paths } from '../../router';
@@ -10,18 +10,18 @@ interface FieldProps {
     value: unknown;
 }
 const Field = ({ field, value }: FieldProps) => {
-    // 'source_type' => 'Source type'
-    const formattedField = capitalize(field.replace(/_/g, ' '));
-    const isNonPrimitiveType = !isNumber(value) && !isString(value) && !isBoolean(value);
-
     if (!value) {
         return null;
     }
 
+    // 'source_type' => 'Source type'
+    const formattedField = capitalize(field.replace(/_/g, ' '));
+    const isArrayType = startsWith(`${value}`, '[');
+
     return (
         <Flex direction={'column'}>
             <Heading level={4}>{formattedField}</Heading>
-            <Text>{isNonPrimitiveType ? JSON.stringify(value) : value}</Text>
+            <Text>{isArrayType ? `${value}`.replace(/[\[\]']+/g, '') : `${value}`}</Text>
         </Flex>
     );
 };
