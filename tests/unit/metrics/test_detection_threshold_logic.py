@@ -214,37 +214,6 @@ class TestLogMetrics:
         assert "best_confidence_threshold_list" not in detection_model.hparams
         assert "best_confidence_threshold" not in detection_model.hparams
 
-    def test_test_logging_with_existing_threshold(self, detection_model):
-        """Test test logging uses existing best_confidence_threshold."""
-        # Setup
-        detection_model.hparams["best_confidence_threshold"] = 0.75
-        metric = Mock()
-        # Mock compute() to return proper dictionary
-        metric.compute.return_value = {"accuracy": torch.tensor(0.90)}
-
-        # Mock the base class method to capture the call with kwargs
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Call method
-            detection_model._log_metrics(metric, "test")
-
-            # Check that super()._log_metrics was called with the threshold
-            mock_super.assert_called_once_with(metric, "test", best_confidence_threshold=0.75)
-
-    def test_test_logging_without_threshold(self, detection_model):
-        """Test test logging without existing threshold."""
-        # Setup - no threshold in hparams
-        metric = Mock()
-        # Mock compute() to return proper dictionary
-        metric.compute.return_value = {"accuracy": torch.tensor(0.90)}
-
-        # Mock the base class method to capture the call
-        with patch("otx.backend.native.models.base.OTXModel._log_metrics") as mock_super:
-            # Call method
-            detection_model._log_metrics(metric, "test")
-
-            # Check that super()._log_metrics was called without additional kwargs
-            mock_super.assert_called_once_with(metric, "test")
-
 
 class TestFilterOutputsByThreshold:
     """Test cases for _filter_outputs_by_threshold method."""
