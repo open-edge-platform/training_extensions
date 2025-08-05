@@ -90,7 +90,7 @@ docs = [
 ]
 
 ci_tox = [
-    "tox==4.25.0",
+    "tox-uv>=1.26.2",
 ]
 
 ci_publish = [

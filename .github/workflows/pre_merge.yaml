@@ -34,7 +34,7 @@ jobs:
         run: |
           pip install '.[ci_tox]'
       - name: Code quality checks
-        run: tox -vv -e pre-commit
+        run: tox r -vv -e pre-commit
   Unit-Test:
     runs-on: ubuntu-24.04
     needs: Code-Quality-Checks
@@ -59,7 +59,7 @@ jobs:
         run: |
           pip install '.[ci_tox]'
       - name: Run unit test
-        run: tox -vv -e unit-test-${{ matrix.tox-env }}
+        run: tox r -vv -e unit-test-${{ matrix.tox-env }}
       - name: Upload coverage reports to Codecov
         run: |
           # If the workflow is triggered from PR then it gets the commit id from the PR.
@@ -108,4 +108,4 @@ jobs:
         run: |
           pip install '.[ci_tox]'
       - name: Run Integration Test
-        run: tox -vv -e integration-test-${{ matrix.task }} -- --run-category-only
+        run: tox r -vv -e integration-test-${{ matrix.task }} -- --run-category-only
