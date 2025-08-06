@@ -149,9 +149,45 @@ This section contains descriptions of current and previous releases.
 
 
 .. toctree::
-   :hidden:
+  :hidden:
+  :maxdepth: 3
+  :caption: Get Started
 
-   guide/index
+  guide/get_started/introduction
+  guide/get_started/installation
+  guide/get_started/cli_commands
+  guide/get_started/api_tutorial
+
+
+.. toctree::
+  :hidden:
+  :caption: Tutorials
+
+  guide/tutorials/base/index.rst
+  guide/tutorials/advanced/index.rst
+
+
+.. toctree::
+  :hidden:
+  :caption: Explanation
+
+  guide/explanation/algorithms/index
+  guide/explanation/additional_features/index
+  guide/explanation/product_design
+
+
+.. toctree::
+  :hidden:
+  :caption: Reference
+
+  guide/reference/index
+
+
+.. toctree::
+  :hidden:
+  :caption: Release Notes
+
+  guide/release_notes/index
 
 ******************
 Indices and tables
