@@ -1,49 +1,157 @@
-.. include:: guide/get_started/introduction.rst
+.. raw:: html
+
+    <div style="margin-bottom:30px;">
+    <img src="_static/logos/otx-logo-black.png" alt="Logo" width="900" style="display:block;margin:auto;background-color:white;">
+    </div>
+
+Introduction
+============
+
+**OpenVINO™ Training Extensions** is a low-code transfer learning framework for Computer Vision.
+
+The framework's CLI commands and API allow users to easily train, infer, optimize and export models, even with limited deep learning expertise. OpenVINO™ Training Extensions offers diverse combinations of model architectures, learning methods, and task types based on `PyTorch <https://pytorch.org/>`_ , `Lightning <https://lightning.ai/>`_ and `OpenVINO™ toolkit <https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html>`_.
+
+OpenVINO™ Training Extensions provide `recipe <https://github.com/open-edge-platform/training_extensions/tree/develop/src/otx/recipe>`_ for every supported task type, which consolidates necessary information to build a model. Model configs are validated on various datasets and serve one-stop shop for obtaining the best models in general.
+
+The framework will identify the most suitable recipe based on your dataset, and choose the best hyperparameter configuration. The development team is continuously extending functionalities to make training as simple as possible so that single CLI command can obtain accurate, efficient and robust models ready to be integrated into your project.
+
+|
+
+.. figure:: ../utils/images/diagram_otx.png
+   :align: center
+   :width: 100%
+
+|
+
+************
+Key Features
+************
+
+OpenVINO™ Training Extensions supports the following computer vision tasks:
+
+- **Classification**, including multi-class, multi-label and hierarchical image classification tasks.
+- **Object detection** including rotated bounding box and tiling support
+- **Semantic segmentation** including tiling algorithm support
+- **Instance segmentation** including tiling algorithm support
+- **Anomaly recognition** tasks including anomaly classification, detection and segmentation
+
+OpenVINO™ Training Extensions provide the :doc:`following features <guide/explanation/additional_features/index>`:
+
+- Native **Intel GPUs (XPU) support**. OpenVINO™ Training Extensions can be installed with XPU support to utilize Intel GPUs for training and testing.
+- **Distributed training** to accelerate the training process when you have multiple GPUs
+- **Half-precision training** to save GPUs memory and use larger batch sizes
+- **Class incremental learning** to add new classes to the existing model
+- OpenVINO™ Training Extensions uses `Datumaro <https://open-edge-platform.github.io/datumaro/stable/index.html>`_ as the backend to handle datasets. On account of that, OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. In the future there will be more supported formats available to give more freedom of datasets format choice.
+- Improved :doc:`auto-configuration functionality <guide/explanation/additional_features/auto_configuration>`. OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model recipe to provide the best accuracy/speed trade-off. It will also make a random auto-split of your dataset if there is no validation set provided.
+
+*********************
+Documentation content
+*********************
+
+1. :octicon:`light-bulb` **Quick start guide**:
+
+.. grid::
+    :gutter: 1
+
+    .. grid-item-card:: :octicon:`package` Installation Guide
+        :link: guide/get_started/installation
+        :link-type: doc
+        :text-align: center
+
+        Learn more about how to install OpenVINO™ Training Extensions
+
+    .. grid-item-card:: :octicon:`code-square` API Quick-Guide
+        :link: guide/get_started/api_tutorial
+        :link-type: doc
+        :text-align: center
+
+        Learn more about how to use OpenVINO™ Training Extensions Python API.
+
+    .. grid-item-card:: :octicon:`terminal` CLI Guide
+        :link: guide/get_started/cli_commands
+        :link-type: doc
+        :text-align: center
+
+        Learn more about how to use OpenVINO™ Training Extensions CLI commands
+
+2. :octicon:`book` **Tutorials**:
+
+.. grid:: 1 2 2 3
+    :margin: 1 1 0 0
+    :gutter: 1
+
+    .. grid-item-card:: Classification
+        :link: guide/tutorials/base/how_to_train/classification
+        :link-type: doc
+        :text-align: center
+
+        Learn how to train a classification model
+
+    .. grid-item-card:: Detection
+        :link: guide/tutorials/base/how_to_train/detection
+        :link-type: doc
+        :text-align: center
+
+        Learn how to train a detection model.
+
+    .. grid-item-card:: Instance Segmentation
+        :link: guide/tutorials/base/how_to_train/instance_segmentation
+        :link-type: doc
+        :text-align: center
+
+        Learn how to train an instance segmentation model
+
+    .. grid-item-card:: Semantic Segmentation
+        :link: guide/tutorials/base/how_to_train/semantic_segmentation
+        :link-type: doc
+        :text-align: center
+
+        Learn how to train a semantic segmentation model
+
+    .. grid-item-card:: Anomaly Task
+        :link: guide/tutorials/base/how_to_train/anomaly
+        :link-type: doc
+        :text-align: center
+
+        Learn how to train an anomaly detection model
+
+    .. grid-item-card:: Advanced
+        :link: guide/tutorials/advanced/index
+        :link-type: doc
+        :text-align: center
+
+        Learn how to use advanced features of OpenVINO™ Training Extensions
+
+3. **Explanation section**:
+
+This section consists of an algorithms explanation and describes additional features that are supported by OpenVINO™ Training Extensions.
+:ref:`Algorithms <algo_section_ref>` section includes a description of all supported algorithms:
+
+   1. Explanation of the task and main supervised training pipeline.
+   2. Description of the supported datasets formats for each task.
+   3. Available recipes and models.
+
+:ref:`Additional Features <features_section_ref>` section consists of:
+
+   1. Overview of model optimization algorithms.
+   2. Auto-configuration algorithm to select the most appropriate training pipeline for a given dataset.
+   3. Tiling algorithm to detect small objects in large images.
+   4. explainable AI algorithms to visualize the model's decision-making process.
+   5. Additional useful features like configurable input size, class incremental learning, and adaptive training.
+
+4. **Reference**:
+
+This section gives an overview of the OpenVINO™ Training Extensions code base, where source code for Entities, classes and functions can be found.
+
+5. **Release Notes**:
+
+This section contains descriptions of current and previous releases.
+
 
 .. toctree::
    :hidden:
-   :maxdepth: 3
-   :caption: Get Started
 
-   guide/get_started/introduction
-   guide/get_started/installation
-   guide/get_started/cli_commands
-   guide/get_started/api_tutorial
-
-
-.. toctree::
-   :hidden:
-   :maxdepth: 3
-   :caption: Tutorials
-
-   guide/tutorials/base/index.rst
-   guide/tutorials/advanced/index.rst
-
-
-.. toctree::
-   :hidden:
-   :maxdepth: 3
-   :caption: Explanation
-
-   guide/explanation/algorithms/index
-   guide/explanation/additional_features/index
-   guide/explanation/product_design
-
-
-.. toctree::
-   :hidden:
-   :maxdepth: 3
-   :caption: Reference
-
-   guide/reference/index
-
-
-.. toctree::
-   :hidden:
-   :maxdepth: 3
-   :caption: Release Notes
-
-   guide/release_notes/index
+   guide/index
 
 ******************
 Indices and tables

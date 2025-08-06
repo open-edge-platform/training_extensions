@@ -34,7 +34,7 @@ Training to deployment tutorials
       Learn how to train a semantic segmentation model
 
    .. grid-item-card:: Anomaly Task
-      :link: anomaly_detection
+      :link: anomaly
       :link-type: doc
       :text-align: center
 
@@ -48,4 +48,4 @@ Training to deployment tutorials
    detection
    instance_segmentation
    semantic_segmentation
-   anomaly_detection
+   anomaly

@@ -5,7 +5,6 @@ Advanced Tutorials
    :maxdepth: 1
 
    configuration
-   huggingface_model
    multi_gpu
    low_rank_adaptation
    torch_compile

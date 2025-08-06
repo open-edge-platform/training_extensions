@@ -109,7 +109,7 @@ Documentation content
         Learn how to train a semantic segmentation model
 
     .. grid-item-card:: Anomaly Task
-        :link: ../tutorials/base/how_to_train/anomaly_detection
+        :link: ../tutorials/base/how_to_train/anomaly
         :link-type: doc
         :text-align: center
 

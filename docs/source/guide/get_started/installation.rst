@@ -16,9 +16,9 @@ The current version of OpenVINO™ Training Extensions was tested in the followi
     To enable efficient execution of multiple models, we increase the ONEDNN_PRIMITIVE_CACHE_CAPACITY environment variable from its default value to 10000.
     For more information, refer to the `Primitive cache <https://www.intel.com/content/www/us/en/docs/onednn/developer-guide-reference/2024-1/primitive-cache-002.html>`_.
 
-***************
+******************
 Installing ``uv``
-***************
+******************
 
 To use OpenVINO™ Training Extensions with ``uv``, you first need to install the ``uv`` tool.
 
