@@ -28,10 +28,10 @@ from otx.data.transform_libs.torchvision import (
     RandomAffine,
     RandomCrop,
     RandomFlip,
+    RandomGaussianNoise,
     RandomResize,
     Resize,
     TopdownAffine,
-    UnscaledGaussianNoise,
     YOLOXHSVRandomAug,
 )
 from otx.data.transform_libs.utils import overlap_bboxes
@@ -690,12 +690,12 @@ class TestTopdownAffine:
         assert results.keypoints.shape == (4, 3)
 
 
-class TestUnscaledGaussianNoise:
+class TestRandomGaussianNoise:
     def test_transform(self, det_data_entity) -> None:
         transform = Compose(
             [
                 ToDtype(torch.float32),
-                UnscaledGaussianNoise(mean=0.1, sigma=0.2, clip=True),
+                RandomGaussianNoise(mean=0.1, sigma=0.2, clip=True),
             ],
         )
 
