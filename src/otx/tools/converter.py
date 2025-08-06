@@ -373,7 +373,21 @@ class GetiConfigConverter:
             config["data"]["input_size"] = (height, width)
 
         def update_augmentations(augmentation_params: dict) -> None:
-            """Update augmentations in the config."""
+            """Update augmentations in the config.
+            
+            Example:
+                augmentation_params = {
+                    random_affine = {
+                        "enable": True,
+                        "scaling_ratio_range": [0.1, 2.0]
+                    },
+                    gaussian_blur = {
+                        "enable": True,
+                        "kernel_size": 5
+                    }
+                    ...
+                }
+            """
             if not augmentation_params:
                 return
 
@@ -401,13 +415,16 @@ class GetiConfigConverter:
                 for aug_config in config["data"]["train_subset"]["transforms"]:
                     if aug_config["class_path"] in aug_class:
                         found = True
-                        aug_config["enable"] = aug_value["enable"]
-                        for parameter in aug_value:
+                        if aug_name == "random_resize_crop" and not aug_value["enable"]:
+                            # if random crop is disabled -> change this augmentation to simple Resize
+                            aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
+                            break
+                        aug_config["enable"] = aug_value.pop("enable")
+                        for parameter in aug_value: 
                             if parameter not in aug_config["init_args"]:
                                 msg = f"Configuration '{parameter}' is not found in {aug_name} augmentation."
                                 raise ValueError(msg)
                             aug_config["init_args"][parameter] = aug_value[parameter]
-                        # if aug_name == "random_resize_crop" and not aug_value["enable"]:
 
                         break
                 if not found:
