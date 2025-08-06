@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 from collections import OrderedDict
 from functools import partial
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torch.nn.functional as f
@@ -20,6 +20,9 @@ from otx.backend.native.models.common.utils.utils import inverse_sigmoid
 from otx.backend.native.models.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
 from otx.backend.native.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
 from otx.backend.native.models.utils.weight_init import bias_init_with_prob
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class TransformerDecoderLayer(nn.Module):
@@ -565,7 +568,7 @@ class DFINETransformerModule(nn.Module):
         init.constant_(self.pre_bbox_head.layers[-1].weight, 0)
         init.constant_(self.pre_bbox_head.layers[-1].bias, 0)
 
-        for cls_, reg_ in zip(self.dec_score_head, self.dec_bbox_head):
+        for cls_, reg_ in zip(self.dec_score_head, self.dec_bbox_head, strict=True):
             init.constant_(cls_.bias, bias)
             if hasattr(reg_, "layers"):
                 init.constant_(reg_.layers[-1].weight, 0)
@@ -574,7 +577,7 @@ class DFINETransformerModule(nn.Module):
         init.xavier_uniform_(self.enc_output[0].weight)
         init.xavier_uniform_(self.query_pos_head.layers[0].weight)
         init.xavier_uniform_(self.query_pos_head.layers[1].weight)
-        for m, in_channels in zip(self.input_proj, feat_channels):
+        for m, in_channels in zip(self.input_proj, feat_channels, strict=True):
             if in_channels != self.hidden_dim:
                 init.xavier_uniform_(m[0].weight)
 
@@ -892,7 +895,7 @@ class DFINETransformerModule(nn.Module):
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
-        return [{"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class, outputs_coord)]
+        return [{"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class, outputs_coord, strict=True)]
 
     @torch.jit.unused
     def _set_aux_loss2(
@@ -916,7 +919,7 @@ class DFINETransformerModule(nn.Module):
                 "teacher_corners": teacher_corners,
                 "teacher_logits": teacher_logits,
             }
-            for a, b, c, d in zip(outputs_class, outputs_coord, outputs_corners, outputs_ref)
+            for a, b, c, d in zip(outputs_class, outputs_coord, outputs_corners, outputs_ref, strict=True)
         ]
 
 

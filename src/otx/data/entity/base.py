@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 import torch
 import torchvision.transforms.v2.functional as F  # noqa: N812
@@ -170,7 +170,7 @@ class ImageInfo(tv_tensors.TVTensor):
                 image_color_channel=image_info.image_color_channel,
                 ignored_labels=image_info.ignored_labels,
             )
-        elif isinstance(output, (tuple, list)):
+        elif isinstance(output, (tuple | list)):
             image_infos = [x for x in flat_params if isinstance(x, ImageInfo)]
             output = type(output)(
                 ImageInfo._wrap(
@@ -186,7 +186,7 @@ class ImageInfo(tv_tensors.TVTensor):
                     image_color_channel=image_info.image_color_channel,
                     ignored_labels=image_info.ignored_labels,
                 )
-                for dummy_tensor, image_info in zip(output, image_infos)
+                for dummy_tensor, image_info in zip(output, image_infos, strict=True)
             )
         return output
 
@@ -340,7 +340,7 @@ class Points(tv_tensors.TVTensor):
 
         if isinstance(output, Tensor) and not isinstance(output, Points):
             output = Points._wrap(output, canvas_size=canvas_size)
-        elif isinstance(output, (tuple, list)):
+        elif isinstance(output, (tuple | list)):
             output = type(output)(Points._wrap(part, canvas_size=canvas_size) for part in output)
         return output
 
@@ -464,5 +464,5 @@ def clamp_points(inpt: Tensor, canvas_size: tuple[int, int] | None = None) -> Te
         )
 
 
-class OTXBatchLossEntity(Dict[str, Tensor]):
+class OTXBatchLossEntity(dict[str, Tensor]):
     """Data entity to represent model output losses."""

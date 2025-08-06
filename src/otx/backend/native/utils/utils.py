@@ -8,7 +8,7 @@ from __future__ import annotations
 import importlib
 from collections import defaultdict
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import torch
 from datumaro.components.annotation import AnnotationType, LabelCategories
@@ -16,10 +16,10 @@ from datumaro.components.annotation import AnnotationType, LabelCategories
 from otx.utils.device import is_xpu_available
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from datumaro import Dataset as DmDataset
 
-
-from typing import Callable, TypeVar
 
 _T = TypeVar("_T")
 _V = TypeVar("_V")

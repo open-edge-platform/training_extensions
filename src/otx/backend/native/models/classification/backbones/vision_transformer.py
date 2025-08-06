@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from timm.layers import (
@@ -34,6 +34,7 @@ from otx.backend.native.models.classification.utils.peft import (
 from otx.backend.native.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
     import numpy as np
@@ -538,7 +539,7 @@ class VisionTransformer(BaseModule):
                 for out in outputs
             ]
         if return_class_token:
-            return tuple(zip(outputs, class_tokens))
+            return tuple(zip(outputs, class_tokens, strict=True))
         return tuple(outputs)
 
     def forward(

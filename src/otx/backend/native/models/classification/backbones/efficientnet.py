@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """EfficientNet Module."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from pytorchcv.models.model_store import download_model
@@ -22,6 +22,9 @@ PRETRAINED_ROOT = "https://github.com/osmr/imgclsmob/releases/download/v0.0.364/
 pretrained_urls = {
     "efficientnet_b0": PRETRAINED_ROOT + "efficientnet_b0-0752-0e386130.pth.zip",
 }
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def conv1x1_block(
@@ -632,22 +635,22 @@ class EfficientNetBackbone:
 
         channels: list = reduce(
             lambda x, y: [*x, [y[0]] * y[1]] if y[2] != 0 else x[:-1] + [x[-1] + [y[0]] * y[1]],
-            zip(channels_per_layers, effnet_layers, cls.downsample),
+            zip(channels_per_layers, effnet_layers, cls.downsample, strict=True),
             [],
         )
         kernel_sizes: list = reduce(
             lambda x, y: [*x, [y[0]] * y[1]] if y[2] != 0 else x[:-1] + [x[-1] + [y[0]] * y[1]],
-            zip(cls.kernel_sizes_per_layers, effnet_layers, cls.downsample),
+            zip(cls.kernel_sizes_per_layers, effnet_layers, cls.downsample, strict=True),
             [],
         )
         expansion_factors: list = reduce(
             lambda x, y: [*x, [y[0]] * y[1]] if y[2] != 0 else x[:-1] + [x[-1] + [y[0]] * y[1]],
-            zip(cls.expansion_factors_per_layers, effnet_layers, cls.downsample),
+            zip(cls.expansion_factors_per_layers, effnet_layers, cls.downsample, strict=True),
             [],
         )
         strides_per_stage: list = reduce(
             lambda x, y: [*x, [y[0]] * y[1]] if y[2] != 0 else x[:-1] + [x[-1] + [y[0]] * y[1]],
-            zip(cls.strides_per_stage, effnet_layers, cls.downsample),
+            zip(cls.strides_per_stage, effnet_layers, cls.downsample, strict=True),
             [],
         )
         strides_per_stage = [si[0] for si in strides_per_stage]

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomaly Classification Dataset."""
@@ -101,7 +101,7 @@ class OTXAnomalyDataset(OTXDataset):
             if label == AnomalyLabel.ANOMALOUS.value:
                 for annotation in datumaro_item.annotations:
                     # There is only one mask
-                    if isinstance(annotation, (Ellipse, Polygon)):
+                    if isinstance(annotation, (Ellipse | Polygon)):
                         polygons = np.asarray(annotation.as_polygon(), dtype=np.int32).reshape((-1, 1, 2))
                         mask = np.zeros(img_shape, dtype=np.uint8)
                         mask = cv2.drawContours(

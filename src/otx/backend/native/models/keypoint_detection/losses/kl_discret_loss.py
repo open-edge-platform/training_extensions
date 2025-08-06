@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -79,7 +79,7 @@ class KLDiscretLoss(nn.Module):
         loss = 0
         weight = target_weight.reshape(-1) if self.use_target_weight else 1.0
 
-        for pred, target in zip(pred_simcc, gt_simcc):
+        for pred, target in zip(pred_simcc, gt_simcc, strict=True):
             _pred = pred.reshape(-1, pred.size(-1))
             _target = target.reshape(-1, target.size(-1))
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for detection model entity used in OTX."""
@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from torchmetrics import Metric, MetricCollection
@@ -33,6 +33,8 @@ from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.models.detection.detectors import SingleStageDetector
@@ -120,7 +122,7 @@ class OTXDetectionModel(OTXModel):
         bboxes = []
         labels = []
         if outputs.scores is not None and outputs.bboxes is not None and outputs.labels is not None:
-            for score, bbox, label in zip(outputs.scores, outputs.bboxes, outputs.labels):
+            for score, bbox, label in zip(outputs.scores, outputs.bboxes, outputs.labels, strict=True):
                 filtered_idx = torch.where(score > self.best_confidence_threshold)
                 scores.append(score[filtered_idx])
                 bboxes.append(tv_tensors.wrap(bbox[filtered_idx], like=bbox))
@@ -175,7 +177,7 @@ class OTXDetectionModel(OTXModel):
         bboxes = []
         labels = []
         predictions = outputs["predictions"] if isinstance(outputs, dict) else outputs
-        for img_info, prediction in zip(inputs.imgs_info, predictions):  # type: ignore[union-attr,arg-type]
+        for img_info, prediction in zip(inputs.imgs_info, predictions, strict=True):  # type: ignore[union-attr,arg-type]
             if not isinstance(prediction, InstanceData):
                 raise TypeError(prediction)
 
@@ -300,14 +302,14 @@ class OTXDetectionModel(OTXModel):
                     "scores": scores.type(torch.float32),
                     "labels": labels,
                 }
-                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.labels)  # type: ignore[arg-type]
+                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.labels, strict=True)  # type: ignore[arg-type]
             ],
             "target": [
                 {
                     "boxes": bboxes.data,
                     "labels": labels,
                 }
-                for bboxes, labels in zip(inputs.bboxes, inputs.labels)  # type: ignore[arg-type]
+                for bboxes, labels in zip(inputs.bboxes, inputs.labels, strict=True)  # type: ignore[arg-type]
             ],
         }
 

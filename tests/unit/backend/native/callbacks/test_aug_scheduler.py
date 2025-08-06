@@ -367,7 +367,7 @@ class TestDataAugSwitchIntegration:
             "light_aug",
         ]
 
-        for epoch, expected_policy_type in zip(test_epochs, expected_policies):
+        for epoch, expected_policy_type in zip(test_epochs, expected_policies, strict=True):
             # Simulate trainer epoch update
             mock_trainer = MagicMock(spec=Trainer)
             mock_trainer.current_epoch = epoch

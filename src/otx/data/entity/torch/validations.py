@@ -42,7 +42,7 @@ class ValidateItemMixin:
     @staticmethod
     def _image_validator(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
         """Validate the image."""
-        if not isinstance(image, (torch.Tensor, np.ndarray)):
+        if not isinstance(image, (torch.Tensor | np.ndarray)):
             msg = f"Image must be a torch tensor or numpy array. Got {type(image)}"
             raise TypeError(msg)
         if image.ndim != 3:
@@ -88,7 +88,7 @@ class ValidateItemMixin:
 
         Numpy is mixed for this round as it is used in OV Classification.
         """
-        if not isinstance(feature_vector, (torch.Tensor, np.ndarray)):
+        if not isinstance(feature_vector, (torch.Tensor | np.ndarray)):
             msg = "Feature vector must be a torch tensor or numpy array"
             raise TypeError(msg)
         if isinstance(feature_vector, torch.Tensor) and feature_vector.dtype != torch.float32:
@@ -280,7 +280,7 @@ class ValidateBatchMixin:
         """
         if not isinstance(feature_vector_batch, list) or not isinstance(
             feature_vector_batch[0],
-            (torch.Tensor, np.ndarray),
+            (torch.Tensor | np.ndarray),
         ):
             msg = (
                 "Feature vector batch must be a list of torch tensors or numpy arrays."
@@ -313,7 +313,7 @@ class ValidateBatchMixin:
         # TODO(ashwinvaidya17): use only one dtype. Kept for OV Classification compatibility
         if not isinstance(saliency_map_batch, list) or not isinstance(
             saliency_map_batch[0],
-            (torch.Tensor, np.ndarray),
+            (torch.Tensor | np.ndarray),
         ):
             msg = f"Saliency map batch must be a list of torch tensors. Got {type(saliency_map_batch)}"
             raise TypeError(msg)

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -40,7 +40,7 @@ def accuracy(
             function will return a tuple containing accuracies of
             each ``topk`` number.
     """
-    if not isinstance(topk, (int, tuple)):
+    if not isinstance(topk, (int | tuple)):
         msg = f"topk must be int or tuple of int, got {type(topk)}"
         raise TypeError(msg)
     if isinstance(topk, int):

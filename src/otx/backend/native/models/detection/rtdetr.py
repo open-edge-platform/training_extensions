@@ -132,7 +132,7 @@ class RTDETR(OTXDetectionModel):
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
         if entity.bboxes is not None and entity.labels is not None:
-            for bb, ll in zip(entity.bboxes, entity.labels):
+            for bb, ll in zip(entity.bboxes, entity.labels, strict=True):
                 # convert to cxcywh if needed
                 if len(scaled_bboxes := bb):
                     converted_bboxes = (

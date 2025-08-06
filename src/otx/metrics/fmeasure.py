@@ -541,9 +541,9 @@ class _FMeasureCalculator:
             list[list[tuple]]: list of list of filtered boxes in each image
         """
         new_boxes_per_image = []
-        for boxes, boxes_nms in zip(boxes_per_image, critical_nms):
+        for boxes, boxes_nms in zip(boxes_per_image, critical_nms, strict=True):
             new_boxes = []
-            for box, nms in zip(boxes, boxes_nms):
+            for box, nms in zip(boxes, boxes_nms, strict=True):
                 if nms < nms_threshold:
                     new_boxes.append(box)
             new_boxes_per_image.append(new_boxes)
@@ -610,6 +610,7 @@ class _FMeasureCalculator:
         for ground_truth_boxes, predicted_boxes in zip(
             self.ground_truth_boxes_per_image,
             self.prediction_boxes_per_image,
+            strict=True,
         ):
             n_true += len(ground_truth_boxes)
             n_predicted += len(predicted_boxes)
@@ -677,7 +678,7 @@ class FMeasure(Metric):
 
     def update(self, preds: list[dict[str, Tensor]], target: list[dict[str, Tensor]]) -> None:
         """Update total predictions and targets from given batch predicitons and targets."""
-        for pred, tget in zip(preds, target):
+        for pred, tget in zip(preds, target, strict=True):
             self.preds.append(
                 [
                     (*box, self.classes[label], score)
@@ -685,13 +686,14 @@ class FMeasure(Metric):
                         pred["boxes"].tolist(),
                         pred["labels"].tolist(),
                         pred["scores"].tolist(),
+                        strict=True,
                     )
                 ],
             )
             self.targets.append(
                 [
                     (*box, self.classes[label], 0.0)
-                    for box, label in zip(tget["boxes"].tolist(), tget["labels"].tolist())
+                    for box, label in zip(tget["boxes"].tolist(), tget["labels"].tolist(), strict=True)
                 ],
             )
 

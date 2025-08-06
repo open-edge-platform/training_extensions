@@ -1,11 +1,11 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class modules that manage Workspace."""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -26,6 +26,6 @@ class Workspace:
             else work_dir
         )
         if use_sub_dir:
-            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
             self.work_dir = self.work_dir / f"{timestamp}"
         Path(self.work_dir).mkdir(parents=True, exist_ok=True)

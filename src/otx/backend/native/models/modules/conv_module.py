@@ -12,7 +12,7 @@ import itertools
 import operator
 import warnings
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from torch import Tensor, nn
 from torch.nn.modules.batchnorm import _BatchNorm as BatchNorm
@@ -25,6 +25,8 @@ from .norm import build_norm_layer, infer_abbr
 from .padding import build_padding_layer
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from torch.nn.modules.conv import _ConvNd as ConvNd
 
 
@@ -145,7 +147,7 @@ class ConvModule(nn.Module):
                 self.norm_name = infer_abbr(norm.__class__)
 
             self.add_module(self.norm_name, norm)
-            if self.with_bias and isinstance(norm, (BatchNorm, InstanceNorm)):
+            if self.with_bias and isinstance(norm, (BatchNorm | InstanceNorm)):
                 warnings.warn("Unnecessary conv bias before batch/instance norm", stacklevel=1)
 
         # build activation layer
@@ -366,7 +368,7 @@ def _patch_grad(x: Tensor) -> Tensor:
 
         # If the stride is equal to 1 for a dimension of size 1 (condition which triggers the bug),
         # set the stride based on the expected one that we calculated above to workaround the problem.
-        new_stride = [cst if sz == 1 and st == 1 else st for cst, st, sz in zip(calc_stride, stride, size)]
+        new_stride = [cst if sz == 1 and st == 1 else st for cst, st, sz in zip(calc_stride, stride, size, strict=True)]
         return grad_x.as_strided(size, new_stride)
 
     if x.requires_grad:

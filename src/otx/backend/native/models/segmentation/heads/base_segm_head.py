@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base head for OTX segmentation models."""
@@ -7,13 +7,16 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from torch import nn
 
 from otx.backend.native.models.segmentation.modules import resize
 from otx.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class BaseSegmentationHead(nn.Module):

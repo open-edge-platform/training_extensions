@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 import torch
 from torchvision import tv_tensors
@@ -18,6 +18,8 @@ from otx.types.task import OTXTaskType
 from .base import ImageInfo
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from datumaro import Polygon
     from torch import LongTensor
 
@@ -289,7 +291,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             )
             for i in range(0, len(tiles), self.batch_size)
         ]
-        return list(zip(batch_tile_attr_list, batch_data_entities))
+        return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))
 
     @classmethod
     def collate_fn(cls, batch_entities: list[TileSegDataEntity]) -> TileBatchSegDataEntity:

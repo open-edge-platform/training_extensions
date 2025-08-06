@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """This module implements activation map."""
@@ -75,7 +75,7 @@ def dump_frames(saved_frames: list, output: str, input_path: str | int, capture:
     else:
         if len(filenames) != len(saved_frames):
             filenames = [f"output_{i}.jpeg" for i, _ in enumerate(saved_frames)]
-        for filename, frame in zip(filenames, saved_frames):
+        for filename, frame in zip(filenames, saved_frames, strict=True):
             image_path = str(output_path / filename)
             cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             cv2.imwrite(image_path, frame)

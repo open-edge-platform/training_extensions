@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Utility functions for OTX algo."""
@@ -10,7 +10,7 @@ import os
 import re
 from collections import OrderedDict, abc, namedtuple
 from pathlib import Path
-from typing import Any, Callable, Iterator, Sequence, Union
+from typing import TYPE_CHECKING, Any
 from warnings import warn
 
 import numpy as np
@@ -19,9 +19,8 @@ from torch import distributed as torch_dist
 from torch import nn
 from torch.utils.model_zoo import load_url
 
-BoolTypeTensor = Union[torch.BoolTensor, torch.cuda.BoolTensor]
-LongTypeTensor = Union[torch.LongTensor, torch.cuda.LongTensor]
-IndexType = Union[str, slice, int, list, LongTypeTensor, BoolTypeTensor, np.ndarray]
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator, Sequence
 
 
 def _torch_hub_model_reduce(self) -> tuple[Callable, tuple]:  # noqa: ANN001
@@ -436,7 +435,18 @@ class InstanceData:
 
     __setitem__ = __setattr__
 
-    def __getitem__(self, item: IndexType) -> InstanceData:
+    def __getitem__(
+        self,
+        item: str
+        | slice
+        | int
+        | list
+        | torch.LongTensor
+        | torch.cuda.LongTensor
+        | torch.BoolTensor
+        | torch.cuda.BoolTensor
+        | np.ndarray,
+    ) -> InstanceData:
         """Get item mehod.
 
         Args:
@@ -473,9 +483,9 @@ class InstanceData:
                     new_data[k] = v[item]
                 elif isinstance(v, np.ndarray):
                     new_data[k] = v[item.cpu().numpy()]
-                elif isinstance(v, (str, list, tuple)) or (hasattr(v, "__getitem__") and hasattr(v, "cat")):
+                elif isinstance(v, (str | list | tuple)) or (hasattr(v, "__getitem__") and hasattr(v, "cat")):
                     # convert to indexes from BoolTensor
-                    if isinstance(item, BoolTypeTensor.__args__):  # type: ignore[attr-defined]
+                    if isinstance(item, torch.BoolTensor | torch.cuda.BoolTensor.__args__):  # type: ignore[attr-defined]
                         indexes = torch.nonzero(item).view(-1).cpu().numpy().tolist()
                     else:
                         indexes = item.cpu().numpy().tolist()
@@ -486,7 +496,7 @@ class InstanceData:
                     else:
                         slice_list.append(slice(None, 0, None))
                     r_list = [v[s] for s in slice_list]
-                    if isinstance(v, (str, list, tuple)):
+                    if isinstance(v, (str | list | tuple)):
                         new_value = r_list[0]
                         for r in r_list[1:]:
                             new_value = new_value + r
@@ -592,7 +602,7 @@ class InstanceData:
         """Convert all tensors to CPU in data."""
         new_data = self.new()
         for k, v in self.items():
-            if isinstance(v, (torch.Tensor, InstanceData)):
+            if isinstance(v, (torch.Tensor | InstanceData)):
                 v = v.cpu()  # noqa: PLW2901
                 data = {k: v}
                 new_data.set_data(data)
@@ -603,7 +613,7 @@ class InstanceData:
         """Convert all tensors to GPU in data."""
         new_data = self.new()
         for k, v in self.items():
-            if isinstance(v, (torch.Tensor, InstanceData)):
+            if isinstance(v, (torch.Tensor | InstanceData)):
                 v = v.cuda()  # noqa: PLW2901
                 data = {k: v}
                 new_data.set_data(data)
@@ -614,7 +624,7 @@ class InstanceData:
         """Detach all tensors in data."""
         new_data = self.new()
         for k, v in self.items():
-            if isinstance(v, (torch.Tensor, InstanceData)):
+            if isinstance(v, (torch.Tensor | InstanceData)):
                 v = v.detach()  # noqa: PLW2901
                 data = {k: v}
                 new_data.set_data(data)
@@ -625,7 +635,7 @@ class InstanceData:
         """Convert all tensors to np.ndarray in data."""
         new_data = self.new()
         for k, v in self.items():
-            if isinstance(v, (torch.Tensor, InstanceData)):
+            if isinstance(v, (torch.Tensor | InstanceData)):
                 v = v.detach().cpu().numpy()  # noqa: PLW2901
                 data = {k: v}
                 new_data.set_data(data)

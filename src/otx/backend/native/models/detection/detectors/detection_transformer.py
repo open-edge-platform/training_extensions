@@ -137,7 +137,8 @@ class DETR(BaseModule):
 
         # Reshape each split in a list comprehension
         return tuple(
-            logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1]) for logits, f in zip(raw_logits, backbone_feats)
+            logits.reshape(f.shape[0], -1, f.shape[-2], f.shape[-1])
+            for logits, f in zip(raw_logits, backbone_feats, strict=True)
         )
 
     def postprocess(
@@ -176,7 +177,7 @@ class DETR(BaseModule):
 
         scores_list, boxes_list, labels_list = [], [], []
 
-        for sc, bb, ll, original_size in zip(scores, boxes, labels, original_sizes):
+        for sc, bb, ll, original_size in zip(scores, boxes, labels, original_sizes, strict=True):
             scores_list.append(sc)
             boxes_list.append(
                 BoundingBoxes(bb, format="xyxy", canvas_size=original_size),

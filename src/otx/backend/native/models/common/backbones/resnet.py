@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MMDet ResNet."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import warnings
 from functools import partial
-from typing import Callable, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import torch
 import torch.utils.checkpoint as cp
@@ -17,6 +17,9 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from otx.backend.native.models.common.layers import ResLayer
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.modules.norm import build_norm_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class Bottleneck(BaseModule):

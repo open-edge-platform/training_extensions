@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for instance segmentation model entity used in OTX."""
@@ -10,7 +10,7 @@ from __future__ import annotations
 import copy
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from torch import Tensor
@@ -39,6 +39,8 @@ from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
@@ -136,7 +138,7 @@ class OTXInstanceSegModel(OTXModel):
         masks: list[tv_tensors.Mask] = []
 
         predictions = outputs["predictions"] if isinstance(outputs, dict) else outputs
-        for img_info, prediction in zip(inputs.imgs_info, predictions):  # type: ignore[arg-type]
+        for img_info, prediction in zip(inputs.imgs_info, predictions, strict=True):  # type: ignore[arg-type]
             scores.append(prediction.scores)
             bboxes.append(
                 tv_tensors.BoundingBoxes(
@@ -406,7 +408,7 @@ class OTXInstanceSegModel(OTXModel):
             # Export case, consists of tensors
             # For OV task saliency map are generated on MAPI side
             saliency_map = torch.empty(1, dtype=torch.uint8)
-        elif isinstance(predictions, list) and isinstance(predictions[0], (InstanceData, dict)):
+        elif isinstance(predictions, list) and isinstance(predictions[0], (InstanceData | dict)):
             # Predict case, consists of InstanceData or dict
             saliency_map = self.explain_fn(predictions)
         else:

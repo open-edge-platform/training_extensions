@@ -1,11 +1,11 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Anomaly Lightning OTX model."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 import torch
 from anomalib import TaskType as AnomalibTaskType
@@ -28,6 +28,7 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     import types
+    from collections.abc import Sequence
     from pathlib import Path
 
     from anomalib.metrics import AnomalibMetricCollection

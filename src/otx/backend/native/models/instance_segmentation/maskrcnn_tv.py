@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """TV MaskRCNN model implementations."""
@@ -180,7 +180,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
         # XAI wraps prediction under dictionary with key "predictions"
         predictions = outputs["predictions"] if isinstance(outputs, dict) else outputs
-        for img_info, prediction in zip(inputs.imgs_info, predictions):  # type: ignore[arg-type]
+        for img_info, prediction in zip(inputs.imgs_info, predictions, strict=True):  # type: ignore[arg-type]
             scores.append(prediction["scores"])
             bboxes.append(
                 tv_tensors.BoundingBoxes(

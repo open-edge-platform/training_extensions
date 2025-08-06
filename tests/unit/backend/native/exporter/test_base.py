@@ -85,7 +85,7 @@ class TestOTXModelExporter:
         processed_model = exporter._postprocess_openvino_model(mock_model)
         # Verify the processed model is returned and the names are set correctly
         assert processed_model is mock_model
-        for output, name in zip(processed_model.outputs, exporter.output_names):
+        for output, name in zip(processed_model.outputs, exporter.output_names, strict=True):
             output.tensor.set_names.assert_called_once_with({name})
 
     def test_embed_metadata_true_precision_fp16(self, exporter):

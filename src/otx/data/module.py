@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """LightningDataModule extension for OTX."""
@@ -115,7 +115,7 @@ class OTXDataModule(LightningDataModule):
                 self.task,
                 input_size_multiplier,
             )
-        elif not isinstance(input_size, (tuple, list)):
+        elif not isinstance(input_size, (tuple | list)):
             msg = f"input_size should be tuple/list of ints or 'auto', but got {input_size}"
             raise ValueError(msg)
 

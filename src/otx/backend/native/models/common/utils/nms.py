@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -13,7 +13,7 @@ Reference :
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
@@ -22,6 +22,9 @@ from torch.onnx import symbolic_helper as sym_help
 from torchvision.ops.boxes import nms as torch_nms
 
 from otx.backend.native.models.common.utils.utils import dynamic_topk
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class NMSop(torch.autograd.Function):

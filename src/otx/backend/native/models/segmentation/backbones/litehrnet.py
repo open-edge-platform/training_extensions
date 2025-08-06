@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """HRNet network modules for base backbone.
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torch.utils.checkpoint as cp
@@ -23,6 +23,9 @@ from otx.backend.native.models.segmentation.modules import (
     channel_shuffle,
 )
 from otx.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class NeighbourSupport(nn.Module):
@@ -179,7 +182,7 @@ class CrossResolutionWeighting(nn.Module):
         out = self.conv2(out)
         out = torch.split(out, self.channels, dim=1)
 
-        return [s * functional.interpolate(a, size=s.size()[-2:], mode="nearest") for s, a in zip(x, out)]
+        return [s * functional.interpolate(a, size=s.size()[-2:], mode="nearest") for s, a in zip(x, out, strict=True)]
 
 
 class SpatialWeighting(nn.Module):
@@ -478,17 +481,17 @@ class ConditionalChannelWeighting(nn.Module):
         x2 = [s[1] for s in x]
 
         x2 = self.cross_resolution_weighting(x2)
-        x2 = [dw(s) for s, dw in zip(x2, self.depthwise_convs)]
+        x2 = [dw(s) for s, dw in zip(x2, self.depthwise_convs, strict=True)]
 
         if self.neighbour_weighting is not None:
-            x2 = [nw(s) for s, nw in zip(x2, self.neighbour_weighting)]
+            x2 = [nw(s) for s, nw in zip(x2, self.neighbour_weighting, strict=True)]
 
-        x2 = [sw(s) for s, sw in zip(x2, self.spatial_weighting)]
+        x2 = [sw(s) for s, sw in zip(x2, self.spatial_weighting, strict=True)]
 
         if self.dropout is not None:
-            x2 = [dropout(s) for s, dropout in zip(x2, self.dropout)]
+            x2 = [dropout(s) for s, dropout in zip(x2, self.dropout, strict=True)]
 
-        out = [torch.cat([s1, s2], dim=1) for s1, s2 in zip(x1, x2)]
+        out = [torch.cat([s1, s2], dim=1) for s1, s2 in zip(x1, x2, strict=True)]
 
         return [channel_shuffle(s, 2) for s in out]
 
@@ -533,7 +536,7 @@ class Stem(nn.Module):
         """Stem initialization."""
         super().__init__()
 
-        if not isinstance(strides, (tuple, list)):
+        if not isinstance(strides, (tuple | list)):
             msg = "strides must be tuple or list."
             raise TypeError(msg)
         if len(strides) != 2:

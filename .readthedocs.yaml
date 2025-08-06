@@ -20,6 +20,5 @@ python:
       path: .
       extra_requirements:
         - docs
-
 # Support for multiple versions (this is one of the main benefits of ReadTheDocs)
 # You can configure this later in the ReadTheDocs dashboard

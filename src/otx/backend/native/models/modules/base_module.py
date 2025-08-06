@@ -12,11 +12,14 @@ import logging
 from abc import ABCMeta
 from collections import defaultdict
 from logging import FileHandler
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from torch import nn
 
 from otx.backend.native.models.utils.weight_init import PretrainedInit, initialize, update_init_info
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 logger = logging.getLogger()
 

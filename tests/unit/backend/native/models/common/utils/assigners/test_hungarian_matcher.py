@@ -49,4 +49,4 @@ class TestHungarianMatcher:
         # Assert the output matches the expected shape
         assert len(matches) == 1
         assert all(len(match[0]) == len(match[1]) for match in matches)
-        assert all(len(match[0]) == len(target["labels"]) for match, target in zip(matches, targets))
+        assert all(len(match[0]) == len(target["labels"]) for match, target in zip(matches, targets, strict=True))

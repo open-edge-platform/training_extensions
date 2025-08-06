@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Streamer for reading input."""
@@ -13,9 +13,11 @@ import queue
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     import numpy as np
 
 import cv2
@@ -332,7 +334,7 @@ def get_streamer(
         try:
             streamer = reader(input_stream, loop)  # type: ignore [abstract]
             return ThreadedStreamer(streamer) if threaded else streamer
-        except RuntimeError as error:  # noqa: PERF203
+        except RuntimeError as error:
             errors.append(error)
     try:
         streamer = CameraStreamer(input_stream)

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import math
 from functools import partial
-from typing import Any, Callable, ClassVar, Sequence
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torch.nn.functional as F  # noqa: N812
@@ -30,6 +30,9 @@ from otx.backend.native.models.modules.conv_module import Conv2dModule, Depthwis
 from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.data.entity.torch import OTXDataBatch
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 logger = logging.getLogger()
 

@@ -11,7 +11,7 @@ import platform
 import subprocess
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 
@@ -122,7 +122,7 @@ def current_date_str() -> str:
     Returns:
         str: Current date string.
     """
-    return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    return datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
 
 
 def setup_output_root(config: Namespace, task: OTXTaskType) -> Path:

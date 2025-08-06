@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -9,13 +9,16 @@ from __future__ import annotations
 
 import inspect
 from functools import partial
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch import nn
 from torch.nn import SyncBatchNorm
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.instancenorm import _InstanceNorm
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class FrozenBatchNorm2d(nn.Module):

@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 import math
 from collections import OrderedDict
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torchvision
@@ -18,6 +18,9 @@ from torch.nn import init
 from otx.backend.native.models.common.layers.transformer_layers import MLP, MSDeformableAttention
 from otx.backend.native.models.common.utils.utils import inverse_sigmoid
 from otx.backend.native.models.modules.base_module import BaseModule
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = ["RTDETRTransformer"]
 
@@ -423,7 +426,7 @@ class RTDETRTransformerModule(BaseModule):
         init.constant_(self.enc_bbox_head.layers[-1].weight, 0)
         init.constant_(self.enc_bbox_head.layers[-1].bias, 0)
 
-        for cls_, reg_ in zip(self.dec_score_head, self.dec_bbox_head):
+        for cls_, reg_ in zip(self.dec_score_head, self.dec_bbox_head, strict=True):
             init.constant_(cls_.bias, bias)
             init.constant_(reg_.layers[-1].weight, 0)
             init.constant_(reg_.layers[-1].bias, 0)
@@ -654,7 +657,7 @@ class RTDETRTransformerModule(BaseModule):
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
-        return [{"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class, outputs_coord)]
+        return [{"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class, outputs_coord, strict=True)]
 
 
 class RTDETRTransformer:

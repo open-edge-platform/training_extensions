@@ -165,7 +165,7 @@ class AutoConfigurator:
         if data_root is None and self.data_root is None:
             msg = "No data root provided."
             raise ValueError(msg)
-        if data_root is not None and not isinstance(data_root, (str, os.PathLike)):
+        if data_root is not None and not isinstance(data_root, (str | os.PathLike)):
             msg = f"data_root should be of type PathLike, but got {type(data_root)}"
             raise TypeError(msg)
 

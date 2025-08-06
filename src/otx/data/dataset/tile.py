@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX tile dataset."""
@@ -11,7 +11,7 @@ import warnings
 from collections import defaultdict
 from copy import deepcopy
 from itertools import product
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import shapely.geometry as sg
@@ -46,6 +46,8 @@ from otx.types.task import OTXTaskType
 from .base import OTXDataset
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from datumaro.components.media import BboxIntCoords
 
     from otx.config.data import TileConfig
@@ -115,7 +117,7 @@ class OTXTileTransform(Tile):
 
         # NOTE: intersection may return a GeometryCollection or MultiPolygon
         inter = polygon.intersection(roi_box)
-        if isinstance(inter, (sg.GeometryCollection, sg.MultiPolygon)):
+        if isinstance(inter, (sg.GeometryCollection | sg.MultiPolygon)):
             shapes = [(geom, geom.area) for geom in list(inter.geoms) if geom.is_valid]
             if not shapes:
                 return None
@@ -177,7 +179,7 @@ class OTXTileTransform(Tile):
 
         # NOTE: intersection may return a GeometryCollection or MultiPolygon
         inter = polygon.intersection(roi_box)
-        if isinstance(inter, (sg.GeometryCollection, sg.MultiPolygon)):
+        if isinstance(inter, (sg.GeometryCollection | sg.MultiPolygon)):
             shapes = [(geom, geom.area) for geom in list(inter.geoms) if geom.is_valid]
             if not shapes:
                 return None

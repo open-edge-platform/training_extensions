@@ -1,11 +1,12 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Algorithms for calculcalating XAI branch for Explainable AI."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import torch
 
@@ -23,7 +24,7 @@ ExplainerForwardFn = HeadForwardFn
 
 def feature_vector_fn(feature_map: FeatureMapType) -> torch.Tensor:
     """Generate the feature vector by average pooling feature maps."""
-    if isinstance(feature_map, (list, tuple, dict)):
+    if isinstance(feature_map, (list | tuple | dict)):
         if isinstance(feature_map, dict):
             feature_map = list(feature_map.values())
 
@@ -87,7 +88,7 @@ class ActivationMap(BaseExplainAlgo):
 
     def func(self, feature_map: FeatureMapType, fpn_idx: int = -1) -> torch.Tensor:
         """Generate the saliency map by average feature maps then normalizing to (0, 255)."""
-        if isinstance(feature_map, (list, tuple)):
+        if isinstance(feature_map, (list | tuple)):
             feature_map = feature_map[fpn_idx]
 
         batch_size, _, h, w = feature_map.size()
@@ -129,7 +130,7 @@ class ReciproCAM(BaseExplainAlgo):
         Returns:
             torch.Tensor: Class-wise Saliency Maps. One saliency map per each class - [batch, class_id, H, W]
         """
-        if isinstance(feature_map, (list, tuple)):
+        if isinstance(feature_map, (list | tuple)):
             feature_map = feature_map[fpn_idx]
 
         batch_size, channel, h, w = feature_map.size()
@@ -370,7 +371,7 @@ class InstSegExplainAlgo(BaseExplainAlgo):
         saliency_map = torch.zeros((num_classes, height, width), dtype=torch.float32, device=labels.device)
         class_objects = [0 for _ in range(num_classes)]
 
-        for confidence, class_ind, raw_mask in zip(scores, labels, masks):
+        for confidence, class_ind, raw_mask in zip(scores, labels, masks, strict=True):
             weighted_mask = raw_mask * confidence
             saliency_map[class_ind] += weighted_mask
             class_objects[class_ind] += 1

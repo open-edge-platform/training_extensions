@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -10,16 +10,12 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/t
 
 from __future__ import annotations
 
-from typing import Union
-
 import numpy as np
 import torch
 from torch import Tensor
 from torch.nn.modules.utils import _pair
 
 from .base_prior_generator import BasePriorGenerator
-
-DeviceType = Union[str, torch.device]
 
 
 class MlvlPointGenerator(BasePriorGenerator):
@@ -60,7 +56,7 @@ class MlvlPointGenerator(BasePriorGenerator):
         self,
         featmap_sizes: list[tuple[int, int]],
         dtype: torch.dtype = torch.float32,
-        device: DeviceType = "cuda",
+        device: str | torch.device = "cuda",
         with_stride: bool = False,
     ) -> list[Tensor]:
         """Generate grid points of multiple feature levels.
@@ -103,7 +99,7 @@ class MlvlPointGenerator(BasePriorGenerator):
         featmap_size: tuple[int, int],
         level_idx: int,
         dtype: torch.dtype = torch.float32,
-        device: DeviceType = "cuda",
+        device: str | torch.device = "cuda",
         with_stride: bool = False,
     ) -> Tensor:
         """Generate grid Points of a single level.
@@ -156,7 +152,7 @@ class MlvlPointGenerator(BasePriorGenerator):
         self,
         featmap_sizes: list[tuple[int, int]],
         pad_shape: tuple[int, ...],
-        device: DeviceType = "cuda",
+        device: str | torch.device = "cuda",
     ) -> list[Tensor]:
         """Generate valid flags of points of multiple feature levels.
 
@@ -188,7 +184,7 @@ class MlvlPointGenerator(BasePriorGenerator):
         self,
         featmap_size: tuple[int, int],
         valid_size: tuple[int, int],
-        device: DeviceType = "cuda",
+        device: str | torch.device = "cuda",
     ) -> Tensor:
         """Generate the valid flags of points of a single feature map.
 
@@ -221,7 +217,7 @@ class MlvlPointGenerator(BasePriorGenerator):
         featmap_size: tuple[int, int],
         level_idx: int,
         dtype: torch.dtype = torch.float32,
-        device: DeviceType = "cuda",
+        device: str | torch.device = "cuda",
     ) -> Tensor:
         """Generate sparse points according to the ``prior_idxs``.
 

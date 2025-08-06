@@ -8,11 +8,14 @@ from __future__ import annotations
 import logging
 import multiprocessing as mp
 import queue
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import torch
 
 from otx.utils.device import is_xpu_available
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

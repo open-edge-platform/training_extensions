@@ -5,10 +5,10 @@ on:
   workflow_dispatch: # run on request (no need for PR)
   pull_request:
     paths:
-      - 'docs/**'
-      - 'src/**'
-      - 'pyproject.toml'
-      - '.readthedocs.yaml'
+      - "docs/**"
+      - "src/**"
+      - "pyproject.toml"
+      - ".readthedocs.yaml"
 
 # Declare default permissions as read only.
 permissions: read-all

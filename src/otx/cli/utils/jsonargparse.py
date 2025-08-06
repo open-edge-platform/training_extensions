@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Functions related to jsonargparse."""
@@ -9,12 +9,15 @@ import ast
 import logging
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import docstring_parser
 from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, dict_to_namespace, namespace_to_dict
 
 from otx.types import PathLike
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 logger = logging.getLogger()
 
@@ -77,7 +80,7 @@ def update(
         # Dict -> Nested Namespace for overriding
         is_value_dict = True
         value = dict_to_namespace(value)
-    if not isinstance(value, (Namespace, dict)):
+    if not isinstance(value, (Namespace | dict)):
         if not key:
             msg = "Key is required if value not a Namespace."
             raise KeyError(msg)
@@ -382,7 +385,7 @@ def add_list_type_arguments(
     added_args: list[str] = []
     if skip is not None:
         skip = {f"{nested_key}.init_args." + s for s in skip}
-    param = ParamData(name=nested_key, annotation=Union[baseclass], component=baseclass)
+    param = ParamData(name=nested_key, annotation=baseclass, component=baseclass)
     str_baseclass = iter_to_set_str(get_import_path(x) for x in baseclass)
     kwargs = {
         "metavar": "CONFIG | CLASS_PATH_OR_NAME | .INIT_ARG_NAME VALUE",

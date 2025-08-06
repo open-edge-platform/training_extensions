@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX tile merge module."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections import defaultdict
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
@@ -19,6 +19,9 @@ from torchvision.ops import batched_nms
 from otx.backend.native.tools.explain.explain_algo import InstSegExplainAlgo
 from otx.config.data import TileConfig
 from otx.data.entity import ImageInfo, OTXPredBatch, OTXPredItem
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Maximum number of elements 2**31 -1
 MAX_ELEMENTS: int = np.iinfo(np.int32).max
@@ -523,7 +526,7 @@ class SegmentationTileMerge(TileMerge):
         img_ids = []
         explain_mode = self.explain_mode
 
-        for tile_preds, tile_attrs in zip(batch_tile_preds, batch_tile_attrs):
+        for tile_preds, tile_attrs in zip(batch_tile_preds, batch_tile_attrs, strict=True):
             batch_size = tile_preds.batch_size
             saliency_maps = tile_preds.saliency_map if explain_mode else [[] for _ in range(batch_size)]
             feature_vectors = tile_preds.feature_vector if explain_mode else [[] for _ in range(batch_size)]
@@ -543,6 +546,7 @@ class SegmentationTileMerge(TileMerge):
                 tile_preds.masks,
                 saliency_maps,
                 feature_vectors,
+                strict=True,
             ):
                 if tile_img_info is None:
                     msg = f"Image information is not provided : {tile_preds.imgs_info}."
@@ -566,7 +570,7 @@ class SegmentationTileMerge(TileMerge):
 
         return [
             self._merge_entities(image_info, entities_to_merge[img_id], explain_mode)
-            for img_id, image_info in zip(img_ids, self.img_infos)
+            for img_id, image_info in zip(img_ids, self.img_infos, strict=True)
         ]
 
     def _merge_entities(

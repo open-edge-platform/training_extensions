@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Callback to reschedule the validation interval adaptively."""
@@ -91,7 +91,7 @@ class AdaptiveTrainScheduling(Callback):
             self._saved_log_every_n_steps = None
 
         if len(self._revert_lr_frequency) > 0 and len(self._revert_lr_patience) > 0:
-            for revert_f, revert_p in zip(self._revert_lr_frequency, self._revert_lr_patience):
+            for revert_f, revert_p in zip(self._revert_lr_frequency, self._revert_lr_patience, strict=True):
                 revert_f()
                 revert_p()
 

@@ -4,7 +4,8 @@
 """Type definitions for OTX metrics."""
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from torch import zeros
 from torchmetrics import Metric, MetricCollection

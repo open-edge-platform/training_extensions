@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom FCNHead modules for OTX segmentation model."""
@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from torch import Tensor, nn
@@ -18,6 +18,7 @@ from otx.backend.native.models.segmentation.modules import IterativeAggregator
 from .base_segm_head import BaseSegmentationHead
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
 

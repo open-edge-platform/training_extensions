@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Customised torchvision RoIHeads class with support for polygons as ground truth masks."""
@@ -37,7 +37,7 @@ def maskrcnn_loss(
         image_shapes (list[tuple[int, int]]): the image shapes.
     """
     meta_infos = [{"img_shape": img_shape} for img_shape in image_shapes]
-    labels = [gt_label[idxs] for gt_label, idxs in zip(gt_labels, mask_matched_idxs)]
+    labels = [gt_label[idxs] for gt_label, idxs in zip(gt_labels, mask_matched_idxs, strict=True)]
 
     mask_targets = mask_target(
         proposals,
@@ -157,7 +157,7 @@ class TVRoIHeads(RoIHeads):
             else:
                 labels = [r["labels"] for r in result]
                 masks_probs = maskrcnn_inference(mask_logits, labels)
-                for mask_prob, r in zip(masks_probs, result):
+                for mask_prob, r in zip(masks_probs, result, strict=True):
                     r["masks"] = mask_prob
 
             losses.update(loss_mask)

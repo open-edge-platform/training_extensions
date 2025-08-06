@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Config data type objects."""
@@ -120,7 +120,7 @@ def ignore_aliases(self: yaml.representer.SafeRepresenter, data: Any) -> bool:  
         return True
     if isinstance(data, tuple) and data == ():
         return True
-    if isinstance(data, (str, bytes, bool, int, float, dtype)):
+    if isinstance(data, (str | bytes | bool | int | float | dtype)):
         return True
     return None
 

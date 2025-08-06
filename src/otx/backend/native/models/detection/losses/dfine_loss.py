@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn.functional as f
@@ -16,6 +16,9 @@ from torchvision.ops import box_convert
 from otx.backend.native.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from otx.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
 from otx.backend.native.models.detection.utils.utils import dfine_bbox2distance
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class DFINECriterion(nn.Module):
@@ -78,7 +81,7 @@ class DFINECriterion(nn.Module):
         """
         idx = self._get_src_permutation_idx(indices)
         src_boxes = outputs["pred_boxes"][idx]
-        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices, strict=True)], dim=0)
         ious = bbox_overlaps(
             box_convert(src_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
             box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
@@ -86,7 +89,7 @@ class DFINECriterion(nn.Module):
         ious = torch.diag(ious).detach()
 
         src_logits = outputs["pred_logits"]
-        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
+        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices, strict=True)])
         target_classes = torch.full(src_logits.shape[:2], self.num_classes, dtype=torch.int64, device=src_logits.device)
         target_classes[idx] = target_classes_o
         target = f.one_hot(target_classes, num_classes=self.num_classes + 1)[..., :-1]
@@ -125,7 +128,7 @@ class DFINECriterion(nn.Module):
         """
         idx = self._get_src_permutation_idx(indices)
         src_boxes = outputs["pred_boxes"][idx]
-        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices, strict=True)], dim=0)
         losses = {}
         loss_bbox = f.l1_loss(src_boxes, target_boxes, reduction="none")
         losses["loss_bbox"] = loss_bbox.sum() / num_boxes
@@ -165,7 +168,7 @@ class DFINECriterion(nn.Module):
         if "pred_corners" in outputs:
             idx = self._get_src_permutation_idx(indices)
             target_boxes = torch.cat(
-                [t["boxes"][i] for t, (_, i) in zip(targets, indices)],
+                [t["boxes"][i] for t, (_, i) in zip(targets, indices, strict=True)],
                 dim=0,
             )
 
@@ -263,7 +266,7 @@ class DFINECriterion(nn.Module):
         for indices_aux in indices_aux_list:
             indices = [
                 (torch.cat([idx1[0], idx2[0]]), torch.cat([idx1[1], idx2[1]]))
-                for idx1, idx2 in zip(indices.copy(), indices_aux.copy())
+                for idx1, idx2 in zip(indices.copy(), indices_aux.copy(), strict=True)
             ]
 
         for ind in [torch.cat([idx[0][:, None], idx[1][:, None]], 1) for idx in indices]:

@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTXClassificationDatasets."""
@@ -134,7 +134,7 @@ class OTXHlabelClsDataset(OTXDataset):
         else:
             self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
 
-        self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))
+        self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names, strict=False))
         self.id_to_name_mapping[""] = ""
 
         if self.label_info.num_multiclass_heads == 0:

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -73,7 +73,7 @@ class RTMCCHead(BaseModule):
         self.loss_module = loss
         self.codec = SimCCLabel(**decoder_cfg)
 
-        if isinstance(in_channels, (tuple, list)):
+        if isinstance(in_channels, (tuple | list)):
             msg = f"{self.__class__.__name__} does not support selecting multiple input features."
             raise TypeError(msg)
 
@@ -146,7 +146,7 @@ class RTMCCHead(BaseModule):
         )
 
         preds = []
-        for keypoints, scores in zip(batch_keypoints, batch_scores):
+        for keypoints, scores in zip(batch_keypoints, batch_scores, strict=True):
             preds.append((keypoints, scores))
         return preds
 

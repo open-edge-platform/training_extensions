@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Visualizer for results of prediction."""
@@ -369,7 +369,7 @@ class InstanceSegmentationVisualizer(BaseVisualizer):
         return image
 
     def _overlay_boxes(self, image: np.ndarray, boxes: list[np.ndarray], classes: list[int]) -> np.ndarray:
-        for box, class_id in zip(boxes, classes):
+        for box, class_id in zip(boxes, classes, strict=True):
             color = self.palette[class_id]
             top_left, bottom_right = box[:2], box[2:]
             image = cv2.rectangle(image, top_left, bottom_right, color, 2)
@@ -384,7 +384,7 @@ class InstanceSegmentationVisualizer(BaseVisualizer):
     ) -> np.ndarray:
         template = "{}: {:.2f}" if self.show_scores else "{}"
 
-        for box, score, label in zip(boxes, scores, classes):
+        for box, score, label in zip(boxes, scores, classes, strict=True):
             text = template.format(label, score)
             textsize = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
             cv2.putText(

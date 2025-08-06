@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ELAN layers implementation for YOLOv7 and v9.
@@ -9,13 +9,16 @@ Reference : https://github.com/WongKinYiu/YOLO
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch import Tensor, nn
 
 from otx.backend.native.models.detection.utils.utils import auto_pad
 from otx.backend.native.models.modules import Conv2dModule, build_activation_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

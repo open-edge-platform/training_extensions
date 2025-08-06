@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom Help Formatters for OTX CLI."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 import sys
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 from jsonargparse import DefaultHelpFormatter
 from rich.markdown import Markdown
@@ -17,6 +17,7 @@ from rich_argparse import RichHelpFormatter
 
 if TYPE_CHECKING:
     import argparse
+    from collections.abc import Iterable
 
     from rich.console import Console, RenderableType
 

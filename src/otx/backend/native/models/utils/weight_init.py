@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -194,7 +194,7 @@ class BaseInit:
 
     def __init__(self, *, bias: int | float = 0, bias_prob: float | None = None, layer: str | list | None = None):
         self.wholemodule = False
-        if not isinstance(bias, (int, float)):
+        if not isinstance(bias, (int | float)):
             msg = f"bias must be a number, but got a {type(bias)}"
             raise TypeError(msg)
 
@@ -204,7 +204,7 @@ class BaseInit:
             raise TypeError(msg)
 
         if layer is not None:
-            if not isinstance(layer, (str, list)):
+            if not isinstance(layer, (str | list)):
                 msg = f"layer must be a str or a list of str, \
                     but got a {type(layer)}"
                 raise TypeError(msg)
@@ -603,7 +603,7 @@ def _initialize(module: nn.Module, cfg: dict, wholemodule: bool = False) -> None
 
 
 def _initialize_override(module: nn.Module, override: dict | list[dict], cfg: dict) -> None:
-    if not isinstance(override, (dict, list)):
+    if not isinstance(override, (dict | list)):
         msg = f"override must be a dict or a list of dict, \
                 but got {type(override)}"
         raise TypeError(msg)
@@ -677,7 +677,7 @@ def initialize(module: nn.Module, init_cfg: dict | list[dict]) -> None:
         >>> init_cfg = dict(type='Pretrained',
                 checkpoint=url, prefix='backbone.')
     """
-    if not isinstance(init_cfg, (dict, list)):
+    if not isinstance(init_cfg, (dict | list)):
         msg = f"init_cfg must be a dict or a list of dict, \
                 but got {type(init_cfg)}"
         raise TypeError(msg)

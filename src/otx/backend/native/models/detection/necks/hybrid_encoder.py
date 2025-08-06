@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Hybrid Encoder module for detection task, modified from https://github.com/lyuwenyu/RT-DETR."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 from functools import partial
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from torch import nn
@@ -17,6 +17,9 @@ from otx.backend.native.models.detection.layers import CSPRepLayer
 from otx.backend.native.models.modules import Conv2dModule, build_activation_layer
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.modules.norm import build_norm_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = ["HybridEncoder"]
 

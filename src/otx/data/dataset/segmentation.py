@@ -99,11 +99,11 @@ def _extract_class_mask(item: DatasetItem, img_shape: tuple[int, int], ignore_in
         raise ValueError(msg, ignore_index)
 
     # fill mask with background label if we have Polygon/Ellipse/Bbox annotations
-    fill_value = 0 if isinstance(item.annotations[0], (Ellipse, Polygon, Bbox, RotatedBbox)) else ignore_index
+    fill_value = 0 if isinstance(item.annotations[0], (Ellipse | Polygon | Bbox | RotatedBbox)) else ignore_index
     class_mask = np.full(shape=img_shape[:2], fill_value=fill_value, dtype=np.uint8)
 
     for mask in sorted(
-        [ann for ann in item.annotations if isinstance(ann, (Mask, Ellipse, Polygon, Bbox, RotatedBbox))],
+        [ann for ann in item.annotations if isinstance(ann, (Mask | Ellipse | Polygon | Bbox | RotatedBbox))],
         key=lambda ann: ann.z_order,
     ):
         index = mask.label
@@ -112,7 +112,7 @@ def _extract_class_mask(item: DatasetItem, img_shape: tuple[int, int], ignore_in
             msg = "Mask's label index should not be None."
             raise ValueError(msg)
 
-        if isinstance(mask, (Ellipse, Polygon, Bbox, RotatedBbox)):
+        if isinstance(mask, (Ellipse | Polygon | Bbox | RotatedBbox)):
             polygons = np.asarray(mask.as_polygon(), dtype=np.int32).reshape((-1, 1, 2))
             class_index = index + 1  # NOTE: disregard the background index. Objects start from index=1
             this_class_mask = cv2.drawContours(

@@ -11,8 +11,9 @@ import itertools
 import math
 import operator
 import typing
+from collections.abc import Iterable, Sequence
 from inspect import isclass
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Sequence
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import cv2
 import numpy as np
@@ -574,7 +575,7 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
             list[ndarray] | ndarray: The cropped image patches.
         """
         chn = 1 if img.ndim == 2 else img.shape[2]
-        if pad_fill is not None and isinstance(pad_fill, (int, float)):
+        if pad_fill is not None and isinstance(pad_fill, (int | float)):
             pad_fill = [pad_fill for _ in range(chn)]
 
         _bboxes = bboxes[None, ...] if bboxes.ndim == 1 else bboxes
@@ -1236,7 +1237,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
     ) -> None:
         super().__init__()
 
-        assert isinstance(img_scale, (tuple, list))  # noqa: S101
+        assert isinstance(img_scale, (tuple | list))  # noqa: S101
         assert 0 <= prob <= 1.0, f"The probability should be in range [0,1]. got {prob}."  # noqa: S101
 
         self.img_scale = img_scale  # (H, W)
@@ -1402,7 +1403,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs.masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
             if len(mosaic_polygons) > 0:
                 inputs.polygons = [
-                    polygon for ind, polygon in zip(inside_inds, itertools.chain(*mosaic_polygons)) if ind
+                    polygon for ind, polygon in zip(inside_inds, itertools.chain(*mosaic_polygons), strict=True) if ind
                 ]  # type: ignore[union-attr]
         return self.convert(inputs)
 
@@ -1544,7 +1545,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
     ) -> None:
         super().__init__()
 
-        assert isinstance(img_scale, (tuple, list))  # noqa: S101
+        assert isinstance(img_scale, (tuple | list))  # noqa: S101
         assert max_cached_images >= 2, f"The length of cache must >= 2, but got {max_cached_images}."  # noqa: S101
         assert 0 <= prob <= 1.0, f"The probability should be in range [0,1]. got {prob}."  # noqa: S101
         self.dynamic_scale = img_scale  # (H, W)
@@ -2625,7 +2626,7 @@ class TorchVisionTransformLib:
         input_size = getattr(config, "input_size", None)
         transforms = []
         for cfg_transform in config.transforms:
-            if isinstance(cfg_transform, (dict, DictConfig)):
+            if isinstance(cfg_transform, (dict | DictConfig)):
                 if not cfg_transform.get("enable", True):  # Optional "enable: false" flag would remove the transform
                     continue
                 cls._configure_input_size(cfg_transform, input_size)
@@ -2733,7 +2734,7 @@ class TorchVisionTransformLib:
 
     @classmethod
     def _dispatch_transform(cls, cfg_transform: DictConfig | dict | tvt_v2.Transform) -> tvt_v2.Transform:
-        if isinstance(cfg_transform, (DictConfig, dict)):
+        if isinstance(cfg_transform, (DictConfig | dict)):
             transform = instantiate_class(args=(), init=cfg_transform)
 
         elif isinstance(cfg_transform, tvt_v2.Transform):

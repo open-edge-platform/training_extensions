@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Utility functions for OTX data entities."""
@@ -29,7 +29,7 @@ def register_pytree_node(cls: type[OTXDataItem]) -> type[OTXDataItem]:
                 ...
     """
     flatten_fn = lambda obj: (list(obj.values()), list(obj.keys()))
-    unflatten_fn = lambda values, context: cls(**dict(zip(context, values)))
+    unflatten_fn = lambda values, context: cls(**dict(zip(context, values, strict=True)))
     pytree.register_pytree_node(
         cls,
         flatten_fn=flatten_fn,
@@ -81,7 +81,7 @@ def stack_batch(
     pad[:, 1::2] = padded_sizes[:, range(dim - 1, -1, -1)]
     batch_tensor = []
     batch_info = []
-    for idx, (tensor, info) in enumerate(zip(tensor_list, img_info_list)):
+    for idx, (tensor, info) in enumerate(zip(tensor_list, img_info_list, strict=True)):
         padded_img = torch.nn.functional.pad(tensor, tuple(pad[idx].tolist()), value=pad_value)
         # update img_info.img_shape
         info.img_shape = padded_img.shape[1:]

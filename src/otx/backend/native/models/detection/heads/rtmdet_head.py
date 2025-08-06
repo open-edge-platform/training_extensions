@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -11,7 +11,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/d
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from torch import Tensor, nn
@@ -34,6 +34,9 @@ from otx.backend.native.models.modules.scale import Scale
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.backend.native.models.utils.weight_init import bias_init_with_prob, constant_init, normal_init
 from otx.data.entity.torch import OTXDataBatch
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class RTMDetHead(ATSSHeadModule):
@@ -139,7 +142,7 @@ class RTMDetHead(ATSSHeadModule):
         """
         cls_scores = []
         bbox_preds = []
-        for x, scale, stride in zip(feats, self.scales, self.prior_generator.strides):
+        for x, scale, stride in zip(feats, self.scales, self.prior_generator.strides, strict=True):
             cls_feat = x
             reg_feat = x
 
@@ -196,7 +199,7 @@ class RTMDetHead(ATSSHeadModule):
             1,
         )
         decoded_bboxes = []
-        for anchor, bbox_pred in zip(anchor_list[0], bbox_preds):
+        for anchor, bbox_pred in zip(anchor_list[0], bbox_preds, strict=True):
             anchor = anchor.reshape(-1, 4)  # noqa: PLW2901
             bbox_pred = bbox_pred.permute(0, 2, 3, 1).reshape(num_imgs, -1, 4)  # noqa: PLW2901
             bbox_pred = distance2bbox(anchor, bbox_pred)  # noqa: PLW2901
@@ -675,7 +678,7 @@ class RTMDetSepBNHeadModule(RTMDetHead):
             if is_norm(m):
                 constant_init(m, 1)
         bias_cls = bias_init_with_prob(0.01)
-        for rtm_cls, rtm_reg in zip(self.rtm_cls, self.rtm_reg):
+        for rtm_cls, rtm_reg in zip(self.rtm_cls, self.rtm_reg, strict=True):
             normal_init(rtm_cls, std=0.01, bias=bias_cls)
             normal_init(rtm_reg, std=0.01)
         if self.with_objectness:
@@ -700,7 +703,7 @@ class RTMDetSepBNHeadModule(RTMDetHead):
         """
         cls_scores = []
         bbox_preds = []
-        for idx, (x, stride) in enumerate(zip(feats, self.prior_generator.strides)):
+        for idx, (x, stride) in enumerate(zip(feats, self.prior_generator.strides, strict=True)):
             cls_feat = x
             reg_feat = x
 

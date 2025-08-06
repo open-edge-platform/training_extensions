@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Implementation of HamburgerNet head."""
@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torch.nn.functional as f
@@ -19,6 +19,7 @@ from otx.backend.native.models.segmentation.modules import resize
 from .base_segm_head import BaseSegmentationHead
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
 

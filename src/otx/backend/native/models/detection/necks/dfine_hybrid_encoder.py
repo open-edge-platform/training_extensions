@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 from collections import OrderedDict
 from functools import partial
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torch.nn.functional as f
@@ -20,6 +20,9 @@ from otx.backend.native.models.detection.utils.utils import auto_pad
 from otx.backend.native.models.modules.activation import build_activation_layer
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.modules.norm import build_norm_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class SCDown(nn.Module):

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """ViT model implementation."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import types
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import urlparse
 
 import numpy as np
@@ -32,6 +32,8 @@ from otx.metrics.accuracy import MultiClassClsMetricCallable
 from otx.types.label import LabelInfoTypes
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.metrics import MetricCallable

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -13,7 +13,7 @@ from __future__ import annotations
 import copy
 import math
 from functools import partial
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
@@ -43,6 +43,9 @@ from otx.backend.native.models.utils.weight_init import bias_init_with_prob, con
 from otx.data.entity.torch import OTXDataBatch
 
 from .utils import sigmoid_geometric_mean
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # mypy: disable-error-code="call-overload, index, override, attr-defined, misc"
 
@@ -156,7 +159,7 @@ class RTMDetInstHead(RTMDetHead):
         cls_scores = []
         bbox_preds = []
         kernel_preds = []
-        for x, scale, stride in zip(feats, self.scales, self.prior_generator.strides):
+        for x, scale, stride in zip(feats, self.scales, self.prior_generator.strides, strict=True):
             cls_feat = x
             reg_feat = x
             kernel_feat = x
@@ -263,6 +266,7 @@ class RTMDetInstHead(RTMDetHead):
             bbox_pred_list,
             kernel_pred_list,
             mlvl_priors,
+            strict=True,
         ):
             if cls_score.size()[-2:] != bbox_pred.size()[-2:]:
                 msg = "The spatial sizes of cls_score and bbox_pred should be the same."
@@ -527,7 +531,7 @@ class RTMDetInstHead(RTMDetHead):
 
         n_layers = len(weights)
         x = mask_feat.reshape(1, -1, h, w)
-        for i, (weight, bias) in enumerate(zip(weights, biases)):
+        for i, (weight, bias) in enumerate(zip(weights, biases, strict=True)):
             x = torch.nn.functional.conv2d(x, weight, bias=bias, stride=1, padding=0, groups=num_inst)
             if i < n_layers - 1:
                 x = torch.nn.functional.relu(x)
@@ -563,6 +567,7 @@ class RTMDetInstHead(RTMDetHead):
             flatten_kernels,
             sampling_results_list,
             batch_gt_instances,
+            strict=True,
         ):
             pos_priors = sampling_results.pos_priors
             pos_inds = sampling_results.pos_inds
@@ -645,7 +650,7 @@ class RTMDetInstHead(RTMDetHead):
 
         # Convert polygon masks to bitmap masks
         if isinstance(batch_gt_instances[0].masks[0], Polygon):
-            for gt_instances, img_meta in zip(batch_gt_instances, batch_img_metas):
+            for gt_instances, img_meta in zip(batch_gt_instances, batch_img_metas, strict=True):
                 ndarray_masks = polygon_to_bitmap(gt_instances.masks, *img_meta["img_shape"])
                 if len(ndarray_masks) == 0:
                     ndarray_masks = np.empty((0, *img_meta["img_shape"]), dtype=np.uint8)
@@ -667,7 +672,7 @@ class RTMDetInstHead(RTMDetHead):
             1,
         )
         decoded_bboxes = []
-        for anchor, bbox_pred in zip(anchor_list[0], bbox_preds):
+        for anchor, bbox_pred in zip(anchor_list[0], bbox_preds, strict=True):
             anchor = anchor.reshape(-1, 4)  # noqa: PLW2901
             bbox_pred = bbox_pred.permute(0, 2, 3, 1).reshape(num_imgs, -1, 4)  # noqa: PLW2901
             bbox_pred = distance2bbox(anchor, bbox_pred)  # noqa: PLW2901
@@ -939,7 +944,7 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
             if is_norm(m):
                 constant_init(m, 1)
         bias_cls = bias_init_with_prob(0.01)
-        for rtm_cls, rtm_reg in zip(self.rtm_cls, self.rtm_reg):
+        for rtm_cls, rtm_reg in zip(self.rtm_cls, self.rtm_reg, strict=True):
             normal_init(rtm_cls, std=0.01, bias=bias_cls)
             normal_init(rtm_reg, std=0.01, bias=1)
         if self.with_objectness:
@@ -972,7 +977,7 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
         cls_scores = []
         bbox_preds = []
         kernel_preds = []
-        for idx, (x, stride) in enumerate(zip(feats, self.prior_generator.strides)):
+        for idx, (x, stride) in enumerate(zip(feats, self.prior_generator.strides, strict=True)):
             cls_feat = x
             reg_feat = x
             kernel_feat = x
@@ -1160,7 +1165,7 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
 
         n_layers = len(weights)
         x = mask_feat.flatten(0, 1).flatten(2)
-        for i, (weight, bias) in enumerate(zip(weights, biases)):
+        for i, (weight, bias) in enumerate(zip(weights, biases, strict=True)):
             # replace dynamic conv with bmm
             weight = weight.flatten(0, 1)  # noqa: PLW2901
             bias = bias.flatten(0, 1).unsqueeze(2)  # noqa: PLW2901

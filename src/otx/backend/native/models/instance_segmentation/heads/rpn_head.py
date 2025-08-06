@@ -293,7 +293,9 @@ class RPNHeadModule(AnchorHead):
         mlvl_valid_priors = []
         mlvl_scores = []
         level_ids = []
-        for level_idx, (cls_score, bbox_pred, priors) in enumerate(zip(cls_score_list, bbox_pred_list, mlvl_priors)):
+        for level_idx, (cls_score, bbox_pred, priors) in enumerate(
+            zip(cls_score_list, bbox_pred_list, mlvl_priors, strict=True),
+        ):
             if cls_score.size()[-2:] != bbox_pred.size()[-2:]:
                 msg = "cls_score and bbox_pred should have the same size"
                 raise RuntimeError(msg)
@@ -439,6 +441,7 @@ class RPNHeadModule(AnchorHead):
             mlvl_cls_scores,
             mlvl_bbox_preds,
             mlvl_anchors,
+            strict=True,
         ):
             if cls_score.size()[-2:] != bbox_pred.size()[-2:]:
                 msg = "cls_score and bbox_pred should have the same size"

@@ -16,7 +16,11 @@ class TestOTXv1Helper:
         return torch.randn(3, 10)
 
     def _check_ckpt_pairs(self, src_state_dict: dict, dst_state_dict: dict) -> None:
-        for (src_key, src_value), (dst_key, dst_value) in zip(src_state_dict.items(), dst_state_dict.items()):
+        for (src_key, src_value), (dst_key, dst_value) in zip(
+            src_state_dict.items(),
+            dst_state_dict.items(),
+            strict=True,
+        ):
             assert src_key == dst_key
             assert src_value.shape == dst_value.shape
 

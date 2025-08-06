@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -11,7 +11,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/r
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 import torch.nn.functional
@@ -31,6 +31,8 @@ from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.utils.utils import InstanceData
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from otx.backend.native.models.common.utils.coders import DeltaXYWHBBoxCoder
 
 

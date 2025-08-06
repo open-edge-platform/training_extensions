@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -107,7 +107,7 @@ class SSDHeadModule(AnchorHead):
         """
         cls_scores = []
         bbox_preds = []
-        for feat, reg_conv, cls_conv in zip(x, self.reg_convs, self.cls_convs):
+        for feat, reg_conv, cls_conv in zip(x, self.reg_convs, self.cls_convs, strict=True):
             cls_scores.append(cls_conv(feat))
             bbox_preds.append(reg_conv(feat))
         return cls_scores, bbox_preds
@@ -180,7 +180,7 @@ class SSDHeadModule(AnchorHead):
         if isinstance(self.num_base_priors, int):
             self.num_base_priors = [self.num_base_priors]
 
-        for in_channel, num_base_priors in zip(self.in_channels, self.num_base_priors):
+        for in_channel, num_base_priors in zip(self.in_channels, self.num_base_priors, strict=True):
             if self.use_depthwise:
                 activation_layer = nn.ReLU(inplace=True)
 

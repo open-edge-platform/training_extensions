@@ -11,11 +11,12 @@ import pickle  # nosec B403 used pickle for internal state dump/load
 from decimal import Decimal
 from functools import partial
 from types import LambdaType
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from otx.backend.native.models.base import OTXModel
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
     import torch
@@ -213,7 +214,7 @@ def _find_unpickleable_obj(obj: Any, obj_name: str, unpickleable_obj: dict[str, 
         return isinstance(obj, memoryview)  # it makes core dumped
 
     def _make_iter(obj: Any) -> list[tuple[str, Any]]:  # noqa: ANN401
-        if isinstance(obj, (list, tuple)):
+        if isinstance(obj, (list | tuple)):
             return [(f"[{i}]", obj[i]) for i in range(len(obj))]
         if isinstance(obj, dict):
             return [(f'["{key}"]', obj[key]) for key in obj]
@@ -226,7 +227,7 @@ def _find_unpickleable_obj(obj: Any, obj_name: str, unpickleable_obj: dict[str, 
                 attr_obj = getattr(obj, attr)
             except Exception:  # noqa: S112
                 continue
-            if callable(attr_obj) and not isinstance(attr_obj, (LambdaType, partial)):
+            if callable(attr_obj) and not isinstance(attr_obj, (LambdaType | partial)):
                 continue
             res.append((f".{attr}", attr_obj))
         return res

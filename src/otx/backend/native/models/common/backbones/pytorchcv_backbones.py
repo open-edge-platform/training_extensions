@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Backbone of pytorchcv for mmdetection backbones."""
@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from pytorchcv.model_provider import _models
@@ -16,6 +16,9 @@ from torch.nn.modules.batchnorm import _BatchNorm
 
 from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.backend.native.models.utils.utils import get_dist_info
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ruff: noqa: SLF001
 

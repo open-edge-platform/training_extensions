@@ -11,8 +11,9 @@ import inspect
 import logging
 import warnings
 from abc import abstractmethod
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from datumaro import LabelCategories
@@ -352,7 +353,7 @@ class OTXModel(LightningModule):
 
         metric = self.metric_callable(self.label_info)
 
-        if not isinstance(metric, (Metric, MetricCollection)):
+        if not isinstance(metric, Metric | MetricCollection):
             msg = "Metric should be the instance of `torchmetrics.Metric` or `torchmetrics.MetricCollection`."
             raise TypeError(msg, metric)
 

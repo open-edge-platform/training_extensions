@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX Anomaly OpenVINO model.
@@ -11,7 +11,7 @@ All anomaly models use the same AnomalyDetection model from ModelAPI.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import openvino
@@ -28,6 +28,7 @@ from otx.types.label import AnomalyLabelInfo
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
 
     from anomalib.metrics import AnomalibMetricCollection

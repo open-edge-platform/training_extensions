@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """CLI entrypoints."""
@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 from warnings import warn
 
 from jsonargparse import ActionConfigFile, ArgumentParser, Namespace, namespace_to_dict
@@ -280,14 +280,14 @@ class OTXCLI:
             find_parser.add_argument(
                 "--task",
                 help="Value for filtering by task. Default is None, which shows all recipes.",
-                type=Optional[OTXTaskType],
+                type=OTXTaskType | None,
             )
             find_parser.add_argument(
                 "--pattern",
                 help="This allows you to filter the model name of the recipe. \
                       For example, if you want to find all models that contain the word 'efficient', \
                       you can use '--pattern efficient'",
-                type=Optional[str],
+                type=str | None,
             )
             parser_subcommands.add_subcommand("find", find_parser, help="This shows the model provided by OTX.")
 

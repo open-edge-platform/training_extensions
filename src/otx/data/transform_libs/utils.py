@@ -12,7 +12,7 @@ import functools
 import inspect
 import itertools
 import weakref
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
@@ -21,6 +21,8 @@ from shapely import geometry
 from torch import BoolTensor, Tensor
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from datumaro import Polygon
 
 
@@ -111,7 +113,7 @@ class cache_randomness:  # noqa: N801
 
 def get_image_shape(img: np.ndarray | Tensor | list) -> tuple[int, int]:
     """Get image(s) shape with (height, width)."""
-    if not isinstance(img, (np.ndarray, Tensor, list)):
+    if not isinstance(img, (np.ndarray | Tensor | list)):
         msg = f"{type(img)} is not supported."
         raise TypeError(msg)
 
@@ -636,7 +638,7 @@ def scale_size(
     Returns:
         tuple[int]: scaled size with (height, width).
     """
-    if isinstance(scale, (float, int)):
+    if isinstance(scale, (float | int)):
         scale = (scale, scale)
     h, w = size
     return int(h * float(scale[0]) + 0.5), int(w * float(scale[1]) + 0.5)
@@ -663,7 +665,7 @@ def rescale_size(
     """
     h, w = old_size
     msg = ""
-    if isinstance(scale, (float, int)):
+    if isinstance(scale, (float | int)):
         if scale <= 0:
             msg = f"Invalid scale {scale}, must be positive."
             raise ValueError(msg)

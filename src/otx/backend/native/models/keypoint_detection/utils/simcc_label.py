@@ -81,7 +81,7 @@ class SimCCLabel:
         self.decode_scores = decode_scores
         self.decode_beta = decode_beta
 
-        if isinstance(sigma, (float, int)):
+        if isinstance(sigma, (float | int)):
             self.sigma = np.array([sigma, sigma])
         else:
             self.sigma = np.array(sigma)

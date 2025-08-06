@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Timm Backbone Class for OTX classification.
@@ -58,7 +58,7 @@ class TimmBackbone(nn.Module):
             {"params": self.model.named_parameters()},
         ]
         if isinstance(lrs, list):
-            for lr, param_dict in zip(lrs, parameters):
+            for lr, param_dict in zip(lrs, parameters, strict=True):
                 param_dict["lr"] = lr
         else:
             for param_dict in parameters:

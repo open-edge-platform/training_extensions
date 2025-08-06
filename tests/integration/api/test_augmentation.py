@@ -42,7 +42,7 @@ def _test_augmentation(
     img_shape = None
     for switches in itertools.product([True, False], repeat=len(configurable_augs)):
         # Configure on/off
-        for aug_name, switch in zip(configurable_augs, switches):
+        for aug_name, switch in zip(configurable_augs, switches, strict=True):
             aug_found = False
             for aug_config in train_config["transforms"]:
                 if aug_name in aug_config["class_path"]:

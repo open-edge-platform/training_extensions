@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Presnet backbones, modified from https://github.com/lyuwenyu/RT-DETR."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from functools import partial
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from torch import nn
@@ -16,6 +16,9 @@ from otx.backend.native.models.modules import build_activation_layer
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.modules.norm import FrozenBatchNorm2d, build_norm_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = ["PResNet"]
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -487,7 +487,7 @@ class SSDAnchorGeneratorClustered(AnchorGenerator):
     def gen_base_anchors(self) -> None:  # type: ignore[override]
         """Generate base anchor for SSD."""
         multi_level_base_anchors = []
-        for widths, heights, centers in zip(self.widths, self.heights, self.centers):
+        for widths, heights, centers in zip(self.widths, self.heights, self.centers, strict=True):
             base_anchors = self.gen_single_level_base_anchors(
                 widths=Tensor(widths),
                 heights=Tensor(heights),

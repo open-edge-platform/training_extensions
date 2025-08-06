@@ -232,14 +232,14 @@ class OVDetectionModel(OVModel):
                     "scores": scores,
                     "labels": labels,
                 }
-                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.labels)  # type: ignore[arg-type]
+                for bboxes, scores, labels in zip(preds.bboxes, preds.scores, preds.labels, strict=True)  # type: ignore[arg-type]
             ],
             "target": [
                 {
                     "boxes": bboxes.data,
                     "labels": labels,
                 }
-                for bboxes, labels in zip(inputs.bboxes, inputs.labels)  # type: ignore[arg-type]
+                for bboxes, labels in zip(inputs.bboxes, inputs.labels, strict=True)  # type: ignore[arg-type]
             ],
         }
 

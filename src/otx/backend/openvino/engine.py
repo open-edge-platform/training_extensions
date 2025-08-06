@@ -52,13 +52,13 @@ class OVEngine(Engine):
             work_dir (PathLike, optional): Working directory for the engine. Defaults to "./otx-workspace".
         """
         self._work_dir = work_dir
-        if isinstance(model, (str, os.PathLike)) and Path(model).suffix in [".xml"]:
+        if isinstance(model, (str | os.PathLike)) and Path(model).suffix in [".xml"]:
             task: OTXTaskType | None = self._derive_task_from_ir(model)
         elif isinstance(model, OVModel):
             task = model.task  # type: ignore[assignment]
 
         self._auto_configurator = AutoConfigurator(
-            data_root=data if isinstance(data, (str, os.PathLike)) else None,
+            data_root=data if isinstance(data, (str | os.PathLike)) else None,
             task=task,
         )
 
@@ -171,7 +171,7 @@ class OVEngine(Engine):
             RuntimeError: If required data or metric is not provided.
             ValueError: If label information between model and datamodule does not match.
         """
-        if isinstance(data, (str, os.PathLike)):
+        if isinstance(data, (str | os.PathLike)):
             datamodule = self._auto_configurator.get_datamodule(data_root=data)
         elif isinstance(data, OTXDataModule):
             datamodule = data
@@ -276,7 +276,7 @@ class OVEngine(Engine):
         )
 
         model = self._update_checkpoint(checkpoint)
-        if isinstance(data, (str, os.PathLike)):
+        if isinstance(data, (str | os.PathLike)):
             data = self._auto_configurator.get_datamodule(data_root=data)
 
         datamodule = data or self.datamodule
@@ -377,12 +377,12 @@ class OVEngine(Engine):
         check_data = False
         if isinstance(model, OVModel):
             check_model = True
-        elif isinstance(model, (str, os.PathLike)):
+        elif isinstance(model, (str | os.PathLike)):
             model_path = Path(model)
             check_model = model_path.suffix in [".xml"]
         if isinstance(data, OTXDataModule):
             check_data = True
-        elif isinstance(data, (str, os.PathLike)):
+        elif isinstance(data, (str | os.PathLike)):
             data_path = Path(data)
             check_data = data_path.is_dir()
 

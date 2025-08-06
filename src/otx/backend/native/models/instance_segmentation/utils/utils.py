@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Instance Segmentation Utilities."""
@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from torch import Tensor
@@ -14,6 +14,9 @@ from torch import Tensor
 from otx.backend.native.models.common.utils.utils import sample_point
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.data.entity.torch import OTXDataBatch
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def unpack_inst_seg_entity(entity: OTXDataBatch) -> tuple:

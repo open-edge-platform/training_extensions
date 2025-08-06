@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -269,6 +269,7 @@ class BaseDenseHead(BaseModule):
             bbox_pred_list,
             score_factor_list,
             mlvl_priors,
+            strict=True,
         ):
             dim = self.bbox_coder.encode_size
             bbox_pred = bbox_pred.permute(1, 2, 0).reshape(-1, dim)  # noqa: PLW2901
@@ -491,6 +492,7 @@ class BaseDenseHead(BaseModule):
             mlvl_bbox_preds,
             mlvl_score_factor,
             mlvl_priors,
+            strict=True,
         ):
             scores = cls_score.permute(0, 2, 3, 1).reshape(batch_size, -1, self.cls_out_channels)
             scores = scores.sigmoid() if self.use_sigmoid_cls else scores.softmax(-1)[:, :, :-1]

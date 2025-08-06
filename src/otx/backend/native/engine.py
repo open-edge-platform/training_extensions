@@ -14,7 +14,7 @@ import time
 from contextlib import contextmanager
 from multiprocessing import Value
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 from warnings import warn
 
 import torch
@@ -44,6 +44,8 @@ from otx.utils.device import is_xpu_available
 from otx.utils.utils import measure_flops
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator
+
     from lightning import Callback
     from lightning.pytorch.loggers import Logger
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
@@ -108,11 +110,11 @@ class OTXEngine(Engine):
         self.work_dir = work_dir
         self.device = device  # type: ignore[assignment]
         self.num_devices = num_devices
-        if not isinstance(data, (OTXDataModule, str, os.PathLike)):
+        if not isinstance(data, OTXDataModule | str | os.PathLike):
             msg = f"data should be OTXDataModule or PathLike, but got {type(data)}"
             raise TypeError(msg)
         self._auto_configurator = AutoConfigurator(
-            data_root=data if isinstance(data, (str, os.PathLike)) else None,
+            data_root=data if isinstance(data, str | os.PathLike) else None,
             task=data.task if isinstance(data, OTXDataModule) else None,
             model_config_path=None if isinstance(model, OTXModel) else model,
         )
@@ -139,7 +141,7 @@ class OTXEngine(Engine):
 
         self.checkpoint = checkpoint
         if self.checkpoint:
-            if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
+            if not isinstance(self.checkpoint, Path | str) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
             self._model.load_state_dict_incrementally(torch.load(self.checkpoint))
@@ -284,7 +286,7 @@ class OTXEngine(Engine):
             )
         self.checkpoint = self.trainer.checkpoint_callback.best_model_path
 
-        if not isinstance(self.checkpoint, (Path, str)):
+        if not isinstance(self.checkpoint, Path | str):
             msg = "self.checkpoint should be Path or str at this time."
             raise TypeError(msg)
 

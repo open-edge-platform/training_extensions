@@ -147,7 +147,7 @@ class OVKeypointDetectionModel(OVModel):
                     "keypoints": kpt[:, :2],
                     "scores": score,
                 }
-                for kpt, score in zip(preds.keypoints, preds.scores)
+                for kpt, score in zip(preds.keypoints, preds.scores, strict=True)
             ],
             "target": [
                 {

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """OTX STFPM model."""
@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Sequence
+from typing import TYPE_CHECKING, Literal
 
 from anomalib.models.image.stfpm import Stfpm as AnomalibStfpm
 
@@ -18,6 +18,8 @@ from otx.types.label import AnomalyLabelInfo
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from otx.types.label import LabelInfoTypes
 
 

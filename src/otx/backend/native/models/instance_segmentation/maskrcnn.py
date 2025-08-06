@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MaskRCNN model implementations."""
@@ -416,6 +416,7 @@ class RotatedMaskRCNNModel(MaskRCNN):
         for field_name, field in zip(
             ["imgs_info", "bboxes", "scores", "labels", "masks"],
             [preds.imgs_info, preds.bboxes, preds.scores, preds.labels, preds.masks],
+            strict=True,
         ):
             if field is None:
                 msg = f"Field '{field_name}' is None, which is not allowed."
@@ -427,6 +428,7 @@ class RotatedMaskRCNNModel(MaskRCNN):
             preds.scores,  # type: ignore[arg-type]
             preds.labels,  # type: ignore[arg-type]
             preds.masks,  # type: ignore[arg-type]
+            strict=True,
         ):
             boxes = []
             scores = []
@@ -434,7 +436,7 @@ class RotatedMaskRCNNModel(MaskRCNN):
             masks = []
             polygons = []
 
-            for bbox, score, label, mask in zip(pred_bboxes, pred_scores, pred_labels, pred_masks):
+            for bbox, score, label, mask in zip(pred_bboxes, pred_scores, pred_labels, pred_masks, strict=True):
                 if mask.sum() == 0:
                     continue
                 np_mask = mask.detach().cpu().numpy().astype(int)
@@ -442,7 +444,7 @@ class RotatedMaskRCNNModel(MaskRCNN):
                 if hierarchies is None:
                     continue
                 rbox_polygons = []
-                for contour, hierarchy in zip(contours, hierarchies[0]):
+                for contour, hierarchy in zip(contours, hierarchies[0], strict=True):
                     # skip inner contours
                     if hierarchy[3] != -1 or len(contour) <= 2:
                         continue

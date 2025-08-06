@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -14,7 +14,7 @@ import warnings
 from collections import OrderedDict
 from copy import deepcopy
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn.functional
@@ -27,6 +27,9 @@ from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.backend.native.models.modules.transformer import FFN, PatchEmbed, PatchMerging
 from otx.backend.native.models.utils.utils import load_from_http
 from otx.backend.native.models.utils.weight_init import constant_init, trunc_normal_, trunc_normal_init
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ruff: noqa: PLR0913
 

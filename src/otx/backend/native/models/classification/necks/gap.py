@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -58,7 +58,7 @@ class GlobalAveragePooling(nn.Module):
         """
         if isinstance(inputs, tuple):
             outs = tuple([self.gap(x) for x in inputs])
-            outs = tuple([out.view(x.size(0), -1) for out, x in zip(outs, inputs)])
+            outs = tuple([out.view(x.size(0), -1) for out, x in zip(outs, inputs, strict=True)])
         elif isinstance(inputs, torch.Tensor):
             _outs = self.gap(inputs)
             outs = _outs.view(inputs.size(0), -1)

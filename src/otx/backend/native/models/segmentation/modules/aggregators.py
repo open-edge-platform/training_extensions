@@ -1,11 +1,11 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Aggregators for semantic segmentation."""
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from torch import nn
@@ -15,6 +15,9 @@ from otx.backend.native.models.modules import Conv2dModule, DepthwiseSeparableCo
 from otx.backend.native.models.modules.norm import build_norm_layer
 
 from .utils import normalize
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class IterativeAggregator(nn.Module):

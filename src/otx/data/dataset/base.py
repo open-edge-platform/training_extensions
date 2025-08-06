@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Base class for OTXDataset."""
@@ -6,9 +6,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import cv2
 import numpy as np
@@ -23,10 +23,12 @@ from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo, NullLabelInfo
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from datumaro import DatasetSubset, Image
 
 
-Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
+Transforms: TypeAlias = Compose | Callable | list[Callable] | dict[str, Compose | Callable | list[Callable]]
 
 
 @contextmanager

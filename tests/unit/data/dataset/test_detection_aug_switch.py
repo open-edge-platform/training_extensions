@@ -175,7 +175,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
         test_epochs = [2, 15, 35]
         expected_policies = ["no_aug", "strong_aug", "light_aug"]
 
-        for epoch, expected_policy_type in zip(test_epochs, expected_policies):
+        for epoch, expected_policy_type in zip(test_epochs, expected_policies, strict=True):
             data_aug_switch.epoch = epoch
 
             # Apply augmentation switch

@@ -8,10 +8,13 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from torch import Tensor, nn
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class Swish(nn.Module):

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -11,7 +11,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/b
 from __future__ import annotations
 
 from functools import partial
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from torch import Tensor, nn
@@ -20,6 +20,9 @@ from otx.backend.native.models.modules.activation import Swish, build_activation
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.modules.norm import build_norm_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class SPPBottleneck(BaseModule):

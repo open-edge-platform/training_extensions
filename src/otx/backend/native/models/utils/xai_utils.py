@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Utils used for XAI."""
@@ -62,7 +62,7 @@ def process_saliency_maps_in_pred_entity(
         conf_thr = explain_config.predicted_maps_conf_thr
 
         pred_labels = []
-        for labels, scores in zip(predict_result_per_batch.labels, predict_result_per_batch.scores):  # type: ignore[union-attr, arg-type]
+        for labels, scores in zip(predict_result_per_batch.labels, predict_result_per_batch.scores, strict=True):  # type: ignore[union-attr, arg-type]
             if isinstance(label_info, HLabelInfo):
                 pred_labels.append(_convert_labels_from_hcls_format(labels, scores, label_info, conf_thr))
             elif labels.shape == scores.shape:  # type: ignore[union-attr, attr-defined]

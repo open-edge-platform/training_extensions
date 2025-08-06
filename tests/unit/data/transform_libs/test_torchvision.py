@@ -153,7 +153,7 @@ class TestResize:
                     np.array(rp.points).reshape(-1, 2)
                     == np.array(fp.points).reshape(-1, 2) * np.array([results.img_info.scale_factor[::-1]]),
                 )
-                for rp, fp in zip(results.polygons, fxt_inst_seg_data_entity[0].polygons)
+                for rp, fp in zip(results.polygons, fxt_inst_seg_data_entity[0].polygons, strict=True)
             ],
         )
 

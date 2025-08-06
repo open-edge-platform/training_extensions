@@ -5,9 +5,7 @@
 
 import os
 from pathlib import Path
-from typing import Union
-
-from typing_extensions import TypeAlias
+from typing import TypeAlias
 
 from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
@@ -22,4 +20,4 @@ __all__ = [
     "OTXTaskType",
 ]
 
-PathLike: TypeAlias = Union[str, Path, os.PathLike]
+PathLike: TypeAlias = str | Path | os.PathLike

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from torch import nn
@@ -21,6 +21,8 @@ from otx.metrics.types import MetricCallable
 from .mlc_map import MultilabelmAP
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
     from torch import Tensor
 
     from otx.types.label import HLabelInfo, LabelInfo

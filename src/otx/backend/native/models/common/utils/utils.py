@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -19,11 +19,14 @@ from __future__ import annotations
 
 import copy
 from functools import partial
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 import torch.distributed as dist
 from torch import Tensor, nn
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def reduce_mean(tensor: Tensor) -> Tensor:
@@ -54,7 +57,7 @@ def multi_apply(func: Callable, *args, **kwargs) -> tuple:
     """
     pfunc = partial(func, **kwargs) if kwargs else func
     map_results = map(pfunc, *args)  # type: ignore[call-overload]
-    return tuple(map(list, zip(*map_results)))
+    return tuple(map(list, zip(*map_results, strict=True)))
 
 
 def filter_scores_and_topk(

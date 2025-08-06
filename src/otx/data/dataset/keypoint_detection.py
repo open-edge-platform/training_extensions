@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTXKeypointDetectionDataset."""
@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Callable, List, Union
+from collections.abc import Callable
+from typing import TypeAlias
 
 import numpy as np
 import torch
@@ -22,7 +23,7 @@ from otx.types.label import LabelInfo
 
 from .base import OTXDataset
 
-Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
+Transforms: TypeAlias = Compose | Callable | list[Callable] | dict[str, Compose | Callable | list[Callable]]
 
 
 class OTXKeypointDetectionDataset(OTXDataset):
@@ -65,7 +66,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         for item in dm_subset:
             new_items = defaultdict(list)
             for ann in item.annotations:
-                if isinstance(ann, (Bbox, Points)):
+                if isinstance(ann, (Bbox | Points)):
                     new_items[ann.id].append(ann)
             for ann_id, anns in new_items.items():
                 available_types = []

@@ -89,7 +89,7 @@ class TestRTDETR:
         cfg = [{"params": "^fc", "lr": 0.01, "weight_decay": 0.0}]
         params = RTDETR._get_optim_params(cfg, model)
         assert len(params) == 2
-        for p1, (name, p2) in zip(params[0]["params"], model.named_parameters()):
+        for p1, (name, p2) in zip(params[0]["params"], model.named_parameters(), strict=True):
             if "fc" in name:
                 assert not torch.is_nonzero((p1.data - p2.data).sum())
 
@@ -98,7 +98,7 @@ class TestRTDETR:
 
         cfg = None
         params = RTDETR._get_optim_params(cfg, model)
-        for p1, p2 in zip(params, model.parameters()):
+        for p1, p2 in zip(params, model.parameters(), strict=True):
             assert not torch.is_nonzero((p1.data - p2.data).sum())
 
         cfg = [
@@ -107,9 +107,17 @@ class TestRTDETR:
         ]
         params = RTDETR._get_optim_params(cfg, model)
         assert len(params) == 2
-        for p1, p2 in zip(params[0]["params"], [p.data for name, p in model.named_parameters() if "conv" in name]):
+        for p1, p2 in zip(
+            params[0]["params"],
+            [p.data for name, p in model.named_parameters() if "conv" in name],
+            strict=True,
+        ):
             assert not torch.is_nonzero((p1.data - p2.data).sum())
-        for p1, p2 in zip(params[1]["params"], [p.data for name, p in model.named_parameters() if "fc" in name]):
+        for p1, p2 in zip(
+            params[1]["params"],
+            [p.data for name, p in model.named_parameters() if "fc" in name],
+            strict=True,
+        ):
             assert not torch.is_nonzero((p1.data - p2.data).sum())
         assert params[0]["lr"] == 0.01  # conv
         assert params[1]["lr"] == 0.001  # fc

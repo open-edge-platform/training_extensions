@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -12,7 +12,7 @@ Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/models/n
 
 from __future__ import annotations
 
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from torch import Tensor, nn
 
@@ -20,6 +20,9 @@ from otx.backend.native.models.modules import build_activation_layer
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.modules.norm import build_norm_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class FPNModule(BaseModule):

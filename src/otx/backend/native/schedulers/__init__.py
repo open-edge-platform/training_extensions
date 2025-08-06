@@ -1,11 +1,11 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Custom schedulers for the OTX2.0."""
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from lightning.pytorch.cli import ReduceLROnPlateau
 from torch.optim.lr_scheduler import LRScheduler

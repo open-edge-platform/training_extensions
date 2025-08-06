@@ -3,8 +3,8 @@
 """Test of AsyncExecutor in demo_package."""
 
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import cv2
 import numpy as np

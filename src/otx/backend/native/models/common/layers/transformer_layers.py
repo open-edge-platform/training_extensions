@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import math
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn.functional as f
@@ -16,6 +16,9 @@ from torch.nn import init
 
 from otx.backend.native.models.common.utils.utils import get_clones
 from otx.backend.native.models.modules.transformer import deformable_attention_core_func
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -150,7 +153,7 @@ class MLP(nn.Module):
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim, *h], [*h, output_dim]))
+        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim, *h], [*h, output_dim], strict=True))
         self.act = activation() if activation else nn.Identity()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -64,7 +64,7 @@ class TestRTMDetHead:
         cls_scores, bbox_preds = rtmdet_head(input_features)
         assert len(cls_scores) == len(input_features)
         assert len(bbox_preds) == len(input_features)
-        for cls_score, bbox_pred in zip(cls_scores, bbox_preds):
+        for cls_score, bbox_pred in zip(cls_scores, bbox_preds, strict=True):
             assert cls_score.shape[1] == rtmdet_head.num_base_priors * rtmdet_head.cls_out_channels
             assert bbox_pred.shape[1] == rtmdet_head.num_base_priors * 4
 
@@ -101,10 +101,10 @@ class TestRTMDetHead:
 
         assert len(anchor_list) == len(batch_img_metas)
         assert len(valid_flag_list) == len(batch_img_metas)
-        for anchors, valid_flags in zip(anchor_list, valid_flag_list):
+        for anchors, valid_flags in zip(anchor_list, valid_flag_list, strict=True):
             assert len(anchors) == len(featmap_sizes)
             assert len(valid_flags) == len(featmap_sizes)
-            for anchor, valid_flag in zip(anchors, valid_flags):
+            for anchor, valid_flag in zip(anchors, valid_flags, strict=True):
                 assert anchor.shape[1] == 4
                 assert valid_flag.dtype == torch.bool
 
@@ -151,7 +151,7 @@ class TestRTMDetSepBNHeadModule:
         cls_scores, bbox_preds = rtmdet_sep_bn_head(input_features)
         assert len(cls_scores) == len(input_features)
         assert len(bbox_preds) == len(input_features)
-        for cls_score, bbox_pred in zip(cls_scores, bbox_preds):
+        for cls_score, bbox_pred in zip(cls_scores, bbox_preds, strict=True):
             # The number of channels in cls_scores should be num_base_priors * num_classes
             assert cls_score.size(1) == rtmdet_sep_bn_head.num_base_priors * rtmdet_sep_bn_head.cls_out_channels
             # The number of channels in bbox_preds should be num_base_priors * 4

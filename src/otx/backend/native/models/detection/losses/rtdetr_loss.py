@@ -1,11 +1,11 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """RT-Detr loss, modified from https://github.com/lyuwenyu/RT-DETR."""
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import torch
 from torch import nn
@@ -14,6 +14,9 @@ from torchvision.ops import box_convert
 from otx.backend.native.models.common.losses import GIoULoss, L1Loss
 from otx.backend.native.models.common.utils.assigners.hungarian_matcher import HungarianMatcher
 from otx.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class DetrCriterion(nn.Module):
@@ -67,7 +70,7 @@ class DetrCriterion(nn.Module):
         idx = self._get_src_permutation_idx(indices)
 
         src_boxes = outputs["pred_boxes"][idx]
-        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices, strict=True)], dim=0)
         ious = bbox_overlaps(
             box_convert(src_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
             box_convert(target_boxes, in_fmt="cxcywh", out_fmt="xyxy"),
@@ -75,7 +78,7 @@ class DetrCriterion(nn.Module):
         ious = torch.diag(ious).detach()
 
         src_logits = outputs["pred_logits"]
-        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
+        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices, strict=True)])
         target_classes = torch.full(src_logits.shape[:2], self.num_classes, dtype=torch.int64, device=src_logits.device)
         target_classes[idx] = target_classes_o.long()
         target = nn.functional.one_hot(target_classes, num_classes=self.num_classes + 1)[..., :-1]
@@ -114,7 +117,7 @@ class DetrCriterion(nn.Module):
         """
         idx = self._get_src_permutation_idx(indices)
         src_boxes = outputs["pred_boxes"][idx]
-        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        target_boxes = torch.cat([t["boxes"][i] for t, (_, i) in zip(targets, indices, strict=True)], dim=0)
 
         losses = {}
 

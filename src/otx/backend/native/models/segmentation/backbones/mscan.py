@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MSCAN backbone for SegNext model."""
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import torch
 from torch import nn
@@ -18,6 +18,8 @@ from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.utils.utils import load_checkpoint_to_model, load_from_http
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from torch import Tensor
 
 
@@ -157,11 +159,11 @@ class MSCAAttention(BaseModule):
         """
         super().__init__()
         self.conv0 = nn.Conv2d(channels, channels, kernel_size=kernel_sizes[0], padding=paddings[0], groups=channels)
-        for i, (kernel_size, padding) in enumerate(zip(kernel_sizes[1:], paddings[1:])):
+        for i, (kernel_size, padding) in enumerate(zip(kernel_sizes[1:], paddings[1:], strict=True)):
             kernel_size_ = [kernel_size, kernel_size[::-1]]
             padding_ = [padding, padding[::-1]]
             conv_name = [f"conv{i}_1", f"conv{i}_2"]
-            for i_kernel, i_pad, i_conv in zip(kernel_size_, padding_, conv_name):
+            for i_kernel, i_pad, i_conv in zip(kernel_size_, padding_, conv_name, strict=True):
                 self.add_module(i_conv, nn.Conv2d(channels, channels, tuple(i_kernel), padding=i_pad, groups=channels))
         self.conv3 = nn.Conv2d(channels, channels, 1)
 

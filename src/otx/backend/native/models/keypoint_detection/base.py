@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for keypoint detection model entity used in OTX."""
@@ -153,7 +153,7 @@ class OTXKeypointDetectionModel(OTXModel):
                     "keypoints": kpt[:, :2],
                     "scores": score,
                 }
-                for kpt, score in zip(preds.keypoints, preds.scores)
+                for kpt, score in zip(preds.keypoints, preds.scores, strict=True)
             ],
             "target": [
                 {

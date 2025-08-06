@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Torchvision MaskRCNN model with forward method accepting TorchDataBatch."""
@@ -88,7 +88,7 @@ class MaskRCNN(_MaskRCNN):
         mask_thr_binary: float = 0.5,
     ) -> list[dict[str, Tensor]]:
         """Postprocess the output of the model."""
-        for i, (pred, scale_factor, ori_shape) in enumerate(zip(result, scale_factors, ori_shapes)):
+        for i, (pred, scale_factor, ori_shape) in enumerate(zip(result, scale_factors, ori_shapes, strict=True)):
             boxes = pred["boxes"]
             labels = pred["labels"]
             scores = pred["scores"]
