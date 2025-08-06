@@ -4,7 +4,6 @@
 
 from unittest.mock import Mock, patch
 
-import numpy as np
 import pytest
 import torch
 from torchmetrics import MetricCollection
@@ -134,8 +133,6 @@ class TestLogMetrics:
         detection_model._log_metrics(fmeasure, "val")
 
         # Assertions
-        assert "best_confidence_threshold_list" in detection_model.hparams
-        assert detection_model.hparams["best_confidence_threshold_list"] == [0.7]
         assert detection_model.hparams["best_confidence_threshold"] == 0.7
 
     def test_validation_with_metric_collection(self, detection_model):
@@ -156,49 +153,6 @@ class TestLogMetrics:
 
         # Assertions
         assert detection_model.hparams["best_confidence_threshold"] == 0.6
-        assert detection_model.hparams["best_confidence_threshold_list"] == [0.6]
-
-    def test_validation_averaging_behavior(self, detection_model):
-        """Test that confidence thresholds are averaged over multiple epochs."""
-        # Setup
-        fmeasure = Mock(spec=FMeasure)
-        # Ensure hasattr works correctly for Python 3.10 compatibility
-        fmeasure.best_confidence_threshold = 0.5  # Initial value
-        # Mock compute() to return proper dictionary
-        fmeasure.compute.return_value = {"f1-score": torch.tensor(0.75)}
-
-        # Simulate multiple validation epochs
-        thresholds = [0.5, 0.6, 0.7, 0.8, 0.9]
-        for threshold in thresholds:
-            fmeasure.configure_mock(best_confidence_threshold=threshold)
-            detection_model._log_metrics(fmeasure, "val")
-
-        # Check that all thresholds are stored
-        assert detection_model.hparams["best_confidence_threshold_list"] == thresholds
-        # Check that the average is computed correctly
-        expected_avg = np.mean(thresholds)
-        assert abs(detection_model.hparams["best_confidence_threshold"] - expected_avg) < 1e-6
-
-    def test_validation_averaging_last_10_values(self, detection_model):
-        """Test that only last 10 values are used for averaging."""
-        # Setup
-        fmeasure = Mock(spec=FMeasure)
-        # Ensure hasattr works correctly for Python 3.10 compatibility
-        fmeasure.best_confidence_threshold = 0.1  # Initial value
-        # Mock compute() to return proper dictionary
-        fmeasure.compute.return_value = {"f1-score": torch.tensor(0.75)}
-
-        # Simulate 15 validation epochs
-        thresholds = [0.1 * i for i in range(1, 16)]  # 0.1, 0.2, ..., 1.5
-        for threshold in thresholds:
-            fmeasure.configure_mock(best_confidence_threshold=threshold)
-            detection_model._log_metrics(fmeasure, "val")
-
-        # Check that all 15 thresholds are stored
-        assert len(detection_model.hparams["best_confidence_threshold_list"]) == 15
-        # Check that only last 10 are used for averaging
-        expected_avg = np.mean(thresholds[-10:])  # Last 10 values: 0.6, 0.7, ..., 1.5
-        assert abs(detection_model.hparams["best_confidence_threshold"] - expected_avg) < 1e-6
 
     def test_validation_without_fmeasure(self, detection_model):
         """Test validation logging without FMeasure metric."""
@@ -211,7 +165,6 @@ class TestLogMetrics:
         detection_model._log_metrics(other_metric, "val")
 
         # Should not modify hparams
-        assert "best_confidence_threshold_list" not in detection_model.hparams
         assert "best_confidence_threshold" not in detection_model.hparams
 
 
@@ -414,10 +367,9 @@ class TestTestStep:
 class TestCheckpointHandling:
     """Test cases for checkpoint saving/loading."""
 
-    def test_on_save_checkpoint_removes_threshold_list(self, detection_model):
-        """Test that on_save_checkpoint removes best_confidence_threshold_list from checkpoint."""
+    def test_on_save_checkpoint_preserves_threshold(self, detection_model):
+        """Test that on_save_checkpoint preserves best_confidence_threshold."""
         # Setup
-        detection_model.hparams["best_confidence_threshold_list"] = [0.5, 0.6, 0.7]
         detection_model.hparams["best_confidence_threshold"] = 0.6
         detection_model.hparams["other_param"] = "should_remain"
 
@@ -429,19 +381,13 @@ class TestCheckpointHandling:
         # Call on_save_checkpoint directly (it calls super() internally)
         detection_model.on_save_checkpoint(checkpoint)
 
-        # Verify that best_confidence_threshold_list is removed from checkpoint
-        assert "best_confidence_threshold_list" not in checkpoint["hyper_parameters"]
-
-        # Verify that other parameters remain
+        # Verify that parameters remain
         assert "best_confidence_threshold" in checkpoint["hyper_parameters"]
         assert "other_param" in checkpoint["hyper_parameters"]
 
-        # Verify that original hparams still contains the list (not modified)
-        assert "best_confidence_threshold_list" in detection_model.hparams
-
-    def test_on_save_checkpoint_without_threshold_list(self, detection_model):
-        """Test on_save_checkpoint when there's no threshold list."""
-        # Setup - no threshold list in hparams
+    def test_on_save_checkpoint_basic_functionality(self, detection_model):
+        """Test basic on_save_checkpoint functionality."""
+        # Setup - basic threshold in hparams
         detection_model.hparams["best_confidence_threshold"] = 0.6
         detection_model.hparams["other_param"] = "should_remain"
 
@@ -453,7 +399,7 @@ class TestCheckpointHandling:
         # Call on_save_checkpoint - should not raise error
         detection_model.on_save_checkpoint(checkpoint)
 
-        # Verify other parameters remain
+        # Verify parameters remain
         assert "best_confidence_threshold" in checkpoint["hyper_parameters"]
         assert "other_param" in checkpoint["hyper_parameters"]
 

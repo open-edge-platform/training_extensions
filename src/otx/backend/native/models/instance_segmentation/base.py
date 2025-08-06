@@ -13,7 +13,6 @@ import types
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
-import numpy as np
 import torch
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
@@ -360,15 +359,7 @@ class OTXInstanceSegModel(OTXModel):
                 fmeasure = meter
 
             if fmeasure is not None and hasattr(fmeasure, "best_confidence_threshold"):
-                # Instead of using only the last best_confidence_threshold,
-                # we now average the last N values to get a more stable estimate,
-                # especially helpful for small datasets where it can vary greatly across epochs.
-                if "best_confidence_threshold_list" not in self.hparams:
-                    self.hparams["best_confidence_threshold_list"] = []
-                self.hparams["best_confidence_threshold_list"].append(fmeasure.best_confidence_threshold)
-                self.hparams["best_confidence_threshold"] = np.mean(
-                    self.hparams["best_confidence_threshold_list"][-10:],
-                )
+                self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
 
         if key == "test":
             # NOTE: Test metric logging should use `best_confidence_threshold` found previously.

@@ -410,8 +410,6 @@ class OTXModel(LightningModule):
             checkpoint["state_dict"] = remove_state_dict_prefix(compiled_state_dict, "_orig_mod.")
         super().on_save_checkpoint(checkpoint)
 
-        if "best_confidence_threshold_list" in checkpoint["hyper_parameters"]:
-            checkpoint["hyper_parameters"].pop("best_confidence_threshold_list")
         checkpoint["hyper_parameters"]["label_info"] = asdict(self.label_info)
         checkpoint["otx_version"] = __version__
         checkpoint["hyper_parameters"]["tile_config"] = asdict(self.tile_config)
