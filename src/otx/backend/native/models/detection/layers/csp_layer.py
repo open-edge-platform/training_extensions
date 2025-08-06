@@ -7,8 +7,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import partial
+from typing import TYPE_CHECKING
 
 import torch
 from torch import Tensor, nn
@@ -18,6 +18,9 @@ from otx.backend.native.models.modules.activation import Swish, build_activation
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
 from otx.backend.native.models.modules.norm import build_norm_layer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class DarknetBottleneck(BaseModule):
