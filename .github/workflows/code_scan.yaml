@@ -39,7 +39,7 @@ jobs:
 
       - name: Upload SARIF file
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v3.28.8
+        uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.28.8
         with:
           sarif_file: "trivy-results-vuln.sarif"
 
@@ -86,7 +86,7 @@ jobs:
 
       - name: Upload SARIF file
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v3.28.8
+        uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.28.8
         with:
           sarif_file: "trivy-results-misconfig.sarif"
 
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload SARIF file
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@4e828ff8d448a8a6e532957b1811f387a63867e8 # v3.28.8
+        uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.28.8
         with:
           sarif_file: .tox/bandit-results.sarif
 
@@ -140,7 +140,7 @@ jobs:
 
       # Download artifacts with error handling
       - name: Download all results
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         continue-on-error: true # Don't fail if some tools didn't generate results
         with:
           pattern: "*-results"
