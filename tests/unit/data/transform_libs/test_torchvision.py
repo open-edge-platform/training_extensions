@@ -59,6 +59,111 @@ def det_data_entity() -> OTXDataItem:
     )
 
 
+@pytest.fixture()
+def det_data_entity_with_masks() -> OTXDataItem:
+    """Create a data entity with masks for testing."""
+    img_size = (112, 224)
+    fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
+    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
+    fake_bboxes = tv_tensors.BoundingBoxes(
+        data=torch.Tensor([[10, 10, 50, 50], [60, 60, 100, 100]]),
+        format="xyxy",
+        canvas_size=img_size,
+    )
+    fake_labels = LongTensor([1, 2])
+
+    # Create meaningful masks that correspond to the bounding boxes
+    masks = torch.zeros(size=(2, *img_size), dtype=torch.bool)
+    masks[0, 10:50, 10:50] = True  # First mask
+    masks[1, 60:100, 60:100] = True  # Second mask
+    fake_masks = tv_tensors.Mask(masks)
+
+    return OTXDataItem(
+        image=tv_tensors.Image(fake_image),
+        img_info=fake_image_info,
+        bboxes=fake_bboxes,
+        label=fake_labels,
+        masks=fake_masks,
+    )
+
+
+@pytest.fixture()
+def det_data_entity_empty_masks() -> OTXDataItem:
+    """Create a data entity with empty masks for testing."""
+    img_size = (112, 224)
+    fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
+    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
+    fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([[10, 10, 50, 50]]), format="xyxy", canvas_size=img_size)
+    fake_labels = LongTensor([1])
+
+    # Create empty masks
+    fake_masks = tv_tensors.Mask(torch.zeros(size=(0, *img_size), dtype=torch.uint8))
+
+    return OTXDataItem(
+        image=tv_tensors.Image(fake_image),
+        img_info=fake_image_info,
+        bboxes=fake_bboxes,
+        label=fake_labels,
+        masks=fake_masks,
+    )
+
+
+@pytest.fixture()
+def det_data_entity_with_polygons() -> OTXDataItem:
+    """Create a data entity with polygons for testing."""
+    img_size = (112, 224)
+    fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
+    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
+    fake_bboxes = tv_tensors.BoundingBoxes(
+        data=torch.Tensor([[10, 10, 50, 50], [60, 60, 100, 100]]),
+        format="xyxy",
+        canvas_size=img_size,
+    )
+    fake_labels = LongTensor([1, 2])
+
+    # Create meaningful masks that correspond to the bounding boxes
+    masks = torch.zeros(size=(2, *img_size), dtype=torch.bool)
+    masks[0, 10:50, 10:50] = True  # First mask
+    masks[1, 60:100, 60:100] = True  # Second mask
+    fake_masks = tv_tensors.Mask(masks)
+
+    # Create corresponding polygons
+    fake_polygons = [
+        Polygon(points=[10, 10, 50, 10, 50, 50, 10, 50]),  # Rectangle polygon for first object
+        Polygon(points=[60, 60, 100, 60, 100, 100, 60, 100]),  # Rectangle polygon for second object
+    ]
+
+    return OTXDataItem(
+        image=tv_tensors.Image(fake_image),
+        img_info=fake_image_info,
+        bboxes=fake_bboxes,
+        label=fake_labels,
+        masks=fake_masks,
+        polygons=fake_polygons,
+    )
+
+
+@pytest.fixture()
+def det_data_entity_empty_polygons() -> OTXDataItem:
+    """Create a data entity with empty polygons for testing."""
+    img_size = (112, 224)
+    fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
+    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
+    fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([[10, 10, 50, 50]]), format="xyxy", canvas_size=img_size)
+    fake_labels = LongTensor([1])
+
+    # Create empty polygons
+    fake_polygons = []
+
+    return OTXDataItem(
+        image=tv_tensors.Image(fake_image),
+        img_info=fake_image_info,
+        bboxes=fake_bboxes,
+        label=fake_labels,
+        polygons=fake_polygons,
+    )
+
+
 class TestMinIoURandomCrop:
     @pytest.fixture()
     def min_iou_random_crop(self) -> MinIoURandomCrop:
@@ -214,16 +319,32 @@ class TestRandomAffine:
     def random_affine(self) -> RandomAffine:
         return RandomAffine()
 
+    @pytest.fixture()
+    def random_affine_with_mask_transform(self) -> RandomAffine:
+        return RandomAffine(transform_mask=True, mask_fill_value=0)
+
+    @pytest.fixture()
+    def random_affine_without_mask_transform(self) -> RandomAffine:
+        return RandomAffine(transform_mask=False)
+
+    @pytest.fixture()
+    def random_affine_with_polygon_transform(self) -> RandomAffine:
+        return RandomAffine(transform_polygon=True)
+
+    @pytest.fixture()
+    def random_affine_with_mask_and_polygon_transform(self) -> RandomAffine:
+        return RandomAffine(transform_mask=True, transform_polygon=True, mask_fill_value=0)
+
     def test_init_invalid_translate_ratio(self) -> None:
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(max_translate_ratio=1.5)
 
     def test_init_invalid_scaling_ratio_range_inverse_order(self) -> None:
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(scaling_ratio_range=(1.5, 0.5))
 
     def test_init_invalid_scaling_ratio_range_zero_value(self) -> None:
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(scaling_ratio_range=(0, 0.5))
 
     def test_forward(self, random_affine: RandomAffine, det_data_entity: OTXDataItem) -> None:
@@ -235,6 +356,320 @@ class TestRandomAffine:
         assert results.label.dtype == torch.long
         assert results.bboxes.dtype == torch.float32
         assert results.img_info.img_shape == results.image.shape[:2]
+
+    def test_forward_with_masks_transform_enabled(
+        self,
+        random_affine_with_mask_transform: RandomAffine,
+        det_data_entity_with_masks: OTXDataItem,
+    ) -> None:
+        """Test forward with masks when transform_mask is True."""
+        original_entity = deepcopy(det_data_entity_with_masks)
+        results = random_affine_with_mask_transform(original_entity)
+
+        # Check that masks are present and transformed
+        assert hasattr(results, "masks")
+        assert results.masks is not None
+        assert results.masks.shape[0] > 0  # Should have masks
+        assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions as image
+
+        # Check that the number of masks matches the number of remaining bboxes and labels
+        assert results.masks.shape[0] == results.bboxes.shape[0]
+        assert results.masks.shape[0] == results.label.shape[0]
+
+        # Check that masks are still binary (0 or 255)
+        unique_values = torch.unique(results.masks)
+        assert len(unique_values) <= 2  # Should only have 0 and/or 255
+
+        # Check data types
+        assert results.masks.dtype == torch.bool
+        assert isinstance(results.masks, tv_tensors.Mask)
+
+    def test_forward_with_polygons_transform_enabled(
+        self,
+        random_affine_with_polygon_transform: RandomAffine,
+        det_data_entity_with_polygons: OTXDataItem,
+    ) -> None:
+        """Test forward with polygons when transform_polygon is True."""
+        original_entity = deepcopy(det_data_entity_with_polygons)
+        results = random_affine_with_polygon_transform(original_entity)
+
+        # Check that polygons are present and transformed
+        assert hasattr(results, "polygons")
+        assert results.polygons is not None
+        assert len(results.polygons) > 0  # Should have polygons
+
+        # Check that the number of polygons matches the number of remaining bboxes and labels
+        assert len(results.polygons) == results.bboxes.shape[0]
+        assert len(results.polygons) == results.label.shape[0]
+
+        # Check that polygons are still valid (even number of coordinates)
+        for polygon in results.polygons:
+            assert len(polygon.points) % 2 == 0  # Should have even number of coordinates
+            assert len(polygon.points) >= 6  # Should have at least 3 points (6 coordinates)
+
+    def test_forward_with_masks_and_polygons_transform_enabled(
+        self,
+        random_affine_with_mask_and_polygon_transform: RandomAffine,
+        det_data_entity_with_polygons: OTXDataItem,
+    ) -> None:
+        """Test forward with both masks and polygons when both transforms are enabled."""
+        original_entity = deepcopy(det_data_entity_with_polygons)
+        results = random_affine_with_mask_and_polygon_transform(original_entity)
+
+        # Check that both masks and polygons are present and transformed
+        assert hasattr(results, "masks")
+        assert hasattr(results, "polygons")
+        assert results.masks is not None
+        assert results.polygons is not None
+
+        # Check consistency between masks, polygons, bboxes, and labels
+        assert results.masks.shape[0] == results.bboxes.shape[0]
+        assert len(results.polygons) == results.bboxes.shape[0]
+        assert results.masks.shape[0] == results.label.shape[0]
+        assert len(results.polygons) == results.label.shape[0]
+
+    def test_forward_with_empty_polygons(
+        self,
+        random_affine_with_polygon_transform: RandomAffine,
+        det_data_entity_empty_polygons: OTXDataItem,
+    ) -> None:
+        """Test forward with empty polygons."""
+        original_entity = deepcopy(det_data_entity_empty_polygons)
+        results = random_affine_with_polygon_transform(original_entity)
+
+        # Check that empty polygons are handled correctly
+        assert hasattr(results, "polygons")
+        assert results.polygons is not None
+        assert len(results.polygons) == 0  # Should still be empty
+
+    def test_forward_without_polygons(
+        self,
+        random_affine_with_polygon_transform: RandomAffine,
+        det_data_entity: OTXDataItem,
+    ) -> None:
+        """Test forward when entity has no polygons attribute."""
+        original_entity = deepcopy(det_data_entity)
+        # Ensure no polygons attribute
+        if hasattr(original_entity, "polygons"):
+            delattr(original_entity, "polygons")
+
+        results = random_affine_with_polygon_transform(original_entity)
+
+        # Should work normally without polygons
+        assert results.image.shape[:2] == (112, 224)
+        assert results.label.shape[0] == results.bboxes.shape[0]
+        assert not hasattr(results, "polygons") or results.polygons is None or len(results.polygons) == 0
+
+    def test_polygon_filtering_consistency(
+        self,
+        det_data_entity_with_polygons: OTXDataItem,
+    ) -> None:
+        """Test that polygons are filtered consistently with bboxes."""
+        # Create a transform that might filter out some bboxes
+        transform = RandomAffine(
+            transform_polygon=True,
+            bbox_clip_border=True,
+            max_rotate_degree=30,
+            max_translate_ratio=0.3,
+            scaling_ratio_range=(0.5, 1.5),
+            max_shear_degree=10,
+        )
+
+        original_entity = deepcopy(det_data_entity_with_polygons)
+        original_num_polygons = len(original_entity.polygons)
+
+        results = transform(original_entity)
+
+        # Check that the number of polygons matches the number of valid bboxes and labels
+        assert len(results.polygons) == results.bboxes.shape[0]
+        assert len(results.polygons) == results.label.shape[0]
+
+        # The number of polygons might be reduced due to filtering
+        assert len(results.polygons) <= original_num_polygons
+
+    def test_polygon_coordinates_validity(
+        self,
+        random_affine_with_polygon_transform: RandomAffine,
+        det_data_entity_with_polygons: OTXDataItem,
+    ) -> None:
+        """Test that transformed polygon coordinates are valid."""
+        original_entity = deepcopy(det_data_entity_with_polygons)
+        results = random_affine_with_polygon_transform(original_entity)
+
+        # Check that all polygon coordinates are within image bounds
+        height, width = results.image.shape[:2]
+
+        for polygon in results.polygons:
+            points = np.array(polygon.points).reshape(-1, 2)
+
+            # Check that x coordinates are within [0, width]
+            assert np.all(points[:, 0] >= 0)
+            assert np.all(points[:, 0] <= width)
+
+            # Check that y coordinates are within [0, height]
+            assert np.all(points[:, 1] >= 0)
+            assert np.all(points[:, 1] <= height)
+
+    @pytest.mark.parametrize("transform_polygon", [True, False])
+    def test_polygon_transform_parameter_effect(
+        self,
+        det_data_entity_with_polygons: OTXDataItem,
+        transform_polygon: bool,
+    ) -> None:
+        """Test that the transform_polygon parameter controls polygon transformation."""
+        transform = RandomAffine(
+            transform_polygon=transform_polygon,
+            max_rotate_degree=0,
+            max_translate_ratio=0.1,
+            scaling_ratio_range=(1.0, 1.0),
+            max_shear_degree=0,
+        )
+
+        original_entity = deepcopy(det_data_entity_with_polygons)
+        results = transform(original_entity)
+
+        # Regardless of transform_polygon value, polygons should be present and properly managed
+        assert hasattr(results, "polygons")
+        if len(original_entity.polygons) > 0:
+            assert results.polygons is not None
+            assert len(results.polygons) == results.bboxes.shape[0]
+
+    def test_forward_with_masks_transform_disabled(
+        self,
+        random_affine_without_mask_transform: RandomAffine,
+        det_data_entity_with_masks: OTXDataItem,
+    ) -> None:
+        """Test forward with masks when transform_mask is False."""
+        original_entity = deepcopy(det_data_entity_with_masks)
+        results = random_affine_without_mask_transform(original_entity)
+
+        # Check that masks are present but not transformed
+        assert hasattr(results, "masks")
+        assert results.masks is not None
+
+        # Since transform_mask is False, masks should remain unchanged
+        # However, they might still be filtered based on valid bounding boxes
+        assert (
+            results.masks.shape[0] == results.bboxes.shape[0]
+        ), f"results.masks.shape[0] = {results.masks.shape[0]}, results.bboxes.shape[0] = {results.bboxes.shape[0]}"
+        assert (
+            results.masks.shape[0] == results.label.shape[0]
+        ), f"results.masks.shape[0] = {results.masks.shape[0]}, results.label.shape[0] = {results.label.shape[0]}"
+
+    def test_forward_with_empty_masks(
+        self,
+        random_affine_with_mask_transform: RandomAffine,
+        det_data_entity_empty_masks: OTXDataItem,
+    ) -> None:
+        """Test forward with empty masks."""
+        original_entity = deepcopy(det_data_entity_empty_masks)
+        results = random_affine_with_mask_transform(original_entity)
+
+        # Check that empty masks are handled correctly
+        assert hasattr(results, "masks")
+        assert results.masks is not None
+        assert results.masks.shape[0] == 0  # Should still be empty
+        assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions
+
+    def test_forward_without_masks(
+        self,
+        random_affine_with_mask_transform: RandomAffine,
+        det_data_entity: OTXDataItem,
+    ) -> None:
+        """Test forward when entity has no masks attribute."""
+        original_entity = deepcopy(det_data_entity)
+        # Ensure no masks attribute
+        if hasattr(original_entity, "masks"):
+            delattr(original_entity, "masks")
+
+        results = random_affine_with_mask_transform(original_entity)
+
+        # Should work normally without masks
+        assert results.image.shape[:2] == (112, 224)
+        assert results.label.shape[0] == results.bboxes.shape[0]
+        assert not hasattr(results, "masks") or results.masks is None
+
+    def test_mask_fill_value_applied(
+        self,
+        det_data_entity_with_masks: OTXDataItem,
+        repeat: int = 10,
+    ) -> None:
+        """Test that mask_fill_value is applied correctly."""
+        # Test with different fill values
+        fill_values = [0, 128, 255]
+
+        for _ in range(repeat):
+            for fill_value in fill_values:
+                transform = RandomAffine(
+                    transform_mask=True,
+                    mask_fill_value=fill_value,
+                    max_rotate_degree=45,  # Force significant transformation
+                    max_translate_ratio=0.2,
+                    scaling_ratio_range=(0.8, 1.2),
+                    max_shear_degree=10,
+                )
+
+                original_entity = deepcopy(det_data_entity_with_masks)
+                results = transform(original_entity)
+
+                assert hasattr(results, "masks")
+                assert results.masks is not None
+                # The fill value should be used for areas outside the original mask
+                # This is hard to test directly, but we can check that the transform executed successfully
+                assert results.masks.shape[0] > 0
+
+    def test_mask_consistency_with_image_transform(
+        self,
+        det_data_entity_with_masks: OTXDataItem,
+    ) -> None:
+        """Test that masks and images are transformed consistently."""
+        # Create a transform with fixed parameters for reproducibility
+        transform = RandomAffine(
+            transform_mask=True,
+            mask_fill_value=0,
+            max_rotate_degree=0,  # No rotation for simpler testing
+            max_translate_ratio=0.1,  # Small translation
+            scaling_ratio_range=(1.0, 1.0),  # No scaling
+            max_shear_degree=0,  # No shear
+        )
+
+        original_entity = deepcopy(det_data_entity_with_masks)
+        results = transform(original_entity)
+
+        # Check that image and masks have consistent dimensions
+        assert results.image.shape[:2] == results.masks.shape[1:]
+
+        # Check that masks are still properly shaped
+        assert len(results.masks.shape) == 3  # (N, H, W)
+        assert results.masks.shape[0] == results.bboxes.shape[0]
+
+    def test_mask_bbox_filtering_consistency(
+        self,
+        det_data_entity_with_masks: OTXDataItem,
+    ) -> None:
+        """Test that masks are filtered consistently with bboxes."""
+        # Create a transform that might filter out some bboxes
+        transform = RandomAffine(
+            transform_mask=True,
+            mask_fill_value=0,
+            bbox_clip_border=True,
+            max_rotate_degree=30,
+            max_translate_ratio=0.3,
+            scaling_ratio_range=(0.5, 1.5),
+            max_shear_degree=10,
+        )
+
+        original_entity = deepcopy(det_data_entity_with_masks)
+        original_num_objects = original_entity.masks.shape[0]
+
+        results = transform(original_entity)
+
+        # Check that the number of masks matches the number of valid bboxes and labels
+        assert results.masks.shape[0] == results.bboxes.shape[0]
+        assert results.masks.shape[0] == results.label.shape[0]
+
+        # The number of objects might be reduced due to filtering
+        assert results.masks.shape[0] <= original_num_objects
 
 
 class TestCachedMosaic:
