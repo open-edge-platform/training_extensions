@@ -75,24 +75,8 @@ exclude_patterns = []
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_theme = "sphinx_book_theme"
 html_static_path = ["_static"]
-
-# Show source link & copyright
-
-
-html_theme_options = {
-    "logo": {
-        "image_light": "logos/otx-logo.png",
-        "image_dark": "logos/otx-logo.png",
-    },
-    "icon_links": [
-        {
-            "name": "GitHub",
-            "url": "https://github.com/open-edge-platform/training_extensions",
-            "icon": "fab fa-github",
-            "type": "fontawesome",
-        },
-    ],
-}
+html_logo = "_static/logos/otx-logo.png"
+html_favicon = "_static/logos/geti-favicon-64.png"
 
 html_context = {
     "github_user": "open-edge-platform",
