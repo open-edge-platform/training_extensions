@@ -6,6 +6,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { path } from 'static-path';
 
 import { Layout } from './layout';
+import { DataCollection } from './routes/data-collection/data-collection';
 import { LiveFeed } from './routes/live-feed/live-feed';
 import { EditPipelineLayout } from './routes/pipeline/edit-pipeline-layout';
 import { Index as PipelineIndex } from './routes/pipeline/index';
@@ -86,7 +87,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: paths.dataCollection.index.pattern,
-                element: <div>Data collection</div>,
+                element: <DataCollection />,
             },
         ],
     },
