@@ -472,34 +472,37 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.project_bboxes" title="otx.data.transform_libs.utils.project_bboxes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_bboxes</span></code></a>(boxes, homography_matrix)</p></td>
 <td><p>Geometric transformat boxes in-place.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_bboxes" title="otx.data.transform_libs.utils.rescale_bboxes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_bboxes</span></code></a>(boxes, scale_factor)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.project_polygons" title="otx.data.transform_libs.utils.project_polygons"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_polygons</span></code></a>(polygons, ...)</p></td>
+<td><p>Transform polygons using a homography matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_bboxes" title="otx.data.transform_libs.utils.rescale_bboxes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_bboxes</span></code></a>(boxes, scale_factor)</p></td>
 <td><p>Rescale boxes w.r.t.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_keypoints" title="otx.data.transform_libs.utils.rescale_keypoints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_keypoints</span></code></a>(keypoints, scale_factor)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_keypoints" title="otx.data.transform_libs.utils.rescale_keypoints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_keypoints</span></code></a>(keypoints, scale_factor)</p></td>
 <td><p>Rescale keypoints as large as possible while keeping the aspect ratio.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_masks" title="otx.data.transform_libs.utils.rescale_masks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_masks</span></code></a>(masks, scale_factor[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_masks" title="otx.data.transform_libs.utils.rescale_masks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_masks</span></code></a>(masks, scale_factor[, ...])</p></td>
 <td><p>Rescale masks as large as possible while keeping the aspect ratio.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_polygons" title="otx.data.transform_libs.utils.rescale_polygons"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_polygons</span></code></a>(polygons, scale_factor)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_polygons" title="otx.data.transform_libs.utils.rescale_polygons"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_polygons</span></code></a>(polygons, scale_factor)</p></td>
 <td><p>Rescale polygons as large as possible while keeping the aspect ratio.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_size" title="otx.data.transform_libs.utils.rescale_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_size</span></code></a>(old_size, scale[, return_scale])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.rescale_size" title="otx.data.transform_libs.utils.rescale_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rescale_size</span></code></a>(old_size, scale[, return_scale])</p></td>
 <td><p>Calculate the new size to be rescaled to.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.scale_size" title="otx.data.transform_libs.utils.scale_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_size</span></code></a>(size, scale)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.scale_size" title="otx.data.transform_libs.utils.scale_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_size</span></code></a>(size, scale)</p></td>
 <td><p>Rescale a size by a ratio.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.to_np_image" title="otx.data.transform_libs.utils.to_np_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_np_image</span></code></a>(img)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.to_np_image" title="otx.data.transform_libs.utils.to_np_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_np_image</span></code></a>(img)</p></td>
 <td><p>Convert torch.Tensor 3D image to numpy 3D image.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.translate_bboxes" title="otx.data.transform_libs.utils.translate_bboxes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate_bboxes</span></code></a>(boxes, distances)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.translate_bboxes" title="otx.data.transform_libs.utils.translate_bboxes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate_bboxes</span></code></a>(boxes, distances)</p></td>
 <td><p>Translate boxes in-place.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.translate_masks" title="otx.data.transform_libs.utils.translate_masks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate_masks</span></code></a>(masks, out_shape, offset[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.translate_masks" title="otx.data.transform_libs.utils.translate_masks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate_masks</span></code></a>(masks, out_shape, offset[, ...])</p></td>
 <td><p>Translate the masks.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.translate_polygons" title="otx.data.transform_libs.utils.translate_polygons"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate_polygons</span></code></a>(polygons, out_shape, offset)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.transform_libs.utils.translate_polygons" title="otx.data.transform_libs.utils.translate_polygons"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate_polygons</span></code></a>(polygons, out_shape, offset)</p></td>
 <td><p>Translate polygons.</p></td>
 </tr>
 </tbody>
@@ -605,7 +608,7 @@ return the cached values when being invoked again.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="otx.data.transform_libs.utils.crop_polygons">
-<span class="sig-prename descclassname"><span class="pre">otx.data.transform_libs.utils.</span></span><span class="sig-name descname"><span class="pre">crop_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">np.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/data/transform_libs/utils.html#crop_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.transform_libs.utils.crop_polygons" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">otx.data.transform_libs.utils.</span></span><span class="sig-name descname"><span class="pre">crop_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/data/transform_libs/utils.html#crop_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.transform_libs.utils.crop_polygons" title="Link to this definition">#</a></dt>
 <dd><p>Crop each polygon by the given bbox.</p>
 </dd></dl>
 
@@ -678,7 +681,7 @@ return the cached values when being invoked again.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="otx.data.transform_libs.utils.get_bboxes_from_polygons">
-<span class="sig-prename descclassname"><span class="pre">otx.data.transform_libs.utils.</span></span><span class="sig-name descname"><span class="pre">get_bboxes_from_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">np.ndarray</span></span></span><a class="reference internal" href="../../../_modules/otx/data/transform_libs/utils.html#get_bboxes_from_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.transform_libs.utils.get_bboxes_from_polygons" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">otx.data.transform_libs.utils.</span></span><span class="sig-name descname"><span class="pre">get_bboxes_from_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="../../../_modules/otx/data/transform_libs/utils.html#get_bboxes_from_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.transform_libs.utils.get_bboxes_from_polygons" title="Link to this definition">#</a></dt>
 <dd><p>Create boxes from polygons.</p>
 </dd></dl>
 
@@ -878,6 +881,27 @@ stability. Default 1e-6.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>(Tensor | np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otx.data.transform_libs.utils.project_polygons">
+<span class="sig-prename descclassname"><span class="pre">otx.data.transform_libs.utils.</span></span><span class="sig-name descname"><span class="pre">project_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">homography_matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/data/transform_libs/utils.html#project_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.transform_libs.utils.project_polygons" title="Link to this definition">#</a></dt>
+<dd><p>Transform polygons using a homography matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>polygons</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><em>Polygon</em><em>]</em>) – List of polygons to be transformed.</p></li>
+<li><p><strong>homography_matrix</strong> (<em>np.ndarray</em>) – Homography matrix of shape (3, 3) for geometric transformation.</p></li>
+<li><p><strong>out_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>]</em>) – Output shape (height, width) for boundary clipping.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of transformed polygons.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a>[Polygon]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1299,6 +1323,15 @@ is horizontal distance and the second is vertical distance.</p></li>
    <code class="docutils literal notranslate">
     <span class="pre">
      project_bboxes()
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.transform_libs.utils.project_polygons">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     project_polygons()
     </span>
    </code>
   </a>

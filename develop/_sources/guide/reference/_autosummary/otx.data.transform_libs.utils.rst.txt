@@ -31,6 +31,7 @@ otx.data.transform\_libs.utils
       is_inside_bboxes
       overlap_bboxes
       project_bboxes
+      project_polygons
       rescale_bboxes
       rescale_keypoints
       rescale_masks

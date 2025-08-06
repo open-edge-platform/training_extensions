@@ -309,6 +309,7 @@
     <span class="n">is_inside_bboxes</span><span class="p">,</span>
     <span class="n">overlap_bboxes</span><span class="p">,</span>
     <span class="n">project_bboxes</span><span class="p">,</span>
+    <span class="n">project_polygons</span><span class="p">,</span>
     <span class="n">rescale_bboxes</span><span class="p">,</span>
     <span class="n">rescale_keypoints</span><span class="p">,</span>
     <span class="n">rescale_masks</span><span class="p">,</span>
@@ -1351,7 +1352,7 @@
 
 <span class="sd">    Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/datasets/transforms/transforms.py#L2736-L2901</span>
 
-<span class="sd">    RandomAffine only supports images and bounding boxes in mmdetection.</span>
+<span class="sd">    RandomAffine supports images, bounding boxes, masks, and polygons.</span>
 
 <span class="sd">    TODO : optimize logic to torcivision pipeline</span>
 
@@ -1360,19 +1361,22 @@
 <span class="sd">            Defaults to 10.</span>
 <span class="sd">        max_translate_ratio (float): Maximum ratio of translation.</span>
 <span class="sd">            Defaults to 0.1.</span>
-<span class="sd">        scaling_ratio_range (tuple[float]): Min and max ratio of</span>
+<span class="sd">        scaling_ratio_range (tuple[float, float]): Min and max ratio of</span>
 <span class="sd">            scaling transform. Defaults to (0.5, 1.5).</span>
 <span class="sd">        max_shear_degree (float): Maximum degrees of shear</span>
 <span class="sd">            transform. Defaults to 2.</span>
-<span class="sd">        border (tuple[int]): Distance from height and width sides of input</span>
+<span class="sd">        border (tuple[int, int]): Distance from height and width sides of input</span>
 <span class="sd">            image to adjust output shape. Only used in mosaic dataset.</span>
 <span class="sd">            Defaults to (0, 0).</span>
-<span class="sd">        border_val (tuple[int]): Border padding values of 3 channels.</span>
+<span class="sd">        border_val (tuple[int, int, int]): Border padding values of 3 channels.</span>
 <span class="sd">            Defaults to (114, 114, 114).</span>
 <span class="sd">        bbox_clip_border (bool, optional): Whether to clip the objects outside</span>
 <span class="sd">            the border of the image. In some dataset like MOT17, the gt bboxes</span>
 <span class="sd">            are allowed to cross the border of images. Therefore, we don&#39;t</span>
 <span class="sd">            need to clip the gt bboxes in these cases. Defaults to True.</span>
+<span class="sd">        transform_mask (bool): Whether to transform the mask. Defaults to True.</span>
+<span class="sd">        mask_fill_value (int): Fill value for mask. Defaults to 0.</span>
+<span class="sd">        transform_polygon (bool): Whether to transform polygons. Defaults to True.</span>
 <span class="sd">        is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1385,13 +1389,15 @@
         <span class="n">border</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># (H, W)</span>
         <span class="n">border_val</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">114</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">114</span><span class="p">),</span>
         <span class="n">bbox_clip_border</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">transform_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">transform_polygon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">recompute_bbox</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">mask_fill_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">is_numpy_to_tvtensor</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_parameters</span><span class="p">(</span><span class="n">max_translate_ratio</span><span class="p">,</span> <span class="n">scaling_ratio_range</span><span class="p">)</span>
 
-        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">max_translate_ratio</span> <span class="o">&lt;=</span> <span class="mi">1</span>  <span class="c1"># noqa: S101</span>
-        <span class="k">assert</span> <span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># noqa: S101</span>
-        <span class="k">assert</span> <span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>  <span class="c1"># noqa: S101</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_rotate_degree</span> <span class="o">=</span> <span class="n">max_rotate_degree</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_translate_ratio</span> <span class="o">=</span> <span class="n">max_translate_ratio</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scaling_ratio_range</span> <span class="o">=</span> <span class="n">scaling_ratio_range</span>
@@ -1399,97 +1405,397 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">border</span> <span class="o">=</span> <span class="n">border</span>  <span class="c1"># (H, W)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">border_val</span> <span class="o">=</span> <span class="n">border_val</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bbox_clip_border</span> <span class="o">=</span> <span class="n">bbox_clip_border</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform_mask</span> <span class="o">=</span> <span class="n">transform_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform_polygon</span> <span class="o">=</span> <span class="n">transform_polygon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recompute_bbox</span> <span class="o">=</span> <span class="n">recompute_bbox</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_fill_value</span> <span class="o">=</span> <span class="n">mask_fill_value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_numpy_to_tvtensor</span> <span class="o">=</span> <span class="n">is_numpy_to_tvtensor</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_parameters</span><span class="p">(</span><span class="n">max_translate_ratio</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">scaling_ratio_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate input parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">max_translate_ratio</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;max_translate_ratio must be between 0 and 1, got </span><span class="si">{</span><span class="n">max_translate_ratio</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;scaling_ratio_range[0] must be &lt;= scaling_ratio_range[1], got </span><span class="si">{</span><span class="n">scaling_ratio_range</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;scaling_ratio_range[0] must be &gt; 0, got </span><span class="si">{</span><span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@cache_randomness</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_random_homography_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="c1"># Rotation</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate random homography matrix for affine transformation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            height (int): Image height including border.</span>
+<span class="sd">            width (int): Image width including border.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: 3x3 homography matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Generate transformation parameters</span>
         <span class="n">rotation_degree</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rotate_degree</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_rotate_degree</span><span class="p">)</span>
-        <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotation_matrix</span><span class="p">(</span><span class="n">rotation_degree</span><span class="p">)</span>
-
-        <span class="c1"># Scaling</span>
         <span class="n">scaling_ratio</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaling_ratio_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">scaling_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scaling_matrix</span><span class="p">(</span><span class="n">scaling_ratio</span><span class="p">)</span>
-
-        <span class="c1"># Shear</span>
-        <span class="n">x_degree</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">)</span>
-        <span class="n">y_degree</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">)</span>
-        <span class="n">shear_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shear_matrix</span><span class="p">(</span><span class="n">x_degree</span><span class="p">,</span> <span class="n">y_degree</span><span class="p">)</span>
-
-        <span class="c1"># Translation</span>
+        <span class="n">x_shear_degree</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">)</span>
+        <span class="n">y_shear_degree</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="p">)</span>
         <span class="n">trans_x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_translate_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_translate_ratio</span><span class="p">)</span> <span class="o">*</span> <span class="n">width</span>
         <span class="n">trans_y</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_translate_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_translate_ratio</span><span class="p">)</span> <span class="o">*</span> <span class="n">height</span>
+
+        <span class="c1"># Create transformation matrices</span>
+        <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotation_matrix</span><span class="p">(</span><span class="n">rotation_degree</span><span class="p">)</span>
+        <span class="n">scaling_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scaling_matrix</span><span class="p">(</span><span class="n">scaling_ratio</span><span class="p">)</span>
+        <span class="n">shear_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shear_matrix</span><span class="p">(</span><span class="n">x_shear_degree</span><span class="p">,</span> <span class="n">y_shear_degree</span><span class="p">)</span>
         <span class="n">translate_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_translation_matrix</span><span class="p">(</span><span class="n">trans_x</span><span class="p">,</span> <span class="n">trans_y</span><span class="p">)</span>
 
+        <span class="c1"># Combine transformations: T * Sh * R * S</span>
         <span class="k">return</span> <span class="n">translate_matrix</span> <span class="o">@</span> <span class="n">shear_matrix</span> <span class="o">@</span> <span class="n">rotation_matrix</span> <span class="o">@</span> <span class="n">scaling_matrix</span>
 
 <div class="viewcode-block" id="RandomAffine.forward">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.transform_libs.torchvision.html#otx.data.transform_libs.torchvision.RandomAffine.forward">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">_inputs</span><span class="p">:</span> <span class="n">OTXDataItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward for RandomAffine.&quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">_inputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;[tmp] Multiple entity is not supported yet.&quot;</span>  <span class="c1"># noqa: S101</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">_inputs</span><span class="p">:</span> <span class="n">OTXDataItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass of RandomAffine transform.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs: Input data containing image and annotations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Transformed data item or original input if no valid annotations remain.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If inputs format is invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_inputs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;RandomAffine can only transform single input, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_inputs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">to_np_image</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
 
-        <span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">to_np_image</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
-        <span class="n">height</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
-        <span class="n">width</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="c1"># Get random homography matrix for affine transformation</span>
+        <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># type: ignore[union-attr]</span>
+        <span class="n">homography_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_random_homography_matrix</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">width</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
 
-        <span class="n">warp_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_random_homography_matrix</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;bboxes&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Test transform bboxes to see if any remain valid</span>
+            <span class="n">valid_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_bboxes</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">homography_matrix</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+            <span class="c1"># If no valid annotations will remain after transformation, skip entirely</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_index</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">inputs</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">img</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span>
 
-        <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">warp_matrix</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">borderValue</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">border_val</span><span class="p">)</span>
-        <span class="n">inputs</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">img</span>
-        <span class="n">inputs</span><span class="o">.</span><span class="n">img_info</span> <span class="o">=</span> <span class="n">_resize_image_info</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="c1"># If we reach here, transformation will produce valid results, so proceed</span>
+            <span class="c1"># Transform image</span>
+            <span class="n">transformed_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_warp_image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">homography_matrix</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">transformed_img</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">img_info</span> <span class="o">=</span> <span class="n">_resize_image_info</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">img_info</span><span class="p">,</span> <span class="n">transformed_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
 
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_transform_masks</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">homography_matrix</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">valid_index</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;polygons&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_transform_polygons</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">homography_matrix</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">valid_index</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">recompute_bbox</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_recompute_bboxes</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_warp_image</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">homography_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Warp image using the homography matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image: Input image.</span>
+<span class="sd">            homography_matrix: Homography matrix.</span>
+<span class="sd">            output_shape: Output shape (height, width).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: Warped image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">output_shape</span>
+        <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">homography_matrix</span><span class="p">,</span> <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="n">borderValue</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">border_val</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transform_bboxes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataItem</span><span class="p">,</span>
+        <span class="n">warp_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform bounding boxes and return valid indices.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs: Input data item.</span>
+<span class="sd">            warp_matrix: Transformation matrix.</span>
+<span class="sd">            output_shape: Output image shape (height, width).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: Boolean array indicating valid bboxes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">project_bboxes</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">warp_matrix</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_clip_border</span><span class="p">:</span>
+            <span class="n">bboxes</span> <span class="o">=</span> <span class="n">clip_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+
+        <span class="c1"># Get valid indices and filter</span>
+        <span class="n">valid_index</span> <span class="o">=</span> <span class="n">is_inside_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">valid_index</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="o">=</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
+                <span class="n">bboxes</span><span class="p">[</span><span class="n">valid_index</span><span class="p">],</span>
+                <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;XYXY&quot;</span><span class="p">,</span>
+                <span class="n">canvas_size</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="n">valid_index</span><span class="p">]</span>  <span class="c1"># type: ignore[index]</span>
+
+        <span class="k">return</span> <span class="n">valid_index</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transform_masks</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataItem</span><span class="p">,</span>
+        <span class="n">warp_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">output_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">valid_index</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform masks using the warp matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs: Input data item.</span>
+<span class="sd">            warp_matrix: Transformation matrix.</span>
+<span class="sd">            output_size: Output size (width, height).</span>
+<span class="sd">            valid_index: Boolean array indicating valid objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_mask</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Convert valid_index to numpy boolean array if it&#39;s a tensor</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">valid_index</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">):</span>
+            <span class="n">valid_index</span> <span class="o">=</span> <span class="n">valid_index</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="c1"># Filter masks using valid_index first</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">valid_index</span><span class="p">]</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">masks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">masks</span>
+
+        <span class="k">if</span> <span class="n">masks</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span>
+
+        <span class="n">transformed_masks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="p">:</span>
+            <span class="n">transformed_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_warp_single_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">warp_matrix</span><span class="p">,</span> <span class="n">output_size</span><span class="p">)</span>
+            <span class="n">transformed_masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transformed_mask</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">transformed_masks</span><span class="p">:</span>
+            <span class="n">masks_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">transformed_masks</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="o">=</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">masks_array</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_warp_single_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">warp_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">output_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Warp a single mask using appropriate interpolation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mask: Input mask.</span>
+<span class="sd">            warp_matrix: Transformation matrix.</span>
+<span class="sd">            output_size: Output size (width, height).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: Warped mask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">unique_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">output_size</span>
+
+        <span class="c1"># Binary mask: use 255/127 threshold for cleaner results</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">unique_values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">warped_mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">warpPerspective</span><span class="p">(</span>
+                <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">,</span>
+                <span class="n">warp_matrix</span><span class="p">,</span>
+                <span class="n">dsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span>
+                <span class="n">borderValue</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">warped_mask</span> <span class="o">&gt;</span> <span class="mi">127</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Multi-class masks are not supported yet.&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transform_polygons</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataItem</span><span class="p">,</span>
+        <span class="n">warp_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">valid_index</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform polygons using the warp matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs: Input data item.</span>
+<span class="sd">            warp_matrix: Transformation matrix.</span>
+<span class="sd">            output_shape: Output shape (height, width).</span>
+<span class="sd">            valid_index: Boolean array indicating valid objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_polygon</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;polygons&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Convert valid_index to numpy boolean array if it&#39;s a tensor</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">valid_index</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">):</span>
+            <span class="n">valid_index</span> <span class="o">=</span> <span class="n">valid_index</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="c1"># Filter polygons using valid_index</span>
+        <span class="n">filtered_polygons</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">keep</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">,</span> <span class="n">valid_index</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">filtered_polygons</span><span class="p">:</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span> <span class="o">=</span> <span class="n">project_polygons</span><span class="p">(</span><span class="n">filtered_polygons</span><span class="p">,</span> <span class="n">warp_matrix</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_recompute_bboxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataItem</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recomputes the bounding boxes after tranforming from the mask or polygons if available.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs: Input data item.</span>
+<span class="sd">            output_shape: Output shape (height, width).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">has_polygons</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;polygons&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">has_masks</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_polygons</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_masks</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># bboxes here are XYXY format</span>
         <span class="n">bboxes</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span>
-        <span class="n">num_bboxes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bboxes</span><span class="p">)</span> <span class="k">if</span> <span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="n">num_bboxes</span><span class="p">:</span>
-            <span class="n">bboxes</span> <span class="o">=</span> <span class="n">project_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">warp_matrix</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_clip_border</span><span class="p">:</span>
-                <span class="n">bboxes</span> <span class="o">=</span> <span class="n">clip_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>
-            <span class="c1"># remove outside bbox</span>
-            <span class="n">valid_index</span> <span class="o">=</span> <span class="n">is_inside_bboxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="o">=</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span><span class="n">bboxes</span><span class="p">[</span><span class="n">valid_index</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;XYXY&quot;</span><span class="p">,</span> <span class="n">canvas_size</span><span class="o">=</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>  <span class="c1"># type: ignore[union-attr]</span>
-            <span class="n">inputs</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="n">valid_index</span><span class="p">]</span>  <span class="c1"># type: ignore[union-attr,index]</span>
+        <span class="n">bboxes</span> <span class="o">=</span> <span class="n">bboxes</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">bboxes</span>  <span class="c1"># type: ignore[union-attr]</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">has_masks</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">masks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">masks</span>  <span class="c1"># type: ignore[union-attr]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">masks</span><span class="p">):</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findNonZero</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+                    <span class="n">bboxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">w</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span><span class="p">])</span>
 
+        <span class="k">elif</span> <span class="n">has_polygons</span><span class="p">:</span>
+            <span class="n">polygons</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">polygons</span><span class="p">):</span>  <span class="c1"># type: ignore[arg-type]</span>
+                <span class="n">points_1d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points_1d</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;(max_rotate_degree=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rotate_degree</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;max_translate_ratio=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_translate_ratio</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;scaling_ratio_range=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scaling_ratio_range</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;max_shear_degree=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;border=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;border_val=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">border_val</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;bbox_clip_border=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bbox_clip_border</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;is_numpy_to_tvtensor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_numpy_to_tvtensor</span><span class="si">}</span><span class="s2">)&quot;</span>
-        <span class="k">return</span> <span class="n">repr_str</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">points_1d</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+                <span class="n">bboxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">w</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span><span class="p">])</span>
+
+        <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="o">=</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
+            <span class="n">bboxes</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;XYXY&quot;</span><span class="p">,</span>
+            <span class="n">canvas_size</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation of the transform.&quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;max_rotate_degree=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_rotate_degree</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;max_translate_ratio=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_translate_ratio</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;scaling_ratio_range=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scaling_ratio_range</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;max_shear_degree=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_shear_degree</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;border=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;border_val=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">border_val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;bbox_clip_border=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bbox_clip_border</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;transform_mask=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transform_mask</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;transform_polygon=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transform_polygon</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;mask_fill_value=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_fill_value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;is_numpy_to_tvtensor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_numpy_to_tvtensor</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_rotation_matrix</span><span class="p">(</span><span class="n">rotate_degrees</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create rotation transformation matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            rotate_degrees: Rotation angle in degrees.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: 3x3 rotation matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">radian</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">rotate_degrees</span><span class="p">)</span>
+        <span class="n">cos_val</span><span class="p">,</span> <span class="n">sin_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">radian</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">radian</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">radian</span><span class="p">),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">radian</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">radian</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">radian</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="n">cos_val</span><span class="p">,</span> <span class="o">-</span><span class="n">sin_val</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                <span class="p">[</span><span class="n">sin_val</span><span class="p">,</span> <span class="n">cos_val</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+            <span class="p">],</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_scaling_matrix</span><span class="p">(</span><span class="n">scale_ratio</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">scale_ratio</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale_ratio</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create scaling transformation matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scale_ratio: Scaling factor.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: 3x3 scaling matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="n">scale_ratio</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale_ratio</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_shear_matrix</span><span class="p">(</span><span class="n">x_shear_degrees</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y_shear_degrees</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create shear transformation matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_shear_degrees: Shear angle in x direction (degrees).</span>
+<span class="sd">            y_shear_degrees: Shear angle in y direction (degrees).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: 3x3 shear matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">x_radian</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">x_shear_degrees</span><span class="p">)</span>
         <span class="n">y_radian</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">y_shear_degrees</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">x_radian</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">y_radian</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">x_radian</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">],</span>
+                <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">y_radian</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+            <span class="p">],</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_translation_matrix</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create translation transformation matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: Translation in x direction.</span>
+<span class="sd">            y: Translation in y direction.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: 3x3 translation matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span>
+                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span>
+                <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 
@@ -2285,22 +2591,32 @@
             <span class="n">pad_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_val</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="n">padding</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">img_info</span><span class="o">.</span><span class="n">padding</span>
 
-            <span class="n">padded_masks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="n">cv2</span><span class="o">.</span><span class="n">copyMakeBorder</span><span class="p">(</span>
-                        <span class="n">mask</span><span class="p">,</span>
-                        <span class="n">padding</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                        <span class="n">padding</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                        <span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                        <span class="n">padding</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">border_type</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_mode</span><span class="p">],</span>
-                        <span class="n">value</span><span class="o">=</span><span class="n">pad_val</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span>
-                <span class="p">],</span>
-            <span class="p">)</span>
+            <span class="n">padded_masks</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="p">:</span>
+                <span class="n">orig_dtype</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">dtype</span>
+                <span class="c1"># cv2.copyMakeBorder does not support bool, so cast to uint8 if needed</span>
+                <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">:</span>
+                    <span class="n">mask_to_pad</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                    <span class="n">pad_val_cast</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">pad_val</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mask_to_pad</span> <span class="o">=</span> <span class="n">mask</span>
+                    <span class="n">pad_val_cast</span> <span class="o">=</span> <span class="n">pad_val</span>
 
-            <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="o">=</span> <span class="n">padded_masks</span>
+                <span class="n">padded</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">copyMakeBorder</span><span class="p">(</span>
+                    <span class="n">mask_to_pad</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">padding</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                    <span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">padding</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">border_type</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_mode</span><span class="p">],</span>
+                    <span class="n">value</span><span class="o">=</span><span class="n">pad_val_cast</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="c1"># Cast back to original dtype if needed</span>
+                <span class="k">if</span> <span class="n">orig_dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">:</span>
+                    <span class="n">padded</span> <span class="o">=</span> <span class="n">padded</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)</span>
+                <span class="n">padded_masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">padded</span><span class="p">)</span>
+
+            <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">padded_masks</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">inputs</span>
 
