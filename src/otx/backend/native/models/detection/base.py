@@ -346,10 +346,6 @@ class OTXDetectionModel(OTXModel):
     def _log_metrics(self, meter: Metric, key: Literal["val", "test"], **compute_kwargs) -> None:
         """This function is called every epoch.
 
-        During metric logging, we want to average the last N best_confidence_threshold
-        values to get a more stable estimate, especially helpful for small datasets where
-        it can vary greatly across epochs.
-
         Args:
             meter: Metric object
             key: "val" or "test"
@@ -369,7 +365,7 @@ class OTXDetectionModel(OTXModel):
                 self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
 
         if key == "test":
-            # NOTE: Test metric logging should use `best_confidence_threshold` found previously.
+            # NOTE: Test metric logging should use `best_confidence_threshold` in the loaded checkpoint.
             best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
             compute_kwargs = (
                 {"best_confidence_threshold": best_confidence_threshold} if best_confidence_threshold else {}
