@@ -50,7 +50,7 @@ class ATSSHeadModule(ClassIncrementalMixin, AnchorHead):
         pred_kernel_size (int): Kernel size of ``nn.Conv2d``. Defaults to 3.
         stacked_convs (int): Number of stacking convs of the head. Defaults to 4.
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to ``partial(build_norm_layer, nn.GroupNorm, num_groups=32, requires_grad=True)``.
+            Defaults to ``None``.
         reg_decoded_bbox (bool): If true, the regression loss would be
             applied directly on decoded bounding boxes, converting both
             the predicted boxes and regression targets to absolute
@@ -67,17 +67,19 @@ class ATSSHeadModule(ClassIncrementalMixin, AnchorHead):
         in_channels: int,
         pred_kernel_size: int = 3,
         stacked_convs: int = 4,
-        normalization: Callable[..., nn.Module] = partial(
-            build_norm_layer,
-            nn.GroupNorm,
-            num_groups=32,
-            requires_grad=True,
-        ),
+        normalization: Callable[..., nn.Module] | None = None,
         reg_decoded_bbox: bool = True,
         init_cfg: dict | None = None,
         use_sigmoid_cls: bool = True,
         **kwargs,
     ) -> None:
+        if normalization is None:
+            normalization = partial(
+                build_norm_layer,
+                nn.GroupNorm,
+                num_groups=32,
+                requires_grad=True,
+            )
         self.pred_kernel_size = pred_kernel_size
         self.stacked_convs = stacked_convs
         self.normalization = normalization

@@ -53,11 +53,14 @@ class DarknetBottleneck(BaseModule):
         expansion: float = 0.5,
         add_identity: bool = True,
         use_depthwise: bool = False,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = Swish,
         init_cfg: dict | list[dict] | None = None,
     ) -> None:
         super().__init__(init_cfg=init_cfg)
+
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
 
         hidden_channels = int(out_channels * expansion)
         conv = DepthwiseSeparableConvModule if use_depthwise else Conv2dModule
@@ -104,7 +107,7 @@ class CSPNeXtBlock(BaseModule):
         kernel_size (int): The kernel size of the second convolution layer.
             Defaults to 5.
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.
+            Defaults to ``None``.
         activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``nn.SiLU``.
         init_cfg (dict or list[dict], optional): Initialization config dict.
@@ -119,11 +122,14 @@ class CSPNeXtBlock(BaseModule):
         add_identity: bool = True,
         use_depthwise: bool = False,
         kernel_size: int = 5,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = nn.SiLU,
         init_cfg: dict | list[dict] | None = None,
     ) -> None:
         super().__init__(init_cfg=init_cfg)
+
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
 
         hidden_channels = int(out_channels * expansion)
         conv = DepthwiseSeparableConvModule if use_depthwise else Conv2dModule
@@ -272,11 +278,14 @@ class CSPLayer(BaseModule):
         use_depthwise: bool = False,
         use_cspnext_block: bool = False,
         channel_attention: bool = False,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] | None = Swish,
         init_cfg: dict | list[dict] | None = None,
     ) -> None:
         super().__init__(init_cfg=init_cfg)
+
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
 
         block = CSPNeXtBlock if use_cspnext_block else DarknetBottleneck
         mid_channels = int(out_channels * expand_ratio)

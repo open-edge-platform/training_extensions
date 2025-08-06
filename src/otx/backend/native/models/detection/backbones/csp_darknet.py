@@ -38,8 +38,8 @@ class Focus(nn.Module):
         kernel_size (int): The kernel size of the convolution. Default: 1
         stride (int): The stride of the convolution. Default: 1
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.
-        activation (Callable[..., nn.Module] | None): Activation layer module.
+            Defaults to ``None``.
+        activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``Swish``.
     """
 
@@ -49,10 +49,14 @@ class Focus(nn.Module):
         out_channels: int,
         kernel_size: int = 1,
         stride: int = 1,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
-        activation: Callable[..., nn.Module] | None = Swish,
+        normalization: Callable[..., nn.Module] | None = None,
+        activation: Callable[..., nn.Module] = Swish,
     ):
         super().__init__()
+
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
+
         self.conv = Conv2dModule(
             in_channels * 4,
             out_channels,
@@ -115,8 +119,8 @@ class CSPDarknetModule(BaseModule):
         spp_kernal_sizes: (tuple[int]): Sequential of kernel sizes of SPP
             layers. Default: (5, 9, 13).
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.
-        activation (Callable[..., nn.Module] | None): Activation layer module.
+            Defaults to ``None``.
+        activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``Swish``.
         norm_eval (bool): Whether to set norm layers to eval mode, namely,
             freeze running stats (mean and var). Note: Effect on Batch Norm
@@ -153,7 +157,7 @@ class CSPDarknetModule(BaseModule):
         use_depthwise: bool = False,
         arch_ovewrite: list | None = None,
         spp_kernal_sizes: tuple[int, ...] = (5, 9, 13),
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = Swish,
         norm_eval: bool = False,
         init_cfg: dict | list[dict] | None = None,
@@ -181,6 +185,9 @@ class CSPDarknetModule(BaseModule):
         self.use_depthwise = use_depthwise
         self.norm_eval = norm_eval
         conv = DepthwiseSeparableConvModule if use_depthwise else Conv2dModule
+
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
 
         self.stem = Focus(
             3,

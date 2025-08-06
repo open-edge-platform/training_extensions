@@ -44,11 +44,14 @@ class TransformerDecoderLayer(nn.Module):
         n_head: int = 8,
         dim_feedforward: int = 1024,
         dropout: float = 0.0,
-        activation: Callable[..., nn.Module] = partial(nn.ReLU, inplace=True),
+        activation: Callable[..., nn.Module] | None = None,
         n_levels: int = 4,
         num_points_list: list[int] = [3, 6, 3],  # noqa: B006
     ):
         super().__init__()
+
+        if activation is None:
+            activation = partial(nn.ReLU, inplace=True)
 
         # self attention
         self.self_attn = nn.MultiheadAttention(

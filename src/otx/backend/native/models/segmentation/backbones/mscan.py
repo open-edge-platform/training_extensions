@@ -111,7 +111,7 @@ class StemConv(BaseModule):
         activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``nn.GELU``.
         normalization (Callable[..., nn.Module]): Normalization layer module.
-            Defaults to ``partial(build_norm_layer, SyncBatchNorm, requires_grad=True)``.
+            Defaults to ``None``.
     """
 
     def __init__(
@@ -119,8 +119,11 @@ class StemConv(BaseModule):
         in_channels: int,
         out_channels: int,
         activation: Callable[..., nn.Module] = nn.GELU,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, SyncBatchNorm, requires_grad=True),
+        normalization: Callable[..., nn.Module] | None = None,
     ) -> None:
+        if normalization is None:
+            normalization = partial(build_norm_layer, SyncBatchNorm, requires_grad=True)
+
         super().__init__()
         self.proj = nn.Sequential(
             nn.Conv2d(in_channels, out_channels // 2, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
@@ -257,9 +260,12 @@ class MSCABlock(BaseModule):
         drop: float = 0.0,
         drop_path: float = 0.0,
         activation: Callable[..., nn.Module] = nn.GELU,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, SyncBatchNorm, requires_grad=True),
+        normalization: Callable[..., nn.Module] | None = None,
     ) -> None:
         """Initialize a MSCABlock."""
+        if normalization is None:
+            normalization = partial(build_norm_layer, SyncBatchNorm, requires_grad=True)
+
         super().__init__()
         self.norm1 = build_norm_layer(normalization, num_features=channels)[1]  # type: nn.Module
         self.attn = MSCASpatialAttention(
@@ -308,9 +314,12 @@ class OverlapPatchEmbed(BaseModule):
         stride: int = 4,
         in_channels: int = 3,
         embed_dim: int = 768,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, SyncBatchNorm, requires_grad=True),
+        normalization: Callable[..., nn.Module] | None = None,
     ):
         """Initializes the OverlapPatchEmbed module."""
+        if normalization is None:
+            normalization = partial(build_norm_layer, SyncBatchNorm, requires_grad=True)
+
         super().__init__()
         self.proj = nn.Conv2d(in_channels, embed_dim, kernel_size=patch_size, stride=stride, padding=patch_size // 2)
         self.norm = build_norm_layer(normalization, num_features=embed_dim)[1]
@@ -349,7 +358,7 @@ class MSCANModule(nn.Module):
         activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``nn.GELU``.
         normalization (Callable[..., nn.Module]): Normalization layer module.
-            Defaults to ``partial(build_norm_layer, SyncBatchNorm, requires_grad=True)``.
+            Defaults to ``None``.
         init_cfg (Optional[Union[Dict[str, str], List[Dict[str, str]]]]): Initialization config dict.
             Defaults to None.
     """
@@ -366,11 +375,14 @@ class MSCANModule(nn.Module):
         attention_kernel_sizes: list[int | list[int]] = [5, [1, 7], [1, 11], [1, 21]],  # noqa: B006
         attention_kernel_paddings: list[int | list[int]] = [2, [0, 3], [0, 5], [0, 10]],  # noqa: B006
         activation: Callable[..., nn.Module] = nn.GELU,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True),
+        normalization: Callable[..., nn.Module] | None = None,
         pretrained_weights: str | None = None,
     ) -> None:
         """Initialize a MSCAN backbone."""
         super().__init__()
+        if normalization is None:
+            normalization = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True)
+
         self.depths = depths
         self.num_stages = num_stages
 

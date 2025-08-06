@@ -35,7 +35,7 @@ class SPPBottleneck(BaseModule):
             layers. Default: (5, 9, 13).
         normalization (Callable[..., nn.Module]): Normalization layer module.
             Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.
-        activation (Callable[..., nn.Module] | None): Activation layer module.
+        activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``Swish``.
         init_cfg (dict, list[dict], optional): Initialization config dict.
             Default: None.
@@ -46,12 +46,16 @@ class SPPBottleneck(BaseModule):
         in_channels: int,
         out_channels: int,
         kernel_sizes: tuple[int, ...] = (5, 9, 13),
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
-        activation: Callable[..., nn.Module] | None = Swish,
+        normalization: Callable[..., nn.Module] | None = None,
+        activation: Callable[..., nn.Module] = Swish,
         init_cfg: dict | list[dict] | None = None,
     ):
         super().__init__(init_cfg=init_cfg)
         mid_channels = in_channels // 2
+
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
+
         self.conv1 = Conv2dModule(
             in_channels,
             mid_channels,

@@ -29,7 +29,7 @@ class FCNHeadModule(BaseSegmentationHead):
 
     Args:
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to None.
+            Defaults to ``None``.
         num_convs (int): Number of convs in the head. Default: 2.
         kernel_size (int): The kernel size for convs in the head. Default: 3.
         concat_input (bool): Whether concat the input and output of convs
@@ -42,7 +42,7 @@ class FCNHeadModule(BaseSegmentationHead):
         in_channels: list[int] | int,
         in_index: list[int] | int,
         channels: int,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True),
+        normalization: Callable[..., nn.Module] | None = None,
         input_transform: str | None = None,
         num_classes: int = 80,
         num_convs: int = 1,
@@ -59,6 +59,9 @@ class FCNHeadModule(BaseSegmentationHead):
         pretrained_weights: Path | str | None = None,
     ) -> None:
         """Initialize a Fully Convolution Networks head."""
+        if normalization is None:
+            normalization = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True)
+
         if not isinstance(dilation, int):
             msg = f"dilation should be int, but got {type(dilation)}"
             raise TypeError(msg)

@@ -254,7 +254,7 @@ class FFN(BaseModule):
         num_fcs (int, optional): The number of fully-connected layers in
             FFNs. Default: 2.
         activation (Callable[..., nn.Module]): Activation layer module.
-            Defaults to ``partial(nn.ReLU, inplace=True)``.
+            Defaults to ``None``.
         ffn_drop (float, optional): Probability of an element to be
             zeroed in FFN. Default 0.0.
         add_identity (bool, optional): Whether to add the
@@ -270,13 +270,16 @@ class FFN(BaseModule):
         embed_dims: int = 256,
         feedforward_channels: int = 1024,
         num_fcs: int = 2,
-        activation: Callable[..., nn.Module] = partial(nn.ReLU, inplace=True),
+        activation: Callable[..., nn.Module] | None = None,
         ffn_drop: float = 0.0,
         dropout_layer: dict | None = None,
         add_identity: bool = True,
         init_cfg: dict | None = None,
     ):
         super().__init__(init_cfg)
+        if activation is None:
+            activation = partial(nn.ReLU, inplace=True)
+
         if num_fcs < 2:
             msg = "The number of fully-connected layers in FFNs should be at least 2."
             raise ValueError(msg)

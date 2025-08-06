@@ -80,13 +80,16 @@ class YOLOXHeadModule(BaseDenseHead):
         use_depthwise: bool = False,
         dcn_on_last_conv: bool = False,
         conv_bias: bool | str = "auto",
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = Swish,
         train_cfg: dict | None = None,
         test_cfg: dict | None = None,
         init_cfg: dict | list[dict] | None = None,
         use_sigmoid_cls: bool = True,
     ) -> None:
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
+
         if init_cfg is None:
             init_cfg = {
                 "type": "Kaiming",

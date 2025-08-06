@@ -53,10 +53,13 @@ class YOLOXPAFPNModule(BaseModule):
         num_csp_blocks: int = 3,
         use_depthwise: bool = False,
         upsample_cfg: dict | None = None,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = Swish,
         init_cfg: dict | list[dict] | None = None,
     ):
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
+
         upsample_cfg = upsample_cfg or {"scale_factor": 2, "mode": "nearest"}
         init_cfg = init_cfg or {
             "type": "Kaiming",

@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -40,7 +40,7 @@ class CSPNeXtPAFPNModule(BaseModule):
         expand_ratio (float): Ratio to adjust the number of channels of the hidden layer. Default: 0.5
         upsample_cfg (dict): Config dict for interpolate layer. Default: `dict(scale_factor=2, mode='nearest')`
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.
+            Defaults to ``None``.
         activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``Swish``.
         init_cfg (dict or list[dict], optional): Initialization config dict. Default: None.
@@ -54,10 +54,13 @@ class CSPNeXtPAFPNModule(BaseModule):
         use_depthwise: bool = False,
         expand_ratio: float = 0.5,
         upsample_cfg: dict | None = None,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = Swish,
         init_cfg: dict | None = None,
     ) -> None:
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
+
         upsample_cfg = upsample_cfg or {"scale_factor": 2, "mode": "nearest"}
         init_cfg = init_cfg or {
             "type": "Kaiming",

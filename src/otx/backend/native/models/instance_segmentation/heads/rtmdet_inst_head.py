@@ -733,9 +733,9 @@ class MaskFeatModule(BaseModule):
             kernel.
         stacked_convs (int): Number of convs in mask feature branch.
         activation (Callable[..., nn.Module]): Activation layer module.
-            Defaults to ``partial(nn.ReLU, inplace=True)``.
+            Defaults to ``None``.
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to ``nn.BatchNorm2d``.
+            Defaults to ``None``.
     """
 
     def __init__(
@@ -745,10 +745,16 @@ class MaskFeatModule(BaseModule):
         stacked_convs: int = 4,
         num_levels: int = 3,
         num_prototypes: int = 8,
-        activation: Callable[..., nn.Module] = partial(nn.ReLU, inplace=True),
-        normalization: Callable[..., nn.Module] = nn.BatchNorm2d,
+        activation: Callable[..., nn.Module] | None = None,
+        normalization: Callable[..., nn.Module] | None = None,
     ) -> None:
         super().__init__(init_cfg=None)
+
+        if activation is None:
+            activation = partial(nn.ReLU, inplace=True)
+
+        if normalization is None:
+            normalization = nn.BatchNorm2d
 
         self.num_levels = num_levels
         self.fusion_conv = nn.Conv2d(num_levels * in_channels, in_channels, 1)
@@ -793,9 +799,9 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
         share_conv (bool): Whether to share conv layers between stages.
             Defaults to True.
         normalization (Callable[..., nn.Module]): Normalization layer module.
-            Defaults to ``partial(nn.BatchNorm2d, requires_grad=True)``.
+            Defaults to ``None``.
         activation (Callable[..., nn.Module]): Activation layer module.
-            Defaults to ``partial(nn.SiLU, inplace=True)``.
+            Defaults to ``None``.
         pred_kernel_size (int): Kernel size of prediction layer. Defaults to 1.
         use_sigmoid_cls (bool): Whether to use a sigmoid activation function
             for classification prediction. Defaults to True.
@@ -807,12 +813,18 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
         in_channels: int,
         share_conv: bool = True,
         with_objectness: bool = False,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, requires_grad=True),
-        activation: Callable[..., nn.Module] = partial(nn.SiLU, inplace=True),
+        normalization: Callable[..., nn.Module] | None = None,
+        activation: Callable[..., nn.Module] | None = None,
         pred_kernel_size: int = 1,
         use_sigmoid_cls: bool = True,
         **kwargs,
     ) -> None:
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, requires_grad=True)
+
+        if activation is None:
+            activation = partial(nn.SiLU, inplace=True)
+
         self.share_conv = share_conv
         super().__init__(
             num_classes,

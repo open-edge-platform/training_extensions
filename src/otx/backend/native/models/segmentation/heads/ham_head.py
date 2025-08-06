@@ -76,12 +76,7 @@ class LightHamHeadModule(BaseSegmentationHead):
         channels: int,
         num_classes: int,
         dropout_ratio: float = 0.1,
-        normalization: Callable[..., nn.Module] | None = partial(
-            build_norm_layer,
-            nn.GroupNorm,
-            num_groups=32,
-            requires_grad=True,
-        ),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] | None = nn.ReLU,
         in_index: int | list[int] = [1, 2, 3],  # noqa: B006
         input_transform: str | None = "multiple_select",
@@ -110,6 +105,14 @@ class LightHamHeadModule(BaseSegmentationHead):
         Returns:
             None
         """
+        if normalization is None:
+            normalization = partial(
+                build_norm_layer,
+                nn.GroupNorm,
+                num_groups=32,
+                requires_grad=True,
+            )
+
         super().__init__(
             input_transform=input_transform,
             in_channels=in_channels,

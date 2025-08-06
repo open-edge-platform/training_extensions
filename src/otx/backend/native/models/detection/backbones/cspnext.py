@@ -53,8 +53,8 @@ class CSPNeXtModule(BaseModule):
         channel_attention (bool): Whether to add channel attention in each
             stage. Defaults to True.
         normalization (Callable[..., nn.Module]): Normalization layer module.
-            Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.
-        activation (Callable[..., nn.Module] | None): Activation layer module.
+            Defaults to ``None``.
+        activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``nn.SiLU``.
         norm_eval (bool): Whether to set norm layers to eval mode, namely,
             freeze running stats (mean and var). Note: Effect on Batch Norm
@@ -92,7 +92,7 @@ class CSPNeXtModule(BaseModule):
         arch_ovewrite: dict | None = None,
         spp_kernel_sizes: tuple[int, int, int] = (5, 9, 13),
         channel_attention: bool = True,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = nn.SiLU,
         norm_eval: bool = False,
         init_cfg: dict | None = None,
@@ -124,6 +124,10 @@ class CSPNeXtModule(BaseModule):
         self.use_depthwise = use_depthwise
         self.norm_eval = norm_eval
         conv = DepthwiseSeparableConvModule if use_depthwise else Conv2dModule
+
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
+
         self.stem = nn.Sequential(
             Conv2dModule(
                 3,

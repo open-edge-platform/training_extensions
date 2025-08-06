@@ -527,7 +527,7 @@ class Stem(nn.Module):
         stem_channels: int = 32,
         out_channels: int = 32,
         expand_ratio: int = 1,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True),
+        normalization: Callable[..., nn.Module] | None = None,
         with_cp: bool = False,
         strides: tuple[int, int] = (2, 2),
         extra_stride: bool = False,
@@ -535,6 +535,9 @@ class Stem(nn.Module):
     ) -> None:
         """Stem initialization."""
         super().__init__()
+
+        if normalization is None:
+            normalization = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True)
 
         if not isinstance(strides, (tuple | list)):
             msg = "strides must be tuple or list."
@@ -1020,8 +1023,8 @@ class LiteHRNetModule(nn.Module):
     Args:
         extra (dict): detailed configuration for each stage of HRNet.
         in_channels (int): Number of input image channels. Default: 3.
-        normalization (Callable[..., nn.Module]): Normalization layer module.
-            Defaults to ``nn.BatchNorm2d``.
+        normalization (Callable[..., nn.Module] | None): Normalization layer module.
+            Defaults to ``None``.
         norm_eval (bool): Whether to set norm layers to eval mode, namely,
             freeze running stats (mean and var). Note: Effect on Batch Norm
             and its variants only. Default: False
@@ -1037,7 +1040,7 @@ class LiteHRNetModule(nn.Module):
         stem_configuration: dict[str, Any],
         stages_spec: dict[str, Any],
         in_channels: int = 3,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True),
+        normalization: Callable[..., nn.Module] | None = None,
         norm_eval: bool = False,
         with_cp: bool = False,
         zero_init_residual: bool = False,
@@ -1046,6 +1049,9 @@ class LiteHRNetModule(nn.Module):
     ) -> None:
         """Init."""
         super().__init__()
+
+        if normalization is None:
+            normalization = partial(build_norm_layer, nn.BatchNorm2d, requires_grad=True)
 
         self.normalization = normalization
         self.norm_eval = norm_eval

@@ -254,10 +254,10 @@ class PResNetModule(BaseModule):
         variant (str): The variant of the PResNet backbone. Defaults to "d".
         num_stages (int): The number of stages in the PResNet backbone. Defaults to 4.
         return_idx (list[int]): The indices of the stages to return as output. Defaults to [0, 1, 2, 3].
-        activation (Callable[..., nn.Module] | None): Activation layer module.
+        activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to None.
         normalization (Callable[..., nn.Module] | None): Normalization layer module.
-            Defaults to ``nn.BatchNorm2d``.
+            Defaults to ``None``.
         freeze_at (int): The stage at which to freeze the parameters. Defaults to -1.
         pretrained (bool): Whether to load pretrained weights. Defaults to False.
     """
@@ -282,13 +282,16 @@ class PResNetModule(BaseModule):
         variant: str = "d",
         num_stages: int = 4,
         return_idx: list[int] = [0, 1, 2, 3],  # noqa: B006
-        activation: Callable[..., nn.Module] | None = nn.ReLU,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, nn.BatchNorm2d, layer_name="norm"),
+        activation: Callable[..., nn.Module] = nn.ReLU,
+        normalization: Callable[..., nn.Module] | None = None,
         freeze_at: int = -1,
         pretrained: bool = False,
     ) -> None:
         """Initialize the PResNet backbone."""
         super().__init__()
+
+        if normalization is None:
+            normalization = partial(build_norm_layer, nn.BatchNorm2d, layer_name="norm")
 
         block_nums = self.num_resnet_blocks[depth]
         ch_in = 64

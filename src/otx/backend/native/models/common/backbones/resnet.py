@@ -181,11 +181,7 @@ class ResNet(BaseModule):
         out_indices: tuple[int, int, int, int] = (0, 1, 2, 3),
         avg_down: bool = False,
         frozen_stages: int = -1,
-        normalization: Callable[..., nn.Module] = partial(
-            build_norm_layer,
-            nn.BatchNorm2d,
-            requires_grad=True,
-        ),
+        normalization: Callable[..., nn.Module] | None = None,
         norm_eval: bool = True,
         with_cp: bool = False,
         zero_init_residual: bool = True,
@@ -238,6 +234,20 @@ class ResNet(BaseModule):
             raise ValueError(msg)
         self.avg_down = avg_down
         self.frozen_stages = frozen_stages
+
+        if normalization is None:
+            normalization = partial(
+                build_norm_layer,
+                nn.BatchNorm2d,
+                requires_grad=True,
+            )
+        elif not callable(normalization):
+            msg = (
+                "normalization must be None, a normalization layer class, or a callable, "
+                f"but got {type(normalization)}."
+            )
+            raise TypeError(msg)
+
         self.normalization = normalization
         self.with_cp = with_cp
         self.norm_eval = norm_eval

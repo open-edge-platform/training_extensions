@@ -567,8 +567,8 @@ class RTMDetSepBNHeadModule(RTMDetHead):
             Defaults to True.
         use_depthwise (bool): Whether to use depthwise separable convolution in head.
             Defaults to False.
-        normalization (Callable[..., nn.Module]): Normalization layer module.
-            Defaults to ``partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)``.
+        normalization (Callable[..., nn.Module] | None): Normalization layer module.
+            Defaults to ``None``.
         activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``nn.SiLU``.
         pred_kernel_size (int): Kernel size of prediction layer. Defaults to 1.
@@ -583,13 +583,16 @@ class RTMDetSepBNHeadModule(RTMDetHead):
         in_channels: int,
         share_conv: bool = True,
         use_depthwise: bool = False,
-        normalization: Callable[..., nn.Module] = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001),
+        normalization: Callable[..., nn.Module] | None = None,
         activation: Callable[..., nn.Module] = nn.SiLU,
         pred_kernel_size: int = 1,
         exp_on_reg: bool = False,
         use_sigmoid_cls: bool = True,
         **kwargs,
     ) -> None:
+        if normalization is None:
+            normalization = partial(nn.BatchNorm2d, momentum=0.03, eps=0.001)
+
         self.share_conv = share_conv
         self.exp_on_reg = exp_on_reg
         self.use_depthwise = use_depthwise

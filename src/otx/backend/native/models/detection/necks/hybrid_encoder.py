@@ -41,7 +41,7 @@ class HybridEncoderModule(BaseModule):
         enc_activation (Callable[..., nn.Module]): Activation layer module.
             Defaults to ``nn.GELU``.
         normalization (Callable[..., nn.Module]): Normalization layer module.
-            Defaults to ``partial(build_norm_layer, nn.BatchNorm2d, layer_name="norm")``.
+            Defaults to ``None``.
         use_encoder_idx (list[int], optional): List of indices of the encoder to use.
             Defaults to [2].
         num_encoder_layers (int, optional): Number of layers in the transformer encoder.
@@ -67,7 +67,7 @@ class HybridEncoderModule(BaseModule):
         dim_feedforward: int = 1024,
         dropout: float = 0.0,
         enc_activation: Callable[..., nn.Module] = nn.GELU,
-        normalization: Callable[..., nn.Module] = partial(build_norm_layer, nn.BatchNorm2d, layer_name="norm"),
+        normalization: Callable[..., nn.Module] | None = None,
         use_encoder_idx: list[int] = [2],  # noqa: B006
         num_encoder_layers: int = 1,
         pe_temperature: float = 10000,
@@ -97,6 +97,9 @@ class HybridEncoderModule(BaseModule):
                     nn.BatchNorm2d(hidden_dim),
                 ),
             )
+
+        if normalization is None:
+            normalization = partial(build_norm_layer, nn.BatchNorm2d, layer_name="norm")
 
         # encoder transformer
         encoder_layer = TransformerEncoderLayer(
