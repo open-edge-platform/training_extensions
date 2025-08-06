@@ -88,12 +88,12 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
+        - class_path: otx.data.transform_libs.torchvision.UnscaledGaussianNoise
+          enable: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [1.0, 1.0, 1.0]
-        - class_path: torchvision.transforms.v2.GaussianNoise
-          enable: false
 
     val_subset:
       num_workers: 4

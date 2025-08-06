@@ -119,7 +119,7 @@ overrides:
           init_args:
             mean: [123.675, 116.28, 103.53]
             std: [58.395, 57.12, 57.375]
-        - class_path: torchvision.transforms.v2.GaussianNoise
+        - class_path: otx.data.transform_libs.torchvision.UnscaledGaussianNoise
           enable: false
 
     val_subset:

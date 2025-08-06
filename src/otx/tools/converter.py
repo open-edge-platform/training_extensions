@@ -382,7 +382,7 @@ class GetiConfigConverter:
                 "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
                 "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
                 "gaussian_blur": "torchvision.transforms.v2.GaussianBlur",
-                "gaussian_noise": "torchvision.transforms.v2.GaussianNoise",
+                "gaussian_noise": "otx.data.transform_libs.torchvision.UnscaledGaussianNoise",
                 "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
             }
 

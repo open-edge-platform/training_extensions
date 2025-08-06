@@ -88,13 +88,14 @@ overrides:
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
             scale: false
+        - class_path: otx.data.transform_libs.torchvision.UnscaledGaussianNoise
+          enable: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [255.0, 255.0, 255.0]
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-        - class_path: torchvision.transforms.v2.GaussianNoise
-          enable: false
+
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 

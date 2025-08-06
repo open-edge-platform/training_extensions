@@ -13,6 +13,7 @@ import torch
 from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
+from torchvision.transforms.v2 import ToDtype
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
 from otx.data.entity.base import ImageInfo
@@ -30,6 +31,7 @@ from otx.data.transform_libs.torchvision import (
     RandomResize,
     Resize,
     TopdownAffine,
+    UnscaledGaussianNoise,
     YOLOXHSVRandomAug,
 )
 from otx.data.transform_libs.utils import overlap_bboxes
@@ -686,3 +688,25 @@ class TestTopdownAffine:
         )
         results = transform(deepcopy(keypoint_det_entity))
         assert results.keypoints.shape == (4, 3)
+
+
+class TestUnscaledGaussianNoise:
+    def test_transform(self, det_data_entity) -> None:
+        transform = Compose(
+            [
+                ToDtype(torch.float32),
+                UnscaledGaussianNoise(mean=0.1, sigma=0.2, clip=True),
+            ],
+        )
+
+        new_det_data_entity = deepcopy(det_data_entity)
+        # test unscaled image in range [0, 255]
+        result = transform(new_det_data_entity)
+        assert not torch.all((result.image >= 0) & (result.image <= 1))
+        assert torch.all((result.image >= 0) & (result.image <= 255))
+
+        # test scaled image in range [0, 1]
+        new_image = torch.rand((3, 100, 100))
+        new_det_data_entity.image = new_image
+        result = transform(new_det_data_entity)
+        assert torch.all((result.image >= 0) & (result.image <= 1))
