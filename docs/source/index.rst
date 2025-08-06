@@ -1,8 +1,8 @@
-Welcome to Intel OpenVINO Training Extensions's develop documentation!
-======================================================================
+.. include:: guide/get_started/introduction.rst
 
 .. toctree::
    :hidden:
+   :maxdepth: 3
 
    guide/index
 
