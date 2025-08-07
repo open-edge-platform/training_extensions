@@ -4,8 +4,8 @@
     "private": true,
     "type": "module",
     "engines": {
-        "node": "22.12.0",
-        "npm": "10.9.0"
+        "node": "v24.2.0",
+        "npm": "11.3.0"
     },
     "scripts": {
         "build": "rsbuild build",
@@ -81,6 +81,7 @@
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^5.2.0",
         "identity-obj-proxy": "^3.0.0",
+        "jsdom": "^26.1.0",
         "msw": "^2.10.4",
         "openapi-msw": "^1.2.0",
         "openapi-typescript": "^7.8.0",
