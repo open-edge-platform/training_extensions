@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 import cv2
 import numpy as np
 import torch
-from datumaro.components.annotation import AnnotationType, Bbox, LabelCategories, Polygon
+from datumaro.components.annotation import AnnotationType, Bbox, ExtractedMask, LabelCategories, Polygon
 from datumaro.components.annotation import Shape as _Shape
 
 from otx.types import OTXTaskType
@@ -145,7 +145,7 @@ def compute_robust_dataset_statistics(
         data = dataset.get(id=idx, subset=dataset.name)
         annotations: dict[str, list] = defaultdict(list)
         for ann in data.annotations:
-            if task is OTXTaskType.SEMANTIC_SEGMENTATION:
+            if task is OTXTaskType.SEMANTIC_SEGMENTATION and isinstance(ann, ExtractedMask):
                 # Skip background class
                 if label_names and label_names[AnnotationType.label][ann.label].name == "background":
                     continue
