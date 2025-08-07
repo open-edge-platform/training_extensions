@@ -935,7 +935,7 @@ class RandomGaussianNoise(GaussianNoise):
         self.prob = prob
 
     def _is_scaled(self, tensor: torch.Tensor) -> bool:
-        return torch.all((tensor >= 0) & (tensor <= 1))
+        return torch.max(tensor) <= 1 + 1e-5
 
     def forward(self, *_inputs: OTXDataItem) -> OTXDataItem:
         """Main transform function."""
