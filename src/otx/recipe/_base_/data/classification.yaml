@@ -15,10 +15,32 @@ train_subset:
     - class_path: otx.data.transform_libs.torchvision.RandomResizedCrop
       init_args:
         scale: $(input_size)
+        crop_ratio_range: 
+          - 0.08
+          - 1.0
+        aspect_ratio_range: 
+          - 0.75
+          - 1.34
     - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
       enable: false
+      init_args:
+        brightness_delta: 32
+        contrast_range:
+          - 0.5
+          - 1.5
+        saturation_range:
+          - 0.5
+          - 1.5
+        hue_delta: 18
     - class_path: otx.data.transform_libs.torchvision.RandomAffine
       enable: false
+      init_args:
+        max_rotate_degree: 10.0
+        max_translate_ratio: 0.1
+        scaling_ratio_range: 
+          - 0.5
+          - 1.5
+        max_shear_degree: 2.0
     - class_path: otx.data.transform_libs.torchvision.RandomFlip
       enable: true
       init_args:
@@ -26,20 +48,30 @@ train_subset:
         is_numpy_to_tvtensor: true
     - class_path: torchvision.transforms.v2.RandomVerticalFlip
       enable: false
+      init_args:
+        p: 0.5
     - class_path: torchvision.transforms.v2.GaussianBlur
       enable: false
       init_args:
         kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+        prob: 0.5
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
         scale: false
+    - class_path: torchvision.transforms.v2.GaussianNoise
+      enable: false
+      init_args:
+        mean: 0.0
+        sigma: 0.1
+        prob: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [123.675, 116.28, 103.53]
         std: [58.395, 57.12, 57.375]
-    - class_path: torchvision.transforms.v2.GaussianNoise
-      enable: false
   sampler:
     class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
