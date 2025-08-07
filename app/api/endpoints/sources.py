@@ -1,14 +1,19 @@
 """Endpoints for managing pipeline sources"""
 
 import logging
+from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID
 
+import yaml
 from fastapi import APIRouter, Body, Depends, File, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.exceptions import HTTPException
+from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_source_id
-from app.schemas import Source
+from app.schemas import Source, SourceType
+from app.schemas.source import SourceAdapter
+from app.services import ConfigurationService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
@@ -80,30 +85,64 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
 }
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
-def create_source(
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_201_CREATED: {"description": "Source created", "model": Source},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
+    },
+)
+async def create_source(
     source_config: Annotated[
         Source, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
 ) -> Source:
     """Create and configure a new source"""
-    raise NotImplementedError
+    if source_config.source_type == SourceType.DISCONNECTED:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
+        )
+
+    return ConfigurationService.create_source(source_config)
 
 
-@router.get("")
-def list_sources() -> list[Source]:
+@router.get(
+    "",
+    responses={
+        status.HTTP_200_OK: {"description": "List of available source configurations", "model": list[Source]},
+    },
+)
+async def list_sources() -> list[Source]:
     """List the available sources"""
-    raise NotImplementedError
+    return ConfigurationService.list_sources()
 
 
-@router.get("/{source_id}")
-def get_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Source:
+@router.get(
+    "/{source_id}",
+    responses={
+        status.HTTP_200_OK: {"description": "Source found", "model": Source},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
+    },
+)
+async def get_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Source:
     """Get info about a source"""
-    raise NotImplementedError
+    source = ConfigurationService.get_source_by_id(source_id)
+    if not source:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"Source with ID {source_id} not found")
+    return source
 
 
-@router.patch("/{source_id}")
-def update_source(
+@router.patch(
+    "/{source_id}",
+    responses={
+        status.HTTP_200_OK: {"description": "Source successfully updated", "model": Source},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
+        status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
+    },
+)
+async def update_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     source_config: Annotated[
         dict,
@@ -120,7 +159,12 @@ def update_source(
     ],
 ) -> Source:
     """Reconfigure an existing source"""
-    raise NotImplementedError
+    if "source_type" in source_config:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="The 'source_type' field cannot be changed")
+    source = ConfigurationService.get_source_by_id(source_id)
+    if not source:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"Source with ID {source_id} not found")
+    return ConfigurationService.update_source(source, source_config)
 
 
 @router.post(
@@ -132,23 +176,65 @@ def update_source(
             "content": {
                 "application/x-yaml": {"schema": {"type": "string", "format": "binary"}},
             },
-        }
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
+        status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-def export_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> FileResponse:
+async def export_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Response:
     """Export a source to file"""
-    raise NotImplementedError
+    source = ConfigurationService.get_source_by_id(source_id)
+    if not source:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
+
+    yaml_content = yaml.safe_dump(source.model_dump(mode="json"))
+
+    return Response(
+        content=yaml_content.encode("utf8"),
+        media_type="application/x-yaml",
+        headers={"Content-Disposition": f"attachment; filename=source_{source_id}.yaml"},
+    )
 
 
 @router.post(":import")
-def import_source(
+async def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
 ) -> Source:
     """Import a source from file"""
-    raise NotImplementedError
+    try:
+        yaml_content = await yaml_file.read()
+        source_data = yaml.safe_load(yaml_content)
+
+        source_config = SourceAdapter.validate_python(source_data)
+        if source_config.source_type == SourceType.DISCONNECTED:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be imported"
+            )
+        return ConfigurationService.create_source(source_config)
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
 
 
-@router.delete("/{source_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> None:
+@router.delete(
+    "/{source_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Source configuration exported as a YAML file",
+            "content": {
+                "application/x-yaml": {"schema": {"type": "string", "format": "binary"}},
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or source is used by at least one pipeline"},
+        status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
+    },
+)
+async def delete_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> None:
     """Remove a source"""
-    raise NotImplementedError
+    source = ConfigurationService.get_source_by_id(source_id)
+    if not source:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"Source with ID {source_id} not found")
+    try:
+        ConfigurationService.delete_source_by_id(source_id)
+    except ValueError as e:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e))

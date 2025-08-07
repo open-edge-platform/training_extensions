@@ -11,10 +11,6 @@ from app.services.mappers.sink_mapper import SinkMapper
 class TestSinkMapper:
     """Test suite for SinkMapper methods."""
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.mapper = SinkMapper()
-
     @pytest.mark.parametrize(
         "schema_instance,expected_model",
         [
@@ -68,11 +64,12 @@ class TestSinkMapper:
     )
     def test_from_schema_valid_sink_types(self, schema_instance, expected_model):
         """Test from_schema with valid sink types."""
-        sink_id = str(uuid4())
-        result = self.mapper.from_schema(schema_instance, sink_id=sink_id)
+        sink_id = uuid4()
+        schema_instance.id = sink_id
+        result = SinkMapper.from_schema(schema_instance)
 
         assert isinstance(result, SinkDB)
-        assert result.id == sink_id
+        assert result.id == str(sink_id)
         assert result.sink_type == expected_model.sink_type
         assert result.rate_limit == expected_model.rate_limit
         assert result.output_formats == expected_model.output_formats
@@ -81,7 +78,7 @@ class TestSinkMapper:
     def test_from_schema_none_sink_raises_error(self):
         """Test from_schema raises ValueError when sink is None."""
         with pytest.raises(ValueError, match="Sink config cannot be None"):
-            self.mapper.from_schema(None)
+            SinkMapper.from_schema(None)
 
     def test_from_schema_unsupported_sink_type(self):
         """Test from_schema raises ValueError for unsupported sink type."""
@@ -89,7 +86,7 @@ class TestSinkMapper:
         mock.sink_type = "UNSUPPORTED_TYPE"
 
         with pytest.raises(ValueError, match="Unsupported sink type: UNSUPPORTED_TYPE"):
-            self.mapper.from_schema(mock)
+            SinkMapper.from_schema(mock)
 
     @pytest.mark.parametrize(
         "db_instance,expected_schema",
@@ -144,8 +141,11 @@ class TestSinkMapper:
     )
     def test_to_schema_valid_sink_types(self, db_instance, expected_schema):
         """Test to_schema with valid sink types."""
-        result = self.mapper.to_schema(db_instance)
+        sink_id = uuid4()
+        db_instance.id = str(sink_id)
+        result = SinkMapper.to_schema(db_instance)
 
+        assert result.id == sink_id
         assert result.sink_type == expected_schema.sink_type
         assert result.rate_limit == expected_schema.rate_limit
         assert result.output_formats == expected_schema.output_formats
@@ -165,4 +165,4 @@ class TestSinkMapper:
         mock.sink_type = "UNSUPPORTED_TYPE"
 
         with pytest.raises(ValueError, match="Unsupported sink type: UNSUPPORTED_TYPE"):
-            self.mapper.to_schema(mock)
+            SinkMapper.to_schema(mock)

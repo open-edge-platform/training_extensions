@@ -29,7 +29,7 @@ def fxt_upload_file():
 
 
 @pytest.fixture
-def fxt_model_service(default_pipeline):
+def fxt_model_service(fxt_default_pipeline):
     with TemporaryDirectory(suffix="models") as tmpdir:
         service = ModelService()
         service.models_dir = Path(tmpdir)

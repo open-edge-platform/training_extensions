@@ -72,18 +72,18 @@ def mock_video_stream(mock_stream_data):
 @pytest.fixture
 def mock_services(mock_config, mock_video_stream):
     with (
-        patch("app.workers.stream_loading.ConfigurationService") as mock_config_service,
+        patch("app.workers.stream_loading.ActivePipelineService") as mock_active_pipeline_service,
         patch("app.workers.stream_loading.VideoStreamService") as mock_video_service,
     ):
         # Set up the mocks
         mock_config_instance = Mock()
         mock_config_instance.get_input_config.return_value = mock_config
-        mock_config_service.return_value = mock_config_instance
+        mock_active_pipeline_service.return_value = mock_config_instance
 
         mock_video_service.get_video_stream.return_value = mock_video_stream
 
         yield {
-            "config_service": mock_config_service,
+            "active_pipeline_service": mock_active_pipeline_service,
             "video_service": mock_video_service,
             "config_instance": mock_config_instance,
             "video_stream": mock_video_stream,

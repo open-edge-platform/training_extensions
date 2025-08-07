@@ -1,68 +1,93 @@
-import tempfile
 from collections.abc import Generator
 
 import pytest
-from alembic import command
-from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from app.db.schema import PipelineDB
-
-
-@pytest.fixture(scope="session")
-def temp_sqlite_db():
-    """Create a temporary SQLite database file for testing."""
-    with tempfile.NamedTemporaryFile(suffix=".db") as tmp_file:
-        db_path = tmp_file.name
-        yield f"sqlite:///{db_path}"
+from app.db.schema import Base, PipelineDB, SourceDB
+from app.schemas import OutputFormat, SinkType, SourceType
+from app.schemas.sink import MqttSinkConfig
+from app.schemas.source import WebcamSourceConfig
 
 
 @pytest.fixture(scope="session")
-def alembic_config(temp_sqlite_db):
-    """Configure Alembic for testing with temporary database."""
-    alembic_cfg = Config()
-    alembic_cfg.set_main_option("script_location", "app/alembic")
-    alembic_cfg.set_main_option("sqlalchemy.url", temp_sqlite_db)
-
-    return alembic_cfg
-
-
-@pytest.fixture(scope="session")
-def migrated_db_engine(temp_sqlite_db, alembic_config):
+def db_engine():
     """Create database engine and run migrations."""
-    engine = create_engine(temp_sqlite_db, echo=False)
-
-    # Run Alembic migrations
-    command.upgrade(alembic_config, "head")
-
+    db_url = "sqlite://"
+    engine = create_engine(db_url, echo=True, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
     yield engine
-
     engine.dispose()
 
 
 @pytest.fixture
-def db_session(migrated_db_engine):
-    """Create a database session for each test."""
-    SessionLocal = sessionmaker(bind=migrated_db_engine)
+def db_session(db_engine):
+    """Create a database session with transaction rollback for each test."""
+    connection = db_engine.connect()
+    transaction = connection.begin()
+
+    SessionLocal = sessionmaker(bind=connection)
     session = SessionLocal()
 
     try:
         yield session
     finally:
-        session.rollback()
         session.close()
+        transaction.rollback()
+        connection.close()
 
 
-@pytest.fixture(scope="function")
-def default_pipeline(db_session) -> Generator[PipelineDB]:
+@pytest.fixture
+def fxt_default_pipeline(db_session) -> Generator[PipelineDB]:
     """Seed the database with default pipeline."""
     pipeline = PipelineDB(name="Default Pipeline", is_running=True)
     db_session.add(pipeline)
-    db_session.commit()
-    try:
-        yield pipeline
-    finally:
-        obj = db_session.query(PipelineDB).filter_by(is_running=True).one()
-        db_session.delete(obj)
-        db_session.commit()
+    yield pipeline
+
+
+@pytest.fixture
+def fxt_source_config() -> WebcamSourceConfig:
+    """Sample source configuration data."""
+    return WebcamSourceConfig(source_type=SourceType.WEBCAM, name="Test Source", device_id=1)
+
+
+@pytest.fixture
+def fxt_sink_config() -> MqttSinkConfig:
+    """Sample sink configuration data."""
+    return MqttSinkConfig(
+        sink_type=SinkType.MQTT,
+        name="Test Sink",
+        rate_limit=0.1,
+        output_formats=[OutputFormat.IMAGE_WITH_PREDICTIONS],
+        broker_host="localhost",
+        broker_port=1883,
+        topic="topic",
+    )
+
+
+@pytest.fixture
+def fxt_db_sources() -> list[SourceDB]:
+    """Fixture to create multiple source configurations in the database."""
+    return [
+        SourceDB(
+            source_type=SourceType.VIDEO_FILE.value,
+            name="Test Video Source",
+            config_data={"video_path": "/path/to/video.mp4"},
+        ),
+        SourceDB(
+            source_type=SourceType.WEBCAM.value,
+            name="Test Webcam Source",
+            config_data={
+                "device_id": 1,
+            },
+        ),
+        SourceDB(
+            source_type=SourceType.IP_CAMERA.value,
+            name="Test IPCamera Source",
+            config_data={
+                "stream_url": "rtsp://192.168.1.100:554/stream",
+                "auth_required": False,
+            },
+        ),
+    ]

@@ -10,6 +10,7 @@ end title
 
 table(sources) {
   pk(id) : UUID
+  name : VARCHAR(255) UNIQUE NOT NULL
   source_type : VARCHAR(50) NOT NULL
   config_data : JSONB NOT NULL
   created_at : TIMESTAMP
@@ -30,7 +31,8 @@ table(pipelines) {
 
 table(sinks) {
   pk(id) : UUID
-  destination_type : VARCHAR(50)
+  name : VARCHAR(255) UNIQUE NOT NULL
+  sink_type : VARCHAR(50)
   rate_limit : FLOAT DEFAULT NULL
   config_data : JSONB NOT NULL
   output_formats : JSONB NOT NULL
@@ -66,8 +68,7 @@ note right of sinks
 end note
 
 note right of models
-  Models available
-  for inference
+  Models available for inference
 end note
 
 @enduml

@@ -75,9 +75,14 @@ def seed(with_model: bool) -> None:
     # TODO: use APIs when ready
     # Currently, the app needs to be restarted since it doesn't track direct DB changes
     with get_db_session() as db:
-        source = SourceDB(source_type=SourceType.VIDEO_FILE.value, config_data={"video_path": "data/media/video.mp4"})
+        source = SourceDB(
+            name="Default source",
+            source_type=SourceType.VIDEO_FILE.value,
+            config_data={"video_path": "data/media/video.mp4"},
+        )
         db.add(source)
         sink = SinkDB(
+            name="Default sink",
             sink_type=SinkType.FOLDER.value,
             rate_limit=0.2,
             output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],

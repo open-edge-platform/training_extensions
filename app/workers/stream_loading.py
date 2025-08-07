@@ -9,7 +9,7 @@ from multiprocessing.synchronize import Event as EventClass
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
 from app.schemas import Source, SourceType
-from app.services import ConfigurationService, VideoStreamService
+from app.services import ActivePipelineService, VideoStreamService
 from app.utils import flush_queue, log_threads
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ def frame_acquisition_routine(
     frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass, cleanup: bool = True
 ) -> None:
     """Load frames from the video stream and inject them into the frame queue"""
-    config_service = ConfigurationService(config_changed_condition=config_changed_condition)
+    config_service = ActivePipelineService(config_changed_condition=config_changed_condition)
     prev_source_config: Source | None = None
     video_stream: VideoStream | None = None
 

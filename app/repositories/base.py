@@ -16,7 +16,7 @@ class BaseRepository(Generic[ModelType]):
         self.model = model
 
     def get_by_id(self, obj_id: str) -> ModelType | None:
-        return self.db.query(self.model).filter(self.model.id == obj_id).first()  # type: ignore[attr-defined]
+        return self.db.query(self.model).get(obj_id)
 
     def list_all(self) -> list[ModelType]:
         return self.db.query(self.model).all()
@@ -26,3 +26,12 @@ class BaseRepository(Generic[ModelType]):
         self.db.add(item)
         self.db.flush()
         return item
+
+    def update(self, item: ModelType) -> ModelType:
+        item.updated_at = datetime.now()  # type: ignore[attr-defined]
+        self.db.merge(item)
+        self.db.flush()
+        return item
+
+    def delete(self, obj_id: str) -> None:
+        self.db.query(self.model).filter(self.model.id == obj_id).delete()  # type: ignore[attr-defined]

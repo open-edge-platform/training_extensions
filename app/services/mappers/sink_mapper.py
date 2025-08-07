@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from app.db.schema import SinkDB
 from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, Sink, SinkType
@@ -7,12 +8,14 @@ from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, Sink, SinkType
 class SinkMapper:
     """Mapper for Sink model <-> Sink schema conversions."""
 
-    def to_schema(self, sink_db: SinkDB) -> Sink:
+    @staticmethod
+    def to_schema(sink_db: SinkDB) -> Sink:
         """Convert Sink model to Sink schema."""
 
         match sink_db.sink_type:
             case SinkType.FOLDER.value:
                 return FolderSinkConfig(
+                    id=UUID(sink_db.id),
                     sink_type=SinkType.FOLDER,
                     output_formats=sink_db.output_formats,
                     rate_limit=sink_db.rate_limit,
@@ -20,6 +23,7 @@ class SinkMapper:
                 )
             case SinkType.MQTT.value:
                 return MqttSinkConfig(
+                    id=UUID(sink_db.id),
                     sink_type=SinkType.MQTT,
                     output_formats=sink_db.output_formats,
                     rate_limit=sink_db.rate_limit,
@@ -30,7 +34,8 @@ class SinkMapper:
             case _:
                 raise ValueError(f"Unsupported sink type: {sink_db.sink_type}")
 
-    def from_schema(self, sink: Sink, sink_id: str | None = None) -> SinkDB:
+    @staticmethod
+    def from_schema(sink: Sink) -> SinkDB:
         """Convert Sink schema to Sink model."""
         if sink is None:
             raise ValueError("Sink config cannot be None")
@@ -52,8 +57,9 @@ class SinkMapper:
                 raise ValueError(f"Unsupported sink type: {sink.sink_type}")
 
         return SinkDB(
-            id=sink_id,
+            id=str(sink.id),
             sink_type=sink.sink_type.value,
+            name=sink.name,
             output_formats=sink.output_formats,
             rate_limit=sink.rate_limit,
             config_data=config_data,

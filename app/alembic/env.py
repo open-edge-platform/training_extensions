@@ -43,6 +43,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
+    context.execute("PRAGMA foreign_keys=ON")  # Enable foreign keys for SQLite
 
     with context.begin_transaction():
         context.run_migrations()
@@ -63,6 +64,7 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
+        context.execute("PRAGMA foreign_keys=ON")  # Enable foreign keys for SQLite
 
         with context.begin_transaction():
             context.run_migrations()

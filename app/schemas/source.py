@@ -3,7 +3,7 @@ from os import getenv
 from typing import Annotated, Literal
 from urllib.parse import urlparse, urlunparse
 
-from pydantic import Field
+from pydantic import Field, TypeAdapter
 
 from app.schemas.base import BaseIDNameModel
 
@@ -116,3 +116,5 @@ Source = Annotated[
     | DisconnectedSourceConfig,
     Field(discriminator="source_type"),
 ]
+
+SourceAdapter: TypeAdapter[Source] = TypeAdapter(Source)

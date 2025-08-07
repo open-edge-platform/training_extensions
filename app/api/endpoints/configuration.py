@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from app.schemas import Sink, Source
-from app.services import ConfigurationService
+from app.services import ActivePipelineService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -18,8 +18,8 @@ async def get_source_config() -> Source:
         - `GET /api/sources` to list the sources
         - `GET /api/pipelines/{pipeline_id}` to find the source used in a given pipeline
     """
-    config_service = ConfigurationService()
-    return config_service.get_source_config()
+    active_pipeline_service = ActivePipelineService()
+    return active_pipeline_service.get_source_config()
 
 
 @router.get("/outputs", deprecated=True)
@@ -31,8 +31,8 @@ async def get_sink_config() -> Sink:
         - `GET /api/sinks` to list the sinks
         - `GET /api/pipelines/{pipeline_id}` to find the sink used in a given pipeline
     """
-    config_service = ConfigurationService()
-    return config_service.get_sink_config()
+    active_pipeline_service = ActivePipelineService()
+    return active_pipeline_service.get_sink_config()
 
 
 @router.post("/inputs", deprecated=True)
@@ -45,9 +45,9 @@ async def configure_source(source: Source) -> None:
         - `PATCH /api/sources/{source_id}` to update an existing source
         - `PATCH /api/pipelines/{pipeline_id}` to change the source used in a pipeline
     """
-    config_service = ConfigurationService()
+    active_pipeline_service = ActivePipelineService()
     try:
-        config_service.set_source_config(source)
+        active_pipeline_service.set_source_config(source)
     except Exception as e:
         logger.exception("Failed to update input configuration")
         raise HTTPException(status_code=400, detail=str(e))
@@ -63,8 +63,8 @@ async def configure_sink(sink: Sink) -> None:
         - `PATCH /api/sinks/{sink_id}` to update an existing sink
         - `PATCH /api/pipelines/{pipeline_id}` to change the sink used in a pipeline
     """
-    config_service = ConfigurationService()
+    active_pipeline_service = ActivePipelineService()
     try:
-        config_service.set_sink_config(sink)
+        active_pipeline_service.set_sink_config(sink)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

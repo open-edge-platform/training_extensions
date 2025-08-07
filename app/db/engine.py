@@ -1,7 +1,10 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
+from sqlite3 import Connection
+from typing import Any
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -12,10 +15,21 @@ settings = get_settings()
 db_engine = create_engine(
     settings.database_url,
     connect_args={"check_same_thread": False, "timeout": 30},
-    # https://docs.sqlalchemy.org/en/14/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
+    # Using NullPool to disable connection pooling, which is necessary for SQLite when using multiprocessing
+    # https://docs.sqlalchemy.org/en/20/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
     poolclass=NullPool,
     echo=settings.db_echo,
 )
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection: Connection, _: Any) -> None:
+    """Enable foreign key support for SQLite."""
+    # https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#foreign-key-support
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 Base = declarative_base()

@@ -10,7 +10,7 @@ from fastrtc import AdditionalOutputs
 
 from app.entities.stream_data import StreamData
 from app.schemas import Sink, SinkType
-from app.services import ConfigurationService, DispatchService
+from app.services import ActivePipelineService, DispatchService
 from app.services.dispatchers import Dispatcher
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def dispatching_routine(
     config_changed_condition: ConditionClass,
 ) -> None:
     """Pull predictions from the queue and dispatch them to the configured outputs and WebRTC visualization stream."""
-    config_service = ConfigurationService(config_changed_condition=config_changed_condition)
+    config_service = ActivePipelineService(config_changed_condition=config_changed_condition)
 
     prev_sink_config: Sink | None = None
     destinations: list[Dispatcher] = []
