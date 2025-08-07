@@ -66,17 +66,22 @@ overrides:
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           init_args:
             p: 0.5
-        - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
+        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:
-            brightness_delta: 32
-            contrast_range:
+            brightness:
+              - 0.875
+              - 1.125
+            contrast:
               - 0.5
               - 1.5
-            saturation_range:
+            saturation:
               - 0.5
               - 1.5
-            hue_delta: 18
+            hue: 
+              - -0.05
+              - 0.05
+            p: 0.5
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)

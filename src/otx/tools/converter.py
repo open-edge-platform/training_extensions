@@ -395,14 +395,14 @@ class GetiConfigConverter:
             augs_mapping_list = {
                 "random_resize_crop": ["otx.data.transform_libs.torchvision.EfficientNetRandomCrop", 
                                        "otx.data.transform_libs.torchvision.RandomResizedCrop"],
-                "random_affine": ["otx.data.transform_libs.torchvision.RandomAffine"],
+                "random_affine": ["otx.data.transform_libs.torchvision.RandomAffine",
+                                  "otx.data.transform_libs.torchvision.TopdownAffine"],
                 "random_horizontal_flip": ["otx.data.transform_libs.torchvision.RandomFlip"],
                 "random_vertical_flip": ["torchvision.transforms.v2.RandomVerticalFlip"],
                 "gaussian_blur": ["torchvision.transforms.v2.GaussianBlur"],
                 "gaussian_noise": ["torchvision.transforms.v2.GaussianNoise"],
                 "color_jitter": ["otx.data.transform_libs.torchvision.PhotoMetricDistortion"],
                 "iou_random_crop" : ["otx.data.transform_libs.torchvision.MinIoURandomCrop"],
-                "pad_to_square": ["otx.data.transform_libs.torchvision.Pad"],
                 "random_zoom_out": ["torchvision.transforms.v2.RandomZoomOut"],
                 "random_hsv_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
                 "cached_mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
@@ -418,6 +418,16 @@ class GetiConfigConverter:
                         if aug_name == "random_resize_crop" and not aug_value["enable"]:
                             # if random crop is disabled -> change this augmentation to simple Resize
                             aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
+                            break
+                        if ("TopdownAffine" in aug_config["class_path"] and 
+                            (not aug_value["enable"] or aug_value["affine_transforms_prob"] <= 0.7)):
+                            aug_config["init_args"]["affine_transforms_prob"] = 0.0
+                            for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
+                                if "Pad" in val_aug_cfg["class_path"]:
+                                    val_aug_cfg["enable"] = False
+                            for test_aug_cfg in config["data"]["test_subset"]["transforms"]:
+                                if "Pad" in test_aug_cfg["class_path"]:
+                                    test_aug_cfg["enable"] = False
                             break
                         aug_config["enable"] = aug_value.pop("enable")
                         for parameter in aug_value: 
