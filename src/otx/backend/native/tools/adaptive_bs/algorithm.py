@@ -269,6 +269,7 @@ def _run_trial(train_func: Callable[[int], Any], bs: int, trial_queue: mp.Queue)
             or "XPU out of memory" in str(e)
             or "UR_RESULT_ERROR_OUT_OF_DEVICE_MEMORY" in str(e)
             or "UR error" in str(e)
+            or "UR_RESULT_ERROR_UNKNOWN" in str(e)
         ):  # XPU OOM
             oom = True
         else:
