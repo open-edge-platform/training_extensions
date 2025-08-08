@@ -1,6 +1,8 @@
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+    plugins: [react()],
     test: {
         environment: 'jsdom',
         // This is needed to use globals like describe or expect
@@ -8,10 +10,10 @@ export default defineConfig({
         include: ['./src/**/*.test.{ts,tsx}'],
         setupFiles: './src/setup-tests.ts',
         watch: false,
-        // More context:
-        // https://vitest.dev/config/#deps-web-transformcss
-        // https://stackoverflow.com/questions/78989267/vitest-unknown-file-extension-css
-        // This is needed to set the css transform to 'true' by default
-        pool: 'typescript',
+        server: {
+            deps: {
+                inline: [/@react-spectrum\/.*/, /@spectrum-icons\/.*/, /@adobe\/react-spectrum\/.*/],
+            },
+        },
     },
 });
