@@ -81,11 +81,13 @@ class TestModule:
             dataset: DmDataset,
             data_format: str,
             unannotated_items_ratio: float,
+            task: OTXTaskType,
             ignore_index: int | None,
         ) -> DmDataset:
             del data_format
             del unannotated_items_ratio
             del ignore_index
+            del task
             return dataset
 
         return mocker.patch("otx.data.module.pre_filtering", side_effect=func)
