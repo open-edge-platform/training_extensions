@@ -374,7 +374,7 @@ class GetiConfigConverter:
 
         def update_augmentations(augmentation_params: dict) -> None:
             """Update augmentations in the config.
-            
+
             Example:
                 augmentation_params = {
                     random_affine = {
@@ -393,22 +393,28 @@ class GetiConfigConverter:
 
             # this list maps Geti user frendly naming to OTX aug classes
             augs_mapping_list = {
-                "random_resize_crop": ["otx.data.transform_libs.torchvision.EfficientNetRandomCrop", 
-                                       "otx.data.transform_libs.torchvision.RandomResizedCrop"],
-                "random_affine": ["otx.data.transform_libs.torchvision.RandomAffine",
-                                  "otx.data.transform_libs.torchvision.TopdownAffine"],
+                "random_resize_crop": [
+                    "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
+                    "otx.data.transform_libs.torchvision.RandomResizedCrop",
+                ],
+                "random_affine": [
+                    "otx.data.transform_libs.torchvision.RandomAffine",
+                    "otx.data.transform_libs.torchvision.TopdownAffine",
+                ],
                 "random_horizontal_flip": ["otx.data.transform_libs.torchvision.RandomFlip"],
                 "random_vertical_flip": ["torchvision.transforms.v2.RandomVerticalFlip"],
                 "gaussian_blur": ["torchvision.transforms.v2.GaussianBlur"],
                 "gaussian_noise": ["torchvision.transforms.v2.GaussianNoise"],
                 "color_jitter": ["torchvision.transforms.v2.RandomPhotometricDistort"],
-                "iou_random_crop" : ["otx.data.transform_libs.torchvision.MinIoURandomCrop",
-                                     "otx.data.transform_libs.torchvision.RandomIoUCrop"],
+                "iou_random_crop": [
+                    "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+                    "otx.data.transform_libs.torchvision.RandomIoUCrop",
+                ],
                 "random_zoom_out": ["torchvision.transforms.v2.RandomZoomOut"],
                 "random_hsv_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
                 "cached_mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
-                "cached_mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"]
-              } 
+                "cached_mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"],
+            }
 
             for aug_name, aug_value in augmentation_params.items():
                 aug_class = augs_mapping_list[aug_name]
@@ -420,8 +426,9 @@ class GetiConfigConverter:
                             # if random crop is disabled -> change this augmentation to simple Resize
                             aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
                             break
-                        if ("TopdownAffine" in aug_config["class_path"] and 
-                            (not aug_value["enable"] or aug_value["affine_transforms_prob"] <= 0.7)):
+                        if "TopdownAffine" in aug_config["class_path"] and (
+                            not aug_value["enable"] or aug_value["affine_transforms_prob"] <= 0.7
+                        ):
                             aug_config["init_args"]["affine_transforms_prob"] = 0.0
                             for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
                                 if "Pad" in val_aug_cfg["class_path"]:
@@ -432,7 +439,7 @@ class GetiConfigConverter:
                             break
                         aug_config["enable"] = aug_value.pop("enable")
                         for parameter in aug_value:
-                            if  "init_args" not in aug_config:
+                            if "init_args" not in aug_config:
                                 aug_config["init_args"] = {}
                             aug_config["init_args"][parameter] = aug_value[parameter]
 

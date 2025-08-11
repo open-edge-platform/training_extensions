@@ -82,7 +82,7 @@ overrides:
             saturation:
               - 0.5
               - 1.5
-            hue: 
+            hue:
               - -0.05
               - 0.05
             p: 0.5
@@ -92,7 +92,7 @@ overrides:
           init_args:
             max_rotate_degree: 10.0
             max_translate_ratio: 0.1
-            scaling_ratio_range: 
+            scaling_ratio_range:
               - 0.5
               - 1.5
             max_shear_degree: 2.0

@@ -58,10 +58,10 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.RandomResizedCrop
           init_args:
             scale: $(input_size)
-            crop_ratio_range: 
+            crop_ratio_range:
               - 0.08
               - 1.0
-            aspect_ratio_range: 
+            aspect_ratio_range:
               - 0.75
               - 1.34
 

@@ -273,7 +273,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         transform_keypoints: bool = False,
         transform_mask: bool = False,
         is_numpy_to_tvtensor: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__()
 

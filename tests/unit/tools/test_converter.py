@@ -47,14 +47,14 @@ class TestGetiConfigConverter:
 
     def test_classification_augs(self, tmp_path):
         supported_augs_list_for_configuration = [
-                "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
-                "torchvision.transforms.v2.RandomPhotometricDistort",
-                "otx.data.transform_libs.torchvision.RandomAffine",
-                "otx.data.transform_libs.torchvision.RandomFlip",
-                "torchvision.transforms.v2.RandomVerticalFlip",
-                "torchvision.transforms.v2.GaussianBlur",
-                "torchvision.transforms.v2.GaussianNoise"
-            ]
+            "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
+            "torchvision.transforms.v2.RandomPhotometricDistort",
+            "otx.data.transform_libs.torchvision.RandomAffine",
+            "otx.data.transform_libs.torchvision.RandomFlip",
+            "torchvision.transforms.v2.RandomVerticalFlip",
+            "torchvision.transforms.v2.GaussianBlur",
+            "torchvision.transforms.v2.GaussianNoise",
+        ]
         cfg_path = "tests/assets/geti/model_configs/classification.yaml"
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
@@ -62,8 +62,10 @@ class TestGetiConfigConverter:
         # default values
         list_of_all_augs = []
         for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] in ["otx.data.transform_libs.torchvision.RandomFlip", 
-                                       "otx.data.transform_libs.torchvision.EfficientNetRandomCrop"]:
+            if aug["class_path"] in [
+                "otx.data.transform_libs.torchvision.RandomFlip",
+                "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
+            ]:
                 assert aug["enable"]
             list_of_all_augs.append(aug["class_path"])
         # check if all supported augs are in the config
@@ -112,14 +114,14 @@ class TestGetiConfigConverter:
 
     def test_detection_augs(self, tmp_path):
         supported_augs_list_for_configuration = [
-                "otx.data.transform_libs.torchvision.MinIoURandomCrop",
-                "torchvision.transforms.v2.RandomPhotometricDistort",
-                "otx.data.transform_libs.torchvision.RandomAffine",
-                "otx.data.transform_libs.torchvision.RandomFlip",
-                "torchvision.transforms.v2.RandomVerticalFlip",
-                "torchvision.transforms.v2.GaussianBlur",
-                "torchvision.transforms.v2.GaussianNoise"
-            ]
+            "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+            "torchvision.transforms.v2.RandomPhotometricDistort",
+            "otx.data.transform_libs.torchvision.RandomAffine",
+            "otx.data.transform_libs.torchvision.RandomFlip",
+            "torchvision.transforms.v2.RandomVerticalFlip",
+            "torchvision.transforms.v2.GaussianBlur",
+            "torchvision.transforms.v2.GaussianNoise",
+        ]
         cfg_path = "tests/assets/geti/model_configs/detection.yaml"
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
@@ -127,8 +129,10 @@ class TestGetiConfigConverter:
         # default values
         list_of_all_augs = []
         for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] in ["otx.data.transform_libs.torchvision.RandomFlip", 
-                                       "otx.data.transform_libs.torchvision.MinIoURandomCrop"]:
+            if aug["class_path"] in [
+                "otx.data.transform_libs.torchvision.RandomFlip",
+                "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+            ]:
                 assert aug["enable"]
             list_of_all_augs.append(aug["class_path"])
         # check if all supported augs are in the config
@@ -168,7 +172,9 @@ class TestGetiConfigConverter:
         )
         assert len(engine.datamodule.train_subset.transforms) == 10
         assert engine.datamodule.train_dataloader().dataset.transforms is not None
-        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9 # 10 - disabled iou_random_crop
+        assert (
+            len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9
+        )  # 10 - disabled iou_random_crop
 
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"
