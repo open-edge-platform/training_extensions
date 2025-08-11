@@ -82,8 +82,8 @@ def adapt_batch_size(
 def _adjust_train_args(train_args: dict[str, Any]) -> dict[str, Any]:
     train_args.update(train_args.pop("kwargs", {}))
     train_args.pop("self", None)
-    train_args.pop("adaptive_bs")
-    train_args.pop("callbacks")
+    train_args.pop("adaptive_bs", None)
+    train_args.pop("callbacks", None)
     return train_args
 
 
