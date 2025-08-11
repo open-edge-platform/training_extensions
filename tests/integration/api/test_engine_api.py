@@ -144,7 +144,12 @@ def test_engine_from_tile_recipe(
         work_dir=tmp_path / task,
         device=fxt_accelerator,
     )
-    engine.train(max_epochs=1)
+
+    # To avoid OOM error, set adaptive_bs to None for CPU
+    if fxt_accelerator == "cpu":
+        engine.train(max_epochs=1, adaptive_bs="None")
+    else:
+        engine.train(max_epochs=1)
     exported_model_path = engine.export()
     assert exported_model_path.exists()
 
