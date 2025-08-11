@@ -82,7 +82,7 @@ jobs:
     if: |
       github.event.pull_request.draft == false &&
       !(startsWith(github.event.pull_request.title, '[WIP]'))
-    runs-on: [self-hosted, linux, x64, dev, dmount]
+    runs-on: ubuntu-24.04
     needs: Unit-Test
     strategy:
       fail-fast: false
