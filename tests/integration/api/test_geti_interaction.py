@@ -133,7 +133,7 @@ class TestEngineAPI:
         max_epochs = 2
         self.train_kwargs["max_epochs"] = max_epochs
         # To avoid OOM error, set adaptive_bs to None for CPU
-        if self.engine.device == "cpu" and not torch.cuda.is_available():
+        if not torch.cuda.is_available():
             self.train_kwargs["adaptive_bs"] = "None"
         train_metric = self.engine.train(**self.train_kwargs)
         assert len(train_metric) > 0
