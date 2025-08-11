@@ -872,6 +872,13 @@ class BenchmarkDashboard:
                 "Iteration Time",
                 "Iteration Time (seconds)",
             )
+        if metric_type == "gpu_mem":
+            return self.create_averaged_training_metric_plot(
+                task,
+                "training:gpu_mem_mean",
+                "GPU Memory",
+                "GPU Memory (GB)",
+            )
         if metric_type == "scatter":
             fig = self.create_averaged_latency_accuracy_scatter(task)
             return dcc.Graph(figure=fig)
@@ -1272,6 +1279,109 @@ class BenchmarkDashboard:
 
         return fig
 
+    def create_gpu_memory_comparison_plot(self, task: OTXTaskType, dataset_name: str) -> html.Div:
+        """Create GPU memory comparison plot."""
+        if not self.benchmark_data:
+            return html.Div("No data available")
+
+        metric_col = "training:gpu_mem_mean"
+        plot_data = []
+
+        for version in self.available_versions:
+            if (
+                version in self.benchmark_data
+                and task.value in self.benchmark_data[version]
+                and dataset_name in self.benchmark_data[version][task.value]
+            ):
+                data_frame = self.benchmark_data[version][task.value][dataset_name]
+
+                if metric_col in data_frame.columns:
+                    for _, row in data_frame.iterrows():
+                        if not pd.isna(row[metric_col]):
+                            plot_data.append(
+                                {
+                                    "Version": version,
+                                    "Model": row.get("model", "Unknown"),
+                                    "Metric": row[metric_col],
+                                    "Dataset": dataset_name,
+                                },
+                            )
+
+        if not plot_data:
+            return html.Div(
+                [
+                    html.H4(
+                        "GPU Memory Comparison",
+                        style={
+                            "textAlign": "center",
+                            "marginTop": "30px",
+                            "marginBottom": "10px",
+                            "color": "#2c3e50",
+                            "fontFamily": "Arial, sans-serif",
+                        },
+                    ),
+                    html.P(
+                        f"No GPU memory data available for {dataset_name}",
+                        style={
+                            "textAlign": "center",
+                            "color": "#7f8c8d",
+                            "fontStyle": "italic",
+                        },
+                    ),
+                ],
+                style={
+                    "marginBottom": "20px",
+                    "border": "1px solid #e0e0e0",
+                    "borderRadius": "5px",
+                    "padding": "15px",
+                    "backgroundColor": "#fafafa",
+                },
+            )
+
+        plot_df = pd.DataFrame(plot_data)
+
+        # Create the plot
+        fig = px.bar(
+            plot_df,
+            x="Model",
+            y="Metric",
+            color="Version",
+            title=f"{task.value} - {dataset_name} - GPU Memory Comparison",
+            barmode="group",
+            height=400,
+        )
+
+        fig.update_layout(
+            xaxis_title="Model",
+            yaxis_title="GPU Memory (GB)",
+            legend_title="OTX Version",
+            showlegend=True,
+            margin={"t": 50, "b": 50, "l": 50, "r": 50},
+        )
+
+        return html.Div(
+            [
+                html.H4(
+                    "GPU Memory Comparison",
+                    style={
+                        "textAlign": "center",
+                        "marginTop": "30px",
+                        "marginBottom": "10px",
+                        "color": "#2c3e50",
+                        "fontFamily": "Arial, sans-serif",
+                    },
+                ),
+                dcc.Graph(figure=fig),
+            ],
+            style={
+                "marginBottom": "20px",
+                "border": "1px solid #e0e0e0",
+                "borderRadius": "5px",
+                "padding": "15px",
+                "backgroundColor": "#fafafa",
+            },
+        )
+
     def get_datasets_for_task(self, task: OTXTaskType) -> list[str]:
         """Get available datasets for a specific task."""
         if task not in DATASET_COLLECTIONS:
@@ -1429,6 +1539,7 @@ class BenchmarkDashboard:
                                 {"label": "Training Time Comparison", "value": "training_time"},
                                 {"label": "Epoch Comparison", "value": "epoch"},
                                 {"label": "Iteration Time Comparison", "value": "iter_time"},
+                                {"label": "GPU Memory Comparison", "value": "gpu_mem"},
                                 {"label": "Accuracy vs Latency", "value": "scatter"},
                             ],
                             value="accuracy",
@@ -1478,7 +1589,7 @@ class BenchmarkDashboard:
             Output("dynamic-plot", "children"),
             [Input("metric-selector", "value"), Input("dataset-tabs", "value"), Input("task-tabs", "value")],
         )
-        def update_dynamic_plot(metric_type: str, selected_dataset: str, selected_task: str) -> html.Div:
+        def update_dynamic_plot(metric_type: str, selected_dataset: str, selected_task: str) -> html.Div:  # noqa: PLR0911
             if not selected_dataset or not selected_task or not metric_type:
                 return html.Div()
 
@@ -1502,6 +1613,8 @@ class BenchmarkDashboard:
                     return self.create_epoch_comparison_plot(task, selected_dataset)
                 if metric_type == "iter_time":
                     return self.create_iter_time_comparison_plot(task, selected_dataset)
+                if metric_type == "gpu_mem":
+                    return self.create_gpu_memory_comparison_plot(task, selected_dataset)
                 if metric_type == "scatter":
                     fig = self.create_latency_accuracy_scatter(task, selected_dataset)
                     return dcc.Graph(figure=fig)

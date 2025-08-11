@@ -81,6 +81,10 @@ def test_dashboard_basic():
             dashboard.create_iter_time_comparison_plot(first_task, first_dataset)
             print(f"✓ Created iteration time comparison plot for {first_task.value} - {first_dataset}")
 
+            # Test GPU memory comparison
+            dashboard.create_gpu_memory_comparison_plot(first_task, first_dataset)
+            print(f"✓ Created GPU memory comparison plot for {first_task.value} - {first_dataset}")
+
             # Test scatter plot
             dashboard.create_latency_accuracy_scatter(first_task, first_dataset)
             print(f"✓ Created scatter plot for {first_task.value} - {first_dataset}")
@@ -100,6 +104,14 @@ def test_dashboard_basic():
                 "Training Time (seconds)",
             )
             print(f"✓ Created averaged training time comparison plot for {first_task.value}")
+
+            dashboard.create_averaged_training_metric_plot(
+                first_task,
+                "training:gpu_mem_mean",
+                "GPU Memory",
+                "GPU Memory (GB)",
+            )
+            print(f"✓ Created averaged GPU memory comparison plot for {first_task.value}")
 
             dashboard.create_averaged_latency_accuracy_scatter(first_task)
             print(f"✓ Created averaged scatter plot for {first_task.value}")

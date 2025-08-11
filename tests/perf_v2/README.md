@@ -97,7 +97,11 @@ For each dataset, you can choose from:
 
    - Training Iteration Time (`training:train/iter_time_mean`)
 
-6. **Accuracy vs Latency**: Scatter plot showing the relationship between accuracy and latency
+6. **GPU Memory Comparison**: Bar chart comparing GPU memory usage across OTX versions
+
+   - Training GPU Memory (`training:gpu_mem_mean`)
+
+7. **Accuracy vs Latency**: Scatter plot showing the relationship between accuracy and latency
 
 ## Data Structure Requirements
 
@@ -130,6 +134,7 @@ Each aggregated Excel file should contain sheets named after datasets, with colu
 - `training:e2e_time_mean`: Training end-to-end time
 - `training:epoch_mean`: Number of training epochs
 - `training:train/iter_time_mean`: Training iteration time
+- `training:gpu_mem_mean`: Training GPU memory usage
 - `otx_version`: OTX version information
 
 ## Troubleshooting

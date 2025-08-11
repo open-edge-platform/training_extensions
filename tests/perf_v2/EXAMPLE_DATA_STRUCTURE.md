@@ -62,16 +62,17 @@ Where `{metric}` is the task-specific metric:
 - `training:e2e_time_mean`: End-to-end training time
 - `training:epoch_mean`: Number of training epochs
 - `training:train/iter_time_mean`: Training iteration time
+- `training:gpu_mem_mean`: Training GPU memory usage
 
 ### Example Sheet Content
 
 For a semantic segmentation task with dataset `tiny_cell_labels`:
 
-| model        | otx_version | torch:test/Dice_mean | export:test/Dice_mean | optimize:test/Dice_mean | torch:test/latency_mean | export:test/latency_mean | optimize:test/latency_mean | training:e2e_time_mean | training:epoch_mean | training:train/iter_time_mean |
-| ------------ | ----------- | -------------------- | --------------------- | ----------------------- | ----------------------- | ------------------------ | -------------------------- | ---------------------- | ------------------- | ----------------------------- |
-| litehrnet_18 | 2.4.2       | 0.850                | 0.848                 | 0.845                   | 45.2                    | 28.1                     | 15.3                       | 1850.5                 | 50                  | 0.85                          |
-| litehrnet_s  | 2.4.2       | 0.820                | 0.818                 | 0.815                   | 32.1                    | 20.5                     | 12.8                       | 1420.2                 | 45                  | 0.62                          |
-| segnext_b    | 2.4.2       | 0.875                | 0.870                 | 0.865                   | 78.5                    | 45.2                     | 25.1                       | 2150.8                 | 60                  | 1.15                          |
+| model        | otx_version | torch:test/Dice_mean | export:test/Dice_mean | optimize:test/Dice_mean | torch:test/latency_mean | export:test/latency_mean | optimize:test/latency_mean | training:e2e_time_mean | training:epoch_mean | training:train/iter_time_mean | training:gpu_mem_mean |
+| ------------ | ----------- | -------------------- | --------------------- | ----------------------- | ----------------------- | ------------------------ | -------------------------- | ---------------------- | ------------------- | ----------------------------- | --------------------- |
+| litehrnet_18 | 2.4.2       | 0.850                | 0.848                 | 0.845                   | 45.2                    | 28.1                     | 15.3                       | 1850.5                 | 50                  | 0.85                          | 8.5                   |
+| litehrnet_s  | 2.4.2       | 0.820                | 0.818                 | 0.815                   | 32.1                    | 20.5                     | 12.8                       | 1420.2                 | 45                  | 0.62                          | 6.2                   |
+| segnext_b    | 2.4.2       | 0.875                | 0.870                 | 0.865                   | 78.5                    | 45.2                     | 25.1                       | 2150.8                 | 60                  | 1.15                          | 12.8                  |
 
 ## Task-Specific Metrics
 
