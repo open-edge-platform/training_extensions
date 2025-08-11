@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from pathlib import Path
 
@@ -21,6 +22,8 @@ from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
+
+logger = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser: pytest.Parser):
@@ -333,7 +336,10 @@ def fxt_seg_data_entity() -> tuple[tuple, OTXDataItem, OTXDataBatch]:
 def fxt_accelerator(request: pytest.FixtureRequest) -> str:
     if is_xpu_available():
         return "xpu"
-    return request.config.getoption("--device", "gpu")
+    if torch.cuda.is_available():
+        return "gpu"
+    logger.info("CUDA is not available")
+    return "cpu"
 
 
 @pytest.fixture(params=set(OTXTaskType))
