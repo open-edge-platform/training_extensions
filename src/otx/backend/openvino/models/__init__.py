@@ -13,7 +13,7 @@ from .multilabel_classification import OVMultilabelClassificationModel
 from .segmentation import OVSegmentationModel
 
 # Scikit-learn models with OpenVINO optimizations
-from . import scikit_learn
+from . import sklearn
 
 __all__ = [
     "OVModel",
@@ -24,5 +24,5 @@ __all__ = [
     "OVHlabelClassificationModel",
     "OVInstanceSegmentationModel",
     "OVKeypointDetectionModel",
-    "scikit_learn",
+    "sklearn",
 ]
