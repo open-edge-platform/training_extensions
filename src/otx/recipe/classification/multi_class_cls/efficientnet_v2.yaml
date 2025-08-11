@@ -63,7 +63,7 @@ overrides:
             aspect_ratio_range: 
               - 0.75
               - 1.34
-    - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:
             brightness:

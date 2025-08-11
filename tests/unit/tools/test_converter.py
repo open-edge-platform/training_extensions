@@ -45,23 +45,25 @@ class TestGetiConfigConverter:
         with pytest.raises(FileNotFoundError):
             GetiConfigConverter.convert(asdict(otx_config))
 
-    def test_augmentations(self, tmp_path):
+    def test_classification_augs(self, tmp_path):
         supported_augs_list_for_configuration = [
-            "otx.data.transform_libs.torchvision.RandomAffine",
-            "torchvision.transforms.v2.RandomVerticalFlip",
-            "torchvision.transforms.v2.GaussianBlur",
-            "torchvision.transforms.v2.GaussianNoise",
-            "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
-        ]
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/classification.yaml")
+                "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
+                "torchvision.transforms.v2.RandomPhotometricDistort",
+                "otx.data.transform_libs.torchvision.RandomAffine",
+                "otx.data.transform_libs.torchvision.RandomFlip",
+                "torchvision.transforms.v2.RandomVerticalFlip",
+                "torchvision.transforms.v2.GaussianBlur",
+                "torchvision.transforms.v2.GaussianNoise"
+            ]
+        cfg_path = "tests/assets/geti/model_configs/classification.yaml"
+        otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 9
         # default values
         list_of_all_augs = []
         for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] in supported_augs_list_for_configuration:
-                assert not aug["enable"]
-            elif aug["class_path"] == "otx.data.transform_libs.torchvision.RandomFlip":
+            if aug["class_path"] in ["otx.data.transform_libs.torchvision.RandomFlip", 
+                                       "otx.data.transform_libs.torchvision.EfficientNetRandomCrop"]:
                 assert aug["enable"]
             list_of_all_augs.append(aug["class_path"])
         # check if all supported augs are in the config
@@ -76,6 +78,28 @@ class TestGetiConfigConverter:
             if aug["class_path"] in supported_augs_list_for_configuration:
                 assert aug["enable"]
 
+        # disable EfficientNetRandomCrop
+        for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].items():
+            if aug_name == "random_resize_crop":
+                aug_conf["enable"] = False
+            # modify some aug for test
+            if aug_name == "color_jitter":
+                aug_conf["contrast"] = [0.0, 3.0]
+                aug_conf["hue"] = [-0.1, 0.1]
+
+        default_config = GetiConfigConverter.convert(asdict(otx_config))
+        assert len(default_config["data"]["train_subset"]["transforms"]) == 9
+        found = False
+        for aug in default_config["data"]["train_subset"]["transforms"]:
+            assert aug["class_path"] != supported_augs_list_for_configuration[0]
+            if aug["class_path"] == "otx.data.transform_libs.torchvision.Resize":
+                found = True
+            if aug["class_path"] == "torchvision.transforms.v2.RandomPhotometricDistort":
+                assert aug["init_args"]["contrast"] == [0.0, 3.0]
+                assert aug["init_args"]["hue"] == [-0.1, 0.1]
+        assert found
+
+        # instantiate
         data_root = "tests/assets/classification_dataset"
         engine, _ = GetiConfigConverter.instantiate(
             config=default_config,
@@ -85,6 +109,66 @@ class TestGetiConfigConverter:
         assert len(engine.datamodule.train_subset.transforms) == 9
         assert engine.datamodule.train_dataloader().dataset.transforms is not None
         assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9
+
+    def test_detection_augs(self, tmp_path):
+        supported_augs_list_for_configuration = [
+                "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+                "torchvision.transforms.v2.RandomPhotometricDistort",
+                "otx.data.transform_libs.torchvision.RandomAffine",
+                "otx.data.transform_libs.torchvision.RandomFlip",
+                "torchvision.transforms.v2.RandomVerticalFlip",
+                "torchvision.transforms.v2.GaussianBlur",
+                "torchvision.transforms.v2.GaussianNoise"
+            ]
+        cfg_path = "tests/assets/geti/model_configs/detection.yaml"
+        otx_config = OTXConfig.from_yaml_file(cfg_path)
+        default_config = GetiConfigConverter.convert(asdict(otx_config))
+        assert len(default_config["data"]["train_subset"]["transforms"]) == 10
+        # default values
+        list_of_all_augs = []
+        for aug in default_config["data"]["train_subset"]["transforms"]:
+            if aug["class_path"] in ["otx.data.transform_libs.torchvision.RandomFlip", 
+                                       "otx.data.transform_libs.torchvision.MinIoURandomCrop"]:
+                assert aug["enable"]
+            list_of_all_augs.append(aug["class_path"])
+        # check if all supported augs are in the config
+        for configuable_aug in supported_augs_list_for_configuration:
+            assert configuable_aug in list_of_all_augs, f"{configuable_aug} is missing for configuration."
+        # change config from geti to enable all augs
+        for aug in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].values():
+            aug["enable"] = True
+        default_config = GetiConfigConverter.convert(asdict(otx_config))
+        assert len(default_config["data"]["train_subset"]["transforms"]) == 10
+        for aug in default_config["data"]["train_subset"]["transforms"]:
+            if aug["class_path"] in supported_augs_list_for_configuration:
+                assert aug["enable"]
+
+        # disable iou_random_crop
+        for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].items():
+            if aug_name == "iou_random_crop":
+                aug_conf["enable"] = False
+            # modify some aug for test
+            if aug_name == "color_jitter":
+                aug_conf["contrast"] = [0.0, 3.0]
+                aug_conf["hue"] = [-0.1, 0.1]
+        default_config = GetiConfigConverter.convert(asdict(otx_config))
+        assert len(default_config["data"]["train_subset"]["transforms"]) == 10
+        for aug in default_config["data"]["train_subset"]["transforms"]:
+            if aug["class_path"] == "torchvision.transforms.v2.RandomPhotometricDistort":
+                assert aug["init_args"]["contrast"] == [0.0, 3.0]
+                assert aug["init_args"]["hue"] == [-0.1, 0.1]
+                break
+
+        # instantiate
+        data_root = "tests/assets/car_tree_bug"
+        engine, _ = GetiConfigConverter.instantiate(
+            config=default_config,
+            work_dir=tmp_path,
+            data_root=data_root,
+        )
+        assert len(engine.datamodule.train_subset.transforms) == 10
+        assert engine.datamodule.train_dataloader().dataset.transforms is not None
+        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9 # 10 - disabled iou_random_crop
 
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"

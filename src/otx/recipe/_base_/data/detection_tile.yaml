@@ -15,6 +15,8 @@ train_subset:
   num_workers: 2
   to_tv_image: false
   transforms:
+    - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
+      enable: true
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         scale: $(input_size)
@@ -60,9 +62,6 @@ train_subset:
         sigma:
           - 0.1
           - 2.0
-        prob: 0.5
-      init_args:
-        kernel_size: 5
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
@@ -71,7 +70,6 @@ train_subset:
       init_args:
         mean: 0.0
         sigma: 0.1
-        prob: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [0.0, 0.0, 0.0]
@@ -94,12 +92,6 @@ val_subset:
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
-    - class_path: torchvision.transforms.v2.GaussianNoise
-      enable: false
-      init_args:
-        mean: 0.0
-        sigma: 0.1
-        prob: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [0.0, 0.0, 0.0]
@@ -122,12 +114,6 @@ test_subset:
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
-    - class_path: torchvision.transforms.v2.GaussianNoise
-      enable: false
-      init_args:
-        mean: 0.0
-        sigma: 0.1
-        prob: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [0.0, 0.0, 0.0]

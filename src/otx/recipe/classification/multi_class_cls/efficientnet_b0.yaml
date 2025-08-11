@@ -103,13 +103,11 @@ overrides:
             sigma:
               - 0.1
               - 2.0
-            prob: 0.5
         - class_path: torchvision.transforms.v2.GaussianNoise
           enable: false
           init_args:
             mean: 0.0
             sigma: 0.1
-            prob: 0.5
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}

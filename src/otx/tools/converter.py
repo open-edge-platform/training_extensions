@@ -401,8 +401,9 @@ class GetiConfigConverter:
                 "random_vertical_flip": ["torchvision.transforms.v2.RandomVerticalFlip"],
                 "gaussian_blur": ["torchvision.transforms.v2.GaussianBlur"],
                 "gaussian_noise": ["torchvision.transforms.v2.GaussianNoise"],
-                "color_jitter": ["otx.data.transform_libs.torchvision.PhotoMetricDistortion"],
-                "iou_random_crop" : ["otx.data.transform_libs.torchvision.MinIoURandomCrop"],
+                "color_jitter": ["torchvision.transforms.v2.RandomPhotometricDistort"],
+                "iou_random_crop" : ["otx.data.transform_libs.torchvision.MinIoURandomCrop",
+                                     "otx.data.transform_libs.torchvision.RandomIoUCrop"],
                 "random_zoom_out": ["torchvision.transforms.v2.RandomZoomOut"],
                 "random_hsv_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
                 "cached_mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
@@ -430,10 +431,9 @@ class GetiConfigConverter:
                                     test_aug_cfg["enable"] = False
                             break
                         aug_config["enable"] = aug_value.pop("enable")
-                        for parameter in aug_value: 
-                            if parameter not in aug_config["init_args"]:
-                                msg = f"Configuration '{parameter}' is not found in {aug_name} augmentation."
-                                raise ValueError(msg)
+                        for parameter in aug_value:
+                            if  "init_args" not in aug_config:
+                                aug_config["init_args"] = {}
                             aug_config["init_args"][parameter] = aug_value[parameter]
 
                         break
