@@ -159,7 +159,7 @@ class OTXEngine(Engine):
         resume: bool = False,
         metric: MetricCallable | None = None,
         checkpoint: PathLike | None = None,
-        adaptive_bs: Literal["None", "Safe", "Full"] = "Safe",
+        adaptive_bs: Literal["None", "Safe", "Full"] = "None",
         check_val_every_n_epoch: int | None = 1,
         num_sanity_val_steps: int | None = 0,
         log_every_n_steps: int | None = 1,
