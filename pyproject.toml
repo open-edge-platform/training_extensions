@@ -3,7 +3,7 @@ name = "geti-edge"
 version = "0.1.0"
 description = "Geti Edge"
 readme = "readme.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 
 dependencies = [
     "fastapi[standard]~=0.115.12",
@@ -49,7 +49,7 @@ module-root = ""
 module-name = "app"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py313"
 line-length = 120
 exclude = [".venv*"]
 
@@ -71,7 +71,7 @@ split-on-trailing-comma = false
 max-args=7
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.13"
 ignore_missing_imports = true
 show_error_codes = true
 

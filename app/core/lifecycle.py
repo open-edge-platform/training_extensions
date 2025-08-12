@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
     settings = get_settings()

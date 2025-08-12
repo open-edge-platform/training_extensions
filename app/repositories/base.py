@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from sqlalchemy.orm import Session
 
@@ -8,7 +8,7 @@ from app.db.schema import Base
 ModelType = TypeVar("ModelType", bound=Base)
 
 
-class BaseRepository(Generic[ModelType]):
+class BaseRepository[ModelType]:
     """Base repository class for database operations."""
 
     def __init__(self, db: Session, model: type[ModelType]):
