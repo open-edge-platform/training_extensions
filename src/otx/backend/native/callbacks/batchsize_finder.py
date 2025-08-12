@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.loggers.logger import DummyLogger
 
+from otx.utils.device import is_xpu_available
+
 if TYPE_CHECKING:
     from lightning import LightningModule
     from lightning.pytorch.trainer import Trainer
@@ -53,13 +55,15 @@ def _try_loop_run(trainer: Trainer) -> None:
 def _scale_batch_reset_params(trainer: Trainer, steps_per_trial: int) -> None:
     trainer.logger = DummyLogger() if trainer.logger is not None else None
     trainer.callbacks = []
+    # For XPU devices 1 epoch sometimes is not enough to catch an error
+    max_epochs = 2 if is_xpu_available() else 1
 
     loop = trainer._active_loop  # noqa: SLF001
     if loop is None:
         msg = "There is no active loop."
         raise RuntimeError(msg)
     if trainer.fit_loop.epoch_loop.max_steps == -1:  # epoch based loop
-        trainer.fit_loop.max_epochs = 1
+        trainer.fit_loop.max_epochs = max_epochs
         trainer.limit_train_batches = steps_per_trial
     else:  # iter based loop
         trainer.fit_loop.epoch_loop.max_steps = steps_per_trial

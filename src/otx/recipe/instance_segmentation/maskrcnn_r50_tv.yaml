@@ -57,7 +57,7 @@ overrides:
   data:
     train_subset:
       batch_size: 4
-      num_workers: 8
+      num_workers: 4
 
     val_subset:
       num_workers: 4

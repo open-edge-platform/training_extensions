@@ -162,6 +162,7 @@ class OTXEngine(Engine):
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
         check_val_every_n_epoch: int | None = 1,
         num_sanity_val_steps: int | None = 0,
+        log_every_n_steps: int | None = 1,
         **kwargs,
     ) -> dict[str, Any]:
         r"""Trains the model using the provided LightningModule and OTXDataModule.
@@ -245,6 +246,7 @@ class OTXEngine(Engine):
             val_check_interval=val_check_interval,
             check_val_every_n_epoch=check_val_every_n_epoch,
             num_sanity_val_steps=num_sanity_val_steps,
+            log_every_n_steps=log_every_n_steps,
             **kwargs,
         )
         fit_kwargs: dict[str, Any] = {}
