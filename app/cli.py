@@ -1,4 +1,4 @@
-"""Command line interface for database operations"""
+"""Command line interface for interacting with the GETI Edge application."""
 
 import logging
 import sys
@@ -120,6 +120,22 @@ def clean_db() -> None:
         db.query(SourceDB).delete()
         db.commit()
     click.echo("✓ Database cleaned successfully!")
+
+
+@cli.command()
+@click.option("--target-path", default="docs/openapi.json")
+def gen_api(target_path: str) -> None:
+    """Generate OpenAPI specification JSON file."""
+    # Importing create_openapi imports threading which is slow. Importing here to not slow down other cli commands.
+    from app.create_openapi import create_openapi  # noqa: PLC0415
+
+    try:
+        create_openapi(target_path=target_path)
+        click.echo("✓ OpenAPI specification generated successfully!")
+    except Exception as e:
+        click.echo(f"✗ Failed to generate OpenAPI specification: {e}")
+        sys.exit(1)
+    click.echo("Waiting for threading to finish...")
 
 
 if __name__ == "__main__":

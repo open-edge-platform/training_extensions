@@ -9,12 +9,13 @@ import types
 import psutil
 
 from app.utils.ipc import mp_config_changed_condition, mp_reload_model_event, mp_stop_event
+from app.utils.singleton import Singleton
 from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
 
 logger = logging.getLogger(__name__)
 
 
-class Scheduler:
+class Scheduler(metaclass=Singleton):
     """Manages application processes and threads"""
 
     FRAME_QUEUE_SIZE = 5
@@ -127,7 +128,3 @@ class Scheduler:
                     logger.debug("Successfully cleaned up %s", name)
                 except Exception as e:
                     logger.warning("Error cleaning up %s: %s", name, e)
-
-
-# Global scheduler
-app_scheduler = Scheduler()

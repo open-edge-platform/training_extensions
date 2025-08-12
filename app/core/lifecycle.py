@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.core.scheduler import app_scheduler
+from app.core.scheduler import Scheduler
 from app.db import migration_manager
 from app.settings import get_settings
 
@@ -24,6 +24,9 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     if not migration_manager.initialize_database():
         logger.error("Failed to initialize database. Application cannot start.")
         raise RuntimeError("Database initialization failed")
+
+    # Initialize Scheduler
+    app_scheduler = Scheduler()
 
     # Start worker processes
     app_scheduler.start_workers()

@@ -1,4 +1,4 @@
 from app.core.lifecycle import lifespan
-from app.core.scheduler import app_scheduler
+from app.core.scheduler import Scheduler
 
-__all__ = ["app_scheduler", "lifespan"]
+__all__ = ["Scheduler", "lifespan"]

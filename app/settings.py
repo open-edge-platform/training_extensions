@@ -15,6 +15,10 @@ class Settings(BaseSettings):
 
     # Application
     app_name: str = "GETI Edge"
+    version: str = "0.1.0"
+    summary: str = "GETI Edge Inference Server"
+    description: str = "Edge inference server for GETI models"
+    openapi_url: str = "/api/openapi.json"
     debug: bool = Field(default=False, alias="DEBUG")
     environment: Literal["dev", "prod"] = "dev"
 

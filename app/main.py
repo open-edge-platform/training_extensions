@@ -22,7 +22,7 @@ from fastrtc import AdditionalOutputs, Stream
 from pydantic import BaseModel, Field
 
 from app.api.endpoints import configuration, models, pipelines, sinks, sources, system
-from app.core import app_scheduler, lifespan
+from app.core import Scheduler, lifespan
 from app.settings import get_settings
 from app.utils.ipc import mp_stop_event
 
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 def rtc_stream_routine() -> Iterator[tuple[np.ndarray, AdditionalOutputs]]:
     """Iterator to send frames with predictions to the WebRTC visualization stream"""
     while not mp_stop_event.is_set():
-        yield app_scheduler.rtc_stream_queue.get()
+        yield Scheduler().rtc_stream_queue.get()
     logger.info("Stopped RTC stream routine")
 
 
@@ -54,8 +54,9 @@ stream = Stream(
 
 app = FastAPI(
     title=settings.app_name,
-    description="Edge inference server for GETI models",
-    openapi_url="/api/openapi.json",
+    version=settings.version,
+    description=settings.description,
+    openapi_url=settings.openapi_url,
     redoc_url=None,
     docs_url=None,
     lifespan=lifespan,

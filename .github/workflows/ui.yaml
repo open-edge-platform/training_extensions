@@ -46,11 +46,10 @@ jobs:
           uv lock --check
           uv sync --frozen --all-extras
 
-      - name: Start FastAPI server
+      - name: Get OpenAPI spec
         run: |
-          nohup ./run.sh &
-          sleep 30 # Wait for the server to start
-          curl --noproxy '*' -o openapi-spec.json http://localhost:7860/api/openapi.json
+          export PYTHONPATH=.
+          uv run app/cli.py gen-api --target-path openapi-spec.json
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

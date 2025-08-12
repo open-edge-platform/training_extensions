@@ -17,5 +17,6 @@ data/
 .idea
 .DS_Store
 
+docs/openapi.json
 ui/src/api/openapi-spec.d.ts
 ui/src/api/openapi-spec.json
