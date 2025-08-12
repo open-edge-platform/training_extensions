@@ -51,18 +51,18 @@ class MapperProtocol(Protocol[S, D]):
 
 
 @dataclass(frozen=True)
-class ServiceConfig(Generic[R]):
+class ServiceConfig(Generic[R]):  # noqa: UP046
     repository_class: type[R]
     mapper_class: MapperProtocol
     resource_type: ResourceType
 
 
-class GenericConfigurationService(Generic[S, D, R]):
+class GenericConfigurationService(Generic[S, D, R]):  # noqa: UP046
     def __init__(self, config: ServiceConfig[R]) -> None:
         self.config = config
 
     @contextmanager
-    def _get_repo(self) -> Generator[R, None, None]:
+    def _get_repo(self) -> Generator[R]:
         with get_db_session() as db:
             repo = self.config.repository_class(db)  # type: ignore[call-arg]
             yield repo

@@ -1,5 +1,5 @@
 import io
-from enum import Enum
+from enum import StrEnum
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -15,7 +15,7 @@ from app.schemas.source import VideoFileSourceConfig, WebcamSourceConfig
 from app.services import ResourceInUseError, ResourceType
 
 
-class ConfigApiPath(str, Enum):
+class ConfigApiPath(StrEnum):
     SINKS = "sinks"
     SOURCES = "sources"
 
