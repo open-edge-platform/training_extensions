@@ -1,38 +1,28 @@
-from typing import Any
-from uuid import UUID
-
 from app.db.schema import SinkDB
-from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, Sink, SinkType
+from app.schemas.sink import Sink, SinkAdapter, SinkType
 
 
 class SinkMapper:
     """Mapper for Sink model <-> Sink schema conversions."""
 
+    # Define fields to exclude from config_data (common fields)
+    _COMMON_FIELDS: set[str] = {"id", "name", "sink_type", "output_formats", "rate_limit", "created_at", "updated_at"}
+
     @staticmethod
     def to_schema(sink_db: SinkDB) -> Sink:
         """Convert Sink model to Sink schema."""
 
-        match sink_db.sink_type:
-            case SinkType.FOLDER.value:
-                return FolderSinkConfig(
-                    id=UUID(sink_db.id),
-                    sink_type=SinkType.FOLDER,
-                    output_formats=sink_db.output_formats,
-                    rate_limit=sink_db.rate_limit,
-                    folder_path=sink_db.config_data.get("folder_path", ""),
-                )
-            case SinkType.MQTT.value:
-                return MqttSinkConfig(
-                    id=UUID(sink_db.id),
-                    sink_type=SinkType.MQTT,
-                    output_formats=sink_db.output_formats,
-                    rate_limit=sink_db.rate_limit,
-                    broker_host=sink_db.config_data.get("broker_host", ""),
-                    broker_port=int(sink_db.config_data.get("broker_port", 1883)),
-                    topic=sink_db.config_data.get("topic", ""),
-                )
-            case _:
-                raise ValueError(f"Unsupported sink type: {sink_db.sink_type}")
+        config_data = sink_db.config_data or {}
+        return SinkAdapter.validate_python(
+            {
+                "id": sink_db.id,
+                "name": sink_db.name,
+                "sink_type": SinkType(sink_db.sink_type),
+                "output_formats": sink_db.output_formats,
+                "rate_limit": sink_db.rate_limit,
+                **config_data,
+            }
+        )
 
     @staticmethod
     def from_schema(sink: Sink) -> SinkDB:
@@ -40,27 +30,13 @@ class SinkMapper:
         if sink is None:
             raise ValueError("Sink config cannot be None")
 
-        config_data: dict[str, Any] = {}
-
-        match sink.sink_type:
-            case SinkType.FOLDER:
-                config_data["folder_path"] = sink.folder_path
-            case SinkType.MQTT:
-                config_data.update(
-                    {
-                        "broker_host": sink.broker_host,
-                        "broker_port": sink.broker_port,
-                        "topic": sink.topic,
-                    }
-                )
-            case _:
-                raise ValueError(f"Unsupported sink type: {sink.sink_type}")
+        sink_dict = SinkAdapter.dump_python(sink, exclude=SinkMapper._COMMON_FIELDS, exclude_none=True)
 
         return SinkDB(
             id=str(sink.id),
-            sink_type=sink.sink_type.value,
             name=sink.name,
+            sink_type=sink.sink_type,
             output_formats=sink.output_formats,
             rate_limit=sink.rate_limit,
-            config_data=config_data,
+            config_data=sink_dict,
         )

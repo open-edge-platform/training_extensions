@@ -14,6 +14,10 @@ from app.settings import get_settings
 logger = logging.getLogger(__name__)
 
 
+class RevisionNotFoundError(Exception):
+    """Raised when the current revision is not found in Alembic history."""
+
+
 class MigrationManager:
     """Manages database connections and migrations"""
 
@@ -67,11 +71,19 @@ class MigrationManager:
                 context = migration.MigrationContext.configure(conn)
                 current_rev = context.get_current_revision()
 
+            # Check if current_rev is in Alembic's tracked revisions
+            if current_rev and current_rev not in script.get_heads() + script.get_bases():
+                raise RevisionNotFoundError(
+                    f"Current revision '{current_rev}' not found in Alembic history. Please, recreate the database."
+                )
+
             needs_migration = current_rev != current_head
             status = f"Current: {current_rev or 'None'}, Head: {current_head or 'None'}"
 
             return needs_migration, status
 
+        except RevisionNotFoundError:
+            raise
         except Exception as e:
             logger.warning(f"Could not check migration status: {e}")
             return True, "Unknown - assuming migration needed"
@@ -97,6 +109,9 @@ class MigrationManager:
             logger.info("Database is up to date")
             return True
 
+        except RevisionNotFoundError as e:
+            logger.error(f"Revision not found: {e}")
+            return False
         except Exception as e:
             logger.error(f"Database initialization failed: {e}")
             return False

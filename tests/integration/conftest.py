@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, PipelineDB, SourceDB
+from app.db.schema import Base, PipelineDB, SinkDB, SourceDB
 from app.schemas import OutputFormat, SinkType, SourceType
 from app.schemas.sink import MqttSinkConfig
 from app.schemas.source import WebcamSourceConfig
@@ -89,5 +89,34 @@ def fxt_db_sources() -> list[SourceDB]:
                 "stream_url": "rtsp://192.168.1.100:554/stream",
                 "auth_required": False,
             },
+        ),
+    ]
+
+
+@pytest.fixture
+def fxt_db_sinks() -> list[SinkDB]:
+    """Fixture to create multiple sink configurations in the database."""
+    return [
+        SinkDB(
+            sink_type=SinkType.FOLDER.value,
+            name="Test Folder Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            config_data={"folder_path": "/test/path"},
+        ),
+        SinkDB(
+            sink_type=SinkType.MQTT.value,
+            name="Test Mqtt Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
         ),
     ]

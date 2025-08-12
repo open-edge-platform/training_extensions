@@ -1,0 +1,391 @@
+import io
+from enum import Enum
+from unittest.mock import patch
+from uuid import uuid4
+
+import pytest
+import yaml
+from fastapi import status
+from fastapi.testclient import TestClient
+
+from app.main import app
+from app.schemas import OutputFormat, SinkType, SourceType
+from app.schemas.sink import FolderSinkConfig, MqttSinkConfig
+from app.schemas.source import VideoFileSourceConfig, WebcamSourceConfig
+from app.services import ResourceInUseError, ResourceType
+
+
+class ConfigApiPath(str, Enum):
+    SINKS = "sinks"
+    SOURCES = "sources"
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+
+@pytest.fixture
+def fxt_folder_sink() -> FolderSinkConfig:
+    return FolderSinkConfig(
+        id=uuid4(),
+        sink_type=SinkType.FOLDER,
+        name="Test Folder Sink",
+        rate_limit=0.1,
+        output_formats=[OutputFormat.PREDICTIONS],
+        folder_path="/test/path",
+    )
+
+
+@pytest.fixture
+def fxt_webcam_source() -> WebcamSourceConfig:
+    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Webcam Source", device_id=1)
+
+
+@pytest.fixture
+def fxt_video_source() -> VideoFileSourceConfig:
+    return VideoFileSourceConfig(
+        id=uuid4(),
+        source_type=SourceType.VIDEO_FILE,
+        name="Test Folder Source",
+        video_path="/test/video/path.mp4",
+    )
+
+
+@pytest.fixture
+def fxt_mqtt_sink() -> MqttSinkConfig:
+    return MqttSinkConfig(
+        id=uuid4(),
+        sink_type=SinkType.MQTT,
+        name="Test MQTT Sink",
+        rate_limit=0.2,
+        output_formats=[OutputFormat.IMAGE_WITH_PREDICTIONS],
+        broker_host="localhost",
+        broker_port=1883,
+        topic="test_topic",
+    )
+
+
+class TestSinkEndpoints:
+    @pytest.mark.parametrize(
+        "fixture_name, api_path, create_method",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
+        ],
+    )
+    def test_create_config_success(self, fixture_name, api_path, create_method, client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        config_id = str(fxt_config.id)
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, create_method).return_value = fxt_config
+
+            response = client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
+
+            assert response.status_code == status.HTTP_201_CREATED
+            assert response.json()["id"] == config_id
+            assert response.json()["name"] == fxt_config.name
+            getattr(mock_service.return_value, create_method).assert_called_once()
+
+    @pytest.mark.parametrize(
+        "api_path, create_method, config_data",
+        [
+            (
+                ConfigApiPath.SOURCES,
+                "create_source",
+                {"source_type": SourceType.DISCONNECTED, "name": "Disconnected Source"},
+            ),
+            (ConfigApiPath.SINKS, "create_sink", {"sink_type": SinkType.DISCONNECTED, "name": "Disconnected Sink"}),
+        ],
+    )
+    def test_create_config_disconnected_fails(self, api_path, create_method, config_data, client):
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            response = client.post(f"/api/{api_path}", json=config_data)
+
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            assert "DISCONNECTED cannot be created" in response.json()["detail"]
+            getattr(mock_service.return_value, create_method).assert_not_called()
+
+    @pytest.mark.parametrize(
+        "api_path, create_method",
+        [
+            (ConfigApiPath.SOURCES, "create_source"),
+            (ConfigApiPath.SINKS, "create_sink"),
+        ],
+    )
+    def test_create_sink_validation_error(self, api_path, create_method, client):
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            response = client.post(f"/api/{api_path}", json={"name": ""})
+
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            getattr(mock_service.return_value, create_method).assert_not_called()
+
+    @pytest.mark.parametrize(
+        "fixtures, api_path, list_method",
+        [
+            (["fxt_webcam_source", "fxt_video_source"], ConfigApiPath.SOURCES, "list_sources"),
+            (["fxt_folder_sink", "fxt_mqtt_sink"], ConfigApiPath.SINKS, "list_sinks"),
+        ],
+    )
+    def test_list_configs(self, fixtures, api_path, list_method, client, request):
+        fxt_configs = [request.getfixturevalue(fixture) for fixture in fixtures]
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, list_method).return_value = fxt_configs
+
+            response = client.get(f"/api/{api_path}")
+
+            assert response.status_code == status.HTTP_200_OK
+            assert len(response.json()) == 2
+            getattr(mock_service.return_value, list_method).assert_called_once()
+
+    @pytest.mark.parametrize(
+        "fixture_name, api_path, get_method",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "get_source_by_id"),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id"),
+        ],
+    )
+    def test_get_config_success(self, fixture_name, api_path, get_method, client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        config_id = str(fxt_config.id)
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, get_method).return_value = fxt_config
+
+            response = client.get(f"/api/{api_path}/{config_id}")
+
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["id"] == config_id
+            getattr(mock_service.return_value, get_method).assert_called_once_with(fxt_config.id)
+
+    @pytest.mark.parametrize(
+        "api_path, get_method",
+        [
+            (ConfigApiPath.SOURCES, "get_source_by_id"),
+            (ConfigApiPath.SINKS, "get_sink_by_id"),
+        ],
+    )
+    def test_get_config_not_found(self, api_path, get_method, client):
+        config_id = str(uuid4())
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, get_method).return_value = None
+
+            response = client.get(f"/api/{api_path}/{config_id}")
+
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+            assert "not found" in response.json()["detail"]
+
+    @pytest.mark.parametrize("api_path", [ConfigApiPath.SOURCES, ConfigApiPath.SINKS])
+    def test_get_config_invalid_uuid(self, api_path, client):
+        response = client.get(f"/api/{api_path}/invalid-uuid")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "fixture_name, api_path, get_method, update_method, update_data",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "get_source_by_id", "update_source", {"device_id": 5}),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id", "update_sink", {"folder_path": "/new/path"}),
+        ],
+    )
+    def test_update_sink_success(self, fixture_name, api_path, get_method, update_method, update_data, client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        config_id = str(fxt_config.id)
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            updated_config = fxt_config.model_copy(update=update_data)
+            getattr(mock_service.return_value, get_method).return_value = fxt_config
+            getattr(mock_service.return_value, update_method).return_value = updated_config
+
+            response = client.patch(f"/api/{api_path}/{config_id}", json=update_data)
+
+            assert response.status_code == status.HTTP_200_OK
+            key, value = next(iter(update_data.items()))
+            assert response.json()[key] == value
+            getattr(mock_service.return_value, get_method).assert_called_once_with(fxt_config.id)
+            getattr(mock_service.return_value, update_method).assert_called_once_with(fxt_config, update_data)
+
+    @pytest.mark.parametrize(
+        "api_path, get_method",
+        [
+            (ConfigApiPath.SOURCES, "get_source_by_id"),
+            (ConfigApiPath.SINKS, "get_sink_by_id"),
+        ],
+    )
+    def test_update_config_not_found(self, api_path, get_method, client):
+        config_id = str(uuid4())
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, get_method).return_value = None
+
+            response = client.patch(f"/api/{api_path}/{config_id}", json={"name": "Updated"})
+
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize(
+        "fixture_name, api_path, get_method, update_data",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "get_source_by_id", {"source_type": "folder"}),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id", {"sink_type": "mqtt"}),
+        ],
+    )
+    def test_update_config_type_forbidden(self, fixture_name, api_path, get_method, update_data, client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        config_id = str(fxt_config.id)
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            response = client.patch(f"/api/{api_path}/{config_id}", json=update_data)
+
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            assert "_type" in response.json()["detail"]
+            getattr(mock_service.return_value, get_method).assert_not_called()
+
+    @pytest.mark.parametrize(
+        "fixture_name, api_path, get_method, delete_method",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "get_source_by_id", "delete_source_by_id"),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id", "delete_sink_by_id"),
+        ],
+    )
+    def test_delete_config_success(self, fixture_name, api_path, get_method, delete_method, client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        config_id = str(fxt_config.id)
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, get_method).return_value = fxt_config
+            getattr(mock_service.return_value, delete_method).side_effect = None
+
+            response = client.delete(f"/api/{api_path}/{config_id}")
+
+            assert response.status_code == status.HTTP_204_NO_CONTENT
+            getattr(mock_service.return_value, get_method).assert_called_once_with(fxt_config.id)
+            getattr(mock_service.return_value, delete_method).assert_called_once_with(fxt_config.id)
+
+    @pytest.mark.parametrize(
+        "api_path, get_method",
+        [
+            (ConfigApiPath.SOURCES, "get_source_by_id"),
+            (ConfigApiPath.SINKS, "get_sink_by_id"),
+        ],
+    )
+    def test_delete_config_not_found(self, api_path, get_method, client):
+        sink_id = str(uuid4())
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, get_method).return_value = None
+
+            response = client.delete(f"/api/{api_path}/{sink_id}")
+
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize(
+        "fixture_name, api_path, get_method, delete_method, resource_type",
+        [
+            (
+                "fxt_webcam_source",
+                ConfigApiPath.SOURCES,
+                "get_source_by_id",
+                "delete_source_by_id",
+                ResourceType.SOURCE,
+            ),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id", "delete_sink_by_id", ResourceType.SINK),
+        ],
+    )
+    def test_delete_config_in_use(
+        self, fixture_name, api_path, get_method, delete_method, resource_type, client, request
+    ):
+        fxt_config = request.getfixturevalue(fixture_name)
+        config_id = str(fxt_config.id)
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, get_method).return_value = fxt_config
+            getattr(mock_service.return_value, delete_method).side_effect = ResourceInUseError(resource_type, config_id)
+
+            response = client.delete(f"/api/{api_path}/{config_id}")
+
+            assert response.status_code == status.HTTP_409_CONFLICT
+            assert "in use" in response.json()["detail"].lower()
+
+    @pytest.mark.parametrize(
+        "fixture_name,api_path,get_method, expected_yaml",
+        [
+            (
+                "fxt_webcam_source",
+                ConfigApiPath.SOURCES,
+                "get_source_by_id",
+                "device_id: 1\nname: Test Webcam Source\nsource_type: webcam\n",
+            ),
+            (
+                "fxt_folder_sink",
+                ConfigApiPath.SINKS,
+                "get_sink_by_id",
+                "folder_path: /test/path\nname: Test Folder Sink\noutput_formats:\n- predictions"
+                "\nrate_limit: 0.1\nsink_type: folder\n",
+            ),
+        ],
+    )
+    def test_export_config_success(self, fixture_name, api_path, get_method, expected_yaml, client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        config_id = str(fxt_config.id)
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, get_method).return_value = fxt_config
+
+            response = client.post(f"/api/{api_path}/{config_id}:export")
+
+            assert response.status_code == status.HTTP_200_OK
+            assert response.headers["content-type"] == "application/x-yaml"
+            assert f"{api_path[:-1]}_{config_id}.yaml" in response.headers["content-disposition"]
+            assert response.text == expected_yaml
+            getattr(mock_service.return_value, get_method).assert_called_once_with(fxt_config.id)
+
+    @pytest.mark.parametrize(
+        "fixture_name,api_path, create_method",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
+        ],
+    )
+    def test_import_config_success(self, fixture_name, api_path, create_method, client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        sink_data = fxt_config.model_dump(exclude={"id"}, mode="json")
+        yaml_content = yaml.safe_dump(sink_data)
+
+        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
+            getattr(mock_service.return_value, create_method).return_value = fxt_config
+
+            files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
+            response = client.post(f"/api/{api_path}:import", files=files)
+
+            assert response.status_code == status.HTTP_201_CREATED
+            assert response.json()["id"] == str(fxt_config.id)
+            getattr(mock_service.return_value, create_method).assert_called_once()
+
+    @pytest.mark.parametrize(
+        "api_path",
+        [ConfigApiPath.SOURCES, ConfigApiPath.SINKS],
+    )
+    def test_import_config_invalid_yaml(self, api_path, client):
+        invalid_yaml = "invalid: yaml: content: ["
+
+        files = {"yaml_file": ("test.yaml", io.BytesIO(invalid_yaml.encode()), "application/x-yaml")}
+        response = client.post(f"/api/{api_path}:import", files=files)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Invalid YAML format" in response.json()["detail"]
+
+    @pytest.mark.parametrize(
+        "api_path, config_type",
+        [
+            (ConfigApiPath.SOURCES, "source_type"),
+            (ConfigApiPath.SINKS, "sink_type"),
+        ],
+    )
+    def test_import_disconnected_config_fails(self, api_path, config_type, client):
+        config_data = {config_type: "disconnected", "name": "Test"}
+        yaml_content = yaml.safe_dump(config_data)
+
+        files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
+        response = client.post(f"/api/{api_path}:import", files=files)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "DISCONNECTED cannot be imported" in response.json()["detail"]

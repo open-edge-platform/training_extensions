@@ -1,7 +1,6 @@
 """Endpoints for managing pipeline sources"""
 
 import logging
-from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID
 
@@ -13,7 +12,7 @@ from fastapi.responses import FileResponse, Response
 from app.api.dependencies import get_source_id
 from app.schemas import Source, SourceType
 from app.schemas.source import SourceAdapter
-from app.services import ConfigurationService
+from app.services import ConfigurationService, ResourceInUseError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
@@ -101,10 +100,10 @@ async def create_source(
     """Create and configure a new source"""
     if source_config.source_type == SourceType.DISCONNECTED:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
         )
 
-    return ConfigurationService.create_source(source_config)
+    return ConfigurationService().create_source(source_config)
 
 
 @router.get(
@@ -115,7 +114,7 @@ async def create_source(
 )
 async def list_sources() -> list[Source]:
     """List the available sources"""
-    return ConfigurationService.list_sources()
+    return ConfigurationService().list_sources()
 
 
 @router.get(
@@ -128,9 +127,9 @@ async def list_sources() -> list[Source]:
 )
 async def get_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Source:
     """Get info about a source"""
-    source = ConfigurationService.get_source_by_id(source_id)
+    source = ConfigurationService().get_source_by_id(source_id)
     if not source:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"Source with ID {source_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
     return source
 
 
@@ -160,11 +159,12 @@ async def update_source(
 ) -> Source:
     """Reconfigure an existing source"""
     if "source_type" in source_config:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="The 'source_type' field cannot be changed")
-    source = ConfigurationService.get_source_by_id(source_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
+    config_service = ConfigurationService()
+    source = config_service.get_source_by_id(source_id)
     if not source:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"Source with ID {source_id} not found")
-    return ConfigurationService.update_source(source, source_config)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
+    return config_service.update_source(source, source_config)
 
 
 @router.post(
@@ -183,11 +183,11 @@ async def update_source(
 )
 async def export_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Response:
     """Export a source to file"""
-    source = ConfigurationService.get_source_by_id(source_id)
+    source = ConfigurationService().get_source_by_id(source_id)
     if not source:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
 
-    yaml_content = yaml.safe_dump(source.model_dump(mode="json"))
+    yaml_content = yaml.safe_dump(source.model_dump(mode="json", exclude={"id"}))
 
     return Response(
         content=yaml_content.encode("utf8"),
@@ -196,7 +196,14 @@ async def export_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> R
     )
 
 
-@router.post(":import")
+@router.post(
+    ":import",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_201_CREATED: {"description": "Source imported successfully", "model": Source},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format or source type is DISCONNECTED"},
+    },
+)
 async def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
 ) -> Source:
@@ -208,33 +215,33 @@ async def import_source(
         source_config = SourceAdapter.validate_python(source_data)
         if source_config.source_type == SourceType.DISCONNECTED:
             raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be imported"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The source with source_type=DISCONNECTED cannot be imported",
             )
-        return ConfigurationService.create_source(source_config)
+        return ConfigurationService().create_source(source_config)
     except yaml.YAMLError as e:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
 
 
 @router.delete(
     "/{source_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        status.HTTP_200_OK: {
-            "description": "Source configuration exported as a YAML file",
-            "content": {
-                "application/x-yaml": {"schema": {"type": "string", "format": "binary"}},
-            },
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Source configuration successfully deleted",
         },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or source is used by at least one pipeline"},
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
+        status.HTTP_409_CONFLICT: {"description": "Source is used by at least one pipeline"},
     },
 )
 async def delete_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> None:
     """Remove a source"""
-    source = ConfigurationService.get_source_by_id(source_id)
+    config_service = ConfigurationService()
+    source = config_service.get_source_by_id(source_id)
     if not source:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"Source with ID {source_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
     try:
-        ConfigurationService.delete_source_by_id(source_id)
-    except ValueError as e:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e))
+        config_service.delete_source_by_id(source_id)
+    except ResourceInUseError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

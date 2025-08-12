@@ -56,6 +56,10 @@ jobs:
         run: |
           uv run mypy . --config-file=pyproject.toml
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
-          uv run pytest tests
+          uv run pytest tests/unit
+
+      - name: Run integration tests
+        run: |
+          uv run pytest tests/integration

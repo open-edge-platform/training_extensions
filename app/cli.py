@@ -70,19 +70,23 @@ def check_db() -> None:
 
 @cli.command()
 @click.option("--with-model", default=False)
-def seed(with_model: bool) -> None:
+@click.option("--model-name", default="card-detection-ssd")
+def seed(with_model: bool, model_name: str) -> None:
     """Seed the database with test data."""
-    # TODO: use APIs when ready
-    # Currently, the app needs to be restarted since it doesn't track direct DB changes
+    # If the app is running, it needs to be restarted since it doesn't track direct DB changes
+    # Fixed IDs are used to ensure consistency in tests
+    click.echo("Seeding database with test data...")
     with get_db_session() as db:
         source = SourceDB(
-            name="Default source",
+            id="f6b1ac22-e36c-4b36-9a23-62b0881e4223",
+            name="Video Source",
             source_type=SourceType.VIDEO_FILE.value,
             config_data={"video_path": "data/media/video.mp4"},
         )
         db.add(source)
         sink = SinkDB(
-            name="Default sink",
+            id="6ee0c080-c7d9-4438-a7d2-067fd395eecf",
+            name="Folder Sink",
             sink_type=SinkType.FOLDER.value,
             rate_limit=0.2,
             output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],
@@ -92,12 +96,14 @@ def seed(with_model: bool) -> None:
         model = None
         if with_model:
             model = ModelDB(
-                name="card-detection-ssd",
+                id="977eeb18-eaac-449d-bc80-e340fbe052ad",
+                name=model_name,
                 format=ModelFormat.OPENVINO.value,
             )
             db.add(model)
         db.flush()
         pipeline = PipelineDB(
+            id="b2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
             source_id=source.id,
             sink_id=sink.id,
             model_id=model.id if model else None,

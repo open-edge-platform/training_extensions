@@ -16,7 +16,7 @@ class BaseRepository[ModelType]:
         self.model = model
 
     def get_by_id(self, obj_id: str) -> ModelType | None:
-        return self.db.query(self.model).get(obj_id)
+        return self.db.get(self.model, obj_id)
 
     def list_all(self) -> list[ModelType]:
         return self.db.query(self.model).all()

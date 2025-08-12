@@ -26,7 +26,7 @@ class PipelineDB(Base):
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
-    sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="SET NULL"))
+    sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
     model_id: Mapped[str | None] = mapped_column(Text, ForeignKey("models.id", ondelete="SET NULL"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)

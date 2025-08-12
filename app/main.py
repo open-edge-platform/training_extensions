@@ -102,6 +102,12 @@ async def webrtc_input_hook(data: InputData) -> None:
     stream.set_input(data.webrtc_id, data.conf_threshold)
 
 
+@app.get("/health")
+async def health_check() -> dict[str, str]:
+    """Health check endpoint"""
+    return {"status": "ok"}
+
+
 stream.mount(app, "/api")
 
 

@@ -1,5 +1,5 @@
 from .active_pipeline_service import ActivePipelineService
-from .configuration_service import ConfigurationService
+from .configuration_service import ConfigurationService, ResourceInUseError, ResourceType
 from .dispatch_service import DispatchService
 from .model_service import ModelService
 from .system_service import SystemService
@@ -10,6 +10,8 @@ __all__ = [
     "ConfigurationService",
     "DispatchService",
     "ModelService",
+    "ResourceInUseError",
+    "ResourceType",
     "SystemService",
     "VideoStreamService",
 ]

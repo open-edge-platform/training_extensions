@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, TypeAdapter
 
 from app.schemas.base import BaseIDNameModel
 
@@ -120,3 +120,5 @@ Sink = Annotated[
     FolderSinkConfig | MqttSinkConfig | RosSinkConfig | WebhookSinkConfig | DisconnectedSinkConfig,
     Field(discriminator="sink_type"),
 ]
+
+SinkAdapter: TypeAdapter[Sink] = TypeAdapter(Sink)

@@ -9,8 +9,7 @@ from app.db import get_db_session
 from app.db.schema import SinkDB, SourceDB
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
-from app.services.mappers.sink_mapper import SinkMapper
-from app.services.mappers.source_mapper import SourceMapper
+from app.services.mappers import SinkMapper, SourceMapper
 from app.utils import Singleton
 
 logger = logging.getLogger(__name__)

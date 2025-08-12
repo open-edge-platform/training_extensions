@@ -1,4 +1,3 @@
-from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -17,6 +16,7 @@ class TestSinkMapper:
             (
                 FolderSinkConfig(
                     sink_type=SinkType.FOLDER,
+                    name="Test Folder Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -27,6 +27,7 @@ class TestSinkMapper:
                 ),
                 SinkDB(
                     sink_type=SinkType.FOLDER.value,
+                    name="Test Folder Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -39,6 +40,7 @@ class TestSinkMapper:
             (
                 MqttSinkConfig(
                     sink_type=SinkType.MQTT,
+                    name="Test Mqtt Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -51,6 +53,7 @@ class TestSinkMapper:
                 ),
                 SinkDB(
                     sink_type=SinkType.MQTT.value,
+                    name="Test Mqtt Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -70,6 +73,7 @@ class TestSinkMapper:
 
         assert isinstance(result, SinkDB)
         assert result.id == str(sink_id)
+        assert result.name == expected_model.name
         assert result.sink_type == expected_model.sink_type
         assert result.rate_limit == expected_model.rate_limit
         assert result.output_formats == expected_model.output_formats
@@ -80,20 +84,13 @@ class TestSinkMapper:
         with pytest.raises(ValueError, match="Sink config cannot be None"):
             SinkMapper.from_schema(None)
 
-    def test_from_schema_unsupported_sink_type(self):
-        """Test from_schema raises ValueError for unsupported sink type."""
-        mock = MagicMock()
-        mock.sink_type = "UNSUPPORTED_TYPE"
-
-        with pytest.raises(ValueError, match="Unsupported sink type: UNSUPPORTED_TYPE"):
-            SinkMapper.from_schema(mock)
-
     @pytest.mark.parametrize(
         "db_instance,expected_schema",
         [
             (
                 SinkDB(
                     sink_type=SinkType.FOLDER.value,
+                    name="Test Folder Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -104,6 +101,7 @@ class TestSinkMapper:
                 ),
                 FolderSinkConfig(
                     sink_type=SinkType.FOLDER,
+                    name="Test Folder Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -116,6 +114,7 @@ class TestSinkMapper:
             (
                 SinkDB(
                     sink_type=SinkType.MQTT.value,
+                    name="Test Mqtt Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -126,6 +125,7 @@ class TestSinkMapper:
                 ),
                 MqttSinkConfig(
                     sink_type=SinkType.MQTT,
+                    name="Test Mqtt Sink",
                     rate_limit=0.2,
                     output_formats=[
                         OutputFormat.IMAGE_ORIGINAL,
@@ -146,6 +146,7 @@ class TestSinkMapper:
         result = SinkMapper.to_schema(db_instance)
 
         assert result.id == sink_id
+        assert result.name == expected_schema.name
         assert result.sink_type == expected_schema.sink_type
         assert result.rate_limit == expected_schema.rate_limit
         assert result.output_formats == expected_schema.output_formats
@@ -158,11 +159,3 @@ class TestSinkMapper:
                 assert result.broker_host == expected_schema.broker_host
                 assert result.broker_port == expected_schema.broker_port
                 assert result.topic == expected_schema.topic
-
-    def test_to_schema_unsupported_sink_type(self):
-        """Test to_schema raises ValueError for unsupported sink type."""
-        mock = MagicMock()
-        mock.sink_type = "UNSUPPORTED_TYPE"
-
-        with pytest.raises(ValueError, match="Unsupported sink type: UNSUPPORTED_TYPE"):
-            SinkMapper.to_schema(mock)

@@ -1,5 +1,3 @@
-from pydantic import TypeAdapter
-
 from app.db.schema import SourceDB
 from app.schemas.source import Source, SourceAdapter, SourceType
 
@@ -8,10 +6,7 @@ class SourceMapper:
     """Mapper for Source model <-> Source schema conversions."""
 
     # Define fields to exclude from config_data (common fields)
-    _COMMON_FIELDS: set[str] = {"id", "name", "source_type", "enabled", "created_at", "updated_at"}
-
-    # Create TypeAdapter for better serialization performance
-    _SOURCE_ADAPTER: TypeAdapter[Source] = TypeAdapter(Source)
+    _COMMON_FIELDS: set[str] = {"id", "name", "source_type", "created_at", "updated_at"}
 
     @staticmethod
     def to_schema(source_db: SourceDB) -> Source:
@@ -33,9 +28,7 @@ class SourceMapper:
         if source is None:
             raise ValueError("Source config cannot be None")
 
-        source_dict = SourceMapper._SOURCE_ADAPTER.dump_python(
-            source, exclude=SourceMapper._COMMON_FIELDS, exclude_none=True
-        )
+        source_dict = SourceAdapter.dump_python(source, exclude=SourceMapper._COMMON_FIELDS, exclude_none=True)
 
         return SourceDB(
             id=str(source.id),

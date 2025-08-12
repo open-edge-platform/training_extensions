@@ -2,10 +2,9 @@ from unittest.mock import patch
 
 import pytest
 
-from app.db.schema import SourceDB
-from app.schemas.source import SourceType
+from app.db.schema import SinkDB, SourceDB
 from app.services.configuration_service import ConfigurationService, ResourceInUseError, ResourceType
-from app.services.mappers.source_mapper import SourceMapper
+from app.services.mappers import SinkMapper, SourceMapper
 
 
 @pytest.fixture(autouse=True)
@@ -20,94 +19,184 @@ def mock_get_db_session(db_session):
 class TestConfigurationServiceIntegration:
     """Integration tests for ConfigurationService."""
 
-    def test_create_source(self, fxt_source_config, db_session):
-        """Test creating a new source."""
-        config_service = ConfigurationService()
-        config = config_service.create_source(fxt_source_config)
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model",
+        [
+            (ResourceType.SOURCE, "fxt_source_config", SourceDB),
+            (ResourceType.SINK, "fxt_sink_config", SinkDB),
+        ],
+    )
+    def test_create_config(self, resource_type, fixture_name, db_model, request, db_session):
+        """Test creating a new resource."""
 
-        assert db_session.query(SourceDB).count() == 1
-        created = db_session.query(SourceDB).one()
+        config = request.getfixturevalue(fixture_name)
+        config_service = ConfigurationService()
+
+        if resource_type == ResourceType.SOURCE:
+            config_service.create_source(config)
+        else:
+            config_service.create_sink(config)
+
+        assert db_session.query(db_model).count() == 1
+        created = db_session.query(db_model).one()
         assert created.id == str(config.id)
         assert created.name == config.name
-        assert created.source_type == config.source_type.value
+        if resource_type == ResourceType.SOURCE:
+            assert created.source_type == config.source_type.value
+        else:
+            assert created.sink_type == config.sink_type.value
 
-    def test_list_sources(self, fxt_db_sources, db_session):
-        """Test retrieving all source configurations."""
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model",
+        [
+            (ResourceType.SOURCE, "fxt_db_sources", SourceDB),
+            (ResourceType.SINK, "fxt_db_sinks", SinkDB),
+        ],
+    )
+    def test_list_configs(self, resource_type, fixture_name, db_model, request, db_session):
+        """Test retrieving all resource configurations."""
 
-        for db_source in fxt_db_sources:
-            db_session.add(db_source)
+        db_resources = request.getfixturevalue(fixture_name)
+
+        for db_resource in db_resources:
+            db_session.add(db_resource)
         db_session.flush()
 
         config_service = ConfigurationService()
-        sources = config_service.list_sources()
 
-        assert len(sources) == len(fxt_db_sources)
+        if resource_type == ResourceType.SOURCE:
+            resources = config_service.list_sources()
+        else:
+            resources = config_service.list_sinks()
 
-        for i, source in enumerate(sources):
-            assert str(source.id) == fxt_db_sources[i].id
-            assert source.name == fxt_db_sources[i].name
-            assert source.source_type == SourceType(fxt_db_sources[i].source_type)
+        assert len(resources) == len(db_resources)
 
-    def test_get_source(self, fxt_db_sources, db_session):
-        """Test retrieving a source by ID."""
+        for i, resource in enumerate(resources):
+            assert str(resource.id) == db_resources[i].id
+            assert resource.name == db_resources[i].name
 
-        db_source = fxt_db_sources[0]
-        db_session.add(db_source)
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model",
+        [
+            (ResourceType.SOURCE, "fxt_db_sources", SourceDB),
+            (ResourceType.SINK, "fxt_db_sinks", SinkDB),
+        ],
+    )
+    def test_get_config(self, resource_type, fixture_name, db_model, request, db_session):
+        """Test retrieving a config by ID."""
+
+        db_resources = request.getfixturevalue(fixture_name)
+        db_resource = db_resources[0]
+        db_session.add(db_resource)
         db_session.flush()
 
         config_service = ConfigurationService()
-        source = config_service.get_source_by_id(db_source.id)
 
-        assert source is not None
-        assert str(source.id) == db_source.id
-        assert source.name == db_source.name
-        assert source.source_type == SourceType(db_source.source_type)
+        if resource_type == ResourceType.SOURCE:
+            resource = config_service.get_source_by_id(db_resource.id)
+        else:
+            resource = config_service.get_sink_by_id(db_resource.id)
 
-    def test_update_source(self, fxt_db_sources, db_session):
-        """Test updating a source configuration."""
-        db_source = fxt_db_sources[0]
-        db_session.add(db_source)
+        assert resource is not None
+        assert str(resource.id) == db_resource.id
+        assert resource.name == db_resource.name
+
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model,mapper,update_data",
+        [
+            (
+                ResourceType.SOURCE,
+                "fxt_db_sources",
+                SourceDB,
+                SourceMapper,
+                {"name": "Updated Source", "video_path": "/new/path"},
+            ),
+            (
+                ResourceType.SINK,
+                "fxt_db_sinks",
+                SinkDB,
+                SinkMapper,
+                {"name": "Updated Sink", "folder_path": "/new/folder"},
+            ),
+        ],
+    )
+    def test_update_resource(self, resource_type, fixture_name, db_model, mapper, update_data, request, db_session):
+        """Test updating a resource configuration."""
+        db_resources = request.getfixturevalue(fixture_name)
+        db_resource = db_resources[0]
+        db_session.add(db_resource)
         db_session.flush()
 
         config_service = ConfigurationService()
-        source = SourceMapper.to_schema(db_source)
-        partial_update = {"name": "Updated Source Name", "video_path": "/new/path/video.mp4"}
-        updated_source = config_service.update_source(source, partial_update)
+        resource = mapper.to_schema(db_resource)
 
-        assert updated_source.name == "Updated Source Name"
-        assert updated_source.id == source.id
-        assert updated_source.video_path == "/new/path/video.mp4"
+        if resource_type == ResourceType.SOURCE:
+            updated_resource = config_service.update_source(resource, update_data)
+        else:
+            updated_resource = config_service.update_sink(resource, update_data)
+
+        assert updated_resource.name == update_data["name"]
+        assert updated_resource.id == resource.id
 
         # Verify in DB
-        db_source = db_session.query(SourceDB).get(db_source.id)
-        assert db_source.name == "Updated Source Name"
-        assert db_source.config_data["video_path"] == "/new/path/video.mp4"
+        db_resource = db_session.get(db_model, db_resource.id)
+        assert db_resource.name == update_data["name"]
+        if resource_type == ResourceType.SOURCE:
+            assert db_resource.config_data["video_path"] == update_data["video_path"]
+        else:
+            assert db_resource.config_data["folder_path"] == update_data["folder_path"]
 
-    def test_delete_source(self, fxt_db_sources, db_session):
-        """Test deleting a source configuration."""
-        db_source = fxt_db_sources[0]
-        db_session.add(db_source)
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model",
+        [
+            (ResourceType.SOURCE, "fxt_db_sources", SourceDB),
+            (ResourceType.SINK, "fxt_db_sinks", SinkDB),
+        ],
+    )
+    def test_delete_resource(self, resource_type, fixture_name, db_model, request, db_session):
+        """Test deleting a resource configuration."""
+        db_resources = request.getfixturevalue(fixture_name)
+        db_resource = db_resources[0]
+        db_session.add(db_resource)
         db_session.flush()
 
         config_service = ConfigurationService()
-        config_service.delete_source_by_id(db_source.id)
 
-        # Verify deletion
-        assert db_session.query(SourceDB).count() == 0
+        if resource_type == ResourceType.SOURCE:
+            config_service.delete_source_by_id(db_resource.id)
+        else:
+            config_service.delete_sink_by_id(db_resource.id)
 
-    def test_delete_source_in_use(self, fxt_db_sources, fxt_default_pipeline, db_session):
-        """Test deleting a source configuration."""
-        db_source = fxt_db_sources[0]
-        db_session.add(db_source)
+        assert db_session.query(db_model).count() == 0
+
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model,pipeline_field",
+        [
+            (ResourceType.SOURCE, "fxt_db_sources", SourceDB, "source_id"),
+            (ResourceType.SINK, "fxt_db_sinks", SinkDB, "sink_id"),
+        ],
+    )
+    def test_delete_resource_in_use(
+        self, resource_type, fixture_name, db_model, pipeline_field, fxt_default_pipeline, request, db_session
+    ):
+        """Test deleting a resource that is in use."""
+        db_resources = request.getfixturevalue(fixture_name)
+        db_resource = db_resources[0]
+        db_session.add(db_resource)
         db_session.flush()
-        fxt_default_pipeline.source_id = db_source.id
+
+        setattr(fxt_default_pipeline, pipeline_field, db_resource.id)
         db_session.add(fxt_default_pipeline)
         db_session.flush()
 
         with pytest.raises(ResourceInUseError) as exc_info:
             config_service = ConfigurationService()
-            config_service.delete_source_by_id(db_source.id)
 
-        assert exc_info.value.resource_type == ResourceType.SOURCE
-        assert exc_info.value.resource_id == db_source.id
-        assert db_session.query(SourceDB).count() == 1
+            if resource_type == ResourceType.SOURCE:
+                config_service.delete_source_by_id(db_resource.id)
+            else:
+                config_service.delete_sink_by_id(db_resource.id)
+
+        assert exc_info.value.resource_type == resource_type
+        assert exc_info.value.resource_id == db_resource.id
+        assert db_session.query(db_model).count() == 1
