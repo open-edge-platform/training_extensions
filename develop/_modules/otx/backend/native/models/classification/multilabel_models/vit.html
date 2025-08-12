@@ -262,7 +262,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.hub</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_url_to_file</span>
@@ -317,15 +317,20 @@
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vit-tiny&quot;</span><span class="p">,</span>
+        <span class="n">freeze_backbone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">peft</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;lora&quot;</span><span class="p">,</span> <span class="s2">&quot;dora&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">MultiLabelClsMetricCallable</span><span class="p">,</span>
         <span class="n">torch_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peft</span> <span class="o">=</span> <span class="n">peft</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">label_info</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span>
             <span class="n">data_input_params</span><span class="o">=</span><span class="n">data_input_params</span><span class="p">,</span>
             <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">freeze_backbone</span><span class="o">=</span><span class="n">freeze_backbone</span><span class="p">,</span>
             <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
             <span class="n">scheduler</span><span class="o">=</span><span class="n">scheduler</span><span class="p">,</span>
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
@@ -353,6 +358,7 @@
         <span class="n">vit_backbone</span> <span class="o">=</span> <span class="n">VisionTransformer</span><span class="p">(</span>
             <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
             <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
+            <span class="n">peft</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">peft</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">(</span>
             <span class="n">backbone</span><span class="o">=</span><span class="n">vit_backbone</span><span class="p">,</span>

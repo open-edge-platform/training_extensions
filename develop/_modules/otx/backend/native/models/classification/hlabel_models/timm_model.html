@@ -310,6 +310,7 @@
         <span class="n">label_info</span><span class="p">:</span> <span class="n">HLabelInfo</span><span class="p">,</span>
         <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tf_efficientnetv2_s.in21k&quot;</span><span class="p">,</span>
+        <span class="n">freeze_backbone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">HLabelClsMetricCallable</span><span class="p">,</span>
@@ -319,6 +320,7 @@
             <span class="n">label_info</span><span class="o">=</span><span class="n">label_info</span><span class="p">,</span>
             <span class="n">data_input_params</span><span class="o">=</span><span class="n">data_input_params</span><span class="p">,</span>
             <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">freeze_backbone</span><span class="o">=</span><span class="n">freeze_backbone</span><span class="p">,</span>
             <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
             <span class="n">scheduler</span><span class="o">=</span><span class="n">scheduler</span><span class="p">,</span>
             <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
