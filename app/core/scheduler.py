@@ -2,9 +2,7 @@ import logging
 import multiprocessing as mp
 import os
 import queue
-import signal
 import threading
-import types
 
 import psutil
 
@@ -22,6 +20,7 @@ class Scheduler(metaclass=Singleton):
     PREDICTION_QUEUE_SIZE = 5
 
     def __init__(self) -> None:
+        logger.info("Initializing Scheduler...")
         # Queue for the frames acquired from the stream source and decoded
         self.frame_queue: mp.Queue = mp.Queue(maxsize=self.FRAME_QUEUE_SIZE)
         # Queue for the inference results (predictions)
@@ -31,17 +30,7 @@ class Scheduler(metaclass=Singleton):
 
         self.processes: list[mp.Process] = []
         self.threads: list[threading.Thread] = []
-        self._setup_signal_handlers()
-
-    def _setup_signal_handlers(self) -> None:
-        """Setup signal handlers for graceful shutdown"""
-
-        def handle_signal(signum: int, _: types.FrameType | None) -> None:
-            logger.info(f"Process '{os.getpid()}' received signal {signum}, shutting down...")
-            self.shutdown()
-
-        signal.signal(signal.SIGINT, handle_signal)
-        signal.signal(signal.SIGTERM, handle_signal)
+        logger.info("Scheduler initialized")
 
     def start_workers(self) -> None:
         """Start all worker processes and threads"""
