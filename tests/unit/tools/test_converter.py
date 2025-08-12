@@ -114,3 +114,5 @@ class TestGetiConfigConverter:
         if "logger" in train_kwargs and train_kwargs["logger"] is not None:
             assert len(train_kwargs["logger"]) == len(config["logger"])
         assert train_kwargs["max_epochs"] == 100
+        assert "adaptive_bs" in train_kwargs
+        assert train_kwargs["adaptive_bs"] == "Safe"
