@@ -4,7 +4,7 @@
 !define fk(x) <i>x</i>
 
 title
-<size:16><b>Geti Edge - Database Schema</b></size>
+<size:16><b>Pipeline Management - Database Schema</b></size>
 <size:12>JSONB Option</size>
 end title
 
@@ -48,9 +48,9 @@ table(models) {
   updated_at : TIMESTAMP
 }
 
-sources ||--o{ pipelines : "one source can have many pipelines"
-sinks ||--o{ pipelines : "one sink can have many sinks"
-pipelines }o--|| models : "one model can have many sinks"
+sources ||--o{ pipelines : "one source can be used by many pipelines"
+sinks ||--o{ pipelines : "one sink can be used by many pipelines"
+pipelines }o--|| models : "one model can be used by many pipelines"
 
 note right of sources
   Stores configuration for
