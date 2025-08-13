@@ -408,6 +408,15 @@ class OTXTileTrainDataset(OTXTileDataset):
             with_full_img=tile_config.with_full_img,
         )
         dm_dataset = dm_dataset.filter("/item/annotation", filter_annotations=True, remove_empty=True)
+
+        if len(dm_dataset) == 0:
+            msg = (
+                f"Tiled dataset is empty. This is likely because the tile_size ({tile_config.tile_size}) "
+                f"is too small, causing all annotations to be discarded. "
+                f"**Try increasing the tile_size.**"
+            )
+            raise ValueError(msg)
+
         # Include original dataset for training
         dm_dataset.update(dataset.dm_subset)
         dataset.dm_subset = dm_dataset
