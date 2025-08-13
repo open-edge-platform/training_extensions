@@ -1,7 +1,7 @@
 import { View } from '@geti/ui';
 
-import { Gallery } from '../../features/data-collection/gallery/gallery';
-import { Toolbar } from '../../features/data-collection/toolbar/toolbar';
+import { Gallery } from './gallery/gallery.component';
+import { Toolbar } from './toolbar/toolbar.component';
 
 export const DataCollection = () => {
     return (

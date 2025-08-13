@@ -6,7 +6,6 @@ import { MemoryRouterProps, RouterProvider } from 'react-router';
 import { MemoryRouter as Router } from 'react-router-dom';
 
 import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
-import { ZoomProvider } from './components/zoom/zoom';
 import { router } from './router';
 
 const queryClient = new QueryClient({
@@ -28,9 +27,7 @@ export const Providers = () => {
         <QueryClientProvider client={queryClient}>
             <ThemeProvider router={router}>
                 <WebRTCConnectionProvider>
-                    <ZoomProvider>
-                        <RouterProvider router={router} />
-                    </ZoomProvider>
+                    <RouterProvider router={router} />
                 </WebRTCConnectionProvider>
             </ThemeProvider>
         </QueryClientProvider>
