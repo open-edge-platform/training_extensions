@@ -25,6 +25,12 @@ import {
 } from '../../api/openapi-spec';
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
 import { paths } from '../../router';
+import { ReactComponent as IconFolder } from './../../assets/icons/folder-arrow-right.svg';
+import { ReactComponent as IconMQTT } from './../../assets/icons/mqtt.svg';
+import { ReactComponent as IconRos } from './../../assets/icons/ros.svg';
+import { ReactComponent as IconWebhook } from './../../assets/icons/webhook.svg';
+
+const PUBLISH_RATE_MAX_VALUE = 120; // hz
 
 type OutputConfig =
     | SchemaDisconnectedSinkConfig
@@ -224,7 +230,11 @@ const Sinks = ({
                 items={OUTPUT_ITEMS.map((item) => {
                     return {
                         value: item.sink_type,
-                        label: <>{item.name}</>,
+                        label: (
+                            <>
+                                {item.icon} {item.name}
+                            </>
+                        ),
                         content: (
                             <ConfigureOutput
                                 output={forms[item.sink_type]}
@@ -243,12 +253,12 @@ const Sinks = ({
 };
 
 const OUTPUT_ITEMS = [
-    { sink_type: 'disconnected', name: 'Disconnected' },
-    { sink_type: 'folder', name: 'Folder path' },
-    { sink_type: 'mqtt', name: 'MQTT message bus' },
-    { sink_type: 'ros', name: 'ROS2 message bus' },
-    { sink_type: 'webhook', name: 'Webhook URL' },
-] satisfies Array<{ sink_type: OutputType; name: string }>;
+    { sink_type: 'disconnected', name: 'Disconnected', icon: <></> },
+    { sink_type: 'folder', name: 'Folder path', icon: <IconFolder /> },
+    { sink_type: 'mqtt', name: 'MQTT message bus', icon: <IconMQTT /> },
+    { sink_type: 'ros', name: 'ROS2 message bus', icon: <IconRos /> },
+    { sink_type: 'webhook', name: 'Webhook URL', icon: <IconWebhook /> },
+] satisfies Array<{ sink_type: OutputType; name: string; icon: JSX.Element }>;
 
 export const Output = () => {
     const navigate = useNavigate();
@@ -257,6 +267,8 @@ export const Output = () => {
     const outputMutation = $api.useMutation('post', '/api/outputs');
     const currentOutput: OutputConfig = outputs.data;
 
+    const [publishRate, setPublishRate] = useState(60);
+    const [isPublishRateUnlimited, setIsPublishRateUnlimited] = useState(false);
     const [selectedSinkType, setSelectedSinkType] = useState<OutputType>(currentOutput.sink_type);
     const [forms, setForms] = useState<OutputFormRecord>(() => {
         if (currentOutput !== undefined) {
@@ -280,7 +292,7 @@ export const Output = () => {
     };
 
     return (
-        <Form width='100%' onSubmit={onSubmit}>
+        <Form width='100%' onSubmit={onSubmit} maxWidth={'640px'} margin={'0 auto'}>
             <Flex direction='column' gap='size-200'>
                 <Text
                     UNSAFE_style={{
@@ -300,7 +312,7 @@ export const Output = () => {
                 />
 
                 <View>
-                    <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)' }} level={2}>
+                    <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)', fontWeight: 500 }} level={1}>
                         Predictions format
                     </Heading>
 
@@ -312,6 +324,28 @@ export const Output = () => {
                             Input image with predictions drawn on
                         </Checkbox>
                     </Flex>
+                </View>
+
+                <View>
+                    <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)', fontWeight: 500 }} level={1}>
+                        Maximum publishing rate (hz)
+                    </Heading>
+
+                    <NumberField
+                        value={publishRate}
+                        onChange={setPublishRate}
+                        step={1}
+                        maxValue={PUBLISH_RATE_MAX_VALUE}
+                        isQuiet
+                        isDisabled={isPublishRateUnlimited}
+                    />
+                    <Checkbox
+                        isSelected={isPublishRateUnlimited}
+                        onChange={setIsPublishRateUnlimited}
+                        marginStart={'size-150'}
+                    >
+                        Unlimited
+                    </Checkbox>
                 </View>
 
                 <Divider size='S' />
