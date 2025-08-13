@@ -1,8 +1,6 @@
 # export no_proxy="localhost, 127.0.0.1, ::1"
 # Start with:
-#  - uv run app/main.py  (UI_MODE=True)
-#  - uv run fastapi run  (UI_MODE=False)
-#  - uv run fastapi dev  (UI_MODE=False, development mode)
+#  - uv run app/main.py
 # or use docker and access UI and backend at geti-edge.localhost
 #  - docker compose up
 #  - docker compose -f docker-compose.dev.yaml up
@@ -114,20 +112,13 @@ stream.mount(app, "/api")
 def main() -> None:
     """Main application entry point"""
     logger.info(f"Starting {settings.app_name} in {settings.environment} mode")
-
-    if settings.gradio_ui:
-        logger.info("Starting Gradio UI...")
-        stream.ui.launch(server_name=settings.host, server_port=settings.port, show_error=settings.debug)
-    else:
-        logger.info("Starting FastAPI server...")
-
-        uvicorn.run(
-            app,
-            host=settings.host,
-            port=settings.port,
-            reload=settings.debug and settings.environment == "dev",
-            log_level="debug" if settings.debug else "info",
-        )
+    uvicorn.run(
+        app,
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug and settings.environment == "dev",
+        log_level="debug" if settings.debug else "info",
+    )
 
 
 if __name__ == "__main__":

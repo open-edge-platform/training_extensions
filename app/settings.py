@@ -36,9 +36,6 @@ class Settings(BaseSettings):
     alembic_config_path: str = "app/alembic.ini"
     alembic_script_location: str = "app/alembic"
 
-    # UI
-    gradio_ui: bool = Field(default=False, alias="GRADIO_UI")
-
     # Proxy settings
     no_proxy: str = Field(default="localhost,127.0.0.1,::1", alias="no_proxy")
 
