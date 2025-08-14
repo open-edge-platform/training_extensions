@@ -1,8 +1,18 @@
 import react from '@vitejs/plugin-react';
+import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        svgr({
+            svgrOptions: {
+                svgo: false,
+                exportType: 'named',
+            },
+            include: '**/*.svg',
+        }),
+    ],
     test: {
         environment: 'jsdom',
         // This is needed to use globals like describe or expect

@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { Flex, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
-import classes from './models.module.scss';
+import classes from './model-selection.module.scss';
 
 const Models = [
     {

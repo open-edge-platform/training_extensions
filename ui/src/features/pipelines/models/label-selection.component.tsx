@@ -6,13 +6,13 @@ import {
     ColorPicker as SpectrumColorPicker,
     SpectrumColorPickerProps,
 } from '@adobe/react-spectrum';
-import { Button, ColorEditor, Flex, Grid, Text } from '@geti/ui';
+import { ActionButton, Button, ColorEditor, Flex, Grid, Text } from '@geti/ui';
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
 import { Notification, notify } from '../../../components/notification/notification.component';
 
-import classes from './models.module.scss';
+import classes from './label-selection.module.scss';
 
 const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
     return (
@@ -35,12 +35,18 @@ const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
 
 const LabelInput = ({ value, onChange }: { value: string; onChange: (newValue: string) => void }) => {
     return (
-        <input className={classes.labelInput} type='text' value={value} onChange={(e) => onChange(e.target.value)} />
+        <input
+            aria-label={`Label input for ${value}`}
+            className={classes.labelInput}
+            type='text'
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+        />
     );
 };
 
-type LabelItem = { id: string; colorValue: string; nameValue: string; onDelete: (id: string) => void };
-const LabelItem = ({ id, colorValue, nameValue, onDelete }: LabelItem) => {
+type LabelItemProps = { id: string; colorValue: string; nameValue: string; onDelete: (id: string) => void };
+const LabelItem = ({ id, colorValue, nameValue, onDelete }: LabelItemProps) => {
     const [color, setColor] = useState<string>(colorValue);
     const [name, setName] = useState<string>(nameValue);
 
@@ -59,14 +65,20 @@ const LabelItem = ({ id, colorValue, nameValue, onDelete }: LabelItem) => {
                 }}
             />
             <Flex justifyContent={'center'} alignItems={'center'}>
-                <Delete onClick={() => onDelete(id)} fill='white' />
+                <ActionButton
+                    aria-label={`Delete label ${name}`}
+                    onPress={() => onDelete(id)}
+                    UNSAFE_className={classes.deleteButton}
+                >
+                    <Delete fill='white' />
+                </ActionButton>
             </Flex>
         </Grid>
     );
 };
 
 export const LabelSelection = () => {
-    const [items, setItems] = useState<Omit<LabelItem, 'onDelete'>[]>([
+    const [items, setItems] = useState<Omit<LabelItemProps, 'onDelete'>[]>([
         { id: uuid(), colorValue: '#F20004', nameValue: 'Car' },
     ]);
 

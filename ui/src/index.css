@@ -20,6 +20,30 @@
     --annotation-stroke: #7bdeff;
 
     --moss-tint-1: #b1d272;
+
+    --spectrum-button-primary-text-font-weight: 500;
+    --spectrum-accent-background-color-default: var(--energy-blue);
+    --spectrum-accent-background-color: var(--energy-blue);
+    --spectrum-accent-background-color-disabled: var(--spectrum-global-color-gray-200);
+    --spectrum-accent-border-color: var(--energy-blue);
+    --spectrum-button-text-color: var(--spectrum-global-color-gray-50) !important;
+    --spectrum-accent-background-color-key-focus: var(--energy-blue);
+    --spectrum-global-color-blue-300: rgb(20, 103, 200);
+
+    --spectrum-accent-border-color-hover: var(--energy-blue-shade);
+    --spectrum-button-text-color-hover: var(--spectrum-global-color-gray-50);
+    --spectrum-accent-background-color-hover: var(--spectrum-global-color-blue-300);
+    --spectrum-global-color-blue-200: rgb(13, 90, 188);
+
+    --spectrum-accent-border-color-down: var(--energy-blue-shade-darker);
+    --spectrum-button-text-color-down: var(--spectrum-global-color-gray-50);
+    --spectrum-accent-background-color-down: var(--spectrum-global-color-blue-200);
+
+    --spectrum-button-text-background-color-down: var(--energy-blue-shade-darker);
+    --spectrum-button-text-border-color-down: var(--energy-blue-shade-darker);
+
+    --spectrum-high-contrast-button-face: var(--spectrum-global-color-gray-50);
+    --spectrum-high-contrast-gray-text: var(--spectrum-global-color-gray-500);
 }
 
 body,
