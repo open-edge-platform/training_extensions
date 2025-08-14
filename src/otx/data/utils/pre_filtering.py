@@ -97,6 +97,7 @@ def is_valid_annot(item: DatasetItem, annotation: Annotation, labels: list[str])
         msg = "There are invalid polygon, they will be filtered out before training."
         return False
     if isinstance(annotation, Points):
+        # For keypoint detection, num of (x, y) points should be equal to num of labels
         return len(annotation.points) // 2 == len(labels)
 
     return True
