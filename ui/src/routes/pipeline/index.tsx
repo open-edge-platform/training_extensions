@@ -1,5 +1,5 @@
 import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
-import { capitalize, isObject, startsWith } from 'lodash-es';
+import { capitalize, isArray, isObject, startsWith } from 'lodash-es';
 
 import { $api } from '../../api/client';
 import { paths } from '../../router';
@@ -67,9 +67,9 @@ export const Index = () => {
                                     Model
                                 </Heading>
                                 <Flex direction={'column'} gap={'size-300'}>
-                                    {isObject(models.data) &&
-                                        Object.entries(models.data).map(([field, value]) => (
-                                            <Field key={field} field={field} value={value} />
+                                    {isArray(models.data) &&
+                                        models.data.map((model) => (
+                                            <Field key={model.id} field={model.name} value={model.format} />
                                         ))}
                                 </Flex>
                             </View>

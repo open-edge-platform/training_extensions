@@ -6,7 +6,6 @@ import threading
 
 import psutil
 
-from app.utils.ipc import mp_config_changed_condition, mp_reload_model_event, mp_stop_event
 from app.utils.singleton import Singleton
 from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
 
@@ -27,6 +26,12 @@ class Scheduler(metaclass=Singleton):
         self.pred_queue: mp.Queue = mp.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
         # Queue for pushing predictions to the visualization stream (WebRTC)
         self.rtc_stream_queue: queue.Queue = queue.Queue(maxsize=1)
+        # Event to sync all processes on application shutdown
+        self.mp_stop_event = mp.Event()
+        # Event to signal that the model has to be reloaded
+        self.mp_model_reload_event = mp.Event()
+        # Condition variable to notify processes about configuration updates
+        self.mp_config_changed_condition = mp.Condition()
 
         self.processes: list[mp.Process] = []
         self.threads: list[threading.Thread] = []
@@ -40,19 +45,19 @@ class Scheduler(metaclass=Singleton):
         stream_loader_proc = mp.Process(
             target=frame_acquisition_routine,
             name="Stream loader",
-            args=(self.frame_queue, mp_stop_event, mp_config_changed_condition),
+            args=(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition),
         )
 
         inference_server_proc = mp.Process(
             target=inference_routine,
             name="Inferencer",
-            args=(self.frame_queue, self.pred_queue, mp_stop_event, mp_reload_model_event),
+            args=(self.frame_queue, self.pred_queue, self.mp_stop_event, self.mp_model_reload_event),
         )
 
         dispatching_thread = threading.Thread(
             target=dispatching_routine,
             name="Dispatching thread",
-            args=(self.pred_queue, self.rtc_stream_queue, mp_stop_event, mp_config_changed_condition),
+            args=(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event, self.mp_config_changed_condition),
         )
 
         # Start all workers
@@ -71,7 +76,7 @@ class Scheduler(metaclass=Singleton):
         logger.info("Initiating graceful shutdown...")
 
         # Signal all processes to stop
-        mp_stop_event.set()
+        self.mp_stop_event.set()
 
         # Get current process info for debugging
         pid = os.getpid()

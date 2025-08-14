@@ -1,16 +1,17 @@
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 
 from app.db.schema import SinkDB, SourceDB
-from app.services.configuration_service import ConfigurationService, ResourceInUseError, ResourceType
+from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.mappers import SinkMapper, SourceMapper
 
 
 @pytest.fixture(autouse=True)
 def mock_get_db_session(db_session):
     """Mock the get_db_session to use test database."""
-    with patch("app.services.configuration_service.get_db_session") as mock:
+    with patch("app.services.base.get_db_session") as mock:
         mock.return_value.__enter__.return_value = db_session
         mock.return_value.__exit__.return_value = None
         yield mock
@@ -47,13 +48,13 @@ class TestConfigurationServiceIntegration:
             assert created.sink_type == config.sink_type.value
 
     @pytest.mark.parametrize(
-        "resource_type,fixture_name,db_model",
+        "fixture_name,db_model,list_method",
         [
-            (ResourceType.SOURCE, "fxt_db_sources", SourceDB),
-            (ResourceType.SINK, "fxt_db_sinks", SinkDB),
+            ("fxt_db_sources", SourceDB, "list_sources"),
+            ("fxt_db_sinks", SinkDB, "list_sinks"),
         ],
     )
-    def test_list_configs(self, resource_type, fixture_name, db_model, request, db_session):
+    def test_list_configs(self, fixture_name, db_model, list_method, request, db_session):
         """Test retrieving all resource configurations."""
 
         db_resources = request.getfixturevalue(fixture_name)
@@ -64,10 +65,7 @@ class TestConfigurationServiceIntegration:
 
         config_service = ConfigurationService()
 
-        if resource_type == ResourceType.SOURCE:
-            resources = config_service.list_sources()
-        else:
-            resources = config_service.list_sinks()
+        resources = getattr(config_service, list_method)()
 
         assert len(resources) == len(db_resources)
 
@@ -76,13 +74,13 @@ class TestConfigurationServiceIntegration:
             assert resource.name == db_resources[i].name
 
     @pytest.mark.parametrize(
-        "resource_type,fixture_name,db_model",
+        "fixture_name,db_model,get_method",
         [
-            (ResourceType.SOURCE, "fxt_db_sources", SourceDB),
-            (ResourceType.SINK, "fxt_db_sinks", SinkDB),
+            ("fxt_db_sources", SourceDB, "get_source_by_id"),
+            ("fxt_db_sinks", SinkDB, "get_sink_by_id"),
         ],
     )
-    def test_get_config(self, resource_type, fixture_name, db_model, request, db_session):
+    def test_get_config(self, fixture_name, db_model, get_method, request, db_session):
         """Test retrieving a config by ID."""
 
         db_resources = request.getfixturevalue(fixture_name)
@@ -92,10 +90,7 @@ class TestConfigurationServiceIntegration:
 
         config_service = ConfigurationService()
 
-        if resource_type == ResourceType.SOURCE:
-            resource = config_service.get_source_by_id(db_resource.id)
-        else:
-            resource = config_service.get_sink_by_id(db_resource.id)
+        resource = getattr(config_service, get_method)(db_resource.id)
 
         assert resource is not None
         assert str(resource.id) == db_resource.id
@@ -131,9 +126,9 @@ class TestConfigurationServiceIntegration:
         resource = mapper.to_schema(db_resource)
 
         if resource_type == ResourceType.SOURCE:
-            updated_resource = config_service.update_source(resource, update_data)
+            updated_resource = config_service.update_source(resource.id, update_data)
         else:
-            updated_resource = config_service.update_sink(resource, update_data)
+            updated_resource = config_service.update_sink(resource.id, update_data)
 
         assert updated_resource.name == update_data["name"]
         assert updated_resource.id == resource.id
@@ -147,13 +142,32 @@ class TestConfigurationServiceIntegration:
             assert db_resource.config_data["folder_path"] == update_data["folder_path"]
 
     @pytest.mark.parametrize(
-        "resource_type,fixture_name,db_model",
+        "resource_type,db_model,update_method",
         [
-            (ResourceType.SOURCE, "fxt_db_sources", SourceDB),
-            (ResourceType.SINK, "fxt_db_sinks", SinkDB),
+            (ResourceType.SOURCE, SourceDB, "update_source"),
+            (ResourceType.SINK, SinkDB, "update_sink"),
         ],
     )
-    def test_delete_resource(self, resource_type, fixture_name, db_model, request, db_session):
+    def test_update_non_existent_resource(self, resource_type, db_model, update_method):
+        """Test deleting a resource configuration that doesn't exist."""
+
+        config_service = ConfigurationService()
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            config_id = uuid4()
+            getattr(config_service, update_method)(config_id, {"name": "New Name"})
+
+        assert exc_info.value.resource_type == resource_type
+        assert exc_info.value.resource_id == str(config_id)
+
+    @pytest.mark.parametrize(
+        "fixture_name,db_model,delete_method",
+        [
+            ("fxt_db_sources", SourceDB, "delete_source_by_id"),
+            ("fxt_db_sinks", SinkDB, "delete_sink_by_id"),
+        ],
+    )
+    def test_delete_resource(self, fixture_name, db_model, delete_method, request, db_session):
         """Test deleting a resource configuration."""
         db_resources = request.getfixturevalue(fixture_name)
         db_resource = db_resources[0]
@@ -162,22 +176,27 @@ class TestConfigurationServiceIntegration:
 
         config_service = ConfigurationService()
 
-        if resource_type == ResourceType.SOURCE:
-            config_service.delete_source_by_id(db_resource.id)
-        else:
-            config_service.delete_sink_by_id(db_resource.id)
+        getattr(config_service, delete_method)(db_resource.id)
 
         assert db_session.query(db_model).count() == 0
 
     @pytest.mark.parametrize(
-        "resource_type,fixture_name,db_model,pipeline_field",
+        "resource_type,fixture_name,db_model,pipeline_field,delete_method",
         [
-            (ResourceType.SOURCE, "fxt_db_sources", SourceDB, "source_id"),
-            (ResourceType.SINK, "fxt_db_sinks", SinkDB, "sink_id"),
+            (ResourceType.SOURCE, "fxt_db_sources", SourceDB, "source_id", "delete_source_by_id"),
+            (ResourceType.SINK, "fxt_db_sinks", SinkDB, "sink_id", "delete_sink_by_id"),
         ],
     )
     def test_delete_resource_in_use(
-        self, resource_type, fixture_name, db_model, pipeline_field, fxt_default_pipeline, request, db_session
+        self,
+        resource_type,
+        fixture_name,
+        db_model,
+        pipeline_field,
+        delete_method,
+        fxt_default_pipeline,
+        request,
+        db_session,
     ):
         """Test deleting a resource that is in use."""
         db_resources = request.getfixturevalue(fixture_name)
@@ -191,12 +210,27 @@ class TestConfigurationServiceIntegration:
 
         with pytest.raises(ResourceInUseError) as exc_info:
             config_service = ConfigurationService()
-
-            if resource_type == ResourceType.SOURCE:
-                config_service.delete_source_by_id(db_resource.id)
-            else:
-                config_service.delete_sink_by_id(db_resource.id)
+            getattr(config_service, delete_method)(db_resource.id)
 
         assert exc_info.value.resource_type == resource_type
         assert exc_info.value.resource_id == db_resource.id
         assert db_session.query(db_model).count() == 1
+
+    @pytest.mark.parametrize(
+        "resource_type,db_model,delete_method",
+        [
+            (ResourceType.SOURCE, SourceDB, "delete_source_by_id"),
+            (ResourceType.SINK, SinkDB, "delete_sink_by_id"),
+        ],
+    )
+    def test_delete_non_existent_resource(self, resource_type, db_model, delete_method):
+        """Test deleting a resource configuration that doesn't exist."""
+
+        config_service = ConfigurationService()
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            config_id = uuid4()
+            getattr(config_service, delete_method)(config_id)
+
+        assert exc_info.value.resource_type == resource_type
+        assert exc_info.value.resource_id == str(config_id)

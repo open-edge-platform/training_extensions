@@ -19,13 +19,13 @@ def frame_acquisition_routine(
     frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass, cleanup: bool = True
 ) -> None:
     """Load frames from the video stream and inject them into the frame queue"""
-    config_service = ActivePipelineService(config_changed_condition=config_changed_condition)
+    active_pipeline_service = ActivePipelineService(config_changed_condition=config_changed_condition)
     prev_source_config: Source | None = None
     video_stream: VideoStream | None = None
 
     try:
         while not stop_event.is_set():
-            source_config = config_service.get_source_config()
+            source_config = active_pipeline_service.get_source_config()
 
             if source_config.source_type == SourceType.DISCONNECTED:
                 logger.debug("No source available... retrying in 1 second")

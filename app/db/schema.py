@@ -27,7 +27,7 @@ class PipelineDB(Base):
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
-    model_id: Mapped[str | None] = mapped_column(Text, ForeignKey("models.id", ondelete="SET NULL"))
+    model_id: Mapped[str | None] = mapped_column(Text, ForeignKey("models.id", ondelete="RESTRICT"))
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -52,7 +52,7 @@ class ModelDB(Base):
     __tablename__ = "models"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
-    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
     format: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())

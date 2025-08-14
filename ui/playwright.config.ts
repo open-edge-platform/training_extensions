@@ -41,7 +41,7 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: CI ? 'npx serve -s dist -p 3000' : 'npm run dev',
+        command: CI ? 'npx serve -s dist -p 3000' : 'npm run start',
         name: 'client',
         url: 'http://localhost:3000',
         reuseExistingServer: CI === false,

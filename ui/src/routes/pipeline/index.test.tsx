@@ -19,7 +19,7 @@ describe('View pipeline', () => {
                 ]);
             }),
             http.get('/api/models', () => {
-                return HttpResponse.json({ active_model: 'test-model', available_models: ['test-model'] });
+                return HttpResponse.json([{ id: '1', name: 'Test-model', format: 'onnx' }]);
             }),
             http.get('/api/sinks', () => {
                 return HttpResponse.json([
@@ -49,7 +49,7 @@ describe('View pipeline', () => {
         // Content
         expect(await screen.findByText('video_file')).toBeInTheDocument();
 
-        expect(await screen.findAllByText('test-model')).toHaveLength(2);
+        expect(await screen.findByText('Test-model')).toBeInTheDocument();
 
         expect(await screen.findByText('data/sink')).toBeInTheDocument();
         expect(await screen.findByText('image_original,image_with_predictions,predictions')).toBeInTheDocument();

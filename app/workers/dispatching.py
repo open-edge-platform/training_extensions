@@ -23,14 +23,14 @@ def dispatching_routine(
     config_changed_condition: ConditionClass,
 ) -> None:
     """Pull predictions from the queue and dispatch them to the configured outputs and WebRTC visualization stream."""
-    config_service = ActivePipelineService(config_changed_condition=config_changed_condition)
+    active_pipeline_service = ActivePipelineService(config_changed_condition=config_changed_condition)
 
     prev_sink_config: Sink | None = None
     destinations: list[Dispatcher] = []
 
     try:
         while not stop_event.is_set():
-            sink_config = config_service.get_sink_config()
+            sink_config = active_pipeline_service.get_sink_config()
 
             if sink_config.sink_type == SinkType.DISCONNECTED:
                 logger.debug("No sink available... retrying in 1 second")

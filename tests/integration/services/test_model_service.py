@@ -2,21 +2,30 @@ import io
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi import UploadFile
 
+from app.db.schema import ModelDB
+from app.schemas import Model
 from app.schemas.model_activation import ModelActivationState
-from app.services.model_service import ModelAlreadyExistsError, ModelNotFoundError, ModelService
+from app.services import ResourceType
+from app.services.model_service import ModelAlreadyExistsError, ModelService, ResourceNotFoundError
 
 
 @pytest.fixture(autouse=True)
 def mock_get_db_session(db_session):
     """Mock the get_db_session to use test database."""
-    with patch("app.services.model_service.get_db_session") as mock:
+    with (
+        patch("app.services.model_service.get_db_session") as mock,
+        patch("app.services.base.get_db_session") as mock_base,
+    ):
         mock.return_value.__enter__.return_value = db_session
         mock.return_value.__exit__.return_value = None
-        yield mock
+        mock_base.return_value.__enter__.return_value = db_session
+        mock_base.return_value.__exit__.return_value = None
+        yield
 
 
 @pytest.fixture
@@ -35,6 +44,19 @@ def fxt_model_service(fxt_default_pipeline):
         service.models_dir = Path(tmpdir)
         service._model_activation_state = ModelActivationState(active_model=None, available_models=[])
         yield service
+
+
+def create_model_db(db_session, models: list[ModelDB]) -> None:
+    """Create a model in the database."""
+    for db_model in models:
+        db_session.add(db_model)
+    db_session.flush()
+
+
+def assert_model(actual: Model, expected: Model | ModelDB) -> None:
+    assert str(actual.id) == expected.id
+    assert actual.name == expected.name
+    assert actual.format == expected.format
 
 
 class TestModelServiceIntegration:
@@ -79,27 +101,8 @@ class TestModelServiceIntegration:
         model_name = "non_existent_model"
         model_service = ModelService()
 
-        with pytest.raises(ModelNotFoundError, match="Model 'non_existent_model' not found"):
+        with pytest.raises(ResourceNotFoundError):
             model_service.remove_model(model_name)
-
-    @pytest.mark.asyncio
-    async def test_remove_active_model_activates_next(self, fxt_upload_file, fxt_model_service):
-        """Test removing active model activates the next available model."""
-        await fxt_model_service.add_model("model1", fxt_upload_file, fxt_upload_file)
-        await fxt_model_service.add_model("model2", fxt_upload_file, fxt_upload_file)
-
-        available_models = fxt_model_service.get_available_model_names()
-        assert len(available_models) == 2
-        assert "model1" in available_models
-        assert "model2" in available_models
-        assert fxt_model_service.get_active_model_name() == "model1"
-
-        fxt_model_service.remove_model("model1")
-
-        assert fxt_model_service.get_active_model_name() == "model2"
-        assert len(available_models) == 1
-        assert "model1" not in fxt_model_service.get_available_model_names()
-        assert "model2" in fxt_model_service.get_available_model_names()
 
     @pytest.mark.asyncio
     async def test_activate_model_success(self, fxt_upload_file, fxt_model_service):
@@ -117,5 +120,68 @@ class TestModelServiceIntegration:
         """Test activating a non-existent model raises error."""
         model_name = "non_existent_model"
 
-        with pytest.raises(ModelNotFoundError, match=f"Model '{model_name}' not found"):
+        with pytest.raises(ResourceNotFoundError):
             fxt_model_service.activate_model(model_name)
+
+    def test_list_models(self, fxt_db_models, db_session):
+        """Test retrieving all models."""
+
+        create_model_db(db_session, fxt_db_models)
+
+        models = ModelService().list_models()
+
+        assert len(models) == len(fxt_db_models)
+        for i, model in enumerate(models):
+            assert_model(model, fxt_db_models[i])
+
+    def test_get_model(self, fxt_db_models, db_session):
+        """Test retrieving a model by ID."""
+
+        db_model = fxt_db_models[0]
+        create_model_db(db_session, [db_model])
+
+        model = ModelService().get_model_by_id(UUID(db_model.id))
+
+        assert model is not None
+        assert_model(model, db_model)
+
+        assert ModelService().get_model_by_id(uuid4()) is None
+
+    def test_delete_model(self, fxt_db_models, db_session):
+        """Test deleting a model by ID."""
+
+        db_model = fxt_db_models[0]
+        create_model_db(db_session, models=[db_model])
+
+        ModelService().delete_model_by_id(UUID(db_model.id))
+
+        assert db_session.query(ModelDB).count() == 0
+
+    def test_delete_non_existent_model(self):
+        """Test deleting a non-existent model raises error."""
+        model_id = uuid4()
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            ModelService().delete_model_by_id(model_id)
+
+        assert excinfo.value.resource_type == ResourceType.MODEL
+        assert excinfo.value.resource_id == str(model_id)
+
+    def test_update_model(self, fxt_db_models, db_session):
+        """Test deleting a model by ID."""
+
+        db_model = fxt_db_models[0]
+        create_model_db(db_session, models=[db_model])
+
+        updated = ModelService().update_model(UUID(db_model.id), {"name": "Updated Model Name"})
+        db_updated = db_session.query(ModelDB).filter_by(id=db_model.id).one()
+
+        assert_model(updated, db_updated)
+
+    def test_update_non_existent_model(self):
+        """Test deleting a non-existent model raises error."""
+        model_id = uuid4()
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            ModelService().update_model(model_id, {"name": "Updated Model Name"})
+
+        assert excinfo.value.resource_type == ResourceType.MODEL
+        assert excinfo.value.resource_id == str(model_id)

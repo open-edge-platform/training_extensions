@@ -29,7 +29,6 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
     )
     op.create_table(
         "sinks",
@@ -66,7 +65,7 @@ def upgrade() -> None:
         sa.Column("is_running", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(["model_id"], ["models.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["model_id"], ["models.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["sink_id"], ["sinks.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),

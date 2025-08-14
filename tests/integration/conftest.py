@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, PipelineDB, SinkDB, SourceDB
-from app.schemas import OutputFormat, SinkType, SourceType
+from app.db.schema import Base, ModelDB, PipelineDB, SinkDB, SourceDB
+from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 from app.schemas.sink import MqttSinkConfig
 from app.schemas.source import WebcamSourceConfig
 
@@ -64,6 +64,21 @@ def fxt_sink_config() -> MqttSinkConfig:
         broker_port=1883,
         topic="topic",
     )
+
+
+@pytest.fixture
+def fxt_db_models() -> list[ModelDB]:
+    """Fixture to create multiple models in the database."""
+    return [
+        ModelDB(
+            name="Test OpenVino Model",
+            format=ModelFormat.OPENVINO,
+        ),
+        ModelDB(
+            name="Test ONNX Model",
+            format=ModelFormat.ONNX,
+        ),
+    ]
 
 
 @pytest.fixture

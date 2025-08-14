@@ -15,10 +15,7 @@ const test = testBase.extend<Fixtures>({
                 return response(200).json({});
             }),
             http.get('/api/models', ({ response }) => {
-                return response(200).json({
-                    active_model: '1',
-                    available_models: [],
-                });
+                return response(200).json([]);
             }),
             http.post('/api/webrtc/offer', ({ response }) => {
                 // Schema is empty, so we return an empty object

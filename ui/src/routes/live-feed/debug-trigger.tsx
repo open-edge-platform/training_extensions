@@ -23,11 +23,11 @@ const DebugTooltip = () => {
 
             <Picker
                 label='Select model for inference'
-                selectedKey={modelsQuery.data.active_model}
+                selectedKey={modelsQuery.data[0].name}
                 onSelectionChange={(model) => {
-                    if (model === null || !modelsQuery.data.available_models.some((name) => name === model)) {
-                        return;
-                    }
+                    // if (model === null || !modelsQuery.data.available_models.some((name) => name === model)) {
+                    //     return;
+                    // }
 
                     activeModelMutation.mutate({
                         params: {
@@ -36,10 +36,10 @@ const DebugTooltip = () => {
                     });
                 }}
             >
-                {modelsQuery.data.available_models.map((model) => {
+                {modelsQuery.data.map((model) => {
                     return (
-                        <Item key={model} textValue={model}>
-                            {model}
+                        <Item key={model.id} textValue={model.name}>
+                            {model.name}
                         </Item>
                     );
                 })}

@@ -22,7 +22,6 @@ from pydantic import BaseModel, Field
 from app.api.endpoints import configuration, models, pipelines, sinks, sources, system
 from app.core import Scheduler, lifespan
 from app.settings import get_settings
-from app.utils.ipc import mp_stop_event
 
 settings = get_settings()
 
@@ -35,8 +34,9 @@ logger = logging.getLogger(__name__)
 
 def rtc_stream_routine() -> Iterator[tuple[np.ndarray, AdditionalOutputs]]:
     """Iterator to send frames with predictions to the WebRTC visualization stream"""
-    while not mp_stop_event.is_set():
-        yield Scheduler().rtc_stream_queue.get()
+    scheduler = Scheduler()
+    while not scheduler.mp_stop_event.is_set():
+        yield scheduler.rtc_stream_queue.get()
     logger.info("Stopped RTC stream routine")
 
 

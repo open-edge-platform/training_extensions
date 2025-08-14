@@ -10,18 +10,10 @@ from app.db.schema import SinkDB, SourceDB
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
 from app.services.mappers import SinkMapper, SourceMapper
+from app.services.parent_process_guard import parent_process_only
 from app.utils import Singleton
 
 logger = logging.getLogger(__name__)
-
-
-class ConfigUpdateFromChildProcessError(Exception):
-    """Exception raised when a child process tries to update the configuration of the parent process."""
-
-    def __init__(self):
-        super().__init__(
-            "Attempted to update the configuration from a child process; only the parent process can update it."
-        )
 
 
 class ActivePipelineService(metaclass=Singleton):
@@ -50,21 +42,13 @@ class ActivePipelineService(metaclass=Singleton):
         self._load_app_config()
 
         # For child processes, start a daemon to monitor configuration changes and reload it when necessary.
-        if not self.__is_parent_process():
+        if mp.parent_process() is not None:
             if self.config_changed_condition is None:
                 raise ValueError("config_changed_condition must be provided for child processes")
             self._config_reload_daemon = Thread(
                 target=self._reload_config_daemon_routine, name="Config reloader", daemon=True
             )
             self._config_reload_daemon.start()
-
-    @staticmethod
-    def __is_parent_process() -> bool:
-        return mp.parent_process() is None
-
-    def __ensure_parent_process(self) -> None:
-        if not self.__is_parent_process():
-            raise ConfigUpdateFromChildProcessError
 
     @staticmethod
     def __ensure_active_pipeline() -> None:
@@ -140,23 +124,21 @@ class ActivePipelineService(metaclass=Singleton):
                 if self._active_pipeline_id is not None:
                     pipeline_repo.update_sink(self._active_pipeline_id, config.id)
                     self._sink.id = UUID(config.id)
-            else:
-                raise TypeError(f"Unsupported config type: {type(config)}")
 
             db.commit()
             on_success()
 
+    @parent_process_only
     def set_source_config(self, source_config: Source) -> None:
         """Creating new source and attaching to the active pipeline."""
-        self.__ensure_parent_process()
         self.__ensure_active_pipeline()
         source_db = SourceMapper.from_schema(source_config)
         self.__set_config(source_db, self._notify_config_changed)
         self._source = source_config
 
+    @parent_process_only
     def set_sink_config(self, sink_config: Sink) -> None:
         """Creating new sink and attaching to the active pipeline."""
-        self.__ensure_parent_process()
         self.__ensure_active_pipeline()
         sink_db = SinkMapper.from_schema(sink_config)
         self.__set_config(sink_db, self._notify_config_changed)

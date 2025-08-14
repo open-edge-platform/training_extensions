@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, Response
 from app.api.dependencies import get_source_id
 from app.schemas import Source, SourceType
 from app.schemas.source import SourceAdapter
-from app.services import ConfigurationService, ResourceInUseError
+from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
@@ -160,11 +160,10 @@ async def update_source(
     """Reconfigure an existing source"""
     if "source_type" in source_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
-    config_service = ConfigurationService()
-    source = config_service.get_source_by_id(source_id)
-    if not source:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
-    return config_service.update_source(source, source_config)
+    try:
+        return ConfigurationService().update_source(source_id, source_config)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post(
@@ -237,11 +236,9 @@ async def import_source(
 )
 async def delete_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> None:
     """Remove a source"""
-    config_service = ConfigurationService()
-    source = config_service.get_source_by_id(source_id)
-    if not source:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
     try:
-        config_service.delete_source_by_id(source_id)
+        ConfigurationService().delete_source_by_id(source_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

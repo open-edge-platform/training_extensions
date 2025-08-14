@@ -3,7 +3,8 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from threading import Lock
+from threading import Event, Lock
+from uuid import UUID
 
 import aiofiles
 from fastapi import UploadFile
@@ -12,9 +13,11 @@ from model_api.models import Model
 from app.db import get_db_session
 from app.db.schema import ModelDB
 from app.repositories import ModelRepository
+from app.schemas.model import Model as ModelSchema
 from app.schemas.model import ModelFormat
 from app.schemas.model_activation import ModelActivationState
-from app.utils.ipc import mp_reload_model_event
+from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
+from app.services.mappers.model_mapper import ModelMapper
 from app.utils.singleton import Singleton
 
 logger = logging.getLogger(__name__)
@@ -27,10 +30,6 @@ class ModelAlreadyExistsError(Exception):
     """Exception raised when a model with the same name already exists"""
 
 
-class ModelNotFoundError(Exception):
-    """Exception raised when a model is not found"""
-
-
 @dataclass
 class LoadedModel:
     name: str
@@ -40,9 +39,13 @@ class LoadedModel:
 class ModelService(metaclass=Singleton):
     """Service to register and activate models"""
 
-    def __init__(self) -> None:
+    def __init__(self, mp_model_reload_event: Event | None = None) -> None:
         self.models_dir = Path("data/models")
+        self._mp_model_reload_event = mp_model_reload_event
 
+        self._persistence: GenericPersistenceService[Model, ModelDB, ModelRepository] = GenericPersistenceService(
+            ServiceConfig(ModelRepository, ModelMapper, ResourceType.MODEL)
+        )
         self._model_activation_state: ModelActivationState = self._load_state()
         self._model_activation_state_lock = Lock()
 
@@ -80,7 +83,7 @@ class ModelService(metaclass=Singleton):
             save_file(model_bin_file, bin_path),
         )
 
-    async def add_model(self, model_name: str, model_xml_file: UploadFile, model_bin_file: UploadFile) -> None:
+    async def add_model(self, model_name: str, model_xml_file: UploadFile, model_bin_file: UploadFile) -> ModelSchema:
         """
         Store a new model and make it available for inference
 
@@ -109,15 +112,16 @@ class ModelService(metaclass=Singleton):
                 self._model_activation_state.active_model = model_name
 
             # Store the model in db
-            model = ModelDB(name=model_name, format=ModelFormat.OPENVINO.value)
+            model = ModelDB(name=model_name, format=ModelFormat.OPENVINO)
             with get_db_session() as db:
                 repo = ModelRepository(db)
                 repo.save(model)
                 if is_first_model:
                     repo.set_active_model(model_name)
                 db.commit()
-            if is_first_model:
-                mp_reload_model_event.set()
+            if is_first_model and self._mp_model_reload_event:
+                self._mp_model_reload_event.set()
+            return ModelMapper.to_schema(model)
 
     def remove_model(self, model_name: str) -> None:
         """
@@ -129,7 +133,7 @@ class ModelService(metaclass=Singleton):
         with self._model_activation_state_lock:
             # If the model does not exist, raise an error
             if model_name not in self._model_activation_state.available_models:
-                raise ModelNotFoundError(f"Model '{model_name}' not found")
+                raise ResourceNotFoundError(ResourceType.MODEL, model_name, f"Model '{model_name}' not found")
 
             # Remove the model from the inference state
             self._model_activation_state.available_models.remove(model_name)
@@ -158,8 +162,8 @@ class ModelService(metaclass=Singleton):
                 if next_model:
                     repo.set_active_model(next_model)
                 db.commit()
-            if next_model:
-                mp_reload_model_event.set()
+            if next_model and self._mp_model_reload_event:
+                self._mp_model_reload_event.set()
 
     def get_available_model_names(self) -> list[str]:
         """Get the names of all available models"""
@@ -175,7 +179,7 @@ class ModelService(metaclass=Singleton):
         with self._model_activation_state_lock:
             # If there is no model available with the given name, raise an error
             if model_name not in self._model_activation_state.available_models:
-                raise ModelNotFoundError(f"Model '{model_name}' not found")
+                raise ResourceNotFoundError(ResourceType.MODEL, model_name, f"Model '{model_name}' not found")
 
             # Activate the model
             self._model_activation_state.active_model = model_name
@@ -185,7 +189,8 @@ class ModelService(metaclass=Singleton):
                 repo = ModelRepository(db)
                 repo.set_active_model(model_name)
                 db.commit()
-            mp_reload_model_event.set()
+            if self._mp_model_reload_event:
+                self._mp_model_reload_event.set()
 
     def get_inference_model(self, force_reload: bool = False) -> Model | None:
         """
@@ -217,3 +222,25 @@ class ModelService(metaclass=Singleton):
                 ),
             )
         return self._loaded_model.model
+
+    def get_model_by_id(self, model_id: UUID) -> ModelSchema | None:
+        """Get a model by its ID"""
+        return self._persistence.get_by_id(model_id)
+
+    def delete_model_by_id(self, model_id: UUID) -> None:
+        """Delete a model by its ID"""
+        model = self.get_model_by_id(model_id)
+        if not model:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+        self._persistence.delete_by_id(model_id)
+
+    def list_models(self) -> list[ModelSchema]:
+        """Get information about available models"""
+        return self._persistence.list_all()
+
+    def update_model(self, model_id: UUID, model_metadata: dict) -> ModelSchema:
+        """Update the metadata of an existing model"""
+        model = self.get_model_by_id(model_id)
+        if not model:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+        return self._persistence.update(model, model_metadata)

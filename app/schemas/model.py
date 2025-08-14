@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import StrEnum
 
 from app.schemas.base import BaseIDNameModel
 
 
-class ModelFormat(str, Enum):
+class ModelFormat(StrEnum):
     OPENVINO = "openvino_ir"
     ONNX = "onnx"
 

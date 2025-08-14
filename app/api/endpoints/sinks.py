@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, Response
 from app.api.dependencies import get_sink_id
 from app.schemas import Sink, SinkType
 from app.schemas.sink import SinkAdapter
-from app.services import ConfigurationService, ResourceInUseError
+from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
@@ -147,11 +147,10 @@ async def update_sink(
     """Reconfigure an existing sink"""
     if "sink_type" in sink_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'sink_type' field cannot be changed")
-    config_service = ConfigurationService()
-    sink = config_service.get_sink_by_id(sink_id)
-    if not sink:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sink with ID {sink_id} not found")
-    return config_service.update_sink(sink, sink_config)
+    try:
+        return ConfigurationService().update_sink(sink_id, sink_config)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post(
@@ -227,11 +226,9 @@ async def import_sink(
 )
 async def delete_sink(sink_id: Annotated[UUID, Depends(get_sink_id)]) -> None:
     """Remove a sink"""
-    config_service = ConfigurationService()
-    sink = config_service.get_sink_by_id(sink_id)
-    if not sink:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sink with ID {sink_id} not found")
     try:
-        config_service.delete_sink_by_id(sink_id)
+        ConfigurationService().delete_sink_by_id(sink_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

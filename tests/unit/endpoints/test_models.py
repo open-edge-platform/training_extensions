@@ -1,0 +1,125 @@
+from unittest.mock import patch
+from uuid import uuid4
+
+import pytest
+from fastapi import status
+
+from app.schemas.model import Model, ModelFormat
+from app.services import ResourceInUseError, ResourceNotFoundError, ResourceType
+
+
+@pytest.fixture
+def fxt_model():
+    return Model(
+        id=uuid4(),
+        name="test_model",
+        format=ModelFormat.OPENVINO,
+    )
+
+
+class TestModelEndpoints:
+    def test_list_model_success(self, fxt_model, fxt_client):
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.list_models.return_value = [fxt_model] * 2
+
+            response = fxt_client.get("/api/models")
+
+            assert response.status_code == status.HTTP_200_OK
+            assert len(response.json()) == 2
+            mock_service.return_value.list_models.assert_called_once()
+
+    def test_get_model_success(self, fxt_model, fxt_client):
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.get_model_by_id.return_value = fxt_model
+
+            response = fxt_client.get(f"/api/models/{str(fxt_model.id)}")
+
+            assert response.status_code == status.HTTP_200_OK
+            mock_service.return_value.get_model_by_id.assert_called_once_with(fxt_model.id)
+
+    @pytest.mark.parametrize(
+        "http_method, service_method",
+        [
+            ("get", "get_model_by_id"),
+            ("delete", "delete_model_by_id"),
+            ("patch", "update_model"),
+        ],
+    )
+    def test_model_invalid_ids(self, http_method, service_method, fxt_client):
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            getattr(mock_service.return_value, service_method).side_effect = None
+
+            response = getattr(fxt_client, http_method)("/api/models/invalid-id")
+
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            getattr(mock_service.return_value, service_method).assert_not_called()
+
+    def test_get_model_not_found(self, fxt_client):
+        model_id = uuid4()
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.get_model_by_id.return_value = None
+
+            response = fxt_client.get(f"/api/models/{str(model_id)}")
+
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+            mock_service.return_value.get_model_by_id.assert_called_once_with(model_id)
+
+    def test_update_model_success(self, fxt_model, fxt_client):
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.update_model.return_value = fxt_model
+
+            response = fxt_client.patch(f"/api/models/{str(fxt_model.id)}", json={"name": "Updated Model"})
+
+            assert response.status_code == status.HTTP_200_OK
+            mock_service.return_value.update_model.assert_called_once_with(fxt_model.id, {"name": "Updated Model"})
+
+    def test_update_model_format(self, fxt_model, fxt_client):
+        model_id = str(fxt_model.id)
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.update_model.side_effect = None
+
+            response = fxt_client.patch(f"/api/models/{model_id}", json={"format": ModelFormat.ONNX})
+
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+            mock_service.return_value.update_model.assert_not_called()
+
+    def test_update_model_not_found(self, fxt_model, fxt_client):
+        model_id = str(fxt_model.id)
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.update_model.side_effect = ResourceNotFoundError(ResourceType.MODEL, model_id)
+
+            response = fxt_client.patch(f"/api/models/{model_id}", json={"name": "Updated Model"})
+
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+            mock_service.return_value.update_model.assert_called_once_with(fxt_model.id, {"name": "Updated Model"})
+
+    def test_delete_model_success(self, fxt_model, fxt_client):
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.delete_model_by_id.side_effect = None
+
+            response = fxt_client.delete(f"/api/models/{str(fxt_model.id)}")
+
+            assert response.status_code == status.HTTP_204_NO_CONTENT
+            mock_service.return_value.delete_model_by_id.assert_called_once_with(fxt_model.id)
+
+    def test_delete_model_not_found(self, fxt_client):
+        model_id = str(uuid4())
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.delete_model_by_id.side_effect = ResourceNotFoundError(
+                ResourceType.MODEL, model_id
+            )
+
+            response = fxt_client.delete(f"/api/models/{model_id}")
+
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_model_in_use(self, fxt_model, fxt_client):
+        model_id = str(fxt_model.id)
+
+        with patch("app.api.endpoints.models.ModelService") as mock_service:
+            mock_service.return_value.delete_model_by_id.side_effect = ResourceInUseError(ResourceType.MODEL, model_id)
+
+            response = fxt_client.delete(f"/api/models/{model_id}")
+
+            assert response.status_code == status.HTTP_409_CONFLICT
+            assert "in use" in response.json()["detail"].lower()
