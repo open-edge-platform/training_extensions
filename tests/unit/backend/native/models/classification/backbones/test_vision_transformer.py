@@ -68,7 +68,7 @@ class TestVisionTransformer:
 
         for method in peft_methods:
             cfg = deepcopy(config)
-            model = VisionTransformer(**cfg, peft=method)
+            model = VisionTransformerBackbone(**cfg, peft=method)
 
             # check PEFT parameters are created
             peft_param_names = [n for n, _ in model.named_parameters() if method in n]
