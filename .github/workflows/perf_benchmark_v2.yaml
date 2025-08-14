@@ -71,7 +71,7 @@ jobs:
           python-version: "3.12"
       - name: Install tox
         run: |
-          pip install '.[ci_tox]'
+          pip install '.[dev]'
       - name: Run Performance Test
         env:
           BENCHMARK_RESULTS_CLEAR: ${{ vars.BENCHMARK_RESULTS_CLEAR }}

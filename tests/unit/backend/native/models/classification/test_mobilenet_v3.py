@@ -130,6 +130,28 @@ class TestMobileNetV3MultilabelCls:
         )
         assert model.model.backbone.in_size == data_input_params.input_size[-2:]
 
+    def test_freeze_backbone(self):
+        data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+
+        model = MobileNetV3MultilabelCls(
+            model_name="mobilenetv3_large",
+            label_info=10,
+            data_input_params=data_input_params,
+            freeze_backbone=True,
+        )
+
+        classification_layers = model._identify_classification_layers()
+        assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
+
+        model = MobileNetV3MultilabelCls(
+            model_name="mobilenetv3_large",
+            label_info=10,
+            data_input_params=data_input_params,
+            freeze_backbone=False,
+        )
+
+        assert all(param.requires_grad for param in model.parameters())
+
 
 @pytest.fixture()
 def fxt_h_label_cls_model(fxt_hlabel_cifar):
@@ -177,3 +199,25 @@ class TestMobileNetV3HLabelCls:
             data_input_params=data_input_params,
         )
         assert model.model.backbone.in_size == data_input_params.input_size[-2:]
+
+    def test_freeze_backbone(self, fxt_hlabel_data):
+        data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+
+        model = MobileNetV3HLabelCls(
+            model_name="mobilenetv3_large",
+            label_info=fxt_hlabel_data,
+            data_input_params=data_input_params,
+            freeze_backbone=True,
+        )
+
+        classification_layers = model._identify_classification_layers()
+        assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
+
+        model = MobileNetV3HLabelCls(
+            model_name="mobilenetv3_large",
+            label_info=fxt_hlabel_data,
+            data_input_params=data_input_params,
+            freeze_backbone=False,
+        )
+
+        assert all(param.requires_grad for param in model.parameters())

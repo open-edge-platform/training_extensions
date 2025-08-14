@@ -37,6 +37,6 @@ jobs:
           python-version: "3.12"
       - name: Install tox
         run: |
-          pip install '.[ci_tox]'
+          pip install '.[dev]'
       - name: Run Daily Integration Test
         run: tox -vv -e daily-integration-test-${{ matrix.task }} -- --run-category-only=False
