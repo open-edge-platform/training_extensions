@@ -1,6 +1,7 @@
 import { Button, ButtonGroup, Divider, Flex, Text } from '@geti/ui';
 
-import { UploadModelForm } from '../../features/pipelines/models/model-form';
+import { LabelSelection } from '../../features/pipelines/models/label-selection.component';
+import { ModelSelectionGroup } from '../../features/pipelines/models/model-selection-group.component';
 import { paths } from '../../router';
 
 export const Model = () => {
@@ -12,17 +13,20 @@ export const Model = () => {
                     textAlign: 'center',
                 }}
             >
-                Please upload your trained model to proceed. Ensure the model file is in a supported format and
-                compatible with the system.
+                What type of task would you like the model to perform?
             </Text>
-            <UploadModelForm />
+
+            <ModelSelectionGroup />
+            <LabelSelection />
+
             <Divider size='S' />
+
             <Flex justifyContent={'end'}>
                 <ButtonGroup>
                     <Button href={paths.pipeline.input({})} type='submit' variant='secondary'>
                         Back
                     </Button>
-                    <Button href={paths.pipeline.output({})} type='submit' variant='primary'>
+                    <Button href={paths.pipeline.output({})} type='submit' variant='accent'>
                         Next
                     </Button>
                 </ButtonGroup>

@@ -5,12 +5,21 @@ import { ReactComponent as SuccessIcon } from '../../assets/icons/success-icon.s
 
 import classes from './notification.module.scss';
 
-type NotificationType = 'success' | 'error';
+type NotificationType = 'success' | 'error' | 'info';
 
 const DEFAULT_TIME_ON_SCREEN = 5000;
 
 export const notify = (type: NotificationType, text: string) => {
     switch (type) {
+        case 'info':
+            toast.info(text, {
+                unstyled: true,
+                style: {
+                    '--border-color': 'var(--background-inverse)',
+                },
+            });
+            break;
+
         case 'success':
             toast.success(text, {
                 unstyled: true,

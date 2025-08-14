@@ -5,10 +5,10 @@ import { $api } from '../../api/client';
 import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
-interface FieldProps {
+type FieldProps = {
     field: string;
     value: unknown;
-}
+};
 const Field = ({ field, value }: FieldProps) => {
     if (!value) {
         return null;

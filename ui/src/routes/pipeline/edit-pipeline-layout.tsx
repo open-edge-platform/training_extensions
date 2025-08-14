@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { CSSProperties, Suspense } from 'react';
 
 import { Loading, View } from '@geti/ui';
 import { TabPanel } from 'react-aria-components';
@@ -40,19 +40,24 @@ export const EditPipelineLayout = () => {
         },
     ];
 
+    const tabPanelStyles: CSSProperties = {
+        overflowY: 'auto',
+        maxHeight: '85vh',
+    };
+
     const tabsContent = {
         pathname,
         state: wizardState,
         content: (
             <View width={'100%'} height={'100%'} marginTop={'size-150'} maxWidth={'1320px'}>
                 <Suspense fallback={<Loading mode='inline' />}>
-                    <TabPanel id={paths.pipeline.input({})}>
+                    <TabPanel id={paths.pipeline.input({})} style={tabPanelStyles}>
                         <Outlet />
                     </TabPanel>
-                    <TabPanel id={paths.pipeline.model({})}>
+                    <TabPanel id={paths.pipeline.model({})} style={tabPanelStyles}>
                         <Outlet />
                     </TabPanel>
-                    <TabPanel id={paths.pipeline.output({})}>
+                    <TabPanel id={paths.pipeline.output({})} style={tabPanelStyles}>
                         <Outlet />
                     </TabPanel>
                 </Suspense>

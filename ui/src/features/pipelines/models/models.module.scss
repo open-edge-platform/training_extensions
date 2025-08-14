@@ -1,0 +1,46 @@
+.title {
+    color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
+    line-height: var(--spectrum-global-dimension-size-350);
+}
+
+.description {
+    color: var(--spectrum-global-color-gray-900);
+    display: block;
+    max-width: var(--spectrum-global-dimension-size-2400);
+    margin-top: var(--spectrum-global-dimension-size-200);
+}
+
+.option {
+    cursor: pointer;
+    position: relative;
+    border: var(--spectrum-global-dimension-size-25) solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:has(:checked) {
+        border-color: var(--energy-blue);
+    }
+
+    &:has(:checked):after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 199, 253, 1);
+        opacity: 0.1;
+    }
+
+    &:has(:checked) [class*='spectrum-Radio-button']:before {
+        border-color: var(--energy-blue) !important;
+    }
+}
+
+.option label {
+    margin: 0;
+}
+
+.labelInput {
+    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-150);
+}
