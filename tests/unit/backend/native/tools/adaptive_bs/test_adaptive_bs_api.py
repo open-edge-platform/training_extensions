@@ -17,6 +17,7 @@ from otx.backend.native.tools.adaptive_bs.runner import (
     _train_model,
     adapt_batch_size,
 )
+from otx.utils.device import is_xpu_available
 
 
 @pytest.fixture()
@@ -263,7 +264,7 @@ class TestBatchSizeFinder:
         # check steps_per_trial is set well
         assert mock_trainer.limit_val_batches == steps_per_trial
         assert mock_trainer.fit_loop.epoch_loop.max_steps == -1
-        assert mock_trainer.fit_loop.max_epochs == 1
+        assert mock_trainer.fit_loop.max_epochs == 1 if not is_xpu_available() else 2
         assert mock_trainer.limit_train_batches == steps_per_trial
         # check active_loop is run
         assert mock_active_loop.restarting is False
@@ -281,7 +282,7 @@ class TestBatchSizeFinder:
         # check steps_per_trial is set well
         assert mock_trainer.limit_val_batches == 0
         assert mock_trainer.fit_loop.epoch_loop.max_steps == -1
-        assert mock_trainer.fit_loop.max_epochs == 1
+        assert mock_trainer.fit_loop.max_epochs == 1 if not is_xpu_available() else 2
         assert mock_trainer.limit_train_batches == steps_per_trial
         # check active_loop is run
         assert mock_active_loop.restarting is False

@@ -49,8 +49,8 @@ class TestGetiConfigConverter:
         supported_augs_list_for_configuration = [
             "otx.data.transform_libs.torchvision.RandomAffine",
             "torchvision.transforms.v2.RandomVerticalFlip",
-            "torchvision.transforms.v2.GaussianBlur",
-            "torchvision.transforms.v2.GaussianNoise",
+            "otx.data.transform_libs.torchvision.RandomGaussianBlur",
+            "otx.data.transform_libs.torchvision.RandomGaussianNoise",
             "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
         ]
         otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/classification.yaml")
@@ -114,3 +114,5 @@ class TestGetiConfigConverter:
         if "logger" in train_kwargs and train_kwargs["logger"] is not None:
             assert len(train_kwargs["logger"]) == len(config["logger"])
         assert train_kwargs["max_epochs"] == 100
+        assert "adaptive_bs" in train_kwargs
+        assert train_kwargs["adaptive_bs"] == "Safe"

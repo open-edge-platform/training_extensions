@@ -381,17 +381,22 @@ class GetiConfigConverter:
                 "random_affine": "otx.data.transform_libs.torchvision.RandomAffine",
                 "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
                 "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
-                "gaussian_blur": "torchvision.transforms.v2.GaussianBlur",
-                "gaussian_noise": "torchvision.transforms.v2.GaussianNoise",
+                "gaussian_blur": "otx.data.transform_libs.torchvision.RandomGaussianBlur",
+                "gaussian_noise": "otx.data.transform_libs.torchvision.RandomGaussianNoise",
                 "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
             }
 
             for aug_name, aug_value in augmentation_params.items():
                 aug_class = augs_mapping_list[aug_name]
+                found = False
                 for aug_config in config["data"]["train_subset"]["transforms"]:
                     if aug_class == aug_config["class_path"]:
+                        found = True
                         aug_config["enable"] = aug_value["enable"]
                         break
+                if not found:
+                    msg = f"augmentation {aug_class} is not found for this model"
+                    raise ValueError(msg)
 
         augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
         tiling = augmentation_params.pop("tiling", None)

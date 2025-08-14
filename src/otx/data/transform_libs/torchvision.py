@@ -26,6 +26,7 @@ from omegaconf import DictConfig
 from scipy.stats import truncnorm
 from torchvision import tv_tensors
 from torchvision._utils import sequence_to_str
+from torchvision.transforms.v2 import GaussianBlur, GaussianNoise
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
 from otx.data.entity.base import (
@@ -901,6 +902,58 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
         repr_str += f"direction={self.direction}, "
         repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
         return repr_str
+
+
+class RandomGaussianBlur(GaussianBlur):
+    """Modified version of the torchvision GaussianBlur."""
+
+    def __init__(
+        self,
+        kernel_size: int | Sequence[int],
+        sigma: int | tuple[float, float] = (0.1, 2.0),
+        prob: float = 0.5,
+    ) -> None:
+        super().__init__(kernel_size=kernel_size, sigma=sigma)
+        self.prob = prob
+
+    def transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
+        """Main transform function."""
+        if self.prob >= np.random.rand():
+            return super().transform(inpt, params)
+        return inpt
+
+
+class RandomGaussianNoise(GaussianNoise):
+    """Modified version of the torchvision GaussianNoise.
+
+    This augmentation allows to add gaussian noise to unscaled image.
+    Only float32 images are supported for this augmentation.
+    """
+
+    def __init__(self, mean: float = 0.0, sigma: float = 0.1, clip: bool = True, prob: float = 0.5) -> None:
+        super().__init__(mean=mean, sigma=sigma, clip=clip)
+        self.prob = prob
+
+    def _is_scaled(self, tensor: torch.Tensor) -> bool:
+        return torch.max(tensor) <= 1 + 1e-5
+
+    def forward(self, *_inputs: OTXDataItem) -> OTXDataItem:
+        """Main transform function."""
+        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
+        inputs = _inputs[0]
+        if (img := getattr(inputs, "image", None)) is not None and self.prob >= np.random.rand():
+            scaled = self._is_scaled(img)
+            sigma = self.sigma * 255 if not scaled else self.sigma
+            mean = self.mean * 255 if not scaled else self.mean
+            clip = False if not scaled else self.clip
+
+            img = self._call_kernel(F.gaussian_noise, img, mean=mean, sigma=sigma, clip=clip)
+            if not scaled:
+                img = torch.clamp(img, 0, 255)
+
+            inputs.image = img
+
+        return inputs
 
 
 class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
