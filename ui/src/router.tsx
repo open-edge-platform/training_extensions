@@ -12,9 +12,9 @@ import { SelectedDataProvider } from './routes/data-collection/provider';
 import { LiveFeed } from './routes/live-feed/live-feed';
 import { EditPipelineLayout } from './routes/pipeline/edit-pipeline-layout';
 import { Index as PipelineIndex } from './routes/pipeline/index';
-import { Input as PipelineInput } from './routes/pipeline/input';
 import { Model as PipelineModel } from './routes/pipeline/model';
-import { Output as PipelineOutput } from './routes/pipeline/output';
+import { Sink as PipelineSink } from './routes/pipeline/sink';
+import { Source as PipelineSource } from './routes/pipeline/source';
 
 const root = path('/');
 const pipeline = root.path('/pipeline');
@@ -25,9 +25,9 @@ export const paths = {
     root,
     pipeline: {
         index: pipeline,
-        input: pipeline.path('/input'),
+        source: pipeline.path('/source'),
         model: pipeline.path('/model'),
-        output: pipeline.path('/output'),
+        sink: pipeline.path('/sink'),
     },
     liveFeed: {
         index: liveFeed,
@@ -50,9 +50,9 @@ export const router = createBrowserRouter([
             {
                 index: true,
                 loader: () => {
-                    // TODO: if no pipeline configured then redirect to input
+                    // TODO: if no pipeline configured then redirect to source
                     // else redirect to live-feed
-                    return redirect('/pipeline/input');
+                    return redirect('/pipeline/source');
                 },
             },
             {
@@ -67,8 +67,8 @@ export const router = createBrowserRouter([
                         element: <EditPipelineLayout />,
                         children: [
                             {
-                                path: paths.pipeline.input.pattern,
-                                element: <PipelineInput />,
+                                path: paths.pipeline.source.pattern,
+                                element: <PipelineSource />,
                             },
 
                             {
@@ -76,8 +76,8 @@ export const router = createBrowserRouter([
                                 element: <PipelineModel />,
                             },
                             {
-                                path: paths.pipeline.output.pattern,
-                                element: <PipelineOutput />,
+                                path: paths.pipeline.sink.pattern,
+                                element: <PipelineSink />,
                             },
                         ],
                     },

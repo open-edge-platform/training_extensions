@@ -9,24 +9,28 @@ import { Index as PipelineIndex } from './index';
 describe('View pipeline', () => {
     it('renders the correct values for each resource', async () => {
         server.use(
-            http.get('/api/inputs', () => {
-                return HttpResponse.json({
-                    name: 'source',
-                    source_type: 'video_file',
-                    video_path: 'video.mp4',
-                });
+            http.get('/api/sources', () => {
+                return HttpResponse.json([
+                    {
+                        name: 'source',
+                        source_type: 'video_file',
+                        video_path: 'video.mp4',
+                    },
+                ]);
             }),
             http.get('/api/models', () => {
                 return HttpResponse.json({ active_model: 'test-model', available_models: ['test-model'] });
             }),
-            http.get('/api/outputs', () => {
-                return HttpResponse.json({
-                    name: 'output',
-                    folder_path: 'data/output',
-                    output_formats: ['image_original', 'image_with_predictions', 'predictions'],
-                    rate_limit: 0.2,
-                    sink_type: 'folder',
-                });
+            http.get('/api/sinks', () => {
+                return HttpResponse.json([
+                    {
+                        name: 'sink',
+                        folder_path: 'data/sink',
+                        output_formats: ['image_original', 'image_with_predictions', 'predictions'],
+                        rate_limit: 0.2,
+                        sink_type: 'folder',
+                    },
+                ]);
             })
         );
 
@@ -37,9 +41,9 @@ describe('View pipeline', () => {
         );
 
         // Headers
-        expect(screen.getByRole('heading', { name: 'Input' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Source' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Model' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Output' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Sink' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
 
         // Content
@@ -47,7 +51,7 @@ describe('View pipeline', () => {
 
         expect(await screen.findAllByText('test-model')).toHaveLength(2);
 
-        expect(await screen.findByText('data/output')).toBeInTheDocument();
+        expect(await screen.findByText('data/sink')).toBeInTheDocument();
         expect(await screen.findByText('image_original,image_with_predictions,predictions')).toBeInTheDocument();
         expect(await screen.findByText('0.2')).toBeInTheDocument();
         expect(await screen.findByText('folder')).toBeInTheDocument();

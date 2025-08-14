@@ -18,10 +18,10 @@ To start out with Geti Edge development make sure your `data` folder contains al
 
 Assuming your `config.yaml` is,
 ```
-input:
+source:
   source_type: video_file  # [webcam, ip_camera, video_file, images_folder]
   video_path: data/media/video.mp4
-outputs:
+sinks:
   - destination_type: folder  # [folder, mqtt, dds, ros]
     folder_path: data/output
     output_formats:

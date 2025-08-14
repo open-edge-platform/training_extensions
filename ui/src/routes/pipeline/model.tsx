@@ -23,10 +23,10 @@ export const Model = () => {
 
             <Flex justifyContent={'end'}>
                 <ButtonGroup>
-                    <Button href={paths.pipeline.input({})} type='submit' variant='secondary'>
+                    <Button href={paths.pipeline.source({})} type='submit' variant='secondary'>
                         Back
                     </Button>
-                    <Button href={paths.pipeline.output({})} type='submit' variant='accent'>
+                    <Button href={paths.pipeline.sink({})} type='submit' variant='primary'>
                         Next
                     </Button>
                 </ButtonGroup>

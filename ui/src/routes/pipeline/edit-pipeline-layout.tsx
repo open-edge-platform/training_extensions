@@ -18,8 +18,8 @@ export const EditPipelineLayout = () => {
     // TODO: update according to server state
     const wizardState = [
         {
-            href: paths.pipeline.input({}),
-            name: 'Input configuration',
+            href: paths.pipeline.source({}),
+            name: 'Source configuration',
             isCompleted: false,
             isDisabled: false,
             isSelected: true,
@@ -32,8 +32,8 @@ export const EditPipelineLayout = () => {
             isSelected: false,
         },
         {
-            href: paths.pipeline.output({}),
-            name: 'Output & Integration configuration',
+            href: paths.pipeline.sink({}),
+            name: 'Sink & Integration configuration',
             isCompleted: false,
             isDisabled: false,
             isSelected: false,
@@ -51,13 +51,13 @@ export const EditPipelineLayout = () => {
         content: (
             <View width={'100%'} height={'100%'} marginTop={'size-150'} maxWidth={'1320px'}>
                 <Suspense fallback={<Loading mode='inline' />}>
-                    <TabPanel id={paths.pipeline.input({})} style={tabPanelStyles}>
+                    <TabPanel id={paths.pipeline.source({})}>
                         <Outlet />
                     </TabPanel>
                     <TabPanel id={paths.pipeline.model({})} style={tabPanelStyles}>
                         <Outlet />
                     </TabPanel>
-                    <TabPanel id={paths.pipeline.output({})} style={tabPanelStyles}>
+                    <TabPanel id={paths.pipeline.sink({})}>
                         <Outlet />
                     </TabPanel>
                 </Suspense>

@@ -22,20 +22,21 @@ import { ReactComponent as Webcam } from './../../assets/icons/webcam.svg';
 
 import classes from './../live-feed/live-feed.module.css';
 
-type InputConfig =
+type SourceConfig =
     | SchemaDisconnectedSourceConfig
     | SchemaImagesFolderSourceConfig
     | SchemaIpCameraSourceConfig
     | SchemaVideoFileSourceConfig
     | SchemaWebcamSourceConfig;
 
-type SourceType = InputConfig['source_type'];
+type SourceType = SourceConfig['source_type'];
 
-type ConfigByDestinationType<T extends SourceType> = Extract<InputConfig, { source_type: T }>;
-type InputFormRecord = {
-    [InputTypeKey in SourceType]: ConfigByDestinationType<InputTypeKey>;
+type ConfigByDestinationType<T extends SourceType> = Extract<SourceConfig, { source_type: T }>;
+type SourceFormRecord = {
+    [SourceTypeKey in SourceType]: ConfigByDestinationType<SourceTypeKey>;
 };
-const DEFAULT_INPUT_FORMS: InputFormRecord = {
+
+const DEFAULT_SOURCE_FORMS: SourceFormRecord = {
     disconnected: {
         name: 'Disconnected',
         source_type: 'disconnected',
@@ -105,96 +106,102 @@ const ConnectionPreview = () => {
     );
 };
 
-const ConfigureDisconnectedInput = ({}: {
+const ConfigureDisconnectedSource = ({}: {
     // eslint-disable-next-line react/no-unused-prop-types
-    input: SchemaDisconnectedSourceConfig;
+    source: SchemaDisconnectedSourceConfig;
     // eslint-disable-next-line react/no-unused-prop-types
-    setInput: (input: SchemaDisconnectedSourceConfig) => void;
+    setSource: (source: SchemaDisconnectedSourceConfig) => void;
 }) => {
     return null;
 };
 
-const ConfigureImagesFolderInput = ({
-    input,
-    setInput,
+const ConfigureImagesFolderSource = ({
+    source,
+    setSource,
 }: {
-    input: SchemaImagesFolderSourceConfig;
-    setInput: (input: SchemaImagesFolderSourceConfig) => void;
+    source: SchemaImagesFolderSourceConfig;
+    setSource: (source: SchemaImagesFolderSourceConfig) => void;
 }) => {
     return (
         <TextField
             label='Image folder path'
             name='images_folder_path'
-            value={input.images_folder_path}
-            onChange={(images_folder_path) => setInput({ ...input, images_folder_path })}
+            value={source.images_folder_path}
+            onChange={(images_folder_path) => setSource({ ...source, images_folder_path })}
         />
     );
 };
 
-const ConfigureIpCameraInput = ({
-    input,
-    setInput,
+const ConfigureIpCameraSource = ({
+    source,
+    setSource,
 }: {
-    input: SchemaIpCameraSourceConfig;
-    setInput: (input: SchemaIpCameraSourceConfig) => void;
+    source: SchemaIpCameraSourceConfig;
+    setSource: (source: SchemaIpCameraSourceConfig) => void;
 }) => {
     return (
         <TextField
             label='Stream URL'
             name='stream_url'
-            value={input.stream_url}
-            onChange={(stream_url) => setInput({ ...input, stream_url })}
+            value={source.stream_url}
+            onChange={(stream_url) => setSource({ ...source, stream_url })}
         />
     );
 };
 
-const ConfigureVideoFileInput = ({
-    input,
-    setInput,
+const ConfigureVideoFileSource = ({
+    source,
+    setSource,
 }: {
-    input: SchemaVideoFileSourceConfig;
-    setInput: (input: SchemaVideoFileSourceConfig) => void;
+    source: SchemaVideoFileSourceConfig;
+    setSource: (source: SchemaVideoFileSourceConfig) => void;
 }) => {
     return (
         <TextField
             label='Video file path'
             name='video_path'
-            value={input.video_path}
-            onChange={(video_path) => setInput({ ...input, video_path })}
+            value={source.video_path}
+            onChange={(video_path) => setSource({ ...source, video_path })}
         />
     );
 };
 
-const ConfigureWebcamInput = ({
-    input,
-    setInput,
+const ConfigureWebcamSource = ({
+    source,
+    setSource,
 }: {
-    input: SchemaWebcamSourceConfig;
-    setInput: (input: SchemaWebcamSourceConfig) => void;
+    source: SchemaWebcamSourceConfig;
+    setSource: (source: SchemaWebcamSourceConfig) => void;
 }) => {
     return (
         <NumberField
             label='Webcam device id'
             name='device_id'
             hideStepper
-            value={input.device_id}
-            onChange={(device_id) => setInput({ ...input, device_id })}
+            value={source.device_id}
+            onChange={(device_id) => setSource({ ...source, device_id })}
         />
     );
 };
 
-const ConfigureInput = ({ input, setInput }: { input: InputConfig; setInput: (input: InputConfig) => void }) => {
-    switch (input.source_type) {
+const ConfigureSource = ({
+    source,
+    setSource,
+}: {
+    source: SourceConfig;
+    setSource: (source: SourceConfig) => void;
+}) => {
+    switch (source.source_type) {
         case 'disconnected':
-            return <ConfigureDisconnectedInput input={input} setInput={setInput} />;
+            return <ConfigureDisconnectedSource source={source} setSource={setSource} />;
         case 'images_folder':
-            return <ConfigureImagesFolderInput input={input} setInput={setInput} />;
+            return <ConfigureImagesFolderSource source={source} setSource={setSource} />;
         case 'ip_camera':
-            return <ConfigureIpCameraInput input={input} setInput={setInput} />;
+            return <ConfigureIpCameraSource source={source} setSource={setSource} />;
         case 'video_file':
-            return <ConfigureVideoFileInput input={input} setInput={setInput} />;
+            return <ConfigureVideoFileSource source={source} setSource={setSource} />;
         case 'webcam':
-            return <ConfigureWebcamInput input={input} setInput={setInput} />;
+            return <ConfigureWebcamSource source={source} setSource={setSource} />;
     }
 };
 
@@ -212,7 +219,7 @@ const Label = ({ item }: { item: { name: string; source_type: SourceType } }) =>
     );
 };
 
-const INPUT_ITEMS = [
+const DEFAULT_SOURCE_ITEMS = [
     { source_type: 'disconnected', name: 'Disconnected' },
     { source_type: 'webcam', name: 'Webcam' },
     { source_type: 'ip_camera', name: 'IP Camera' },
@@ -220,10 +227,10 @@ const INPUT_ITEMS = [
     { source_type: 'images_folder', name: 'Images folder' },
 ] satisfies Array<{ source_type: SourceType; name: string }>;
 
-export const Input = () => {
+export const Source = () => {
     const { start, status } = useWebRTCConnection();
-    const inputs = $api.useSuspenseQuery('get', '/api/inputs');
-    const inputMutation = $api.useMutation('post', '/api/inputs', {
+    const sources = $api.useSuspenseQuery('get', '/api/sources');
+    const sourceMutation = $api.useMutation('post', '/api/sources', {
         onSuccess: async () => {
             if (status !== 'connected') {
                 await start();
@@ -231,19 +238,18 @@ export const Input = () => {
         },
     });
 
-    const [selectedSourceType, setSelectedSourceType] = useState<SourceType>(inputs.data.source_type);
-    const [forms, setForms] = useState<InputFormRecord>(() => {
-        return {
-            ...DEFAULT_INPUT_FORMS,
-            [inputs.data.source_type]: inputs.data,
-        };
+    const [selectedSourceType, setSelectedSourceType] = useState<SourceType>(
+        sources.data[0]?.source_type ?? DEFAULT_SOURCE_ITEMS[0].source_type
+    );
+    const [forms, setForms] = useState<SourceFormRecord>(() => {
+        return DEFAULT_SOURCE_FORMS;
     });
 
-    const submitIsDisabled = isEqual(forms[selectedSourceType], inputs.data);
+    const submitIsDisabled = isEqual(forms[selectedSourceType], sources.data);
     const onSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        inputMutation.mutateAsync({ body: forms[selectedSourceType] });
+        sourceMutation.mutateAsync({ body: forms[selectedSourceType] });
     };
 
     return (
@@ -260,25 +266,25 @@ export const Input = () => {
                 }}
             >
                 <Text>
-                    Please configure the input source for your system. Select the appropriate input type and provide the
+                    Please configure the source for your system. Select the appropriate source type and provide the
                     necessary connection details below.
                 </Text>
             </View>
             <Form gridArea={'form'} onSubmit={onSubmit}>
                 <RadioDisclosure
-                    ariaLabel={'Select your input source'}
+                    ariaLabel={'Select your source'}
                     value={selectedSourceType}
                     setValue={setSelectedSourceType}
-                    items={INPUT_ITEMS.map((item) => {
+                    items={DEFAULT_SOURCE_ITEMS.map((item) => {
                         return {
                             value: item.source_type,
                             label: <Label item={item} />,
                             content: (
-                                <ConfigureInput
-                                    input={forms[item.source_type]}
-                                    setInput={(newInput) => {
-                                        setForms((oldOutput) => {
-                                            return { ...oldOutput, [item.source_type]: newInput };
+                                <ConfigureSource
+                                    source={forms[item.source_type]}
+                                    setSource={(newSource) => {
+                                        setForms((oldSource) => {
+                                            return { ...oldSource, [item.source_type]: newSource };
                                         });
                                     }}
                                 />
@@ -291,7 +297,7 @@ export const Input = () => {
                     <Button
                         type='submit'
                         variant='accent'
-                        isPending={inputMutation.isPending}
+                        isPending={sourceMutation.isPending}
                         // TODO: disable only if there are no changes
                         isDisabled={submitIsDisabled && status === 'connected'}
                     >

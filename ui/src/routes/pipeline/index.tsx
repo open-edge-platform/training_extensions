@@ -28,8 +28,8 @@ const Field = ({ field, value }: FieldProps) => {
 
 export const Index = () => {
     // TODO: Replace this by /pipeline once available and maybe extract it to a hook
-    const inputs = $api.useQuery('get', '/api/inputs');
-    const outputs = $api.useQuery('get', '/api/outputs');
+    const sources = $api.useQuery('get', '/api/sources');
+    const sinks = $api.useQuery('get', '/api/sinks');
     const models = $api.useQuery('get', '/api/models');
 
     return (
@@ -52,13 +52,14 @@ export const Index = () => {
                         <Grid columns={repeat(3, '1fr')} rows={repeat(5, 'auto')} gap='size-400'>
                             <View>
                                 <Heading level={1} marginBottom={'size-300'}>
-                                    Input
+                                    Source
                                 </Heading>
                                 <Flex direction={'column'} gap={'size-300'}>
-                                    {isObject(inputs.data) &&
-                                        Object.entries(inputs.data).map(([field, value]) => (
-                                            <Field key={field} field={field} value={value} />
-                                        ))}
+                                    {sources.data?.map((item, idx) =>
+                                        Object.entries(item).map(([field, value]) => (
+                                            <Field key={field + idx} field={field} value={value} />
+                                        ))
+                                    )}
                                 </Flex>
                             </View>
                             <View>
@@ -74,19 +75,20 @@ export const Index = () => {
                             </View>
                             <View>
                                 <Heading level={1} marginBottom={'size-300'}>
-                                    Output
+                                    Sink
                                 </Heading>
                                 <Flex direction={'column'} gap={'size-300'}>
-                                    {isObject(outputs.data) &&
-                                        Object.entries(outputs.data).map(([field, value]) => (
-                                            <Field key={field} field={field} value={value} />
-                                        ))}
+                                    {sinks.data?.map((item, idx) =>
+                                        Object.entries(item).map(([field, value]) => (
+                                            <Field key={field + idx} field={field} value={value} />
+                                        ))
+                                    )}
                                 </Flex>
                             </View>
                         </Grid>
                         <Divider size='S' />
                         <ButtonGroup>
-                            <Button href={paths.pipeline.input({})} variant='secondary' marginStart='auto'>
+                            <Button href={paths.pipeline.source({})} variant='secondary' marginStart='auto'>
                                 Edit
                             </Button>
                         </ButtonGroup>

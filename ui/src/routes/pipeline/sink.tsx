@@ -30,22 +30,20 @@ import { ReactComponent as IconMQTT } from './../../assets/icons/mqtt.svg';
 import { ReactComponent as IconRos } from './../../assets/icons/ros.svg';
 import { ReactComponent as IconWebhook } from './../../assets/icons/webhook.svg';
 
-const PUBLISH_RATE_MAX_VALUE = 120; // hz
-
-type OutputConfig =
+type SinkConfig =
     | SchemaDisconnectedSinkConfig
     | SchemaFolderSinkConfig
     | SchemaMqttSinkConfig
     | SchemaWebhookSinkConfig
     | SchemaRosSinkConfig;
 
-type OutputType = OutputConfig['sink_type'];
+type SinkType = SinkConfig['sink_type'];
 
-type ConfigBySinkType<T extends OutputType> = Extract<OutputConfig, { sink_type: T }>;
-type OutputFormRecord = {
-    [SinkTypeKey in OutputType]: ConfigBySinkType<SinkTypeKey>;
+type ConfigBySinkType<T extends SinkType> = Extract<SinkConfig, { sink_type: T }>;
+type SinkFormRecord = {
+    [SinkTypeKey in SinkType]: ConfigBySinkType<SinkTypeKey>;
 };
-const DEFAULT_OUTPUT_FORMS: OutputFormRecord = {
+const DEFAULT_SINK_FORMS: SinkFormRecord = {
     disconnected: {
         sink_type: 'disconnected',
         name: 'Disconnected',
@@ -79,131 +77,120 @@ const DEFAULT_OUTPUT_FORMS: OutputFormRecord = {
     },
 };
 
-const ConfigureDisconnectedOutput = ({}: {
+const ConfigureDisconnectedSink = ({}: {
     // eslint-disable-next-line react/no-unused-prop-types
-    output: SchemaDisconnectedSinkConfig;
+    sink: SchemaDisconnectedSinkConfig;
     // eslint-disable-next-line react/no-unused-prop-types
-    setOutput: (input: SchemaDisconnectedSinkConfig) => void;
+    setSink: (sink: SchemaDisconnectedSinkConfig) => void;
 }) => {
     return null;
 };
 
-const ConfigureFolderOutput = ({
-    output,
-    setOutput,
+const ConfigureFolderSink = ({
+    sink,
+    setSink,
 }: {
-    output: SchemaFolderSinkConfig;
-    setOutput: (input: SchemaFolderSinkConfig) => void;
+    sink: SchemaFolderSinkConfig;
+    setSink: (sink: SchemaFolderSinkConfig) => void;
 }) => {
     return (
         <TextField
             label='Folder path'
             name='folder_path'
-            value={output.folder_path}
-            onChange={(folder_path) => setOutput({ ...output, folder_path })}
+            value={sink.folder_path}
+            onChange={(folder_path) => setSink({ ...sink, folder_path })}
         />
     );
 };
 
-const ConfigureMQTTOutput = ({
-    output,
-    setOutput,
+const ConfigureMQTTSink = ({
+    sink,
+    setSink,
 }: {
-    output: SchemaMqttSinkConfig;
-    setOutput: (input: SchemaMqttSinkConfig) => void;
+    sink: SchemaMqttSinkConfig;
+    setSink: (sink: SchemaMqttSinkConfig) => void;
 }) => {
     return (
         <Flex gap='size-200'>
             <TextField
                 label='Broker host'
                 name='broker_host'
-                value={output.broker_host}
-                onChange={(broker_host) => setOutput({ ...output, broker_host })}
+                value={sink.broker_host}
+                onChange={(broker_host) => setSink({ ...sink, broker_host })}
             />
             <NumberField
                 label='Broker port'
                 name='broker_port'
-                value={output.broker_port}
-                onChange={(broker_port) => setOutput({ ...output, broker_port })}
+                value={sink.broker_port}
+                onChange={(broker_port) => setSink({ ...sink, broker_port })}
             />
 
             <TextField
                 label='Topic'
                 name='topic'
-                value={output.topic}
-                onChange={(topic) => setOutput({ ...output, topic })}
+                value={sink.topic}
+                onChange={(topic) => setSink({ ...sink, topic })}
             />
 
             <TextField
                 label='Password'
                 name='password'
                 type='password'
-                value={output.password ?? undefined}
-                onChange={(password) => setOutput({ ...output, password })}
+                value={sink.password ?? undefined}
+                onChange={(password) => setSink({ ...sink, password })}
             />
 
             <TextField
                 label='Username'
                 name='username'
-                value={output.username ?? undefined}
-                onChange={(username) => setOutput({ ...output, username })}
+                value={sink.username ?? undefined}
+                onChange={(username) => setSink({ ...sink, username })}
             />
         </Flex>
     );
 };
 
-const ConfigureROSOutput = ({
-    output,
-    setOutput,
+const ConfigureROSSink = ({
+    sink,
+    setSink,
 }: {
-    output: SchemaRosSinkConfig;
-    setOutput: (input: SchemaRosSinkConfig) => void;
+    sink: SchemaRosSinkConfig;
+    setSink: (sink: SchemaRosSinkConfig) => void;
 }) => {
     return (
-        <TextField
-            label='Topic'
-            name='topic'
-            value={output.topic}
-            onChange={(topic) => setOutput({ ...output, topic })}
-        />
+        <TextField label='Topic' name='topic' value={sink.topic} onChange={(topic) => setSink({ ...sink, topic })} />
     );
 };
 
-const ConfigureWebhookOutput = ({
-    output,
-    setOutput,
+const ConfigureWebhookSink = ({
+    sink,
+    setSink,
 }: {
-    output: SchemaWebhookSinkConfig;
-    setOutput: (input: SchemaWebhookSinkConfig) => void;
+    sink: SchemaWebhookSinkConfig;
+    setSink: (sink: SchemaWebhookSinkConfig) => void;
 }) => {
     return (
         <TextField
             label='Webhook URL'
             name='webhook_url'
-            value={output.webhook_url}
-            onChange={(webhook_url) => setOutput({ ...output, webhook_url })}
+            value={sink.webhook_url}
+            onChange={(webhook_url) => setSink({ ...sink, webhook_url })}
         />
     );
 };
 
-const ConfigureOutput = ({
-    output,
-    setOutput,
-}: {
-    output: OutputConfig;
-    setOutput: (output: OutputConfig) => void;
-}) => {
-    switch (output.sink_type) {
+const ConfigureSink = ({ sink, setSink }: { sink: SinkConfig; setSink: (sink: SinkConfig) => void }) => {
+    switch (sink.sink_type) {
         case 'disconnected':
-            return <ConfigureDisconnectedOutput output={output} setOutput={setOutput} />;
+            return <ConfigureDisconnectedSink sink={sink} setSink={setSink} />;
         case 'folder':
-            return <ConfigureFolderOutput output={output} setOutput={setOutput} />;
+            return <ConfigureFolderSink sink={sink} setSink={setSink} />;
         case 'mqtt':
-            return <ConfigureMQTTOutput output={output} setOutput={setOutput} />;
+            return <ConfigureMQTTSink sink={sink} setSink={setSink} />;
         case 'ros':
-            return <ConfigureROSOutput output={output} setOutput={setOutput} />;
+            return <ConfigureROSSink sink={sink} setSink={setSink} />;
         case 'webhook':
-            return <ConfigureWebhookOutput output={output} setOutput={setOutput} />;
+            return <ConfigureWebhookSink sink={sink} setSink={setSink} />;
     }
 };
 
@@ -213,10 +200,10 @@ const Sinks = ({
     selectedSinkType,
     setSelectedSinkType,
 }: {
-    forms: OutputFormRecord;
-    setForms: Dispatch<SetStateAction<OutputFormRecord>>;
-    selectedSinkType: OutputType;
-    setSelectedSinkType: Dispatch<SetStateAction<OutputType>>;
+    forms: SinkFormRecord;
+    setForms: Dispatch<SetStateAction<SinkFormRecord>>;
+    selectedSinkType: SinkType;
+    setSelectedSinkType: Dispatch<SetStateAction<SinkType>>;
 }) => {
     return (
         <View>
@@ -227,7 +214,7 @@ const Sinks = ({
                 value={selectedSinkType}
                 ariaLabel={'Select the type of sink'}
                 setValue={setSelectedSinkType}
-                items={OUTPUT_ITEMS.map((item) => {
+                items={SINK_ITEMS.map((item) => {
                     return {
                         value: item.sink_type,
                         label: (
@@ -236,11 +223,11 @@ const Sinks = ({
                             </>
                         ),
                         content: (
-                            <ConfigureOutput
-                                output={forms[item.sink_type]}
-                                setOutput={(newOutput) => {
-                                    setForms((oldOutput) => {
-                                        return { ...oldOutput, [item.sink_type]: newOutput };
+                            <ConfigureSink
+                                sink={forms[item.sink_type]}
+                                setSink={(newSink) => {
+                                    setForms((oldSink) => {
+                                        return { ...oldSink, [item.sink_type]: newSink };
                                     });
                                 }}
                             />
@@ -252,39 +239,37 @@ const Sinks = ({
     );
 };
 
-const OUTPUT_ITEMS = [
+const SINK_ITEMS = [
     { sink_type: 'disconnected', name: 'Disconnected', icon: <></> },
     { sink_type: 'folder', name: 'Folder path', icon: <IconFolder /> },
     { sink_type: 'mqtt', name: 'MQTT message bus', icon: <IconMQTT /> },
     { sink_type: 'ros', name: 'ROS2 message bus', icon: <IconRos /> },
     { sink_type: 'webhook', name: 'Webhook URL', icon: <IconWebhook /> },
-] satisfies Array<{ sink_type: OutputType; name: string; icon: JSX.Element }>;
+] satisfies Array<{ sink_type: SinkType; name: string; icon: JSX.Element }>;
 
-export const Output = () => {
+export const Sink = () => {
     const navigate = useNavigate();
 
-    const outputs = $api.useSuspenseQuery('get', '/api/outputs');
-    const outputMutation = $api.useMutation('post', '/api/outputs');
-    const currentOutput: OutputConfig = outputs.data;
+    const sinks = $api.useSuspenseQuery('get', '/api/sinks');
+    const sinkMutation = $api.useMutation('post', '/api/sinks');
+    const currentSinks: SinkConfig[] = sinks.data;
 
-    const [publishRate, setPublishRate] = useState(60);
-    const [isPublishRateUnlimited, setIsPublishRateUnlimited] = useState(false);
-    const [selectedSinkType, setSelectedSinkType] = useState<OutputType>(currentOutput.sink_type);
-    const [forms, setForms] = useState<OutputFormRecord>(() => {
-        if (currentOutput !== undefined) {
+    const [selectedSinkType, setSelectedSinkType] = useState<SinkType>(currentSinks[0]?.sink_type ?? 'disconnected');
+    const [forms, setForms] = useState<SinkFormRecord>(() => {
+        if (currentSinks !== undefined) {
             return {
-                ...DEFAULT_OUTPUT_FORMS,
-                [currentOutput.sink_type]: currentOutput,
+                ...DEFAULT_SINK_FORMS,
+                ...(currentSinks[0] ? { [currentSinks[0].sink_type]: currentSinks[0] } : {}),
             };
         }
 
-        return DEFAULT_OUTPUT_FORMS;
+        return DEFAULT_SINK_FORMS;
     });
 
     const onSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        outputMutation.mutateAsync({
+        sinkMutation.mutateAsync({
             body: forms[selectedSinkType],
         });
 
@@ -326,28 +311,6 @@ export const Output = () => {
                     </Flex>
                 </View>
 
-                <View>
-                    <Heading UNSAFE_style={{ color: 'var(--spectrum-gray-900)', fontWeight: 500 }} level={1}>
-                        Maximum publishing rate (hz)
-                    </Heading>
-
-                    <NumberField
-                        value={publishRate}
-                        onChange={setPublishRate}
-                        step={1}
-                        maxValue={PUBLISH_RATE_MAX_VALUE}
-                        isQuiet
-                        isDisabled={isPublishRateUnlimited}
-                    />
-                    <Checkbox
-                        isSelected={isPublishRateUnlimited}
-                        onChange={setIsPublishRateUnlimited}
-                        marginStart={'size-150'}
-                    >
-                        Unlimited
-                    </Checkbox>
-                </View>
-
                 <Divider size='S' />
 
                 <Flex justifyContent={'end'}>
@@ -355,7 +318,7 @@ export const Output = () => {
                         <Button href={paths.pipeline.model({})} type='button' variant='secondary'>
                             Back
                         </Button>
-                        <Button type='submit' variant='accent' isPending={outputMutation.isPending}>
+                        <Button type='submit' variant='accent' isPending={sinkMutation.isPending}>
                             Submit & run
                         </Button>
                     </ButtonGroup>
