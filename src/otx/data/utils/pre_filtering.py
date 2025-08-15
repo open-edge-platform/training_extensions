@@ -19,10 +19,10 @@ if TYPE_CHECKING:
     from datumaro.components.dataset_base import DatasetItem
 
 
-def get_labels(dataset: DmDataset, task: OTXTaskType, data_format: str) -> list[str]:
+def get_labels(dataset: DmDataset, task: OTXTaskType) -> list[str]:
     """Get the labels from the dataset."""
     # label is funky from arrow dataset
-    if task == OTXTaskType.KEYPOINT_DETECTION and data_format == "arrow":
+    if task == OTXTaskType.KEYPOINT_DETECTION:
         return dataset.categories()[AnnotationType.points][0].labels
     return dataset.categories()[AnnotationType.label]
 
@@ -51,7 +51,7 @@ def pre_filtering(
     msg = f"There are empty annotation items in train set, Of these, only {unannotated_items_ratio*100}% are used."
     warnings.warn(msg, stacklevel=2)
 
-    labels = get_labels(dataset, task, data_format)
+    labels = get_labels(dataset, task)
 
     dataset = DmDataset.filter(
         dataset,
