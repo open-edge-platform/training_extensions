@@ -145,7 +145,12 @@ class TestModelServiceIntegration:
         assert model is not None
         assert_model(model, db_model)
 
-        assert ModelService().get_model_by_id(uuid4()) is None
+        model_id = uuid4()
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            ModelService().get_model_by_id(model_id)
+
+        assert excinfo.value.resource_type == ResourceType.MODEL
+        assert excinfo.value.resource_id == str(model_id)
 
     def test_delete_model(self, fxt_db_models, db_session):
         """Test deleting a model by ID."""

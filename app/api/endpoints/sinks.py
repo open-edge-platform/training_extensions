@@ -114,10 +114,10 @@ async def list_sinks() -> list[Sink]:
 )
 async def get_sink(sink_id: Annotated[UUID, Depends(get_sink_id)]) -> Sink:
     """Get info about a sink"""
-    sink = ConfigurationService().get_sink_by_id(sink_id)
-    if not sink:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sink with ID {sink_id} not found")
-    return sink
+    try:
+        return ConfigurationService().get_sink_by_id(sink_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.patch(

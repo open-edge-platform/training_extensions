@@ -1,19 +1,24 @@
-from unittest.mock import patch
+from multiprocessing.synchronize import Condition
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
 
-from app.db.schema import SinkDB, SourceDB
+from app.db.schema import PipelineDB, SinkDB, SourceDB
 from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError, ResourceType
-from app.services.mappers import SinkMapper, SourceMapper
 
 
 @pytest.fixture(autouse=True)
 def mock_get_db_session(db_session):
     """Mock the get_db_session to use test database."""
-    with patch("app.services.base.get_db_session") as mock:
+    with (
+        patch("app.services.configuration_service.get_db_session") as mock,
+        patch("app.services.base.get_db_session") as mock_base,
+    ):
         mock.return_value.__enter__.return_value = db_session
         mock.return_value.__exit__.return_value = None
+        mock_base.return_value.__enter__.return_value = db_session
+        mock_base.return_value.__exit__.return_value = None
         yield mock
 
 
@@ -97,25 +102,27 @@ class TestConfigurationServiceIntegration:
         assert resource.name == db_resource.name
 
     @pytest.mark.parametrize(
-        "resource_type,fixture_name,db_model,mapper,update_data",
+        "resource_type,fixture_name,db_model,update_method,update_data",
         [
             (
                 ResourceType.SOURCE,
                 "fxt_db_sources",
                 SourceDB,
-                SourceMapper,
+                "update_source",
                 {"name": "Updated Source", "video_path": "/new/path"},
             ),
             (
                 ResourceType.SINK,
                 "fxt_db_sinks",
                 SinkDB,
-                SinkMapper,
+                "update_sink",
                 {"name": "Updated Sink", "folder_path": "/new/folder"},
             ),
         ],
     )
-    def test_update_resource(self, resource_type, fixture_name, db_model, mapper, update_data, request, db_session):
+    def test_update_resource(
+        self, resource_type, fixture_name, db_model, update_method, update_data, request, db_session
+    ):
         """Test updating a resource configuration."""
         db_resources = request.getfixturevalue(fixture_name)
         db_resource = db_resources[0]
@@ -123,15 +130,10 @@ class TestConfigurationServiceIntegration:
         db_session.flush()
 
         config_service = ConfigurationService()
-        resource = mapper.to_schema(db_resource)
+        updated = getattr(config_service, update_method)(db_resource.id, update_data)
 
-        if resource_type == ResourceType.SOURCE:
-            updated_resource = config_service.update_source(resource.id, update_data)
-        else:
-            updated_resource = config_service.update_sink(resource.id, update_data)
-
-        assert updated_resource.name == update_data["name"]
-        assert updated_resource.id == resource.id
+        assert updated.name == update_data["name"]
+        assert str(updated.id) == db_resource.id
 
         # Verify in DB
         db_resource = db_session.get(db_model, db_resource.id)
@@ -140,6 +142,63 @@ class TestConfigurationServiceIntegration:
             assert db_resource.config_data["video_path"] == update_data["video_path"]
         else:
             assert db_resource.config_data["folder_path"] == update_data["folder_path"]
+
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model,update_method,update_data",
+        [
+            (
+                ResourceType.SOURCE,
+                "fxt_db_sources",
+                SourceDB,
+                "update_source",
+                {"name": "Updated Source", "video_path": "/new/path"},
+            ),
+            (
+                ResourceType.SINK,
+                "fxt_db_sinks",
+                SinkDB,
+                "update_sink",
+                {"name": "Updated Sink", "folder_path": "/new/folder"},
+            ),
+        ],
+    )
+    def test_update_resource_notify(
+        self, resource_type, fixture_name, db_model, update_method, update_data, request, db_session
+    ):
+        """Test updating a resource configuration that is a part of active pipeline."""
+        db_resources = request.getfixturevalue(fixture_name)
+        db_resource = db_resources[0]
+        db_session.add(db_resource)
+        db_session.flush()
+
+        db_pipeline = PipelineDB(name="Active Pipeline", is_running=True)
+        setattr(db_pipeline, f"{resource_type.lower()}_id", db_resource.id)
+        db_session.add(db_pipeline)
+        db_session.flush()
+
+        with (
+            patch("app.services.configuration_service.ActivePipelineService") as mock_active_pipeline_service,
+            patch("app.core.Scheduler") as mock_scheduler,
+        ):
+            mock_active_pipeline_service.return_value.reload.return_value = None
+            mock_scheduler.return_value.mp_config_changed_condition = MagicMock(spec=Condition)
+            config_service = ConfigurationService()
+            updated = getattr(config_service, update_method)(db_resource.id, update_data)
+
+            assert updated.name == update_data["name"]
+            assert str(updated.id) == db_resource.id
+
+            # Verify in DB
+            db_resource = db_session.get(db_model, db_resource.id)
+            assert db_resource.name == update_data["name"]
+            if resource_type == ResourceType.SOURCE:
+                assert db_resource.config_data["video_path"] == update_data["video_path"]
+                mock_scheduler.return_value.mp_config_changed_condition.notify_all.assert_called_once()
+                mock_active_pipeline_service.return_value.reload.assert_not_called()
+            else:
+                assert db_resource.config_data["folder_path"] == update_data["folder_path"]
+                mock_scheduler.return_value.mp_config_changed_condition.notify_all.assert_not_called()
+                mock_active_pipeline_service.return_value.reload.assert_called_once()
 
     @pytest.mark.parametrize(
         "resource_type,db_model,update_method",

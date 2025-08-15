@@ -71,10 +71,10 @@ async def list_models() -> list[Model]:
 )
 async def get_model(model_id: Annotated[UUID, Depends(get_model_id)]) -> Model:
     """Get information about a specific model"""
-    model = ModelService().get_model_by_id(model_id)
-    if not model:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Model with ID {model_id} not found")
-    return model
+    try:
+        return ModelService().get_model_by_id(model_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.patch(

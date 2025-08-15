@@ -2,13 +2,15 @@ import asyncio
 import logging
 import os
 from dataclasses import dataclass
+from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
-from threading import Event, Lock
+from threading import Lock
 from uuid import UUID
 
 import aiofiles
 from fastapi import UploadFile
 from model_api.models import Model
+from sqlalchemy.orm import Session
 
 from app.db import get_db_session
 from app.db.schema import ModelDB
@@ -18,6 +20,7 @@ from app.schemas.model import ModelFormat
 from app.schemas.model_activation import ModelActivationState
 from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
 from app.services.mappers.model_mapper import ModelMapper
+from app.services.parent_process_guard import parent_process_only
 from app.utils.singleton import Singleton
 
 logger = logging.getLogger(__name__)
@@ -39,7 +42,7 @@ class LoadedModel:
 class ModelService(metaclass=Singleton):
     """Service to register and activate models"""
 
-    def __init__(self, mp_model_reload_event: Event | None = None) -> None:
+    def __init__(self, mp_model_reload_event: EventClass | None = None) -> None:
         self.models_dir = Path("data/models")
         self._mp_model_reload_event = mp_model_reload_event
 
@@ -223,24 +226,27 @@ class ModelService(metaclass=Singleton):
             )
         return self._loaded_model.model
 
-    def get_model_by_id(self, model_id: UUID) -> ModelSchema | None:
+    def get_model_by_id(self, model_id: UUID, db: Session | None = None) -> ModelSchema:
         """Get a model by its ID"""
-        return self._persistence.get_by_id(model_id)
-
-    def delete_model_by_id(self, model_id: UUID) -> None:
-        """Delete a model by its ID"""
-        model = self.get_model_by_id(model_id)
+        model = self._persistence.get_by_id(model_id, db)
         if not model:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
-        self._persistence.delete_by_id(model_id)
+        return model
+
+    @parent_process_only
+    def delete_model_by_id(self, model_id: UUID) -> None:
+        """Delete a model by its ID"""
+        with get_db_session() as db:
+            model = self.get_model_by_id(model_id, db)
+            self._persistence.delete_by_id(model.id, db)
 
     def list_models(self) -> list[ModelSchema]:
         """Get information about available models"""
         return self._persistence.list_all()
 
+    @parent_process_only
     def update_model(self, model_id: UUID, model_metadata: dict) -> ModelSchema:
         """Update the metadata of an existing model"""
-        model = self.get_model_by_id(model_id)
-        if not model:
-            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
-        return self._persistence.update(model, model_metadata)
+        with get_db_session() as db:
+            model = self.get_model_by_id(model_id, db)
+            return self._persistence.update(model, model_metadata, db)

@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.db import get_db_session
 from app.db.schema import Base
@@ -64,41 +65,47 @@ class ServiceConfig(Generic[R]):  # noqa: UP046
 
 
 class GenericPersistenceService(Generic[S, D, R]):  # noqa: UP046
+    """Generic service for CRUD operations on a repository."""
+
     def __init__(self, config: ServiceConfig[R]) -> None:
         self.config = config
 
     @contextmanager
-    def _get_repo(self) -> Generator[R]:
-        with get_db_session() as db:
+    def _get_repo(self, db: Session | None = None) -> Generator[R]:
+        if db is None:
+            with get_db_session() as db_session:
+                repo = self.config.repository_class(db_session)  # type: ignore[call-arg]
+                yield repo
+                db_session.commit()
+        else:
             repo = self.config.repository_class(db)  # type: ignore[call-arg]
             yield repo
-            db.commit()
 
-    def list_all(self) -> list[S]:
-        with self._get_repo() as repo:
+    def list_all(self, db: Session | None = None) -> list[S]:
+        with self._get_repo(db) as repo:
             return [self.config.mapper_class.to_schema(o) for o in repo.list_all()]
 
-    def get_by_id(self, item_id: UUID) -> S | None:
-        with self._get_repo() as repo:
+    def get_by_id(self, item_id: UUID, db: Session | None = None) -> S | None:
+        with self._get_repo(db) as repo:
             item_db = repo.get_by_id(str(item_id))
             return self.config.mapper_class.to_schema(item_db) if item_db else None
 
-    def create(self, item: S) -> S:
-        with self._get_repo() as repo:
+    def create(self, item: S, db: Session | None = None) -> S:
+        with self._get_repo(db) as repo:
             item_db = self.config.mapper_class.from_schema(item)
             repo.save(item_db)
             return self.config.mapper_class.to_schema(item_db)
 
-    def update(self, item: S, partial_config: dict) -> S:
-        with self._get_repo() as repo:
+    def update(self, item: S, partial_config: dict, db: Session | None = None) -> S:
+        with self._get_repo(db) as repo:
             update = item.model_copy(update=partial_config)
             item_db = self.config.mapper_class.from_schema(update)
             repo.update(item_db)
             return self.config.mapper_class.to_schema(item_db)
 
-    def delete_by_id(self, item_id: UUID) -> None:
+    def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:
         try:
-            with self._get_repo() as repo:
+            with self._get_repo(db) as repo:
                 repo.delete(str(item_id))
         except IntegrityError:
             raise ResourceInUseError(self.config.resource_type, str(item_id))

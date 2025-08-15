@@ -7,6 +7,7 @@ from uuid import UUID
 import yaml
 from fastapi import APIRouter, Body, Depends, File, UploadFile, status
 from fastapi.exceptions import HTTPException
+from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_source_id
@@ -21,44 +22,44 @@ CREATE_SOURCE_BODY_DESCRIPTION = """
 Configuration for the new source. The exact list of fields that can be configured depends on the source type.
 """
 CREATE_SOURCE_BODY_EXAMPLES = {
-    "webcam": {
-        "summary": "Webcam source",
-        "description": "Configuration for a webcam source",
-        "value": {
+    "webcam": Example(
+        summary="Webcam source",
+        description="Configuration for a webcam source",
+        value={
             "source_type": "webcam",
             "name": "My Webcam",
             "device_id": 0,
         },
-    },
-    "ip_camera": {
-        "summary": "IP camera source",
-        "description": "Configuration for an IP camera source",
-        "value": {
+    ),
+    "ip_camera": Example(
+        summary="IP camera source",
+        description="Configuration for an IP camera source",
+        value={
             "source_type": "ip_camera",
             "name": "IP Camera 1",
             "stream_url": "rtsp://192.168.1.100:554/stream1",
             "auth_required": True,
         },
-    },
-    "video_file": {
-        "summary": "Video file source",
-        "description": "Configuration for a video file source",
-        "value": {
+    ),
+    "video_file": Example(
+        summary="Video file source",
+        description="Configuration for a video file source",
+        value={
             "source_type": "video_file",
             "name": "Camera recording 123",
             "video_path": "/path/to/video.mp4",
         },
-    },
-    "images_folder": {
-        "summary": "Images folder source",
-        "description": "Configuration for a folder containing images source",
-        "value": {
+    ),
+    "images_folder": Example(
+        summary="Images folder source",
+        description="Configuration for a folder containing images source",
+        value={
             "source_type": "images_folder",
             "name": "Production Samples",
             "folder_path": "/path/to/images",
             "ignore_existing_images": True,
         },
-    },
+    ),
 }
 
 UPDATE_SOURCE_BODY_DESCRIPTION = """
@@ -67,20 +68,20 @@ Partial source configuration update. May contain any subset of fields from the r
 Fields not included in the request will remain unchanged. The 'source_type' field cannot be changed.
 """
 UPDATE_SOURCE_BODY_EXAMPLES = {
-    "webcam": {
-        "summary": "Update webcam source",
-        "description": "Rename a webcam source",
-        "value": {
+    "webcam": Example(
+        summary="Update webcam source",
+        description="Rename a webcam source",
+        value={
             "name": "Updated Webcam Name",
         },
-    },
-    "video_file": {
-        "summary": "Update video file source",
-        "description": "Change the video path for a video file source",
-        "value": {
+    ),
+    "video_file": Example(
+        summary="Update video file source",
+        description="Change the video path for a video file source",
+        value={
             "video_path": "/new/path/to/video.mp4",
         },
-    },
+    ),
 }
 
 
@@ -127,10 +128,10 @@ async def list_sources() -> list[Source]:
 )
 async def get_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Source:
     """Get info about a source"""
-    source = ConfigurationService().get_source_by_id(source_id)
-    if not source:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
-    return source
+    try:
+        return ConfigurationService().get_source_by_id(source_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.patch(

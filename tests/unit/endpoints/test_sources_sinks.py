@@ -154,17 +154,19 @@ class TestSourceAndSinkEndpoints:
             getattr(mock_service.return_value, get_method).assert_called_once_with(fxt_config.id)
 
     @pytest.mark.parametrize(
-        "api_path, get_method",
+        "resource_type, api_path, get_method",
         [
-            (ConfigApiPath.SOURCES, "get_source_by_id"),
-            (ConfigApiPath.SINKS, "get_sink_by_id"),
+            (ResourceType.SOURCE, ConfigApiPath.SOURCES, "get_source_by_id"),
+            (ResourceType.SINK, ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
-    def test_get_config_not_found(self, api_path, get_method, fxt_client):
+    def test_get_config_not_found(self, resource_type, api_path, get_method, fxt_client):
         config_id = uuid4()
 
         with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, get_method).return_value = None
+            getattr(mock_service.return_value, get_method).side_effect = ResourceNotFoundError(
+                resource_type, str(config_id)
+            )
 
             response = fxt_client.get(f"/api/{api_path}/{str(config_id)}")
 

@@ -57,7 +57,9 @@ class TestModelEndpoints:
     def test_get_model_not_found(self, fxt_client):
         model_id = uuid4()
         with patch("app.api.endpoints.models.ModelService") as mock_service:
-            mock_service.return_value.get_model_by_id.return_value = None
+            mock_service.return_value.get_model_by_id.side_effect = ResourceNotFoundError(
+                ResourceType.MODEL, str(model_id)
+            )
 
             response = fxt_client.get(f"/api/models/{str(model_id)}")
 

@@ -58,6 +58,10 @@ class ActivePipelineService(metaclass=Singleton):
             if not active:
                 raise ValueError("No active pipeline")
 
+    def reload(self) -> None:
+        """Reload the application configuration from the database."""
+        self._load_app_config()
+
     def _load_app_config(self) -> None:
         logger.info("Loading configuration from database")
         with get_db_session() as db:
@@ -92,6 +96,7 @@ class ActivePipelineService(metaclass=Singleton):
                 notified = self.config_changed_condition.wait(timeout=3)
                 if not notified:  # awakened before of timeout
                     continue
+                logger.debug("Configuration changes detected. Process: %s", mp.current_process().name)
                 self._load_app_config()
 
     def _notify_config_changed(self) -> None:
