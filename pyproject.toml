@@ -1,7 +1,7 @@
 [project]
-name = "geti-edge"
+name = "geti-tune"
 version = "0.1.0"
-description = "Geti Edge"
+description = "Geti Tune"
 readme = "readme.md"
 requires-python = ">=3.13"
 

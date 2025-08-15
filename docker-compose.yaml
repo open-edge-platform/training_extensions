@@ -9,7 +9,7 @@ x-proxies: &proxies
 
 services:
   server:
-    image: geti-edge-backend:${TAG:-latest}
+    image: geti-tune-backend:${TAG:-latest}
     restart: unless-stopped
     build:
       dockerfile: Dockerfile
@@ -21,12 +21,12 @@ services:
       - ./data/:/app/data/
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.geti-edge-server.rule=Host(`${GETI_EDGE_DOMAIN:-geti-edge.localhost}`) && (PathPrefix(`/api`))"
-      - "traefik.http.routers.geti-edge-server.entrypoints=web"
-      - "traefik.http.services.geti-edge-server.loadbalancer.server.port=7860"
+      - "traefik.http.routers.geti-tune-server.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`) && (PathPrefix(`/api`))"
+      - "traefik.http.routers.geti-tune-server.entrypoints=web"
+      - "traefik.http.services.geti-tune-server.loadbalancer.server.port=7860"
 
   client:
-    image: geti-edge-ui:${TAG:-latest}
+    image: geti-tune-ui:${TAG:-latest}
     restart: unless-stopped
     build:
       dockerfile: Dockerfile
@@ -36,9 +36,9 @@ services:
       - reverse-proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.geti-edge-client.rule=Host(`${GETI_EDGE_DOMAIN:-geti-edge.localhost}`)"
-      - "traefik.http.routers.geti-edge-client.entrypoints=web"
-      - "traefik.http.services.geti-edge-client.loadbalancer.server.port=3000"
+      - "traefik.http.routers.geti-tune-client.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`)"
+      - "traefik.http.routers.geti-tune-client.entrypoints=web"
+      - "traefik.http.services.geti-tune-client.loadbalancer.server.port=3000"
 
   reverse-proxy:
     image: traefik:v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a
@@ -53,9 +53,9 @@ services:
       - "--entryPoints.web.address=:80"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.geti-edge-proxy.rule=Host(`proxy.localhost`)"
-      - "traefik.http.routers.geti-edge-proxy.entrypoints=web"
-      - "traefik.http.services.geti-edge-proxy.loadbalancer.server.port=8080"
+      - "traefik.http.routers.geti-tune-proxy.rule=Host(`proxy.localhost`)"
+      - "traefik.http.routers.geti-tune-proxy.entrypoints=web"
+      - "traefik.http.services.geti-tune-proxy.loadbalancer.server.port=8080"
     ports:
       - "80:80"
       - "443:443"

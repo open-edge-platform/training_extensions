@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# run.sh - Script to run the GETI Edge FastAPI server
+# run.sh - Script to run the Geti Tune FastAPI server
 #
 # Features:
 # - Optionally seed the database before starting the server by setting:

@@ -14,10 +14,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     # Application
-    app_name: str = "GETI Edge"
+    app_name: str = "Geti Tune"
     version: str = "0.1.0"
-    summary: str = "GETI Edge Inference Server"
-    description: str = "Edge inference server for GETI models"
+    summary: str = "Geti Tune server"
+    description: str = (
+        "Geti Tune allows to fine-tune computer vision models at the edge. "
+        "It is a lightweight application that covers the complete model AI lifecycle, "
+        "including advanced features for inference, model monitoring and data collection."
+    )
     openapi_url: str = "/api/openapi.json"
     debug: bool = Field(default=False, alias="DEBUG")
     environment: Literal["dev", "prod"] = "dev"
@@ -28,7 +32,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = Field(
-        default="sqlite:///./data/geti_edge.db", alias="DATABASE_URL", description="Database connection URL"
+        default="sqlite:///./data/geti_tune.db", alias="DATABASE_URL", description="Database connection URL"
     )
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 

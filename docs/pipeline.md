@@ -9,7 +9,7 @@ Within a pipeline we can identify three main elements:
 - A _model_, which elaborates the input data to generate predictions.
 - A _sink_, that is where the results should be dispatched. This could be, for example, a folder or a message queue.
 
-The _stream loading_, _inference_ and _output dispatching_ stages are indeed the core of the Geti Edge pipeline.  
+The _stream loading_, _inference_ and _output dispatching_ stages are indeed the core of the Geti Tune pipeline.  
 There are also other stages too, such as model monitoring and data collection, which are not currently configurable.
 
 Each stage outputs in a standard format, so it is possible to use any source in combination with any model and sink. 
@@ -62,7 +62,7 @@ Each sink is identified by a unique id, and optionally a friendly name chosen by
 
 ### Models
 
-Geti Edge supports models exported from Geti in OpenVINO IR format (.xml + .bin). All tasks are supported, including
+Geti Tune supports models exported from Geti in OpenVINO IR format (.xml + .bin). All tasks are supported, including
 classification, detection, segmentation, anomaly and keypoint detection.
 
 A model is identified by a unique id, and optionally a friendly name chosen by the user (e.g. "YOLO-X car detector").

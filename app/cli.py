@@ -1,4 +1,4 @@
-"""Command line interface for interacting with the GETI Edge application."""
+"""Command line interface for interacting with the Geti Tune application."""
 
 import logging
 import sys
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 def cli() -> None:
-    """GETI Edge CLI"""
+    """Geti Tune CLI"""
 
 
 @cli.command()

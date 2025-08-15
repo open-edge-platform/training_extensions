@@ -14,24 +14,7 @@
 
 ## Configuration
 
-To start out with Geti Tune development make sure your `data` folder contains all files that are referenced to from your [`config.yaml`](./config.yaml) file.
-
-Assuming your `config.yaml` is,
-```
-source:
-  source_type: video_file  # [webcam, ip_camera, video_file, images_folder]
-  video_path: data/media/video.mp4
-sinks:
-  - destination_type: folder  # [folder, mqtt, dds, ros]
-    folder_path: data/output
-    output_formats:
-      - image_original
-      - image_with_predictions
-      - predictions
-    rate_limit: 0.2  # output every 5 seconds
-```
-
-Then your `data/media` folder should contain a `video.mp4` file.
+TODO
 
 ## Setting up a local development
 
@@ -43,20 +26,7 @@ First make sure you have uv and npm installed,
 
 #### Local server
 
-First install the server dependencies,
-```shell
-uv sync
-```
-
-then run,
-```shell
-uv run fastapi run --port 7860
-```
-
-or start fastapi server in development mode,
-```shell
-uv run fastapi dev --port 7860
-```
+Run the script `run.sh` to start the server.
 
 #### Local client
 
@@ -87,7 +57,7 @@ If you don't have `uv` or `npm` installed then the quickest way to get started i
 docker compose up
 ```
 
-This will first build our images and then start a server and client that will be available at http://geti-edge.localhost
+This will first build our images and then start a server and client that will be available at http://geti-tune.localhost
 
 If you want to develop for Geti Tune without installing uv or npm locally then you can also use the dev compose file,
 ```shell
@@ -102,6 +72,6 @@ Use the `--profile mqtt` option to enable a local mqtt broker.
 docker compose -f docker-compose.dev.yaml --profile mqtt up --watch
 ```
 
-This also comes with a [MQTT Client UI](https://mqttx.app/web) that you can use to test your MQTT integrations, this is available at http://geti-edge-mqtt.localhost.
+This also comes with a [MQTT Client UI](https://mqttx.app/web) that you can use to test your MQTT integrations, this is available at http://geti-tune-mqtt.localhost.
 
 

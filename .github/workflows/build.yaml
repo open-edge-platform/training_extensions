@@ -45,8 +45,8 @@ jobs:
           for TAG in $TAGS ; do
               TAG=${TAG} docker compose build
 
-              docker save -o geti-edge-backend-${TAG}.tar geti-edge-backend:${TAG}
-              docker save -o geti-edge-ui-${TAG}.tar geti-edge-ui:${TAG}
+              docker save -o geti-tune-backend-${TAG}.tar geti-tune-backend:${TAG}
+              docker save -o geti-tune-ui-${TAG}.tar geti-tune-ui:${TAG}
           done
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
@@ -61,7 +61,7 @@ jobs:
           echo "| Image | Size |" >> image_sizes.md
           echo "|-------|------|" >> image_sizes.md
 
-          for tar_file in geti-edge-*.tar; do
+          for tar_file in geti-tune-*.tar; do
             if [ -f "$tar_file" ]; then
               size=$(ls -lh "$tar_file" | awk '{print $5}')
               image_name=$(basename "$tar_file" .tar)
@@ -116,5 +116,5 @@ jobs:
         with:
           name: docker-images
           path: |
-            geti-edge-*.tar
+            geti-tune-*.tar
           retention-days: 7
