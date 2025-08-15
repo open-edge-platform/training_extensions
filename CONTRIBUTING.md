@@ -1,8 +1,8 @@
-# Contributing to Geti Edge 
+# Contributing to Geti Tune 
 
 **Table of Contents**
 
-- [Contributing to Geti Edge ](#contributing-to-geti-edge)
+- [Contributing to Geti Tune ](#contributing-to-geti-tune)
   - [Configuration](#configuration)
   - [Setting up a local development](#setting-up-a-local-development)
     - [Local client & server with uv and npm](#local-client--server-with-uvhttpsdocsastralshuv-and-npmhttpswwwnpmjscom)
@@ -14,7 +14,7 @@
 
 ## Configuration
 
-To start out with Geti Edge development make sure your `data` folder contains all files that are referenced to from your [`config.yaml`](./config.yaml) file.
+To start out with Geti Tune development make sure your `data` folder contains all files that are referenced to from your [`config.yaml`](./config.yaml) file.
 
 Assuming your `config.yaml` is,
 ```
@@ -89,7 +89,7 @@ docker compose up
 
 This will first build our images and then start a server and client that will be available at http://geti-edge.localhost
 
-If you want to develop for Geti Edge without installing uv or npm locally then you can also use the dev compose file,
+If you want to develop for Geti Tune without installing uv or npm locally then you can also use the dev compose file,
 ```shell
 docker compose -f docker-compose.dev.yaml up --watch
 ```

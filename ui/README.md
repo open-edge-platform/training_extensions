@@ -1,4 +1,4 @@
-# Geti Edge
+# Geti Tune
 
 ## Setup
 

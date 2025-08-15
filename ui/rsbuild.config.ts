@@ -32,7 +32,7 @@ export default defineConfig({
         },
     },
     html: {
-        title: 'Geti Edge',
+        title: 'Geti Tune',
         favicon: './src/assets/icons/build-icon.svg',
     },
     tools: {
