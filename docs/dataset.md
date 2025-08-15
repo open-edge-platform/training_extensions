@@ -187,8 +187,11 @@ The `GET /api/media` endpoint will support pagination and filtering by date, etc
 | `GET`    | `/api/datasets`            | -            | list of datasets | List the available datasets |
 | `GET`    | `/api/datasets/<id>`       | -            | dataset info     | Get info about a dataset    |
 | `DELETE` | `/api/datasets/<id>`       | -            | -                | Delete a dataset            |
+| `GET`    | `/api/datasets/<id>/media` | -            | list of media    | List the media in a dataset |
 | `POST`   | `/api/datasets/media`      | media id     | -                | Add media to dataset        |
 | `DELETE` | `/api/datasets/media/<id>` | -            | -                | Remove media from dataset   |
+
+The `GET /api/datasets/<id>/media` endpoint will support pagination and filtering by date, etc.
 
 ### Annotation management
 
