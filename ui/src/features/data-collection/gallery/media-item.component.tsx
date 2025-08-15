@@ -19,7 +19,7 @@ interface MediaItemProps {
 export const MediaItem = ({ item, topLeftElement, topRightElement }: MediaItemProps) => {
     return (
         <View UNSAFE_className={classes.container}>
-            <img src={getThumbnailUrl(item.image)} alt={item.text_content} />;
+            <img src={getThumbnailUrl(item.id)} alt={item.original_name} />
             {isFunction(topLeftElement) && (
                 <View UNSAFE_className={clsx(classes.leftTopElement, classes.floatingContainer)}>
                     {topLeftElement(item)}

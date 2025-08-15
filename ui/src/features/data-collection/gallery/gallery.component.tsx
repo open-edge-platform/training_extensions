@@ -3,6 +3,7 @@ import { AriaComponentsListBox, GridLayout, ListBoxItem, Size, View, Virtualizer
 import { useSelectedData } from '../../../routes/data-collection/provider';
 import { CheckboxInput } from '../checkbox-input';
 import { response } from '../mock-response';
+import { AnnotationStateIcon } from './annotation-state-icon.component';
 import { MediaItem } from './media-item.component';
 
 import classes from './gallery.module.scss';
@@ -14,8 +15,7 @@ const layoutOptions = {
 };
 
 export const Gallery = () => {
-    const { selectedKeys, setSelectedKeys } = useSelectedData();
-
+    const { selectedKeys, mediaState, setSelectedKeys } = useSelectedData();
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
     return (
@@ -27,23 +27,25 @@ export const Gallery = () => {
                     className={classes.container}
                     selectedKeys={selectedKeys}
                     selectionMode='multiple'
-                    escapeKeyBehavior='clearSelection'
                     onSelectionChange={setSelectedKeys}
                 >
                     {response.items.map((item) => (
                         <ListBoxItem
-                            key={item.image}
-                            id={item.image}
-                            textValue={item.image}
+                            id={item.id}
+                            key={item.id}
+                            textValue={item.id}
                             className={classes.mediaItem}
+                            data-accepted={mediaState.get(item.id) === 'accepted'}
+                            data-rejected={mediaState.get(item.id) === 'rejected'}
                         >
                             <MediaItem
                                 item={item}
+                                topRightElement={() => <AnnotationStateIcon state={mediaState.get(item.id)} />}
                                 topLeftElement={() => (
                                     <CheckboxInput
                                         isReadOnly
-                                        name={`select-${item.image}`}
-                                        isChecked={isSetSelectedKeys && selectedKeys.has(item.image)}
+                                        name={`select-${item.id}`}
+                                        isChecked={isSetSelectedKeys && selectedKeys.has(item.id)}
                                     />
                                 )}
                             />

@@ -2,18 +2,25 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 
 import { Selection } from '@geti/ui';
 
+export type AnnotationState = 'rejected' | 'accepted';
+export type MediaState = Map<string, AnnotationState>;
+
 type SelectedDataState = null | {
     selectedKeys: Selection;
     setSelectedKeys: Dispatch<SetStateAction<Selection>>;
+
+    mediaState: MediaState;
+    setMediaState: Dispatch<SetStateAction<MediaState>>;
 };
 
 export const SelectedDataContext = createContext<SelectedDataState>(null);
 
 export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
+    const [mediaState, setMediaState] = useState<MediaState>(new Map());
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
 
     return (
-        <SelectedDataContext.Provider value={{ selectedKeys, setSelectedKeys }}>
+        <SelectedDataContext.Provider value={{ selectedKeys, setSelectedKeys, mediaState, setMediaState }}>
             {children}
         </SelectedDataContext.Provider>
     );

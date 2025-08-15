@@ -1,19 +1,30 @@
-import { Divider, Flex, Heading, Text } from '@geti/ui';
+import { Button, Divider, Flex, Heading, Text } from '@geti/ui';
 
 import { useSelectedData } from '../../../routes/data-collection/provider';
 import { CheckboxInput } from '../checkbox-input';
 import { response } from '../mock-response';
-import { toggleMultipleSelection } from './util';
+import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 export const Toolbar = () => {
-    const { setSelectedKeys, selectedKeys } = useSelectedData();
+    const { selectedKeys, setSelectedKeys, setMediaState } = useSelectedData();
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
+    const hasSelectedElements = totalSelectedElements > 0;
 
-    const message = totalSelectedElements > 0 ? `${totalSelectedElements} selected` : `${response.items.length} images`;
+    const message = hasSelectedElements ? `${totalSelectedElements} selected` : `${response.items.length} images`;
 
     const handleToggleManyItemSelection = () => {
-        const images = response.items.map((item) => item.image);
+        const images = response.items.map((item) => item.id);
         setSelectedKeys(toggleMultipleSelection(images));
+    };
+
+    const handleAccept = () => {
+        setSelectedKeys(new Set());
+        setMediaState(updateSelectedKeysTo(selectedKeys, 'accepted'));
+    };
+
+    const handleReject = () => {
+        setSelectedKeys(new Set());
+        setMediaState(updateSelectedKeysTo(selectedKeys, 'rejected'));
     };
 
     return (
@@ -21,12 +32,33 @@ export const Toolbar = () => {
             <Heading level={1}>Data collection</Heading>
             <Divider size='S' />
 
-            <Flex direction='row' alignItems='center' justifyContent={'space-between'} gap='size-100'>
-                <CheckboxInput
-                    name='select all'
-                    onChange={handleToggleManyItemSelection}
-                    isChecked={totalSelectedElements === response.items.length}
-                />
+            <Flex direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
+                <Flex
+                    gap={'size-200'}
+                    height={'size-400'}
+                    direction={'row'}
+                    alignItems={'center'}
+                    justifyContent={'space-between'}
+                >
+                    <CheckboxInput
+                        name={'select all'}
+                        onChange={handleToggleManyItemSelection}
+                        isChecked={totalSelectedElements === response.items.length}
+                    />
+
+                    <Divider orientation={'vertical'} size={'S'} />
+
+                    {hasSelectedElements && (
+                        <>
+                            <Button variant={'accent'} onPress={handleAccept}>
+                                Accept
+                            </Button>
+                            <Button variant={'secondary'} onPress={handleReject}>
+                                Decline
+                            </Button>
+                        </>
+                    )}
+                </Flex>
 
                 <Text>{message}</Text>
             </Flex>

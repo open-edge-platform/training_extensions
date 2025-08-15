@@ -4,6 +4,10 @@
     padding: var(--spectrum-global-dimension-size-125);
     background: var(--spectrum-global-color-gray-50);
     border-radius: var(--spectrum-global-dimension-size-50);
+
+    &:empty {
+        display: none;
+    }
 }
 
 .leftTopElement {
@@ -17,7 +21,9 @@
 }
 
 [data-hovered],
-[data-selected] {
+[data-selected],
+[data-accepted='true'],
+[data-rejected='true'] {
     .floatingContainer {
         opacity: 1;
     }
