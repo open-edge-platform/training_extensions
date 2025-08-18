@@ -1,3 +1,4 @@
+task: DETECTION
 model:
   class_path: otx.backend.native.models.detection.DEIMDFine
   init_args:
