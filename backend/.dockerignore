@@ -2,5 +2,3 @@
 !app
 !pyproject.toml
 !uv.lock
-!config.yaml
-!readme.md
