@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import Field, TypeAdapter
@@ -6,7 +6,7 @@ from pydantic import Field, TypeAdapter
 from app.schemas.base import BaseIDNameModel
 
 
-class SinkType(str, Enum):
+class SinkType(StrEnum):
     DISCONNECTED = "disconnected"
     FOLDER = "folder"
     MQTT = "mqtt"
@@ -14,7 +14,7 @@ class SinkType(str, Enum):
     WEBHOOK = "webhook"
 
 
-class OutputFormat(str, Enum):
+class OutputFormat(StrEnum):
     IMAGE_ORIGINAL = "image_original"
     IMAGE_WITH_PREDICTIONS = "image_with_predictions"
     PREDICTIONS = "predictions"

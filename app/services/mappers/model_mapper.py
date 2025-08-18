@@ -1,7 +1,5 @@
-from uuid import UUID
-
 from app.db.schema import ModelDB
-from app.schemas.model import Model, ModelFormat
+from app.schemas.model import Model
 
 
 class ModelMapper:
@@ -11,18 +9,10 @@ class ModelMapper:
     def to_schema(model_db: ModelDB) -> Model:
         """Convert Model db entity to schema."""
 
-        return Model(
-            id=UUID(model_db.id),
-            name=model_db.name,
-            format=ModelFormat(model_db.format),
-        )
+        return Model.model_validate(model_db, from_attributes=True)
 
     @staticmethod
     def from_schema(model: Model) -> ModelDB:
         """Convert Model schema to db model."""
 
-        return ModelDB(
-            id=str(model.id),
-            name=model.name,
-            format=model.format,
-        )
+        return ModelDB(**model.model_dump(mode="json"))

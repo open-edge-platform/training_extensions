@@ -20,6 +20,7 @@ class ResourceType(StrEnum):
     SOURCE = "Source"
     SINK = "Sink"
     MODEL = "Model"
+    PIPELINE = "Pipeline"
 
 
 class ResourceNotFoundError(Exception):

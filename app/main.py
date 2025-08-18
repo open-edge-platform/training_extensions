@@ -19,7 +19,7 @@ from fastapi.responses import HTMLResponse
 from fastrtc import AdditionalOutputs, Stream
 from pydantic import BaseModel, Field
 
-from app.api.endpoints import configuration, models, pipelines, sinks, sources, system
+from app.api.endpoints import models, pipelines, sinks, sources, system
 from app.core import Scheduler, lifespan
 from app.settings import get_settings
 
@@ -74,7 +74,6 @@ app.include_router(sources.router)
 app.include_router(sinks.router)
 app.include_router(pipelines.router)
 app.include_router(models.router)
-app.include_router(configuration.router)
 app.include_router(system.router)
 
 cur_dir = Path(__file__).parent

@@ -119,9 +119,10 @@ class TestModelEndpoints:
         model_id = str(fxt_model.id)
 
         with patch("app.api.endpoints.models.ModelService") as mock_service:
-            mock_service.return_value.delete_model_by_id.side_effect = ResourceInUseError(ResourceType.MODEL, model_id)
+            err = ResourceInUseError(ResourceType.MODEL, model_id)
+            mock_service.return_value.delete_model_by_id.side_effect = err
 
             response = fxt_client.delete(f"/api/models/{model_id}")
 
             assert response.status_code == status.HTTP_409_CONFLICT
-            assert "in use" in response.json()["detail"].lower()
+            assert str(err) == response.json()["detail"]

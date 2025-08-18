@@ -302,12 +302,13 @@ class TestSourceAndSinkEndpoints:
         config_id = str(fxt_config.id)
 
         with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, delete_method).side_effect = ResourceInUseError(resource_type, config_id)
+            err = ResourceInUseError(resource_type, config_id)
+            getattr(mock_service.return_value, delete_method).side_effect = err
 
             response = fxt_client.delete(f"/api/{api_path}/{config_id}")
 
             assert response.status_code == status.HTTP_409_CONFLICT
-            assert "in use" in response.json()["detail"].lower()
+            assert str(err) == response.json()["detail"]
 
     @pytest.mark.parametrize(
         "fixture_name,api_path,get_method, expected_yaml",

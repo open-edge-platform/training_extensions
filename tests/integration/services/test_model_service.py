@@ -145,6 +145,9 @@ class TestModelServiceIntegration:
         assert model is not None
         assert_model(model, db_model)
 
+    def test_get_non_existent_model(self):
+        """Test retrieving a non-existent model raises error."""
+
         model_id = uuid4()
         with pytest.raises(ResourceNotFoundError) as excinfo:
             ModelService().get_model_by_id(model_id)

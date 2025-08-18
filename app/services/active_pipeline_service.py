@@ -1,16 +1,12 @@
 import logging
 import multiprocessing as mp
-from collections.abc import Callable
 from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
-from uuid import UUID
 
 from app.db import get_db_session
-from app.db.schema import SinkDB, SourceDB
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
 from app.services.mappers import SinkMapper, SourceMapper
-from app.services.parent_process_guard import parent_process_only
 from app.utils import Singleton
 
 logger = logging.getLogger(__name__)
@@ -18,25 +14,21 @@ logger = logging.getLogger(__name__)
 
 class ActivePipelineService(metaclass=Singleton):
     """
-    A singleton service for managing pipeline-based application configuration from SQLite database.
+    A singleton service used in workers for loading pipeline-based application configuration from SQLite database.
 
-    This service handles loading, saving, and monitoring configuration changes based on the active pipeline.
+    This service handles loading and monitoring configuration changes based on the active pipeline.
     The configuration is built from Source -> Pipeline -> Sinks relationships.
-    In multiprocess environments, only the parent process can modify the configuration,
-    while child processes automatically reload configuration when changes are detected.
 
     Args:
-        config_changed_condition: Multiprocessing Condition object for notifying child
-                                processes of configuration changes. Required for child processes.
+        config_changed_condition: Multiprocessing Condition object for getting configuration updates in child
+                                processes. Required for child processes.
 
     Raises:
-        ConfigUpdateFromChildProcessError: When a child process attempts to update configuration.
         ValueError: When config_changed_condition is None in a child process.
     """
 
     def __init__(self, config_changed_condition: ConditionClass | None = None) -> None:
         self.config_changed_condition = config_changed_condition
-        self._active_pipeline_id: str | None = None
         self._source: Source = DisconnectedSourceConfig()
         self._sink: Sink = DisconnectedSinkConfig()
         self._load_app_config()
@@ -50,14 +42,6 @@ class ActivePipelineService(metaclass=Singleton):
             )
             self._config_reload_daemon.start()
 
-    @staticmethod
-    def __ensure_active_pipeline() -> None:
-        with get_db_session() as db:
-            pipeline_repo = PipelineRepository(db)
-            active = pipeline_repo.get_active_pipeline()
-            if not active:
-                raise ValueError("No active pipeline")
-
     def reload(self) -> None:
         """Reload the application configuration from the database."""
         self._load_app_config()
@@ -67,11 +51,12 @@ class ActivePipelineService(metaclass=Singleton):
         with get_db_session() as db:
             repo = PipelineRepository(db)
 
+            # Loads the first active pipeline
             pipeline = repo.get_active_pipeline()
             if pipeline is None:
+                self._source = DisconnectedSourceConfig()
+                self._sink = DisconnectedSinkConfig()
                 return
-
-            self._active_pipeline_id = pipeline.id
 
             # Get the source for this pipeline
             if pipeline.source_id:
@@ -99,52 +84,8 @@ class ActivePipelineService(metaclass=Singleton):
                 logger.debug("Configuration changes detected. Process: %s", mp.current_process().name)
                 self._load_app_config()
 
-    def _notify_config_changed(self) -> None:
-        """Notify child processes that the configuration has changed."""
-        if self.config_changed_condition is None:
-            raise RuntimeError("Attempt to notify uninitialized config_changed_condition")
-        with self.config_changed_condition:
-            logger.debug("Notifying other processes about configuration changes")
-            self.config_changed_condition.notify_all()
-
     def get_source_config(self) -> Source:
         return self._source
 
     def get_sink_config(self) -> Sink:
         return self._sink
-
-    def __set_config(self, config: SourceDB | SinkDB, on_success: Callable[[], None]) -> None:
-        with get_db_session() as db:
-            pipeline_repo = PipelineRepository(db)
-
-            if isinstance(config, SourceDB):
-                source_repo = SourceRepository(db)
-                source_repo.save(config)
-                if self._active_pipeline_id is not None:
-                    pipeline_repo.update_source(self._active_pipeline_id, config.id)
-                    self._source.id = UUID(config.id)
-            elif isinstance(config, SinkDB):
-                sink_repo = SinkRepository(db)
-                sink_repo.save(config)
-                if self._active_pipeline_id is not None:
-                    pipeline_repo.update_sink(self._active_pipeline_id, config.id)
-                    self._sink.id = UUID(config.id)
-
-            db.commit()
-            on_success()
-
-    @parent_process_only
-    def set_source_config(self, source_config: Source) -> None:
-        """Creating new source and attaching to the active pipeline."""
-        self.__ensure_active_pipeline()
-        source_db = SourceMapper.from_schema(source_config)
-        self.__set_config(source_db, self._notify_config_changed)
-        self._source = source_config
-
-    @parent_process_only
-    def set_sink_config(self, sink_config: Sink) -> None:
-        """Creating new sink and attaching to the active pipeline."""
-        self.__ensure_active_pipeline()
-        sink_db = SinkMapper.from_schema(sink_config)
-        self.__set_config(sink_db, self._notify_config_changed)
-        self._sink = sink_config

@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
 from urllib.parse import urlparse, urlunparse
@@ -11,7 +11,7 @@ IP_CAMERA_USERNAME = "IP_CAMERA_USERNAME"
 IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
 
 
-class SourceType(str, Enum):
+class SourceType(StrEnum):
     DISCONNECTED = "disconnected"
     WEBCAM = "webcam"
     IP_CAMERA = "ip_camera"

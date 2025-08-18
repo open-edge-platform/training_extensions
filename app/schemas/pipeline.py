@@ -1,12 +1,23 @@
-from enum import Enum
+from enum import StrEnum
+from typing import Any
 from uuid import UUID
+
+from pydantic import model_validator
 
 from app.schemas.base import BaseIDNameModel
 
 
-class PipelineStatus(str, Enum):
+class PipelineStatus(StrEnum):
     IDLE = "idle"
     RUNNING = "running"
+
+    @classmethod
+    def from_bool(cls, is_running: bool) -> "PipelineStatus":
+        return cls.RUNNING if is_running else cls.IDLE
+
+    @property
+    def as_bool(self) -> bool:
+        return self == PipelineStatus.RUNNING
 
 
 class Pipeline(BaseIDNameModel):
@@ -27,3 +38,22 @@ class Pipeline(BaseIDNameModel):
             }
         }
     }
+
+    @model_validator(mode="before")
+    def set_status_from_is_running(cls, data: Any) -> Any:
+        if hasattr(data, "is_running") and not hasattr(data, "status"):
+            status = PipelineStatus.from_bool(getattr(data, "is_running"))
+            d = data.__dict__.copy()
+            d["status"] = status
+            return d
+        return data
+
+    @model_validator(mode="after")
+    def validate_running_status(self) -> "Pipeline":
+        if self.status == PipelineStatus.RUNNING and any(
+            x is None for x in (self.source_id, self.sink_id, self.model_id)
+        ):
+            raise ValueError(
+                "Pipeline cannot be in 'running' status when source_id, sink_id, or model_id is not configured."
+            )
+        return self

@@ -208,7 +208,7 @@ class TestConfigurationServiceIntegration:
         ],
     )
     def test_update_non_existent_resource(self, resource_type, db_model, update_method):
-        """Test deleting a resource configuration that doesn't exist."""
+        """Test updating a non-existent resource raises error."""
 
         config_service = ConfigurationService()
 

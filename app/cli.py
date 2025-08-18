@@ -80,14 +80,14 @@ def seed(with_model: bool, model_name: str) -> None:
         source = SourceDB(
             id="f6b1ac22-e36c-4b36-9a23-62b0881e4223",
             name="Video Source",
-            source_type=SourceType.VIDEO_FILE.value,
+            source_type=SourceType.VIDEO_FILE,
             config_data={"video_path": "data/media/video.mp4"},
         )
         db.add(source)
         sink = SinkDB(
             id="6ee0c080-c7d9-4438-a7d2-067fd395eecf",
             name="Folder Sink",
-            sink_type=SinkType.FOLDER.value,
+            sink_type=SinkType.FOLDER,
             rate_limit=0.2,
             output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],
             config_data={"folder_path": "data/output"},
@@ -98,12 +98,12 @@ def seed(with_model: bool, model_name: str) -> None:
             model = ModelDB(
                 id="977eeb18-eaac-449d-bc80-e340fbe052ad",
                 name=model_name,
-                format=ModelFormat.OPENVINO.value,
+                format=ModelFormat.OPENVINO,
             )
             db.add(model)
         db.flush()
         pipeline = PipelineDB(
-            id="b2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
+            id="ace3f1da-fdd9-4048-a95e-a647ed969442",
             source_id=source.id,
             sink_id=sink.id,
             model_id=model.id if model else None,

@@ -8,7 +8,6 @@ import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-
 
 const DebugTooltip = () => {
     const modelsQuery = $api.useSuspenseQuery('get', '/api/models');
-    const activeModelMutation = $api.useMutation('post', '/api/models/{model_name}:activate');
 
     const { start, stop } = useWebRTCConnection();
 
@@ -25,15 +24,7 @@ const DebugTooltip = () => {
                 label='Select model for inference'
                 selectedKey={modelsQuery.data[0].name}
                 onSelectionChange={(model) => {
-                    // if (model === null || !modelsQuery.data.available_models.some((name) => name === model)) {
-                    //     return;
-                    // }
-
-                    activeModelMutation.mutate({
-                        params: {
-                            path: { model_name: String(model) },
-                        },
-                    });
+                    console.info(model);
                 }}
             >
                 {modelsQuery.data.map((model) => {
