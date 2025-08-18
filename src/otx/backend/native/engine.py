@@ -152,8 +152,7 @@ class OTXEngine(Engine):
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = None,
-        val_check_interval: int | float | None = None,
+        precision: _PRECISION_INPUT | None = 16,
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
         resume: bool = False,
@@ -162,7 +161,7 @@ class OTXEngine(Engine):
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
         check_val_every_n_epoch: int | None = 1,
         num_sanity_val_steps: int | None = 0,
-        log_every_n_steps: int | None = 1,
+        gradient_clip_val: float | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         r"""Trains the model using the provided LightningModule and OTXDataModule.
@@ -175,7 +174,6 @@ class OTXEngine(Engine):
                 Also, can be set to `warn` to avoid failures, because some operations don't
                 support deterministic mode. Defaults to False.
             precision (_PRECISION_INPUT | None, optional): The precision of the model. Defaults to 16.
-            val_check_interval (int | float | None, optional): The validation check interval. Defaults to None.
             callbacks (list[Callback] | Callback | None, optional): The callbacks to be used during training.
             logger (Logger | Iterable[Logger] | bool | None, optional): The logger(s) to be used. Defaults to None.
             resume (bool, optional): If True, tries to resume training from existing checkpoint.
@@ -188,6 +186,7 @@ class OTXEngine(Engine):
                 Defaults to "None".
             check_val_every_n_epoch (int | None, optional): How often to check validation. Defaults to 1.
             num_sanity_val_steps (int | None, optional): Number of validation steps to run before training starts.
+            gradient_clip_val (float | None, optional): The value for gradient clipping. Defaults to None.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
@@ -243,10 +242,9 @@ class OTXEngine(Engine):
             max_epochs=max_epochs,
             min_epochs=min_epochs,
             deterministic=deterministic,
-            val_check_interval=val_check_interval,
             check_val_every_n_epoch=check_val_every_n_epoch,
             num_sanity_val_steps=num_sanity_val_steps,
-            log_every_n_steps=log_every_n_steps,
+            gradient_clip_val=gradient_clip_val,
             **kwargs,
         )
         fit_kwargs: dict[str, Any] = {}
@@ -877,13 +875,18 @@ class OTXEngine(Engine):
         """Apply parameter overrides based on the current local variables."""
         sig = inspect.signature(self.train)
         add_kwargs = param_kwargs.pop("kwargs", {})
-        self._cache.update(**add_kwargs)
         for param_name, param in sig.parameters.items():
-            if param_name in param_kwargs:
-                current_value = param_kwargs[param_name]
-                # Apply override if current value matches default and we have an override
-                if (current_value != param.default) or (param_name not in self._cache.args):
+            if param_name in param_kwargs and param_name in self._cache.args:
+                # if both `param_kwargs` and `_cache.args` have the same parameter,
+                # we will use the value from `param_kwargs` if it is different from the default
+                # value of the parameter.
+                # Otherwise, we will keep the value from `_cache.args`.
+                current_value = param_kwargs.pop(param_name)
+                if current_value != param.default:
                     self._cache.args[param_name] = current_value
+        # update the cache with the remaining parameters
+        self._cache.update(**param_kwargs)
+        self._cache.update(**add_kwargs)
 
     def configure_accelerator(self) -> None:
         """Updates the cache arguments based on the device type."""
