@@ -7,3 +7,4 @@
 !.prettierrc
 !tsconfig.json
 !rsbuild.config.ts
+!nginx.conf

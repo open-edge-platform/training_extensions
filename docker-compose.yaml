@@ -38,7 +38,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.geti-tune-client.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`)"
       - "traefik.http.routers.geti-tune-client.entrypoints=web"
-      - "traefik.http.services.geti-tune-client.loadbalancer.server.port=3000"
+      - "traefik.http.services.geti-tune-client.loadbalancer.server.port=80"
 
   reverse-proxy:
     image: traefik:v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a
