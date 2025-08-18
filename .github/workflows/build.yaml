@@ -1,0 +1,120 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+    tags:
+      - 'v*'
+  pull_request:
+
+
+jobs:
+  build:
+    name: Build and upload docker image
+    runs-on: innersource.prod.amr.dind
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@364cc21a5de5b1ee4a7f5f9d3fa374ce0ccde746 #v1.2.0
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 #v5.7.0
+        with:
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+
+      - name: Build images
+        run: |
+          # Build and tag images using provided metadata
+          for TAG in $TAGS ; do
+              TAG=${TAG} docker compose build
+
+              docker save -o geti-tune-backend-${TAG}.tar geti-tune-backend:${TAG}
+              docker save -o geti-tune-ui-${TAG}.tar geti-tune-ui:${TAG}
+          done
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          PUBLIC_API_BASE_URL: "/"
+
+      - name: Get Docker image sizes
+        id: image-sizes
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "## Docker Image Sizes" > image_sizes.md
+          echo "" >> image_sizes.md
+          echo "| Image | Size |" >> image_sizes.md
+          echo "|-------|------|" >> image_sizes.md
+
+          for tar_file in geti-tune-*.tar; do
+            if [ -f "$tar_file" ]; then
+              size=$(ls -lh "$tar_file" | awk '{print $5}')
+              image_name=$(basename "$tar_file" .tar)
+              echo "| $image_name | $size |" >> image_sizes.md
+            fi
+          done
+
+          echo "SIZES_CONTENT<<EOF" >> $GITHUB_OUTPUT
+          cat image_sizes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with image sizes
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        if: github.event_name == 'pull_request'
+        env:
+          SIZES_CONTENT: ${{ steps.image-sizes.outputs.SIZES_CONTENT }}
+        with:
+          script: |
+            const comment = process.env.SIZES_CONTENT;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.data.find(comment =>
+              comment.body.includes('## Docker Image Sizes')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+
+      - name: Upload Docker images as artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4.6.2
+        with:
+          name: docker-images
+          path: |
+            geti-tune-*.tar
+          retention-days: 7

@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  ip-camera:
+    image: jrottenberg/ffmpeg:4.4-alpine
+    ports:
+      - "8080:8080"
+    command: >
+      -re -f lavfi -i testsrc2=size=1280x720:rate=30
+      -c:v libx264 -preset ultrafast -tune zerolatency
+      -f mpegts -listen 1 http://0.0.0.0:8080/stream

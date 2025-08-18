@@ -1,0 +1,81 @@
+[project]
+name = "geti-tune"
+version = "0.1.0"
+description = "Geti Tune"
+readme = "readme.md"
+requires-python = ">=3.13"
+
+dependencies = [
+    "fastapi[standard]~=0.115.12",
+    "fastrtc~=0.0.28",
+    "openvino-model-api~=0.3.0.2",
+    "opencv-python~=4.11",
+    "pillow~=11.2",
+    "python-multipart~=0.0.20",
+    "uvicorn~=0.34.3",
+    "psutil~=7.0.0",
+    "pyyaml~=6.0.2",
+    "openvino==2025.2.0",
+    "watchdog==6.0.0",
+    "sqlalchemy~=2.0.41",
+    "alembic~=1.16.4",
+    "aiofiles==24.1.0",
+    "pydantic-settings~=2.10.1",
+]
+
+[project.optional-dependencies]
+mqtt = [
+    "paho-mqtt~=2.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "testcontainers~=4.10.0",
+    "pytest~=8.4",
+    "pytest-asyncio~=1.1.0",
+    "types-aiofiles==24.1.0.20240626",
+]
+lint = [
+    "ruff~=0.12.0",
+    "mypy~=1.17",
+    "types-PyYAML~=6.0.12",
+]
+
+[tool.uv]
+default-groups = "all"
+
+[tool.uv.build-backend]
+module-root = ""
+module-name = "app"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+exclude = [".venv*"]
+
+[tool.ruff.lint]
+select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
+    "TID", "TC", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205", "FAST"]
+ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
+    "RUF010", "TC001",  "RUF012"]
+fixable = ["ALL"]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"*test*.py" = ["S", "ANN", "D", "ARG", "PLR"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.pylint]
+max-args=7
+
+[tool.mypy]
+python_version = "3.13"
+ignore_missing_imports = true
+show_error_codes = true
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]

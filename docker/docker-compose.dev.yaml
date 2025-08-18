@@ -1,0 +1,108 @@
+x-proxies: &proxies
+  args:
+    - HTTP_PROXY=${HTTP_PROXY}
+    - HTTPS_PROXY=${HTTPS_PROXY}
+    - NO_PROXY=${NO_PROXY}
+    - http_proxy=${http_proxy}
+    - https_proxy=${https_proxy}
+    - no_proxy=${no_proxy}
+
+services:
+  server:
+    image: geti-tune-backend:dev
+    restart: unless-stopped
+    build:
+      dockerfile: Dockerfile
+      <<: *proxies
+    develop:
+      watch:
+        # sync static content
+        - path: ./app/
+          action: sync
+          target: /app/app/
+    depends_on:
+      - reverse-proxy
+    command: uv run fastapi dev --host 0.0.0.0 --port 7860
+    volumes:
+      - ./data/:/app/data/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-tune-server.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`) && (PathPrefix(`/api`))"
+      - "traefik.http.routers.geti-tune-server.entrypoints=web"
+      - "traefik.http.services.geti-tune-server.loadbalancer.server.port=7860"
+
+  client:
+    image: geti-tune-ui:dev
+    restart: unless-stopped
+    build:
+      dockerfile: Dockerfile
+      context: ./ui
+      target: dev
+      <<: *proxies
+    depends_on:
+      - reverse-proxy
+    develop:
+      watch:
+        # sync static content
+        - path: ./ui/
+          action: sync
+          target: /home/app/web_ui/
+          ignore:
+            - node_modules/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-tune-client.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`)"
+      - "traefik.http.routers.geti-tune-client.entrypoints=web"
+      - "traefik.http.services.geti-tune-client.loadbalancer.server.port=3000"
+
+  reverse-proxy:
+    image: traefik:v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-tune-proxy.rule=Host(`proxy.localhost`)"
+      - "traefik.http.routers.geti-tune-proxy.entrypoints=web"
+      - "traefik.http.services.geti-tune-proxy.loadbalancer.server.port=8080"
+    ports:
+      - "80:80"
+      - "443:443"
+
+  mosquitto:
+    profiles:
+      - mqtt
+    image: eclipse-mosquitto:2.0
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./data/mosquitto/config:/mosquitto/config
+      - ./data/mosquitto/data:/mosquitto/data
+      - ./data/mosquitto/log:/mosquitto/log
+    environment:
+      - MOSQUITTO_USERNAME=testuser
+      - MOSQUITTO_PASSWORD=testpass
+
+  mqtt-web-ui:
+    profiles:
+      - mqtt
+    image: emqx/mqttx-web
+    restart: unless-stopped
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=9001
+    depends_on:
+      - mosquitto
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geti-tune-mqtt-ui.rule=Host(`geti-tune-mqtt.localhost`)"
+      - "traefik.http.routers.geti-tune-mqtt-ui.entrypoints=web"
+      - "traefik.http.services.geti-tune-mqtt-ui.loadbalancer.server.port=80"
