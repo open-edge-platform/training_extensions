@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>otx.backend.openvino.engine &#8212; OpenVINO™ Training Extensions 2.5.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../_static/styles/bootstrap.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=6232a102" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
+
+    <script src="../../../../_static/documentation_options.js?v=5574521d"></script>
+    <script src="../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/openvino/engine';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fa-solid fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../../../../_static/logos/otx-logo.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../../../_static/logos/otx-logo.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+    </div>
+
+    <div id="navbar-end">
+      
+        <div class="navbar-end-item navbar-persistent--container">
+          
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+        </div>
+      
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  
+    <div class="navbar-persistent--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+    </div>
+  
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+  
+  <div id="rtd-footer-container"></div>
+
+      </div>
+      <main id="main-content" class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for otx.backend.openvino.engine</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2025 Intel Corporation</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+
+<span class="sd">&quot;&quot;&quot;OpenVINO engine.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">defusedxml.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">Elet</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.loggers</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSVLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">Progress</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.openvino.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OVModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExplainConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.tools.auto_configurator</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoConfigurator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span><span class="p">,</span> <span class="n">PathLike</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ANNOTATIONS</span><span class="p">,</span> <span class="n">DATA</span><span class="p">,</span> <span class="n">METRICS</span><span class="p">,</span> <span class="n">MODEL</span>
+
+
+<div class="viewcode-block" id="OVEngine">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OVEngine</span><span class="p">(</span><span class="n">Engine</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OV Engine.</span>
+
+<span class="sd">    This class defines the OV Engine for OTX, which governs each step of the OpenVINO validation workflow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="n">PathLike</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">OVModel</span> <span class="o">|</span> <span class="n">PathLike</span><span class="p">,</span>
+        <span class="n">work_dir</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">=</span> <span class="s2">&quot;./otx-workspace&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the OVEngine.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (OTXDataModule | PathLike): The data module or path to the data root.</span>
+<span class="sd">                If a path is provided, the engine will automatically create a datamodule</span>
+<span class="sd">                based on the data root and model.</span>
+<span class="sd">            model (OVModel | PathLike): The OV model for the engine.</span>
+<span class="sd">                A PathLike object to an OpenVINO IR XML file can also be provided. Defaults to None.</span>
+<span class="sd">            work_dir (PathLike, optional): Working directory for the engine. Defaults to &quot;./otx-workspace&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_work_dir</span> <span class="o">=</span> <span class="n">work_dir</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">))</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.xml&quot;</span><span class="p">]:</span>
+            <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive_task_from_ir</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">OVModel</span><span class="p">):</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">task</span>  <span class="c1"># type: ignore[assignment]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span> <span class="o">=</span> <span class="n">AutoConfigurator</span><span class="p">(</span>
+            <span class="n">data_root</span><span class="o">=</span><span class="n">data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">))</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">OTXDataModule</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">task</span> <span class="o">!=</span> <span class="n">task</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;The task of the provided datamodule does not match the task derived from the model. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;datamodule.task=</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">task</span><span class="si">}</span><span class="s2">, model.task=</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_datamodule</span><span class="p">:</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">:</span> <span class="n">OVModel</span> <span class="o">=</span> <span class="n">model</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">OVModel</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">get_ov_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_derive_task_from_ir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ir_xml</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXTaskType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive the task type from the IR model XML file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ir_xml (PathLike): Path to the IR model XML file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OTXTaskType: The derived task type.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the task type is unsupported or the XML file is invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">task_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;classification_hcl&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">H_LABEL_CLS</span><span class="p">,</span>
+            <span class="s2">&quot;classification_mlc&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">MULTI_LABEL_CLS</span><span class="p">,</span>
+            <span class="s2">&quot;classification_mc&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">MULTI_CLASS_CLS</span><span class="p">,</span>
+            <span class="s2">&quot;segmentation&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">SEMANTIC_SEGMENTATION</span><span class="p">,</span>
+            <span class="s2">&quot;detection&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">,</span>
+            <span class="s2">&quot;instance_segmentation&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">INSTANCE_SEGMENTATION</span><span class="p">,</span>
+            <span class="s2">&quot;keypoint_detection&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">KEYPOINT_DETECTION</span><span class="p">,</span>
+            <span class="s2">&quot;anomaly_classification&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_CLASSIFICATION</span><span class="p">,</span>
+            <span class="s2">&quot;anomaly_detection&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_DETECTION</span><span class="p">,</span>
+            <span class="s2">&quot;anomaly_segmentation&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_SEGMENTATION</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">Elet</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">ir_xml</span><span class="p">)</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+        <span class="n">rt_info</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;rt_info&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rt_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No &lt;rt_info&gt; found in the IR model XML file. Please check the model file.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">task_type</span> <span class="o">=</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//task_type&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;No &lt;task_type&gt; found in the IR model XML file. Please check the model file.&quot;</span>
+                <span class="s2">&quot;Task cannot be derived from the model.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">task_type</span> <span class="o">=</span> <span class="n">task_type</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task_type</span> <span class="o">==</span> <span class="s2">&quot;classification&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//hierarchical&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+                <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot;_hcl&quot;</span>
+            <span class="k">elif</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//multilabel&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+                <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot;_mlc&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot;_mc&quot;</span>
+        <span class="k">elif</span> <span class="n">task_type</span> <span class="o">==</span> <span class="s2">&quot;anomaly&quot;</span><span class="p">:</span>
+            <span class="n">sub_type</span> <span class="o">=</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//task&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+            <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">sub_type</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span>
+
+        <span class="k">if</span> <span class="n">otx_task_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">task_map</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported task type &#39;</span><span class="si">{</span><span class="n">otx_task_name</span><span class="si">}</span><span class="s2">&#39; derived from the IR model XML file.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">task_map</span><span class="p">[</span><span class="n">otx_task_name</span><span class="p">]</span>
+
+<div class="viewcode-block" id="OVEngine.train">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.train">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">METRICS</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Train method is not supported for OVEngine.&quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;OVEngine does not support training. Use test or predict methods to evaluate IR model.&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OVEngine.export">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.export">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export method is not supported for OVEngine.&quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;OVEngine does not support export.&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OVEngine.test">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.test">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">checkpoint</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">METRICS</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the testing phase of the engine.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (OTXDataModule | PathLike | None, optional): The data to test on. It can be a data module</span>
+<span class="sd">                or a path to the data root. If a path is provided, the engine will automatically</span>
+<span class="sd">                create a datamodule based on the data root and model.</span>
+<span class="sd">            checkpoint (PathLike | None, optional): Path to the checkpoint file to load the model from.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            metric (MetricCallable | None, optional): If provided, overrides `OTXModel.metric_callable` with the given</span>
+<span class="sd">                metric callable for evaluation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            METRICS: The computed metrics after testing the model on the provided data.</span>
+<span class="sd">                (dictionary of metric names and values)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If required data or metric is not provided.</span>
+<span class="sd">            ValueError: If label information between model and datamodule does not match.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+            <span class="n">datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">OTXDataModule</span><span class="p">):</span>
+            <span class="n">datamodule</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span>
+
+        <span class="k">if</span> <span class="n">datamodule</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide the `data` when creating the Engine, or pass it in OVEngine.test().&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+        <span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span> <span class="ow">or</span> <span class="n">model</span><span class="o">.</span><span class="n">metric_callable</span>
+
+        <span class="n">datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">update_ov_subset_pipeline</span><span class="p">(</span>
+            <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">,</span>
+            <span class="n">subset</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">metric</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide a `metric` when creating a OVModel or pass it in OVEngine.test().&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">label_info</span> <span class="o">!=</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;To launch a test pipeline, the label information should be same &quot;</span>
+                <span class="s2">&quot;between the training and testing datasets. &quot;</span>
+                <span class="s2">&quot;Please check whether you use the same dataset: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;model.label_info=</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;datamodule.label_info=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">metric_callable</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">Progress</span><span class="p">()</span> <span class="k">as</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="n">dataloader</span> <span class="o">=</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">test_dataloader</span><span class="p">()</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">progress</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="s2">&quot;Testing&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">data_batch</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+                <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data_batch</span><span class="p">)</span>
+                <span class="n">metric_inputs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">prepare_metric_inputs</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_inputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">metric_input</span> <span class="ow">in</span> <span class="n">metric_inputs</span><span class="p">:</span>
+                        <span class="n">metric_callable</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">metric_input</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">metric_callable</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">metric_inputs</span><span class="p">)</span>
+                <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">advance</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">metrics_result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">metric_callable</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_results</span><span class="p">(</span><span class="n">metrics_result</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metrics_result</span></div>
+
+
+<div class="viewcode-block" id="OVEngine.log_results">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.log_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">METRICS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log testing phase results to a CSV file.</span>
+
+<span class="sd">        This function behaves similarly to `OTXModel._log_metrics(metrics, key=&quot;test&quot;)`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">clean</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">metric_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;test/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">clean</span><span class="p">[</span><span class="n">metric_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># or flatten/log each value separately</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">clean</span><span class="p">[</span><span class="n">metric_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">CSVLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;csv/&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">(</span><span class="n">clean</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="s2">&quot;success&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OVEngine.predict">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.predict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">checkpoint</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">explain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">explain_config</span><span class="p">:</span> <span class="n">ExplainConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ANNOTATIONS</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run predictions using the specified model and data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (OTXDataModule | PathLike | list[np.array] | None, optional): The data module, path to data root,</span>
+<span class="sd">                or a list of numpy images to use for predictions.</span>
+<span class="sd">            checkpoint (PathLike | None, optional): The path to the IR XML file to load the model from.</span>
+<span class="sd">            explain (bool, optional): Whether to generate &quot;saliency_map&quot; and &quot;feature_vector&quot;. Defaults to False.</span>
+<span class="sd">            explain_config (ExplainConfig | None, optional): Configuration for saliency map post-processing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ANNOTATIONS: The predictions made by the model on the provided data.</span>
+<span class="sd">                (list of OTXPredEntity)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If input data is invalid or label information does not match.</span>
+<span class="sd">            TypeError: If input data type is unsupported.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.xai_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_saliency_maps_in_pred_entity</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">(</span><span class="n">data_root</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">datamodule</span> <span class="o">=</span> <span class="n">data</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span>
+
+        <span class="n">predict_result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="n">Progress</span><span class="p">()</span> <span class="k">as</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datamodule</span><span class="p">,</span> <span class="n">OTXDataModule</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">label_info</span> <span class="o">!=</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="s2">&quot;To launch a predict pipeline, the label information should be same &quot;</span>
+                        <span class="s2">&quot;between the training and testing datasets. &quot;</span>
+                        <span class="s2">&quot;Please check whether you use the same dataset: &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;model.label_info=</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;datamodule.label_info=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">update_ov_subset_pipeline</span><span class="p">(</span>
+                    <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">,</span>
+                    <span class="n">subset</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+                    <span class="n">task</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">dataloader</span> <span class="o">=</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">test_dataloader</span><span class="p">()</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">progress</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="s2">&quot;Predicting&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">data_batch</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+                    <span class="n">predict_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">data_batch</span><span class="p">))</span>
+                    <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">advance</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datamodule</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">progress</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="s2">&quot;Predicting&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">datamodule</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The input data is empty.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datamodule</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The input data should be a list of numpy arrays.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">customized_inputs</span> <span class="o">=</span> <span class="n">OTXDataBatch</span><span class="p">(</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">datamodule</span><span class="p">),</span>
+                    <span class="n">images</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">datamodule</span><span class="p">],</span>
+                    <span class="n">imgs_info</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">ImageInfo</span><span class="p">(</span><span class="n">img_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">img_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">datamodule</span><span class="p">)</span>
+                    <span class="p">],</span>
+                <span class="p">)</span>
+                <span class="n">predict_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">customized_inputs</span><span class="p">))</span>
+                <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">advance</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The input data should be either a datamodule, valid path to data root or a list of numpy arrays.&quot;</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">explain</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datamodule</span><span class="p">,</span> <span class="n">OTXDataModule</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">explain_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">explain_config</span> <span class="o">=</span> <span class="n">ExplainConfig</span><span class="p">()</span>
+            <span class="n">predict_result</span> <span class="o">=</span> <span class="n">process_saliency_maps_in_pred_entity</span><span class="p">(</span><span class="n">predict_result</span><span class="p">,</span> <span class="n">explain_config</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">.</span><span class="n">label_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">predict_result</span></div>
+
+
+<div class="viewcode-block" id="OVEngine.optimize">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.optimize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">checkpoint</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">datamodule</span><span class="p">:</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_data_subset_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply Post-Training Quantization (PTQ) to optimize the model.</span>
+
+<span class="sd">        PTQ performs int-8 quantization on the input model, resulting in mixed precision.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            checkpoint (PathLike | None, optional): Checkpoint to optimize. Defaults to None.</span>
+<span class="sd">            datamodule (OTXDataModule | None, optional): The data module to use for optimization.</span>
+<span class="sd">            max_data_subset_size (int | None, optional): Maximum size of the train subset used for optimization.</span>
+<span class="sd">                Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Path: Path to the optimized model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">optimize_datamodule</span> <span class="o">=</span> <span class="n">datamodule</span> <span class="k">if</span> <span class="n">datamodule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_checkpoint</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+        <span class="n">optimize_datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">update_ov_subset_pipeline</span><span class="p">(</span>
+            <span class="n">datamodule</span><span class="o">=</span><span class="n">optimize_datamodule</span><span class="p">,</span>
+            <span class="n">subset</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">ptq_config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">max_data_subset_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ptq_config</span><span class="p">[</span><span class="s2">&quot;subset_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_data_subset_size</span>
+
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">),</span>
+            <span class="n">optimize_datamodule</span><span class="p">,</span>
+            <span class="n">ptq_config</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OVEngine.is_supported">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.backend.openvino.engine.html#otx.backend.openvino.engine.OVEngine.is_supported">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_supported</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">MODEL</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DATA</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the engine is supported for the given model and data.&quot;&quot;&quot;</span>
+        <span class="n">check_model</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">check_data</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">OVModel</span><span class="p">):</span>
+            <span class="n">check_model</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+            <span class="n">model_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="n">check_model</span> <span class="o">=</span> <span class="n">model_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.xml&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">OTXDataModule</span><span class="p">):</span>
+            <span class="n">check_data</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+            <span class="n">data_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">check_data</span> <span class="o">=</span> <span class="n">data_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">check_model</span> <span class="ow">and</span> <span class="n">check_data</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OVModel</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the OVModel with the given checkpoint path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            checkpoint (PathLike | None): The new IR XML file path.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OVModel: The updated OVModel instance.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If no model or checkpoint is provided.</span>
+<span class="sd">            RuntimeError: If the checkpoint file format is unsupported.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide either a model or a checkpoint path.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">))</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.xml&quot;</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;OV Engine supports only OV IR checkpoints&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive_task_from_ir</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">get_ov_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">),</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>  <span class="c1"># type: ignore[return-value]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">work_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PathLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the working directory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            PathLike: The working directory path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_work_dir</span>
+
+    <span class="nd">@work_dir</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">work_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the working directory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            work_dir (PathLike): The new working directory path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_work_dir</span> <span class="o">=</span> <span class="n">work_dir</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OVModel</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the model associated with the engine.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OVModel: The OVModel object or None if not set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">datamodule</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataModule</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the datamodule associated with the engine.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            OTXDataModule: The OTXDataModule object.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If the datamodule is not set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_datamodule</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Please include the `data_root` or `datamodule` when creating the Engine.&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_datamodule</span></div>
+
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div id="searchbox"></div>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2024, OpenVINO™ Training Extensions Contributors.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">
+        PyData Sphinx Theme
+    </a>
+    0.12.0.
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+otx.backend.openvino
+====================
+
+.. automodule:: otx.backend.openvino
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   otx.backend.openvino.engine
+   otx.backend.openvino.models
+

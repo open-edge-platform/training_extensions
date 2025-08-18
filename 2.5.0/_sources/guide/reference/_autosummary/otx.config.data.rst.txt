@@ -1,0 +1,31 @@
+otx.config.data
+===============
+
+.. automodule:: otx.config.data
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SamplerConfig
+      SubsetConfig
+      TileConfig
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,33 @@
+otx.tools
+=========
+
+.. automodule:: otx.tools
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   otx.tools.auto_configurator
+   otx.tools.converter
+   otx.tools.templates
+
