@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   Code-Quality-Checks:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, x64, dev, dmount]
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -36,7 +36,7 @@ jobs:
       - name: Code quality checks
         run: tox r -vv -e pre-commit
   Unit-Test:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, x64, dev, dmount]
     needs: Code-Quality-Checks
     timeout-minutes: 120
     strategy:
