@@ -263,11 +263,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Polygon</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoIAlign</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
@@ -284,6 +281,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXInstanceSegModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvFCBBoxHead</span><span class="p">,</span> <span class="n">FCNMaskHead</span><span class="p">,</span> <span class="n">RoIHead</span><span class="p">,</span> <span class="n">RPNHead</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ROICriterion</span><span class="p">,</span> <span class="n">RPNCriterion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.rotated_det</span><span class="w"> </span><span class="kn">import</span> <span class="n">RotatedPredictMixin</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.segmentors.two_stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">TwoStageDetector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.utils.roi_extractors</span><span class="w"> </span><span class="kn">import</span> <span class="n">SingleRoIExtractor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span>
@@ -303,7 +301,7 @@
 
 
 <div class="viewcode-block" id="MaskRCNN">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.MaskRCNN">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.MaskRCNN">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MaskRCNN</span><span class="p">(</span><span class="n">OTXInstanceSegModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of MaskRCNN for instance segmentation.</span>
 
@@ -630,7 +628,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="MaskRCNN.load_from_otx_v1_ckpt">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.MaskRCNN.load_from_otx_v1_ckpt">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.MaskRCNN.load_from_otx_v1_ckpt">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_iseg_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
@@ -655,92 +653,13 @@
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">RotatedMaskRCNNModel</span><span class="p">(</span><span class="n">MaskRCNN</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RotatedMaskRCNNModel</span><span class="p">(</span><span class="n">RotatedPredictMixin</span><span class="p">,</span> <span class="n">MaskRCNN</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the rotated detection models used in OTX.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">predict_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Predict step for rotated detection task.</span>
-
-<span class="sd">        Note: This method is overridden to convert masks to rotated bounding boxes.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            TorchPredBatch: The predicted polygons (rboxes), scores, labels, masks.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform prediction step for rotated detection.&quot;&quot;&quot;</span>
         <span class="n">preds</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">predict_step</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="n">batch_scores</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">batch_bboxes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">batch_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">batch_polygons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">batch_masks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">Mask</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;imgs_info&quot;</span><span class="p">,</span> <span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;scores&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">],</span>
-            <span class="p">[</span><span class="n">preds</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span> <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span> <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span> <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">preds</span><span class="o">.</span><span class="n">masks</span><span class="p">],</span>
-        <span class="p">):</span>
-            <span class="k">if</span> <span class="n">field</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Field &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; is None, which is not allowed.&quot;</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">img_info</span><span class="p">,</span> <span class="n">pred_bboxes</span><span class="p">,</span> <span class="n">pred_scores</span><span class="p">,</span> <span class="n">pred_labels</span><span class="p">,</span> <span class="n">pred_masks</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>  <span class="c1"># type: ignore[misc]</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">bboxes</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
-            <span class="n">preds</span><span class="o">.</span><span class="n">masks</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
-        <span class="p">):</span>
-            <span class="n">boxes</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">masks</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">polygons</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="k">for</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pred_bboxes</span><span class="p">,</span> <span class="n">pred_scores</span><span class="p">,</span> <span class="n">pred_labels</span><span class="p">,</span> <span class="n">pred_masks</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">np_mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-                <span class="n">contours</span><span class="p">,</span> <span class="n">hierarchies</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">findContours</span><span class="p">(</span><span class="n">np_mask</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">RETR_CCOMP</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CHAIN_APPROX_SIMPLE</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">hierarchies</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">rbox_polygons</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">contour</span><span class="p">,</span> <span class="n">hierarchy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-                    <span class="c1"># skip inner contours</span>
-                    <span class="k">if</span> <span class="n">hierarchy</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">contour</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
-                        <span class="k">continue</span>
-                    <span class="n">rbox_points</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">boxPoints</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">minAreaRect</span><span class="p">(</span><span class="n">contour</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-                    <span class="n">rbox_polygons</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">rbox_points</span><span class="p">,</span> <span class="n">rbox_points</span><span class="o">.</span><span class="n">get_area</span><span class="p">()))</span>
-
-                <span class="c1"># select the largest polygon</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rbox_polygons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">rbox_polygons</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                    <span class="n">polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rbox_polygons</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
-                    <span class="n">boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span>
-                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-                    <span class="n">masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxes</span><span class="p">):</span>
-                <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-                <span class="n">boxes</span> <span class="o">=</span> <span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">boxes</span><span class="p">),</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;XYXY&quot;</span><span class="p">,</span> <span class="n">canvas_size</span><span class="o">=</span><span class="n">img_info</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">)</span>  <span class="c1"># type: ignore[union-attr]</span>
-                <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-                <span class="n">masks</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span>
-
-            <span class="n">batch_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-            <span class="n">batch_bboxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
-            <span class="n">batch_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-            <span class="n">batch_polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polygons</span><span class="p">)</span>
-            <span class="n">batch_masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="n">preds</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">images</span><span class="o">=</span><span class="n">preds</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
-            <span class="n">imgs_info</span><span class="o">=</span><span class="n">preds</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
-            <span class="n">scores</span><span class="o">=</span><span class="n">batch_scores</span><span class="p">,</span>
-            <span class="n">bboxes</span><span class="o">=</span><span class="n">batch_bboxes</span><span class="p">,</span>
-            <span class="n">masks</span><span class="o">=</span><span class="n">batch_masks</span><span class="p">,</span>
-            <span class="n">polygons</span><span class="o">=</span><span class="n">batch_polygons</span><span class="p">,</span>
-            <span class="n">labels</span><span class="o">=</span><span class="n">batch_labels</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_predict_step</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
 </pre></div>
 
             </article>

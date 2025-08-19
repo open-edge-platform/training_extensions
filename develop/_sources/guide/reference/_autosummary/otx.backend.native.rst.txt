@@ -27,12 +27,6 @@ otx.backend.native
    :toctree:
    :recursive:
 
-   otx.backend.native.callbacks
-   otx.backend.native.cli
-   otx.backend.native.engine
-   otx.backend.native.exporter
-   otx.backend.native.models
-   otx.backend.native.optimizers
-   otx.backend.native.schedulers
-   otx.backend.native.tools
+   otx.backend.native.accelerators
+   otx.backend.native.strategies
 

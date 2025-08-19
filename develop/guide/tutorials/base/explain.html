@@ -261,7 +261,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/multi_gpu.html">Multi-GPU Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 </ul>
 </li>
@@ -289,8 +288,9 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/models_optimization.html">Models Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/auto_configuration.html">Auto-configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/adaptive_training.html">Adaptive Training</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/xai.html">Explainable AI (XAI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/fast_data_loading.html">Fast Data Loading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/tiling.html">Improve Small Object Detection with Image Tiling</a></li>
@@ -299,7 +299,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/configurable_input_size.html">Configurable Input Size</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../explanation/product_design.html">Product Design</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -307,32 +306,20 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.html">otx</a><input checked class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.html">otx.backend</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.html">otx.backend.native</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.callbacks.html">otx.backend.native.callbacks</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.cli.html">otx.backend.native.cli</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.engine.html">otx.backend.native.engine</a></li>
-<li class="toctree-l5 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.exporter.html">otx.backend.native.exporter</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l6"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.exporter.anomaly.html">otx.backend.native.exporter.anomaly</a></li>
-<li class="toctree-l6"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.exporter.base.html">otx.backend.native.exporter.base</a></li>
-<li class="toctree-l6"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.exporter.exportable_code.html">otx.backend.native.exporter.exportable_code</a></li>
-<li class="toctree-l6"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.exporter.native.html">otx.backend.native.exporter.native</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.accelerators.html">otx.backend.native.accelerators</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.strategies.html">otx.backend.native.strategies</a></li>
 </ul>
 </li>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.models.html">otx.backend.native.models</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.optimizers.html">otx.backend.native.optimizers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.schedulers.html">otx.backend.native.schedulers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.tools.html">otx.backend.native.tools</a></li>
-</ul>
-</li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.openvino.engine.html">otx.backend.openvino.engine</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.openvino.models.html">otx.backend.openvino.models</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
@@ -340,30 +327,18 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.config.data.html">otx.config.data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.config.device.html">otx.config.device</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.config.explain.html">otx.config.explain</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.data.html">otx.data</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.data.dataset.html">otx.data.dataset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.data.entity.html">otx.data.entity</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.data.factory.html">otx.data.factory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.data.module.html">otx.data.module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.data.samplers.html">otx.data.samplers</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.data.transform_libs.html">otx.data.transform_libs</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.data.transform_libs.torchvision.html">otx.data.transform_libs.torchvision</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.data.transform_libs.utils.html">otx.data.transform_libs.utils</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.data.utils.html">otx.data.utils</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.data.html">otx.data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.engine.html">otx.engine</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.metrics.html">otx.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.models.html">otx.models</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.recipe.html">otx.recipe</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.tools.converter.html">otx.tools.converter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.tools.templates.html">otx.tools.templates</a></li>
@@ -378,7 +353,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -429,13 +404,14 @@ created in the previous step.</p>
 .<span class="w"> </span>venv/otx/bin/activate
 </pre></div>
 </div>
-<p>2. <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">explain</span></code> command returns saliency maps,
+<p>2. <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">predict</span></code> with the <code class="docutils literal notranslate"><span class="pre">--explain</span> <span class="pre">True</span></code> parameter returns saliency maps,
 which are heatmaps with red-colored areas indicating focus. Here’s an example how to generate saliency maps from trained checkpoint:</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 CLI (with work_dir)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>explain<span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>predict<span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
+<span class="w">                       </span>--explain<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
 <span class="w">                       </span>--explain_config.postprocess<span class="w"> </span>True<span class="w"> </span><span class="c1"># Resizes and applies colormap to the saliency map</span>
 </pre></div>
 </div>
@@ -443,9 +419,10 @@ CLI (with work_dir)</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 CLI (with config)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>explain<span class="w"> </span>--config<span class="w">  </span>src/otx/recipe/detection/atss_mobilenetv2.yaml<span class="w"> </span><span class="se">\</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>predict<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/detection/atss_mobilenetv2.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">                       </span>--data_root<span class="w"> </span>data/wgisd<span class="w"> </span><span class="se">\</span>
-<span class="w">                       </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt<span class="w"> </span><span class="se">\</span>
+<span class="w">                       </span>--checkpoint<span class="w"> </span>otx-workspace/.latest/train/best_checkpoint.ckpt<span class="w"> </span><span class="se">\</span>
+<span class="w">                       </span>--explain<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
 <span class="w">                       </span>--explain_config.postprocess<span class="w"> </span>True<span class="w"> </span><span class="c1"># Resizes and applies colormap to the saliency map</span>
 </pre></div>
 </div>
@@ -453,11 +430,11 @@ CLI (with config)</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span>
-    <span class="n">checkpoint</span><span class="o">=</span><span class="s2">&quot;&lt;checkpoint-path&gt;&quot;</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">checkpoint</span><span class="o">=</span><span class="s2">&quot;otx-workspace/.latest/train/best_checkpoint.ckpt&quot;</span><span class="p">,</span>
     <span class="n">datamodule</span><span class="o">=</span><span class="n">OTXDataModule</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="c1"># The data module to use for predictions</span>
+    <span class="n">explain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">explain_config</span><span class="o">=</span><span class="n">ExplainConfig</span><span class="p">(</span><span class="n">postprocess</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="c1"># Resizes and applies colormap to the saliency map</span>
-    <span class="n">dump</span><span class="o">=</span><span class="kc">True</span> <span class="c1"># Wherether to save saliency map images or not</span>
   <span class="p">)</span>
 </pre></div>
 </div>
@@ -473,24 +450,20 @@ It will contain a pair of generated images with saliency maps for each image use
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-<p>4. To explain the exported IR model, it should be converted with additional outputs <code class="docutils literal notranslate"><span class="pre">saliency_map</span></code> and <code class="docutils literal notranslate"><span class="pre">feature_map</span></code>.
-To do that we should use <code class="docutils literal notranslate"><span class="pre">--explain</span> <span class="pre">True</span></code> parameter during export.</p>
+<p>4. To use the exported OpenVINO IR model for explanation, PyTorch weights should be converted to OpenVINO IR model with additional outputs <code class="docutils literal notranslate"><span class="pre">saliency_map</span></code> and <code class="docutils literal notranslate"><span class="pre">feature_map</span></code>.
+To do that we should use <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">export</span> <span class="pre">--explain</span> <span class="pre">True</span></code> parameter during export.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
 CLI</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">export</span><span class="w"> </span>...<span class="w"> </span>--explain<span class="w"> </span>True
-<span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>explain<span class="w"> </span>...<span class="w"> </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_052847/exported_model.xml
+<span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>predict<span class="w"> </span>...<span class="w"> </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_052847/exported_model.xml<span class="w"> </span>--explain<span class="w"> </span>True
 </pre></div>
 </div>
 </div>
 <input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-4">
 API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">explain</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">checkpoint</span><span class="o">=</span><span class="s2">&quot;&lt;xml_weights_path&gt;&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
 </div>
 </div>
 <p>5. We can parametrize the explanation process by specifying
@@ -514,7 +487,8 @@ the following parameters in <code class="docutils literal notranslate"><span cla
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-5">
 CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>explain<span class="w"> </span>...<span class="w"> </span>--explain_config.postprocess<span class="w"> </span>True
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>predict<span class="w"> </span>...<span class="w"> </span>--explain<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
+<span class="w">                           </span>--explain_config.postprocess<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
 <span class="w">                           </span>--explain_config.target_explain_group<span class="w"> </span>PREDICTIONS
 </pre></div>
 </div>
@@ -522,7 +496,8 @@ CLI</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-6">
 API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="o">...</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">,</span>
+               <span class="n">explain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                <span class="n">explain_config</span><span class="o">=</span><span class="n">ExplainConfig</span><span class="p">(</span>
                  <span class="n">postprocess</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">target_explain_group</span><span class="o">=</span><span class="n">TargetExplainGroup</span><span class="o">.</span><span class="n">PREDICTIONS</span>

@@ -4,6 +4,132 @@ Releases
 .. toctree::
   :maxdepth: 1
 
+2.4.6 (2025.07)
+----------------
+
+Bug fixes
+^^^^^^^^^^^^
+- Fix label info dispatching
+
+2.4.5 (2025.06)
+----------------
+
+Bug fixes
+^^^^^^^^^^^^
+- Fix UFlow
+- Fix loading/saving checkpoints
+
+2.4.4 (2025.05)
+----------------
+
+Bug fixes
+^^^^^^^^^^^^
+- Fix torch.load() to be able to load all OTX custom snapshots
+
+2.4.3 (2025.05)
+----------------
+
+Bug fixes
+^^^^^^^^^^^^
+- Bump torch to 2.7.0
+
+2.4.2 (2025.04)
+----------------
+
+Bug fixes
+^^^^^^^^^^^^
+- Fix specific torchmetrics dependency to 1.6.0
+
+2.4.1 (2025.04)
+----------------
+
+Bug fixes
+^^^^^^^^^^^^
+- Update Datumaro from 1.10.0rc0 to 1.10.0
+
+2.4.0 (2025.03)
+----------------
+
+New features
+^^^^^^^^^^^^
+
+- Add DETR XAI Explain Mode
+- Add UFlow anomaly detection algorithm
+- Improve Pre-Merge Test
+
+Enhancements
+^^^^^^^^^^^^
+
+- Bump inference dependencies
+- Bump ModelAPI to 0.2.5.2
+- Refactor OTX Models: Introduce DataInputParams. Align all models with the same interface.
+
+Bug fixes
+^^^^^^^^^^^^
+
+- Fix KP Detection performance
+- Fix auto batch size with tiling
+- Fix exportable code for tiling
+- Don't filter empty label from kp arrow
+- Fix description for auto batch size
+
+Removed
+^^^^^^^^^^^^
+
+- Remove HPO
+- Remove Action Classification
+- Remove Diffusion task
+- Remove 3D Object Detection task
+- Remove Zero Shot Visual Prompting
+- Remove Semi-SL algorithm, unlabeled dataset, MMCV transforms
+- Remove MaskDino, YOLOV9, HuggingFace wrappers, OTX install, mmcv tools
+
+v2.3.0 (2025.02)
+----------------
+
+New features
+^^^^^^^^^^^^
+
+- Turn on/off classification augmentations
+- Turn on/off detection and instance segmentation augmentations
+- Add GPU memory monitor hook
+- Add YOLOv9 model for Object Detection
+- Add OV inference for keypoint detection
+- Add tiling for semantic segmentation
+- Add 3D Object Detection task with MonoDETR model
+- Add OpenVINO inference for 3D Object Detection task
+- Add D-Fine Detection Algorithm
+
+Enhancements
+^^^^^^^^^^^^
+
+- Update visual prompting pipeline for multi-label zero-shot learning support
+- Update to work torch compile in detection
+- Refactor MaskDINO
+- Fix MaskRCNN/RTMDet-Inst/MaskRCNNTV Explain Mode
+- Reduce tiling unittests resource consumption
+- Upgrade OpenVINO to 2024.5 and NNCF to 2.14.0
+- Upgrade OV, MAPI, and NNCF dependencies
+- Instance Segmentation Model refactoring
+- Bump torch and lightning to 2.4.0 versions
+- Add mAP metric to evaluate multilabel classification
+- Bump OV to 2024.6, update empty label handling
+- Bump MAPI to 0.2.5.1
+
+Bug fixes
+^^^^^^^^^^^^
+
+- Fix MaskDINO, MonoDETR recipes
+- Fix a wrong HPO log
+- Update model name in rotated detection recipes
+- Fix SupCon flag
+- Add h-cls label info normalization
+- Fix arrow support for semantic segmentation task
+- Revert FMetric computation
+- Fix backward compatibility issues in model checkpoint loading
+- Fix label info on loading checkpoint
+- Revert h-cls head to linear one
+
 v2.2.2 (2024.12)
 ----------------
 

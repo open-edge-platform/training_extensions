@@ -43,7 +43,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'guide/reference/_autosummary/otx.data';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="otx.data.dataset" href="otx.data.dataset.html" />
+    <link rel="next" title="otx.engine" href="otx.engine.html" />
     <link rel="prev" title="otx.config.explain" href="otx.config.explain.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
@@ -261,7 +261,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 </ul>
 </li>
@@ -289,8 +288,9 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/models_optimization.html">Models Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/auto_configuration.html">Auto-configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/adaptive_training.html">Adaptive Training</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/xai.html">Explainable AI (XAI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/fast_data_loading.html">Fast Data Loading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/tiling.html">Improve Small Object Detection with Image Tiling</a></li>
@@ -299,7 +299,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/configurable_input_size.html">Configurable Input Size</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../explanation/product_design.html">Product Design</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current nav bd-sidenav">
@@ -307,32 +306,20 @@
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="otx.html">otx</a><input checked class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3 has-children"><a class="reference internal" href="otx.backend.html">otx.backend</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4 has-children"><a class="reference internal" href="otx.backend.native.html">otx.backend.native</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.callbacks.html">otx.backend.native.callbacks</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.cli.html">otx.backend.native.cli</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.engine.html">otx.backend.native.engine</a></li>
-<li class="toctree-l5 has-children"><a class="reference internal" href="otx.backend.native.exporter.html">otx.backend.native.exporter</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.anomaly.html">otx.backend.native.exporter.anomaly</a></li>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.base.html">otx.backend.native.exporter.base</a></li>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.exportable_code.html">otx.backend.native.exporter.exportable_code</a></li>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.native.html">otx.backend.native.exporter.native</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.accelerators.html">otx.backend.native.accelerators</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.strategies.html">otx.backend.native.strategies</a></li>
 </ul>
 </li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.models.html">otx.backend.native.models</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.optimizers.html">otx.backend.native.optimizers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.schedulers.html">otx.backend.native.schedulers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.tools.html">otx.backend.native.tools</a></li>
-</ul>
-</li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.backend.openvino.engine.html">otx.backend.openvino.engine</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.backend.openvino.models.html">otx.backend.openvino.models</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
@@ -340,30 +327,18 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.config.data.html">otx.config.data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.config.device.html">otx.config.device</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.config.explain.html">otx.config.explain</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current active has-children"><a class="current reference internal" href="#">otx.data</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.dataset.html">otx.data.dataset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.entity.html">otx.data.entity</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.factory.html">otx.data.factory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.module.html">otx.data.module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.samplers.html">otx.data.samplers</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="otx.data.transform_libs.html">otx.data.transform_libs</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="otx.data.transform_libs.torchvision.html">otx.data.transform_libs.torchvision</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.data.transform_libs.utils.html">otx.data.transform_libs.utils</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.utils.html">otx.data.utils</a></li>
-</ul>
-</li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">otx.data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.engine.html">otx.engine</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.metrics.html">otx.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="otx.models.html">otx.models</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.recipe.html">otx.recipe</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.converter.html">otx.tools.converter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.templates.html">otx.tools.templates</a></li>
@@ -378,7 +353,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -415,32 +390,231 @@
   <section id="module-otx.data">
 <span id="otx-data"></span><h1>otx.data<a class="headerlink" href="#module-otx.data" title="Link to this heading">#</a></h1>
 <p>Module for data related objects, such as OTXDataset, OTXDataEntity, OTXDataModule, and Transforms.</p>
-<p class="rubric">Modules</p>
+<p class="rubric">Classes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.data.dataset.html#module-otx.data.dataset" title="otx.data.dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.dataset</span></code></a></p></td>
-<td><p>Module defines OTXDatasets.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.OTXDataModule" title="otx.data.OTXDataModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXDataModule</span></code></a>(task, data_format, data_root, ...)</p></td>
+<td><p>This class extends the LightningDataModule to provide data handling capabilities for the OTX pipeline.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.data.entity.html#module-otx.data.entity" title="otx.data.entity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.entity</span></code></a></p></td>
-<td><p>Module for OTX data entities.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.OTXAnomalyDataset" title="otx.data.OTXAnomalyDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXAnomalyDataset</span></code></a>(task_type, dm_subset, ...)</p></td>
+<td><p>OTXDataset class for anomaly classification task.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.data.factory.html#module-otx.data.factory" title="otx.data.factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.factory</span></code></a></p></td>
-<td><p>Factory classes for dataset and transforms.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.OTXMulticlassClsDataset" title="otx.data.OTXMulticlassClsDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXMulticlassClsDataset</span></code></a>(dm_subset, transforms)</p></td>
+<td><p>OTXDataset class for multi-class classification task.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.data.module.html#module-otx.data.module" title="otx.data.module"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.module</span></code></a></p></td>
-<td><p>LightningDataModule extension for OTX.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.OTXHlabelClsDataset" title="otx.data.OTXHlabelClsDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXHlabelClsDataset</span></code></a>(**kwargs)</p></td>
+<td><p>OTXDataset class for H-label classification task.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.data.samplers.html#module-otx.data.samplers" title="otx.data.samplers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.samplers</span></code></a></p></td>
-<td><p>Custom samplers for the OTX2.0.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.OTXMultilabelClsDataset" title="otx.data.OTXMultilabelClsDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXMultilabelClsDataset</span></code></a>(**kwargs)</p></td>
+<td><p>OTXDataset class for multi-label classification task.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.data.transform_libs.html#module-otx.data.transform_libs" title="otx.data.transform_libs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.transform_libs</span></code></a></p></td>
-<td><p>Helpers to support data transform functions from various frameworks.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.OTXDetectionDataset" title="otx.data.OTXDetectionDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXDetectionDataset</span></code></a>(dm_subset, transforms[, ...])</p></td>
+<td><p>OTXDataset class for detection task.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.data.utils.html#module-otx.data.utils" title="otx.data.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.utils</span></code></a></p></td>
-<td><p>Utility modules for core data modules.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.OTXInstanceSegDataset" title="otx.data.OTXInstanceSegDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXInstanceSegDataset</span></code></a>(dm_subset, transforms, ...)</p></td>
+<td><p>OTXDataset class for instance segmentation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.OTXKeypointDetectionDataset" title="otx.data.OTXKeypointDetectionDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXKeypointDetectionDataset</span></code></a>(dm_subset, ...)</p></td>
+<td><p>OTXDataset class for keypoint detection task.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.data.OTXSegmentationDataset" title="otx.data.OTXSegmentationDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXSegmentationDataset</span></code></a>(dm_subset, transforms)</p></td>
+<td><p>OTXDataset class for segmentation task.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.data.OTXTileDatasetFactory" title="otx.data.OTXTileDatasetFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OTXTileDatasetFactory</span></code></a>()</p></td>
+<td><p>OTX tile dataset factory.</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXAnomalyDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXAnomalyDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.types.html#otx.types.OTXTaskType" title="otx.types.task.OTXTaskType"><span class="pre">OTXTaskType</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Compose</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Compose</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_refetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_color_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ImageColorChannel</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ImageColorChannel.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_tv_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/anomaly.html#OTXAnomalyDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXAnomalyDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
+<p>OTXDataset class for anomaly classification task.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.types.html#otx.types.OTXTaskType" title="otx.types.OTXTaskType"><span class="pre">OTXTaskType</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.config.data.html#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><span class="pre">SubsetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.config.data.html#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><span class="pre">SubsetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.config.data.html#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><span class="pre">SubsetConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.config.data.html#otx.config.data.TileConfig" title="otx.config.data.TileConfig"><span class="pre">TileConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">TileConfig(enable_tiler=False,</span> <span class="pre">enable_adaptive_tiling=True,</span> <span class="pre">tile_size=(400,</span> <span class="pre">400),</span> <span class="pre">overlap=0.2,</span> <span class="pre">iou_threshold=0.45,</span> <span class="pre">max_num_instances=1500,</span> <span class="pre">object_tile_ratio=0.03,</span> <span class="pre">sampling_ratio=1.0,</span> <span class="pre">with_full_img=False)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_color_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ImageColorChannel</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ImageColorChannel.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">255</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unannotated_items_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DeviceType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">DeviceType.auto</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size_multiplier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/module.html#OTXDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDataModule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LightningDataModule</span></code></p>
+<p>This class extends the LightningDataModule to provide data handling capabilities for the OTX pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<a class="reference internal" href="otx.types.html#otx.types.OTXTaskType" title="otx.types.OTXTaskType"><em>OTXTaskType</em></a>) – The type of task (e.g., classification, detection).</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The format of the data (e.g., ‘coco’, ‘voc’).</p></li>
+<li><p><strong>data_root</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The root directory where the data is stored.</p></li>
+<li><p><strong>train_subset</strong> (<a class="reference internal" href="otx.config.data.html#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><em>SubsetConfig</em></a>) – Configuration for the training subset.</p></li>
+<li><p><strong>val_subset</strong> (<a class="reference internal" href="otx.config.data.html#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><em>SubsetConfig</em></a>) – Configuration for the validation subset.</p></li>
+<li><p><strong>test_subset</strong> (<a class="reference internal" href="otx.config.data.html#otx.config.data.SubsetConfig" title="otx.config.data.SubsetConfig"><em>SubsetConfig</em></a>) – Configuration for the test subset.</p></li>
+<li><p><strong>tile_config</strong> (<a class="reference internal" href="otx.config.data.html#otx.config.data.TileConfig" title="otx.config.data.TileConfig"><em>TileConfig</em></a><em>, </em><em>optional</em>) – Configuration for tiling.</p></li>
+<li><p><strong>TileConfig</strong> (<em>Defaults to</em>) – </p></li>
+<li><p><strong>image_color_channel</strong> (<em>ImageColorChannel</em><em>, </em><em>optional</em>) – Color channel configuration for images.</p></li>
+<li><p><strong>ImageColorChannel.RGB.</strong> (<em>Defaults to</em>) – </p></li>
+<li><p><strong>include_polygons</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to include polygons in the data. Defaults to False.</p></li>
+<li><p><strong>ignore_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Index to ignore in segmentation tasks. Defaults to 255.</p></li>
+<li><p><strong>unannotated_items_ratio</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – Ratio of unannotated items to include. Defaults to 0.0.</p></li>
+<li><p><strong>auto_num_workers</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to automatically determine the number of workers. Defaults to False.</p></li>
+<li><p><strong>device</strong> (<em>DeviceType</em><em>, </em><em>optional</em>) – Device type to use (e.g., ‘cpu’, ‘gpu’). Defaults to DeviceType.auto.</p></li>
+<li><p><strong>input_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Final image or video shape after transformation.</p></li>
+<li><p><strong>&quot;auto&quot;.</strong> (<em>Can be &quot;auto&quot; to determine size automatically. Defaults to</em>) – </p></li>
+<li><p><strong>input_size_multiplier</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Multiplier for adaptive input size.</p></li>
+<li><p><strong>1.</strong> (<em>Useful for models requiring specific input size multiples. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<p>Constructor.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule.predict_dataloader">
+<span class="sig-name descname"><span class="pre">predict_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataLoader</span></span></span><a class="reference internal" href="../../../_modules/otx/data/module.html#OTXDataModule.predict_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDataModule.predict_dataloader" title="Link to this definition">#</a></dt>
+<dd><p>Get test dataloader.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/data/module.html#OTXDataModule.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDataModule.setup" title="Link to this definition">#</a></dt>
+<dd><p>Setup for each stage.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule.teardown">
+<span class="sig-name descname"><span class="pre">teardown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/data/module.html#OTXDataModule.teardown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDataModule.teardown" title="Link to this definition">#</a></dt>
+<dd><p>Teardown for each stage.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule.test_dataloader">
+<span class="sig-name descname"><span class="pre">test_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataLoader</span></span></span><a class="reference internal" href="../../../_modules/otx/data/module.html#OTXDataModule.test_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDataModule.test_dataloader" title="Link to this definition">#</a></dt>
+<dd><p>Get test dataloader.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule.train_dataloader">
+<span class="sig-name descname"><span class="pre">train_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataLoader</span></span></span><a class="reference internal" href="../../../_modules/otx/data/module.html#OTXDataModule.train_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDataModule.train_dataloader" title="Link to this definition">#</a></dt>
+<dd><p>Get train dataloader.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule.val_dataloader">
+<span class="sig-name descname"><span class="pre">val_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataLoader</span></span></span><a class="reference internal" href="../../../_modules/otx/data/module.html#OTXDataModule.val_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDataModule.val_dataloader" title="Link to this definition">#</a></dt>
+<dd><p>Get val dataloader.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="otx.data.OTXDataModule.hparams_initial">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hparams_initial</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AttributeDict</span></em><a class="headerlink" href="#otx.data.OTXDataModule.hparams_initial" title="Link to this definition">#</a></dt>
+<dd><p>The collection of hyperparameters saved with <cite>save_hyperparameters()</cite>. It is read-only.</p>
+<p>The reason why we override is that we have some custom resolvers for <cite>DictConfig</cite>.
+Some resolved Python objects has not a primitive type, so that is not loggable without errors.
+Therefore, we need to unresolve it this time.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXDetectionDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXDetectionDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetSubset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_refetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_color_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ImageColorChannel</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ImageColorChannel.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_tv_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/detection.html#OTXDetectionDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXDetectionDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DataAugSwitchMixin</span></code></p>
+<p>OTXDataset class for detection task.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXHlabelClsDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXHlabelClsDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/classification.html#OTXHlabelClsDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXHlabelClsDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
+<p>OTXDataset class for H-label classification task.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXInstanceSegDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXInstanceSegDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Compose</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Compose</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/instance_segmentation.html#OTXInstanceSegDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXInstanceSegDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
+<p>OTXDataset class for instance segmentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dm_subset</strong> (<em>DmDataset</em>) – The subset of the dataset.</p></li>
+<li><p><strong>transforms</strong> (<em>Transforms</em>) – Data transformations to be applied.</p></li>
+<li><p><strong>include_polygons</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Flag indicating whether to include polygons in the dataset.
+If set to False, polygons will be converted to bitmaps, and bitmaps will be used for training.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to the base class.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXKeypointDetectionDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXKeypointDetectionDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetSubset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Compose</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Compose</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_refetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_color_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ImageColorChannel</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ImageColorChannel.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_tv_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/keypoint_detection.html#OTXKeypointDetectionDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXKeypointDetectionDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
+<p>OTXDataset class for keypoint detection task.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXMulticlassClsDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXMulticlassClsDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetSubset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_refetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_color_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ImageColorChannel</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ImageColorChannel.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_tv_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/classification.html#OTXMulticlassClsDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXMulticlassClsDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
+<p>OTXDataset class for multi-class classification task.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="otx.data.OTXMulticlassClsDataset.collate_fn">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collate_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></em><a class="headerlink" href="#otx.data.OTXMulticlassClsDataset.collate_fn" title="Link to this definition">#</a></dt>
+<dd><p>Collection function to collect MulticlassClsDataEntity into MulticlassClsBatchDataEntity in data loader.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXMultilabelClsDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXMultilabelClsDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/classification.html#OTXMultilabelClsDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXMultilabelClsDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
+<p>OTXDataset class for multi-label classification task.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXSegmentationDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXSegmentationDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm_subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DmDataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transforms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Transforms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_refetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_color_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ImageColorChannel</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ImageColorChannel.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_tv_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">255</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/otx/data/dataset/segmentation.html#OTXSegmentationDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXSegmentationDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
+<p>OTXDataset class for segmentation task.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="otx.data.OTXSegmentationDataset.has_polygons">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_polygons</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><a class="headerlink" href="#otx.data.OTXSegmentationDataset.has_polygons" title="Link to this definition">#</a></dt>
+<dd><p>Check if the dataset has polygons in annotations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.data.OTXTileDatasetFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.data.</span></span><span class="sig-name descname"><span class="pre">OTXTileDatasetFactory</span></span><a class="reference internal" href="../../../_modules/otx/data/dataset/tile.html#OTXTileDatasetFactory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXTileDatasetFactory" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>OTX tile dataset factory.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.data.OTXTileDatasetFactory.create">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.types.html#otx.types.OTXTaskType" title="otx.types.OTXTaskType"><span class="pre">OTXTaskType</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OTXDataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="otx.config.data.html#otx.config.data.TileConfig" title="otx.config.data.TileConfig"><span class="pre">TileConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OTXTileDataset</span></span></span><a class="reference internal" href="../../../_modules/otx/data/dataset/tile.html#OTXTileDatasetFactory.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.data.OTXTileDatasetFactory.create" title="Link to this definition">#</a></dt>
+<dd><p>Create a tile dataset based on the task type and subset type.</p>
+<dl class="simple">
+<dt>NOte: All task utilize the same OTXTileTrainDataset for training.</dt><dd><p>In testing, we use different tile dataset for different task
+type due to different annotation format and data entity.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<a class="reference internal" href="otx.types.html#otx.types.OTXTaskType" title="otx.types.OTXTaskType"><em>OTXTaskType</em></a>) – OTX task type.</p></li>
+<li><p><strong>dataset</strong> (<em>OTXDataset</em>) – OTX dataset.</p></li>
+<li><p><strong>tile_config</strong> (<em>TilerConfig</em>) – Tile configuration.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tile dataset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>OTXTileDataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -458,10 +632,10 @@
           <p class="prev-next-title">otx.config.explain</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="otx.data.dataset.html" title="next page">
+  <a class='right-next' id="next-link" href="otx.engine.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">otx.data.dataset</p>
+      <p class="prev-next-title">otx.engine</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -474,6 +648,206 @@
           
             <div class="bd-sidebar-secondary bd-toc">
               
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXAnomalyDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXAnomalyDataset
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXDataModule">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXDataModule
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXDataModule.predict_dataloader">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDataModule.predict_dataloader()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXDataModule.setup">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDataModule.setup()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXDataModule.teardown">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDataModule.teardown()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXDataModule.test_dataloader">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDataModule.test_dataloader()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXDataModule.train_dataloader">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDataModule.train_dataloader()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXDataModule.val_dataloader">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDataModule.val_dataloader()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXDataModule.hparams_initial">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXDataModule.hparams_initial
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXDetectionDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXDetectionDataset
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXHlabelClsDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXHlabelClsDataset
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXInstanceSegDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXInstanceSegDataset
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXKeypointDetectionDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXKeypointDetectionDataset
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXMulticlassClsDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXMulticlassClsDataset
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXMulticlassClsDataset.collate_fn">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXMulticlassClsDataset.collate_fn
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXMultilabelClsDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXMultilabelClsDataset
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXSegmentationDataset">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXSegmentationDataset
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXSegmentationDataset.has_polygons">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXSegmentationDataset.has_polygons
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.data.OTXTileDatasetFactory">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     OTXTileDatasetFactory
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.data.OTXTileDatasetFactory.create">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       OTXTileDatasetFactory.create()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
 <div class="toc-item">
   
 <div id="searchbox"></div>

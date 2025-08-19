@@ -261,7 +261,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 </ul>
 </li>
@@ -289,8 +288,9 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../explanation/additional_features/models_optimization.html">Models Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../explanation/additional_features/auto_configuration.html">Auto-configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../explanation/additional_features/adaptive_training.html">Adaptive Training</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="../explanation/additional_features/xai.html">Explainable AI (XAI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../explanation/additional_features/fast_data_loading.html">Fast Data Loading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../explanation/additional_features/tiling.html">Improve Small Object Detection with Image Tiling</a></li>
@@ -299,7 +299,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../explanation/additional_features/configurable_input_size.html">Configurable Input Size</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../explanation/product_design.html">Product Design</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -307,32 +306,20 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reference/_autosummary/otx.html">otx</a><input checked class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.backend.html">otx.backend</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.html">otx.backend.native</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.callbacks.html">otx.backend.native.callbacks</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.cli.html">otx.backend.native.cli</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.engine.html">otx.backend.native.engine</a></li>
-<li class="toctree-l5 has-children"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.exporter.html">otx.backend.native.exporter</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l6"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.exporter.anomaly.html">otx.backend.native.exporter.anomaly</a></li>
-<li class="toctree-l6"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.exporter.base.html">otx.backend.native.exporter.base</a></li>
-<li class="toctree-l6"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.exporter.exportable_code.html">otx.backend.native.exporter.exportable_code</a></li>
-<li class="toctree-l6"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.exporter.native.html">otx.backend.native.exporter.native</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.accelerators.html">otx.backend.native.accelerators</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.strategies.html">otx.backend.native.strategies</a></li>
 </ul>
 </li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.models.html">otx.backend.native.models</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.optimizers.html">otx.backend.native.optimizers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.schedulers.html">otx.backend.native.schedulers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.native.tools.html">otx.backend.native.tools</a></li>
-</ul>
-</li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.openvino.engine.html">otx.backend.openvino.engine</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.backend.openvino.models.html">otx.backend.openvino.models</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
@@ -340,30 +327,18 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.config.data.html">otx.config.data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.config.device.html">otx.config.device</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.config.explain.html">otx.config.explain</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.data.html">otx.data</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.data.dataset.html">otx.data.dataset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.data.entity.html">otx.data.entity</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.data.factory.html">otx.data.factory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.data.module.html">otx.data.module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.data.samplers.html">otx.data.samplers</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../reference/_autosummary/otx.data.transform_libs.html">otx.data.transform_libs</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.data.transform_libs.torchvision.html">otx.data.transform_libs.torchvision</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../reference/_autosummary/otx.data.transform_libs.utils.html">otx.data.transform_libs.utils</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.data.utils.html">otx.data.utils</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.data.html">otx.data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.engine.html">otx.engine</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.metrics.html">otx.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.models.html">otx.models</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/_autosummary/otx.recipe.html">otx.recipe</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.converter.html">otx.tools.converter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/_autosummary/otx.tools.templates.html">otx.tools.templates</a></li>
@@ -378,7 +353,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -435,7 +410,7 @@ Please refer <a class="reference external" href="https://jsonargparse.readthedoc
 <p><code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">--help</span></code> show available sub-commands.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>--help
 ╭─<span class="w"> </span>Arguments<span class="w"> </span>─────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│<span class="w"> </span>Usage:<span class="w"> </span>otx<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">{</span>find,train,test,predict,export,optimize,explain<span class="o">}</span><span class="w"> </span>...<span class="w">                              </span>│
+│<span class="w"> </span>Usage:<span class="w"> </span>otx<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">{</span>find,train,test,predict,export,optimize<span class="o">}</span><span class="w"> </span>...<span class="w">                                      </span>│
 │<span class="w">                                                                                                                 </span>│
 │<span class="w">                                                                                                                 </span>│
 │<span class="w"> </span>OpenVINO<span class="w"> </span>Training-Extension<span class="w"> </span><span class="nb">command</span><span class="w"> </span>line<span class="w"> </span>tool<span class="w">                                                                   </span>│
@@ -456,7 +431,6 @@ Please refer <a class="reference external" href="https://jsonargparse.readthedoc
 │<span class="w">     </span>predict<span class="w">             </span>Run<span class="w"> </span>predictions<span class="w"> </span>using<span class="w"> </span>the<span class="w"> </span>specified<span class="w"> </span>model<span class="w"> </span>and<span class="w"> </span>data.<span class="w">                                     </span>│
 │<span class="w">     </span><span class="nb">export</span><span class="w">              </span>Export<span class="w"> </span>the<span class="w"> </span>trained<span class="w"> </span>model<span class="w"> </span>to<span class="w"> </span>OpenVINO<span class="w"> </span>Intermediate<span class="w"> </span>Representation<span class="w"> </span><span class="o">(</span>IR<span class="o">)</span><span class="w"> </span>or<span class="w"> </span>ONNX<span class="w"> </span>formats.<span class="w">  </span>│
 │<span class="w">     </span>optimize<span class="w">            </span>Applies<span class="w"> </span>NNCF.PTQ<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>underlying<span class="w"> </span>models<span class="w"> </span><span class="o">(</span>now<span class="w"> </span>works<span class="w"> </span>only<span class="w"> </span><span class="k">for</span><span class="w"> </span>OV<span class="w"> </span>models<span class="o">)</span>.<span class="w">               </span>│
-│<span class="w">     </span>explain<span class="w">             </span>Run<span class="w"> </span>XAI<span class="w"> </span>using<span class="w"> </span>the<span class="w"> </span>specified<span class="w"> </span>model<span class="w"> </span>and<span class="w"> </span>data<span class="w"> </span><span class="o">(</span><span class="nb">test</span><span class="w"> </span>subset<span class="o">)</span>.<span class="w">                               </span>│
 <span class="p">|</span><span class="w">     </span>benchmark<span class="w">           </span>Executes<span class="w"> </span>model<span class="w"> </span>micro<span class="w"> </span>benchmarking<span class="w"> </span>on<span class="w"> </span>random<span class="w"> </span>data.<span class="w">                                       </span><span class="p">|</span>
 │<span class="w">                                                                                                                 </span>│
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
@@ -733,7 +707,7 @@ This option can be useful for maximizing GPU utilization and reducing model trai
 If your machine has enough main memory, we recommend increasing this value as much as possible.
 For example, you can cache approximately 10,000 of <code class="docutils literal notranslate"><span class="pre">500x375~500x439</span></code> sized images with <code class="docutils literal notranslate"><span class="pre">--data.mem_cache_size</span> <span class="pre">8GB</span></code>.</p>
 </div>
-<p>It is also possible to start training by omitting the recipe and just passing the paths to dataset roots, then the <a class="reference internal" href="../explanation/additional_features/auto_configuration.html"><span class="doc">auto-configuration</span></a> will be enabled. Based on the dataset, OpenVINO™ Training Extensions will choose the task type and recipe with the best accuracy/speed trade-off.</p>
+<p>It is also possible to start training by omitting the recipe and just passing the paths to dataset roots, then the <span class="xref std std-doc">auto-configuration</span> will be enabled. Based on the dataset, OpenVINO™ Training Extensions will choose the task type and recipe with the best accuracy/speed trade-off.</p>
 <p>You can override the configurable arguments.
 For example, that is how you can change the max epochs and the batch size for the training:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w"> </span>--data.train_subset.batch_size<span class="w"> </span>&lt;batch-size&gt;<span class="w"> </span>--max_epochs<span class="w"> </span>&lt;max-epochs&gt;
@@ -753,7 +727,7 @@ For example, that is how you can change the max epochs and the batch size for th
 </pre></div>
 </div>
 <p>The command results in <code class="docutils literal notranslate"><span class="pre">exported_model.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">exported_model.bin</span></code>.</p>
-<p>To use the exported model as an input for <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">explain</span></code>, please dump additional outputs with internal information, using <code class="docutils literal notranslate"><span class="pre">--explain</span></code>:</p>
+<p>To use the exported model for explainable AI (XAI), please dump additional outputs with internal information, using <code class="docutils literal notranslate"><span class="pre">--explain</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">export</span><span class="w"> </span>...<span class="w"> </span>--checkpoint<span class="w"> </span>&lt;path/to/trained/weights.ckpt&gt;<span class="w"> </span>--explain<span class="w"> </span>True
 </pre></div>
 </div>
@@ -817,23 +791,28 @@ You can also omit <code class="docutils literal notranslate"><span class="pre">-
 </div>
 </div>
 </section>
-<section id="explanation">
-<h2>Explanation<a class="headerlink" href="#explanation" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">explain</span></code> runs the explainable AI (XAI) algorithm on a specific model-dataset pair. It helps explain the model’s decision-making process in a way that is easily understood by humans.</p>
-<p>The command below will generate saliency maps (heatmaps with red colored areas of focus) of the trained model on the provided dataset and save the resulting images to <code class="docutils literal notranslate"><span class="pre">output</span></code> path:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>explain<span class="w"> </span>--config<span class="w"> </span>&lt;path/to/config&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">                       </span>--checkpoint<span class="w"> </span>&lt;path/to/model_weights&gt;
+<section id="prediction">
+<h2>Prediction<a class="headerlink" href="#prediction" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">predict</span></code> runs inference on a dataset and optionally generates explainable AI (XAI) saliency maps.</p>
+<p>The command below will run predictions on the provided dataset:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>predict<span class="w"> </span>...<span class="w"> </span>--data_root<span class="w"> </span>&lt;path/to/test/root&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">                           </span>--checkpoint<span class="w"> </span>&lt;path/to/model_weights&gt;
+</pre></div>
+</div>
+<p>To generate saliency maps for explainability (XAI), use the <code class="docutils literal notranslate"><span class="pre">--explain</span> <span class="pre">True</span></code> parameter:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>predict<span class="w"> </span>...<span class="w"> </span>--data_root<span class="w"> </span>&lt;path/to/test/root&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">                           </span>--checkpoint<span class="w"> </span>&lt;path/to/model_weights&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">                           </span>--explain<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
+<span class="w">                           </span>--explain_config.postprocess<span class="w"> </span>True
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It is possible to pass both PyTorch weights <code class="docutils literal notranslate"><span class="pre">.ckpt</span></code> or OpenVINO™ IR <code class="docutils literal notranslate"><span class="pre">exported_model.xml</span></code> to <code class="docutils literal notranslate"><span class="pre">--checkpoint</span></code> option.</p>
+<p>For exported OpenVINO™ IR models, make sure the model was exported with <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">export</span> <span class="pre">--explain</span> <span class="pre">True</span></code> to include the necessary outputs for XAI functionality.</p>
 </div>
-<p>By default, the model is exported to the OpenVINO™ IR format without extra feature information needed for the <code class="docutils literal notranslate"><span class="pre">explain</span></code> function. To use OpenVINO™ IR model in <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">explain</span></code>, please first export it with <code class="docutils literal notranslate"><span class="pre">--explain</span></code> parameter:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">export</span><span class="w"> </span>...<span class="w"> </span>--checkpoint<span class="w"> </span>&lt;path/to/trained/weights.ckpt&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">                          </span>--explain<span class="w"> </span>True
-<span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>explain<span class="w"> </span>...<span class="w"> </span>--checkpoint<span class="w"> </span>outputs/openvino/with_features<span class="w"> </span><span class="se">\</span>
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is possible to pass both PyTorch weights <code class="docutils literal notranslate"><span class="pre">.ckpt</span></code> or OpenVINO™ IR <code class="docutils literal notranslate"><span class="pre">exported_model.xml</span></code> to <code class="docutils literal notranslate"><span class="pre">--checkpoint</span></code> option.</p>
 </div>
 </section>
 <section id="micro-benchmarking">
@@ -962,8 +941,8 @@ It worth noticing that the latency and throughput are depend on batch size. Vary
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#explanation">
-   Explanation
+  <a class="reference internal nav-link" href="#prediction">
+   Prediction
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">

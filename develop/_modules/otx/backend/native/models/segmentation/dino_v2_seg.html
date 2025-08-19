@@ -268,7 +268,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.hub</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_url_to_file</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.classification.backbones.vision_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="n">VisionTransformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.classification.backbones.vision_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="n">VisionTransformerBackbone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.segmentation.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXSegmentationModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.segmentation.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCNHead</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.segmentation.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossEntropyLossWithIgnore</span>
@@ -286,7 +286,7 @@
 
 
 <div class="viewcode-block" id="DinoV2Seg">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.DinoV2Seg">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.DinoV2Seg">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DinoV2Seg</span><span class="p">(</span><span class="n">OTXSegmentationModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;DinoV2Seg for Semantic Segmentation model.</span>
 
@@ -332,7 +332,7 @@
         <span class="c1"># initialize backbones</span>
         <span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="k">if</span> <span class="n">num_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span>
 
-        <span class="n">backbone</span> <span class="o">=</span> <span class="n">VisionTransformer</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="n">VisionTransformerBackbone</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">img_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
         <span class="n">backbone</span><span class="o">.</span><span class="n">forward</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>  <span class="c1"># type: ignore[method-assign]</span>
             <span class="n">backbone</span><span class="o">.</span><span class="n">get_intermediate_layers</span><span class="p">,</span>
             <span class="n">n</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>

@@ -1,7 +1,7 @@
-otx.backend.native.optimizers
+otx.backend.native.strategies
 =============================
 
-.. automodule:: otx.backend.native.optimizers
+.. automodule:: otx.backend.native.strategies
 
    
    
@@ -17,7 +17,7 @@ otx.backend.native.optimizers
 
    .. autosummary::
    
-      OptimizerCallableSupportAdaptiveBS
+      SingleXPUStrategy
    
    
 

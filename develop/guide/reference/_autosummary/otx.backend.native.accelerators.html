@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>otx.data.transform_libs &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.backend.native.accelerators &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
   
   
   
@@ -40,11 +40,11 @@
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/reference/_autosummary/otx.data.transform_libs';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/reference/_autosummary/otx.backend.native.accelerators';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="otx.data.transform_libs.torchvision" href="otx.data.transform_libs.torchvision.html" />
-    <link rel="prev" title="otx.data.samplers" href="otx.data.samplers.html" />
+    <link rel="next" title="otx.backend.native.strategies" href="otx.backend.native.strategies.html" />
+    <link rel="prev" title="otx.backend.native" href="otx.backend.native.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -261,7 +261,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/configuration.html">How to write OTX Configuration (recipe)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/multi_gpu.html">Multi-GPU Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/low_rank_adaptation.html">LoRA: Low Rank Adaptation for Classification Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../tutorials/advanced/torch_compile.html">[BETA] Enable torch.compile</a></li>
 </ul>
 </li>
@@ -289,8 +288,9 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/models_optimization.html">Models Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/auto_configuration.html">Auto-configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/adaptive_training.html">Adaptive Training</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/xai.html">Explainable AI (XAI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/fast_data_loading.html">Fast Data Loading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/tiling.html">Improve Small Object Detection with Image Tiling</a></li>
@@ -299,40 +299,27 @@
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/configurable_input_size.html">Configurable Input Size</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../explanation/product_design.html">Product Design</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API reference</a><input checked class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="otx.html">otx</a><input checked class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="otx.backend.html">otx.backend</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4 has-children"><a class="reference internal" href="otx.backend.native.html">otx.backend.native</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.callbacks.html">otx.backend.native.callbacks</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.cli.html">otx.backend.native.cli</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.engine.html">otx.backend.native.engine</a></li>
-<li class="toctree-l5 has-children"><a class="reference internal" href="otx.backend.native.exporter.html">otx.backend.native.exporter</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.anomaly.html">otx.backend.native.exporter.anomaly</a></li>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.base.html">otx.backend.native.exporter.base</a></li>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.exportable_code.html">otx.backend.native.exporter.exportable_code</a></li>
-<li class="toctree-l6"><a class="reference internal" href="otx.backend.native.exporter.native.html">otx.backend.native.exporter.native</a></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="otx.backend.html">otx.backend</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l4 current active has-children"><a class="reference internal" href="otx.backend.native.html">otx.backend.native</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l5 current active"><a class="current reference internal" href="#">otx.backend.native.accelerators</a></li>
+<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.strategies.html">otx.backend.native.strategies</a></li>
 </ul>
 </li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.models.html">otx.backend.native.models</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.optimizers.html">otx.backend.native.optimizers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.schedulers.html">otx.backend.native.schedulers</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.backend.native.tools.html">otx.backend.native.tools</a></li>
-</ul>
-</li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.backend.openvino.engine.html">otx.backend.openvino.engine</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.backend.openvino.models.html">otx.backend.openvino.models</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
 <li class="toctree-l5"><a class="reference internal" href="otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
@@ -340,30 +327,18 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.config.data.html">otx.config.data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.config.device.html">otx.config.device</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.config.explain.html">otx.config.explain</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current active has-children"><a class="reference internal" href="otx.data.html">otx.data</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="otx.data.dataset.html">otx.data.dataset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.entity.html">otx.data.entity</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.factory.html">otx.data.factory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.module.html">otx.data.module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.samplers.html">otx.data.samplers</a></li>
-<li class="toctree-l4 current active has-children"><a class="current reference internal" href="#">otx.data.transform_libs</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-19"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="otx.data.transform_libs.torchvision.html">otx.data.transform_libs.torchvision</a></li>
-<li class="toctree-l5"><a class="reference internal" href="otx.data.transform_libs.utils.html">otx.data.transform_libs.utils</a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="otx.data.utils.html">otx.data.utils</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="otx.data.html">otx.data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.engine.html">otx.engine</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.metrics.html">otx.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="otx.models.html">otx.models</a></li>
 <li class="toctree-l3"><a class="reference internal" href="otx.recipe.html">otx.recipe</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-20"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.converter.html">otx.tools.converter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="otx.tools.templates.html">otx.tools.templates</a></li>
@@ -378,7 +353,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-21"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -412,20 +387,66 @@
             
             <article class="bd-article" role="main">
               
-  <section id="module-otx.data.transform_libs">
-<span id="otx-data-transform-libs"></span><h1>otx.data.transform_libs<a class="headerlink" href="#module-otx.data.transform_libs" title="Link to this heading">#</a></h1>
-<p>Helpers to support data transform functions from various frameworks.</p>
-<p class="rubric">Modules</p>
+  <section id="module-otx.backend.native.accelerators">
+<span id="otx-backend-native-accelerators"></span><h1>otx.backend.native.accelerators<a class="headerlink" href="#module-otx.backend.native.accelerators" title="Link to this heading">#</a></h1>
+<p>Lightning accelerator for XPU device.</p>
+<p class="rubric">Classes</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="otx.data.transform_libs.torchvision.html#module-otx.data.transform_libs.torchvision" title="otx.data.transform_libs.torchvision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.transform_libs.torchvision</span></code></a></p></td>
-<td><p>Helper to support TorchVision data transform functions.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="otx.data.transform_libs.utils.html#module-otx.data.transform_libs.utils" title="otx.data.transform_libs.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">otx.data.transform_libs.utils</span></code></a></p></td>
-<td><p>Utils for data transform functions.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.backend.native.accelerators.XPUAccelerator" title="otx.backend.native.accelerators.XPUAccelerator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">XPUAccelerator</span></code></a>()</p></td>
+<td><p>Support for a XPU, optimized for large-scale machine learning.</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="py class">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">otx.backend.native.accelerators.</span></span><span class="sig-name descname"><span class="pre">XPUAccelerator</span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Accelerator</span></code></p>
+<p>Support for a XPU, optimized for large-scale machine learning.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.auto_device_count">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">auto_device_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.auto_device_count" title="Link to this definition">#</a></dt>
+<dd><p>Returns number of XPU devices available.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.get_device_stats">
+<span class="sig-name descname"><span class="pre">get_device_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">device</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.get_device_stats" title="Link to this definition">#</a></dt>
+<dd><p>Returns XPU devices stats.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.get_parallel_devices">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_parallel_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">device</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.get_parallel_devices" title="Link to this definition">#</a></dt>
+<dd><p>Generates a list of parrallel devices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.is_available">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.is_available" title="Link to this definition">#</a></dt>
+<dd><p>Checks if XPU available.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.parse_devices">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">device</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.parse_devices" title="Link to this definition">#</a></dt>
+<dd><p>Parses devices for multi-GPU training.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.setup_device">
+<span class="sig-name descname"><span class="pre">setup_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.setup_device" title="Link to this definition">#</a></dt>
+<dd><p>Sets up the specified device.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="otx.backend.native.accelerators.XPUAccelerator.teardown">
+<span class="sig-name descname"><span class="pre">teardown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#otx.backend.native.accelerators.XPUAccelerator.teardown" title="Link to this definition">#</a></dt>
+<dd><p>Clean up any state created by the accelerator.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -436,17 +457,17 @@
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="otx.data.samplers.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="otx.backend.native.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">otx.data.samplers</p>
+          <p class="prev-next-title">otx.backend.native</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="otx.data.transform_libs.torchvision.html" title="next page">
+  <a class='right-next' id="next-link" href="otx.backend.native.strategies.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">otx.data.transform_libs.torchvision</p>
+      <p class="prev-next-title">otx.backend.native.strategies</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -461,6 +482,92 @@
               
 <div class="toc-item">
   
+<div class="tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     XPUAccelerator
+    </span>
+   </code>
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.auto_device_count">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.auto_device_count()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.get_device_stats">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.get_device_stats()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.get_parallel_devices">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.get_parallel_devices()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.is_available">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.is_available()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.parse_devices">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.parse_devices()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.setup_device">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.setup_device()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#otx.backend.native.accelerators.XPUAccelerator.teardown">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       XPUAccelerator.teardown()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
 <div id="searchbox"></div>
 </div>
 
@@ -468,7 +575,7 @@
   
 
 <div class="tocsection editthispage">
-    <a href="https://github.com/open-edge-platform/training_extensions/edit/master/docs/source/guide/reference/_autosummary/otx.data.transform_libs.rst">
+    <a href="https://github.com/open-edge-platform/training_extensions/edit/master/docs/source/guide/reference/_autosummary/otx.backend.native.accelerators.rst">
         <i class="fa-solid fa-pencil"></i> Edit this page
     </a>
 </div>
@@ -478,7 +585,7 @@
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="../../../_sources/guide/reference/_autosummary/otx.data.transform_libs.rst.txt">
+    <a href="../../../_sources/guide/reference/_autosummary/otx.backend.native.accelerators.rst.txt">
         <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
 </div>

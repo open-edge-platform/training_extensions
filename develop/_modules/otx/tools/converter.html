@@ -261,175 +261,244 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">jsonargparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">Namespace</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.cli.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_otx_root_path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">OTXModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SamplerConfig</span><span class="p">,</span> <span class="n">SubsetConfig</span><span class="p">,</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span><span class="p">,</span> <span class="n">create_engine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.tools.auto_configurator</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoConfigurator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">PathLike</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
-<span class="n">TEMPLATE_ID_DICT</span> <span class="o">=</span> <span class="p">{</span>
+<span class="n">RECIPE_PATH</span> <span class="o">=</span> <span class="n">get_otx_root_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;recipe&quot;</span>
+
+
+<div class="viewcode-block" id="ModelStatus">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ModelStatus">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelStatus</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enum for model status.&quot;&quot;&quot;</span>
+
+    <span class="n">SPEED</span> <span class="o">=</span> <span class="s2">&quot;speed&quot;</span>
+    <span class="n">BALANCE</span> <span class="o">=</span> <span class="s2">&quot;balance&quot;</span>
+    <span class="n">ACCURACY</span> <span class="o">=</span> <span class="s2">&quot;accuracy&quot;</span>
+    <span class="n">DEPRECATED</span> <span class="o">=</span> <span class="s2">&quot;deprecated&quot;</span>
+    <span class="n">ACTIVE</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span></div>
+
+
+
+<span class="n">TEMPLATE_ID_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># MULTI_CLASS_CLS</span>
     <span class="s2">&quot;Custom_Image_Classification_DeiT-Tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;deit_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Image_Classification_EfficinetNet-B0&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;efficientnet_b0.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Image_Classification_EfficientNet-V2-S&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;efficientnet_v2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Image_Classification_MobileNet-V3-large-1x&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;mobilenet_v3_large.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Image_Classification_EfficientNet-B3&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;tv_efficientnet_b3.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Image_Classification_EfficientNet-V2-L&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;tv_efficientnet_v2_l.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Image_Classification_MobileNet-V3-small&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;tv_mobilenet_v3_small.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># DETECTION</span>
     <span class="s2">&quot;Custom_Object_Detection_Gen3_ATSS&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/atss_mobilenetv2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;atss_mobilenetv2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_ResNeXt101_ATSS&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/atss_resnext101.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;atss_resnext101.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Object_Detection_Gen3_SSD&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/ssd_mobilenetv2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;ssd_mobilenetv2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_YOLOX_X&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/yolox_x.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_x.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_YOLOX_L&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/yolox_l.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_l.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_YOLOX_S&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/yolox_s.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_s.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Object_Detection_YOLOX&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/yolox_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_RTDetr_18&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/rtdetr_18.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtdetr_18.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_RTDetr_50&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/rtdetr_50.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtdetr_50.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_RTDetr_101&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/rtdetr_101.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtdetr_101.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_RTMDet_tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/rtmdet_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtmdet_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Object_Detection_DFine_X&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/detection/dfine_x.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;dfine_x.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># INSTANCE_SEGMENTATION</span>
     <span class="s2">&quot;Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_swint.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_efficientnetb2b.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Instance_Segmentation_RTMDet_tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtmdet_inst_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50_tv.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># ROTATED_DETECTION</span>
     <span class="s2">&quot;Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/rotated_detection/maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;rotated_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;rotated_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_efficientnetb2b.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;Rotated_Detection_MaskRCNN_ResNet50_V2&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;rotated_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50_v2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># SEMANTIC_SEGMENTATION</span>
     <span class="s2">&quot;Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/litehrnet_18.yaml&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_Lite-HRNet-18_OCR&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/litehrnet_18.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;litehrnet_18.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/litehrnet_s.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;litehrnet_s.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/litehrnet_x.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;litehrnet_x.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Semantic_Segmentation_SegNext_t&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/segnext_t.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;segnext_t.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Semantic_Segmentation_SegNext_s&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/segnext_s.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;segnext_s.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Semantic_Segmentation_SegNext_B&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/segnext_b.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;segnext_b.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;Custom_Semantic_Segmentation_DINOV2_S&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/semantic_segmentation/dino_v2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;dino_v2.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># ANOMALY</span>
     <span class="s2">&quot;ote_anomaly_padim&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly/padim.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;anomaly&quot;</span> <span class="o">/</span> <span class="s2">&quot;padim.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;ote_anomaly_stfpm&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly/stfpm.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;anomaly&quot;</span> <span class="o">/</span> <span class="s2">&quot;stfpm.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="s2">&quot;ote_anomaly_uflow&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly/uflow.yaml&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="c1"># ANOMALY CLASSIFICATION</span>
-    <span class="s2">&quot;ote_anomaly_classification_padim&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly_classification/padim.yaml&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;ote_anomaly_classification_stfpm&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly_classification/stfpm.yaml&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="c1"># ANOMALY_DETECTION</span>
-    <span class="s2">&quot;ote_anomaly_detection_padim&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly_detection/padim.yaml&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;ote_anomaly_detection_stfpm&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly_detection/stfpm.yaml&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="c1"># ANOMALY_SEGMENTATION</span>
-    <span class="s2">&quot;ote_anomaly_segmentation_padim&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly_segmentation/padim.yaml&quot;</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;ote_anomaly_segmentation_stfpm&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/anomaly_segmentation/stfpm.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;anomaly&quot;</span> <span class="o">/</span> <span class="s2">&quot;uflow.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># KEYPOINT_DETECTION</span>
     <span class="s2">&quot;Keypoint_Detection_RTMPose_Tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;model_config_path&quot;</span><span class="p">:</span> <span class="s2">&quot;src/otx/recipe/keypoint_detection/rtmpose_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;keypoint_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtmpose_tiny.yaml&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="ConfigConverter">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ConfigConverter</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.</span>
-
-<span class="sd">    This class is used to convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.</span>
+<div class="viewcode-block" id="GetiConfigConverter">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.GetiConfigConverter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GetiConfigConverter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert Geti model manifest to OTXv2 recipe dictionary.</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        The following examples show how to use the Converter class.</span>
@@ -437,8 +506,8 @@
 
 <span class="sd">        Convert template.json to dictionary::</span>
 
-<span class="sd">            converter = ConfigConverter()</span>
-<span class="sd">            config = converter.convert(&quot;template.json&quot;)</span>
+<span class="sd">            converter = GetiConfigConverter()</span>
+<span class="sd">            config = converter.convert(&quot;train_config.yaml&quot;)</span>
 
 <span class="sd">        Instantiate an object from the configuration dictionary::</span>
 
@@ -453,75 +522,42 @@
 <span class="sd">            engine.train(**train_kwargs)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ConfigConverter.convert">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter.convert">[docs]</a>
+<div class="viewcode-block" id="GetiConfigConverter.convert">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.GetiConfigConverter.convert">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a configuration file to a default configuration dictionary.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a geti configuration file to a default configuration dictionary.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            config_path (str): The path to the configuration file.</span>
+<span class="sd">            config (dict): The path to the Geti yaml configuration file.</span>
 <span class="sd">            task (OTXTaskType | None): Value to override the task.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dict: The default configuration dictionary.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">template_config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">hyper_parameters</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;hyper_parameters&quot;</span><span class="p">]</span>
 
-        <span class="n">hyperparameters</span> <span class="o">=</span> <span class="n">template_config</span><span class="p">[</span><span class="s2">&quot;hyperparameters&quot;</span><span class="p">]</span>
-        <span class="n">param_dict</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_get_params</span><span class="p">(</span><span class="n">hyperparameters</span><span class="p">)</span>
-
-        <span class="n">task_info</span> <span class="o">=</span> <span class="n">TEMPLATE_ID_DICT</span><span class="p">[</span><span class="n">template_config</span><span class="p">[</span><span class="s2">&quot;model_template_id&quot;</span><span class="p">]]</span>
-        <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">])</span>
+        <span class="n">model_config_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">TEMPLATE_ID_MAPPING</span><span class="p">[</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;model_manifest_id&quot;</span><span class="p">]][</span><span class="s2">&quot;recipe_path&quot;</span><span class="p">]</span>  <span class="c1"># type: ignore[assignment]</span>
         <span class="c1"># override necessary parameters for config</span>
-        <span class="k">if</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enable_tiling&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;_tile&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">stem</span><span class="p">:</span>
+        <span class="n">tile_enabled</span> <span class="o">=</span> <span class="n">hyper_parameters</span> <span class="ow">and</span> <span class="n">hyper_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_preparation&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;augmentation&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;tiling&quot;</span><span class="p">,</span>
+            <span class="p">{},</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enable&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tile_enabled</span> <span class="ow">and</span> <span class="s2">&quot;_tile&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">stem</span><span class="p">:</span>
             <span class="n">tile_name</span> <span class="o">=</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;_tile.yaml&quot;</span>
             <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">tile_name</span>
         <span class="c1"># classification task type can&#39;t be deducted from template name, try to extract from config</span>
-        <span class="k">if</span> <span class="s2">&quot;sub_task_type&quot;</span> <span class="ow">in</span> <span class="n">template_config</span> <span class="ow">and</span> <span class="s2">&quot;_cls&quot;</span> <span class="ow">in</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-            <span class="n">new_task</span> <span class="o">=</span> <span class="n">template_config</span><span class="p">[</span><span class="s2">&quot;sub_task_type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;src/otx/recipe/classification&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="n">new_task</span> <span class="o">/</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># override the task for the given model</span>
-            <span class="n">parent_path</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">model_config_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="k">if</span> <span class="s2">&quot;_cls&quot;</span> <span class="ow">in</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">parent</span>
-            <span class="p">)</span>
-            <span class="n">name_of_model</span> <span class="o">=</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">name</span>
-            <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">parent_path</span> <span class="o">/</span> <span class="n">task</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">/</span> <span class="n">name_of_model</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Overrided model config file: </span><span class="si">{</span><span class="n">model_config_path</span><span class="si">}</span><span class="s2"> &quot;</span>
-                    <span class="s2">&quot;with the given task: </span><span class="si">{task.value}</span><span class="s2"> does not exist.&quot;</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="c1"># assign back the modified model config path to the task_info</span>
-        <span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_config_path</span><span class="p">)</span>
-        <span class="n">default_config</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_get_default_config</span><span class="p">(</span><span class="n">task_info</span><span class="p">)</span>
-        <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_update_params</span><span class="p">(</span><span class="n">default_config</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">)</span>
-        <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_remove_unused_key</span><span class="p">(</span><span class="n">default_config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">sub_task_type</span> <span class="o">:=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;sub_task_type&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="s2">&quot;_cls&quot;</span> <span class="ow">in</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="n">sub_task_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">/</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">model_config_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">!=</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">:</span>
+            <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">model_config_path</span> <span class="o">/</span> <span class="s2">&quot;.yaml&quot;</span>
+        <span class="n">default_config</span> <span class="o">=</span> <span class="n">AutoConfigurator</span><span class="p">(</span><span class="n">model_config_path</span><span class="o">=</span><span class="n">model_config_path</span><span class="p">)</span><span class="o">.</span><span class="n">config</span>
+        <span class="k">if</span> <span class="n">hyper_parameters</span><span class="p">:</span>
+            <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">_update_params</span><span class="p">(</span><span class="n">default_config</span><span class="p">,</span> <span class="n">hyper_parameters</span><span class="p">)</span>
+        <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">_remove_unused_key</span><span class="p">(</span><span class="n">default_config</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">default_config</span></div>
 
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_default_config</span><span class="p">(</span><span class="n">task_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return default otx conifg for template use.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">suffix</span> <span class="o">!=</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">:</span>
-            <span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;.yaml&quot;</span>
-        <span class="k">if</span> <span class="s2">&quot;task&quot;</span> <span class="ow">in</span> <span class="n">task_info</span><span class="p">:</span>
-            <span class="c1"># override the task with the same model</span>
-            <span class="n">path_to_task_parent</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
-            <span class="n">name_of_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">name</span>
-            <span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path_to_task_parent</span> <span class="o">/</span> <span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">/</span> <span class="n">name_of_file</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">task_info</span><span class="p">[</span><span class="s2">&quot;model_config_path&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Overrided model config file: </span><span class="si">{</span><span class="n">task_info</span><span class="p">[</span><span class="s1">&#39;model_config_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
-                    <span class="s2">&quot;with the given task: </span><span class="si">{task_info[&#39;task&#39;]}</span><span class="s2"> does not exist.&quot;</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">AutoConfigurator</span><span class="p">(</span><span class="o">**</span><span class="n">task_info</span><span class="p">)</span><span class="o">.</span><span class="n">config</span>  <span class="c1"># type: ignore[arg-type]</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_params</span><span class="p">(</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -532,126 +568,112 @@
                 <span class="k">if</span> <span class="s2">&quot;value&quot;</span> <span class="ow">in</span> <span class="n">param_info</span><span class="p">:</span>
                     <span class="n">param_dict</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_info</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">param_dict</span> <span class="o">=</span> <span class="n">param_dict</span> <span class="o">|</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_get_params</span><span class="p">(</span><span class="n">param_info</span><span class="p">)</span>
+                    <span class="n">param_dict</span> <span class="o">=</span> <span class="n">param_dict</span> <span class="o">|</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">_get_params</span><span class="p">(</span><span class="n">param_info</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">param_dict</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_params</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: C901</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_params</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update params of OTX recipe from Geit configurable params.&quot;&quot;&quot;</span>
-        <span class="n">unused_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">param_dict</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_inference_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;val_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;test_subset&quot;</span><span class="p">][</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_learning_rate</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_learning_rate</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update learning rate in the config.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Learning rate is not provided, skipping update.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
             <span class="n">optimizer</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;init_args&quot;</span> <span class="ow">in</span> <span class="n">optimizer</span><span class="p">:</span>
                 <span class="n">optimizer</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: learning_rate is not updated&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_learning_rate_warmup_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">scheduler</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;scheduler&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">scheduler</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="s2">&quot;class_path&quot;</span> <span class="ow">in</span> <span class="n">scheduler</span>
-                <span class="ow">and</span> <span class="n">scheduler</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;otx.backend.native.schedulers.LinearWarmupSchedulerCallable&quot;</span>
-            <span class="p">):</span>
-                <span class="n">scheduler</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;num_warmup_steps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: learning_rate_warmup_iters is not updated&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_num_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_num_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update max_epochs in the config.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Max epochs is not provided, skipping update.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_num_workers</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;val_subset&quot;</span><span class="p">][</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;test_subset&quot;</span><span class="p">][</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_early_stopping</span><span class="p">(</span><span class="n">early_stopping_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update early stopping parameters in the config.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">early_stopping_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Early stopping parameters are not provided, skipping update.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_enable_early_stopping</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_get_callback_idx</span><span class="p">(</span>
+            <span class="n">enable</span> <span class="o">=</span> <span class="n">early_stopping_cfg</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
+            <span class="n">patience</span> <span class="o">=</span> <span class="n">early_stopping_cfg</span><span class="p">[</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span>
+
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">_get_callback_idx</span><span class="p">(</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">param_value</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">enable</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+                <span class="k">return</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_early_stop_patience</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s2">&quot;callbacks&quot;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span>
-                        <span class="o">==</span> <span class="s2">&quot;otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup&quot;</span>
-                    <span class="p">):</span>
-                        <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-                    <span class="k">break</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">patience</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_use_adaptive_interval</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">_get_callback_idx</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">param_value</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_tiling</span><span class="p">(</span><span class="n">tiling_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update tiling parameters in the config.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">tiling_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Tiling parameters are not provided, skipping update.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_auto_num_workers</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;auto_num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_auto_adapt_batch_size</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;adaptive_bs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_enable_tiling</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_tiler&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-            <span class="k">if</span> <span class="n">param_value</span><span class="p">:</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_adaptive_tiling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;enable_adaptive_params&quot;</span><span class="p">]</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_tiler&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]:</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_adaptive_tiling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;adaptive_tiling&quot;</span><span class="p">]</span>
                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;tile_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
-                    <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
+                    <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
+                    <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;overlap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;tile_overlap&quot;</span><span class="p">]</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;max_num_instances&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;tile_max_number&quot;</span><span class="p">]</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;sampling_ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;tile_sampling_ratio&quot;</span><span class="p">]</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;object_tile_ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s2">&quot;object_tile_ratio&quot;</span><span class="p">]</span>
-                <span class="n">tile_params</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="s2">&quot;enable_adaptive_params&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;tile_size&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;tile_overlap&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;tile_max_number&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;tile_sampling_ratio&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;object_tile_ratio&quot;</span><span class="p">,</span>
-                <span class="p">]</span>
-                <span class="k">for</span> <span class="n">tile_param</span> <span class="ow">in</span> <span class="n">tile_params</span><span class="p">:</span>
-                    <span class="n">unused_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">tile_param</span><span class="p">)</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;overlap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_overlap&quot;</span><span class="p">]</span>
 
-        <span class="n">param_update_funcs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">update_batch_size</span><span class="p">,</span>
-            <span class="s2">&quot;inference_batch_size&quot;</span><span class="p">:</span> <span class="n">update_inference_batch_size</span><span class="p">,</span>
-            <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="n">update_learning_rate</span><span class="p">,</span>
-            <span class="s2">&quot;learning_rate_warmup_iters&quot;</span><span class="p">:</span> <span class="n">update_learning_rate_warmup_iters</span><span class="p">,</span>
-            <span class="s2">&quot;num_iters&quot;</span><span class="p">:</span> <span class="n">update_num_iters</span><span class="p">,</span>
-            <span class="s2">&quot;num_workers&quot;</span><span class="p">:</span> <span class="n">update_num_workers</span><span class="p">,</span>
-            <span class="s2">&quot;enable_early_stopping&quot;</span><span class="p">:</span> <span class="n">update_enable_early_stopping</span><span class="p">,</span>
-            <span class="s2">&quot;early_stop_patience&quot;</span><span class="p">:</span> <span class="n">update_early_stop_patience</span><span class="p">,</span>
-            <span class="s2">&quot;use_adaptive_interval&quot;</span><span class="p">:</span> <span class="n">update_use_adaptive_interval</span><span class="p">,</span>
-            <span class="s2">&quot;auto_num_workers&quot;</span><span class="p">:</span> <span class="n">update_auto_num_workers</span><span class="p">,</span>
-            <span class="s2">&quot;enable_tiling&quot;</span><span class="p">:</span> <span class="n">update_enable_tiling</span><span class="p">,</span>
-            <span class="s2">&quot;auto_adapt_batch_size&quot;</span><span class="p">:</span> <span class="n">update_auto_adapt_batch_size</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_value</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">update_func</span> <span class="o">=</span> <span class="n">param_update_funcs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">update_func</span><span class="p">:</span>
-                <span class="n">update_func</span><span class="p">(</span><span class="n">param_value</span><span class="p">)</span>  <span class="c1"># type: ignore[operator]</span>
-                <span class="n">unused_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_input_size</span><span class="p">(</span><span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update input size in the config.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Input size is not provided, skipping update.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;input_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
 
-        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: These parameters are not updated&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_value</span> <span class="ow">in</span> <span class="n">unused_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">param_value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">update_augmentations</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update augmentations in the config.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">augmentation_params</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="n">augs_mapping_list</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;random_affine&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomAffine&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;random_horizontal_flip&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomFlip&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;random_vertical_flip&quot;</span><span class="p">:</span> <span class="s2">&quot;torchvision.transforms.v2.RandomVerticalFlip&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;gaussian_blur&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomGaussianBlur&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;gaussian_noise&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomGaussianNoise&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;color_jitter&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.PhotoMetricDistortion&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">aug_name</span><span class="p">,</span> <span class="n">aug_value</span> <span class="ow">in</span> <span class="n">augmentation_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">aug_class</span> <span class="o">=</span> <span class="n">augs_mapping_list</span><span class="p">[</span><span class="n">aug_name</span><span class="p">]</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">aug_config</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transforms&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">aug_class</span> <span class="o">==</span> <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]:</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">aug_value</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;augmentation </span><span class="si">{</span><span class="n">aug_class</span><span class="si">}</span><span class="s2"> is not found for this model&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">augmentation_params</span> <span class="o">=</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_preparation&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;augmentation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">tiling</span> <span class="o">=</span> <span class="n">augmentation_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tiling&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">training_parameters</span> <span class="o">=</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;training&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="n">update_augmentations</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">)</span>
+        <span class="n">update_tiling</span><span class="p">(</span><span class="n">tiling</span><span class="p">)</span>
+        <span class="n">update_learning_rate</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="n">update_num_iters</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="n">update_early_stopping</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;early_stopping&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="n">update_input_size</span><span class="p">(</span>
+            <span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_size_height&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_size_width&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_callback_idx</span><span class="p">(</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -671,8 +693,32 @@
         <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">)</span>  <span class="c1"># Remove config key that for CLI</span>
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;__path__&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Remove __path__ key that for CLI overriding</span>
 
-<div class="viewcode-block" id="ConfigConverter.instantiate">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.ConfigConverter.instantiate">[docs]</a>
+<div class="viewcode-block" id="GetiConfigConverter.instantiate_datamodule">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.GetiConfigConverter.instantiate_datamodule">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">instantiate_datamodule</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">data_root</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataModule</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate an OTXDataModule with arrow data format.&quot;&quot;&quot;</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Instantiate datamodule</span>
+        <span class="n">data_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_config</span><span class="p">[</span><span class="s2">&quot;data_root&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_root</span>
+
+        <span class="n">train_config</span> <span class="o">=</span> <span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;train_subset&quot;</span><span class="p">)</span>
+        <span class="n">val_config</span> <span class="o">=</span> <span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;val_subset&quot;</span><span class="p">)</span>
+        <span class="n">test_config</span> <span class="o">=</span> <span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;test_subset&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">OTXDataModule</span><span class="p">(</span>
+            <span class="n">train_subset</span><span class="o">=</span><span class="n">SubsetConfig</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">SamplerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">train_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sampler&quot;</span><span class="p">,</span> <span class="p">{})),</span> <span class="o">**</span><span class="n">train_config</span><span class="p">),</span>
+            <span class="n">val_subset</span><span class="o">=</span><span class="n">SubsetConfig</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">SamplerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">val_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sampler&quot;</span><span class="p">,</span> <span class="p">{})),</span> <span class="o">**</span><span class="n">val_config</span><span class="p">),</span>
+            <span class="n">test_subset</span><span class="o">=</span><span class="n">SubsetConfig</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">SamplerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">test_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sampler&quot;</span><span class="p">,</span> <span class="p">{})),</span> <span class="o">**</span><span class="n">test_config</span><span class="p">),</span>
+            <span class="n">tile_config</span><span class="o">=</span><span class="n">TileConfig</span><span class="p">(</span><span class="o">**</span><span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tile_config&quot;</span><span class="p">,</span> <span class="p">{})),</span>
+            <span class="o">**</span><span class="n">data_config</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GetiConfigConverter.instantiate">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.GetiConfigConverter.instantiate">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">instantiate</span><span class="p">(</span>
         <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -690,22 +736,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            tuple: A tuple containing the engine and the train kwargs dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-
-        <span class="c1"># Instantiate datamodule</span>
-        <span class="n">data_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">data_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data_config</span><span class="p">[</span><span class="s2">&quot;data_root&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_root</span>
-
-        <span class="n">train_config</span> <span class="o">=</span> <span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;train_subset&quot;</span><span class="p">)</span>
-        <span class="n">val_config</span> <span class="o">=</span> <span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;val_subset&quot;</span><span class="p">)</span>
-        <span class="n">test_config</span> <span class="o">=</span> <span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;test_subset&quot;</span><span class="p">)</span>
-        <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span>
-            <span class="n">train_subset</span><span class="o">=</span><span class="n">SubsetConfig</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">SamplerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">train_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sampler&quot;</span><span class="p">,</span> <span class="p">{})),</span> <span class="o">**</span><span class="n">train_config</span><span class="p">),</span>
-            <span class="n">val_subset</span><span class="o">=</span><span class="n">SubsetConfig</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">SamplerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">val_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sampler&quot;</span><span class="p">,</span> <span class="p">{})),</span> <span class="o">**</span><span class="n">val_config</span><span class="p">),</span>
-            <span class="n">test_subset</span><span class="o">=</span><span class="n">SubsetConfig</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">SamplerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">test_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sampler&quot;</span><span class="p">,</span> <span class="p">{})),</span> <span class="o">**</span><span class="n">test_config</span><span class="p">),</span>
-            <span class="n">tile_config</span><span class="o">=</span><span class="n">TileConfig</span><span class="p">(</span><span class="o">**</span><span class="n">data_config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tile_config&quot;</span><span class="p">,</span> <span class="p">{})),</span>
-            <span class="o">**</span><span class="n">data_config</span><span class="p">,</span>
+        <span class="n">datamodule</span> <span class="o">=</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">instantiate_datamodule</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">data_root</span><span class="o">=</span><span class="n">data_root</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># Update num_classes &amp; Instantiate Model</span>
@@ -731,7 +765,7 @@
         <span class="c1"># Instantiate Engine.train Arguments</span>
         <span class="n">engine_parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">()</span>
         <span class="n">train_arguments</span> <span class="o">=</span> <span class="n">engine_parser</span><span class="o">.</span><span class="n">add_method_arguments</span><span class="p">(</span>
-            <span class="n">OTXEngine</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
             <span class="s2">&quot;train&quot;</span><span class="p">,</span>
             <span class="n">skip</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;accelerator&quot;</span><span class="p">,</span> <span class="s2">&quot;devices&quot;</span><span class="p">},</span>
             <span class="n">fail_untyped</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -750,6 +784,8 @@
         <span class="n">instantiated_kwargs</span> <span class="o">=</span> <span class="n">engine_parser</span><span class="o">.</span><span class="n">instantiate_classes</span><span class="p">(</span><span class="n">Namespace</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">))</span>
 
         <span class="n">train_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">instantiated_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">train_arguments</span><span class="p">}</span>
+        <span class="c1"># enable auto batch size for training</span>
+        <span class="n">train_kwargs</span><span class="p">[</span><span class="s2">&quot;adaptive_bs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Safe&quot;</span>
 
         <span class="k">return</span> <span class="n">engine</span><span class="p">,</span> <span class="n">train_kwargs</span></div>
 </div>
@@ -762,8 +798,10 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="s2">&quot;--data_root&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input dataset root path&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--work_dir&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input work directory path&quot;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
-    <span class="n">otx_config</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
-    <span class="n">engine</span><span class="p">,</span> <span class="n">train_kwargs</span> <span class="o">=</span> <span class="n">ConfigConverter</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span>
+    <span class="k">with</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">otx_config</span> <span class="o">=</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">engine</span><span class="p">,</span> <span class="n">train_kwargs</span> <span class="o">=</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span>
         <span class="n">config</span><span class="o">=</span><span class="n">otx_config</span><span class="p">,</span>
         <span class="n">data_root</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">data_root</span><span class="p">,</span>
         <span class="n">work_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span>

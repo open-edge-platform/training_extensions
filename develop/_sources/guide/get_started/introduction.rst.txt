@@ -13,7 +13,12 @@ The framework's CLI commands and API allow users to easily train, infer, optimiz
 
 OpenVINO™ Training Extensions provide `recipe <https://github.com/open-edge-platform/training_extensions/tree/develop/src/otx/recipe>`_ for every supported task type, which consolidates necessary information to build a model. Model configs are validated on various datasets and serve one-stop shop for obtaining the best models in general.
 
-The framework will identify the most suitable recipe based on your dataset, and choose the best hyperparameter configuration. The development team is continuously extending functionalities to make training as simple as possible so that single CLI command can obtain accurate, efficient and robust models ready to be integrated into your project.
+The development team is continuously expanding functionality to simplify the training process — aiming for a workflow where a single CLI command or a short API call is enough to produce accurate, efficient, and robust models ready for integration into your project.
+
+Starting with OTX v2.4.5, we introduced a new repository structure and a more flexible backend concept. We're excited to present support for multiple backends — beginning with the OpenVINO™ backend, while all previous OTX functionality is now organized under the "native" backend.
+
+In the future, we plan to integrate popular third-party libraries such as `Anomalib <https://github.com/open-edge-platform/anomalib>_`, `Transformers <https://huggingface.co/docs/transformers/index>_`, and more — seamlessly integrated into the repository.
+This will enable users to train, test, export, and optimize a wide variety of models from different backends using the same CLI commands and unified API, without the need for reimplementation.
 
 |
 
@@ -38,11 +43,12 @@ OpenVINO™ Training Extensions supports the following computer vision tasks:
 OpenVINO™ Training Extensions provide the :doc:`following features <../explanation/additional_features/index>`:
 
 - Native **Intel GPUs (XPU) support**. OpenVINO™ Training Extensions can be installed with XPU support to utilize Intel GPUs for training and testing.
-- **Distributed training** to accelerate the training process when you have multiple GPUs
-- **Half-precision training** to save GPUs memory and use larger batch sizes
-- **Class incremental learning** to add new classes to the existing model
-- OpenVINO™ Training Extensions uses `Datumaro <https://open-edge-platform.github.io/datumaro/stable/index.html>`_ as the backend to handle datasets. On account of that, OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. In the future there will be more supported formats available to give more freedom of datasets format choice.
-- Improved :doc:`auto-configuration functionality <../explanation/additional_features/auto_configuration>`. OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model recipe to provide the best accuracy/speed trade-off. It will also make a random auto-split of your dataset if there is no validation set provided.
+- **Distributed training** to accelerate the training process when using multiple GPUs.
+- **Half-precision (FP16) training** to reduce GPU memory usage and allow for larger batch sizes.
+- **Class-incremental learning** to add new classes to an existing model without retraining from scratch.
+- OpenVINO™ Training Extensions use `Datumaro <https://open-edge-platform.github.io/datumaro/stable/index.html>`_ as the backend for dataset handling. This allows support for many common academic dataset formats per task. More formats will be supported in the future, providing additional flexibility.
+- **Multiple backend support** to easily adapt models from third-party implementations into the OpenVINO™ Training Extensions repository.
+
 
 *********************
 Documentation content

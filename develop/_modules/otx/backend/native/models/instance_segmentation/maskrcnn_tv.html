@@ -278,6 +278,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXInstanceSegModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">TVRoIHeads</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.rotated_det</span><span class="w"> </span><span class="kn">import</span> <span class="n">RotatedPredictMixin</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FastRCNNConvFCHead</span><span class="p">,</span>
     <span class="n">MaskRCNN</span><span class="p">,</span>
@@ -301,7 +302,7 @@
 
 
 <div class="viewcode-block" id="MaskRCNNTV">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.MaskRCNNTV">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.MaskRCNNTV">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MaskRCNNTV</span><span class="p">(</span><span class="n">OTXInstanceSegModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of torchvision MaskRCNN for instance segmentation.</span>
 
@@ -517,7 +518,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="MaskRCNNTV.forward_for_tracing">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.MaskRCNNTV.forward_for_tracing">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.MaskRCNNTV.forward_for_tracing">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward_for_tracing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward function for export.&quot;&quot;&quot;</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
@@ -528,6 +529,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">meta_info_list</span><span class="p">,</span> <span class="n">explain_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span><span class="p">)</span></div>
 </div>
 
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RotatedMaskRCNNModelV2</span><span class="p">(</span><span class="n">RotatedPredictMixin</span><span class="p">,</span> <span class="n">MaskRCNNTV</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rotated MaskRCNN for Torchvision MaskRCNN model implementation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform prediction step for rotated detection.&quot;&quot;&quot;</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">predict_step</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_predict_step</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
 </pre></div>
 
             </article>

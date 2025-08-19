@@ -298,7 +298,7 @@
 
 
 <div class="viewcode-block" id="OVModel">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OVModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for the OpenVINO model.</span>
 
@@ -432,7 +432,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OVModel.forward">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.forward">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">async_inference</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform forward pass of the model.</span>
 
@@ -451,7 +451,7 @@
 
 
 <div class="viewcode-block" id="OVModel.optimize">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.optimize">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.optimize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
@@ -515,7 +515,7 @@
 
 
 <div class="viewcode-block" id="OVModel.transform_fn">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.transform_fn">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.transform_fn">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_batch</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform data for PTQ.</span>
 
@@ -570,7 +570,7 @@
         <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">instantiate_classes</span><span class="p">(</span><span class="n">initial_ptq_config</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 
 <div class="viewcode-block" id="OVModel.prepare_metric_inputs">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.prepare_metric_inputs">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredBatch</span><span class="p">,</span>
@@ -589,7 +589,7 @@
 
 
 <div class="viewcode-block" id="OVModel.compute_metrics">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.compute_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.compute_metrics">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute metrics using the provided metric object.</span>
 
@@ -686,7 +686,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OVModel.get_dummy_input">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.get_dummy_input">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.get_dummy_input">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_dummy_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a dummy input for the model.</span>
 
@@ -710,7 +710,7 @@
 
 
 <div class="viewcode-block" id="OVModel.__call__">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVModel.__call__">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVModel.__call__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Call the model for inference.</span>
 

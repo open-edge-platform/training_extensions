@@ -269,12 +269,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">RandomSampler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.utils.instantiators</span><span class="w"> </span><span class="kn">import</span> <span class="n">instantiate_sampler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adaptive_num_workers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_input_size_to_dataset</span><span class="p">,</span> <span class="n">adapt_tile_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_input_size_to_dataset</span><span class="p">,</span> <span class="n">adapt_tile_config</span><span class="p">,</span> <span class="n">get_adaptive_num_workers</span><span class="p">,</span> <span class="n">instantiate_sampler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.pre_filtering</span><span class="w"> </span><span class="kn">import</span> <span class="n">pre_filtering</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageColorChannel</span>
@@ -289,7 +287,7 @@
 
 
 <div class="viewcode-block" id="OTXDataModule">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.module.html#otx.data.module.OTXDataModule">[docs]</a>
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OTXDataModule</span><span class="p">(</span><span class="n">LightningDataModule</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This class extends the LightningDataModule to provide data handling capabilities for the OTX pipeline.</span>
 
@@ -364,6 +362,7 @@
                 <span class="n">dataset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">unannotated_items_ratio</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
                 <span class="n">ignore_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;SEMANTIC_SEGMENTATION&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">input_size</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
@@ -468,7 +467,7 @@
         <span class="k">return</span> <span class="n">dataset</span>
 
 <div class="viewcode-block" id="OTXDataModule.train_dataloader">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.module.html#otx.data.module.OTXDataModule.train_dataloader">[docs]</a>
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.train_dataloader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get train dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_subset</span>
@@ -500,7 +499,7 @@
 
 
 <div class="viewcode-block" id="OTXDataModule.val_dataloader">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.module.html#otx.data.module.OTXDataModule.val_dataloader">[docs]</a>
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.val_dataloader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">val_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get val dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_subset</span>
@@ -518,7 +517,7 @@
 
 
 <div class="viewcode-block" id="OTXDataModule.test_dataloader">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.module.html#otx.data.module.OTXDataModule.test_dataloader">[docs]</a>
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.test_dataloader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">test_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span>
@@ -536,7 +535,7 @@
 
 
 <div class="viewcode-block" id="OTXDataModule.predict_dataloader">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.module.html#otx.data.module.OTXDataModule.predict_dataloader">[docs]</a>
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.predict_dataloader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get test dataloader.&quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span>
@@ -554,13 +553,13 @@
 
 
 <div class="viewcode-block" id="OTXDataModule.setup">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.module.html#otx.data.module.OTXDataModule.setup">[docs]</a>
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.setup">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup for each stage.&quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="OTXDataModule.teardown">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.module.html#otx.data.module.OTXDataModule.teardown">[docs]</a>
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.teardown">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Teardown for each stage.&quot;&quot;&quot;</span></div>
 

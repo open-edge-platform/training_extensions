@@ -11,7 +11,7 @@ PTQ is designed to optimize the inference of models by applying post-training me
 
 To run Post-training quantization it is required to convert the model to OpenVINO™ intermediate representation (IR) first. To perform fast and accurate quantization we use ``DefaultQuantization Algorithm`` for each task. Please, refer to the `Tune quantization Parameters <https://docs.openvino.ai/2023.2/basic_quantization_flow.html#tune-quantization-parameters>`_ for further information about configuring the optimization.
 
-Please, refer to our :doc:`dedicated tutorials <../../tutorials/base/how_to_train/index>` on how to optimize your model using PTQ.
+Please, refer to our :doc:`dedicated tutorials <../../tutorials/base/export>` on how to optimize your model using PTQ and OpenVINO Engine.
 
 
 .. tab-set::
@@ -20,12 +20,7 @@ Please, refer to our :doc:`dedicated tutorials <../../tutorials/base/how_to_trai
 
         .. code-block:: python
 
-            from otx.engine import Engine
-            ...
-            engine.optimize(checkpoint="<IR-checkpoint-path>")
+            from otx.backend.openvino.engine import OVEngine
 
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx optimize ... --checkpoint <IR-checkpoint-path>
+            ov_engine = OVEngine(model="path/to/your/model.xml", data="path/to/your/data")
+            OVEngine.optimize()

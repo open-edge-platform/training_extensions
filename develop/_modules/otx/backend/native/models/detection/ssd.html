@@ -302,7 +302,7 @@
 
 
 <div class="viewcode-block" id="SSD">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.SSD">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.SSD">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SSD</span><span class="p">(</span><span class="n">OTXDetectionModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Detection model class for SSD.</span>
 
@@ -434,7 +434,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SSD.setup">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.SSD.setup">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.SSD.setup">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback for setup OTX SSD Model.</span>
 
@@ -568,7 +568,7 @@
         <span class="k">return</span> <span class="n">classification_layers</span>
 
 <div class="viewcode-block" id="SSD.load_state_dict_pre_hook">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.SSD.load_state_dict_pre_hook">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.SSD.load_state_dict_pre_hook">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify input state_dict according to class name matching. It is used for incremental learning.&quot;&quot;&quot;</span>
         <span class="n">model2ckpt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_class_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_classes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_classes</span><span class="p">)</span>
@@ -625,7 +625,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="SSD.on_load_checkpoint">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.SSD.on_load_checkpoint">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.SSD.on_load_checkpoint">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">on_load_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback on load checkpoint.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">hparams</span> <span class="o">:=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hyper_parameters&quot;</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span><span class="n">anchors</span> <span class="o">:=</span> <span class="n">hparams</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ssd_anchors&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
@@ -638,7 +638,7 @@
 
 
 <div class="viewcode-block" id="SSD.load_from_otx_v1_ckpt">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.SSD.load_from_otx_v1_ckpt">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.SSD.load_from_otx_v1_ckpt">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_ssd_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>

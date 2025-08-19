@@ -1,12 +1,16 @@
 Deploy & Demo
 =============
 
-This guide explains how to deploy a model trained in the :doc:`previous stage <how_to_train/index>` and visualize it outside of this repository.
+This guide explains how to export, optimize, validate and deploy a model trained in the :doc:`previous stage <how_to_train/index>` and visualize it outside of this repository.
 As a result of this step, you'll get the exported model together with the self-contained python package and a demo application to visualize results in other environments without a long installation process.
 
 ******
 Export
 ******
+
+.. note::
+
+    "export" method should be implemented within a framework engine like OTXEngine to be able to export the model. Optimization and validation steps are required to use OVEngine.
 
 1. Activate the virtual environment
 created in the previous step.
@@ -23,6 +27,23 @@ exportable code with demo depending on the export type passed to CLI or API.
 You can export the model in OpenVINO format and FP32
 using the command below. Specify the path to the trained PyTorch model using ``--checkpoint`` parameter:
 
+.. tab-set::
+
+    .. tab-item:: CLI (with work_dir)
+
+        .. code-block:: shell
+
+            (otx) ...$ otx export -c CONFIG --checkpoint CHECKPOINT --export_format {ONNX,OPENVINO} --export_precision {FP16,FP32} --work-dir WORK_DIR
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            from otx.backend.native.engine import OTXEngine
+
+            engine = OTXEngine(model="path/to/model.yaml", data="path/to/data_root", work_dir="otx-workspace")
+            exported_model_path = engine.export()
+
 .. code-block:: shell
 
     otx export -c CONFIG --checkpoint CHECKPOINT --export_format {ONNX,OPENVINO,EXPORTABLE_CODE} --export_precision {FP16,FP32} --work-dir WORK_DIR
@@ -33,6 +54,119 @@ For example, to export a model with precision FP16 and format ONNX, execute:
 .. code-block:: shell
 
     otx export -c CONFIG --checkpoint CHECKPOINT --export_format ONNX --export_precision FP16 --work-dir outputs/deploy
+
+.. tab-set::
+
+    .. tab-item:: CLI
+
+        .. code-block:: shell
+
+            (otx) ...$ otx export --config CONFIG --checkpoint CHECKPOINT --export_format ONNX --export_precision FP16 --work-dir WORK_DIR
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            exported_onnx_path = engine.export(export_format="ONNX", export_precision="FP16")
+
+3. You can check the accuracy of the exported OpenVINO™ IR model and ensure consistency between the exported model and the original PyTorch model using OVEngine.
+**Note**: CLI functionality is currently not supported for the OpenVINO Engine.
+
+.. tab-set::
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            from otx.backend.openvino.engine import OVEngine
+
+            ov_engine = OVEngine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
+            ov_engine.test()
+
+If you also want to export ``saliency_map``, a feature related to explain, and ``feature_vector`` information for XAI, you can do the following:
+
+.. tab-set::
+
+    .. tab-item:: CLI
+
+        .. code-block:: shell
+
+            (otx) ...$ otx export ... --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_014.ckpt --explain True
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            exported_model_path = engine.export(..., explain=True)
+
+********
+Predict
+********
+
+1. After exporting the model, we can use it for inference on the testing dataset or on a list of numpy images.
+To obtain list of predictions on the given test dataset, we can use the ``OVEngine.predict()`` method:
+
+.. tab-set::
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            predictions = engine.predict(checkpoint=exported_model_path)
+
+            # it is also possible to pass test datamodule or dataset for prediction
+            predictions = engine.predict(checkpoint=exported_model_path, data="path/to/new/test/dataset")
+            # or
+            from otx.data.datamodule import OTXDataModule
+
+            predictions = engine.predict(data=OTXDataModule(...))
+
+
+2. Similarly, it is possible to pass a list of
+numpy images to the ``OVEngine.predict()`` method:
+
+.. code-block:: python
+
+    predictions = engine.predict(data=[numpy_image1, numpy_image2, ...])
+
+********
+Optimize
+********
+
+1. We can further optimize the model with OVEngine.
+It uses PTQ depending on the model and transforms it to ``INT8`` format.
+
+``PTQ`` optimization is used for models exported in the OpenVINO™ IR format. It decreases the floating-point precision to integer precision of the exported model by performing the post-training optimization.
+
+To learn more about optimization, refer to `NNCF repository <https://github.com/openvinotoolkit/nncf>`_.
+
+2.  Command example for optimizing OpenVINO™ model (.xml)
+with OpenVINO™ PTQ. **Note**: CLI functionality is currently not supported for the OpenVINO Engine.
+
+.. tab-set::
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            optimized_model_path = ov_engine.optimize()
+
+
+The optimization time highly relies on the hardware characteristics, for example on Intel(R) Core(TM) i9-10980XE it took about 9 seconds.
+Please note, that PTQ will take some time without logging to optimize the model.
+
+3. Finally, we can also evaluate the optimized model by passing
+it to the OVEngine.test().
+
+.. tab-set::
+
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            metric = ov_engine.test(checkpoint=optimized_model_path)
+
+Now we have fully trained, optimized and exported an efficient model representation.
 
 ******
 Deploy
@@ -56,30 +190,28 @@ The exported archive will consist of the following file structure:
   - ``requirements.txt`` - minimal packages required to run the demo
   - ``setup.py``
 
-3. You can deploy the model,
+2. You can obtain the demo with the model,
 using the command below:
 
-.. code-block:: shell
+.. tab-set::
 
-    (otx) ...$ otx export -c CONFIG
-               --checkpoint {PYTORCH_CHECKPOINT}
-               --export_format EXPORTABLE_CODE
-               --work-dir outputs/deploy
+    .. tab-item:: API
+
+        .. code-block:: python
+
+            engine.export(export_format="OPENVINO", export_demo_package=True, work_dir="outputs/deploy")
+
+    .. tab-item:: CLI
+
+        .. code-block:: shell
+
+            (otx) ...$ otx export -c CONFIG
+                    --checkpoint {PYTORCH_CHECKPOINT}
+                    --export_format OPENVINO
+                    --export_demo_package True
+                    --work-dir outputs/deploy
 
 After that, you can use the resulting ``exportable_code.zip`` archive in other applications.
-
-4. It is also possible to pass already exported/optimized OpenVINO IR model
-to create archive with demo and pack in the IR model.
-
-.. code-block:: shell
-
-    (otx) ...$ otx export -c CONFIG
-               --checkpoint {OPENVINO_IR.XML}
-               --work-dir outputs/deploy
-
-.. note::
-
-    You can also obtain ``exportable_code.zip`` right away during model optimization passing ``export_demo_package=True`` parameter to CLI or API call.
 
 *************
 Demonstration

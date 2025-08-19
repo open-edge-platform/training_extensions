@@ -266,9 +266,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">model_api.tilers</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstanceSegmentationTiler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_rle</span><span class="p">,</span> <span class="n">polygon_to_rle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.openvino.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OVModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">OTXPredBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.structures.mask.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_rle</span><span class="p">,</span> <span class="n">polygon_to_rle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.mean_ap</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaskRLEMeanAPFMeasureCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
@@ -284,7 +284,7 @@
 
 
 <div class="viewcode-block" id="OVInstanceSegmentationModel">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVInstanceSegmentationModel">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVInstanceSegmentationModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OVInstanceSegmentationModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instance segmentation model compatible for OpenVINO IR inference.</span>
 
@@ -426,7 +426,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OVInstanceSegmentationModel.prepare_metric_inputs">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVInstanceSegmentationModel.prepare_metric_inputs">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVInstanceSegmentationModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
@@ -475,7 +475,7 @@
 
 
 <div class="viewcode-block" id="OVInstanceSegmentationModel.compute_metrics">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVInstanceSegmentationModel.compute_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVInstanceSegmentationModel.compute_metrics">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute evaluation metrics for the model.</span>
 

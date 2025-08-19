@@ -331,17 +331,18 @@ file system:</p>
 <section id="training">
 <h2>Training<a class="headerlink" href="#training" title="Link to this heading">#</a></h2>
 <p>1. For this example let’s look at the
-anomaly detection tasks</p>
+anomaly tasks</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w">  </span>otx<span class="w"> </span>find<span class="w"> </span>--task<span class="w"> </span>ANOMALY_DETECTION
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w">  </span>otx<span class="w"> </span>find<span class="w"> </span>--task<span class="w"> </span>ANOMALY
 ┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃<span class="w"> </span>Task<span class="w">              </span>┃<span class="w"> </span>Model<span class="w"> </span>Name<span class="w"> </span>┃<span class="w"> </span>Recipe<span class="w"> </span>Path<span class="w">                                 </span>┃
 ┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│<span class="w"> </span>ANOMALY_DETECTION<span class="w"> </span>│<span class="w"> </span>stfpm<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/anomaly_detection/stfpm.yaml<span class="w"> </span>│
-│<span class="w"> </span>ANOMALY_DETECTION<span class="w"> </span>│<span class="w"> </span>padim<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/anomaly_detection/padim.yaml<span class="w"> </span>│
+│<span class="w"> </span>ANOMALY<span class="w">           </span>│<span class="w"> </span>stfpm<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/anomaly_detection/stfpm.yaml<span class="w"> </span>│
+│<span class="w"> </span>ANOMALY<span class="w">           </span>│<span class="w"> </span>padim<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/anomaly_detection/padim.yaml<span class="w"> </span>│
+│<span class="w"> </span>ANOMALY<span class="w">           </span>│<span class="w"> </span>uflow<span class="w">      </span>│<span class="w"> </span>src/otx/recipe/anomaly_detection/uflow.yaml<span class="w"> </span>│
 └───────────────────┴────────────┴─────────────────────────────────────────────┘
 </pre></div>
 </div>
@@ -349,46 +350,39 @@ CLI</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine.utils.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.cli.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_models</span>
 
-<span class="n">model_lists</span> <span class="o">=</span> <span class="n">list_models</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;ANOMALY_DETECTION&quot;</span><span class="p">)</span>
+<span class="n">model_lists</span> <span class="o">=</span> <span class="n">list_models</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;ANOMALY&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">model_lists</span><span class="p">)</span>
 <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">[&#39;stfpm&#39;, &#39;padim&#39;]</span>
+<span class="sd">[&#39;stfpm&#39;, &#39;padim&#39;, &quot;uflow&quot;]</span>
 <span class="sd">&#39;&#39;&#39;</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>You can see two anomaly detection models, STFPM and PADIM. For more detail on each model, refer to Anomalib’s <a class="reference external" href="https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/stfpm.html">STFPM</a> and <a class="reference external" href="https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/padim.html">PADIM</a> documentation.</p>
+<p>You can see two anomaly models, STFPM, PADIM and UFLOW. For more detail on each model, refer to Anomalib’s <a class="reference external" href="https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/stfpm.html">STFPM</a>, <a class="reference external" href="https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/padim.html">PADIM</a>  and <a class="reference external" href="https://anomalib.readthedocs.io/en/v1.0.0/markdown/guides/reference/models/image/uflow.html">UFLOW</a> documentation.</p>
 <p>2. Let’s proceed with PADIM for
 this example.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
-CLI (auto-config)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w">  </span>otx<span class="w"> </span>train<span class="w"> </span>--data_root<span class="w"> </span>datasets/MVTec/bottle<span class="w"> </span><span class="se">\</span>
-<span class="w">                      </span>--task<span class="w"> </span>ANOMALY_DETECTION
+CLI (with config)</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w">  </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/anomaly_detection/padim.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">                      </span>--data_root<span class="w"> </span>datasets/MVTec/bottle
+<span class="w">                      </span>--work_dir<span class="w"> </span>./otx-workspace
 </pre></div>
 </div>
 </div>
 <input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
-CLI (with config)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w">  </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/anomaly_detection/padim.yaml<span class="w"> </span><span class="se">\</span>
-<span class="w">                      </span>--data_root<span class="w"> </span>datasets/MVTec/bottle
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-4">
 API (from_config)</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
 
 <span class="n">data_root</span> <span class="o">=</span> <span class="s2">&quot;datasets/MVTec/bottle&quot;</span>
 <span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;src/otx/recipe/anomaly_detection/padim.yaml&quot;</span>
 
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">OTXEngine</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
           <span class="n">config_path</span><span class="o">=</span><span class="n">recipe</span><span class="p">,</span>
           <span class="n">data_root</span><span class="o">=</span><span class="n">data_root</span><span class="p">,</span>
           <span class="n">work_dir</span><span class="o">=</span><span class="s2">&quot;otx-workspace&quot;</span><span class="p">,</span>
@@ -398,18 +392,29 @@ API (from_config)</label><div class="sd-tab-content docutils">
 </pre></div>
 </div>
 </div>
-<input id="sd-tab-item-5" name="sd-tab-set-1" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-5">
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
 API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PADIM</span>
 
 <span class="n">data_root</span> <span class="o">=</span> <span class="s2">&quot;datasets/MVTec/bottle&quot;</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">PADIM</span><span class="p">(</span><span class="n">data_input_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;input_size&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">446</span><span class="p">,</span> <span class="mi">446</span><span class="p">],</span>
+                                             <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">103.53</span><span class="p">],</span>
+                                             <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">]})</span>
 
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span>
-            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;padim&quot;</span><span class="p">,</span>
-            <span class="n">data_root</span><span class="o">=</span><span class="n">data_root</span><span class="p">,</span>
-            <span class="n">task</span><span class="o">=</span><span class="s2">&quot;ANOMALY_DETECTION&quot;</span><span class="p">,</span>
-            <span class="n">work_dir</span><span class="o">=</span><span class="s2">&quot;otx-workspace&quot;</span><span class="p">,</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">OTXEngine</span><span class="p">(</span>
+          <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+          <span class="n">data</span><span class="o">=</span><span class="n">data_root</span><span class="p">,</span>
+          <span class="n">work_dir</span><span class="o">=</span><span class="s2">&quot;otx-workspace&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<span class="c1"># one more possibility to obtain the  engine by the given model/dataset</span>
+<span class="c1"># using &quot;create_engine&quot; function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_engine</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span>
+          <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+          <span class="n">data</span><span class="o">=</span><span class="n">data_root</span><span class="p">,</span>
         <span class="p">)</span>
 
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
@@ -421,24 +426,24 @@ API</label><div class="sd-tab-content docutils">
 Learn more about specific parameters using <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">train</span> <span class="pre">--help</span> <span class="pre">-v</span></code> or <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">train</span> <span class="pre">--help</span> <span class="pre">-vv</span></code>.</p>
 <p>For example, to decrease the batch size to 4, fix the number of epochs to 100, extend the command line above with the following line.</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-6">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
 CLI</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>...<span class="w"> </span>--data.train_subset.batch_size<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
 <span class="w">                         </span>--max_epochs<span class="w"> </span><span class="m">100</span>
 </pre></div>
 </div>
 </div>
-<input id="sd-tab-item-7" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-7">
+<input id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
 API</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubsetConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXEngine</span>
 
 <span class="n">datamodule</span> <span class="o">=</span> <span class="n">OTXDataModule</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">train_subset</span><span class="o">=</span><span class="n">SubsetConfig</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
 
-<span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">OTXEngine</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">datamodule</span><span class="o">=</span><span class="n">datamodule</span><span class="p">)</span>
 
 <span class="n">engine</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">max_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
@@ -453,8 +458,8 @@ while training logs can be found in the <code class="docutils literal notranslat
 <h2>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading">#</a></h2>
 <p>Now we have trained the model, let’s see how it performs on a specific dataset. In this example, we will use the same dataset to generate evaluation metrics. To perform evaluation you need to run the following commands:</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-8">
+<input checked="checked" id="sd-tab-item-7" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
 CLI (with work_dir)</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -470,8 +475,8 @@ CLI (with work_dir)</label><div class="sd-tab-content docutils">
 </pre></div>
 </div>
 </div>
-<input id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-9">
+<input id="sd-tab-item-8" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
 CLI (with config)</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--config<span class="w">  </span>src/otx/recipe/anomaly_detection/padim.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">                    </span>--data_root<span class="w"> </span>datasets/MVTec/bottle<span class="w"> </span><span class="se">\</span>
@@ -489,8 +494,8 @@ CLI (with config)</label><div class="sd-tab-content docutils">
 </pre></div>
 </div>
 </div>
-<input id="sd-tab-item-10" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-10">
+<input id="sd-tab-item-9" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
 API</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">test</span><span class="p">()</span>
 </pre></div>
@@ -501,127 +506,6 @@ API</label><div class="sd-tab-content docutils">
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>All task types report Image-level F-measure as the primary metric. In addition, both localization tasks (anomaly detection and anomaly segmentation) also report localization performance (F-measure for anomaly detection and Dice-coefficient for anomaly segmentation).</p>
-</div>
-</section>
-<section id="export">
-<h2>Export<a class="headerlink" href="#export" title="Link to this heading">#</a></h2>
-<p>1. <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">export</span></code> exports a trained Pytorch <cite>.pth</cite> model to the OpenVINO™ Intermediate Representation (IR) format.
-It allows running the model on the Intel hardware much more efficient, especially on the CPU. Also, the resulting IR model is required to run PTQ optimization. IR model consists of 2 files: <code class="docutils literal notranslate"><span class="pre">exported_model.xml</span></code> for weights and <code class="docutils literal notranslate"><span class="pre">exported_model.bin</span></code> for architecture.</p>
-<p>2. We can run the below command line to export the trained model
-and save the exported model to the <code class="docutils literal notranslate"><span class="pre">openvino</span></code> folder:</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-11" name="sd-tab-set-4" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-11">
-CLI (with work_dir)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace
-...
-Elapsed<span class="w"> </span>time:<span class="w"> </span><span class="m">0</span>:00:06.588245
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-12" name="sd-tab-set-4" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-12">
-CLI (with config)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">export</span><span class="w"> </span>...<span class="w"> </span>--checkpoint<span class="w"> </span>otx-workspace/20240313_042421/checkpoints/epoch_010.ckpt
-...
-Elapsed<span class="w"> </span>time:<span class="w"> </span><span class="m">0</span>:00:06.588245
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-13" name="sd-tab-set-4" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-13">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span><span class="o">.</span><span class="n">export</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>Now that we have the exported model, let’s check its performance using <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">test</span></code>:</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-5" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-14">
-CLI (with work_dir)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240313_052847/exported_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
-...
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-15" name="sd-tab-set-5" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-15">
-CLI (with config)</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--config<span class="w"> </span>src/otx/recipe/anomaly_detection/padim.yamll<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--data_root<span class="w"> </span>data/wgisd<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_052847/exported_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
-...
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-16" name="sd-tab-set-5" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-16">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exported_model</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">export</span><span class="p">()</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">checkpoint</span><span class="o">=</span><span class="n">exported_model</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</section>
-<section id="optimization">
-<h2>Optimization<a class="headerlink" href="#optimization" title="Link to this heading">#</a></h2>
-<p>Anomaly tasks can be optimized either in PTQ or NNCF format. The model will be quantized to <code class="docutils literal notranslate"><span class="pre">INT8</span></code> format.
-For more information refer to the <a class="reference internal" href="../../../explanation/additional_features/models_optimization.html"><span class="doc">optimization explanation</span></a> section.</p>
-<p>1. Let’s start with PTQ
-optimization.</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-17" name="sd-tab-set-6" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-17">
-CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span>optimize<span class="w">  </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
-<span class="w">                         </span>--checkpoint<span class="w"> </span>otx-workspace/20240312_052847/exported_model.xml
-
-...
-Statistics<span class="w"> </span>collection<span class="w"> </span>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<span class="w"> </span><span class="m">100</span>%<span class="w"> </span><span class="m">30</span>/30<span class="w"> </span>•<span class="w"> </span><span class="m">0</span>:00:14<span class="w"> </span>•<span class="w"> </span><span class="m">0</span>:00:00
-Applying<span class="w"> </span>Fast<span class="w"> </span>Bias<span class="w"> </span>correction<span class="w"> </span>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<span class="w"> </span><span class="m">100</span>%<span class="w"> </span><span class="m">58</span>/58<span class="w"> </span>•<span class="w"> </span><span class="m">0</span>:00:02<span class="w"> </span>•<span class="w"> </span><span class="m">0</span>:00:00
-Elapsed<span class="w"> </span>time:<span class="w"> </span><span class="m">0</span>:00:24.958733
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-18" name="sd-tab-set-6" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-18">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ckpt_path</span> <span class="o">=</span> <span class="s2">&quot;otx-workspace/20240312_052847/exported_model.xml&quot;</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">checkpoint</span><span class="o">=</span><span class="n">ckpt_path</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>Please note, that PTQ will take some time without logging to optimize the model.</p>
-<p>3. Finally, we can also evaluate the optimized model by passing
-it to the <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">test</span></code> function.</p>
-<div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-19" name="sd-tab-set-7" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-19">
-CLI</label><div class="sd-tab-content docutils">
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>otx<span class="o">)</span><span class="w"> </span>...$<span class="w"> </span>otx<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--work_dir<span class="w"> </span>otx-workspace<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--checkpoint<span class="w"> </span>otx-workspace/20240313_055042/optimized_model.xml<span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span>--engine.device<span class="w"> </span>cpu
-
-...
-Elapsed<span class="w"> </span>time:<span class="w"> </span><span class="m">0</span>:00:10.260521
-</pre></div>
-</div>
-</div>
-<input id="sd-tab-item-20" name="sd-tab-set-7" type="radio">
-<label class="sd-tab-label" for="sd-tab-item-20">
-API</label><div class="sd-tab-content docutils">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ckpt_path</span> <span class="o">=</span> <span class="s2">&quot;otx-workspace/20240313_055042/optimized_model.xml&quot;</span>
-<span class="n">engine</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">checkpoint</span><span class="o">=</span><span class="n">ckpt_path</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
 </div>
 </section>
 <section id="segmentation-and-classification">
@@ -678,16 +562,6 @@ The <code class="docutils literal notranslate"><span class="pre">ground_truth</s
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#evaluation">
    Evaluation
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#export">
-   Export
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#optimization">
-   Optimization
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">

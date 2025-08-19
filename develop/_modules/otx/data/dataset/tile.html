@@ -284,7 +284,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">polygon_to_bitmap</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">_extract_class_mask</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.tile</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -296,6 +295,7 @@
     <span class="n">TileSegDataEntity</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataItem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.structures.mask.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">polygon_to_bitmap</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
@@ -493,12 +493,12 @@
 
 
 <div class="viewcode-block" id="OTXTileDatasetFactory">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.dataset.html#otx.data.dataset.OTXTileDatasetFactory">[docs]</a>
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXTileDatasetFactory">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OTXTileDatasetFactory</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX tile dataset factory.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="OTXTileDatasetFactory.create">
-<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.dataset.html#otx.data.dataset.OTXTileDatasetFactory.create">[docs]</a>
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXTileDatasetFactory.create">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>

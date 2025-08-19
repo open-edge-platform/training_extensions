@@ -33,6 +33,7 @@
    otx.data
    otx.engine
    otx.metrics
+   otx.models
    otx.recipe
    otx.tools
    otx.types

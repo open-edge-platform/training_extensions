@@ -286,7 +286,7 @@
 
 
 <div class="viewcode-block" id="LiteHRNet">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.LiteHRNet">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.LiteHRNet">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LiteHRNet</span><span class="p">(</span><span class="n">OTXSegmentationModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;LiteHRNet Model.</span>
 
@@ -338,7 +338,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="LiteHRNet.load_from_otx_v1_ckpt">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.backend.native.models.html#otx.backend.native.models.LiteHRNet.load_from_otx_v1_ckpt">[docs]</a>
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.LiteHRNet.load_from_otx_v1_ckpt">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_seg_lite_hrnet_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>

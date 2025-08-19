@@ -281,7 +281,7 @@
 
 
 <div class="viewcode-block" id="OVDetectionModel">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVDetectionModel">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVDetectionModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OVDetectionModel</span><span class="p">(</span><span class="n">OVModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OVDetectionModel: Object detection model compatible for OpenVINO IR inference.</span>
 
@@ -468,7 +468,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="OVDetectionModel.prepare_metric_inputs">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVDetectionModel.prepare_metric_inputs">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVDetectionModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
@@ -504,7 +504,7 @@
 
 
 <div class="viewcode-block" id="OVDetectionModel.compute_metrics">
-<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.backend.openvino.models.html#otx.backend.openvino.models.OVDetectionModel.compute_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVDetectionModel.compute_metrics">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Metric</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute metrics for the model.&quot;&quot;&quot;</span>
         <span class="n">best_confidence_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hparams</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;best_confidence_threshold&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>

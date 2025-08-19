@@ -17,7 +17,8 @@ otx.tools.converter
 
    .. autosummary::
    
-      ConfigConverter
+      GetiConfigConverter
+      ModelStatus
    
    
 
