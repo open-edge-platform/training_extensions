@@ -3,7 +3,6 @@
 
 """Auto-Configurator class & util functions for OTX Auto-Configuration."""
 
-
 from __future__ import annotations
 
 import logging
@@ -280,7 +279,7 @@ class AutoConfigurator:
             NotImplementedError: If the OVModel for the given task is not supported.
         """
         task = task if task is not None else self.task
-        class_path = OVMODEL_PER_TASK.get(task, None)
+        class_path = OVMODEL_PER_TASK.get(task)
         if class_path is None:
             msg = f"{task} doesn't support OVModel."
             raise NotImplementedError(msg)

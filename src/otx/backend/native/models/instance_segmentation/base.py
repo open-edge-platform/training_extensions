@@ -267,8 +267,8 @@ class OTXInstanceSegModel(OTXModel):
         For detection, it is need to update confidence threshold information when
         the metric is FMeasure.
         """
-        if best_confidence_threshold := ckpt.get("confidence_threshold", None) or (
-            (hyper_parameters := ckpt.get("hyper_parameters", None))
+        if best_confidence_threshold := ckpt.get("confidence_threshold") or (
+            (hyper_parameters := ckpt.get("hyper_parameters"))
             and (best_confidence_threshold := hyper_parameters.get("best_confidence_threshold", None))
         ):
             self.hparams["best_confidence_threshold"] = best_confidence_threshold

@@ -99,7 +99,7 @@ class ColorPalette:
             msg = "ColorPalette accepts only the positive number of colors"
             raise ValueError(msg)
         if rng is None:
-            rng = random.Random(0xACE)  # nosec B311  # disable random check
+            rng = random.Random(0xACE)  # nosec B311  # disable random check  # noqa: S311
 
         candidates_num = 100
         hsv_colors = [(1.0, 1.0, 1.0)]

@@ -192,7 +192,8 @@ async def disable_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)
     },
 )
 async def export_pipeline(
-    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)], include_model: bool = False
+    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],  # noqa: ARG001
+    include_model: bool = False,  # noqa: ARG001
 ) -> FileResponse:
     """Export a pipeline to file"""
     raise NotImplementedError
@@ -200,7 +201,7 @@ async def export_pipeline(
 
 @router.post(":import", status_code=status.HTTP_204_NO_CONTENT)
 async def import_pipeline(
-    zip_file: Annotated[
+    zip_file: Annotated[  # noqa: ARG001
         UploadFile, File(description="ZIP file containing the pipeline configuration and optionally model binaries")
     ],
 ) -> None:

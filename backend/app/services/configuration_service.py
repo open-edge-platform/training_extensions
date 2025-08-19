@@ -40,7 +40,7 @@ class ConfigurationService(metaclass=Singleton):
 
     @staticmethod
     def _notify_source_changed() -> None:
-        from app.core import Scheduler  # noqa: PLC0415 # cyclic-import
+        from app.core import Scheduler  # cyclic-import
 
         condition = Scheduler().mp_config_changed_condition
         with condition:
