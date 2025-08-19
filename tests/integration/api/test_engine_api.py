@@ -14,7 +14,6 @@ from otx.backend.native.models.base import OTXModel
 from otx.data.module import OTXDataModule
 from otx.engine import create_engine
 from otx.tools.converter import TEMPLATE_ID_MAPPING
-from otx.types.device import DeviceType
 from otx.types.task import OTXTaskType
 from tests.test_helpers import CommonSemanticSegmentationExporter
 
@@ -48,7 +47,7 @@ def test_native_ov_engine(
         work_dir=tmp_path / task,
         device=fxt_accelerator,
     )
-    
+
     # Check OTXModel & OTXDataModule
     assert isinstance(engine.model, OTXModel)
     assert isinstance(engine.datamodule, OTXDataModule)
