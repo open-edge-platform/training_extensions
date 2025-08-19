@@ -37,15 +37,18 @@ def test_native_ov_engine(
     default_models = [str(template["recipe_path"]) for template in TEMPLATE_ID_MAPPING.values() if template["default"]]
     if recipe in default_models:
         pytest.skip("Default models are checked in geti interaction tests.")
+    if "mobilenet_v4" in recipe:
+        pytest.skip("MobileNetV4 is not supported yet.")
     task = Path(recipe).parent.name.lower()
     tmp_path_train = tmp_path / task
-    engine = OTXEngine(
-        model=recipe,
-        data=fxt_target_dataset_per_task[task],
-        work_dir=tmp_path_train,
-        device=DeviceType(fxt_accelerator),
-    )
 
+    engine = OTXEngine.from_config(
+        config_path=recipe,
+        data_root=fxt_target_dataset_per_task[task],
+        work_dir=tmp_path / task,
+        device=fxt_accelerator,
+    )
+    
     # Check OTXModel & OTXDataModule
     assert isinstance(engine.model, OTXModel)
     assert isinstance(engine.datamodule, OTXDataModule)

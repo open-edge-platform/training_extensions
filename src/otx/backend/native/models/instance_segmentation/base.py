@@ -388,9 +388,10 @@ class OTXInstanceSegModel(OTXModel):
             scores.append(_scores[filtered_idx])
             bboxes.append(_bboxes[filtered_idx])
             labels.append(_labels[filtered_idx])
-            if _masks is not None and len(_masks) > 0:
+
+            if _masks is not None:
                 masks.append(_masks[filtered_idx])
-            if _polygons is not None and len(_polygons) > 0:
+            if _polygons is not None:
                 polygons.append(_polygons[filtered_idx])
 
         outputs.scores = scores
