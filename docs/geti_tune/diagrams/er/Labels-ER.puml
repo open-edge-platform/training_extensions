@@ -1,0 +1,47 @@
+@startuml "Labels-ER"
+!define table(x) class x << (T,#FFAAAA) >>
+!define pk(x) <u>x</u>
+!define fk(x) <i>x</i>
+
+' Table: tasks
+table(tasks) {
+  pk(id) : UUID
+  type : TEXT NOT NULL
+  exclusive_labels : BOOLEAN NOT NULL
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' Table: labels
+table(labels) {
+  pk(id) : UUID
+  fk(task_id): UUID NOT NULL
+  name : TEXT NOT NULL
+  color : TEXT
+  hotkey : TEXT
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+table(pipelines) {
+  pk(id) : UUID
+  fk(task_id): UUID
+  ...
+}
+
+tasks ||--o{ labels : "A task has one or more labels;\na label belongs to one task"
+tasks ||--|| pipelines : "Each pipeline has exactly\none task (immutable)"
+
+note right of tasks
+  Task defines the
+  labels and their relationships
+  in a machine learning task
+end note
+
+note right of labels
+  Label represents a ML class,
+  namely a category that can
+  be assigned to a data point
+end note
+
+@enduml
