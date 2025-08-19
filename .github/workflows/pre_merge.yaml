@@ -36,7 +36,7 @@ jobs:
       - name: Code quality checks
         run: tox r -vv -e pre-commit
   Unit-Test:
-    runs-on: [self-hosted, linux, x64, dev, dmount]
+    runs-on: ubuntu-24.04
     needs: Code-Quality-Checks
     timeout-minutes: 120
     strategy:
@@ -83,7 +83,6 @@ jobs:
       github.event.pull_request.draft == false &&
       !(startsWith(github.event.pull_request.title, '[WIP]'))
     runs-on: [self-hosted, linux, x64, dev, dmount]
-    needs: Unit-Test
     strategy:
       fail-fast: false
       matrix:
