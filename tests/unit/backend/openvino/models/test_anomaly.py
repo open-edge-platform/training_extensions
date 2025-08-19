@@ -10,17 +10,17 @@ import torch
 from anomalib.metrics.min_max import MinMax
 from anomalib.metrics.threshold import ManualThreshold
 
-from otx.backend.native.models.anomaly.openvino_model import AnomalyOpenVINO
 from otx.backend.native.models.anomaly.padim import Padim
 from otx.backend.native.models.anomaly.stfpm import Stfpm
 from otx.backend.native.models.anomaly.uflow import Uflow
 from otx.backend.native.models.base import DataInputParams
+from otx.backend.openvino.models.anomaly import OVAnomalyModel
 from otx.types.export import OTXExportFormatType
 from otx.types.label import AnomalyLabelInfo
 from otx.types.task import OTXTaskType
 
 
-class TestAnomalyOpenVINO:
+class TestOVAnomalyModel:
     @pytest.fixture(
         params=[
             # "padim", Cannot export padim in this way. We will face an error.
@@ -57,5 +57,5 @@ class TestAnomalyOpenVINO:
                 base_name="exported_model",
                 export_format=OTXExportFormatType.OPENVINO,
             )
-            ov_model = AnomalyOpenVINO(model_path=exported_model)
+            ov_model = OVAnomalyModel(model_path=exported_model)
             assert isinstance(ov_model.label_info, AnomalyLabelInfo)

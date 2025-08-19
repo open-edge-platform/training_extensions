@@ -15,9 +15,9 @@ from typing import TYPE_CHECKING, Any
 import torch
 from torch import Tensor, nn
 
-from otx.backend.native.models.instance_segmentation.utils.structures.bbox import bbox2roi
 from otx.backend.native.models.instance_segmentation.utils.utils import empty_instances, unpack_inst_seg_entity
 from otx.data.entity.torch import OTXDataBatch
+from otx.data.utils.structures.bbox import bbox2roi
 
 if TYPE_CHECKING:
     from otx.backend.native.models.utils.utils import InstanceData

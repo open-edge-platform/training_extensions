@@ -28,7 +28,7 @@ from otx.backend.native.models.detection.utils.utils import (
     unmap,
 )
 from otx.backend.native.models.modules import build_activation_layer
-from otx.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
+from otx.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule, PatchedConv2d
 from otx.backend.native.models.modules.norm import build_norm_layer, is_norm
 from otx.backend.native.models.modules.scale import Scale
 from otx.backend.native.models.utils.utils import InstanceData
@@ -91,20 +91,20 @@ class RTMDetHead(ATSSHeadModule):
                 ),
             )
         pred_pad_size = self.pred_kernel_size // 2
-        self.rtm_cls = nn.Conv2d(
+        self.rtm_cls = PatchedConv2d(
             self.feat_channels,
             self.num_base_priors * self.cls_out_channels,
             self.pred_kernel_size,
             padding=pred_pad_size,
         )
-        self.rtm_reg = nn.Conv2d(
+        self.rtm_reg = PatchedConv2d(
             self.feat_channels,
             self.num_base_priors * 4,
             self.pred_kernel_size,
             padding=pred_pad_size,
         )
         if self.with_objectness:
-            self.rtm_obj = nn.Conv2d(self.feat_channels, 1, self.pred_kernel_size, padding=pred_pad_size)
+            self.rtm_obj = PatchedConv2d(self.feat_channels, 1, self.pred_kernel_size, padding=pred_pad_size)
 
         self.scales = nn.ModuleList([Scale(1.0) for _ in self.prior_generator.strides])
 
@@ -641,7 +641,7 @@ class RTMDetSepBNHeadModule(RTMDetHead):
             self.reg_convs.append(reg_convs)
 
             self.rtm_cls.append(
-                nn.Conv2d(
+                PatchedConv2d(
                     self.feat_channels,
                     self.num_base_priors * self.cls_out_channels,
                     self.pred_kernel_size,
@@ -649,7 +649,7 @@ class RTMDetSepBNHeadModule(RTMDetHead):
                 ),
             )
             self.rtm_reg.append(
-                nn.Conv2d(
+                PatchedConv2d(
                     self.feat_channels,
                     self.num_base_priors * 4,
                     self.pred_kernel_size,
@@ -658,7 +658,7 @@ class RTMDetSepBNHeadModule(RTMDetHead):
             )
             if self.with_objectness:
                 self.rtm_obj.append(
-                    nn.Conv2d(self.feat_channels, 1, self.pred_kernel_size, padding=self.pred_kernel_size // 2),
+                    PatchedConv2d(self.feat_channels, 1, self.pred_kernel_size, padding=self.pred_kernel_size // 2),
                 )
 
         if self.share_conv:

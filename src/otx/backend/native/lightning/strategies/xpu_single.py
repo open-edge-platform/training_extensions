@@ -47,5 +47,6 @@ class SingleXPUStrategy(SingleDeviceStrategy):
 StrategyRegistry.register(
     SingleXPUStrategy.strategy_name,
     SingleXPUStrategy,
+    override=True,
     description="Strategy that enables training on single XPU",
 )

@@ -9,21 +9,20 @@ import pytest
 import torch
 import yaml
 from datumaro import Polygon
-from omegaconf import OmegaConf
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
 
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataBatch, OTXDataItem, OTXPredBatch, OTXPredItem
-from otx.tools.converter import TEMPLATE_ID_DICT
+from otx.tools.converter import TEMPLATE_ID_MAPPING
 from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
 
-def pytest_addoption(parser: pytest.Parser):
+def pytest_addoption(parser: pytest):
     """Add custom options for perf tests."""
     parser.addoption(
         "--model-category",
@@ -462,40 +461,30 @@ def fxt_export_list() -> list[ExportCase2Test]:
     ]
 
 
-def get_model_template_paths(model_category_only: bool = False) -> dict[OTXTaskType, list[dict]]:
-    """Get model template paths from the templates directory.
-
-    Args:
-        model_category_only (bool): If True, only return templates with model categories.
+def get_model_template_paths() -> dict[OTXTaskType, list[dict]]:
+    """Get Geti model template paths from the templates directory.
 
     Returns:
         dict: A dictionary mapping task types to lists of template paths and tiling options.
     """
 
-    from otx import __file__ as otx_init_path
+    from otx.backend.native.cli.utils import get_otx_root_path
 
-    template_dir = Path(otx_init_path).parent / "tools" / "templates"
-    template_paths = template_dir.rglob("template.yaml")
+    template_dir = Path(get_otx_root_path()).parent.parent / "tests" / "assets" / "geti" / "model_configs"
+    template_paths = template_dir.rglob("*.yaml")
     template_dict = defaultdict(list)
 
     for template_path in template_paths:
         with template_path.open() as file:
             template = yaml.safe_load(file)
 
-        model_id = template.get("model_template_id")
-        if not model_id or model_id not in TEMPLATE_ID_DICT:
-            continue
+        model_id = template.get("model_manifest_id")
 
-        model_info = TEMPLATE_ID_DICT[model_id]
-        model_task = OTXTaskType(Path(model_info["model_config_path"]).parent.name.upper())
-
-        if model_category_only and "model_category" not in template:
-            continue
-
-        base_config_path = template_path.parent / template["hyper_parameters"]["base_path"]
-        base_config = OmegaConf.load(base_config_path)
-
-        has_tiling = "tiling_parameters" in base_config
+        model_config_path = TEMPLATE_ID_MAPPING[model_id]["recipe_path"]
+        model_task = OTXTaskType(model_config_path.parent.name.upper())
+        has_tiling = (
+            template["hyperparameters"].get("dataset_preparation", {}).get("augmentation", {}).get("tiling", None)
+        )
 
         # Add base (no-tiling)
         template_dict[model_task].append(
@@ -533,8 +522,7 @@ def pytest_generate_tests(metafunc):
     """
     if "task_template" in metafunc.fixturenames:
         task_name = metafunc.config.getoption("task")
-        model_category_only = metafunc.config.getoption("run_category_only")
-        template_dict = get_model_template_paths(model_category_only)
+        template_dict = get_model_template_paths()
 
         params = []
         if task_name.lower() == "all":

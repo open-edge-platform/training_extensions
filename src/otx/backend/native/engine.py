@@ -14,6 +14,7 @@ import time
 from contextlib import contextmanager
 from multiprocessing import Value
 from pathlib import Path
+from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
 from warnings import warn
 
@@ -136,13 +137,13 @@ class OTXEngine(Engine):
 
         self._model: OTXModel = model
         self.task = self._model.task
-
         self.checkpoint = checkpoint
         if self.checkpoint:
             if not isinstance(self.checkpoint, (Path, str)) and not Path(self.checkpoint).exists():
                 msg = f"Checkpoint {self.checkpoint} does not exist."
                 raise FileNotFoundError(msg)
-            self._model.load_state_dict_incrementally(torch.load(self.checkpoint))
+            chkpt = self._load_model_checkpoint(self.checkpoint, map_location="cpu")
+            self._model.load_state_dict_incrementally(chkpt)
 
     # ------------------------------------------------------------------------ #
     # General OTX Entry Points
@@ -150,12 +151,11 @@ class OTXEngine(Engine):
 
     def train(
         self,
-        max_epochs: int = 200,
+        max_epochs: int | None = 200,
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = "16",
-        val_check_interval: int | float | None = None,
+        precision: _PRECISION_INPUT | None = 16,
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
         resume: bool = False,
@@ -164,6 +164,7 @@ class OTXEngine(Engine):
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
         check_val_every_n_epoch: int | None = 1,
         num_sanity_val_steps: int | None = 0,
+        gradient_clip_val: float | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         r"""Trains the model using the provided LightningModule and OTXDataModule.
@@ -176,7 +177,6 @@ class OTXEngine(Engine):
                 Also, can be set to `warn` to avoid failures, because some operations don't
                 support deterministic mode. Defaults to False.
             precision (_PRECISION_INPUT | None, optional): The precision of the model. Defaults to 16.
-            val_check_interval (int | float | None, optional): The validation check interval. Defaults to None.
             callbacks (list[Callback] | Callback | None, optional): The callbacks to be used during training.
             logger (Logger | Iterable[Logger] | bool | None, optional): The logger(s) to be used. Defaults to None.
             resume (bool, optional): If True, tries to resume training from existing checkpoint.
@@ -186,8 +186,10 @@ class OTXEngine(Engine):
             adaptive_bs (Literal["None", "Safe", "Full"]):
                 Change the actual batch size depending on the current GPU status.
                 Safe => Prevent GPU out of memory. Full => Find a batch size using most of GPU memory.
+                Defaults to "None".
             check_val_every_n_epoch (int | None, optional): How often to check validation. Defaults to 1.
             num_sanity_val_steps (int | None, optional): Number of validation steps to run before training starts.
+            gradient_clip_val (float | None, optional): The value for gradient clipping. Defaults to None.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
@@ -202,35 +204,34 @@ class OTXEngine(Engine):
             ... )
 
         CLI Usage:
-            1. Can train with data_root only. then OTX will provide default training configuration.
-                ```shell
-                >>> otx train --data_root <DATASET_PATH, str>
-                ```
-            2. Can pick a model or datamodule as Config file or Class.
+            1. Can pick a model or datamodule as Config file.
                 ```shell
                 >>> otx train \
                 ...     --data_root <DATASET_PATH, str> \
-                ...     --model <CONFIG | CLASS_PATH_OR_NAME, OTXModel> \
-                ...     --data <CONFIG | CLASS_PATH_OR_NAME, OTXDataModule>
+                ...     --config <CONFIG, str> \
                 ```
-            3. Of course, can override the various values with commands.
+            2. Of course, can override the various values with commands.
                 ```shell
                 >>> otx train \
+                ...     --config <CONFIG, str> \
                 ...     --data_root <DATASET_PATH, str> \
                 ...     --max_epochs <EPOCHS, int> \
                 ...     --checkpoint <CKPT_PATH, str>
                 ```
-            4. To train with configuration file, run
-                ```shell
-                >>> otx train --data_root <DATASET_PATH, str> --config <CONFIG_PATH, str>
-                ```
-            5. To reproduce the existing training with work_dir, run
+            3. To reproduce the existing training with work_dir, run
                 ```shell
                 >>> otx train --work_dir <WORK_DIR_PATH, str>
                 ```
+            4. To resume training, run
+                ```shell
+                >>> otx train \
+                ...     --config <CONFIG, str> \
+                ...     --data_root <DATASET_PATH, str> \
+                ...     --checkpoint <CKPT_PATH, str>
+                ...     --resume True
+                ```
         """
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-
         if adaptive_bs != "None":
             adapt_batch_size(engine=self, **locals(), not_increase=(adaptive_bs != "Full"))
 
@@ -244,9 +245,9 @@ class OTXEngine(Engine):
             max_epochs=max_epochs,
             min_epochs=min_epochs,
             deterministic=deterministic,
-            val_check_interval=val_check_interval,
             check_val_every_n_epoch=check_val_every_n_epoch,
             num_sanity_val_steps=num_sanity_val_steps,
+            gradient_clip_val=gradient_clip_val,
             **kwargs,
         )
         fit_kwargs: dict[str, Any] = {}
@@ -270,7 +271,7 @@ class OTXEngine(Engine):
             # load the model state from the checkpoint incrementally.
             # This means only the model weights are loaded. If there is a mismatch in label_info,
             # perform incremental weight loading for the model's classification layer.
-            ckpt = torch.load(checkpoint)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
@@ -333,13 +334,9 @@ class OTXEngine(Engine):
             3. Can pick a model.
                 ```shell
                 >>> otx test \
-                ...     --model <CONFIG | CLASS_PATH_OR_NAME> \
+                ...     --config <CONFIG | CLASS_PATH_OR_NAME> \
                 ...     --data_root <DATASET_PATH, str> \
                 ...     --checkpoint <CKPT_PATH, str>
-                ```
-            4. To eval with configuration file, run
-                ```shell
-                >>> otx test --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str>
                 ```
         """
         model = self.model
@@ -352,10 +349,8 @@ class OTXEngine(Engine):
         # NOTE, trainer.test takes only lightning based checkpoint.
         # So, it can't take the OTX1.x checkpoint.
         if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             if (
@@ -431,10 +426,7 @@ class OTXEngine(Engine):
                 ...     --checkpoint <CKPT_PATH, str>
                 ```
         """
-        from otx.backend.native.models.utils.xai_utils import (
-            process_saliency_maps_in_pred_entity,
-            set_crop_padded_map_flag,
-        )
+        from otx.backend.native.models.utils.xai_utils import process_saliency_maps_in_pred_entity
 
         model = self.model
 
@@ -442,10 +434,8 @@ class OTXEngine(Engine):
         datamodule = datamodule if datamodule is not None else self.datamodule
 
         if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            model.load_state_dict(ckpt)
 
         if model.label_info != self.datamodule.label_info:
             msg = (
@@ -474,7 +464,6 @@ class OTXEngine(Engine):
         if explain:
             if explain_config is None:
                 explain_config = ExplainConfig()
-            explain_config = set_crop_padded_map_flag(explain_config, datamodule)
 
             predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
 
@@ -517,7 +506,9 @@ class OTXEngine(Engine):
                 ```
             2. To export a specific checkpoint, run
                 ```shell
-                >>> otx export --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str>
+                >>> otx export \
+                    --config <CONFIG_PATH, str> --checkpoint <CKPT_PATH, str> \
+                    --data_root <DATASET_PATH, str>
                 ```
             3. To export a model with precision FP16 and format ONNX, run
                 ```shell
@@ -542,20 +533,8 @@ class OTXEngine(Engine):
             warn(msg, stacklevel=1)
             export_demo_package = False
 
-        kwargs_user_input: dict[str, Any] = {}
-
-        model_cls = self.model.__class__
-        if hasattr(self.model, "model_name"):
-            # NOTE: This is a solution to fix backward compatibility issue.
-            # If the model has `model_name` attribute, it will be passed to the `load_from_checkpoint` method,
-            # making sure previous model trained without model_name can be loaded.
-            kwargs_user_input["model_name"] = self.model.model_name
-
-        self._model = model_cls.load_from_checkpoint(
-            checkpoint_path=checkpoint,
-            map_location="cpu",
-            **kwargs_user_input,
-        )
+        ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+        self.model.load_state_dict(ckpt)
         self.model.eval()
 
         self.model.explain_mode = explain
@@ -569,93 +548,6 @@ class OTXEngine(Engine):
 
         self.model.explain_mode = False
         return exported_model_path
-
-    def explain(
-        self,
-        checkpoint: PathLike | None = None,
-        datamodule: EVAL_DATALOADERS | OTXDataModule | None = None,
-        explain_config: ExplainConfig | None = None,
-        **kwargs,
-    ) -> list | None:
-        r"""Run XAI using the specified model and data (test subset).
-
-        Args:
-            checkpoint (PathLike | None, optional): The path to the checkpoint file to load the model from.
-            datamodule (EVAL_DATALOADERS | OTXDataModule | None, optional): The data module to use for predictions.
-            explain_config (ExplainConfig | None, optional): Config used to handle saliency maps.
-            **kwargs: Additional keyword arguments for pl.Trainer configuration.
-
-        Returns:
-            list: Saliency maps.
-
-        Example:
-            >>> engine.explain(
-            ...     datamodule=OTXDataModule(),
-            ...     checkpoint=<checkpoint/path>,
-            ...     explain_config=ExplainConfig(),
-            ... )
-
-        CLI Usage:
-            1. To run XAI with the torch model in work_dir, run
-                ```shell
-                >>> otx explain \
-                ...     --work_dir <WORK_DIR_PATH, str>
-                ```
-            2. To run XAI using the specified model (torch or IR), run
-                ```shell
-                >>> otx explain \
-                ...     --work_dir <WORK_DIR_PATH, str> \
-                ...     --checkpoint <CKPT_PATH, str>
-                ```
-            3. To run XAI using the configuration, run
-                ```shell
-                >>> otx explain \
-                ...     --config <CONFIG_PATH> --data_root <DATASET_PATH, str> \
-                ...     --checkpoint <CKPT_PATH, str>
-                ```
-        """
-        from otx.backend.native.models.utils.xai_utils import (
-            process_saliency_maps_in_pred_entity,
-            set_crop_padded_map_flag,
-        )
-
-        model = self.model
-
-        checkpoint = checkpoint if checkpoint is not None else self.checkpoint
-        datamodule = datamodule if datamodule is not None else self.datamodule
-
-        if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = model.__class__
-            model = model_cls.load_from_checkpoint(checkpoint_path=checkpoint, **kwargs_user_input)
-
-        if model.label_info != self.datamodule.label_info:
-            msg = (
-                "To launch a explain pipeline, the label information should be same "
-                "between the training and testing datasets. "
-                "Please check whether you use the same dataset: "
-                f"model.label_info={model.label_info}, "
-                f"datamodule.label_info={self.datamodule.label_info}"
-            )
-            raise ValueError(msg)
-
-        model.explain_mode = True
-
-        self._build_trainer(**kwargs)
-
-        predict_result = self.trainer.predict(
-            model=model,
-            datamodule=datamodule,
-        )
-
-        if explain_config is None:
-            explain_config = ExplainConfig()
-        explain_config = set_crop_padded_map_flag(explain_config, datamodule)
-
-        predict_result = process_saliency_maps_in_pred_entity(predict_result, explain_config, datamodule.label_info)
-        model.explain_mode = False
-        return predict_result
 
     def benchmark(
         self,
@@ -714,14 +606,8 @@ class OTXEngine(Engine):
         checkpoint = checkpoint if checkpoint is not None else self.checkpoint
 
         if checkpoint is not None:
-            kwargs_user_input: dict[str, Any] = {}
-
-            model_cls = self.model.__class__
-            self._model = model_cls.load_from_checkpoint(
-                checkpoint_path=checkpoint,
-                map_location="cpu",
-                **kwargs_user_input,
-            )
+            ckpt = self._load_model_checkpoint(checkpoint, map_location="cpu")
+            self.model.load_state_dict(ckpt)
         self.model.eval()
 
         def dummy_infer(model: OTXModel, batch_size: int = 1) -> float:
@@ -786,7 +672,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> Engine:
+    ) -> OTXEngine:
         """Builds the engine from a configuration file.
 
         Args:
@@ -804,6 +690,7 @@ class OTXEngine(Engine):
             >>> engine = OTXEngine.from_config(
             ...     config="config.yaml",
             ... )
+            ... engine.train()
         """
         from otx.cli.utils.jsonargparse import get_instantiated_classes
 
@@ -865,7 +752,7 @@ class OTXEngine(Engine):
         data_root: PathLike | None = None,
         work_dir: PathLike | None = None,
         **kwargs,
-    ) -> Engine:
+    ) -> OTXEngine:
         """Builds the engine from a model name.
 
         Args:
@@ -878,7 +765,7 @@ class OTXEngine(Engine):
             kwargs: Arguments that can override the engine's arguments.
 
         Returns:
-            Engine: An instance of the Engine class.
+            OTXEngine: An instance of the OTXEngine class.
 
         Example:
             >>> engine = OTXEngine.from_model_name(
@@ -886,6 +773,7 @@ class OTXEngine(Engine):
             ...     task="DETECTION",
             ...     data_root=<dataset/path>,
             ... )
+            ... engine.train()
 
             If you want to override configuration from default config:
                 >>> overriding = {
@@ -975,8 +863,7 @@ class OTXEngine(Engine):
     def _build_trainer(self, logger: Logger | Iterable[Logger] | bool | None = None, **kwargs) -> None:
         """Instantiate the trainer based on the model parameters."""
         if self._cache.requires_update(**kwargs) or self._trainer is None:
-            self._cache.update(**kwargs)
-
+            self._apply_param_overrides(kwargs)
             # set up xpu device
             self.configure_accelerator()
             # setup default loggers
@@ -989,6 +876,23 @@ class OTXEngine(Engine):
             self._cache.is_trainer_args_identical = True
             self._trainer.task = self.task
             self.work_dir = self._trainer.default_root_dir
+
+    def _apply_param_overrides(self, param_kwargs: dict[str, Any]) -> None:
+        """Apply parameter overrides based on the current local variables."""
+        sig = inspect.signature(self.train)
+        add_kwargs = param_kwargs.pop("kwargs", {})
+        for param_name, param in sig.parameters.items():
+            if param_name in param_kwargs and param_name in self._cache.args:
+                # if both `param_kwargs` and `_cache.args` have the same parameter,
+                # we will use the value from `param_kwargs` if it is different from the default
+                # value of the parameter.
+                # Otherwise, we will keep the value from `_cache.args`.
+                current_value = param_kwargs.pop(param_name)
+                if current_value != param.default:
+                    self._cache.args[param_name] = current_value
+        # update the cache with the remaining parameters
+        self._cache.update(**param_kwargs)
+        self._cache.update(**add_kwargs)
 
     def configure_accelerator(self) -> None:
         """Updates the cache arguments based on the device type."""
@@ -1028,6 +932,8 @@ class OTXEngine(Engine):
         """Sets up the OTX callbacks for the trainer."""
         callbacks: list[Callback] = []
         config_callbacks = self._cache.args.get("callbacks", [])
+        if config_callbacks is None:
+            return
         has_callback: Callable[[Callback], bool] = lambda callback: any(
             isinstance(c, callback) for c in config_callbacks
         )
@@ -1199,3 +1105,30 @@ class OTXEngine(Engine):
     def is_supported(model: MODEL, data: DATA) -> bool:
         """Check if the engine is supported for the given model and data."""
         return bool(isinstance(model, OTXModel) and isinstance(data, OTXDataModule))
+
+    @staticmethod
+    def _load_model_checkpoint(checkpoint: PathLike, map_location: str | None = None) -> dict[str, Any]:
+        """Load model checkpoint from the given path.
+
+        Args:
+            checkpoint (PathLike): Path to the checkpoint file.
+
+        Returns:
+            dict[str, Any]: The loaded state dictionary from the checkpoint.
+        """
+        if not Path(checkpoint).exists():
+            msg = f"Checkpoint file does not exist: {checkpoint}"
+            raise FileNotFoundError(msg)
+
+        try:
+            ckpt = torch.load(checkpoint, map_location=map_location)
+        except UnpicklingError:
+            from otx.backend.native.utils.utils import mock_modules_for_chkpt
+
+            with mock_modules_for_chkpt():
+                ckpt = torch.load(checkpoint, map_location=map_location, weights_only=False)
+        except Exception as e:
+            msg = f"Failed to load checkpoint from {checkpoint}. Please check the file."
+            raise RuntimeError(e) from None
+
+        return ckpt

@@ -27,7 +27,7 @@ class EarlyStoppingWithWarmup(EarlyStopping):
         check_finite: bool = True,
         stopping_threshold: float | None = None,
         divergence_threshold: float | None = None,
-        check_on_train_epoch_end: bool | None = None,
+        check_on_train_epoch_end: bool | None = False,
         log_rank_zero_only: bool = False,
         warmup_iters: int = 100,
         warmup_epochs: int = 3,
@@ -54,7 +54,13 @@ class EarlyStoppingWithWarmup(EarlyStopping):
             divergence_threshold (float | None, optional): The threshold for divergence detection.
                 Defaults to None.
             check_on_train_epoch_end (bool | None, optional): If True,
-                checks the stopping criterion on train_epoch_end. Defaults to None.
+                checks the stopping criterion on every train epoch end in addition to validation epochs.
+                If False (default), only checks during validation epochs (controlled by check_val_every_n_epoch).
+
+                When check_val_every_n_epoch > 1, setting this to True enables more frequent early stopping checks.
+                For example, with check_val_every_n_epoch=3:
+                - False: early stopping only checked every 3 epochs (during validation)
+                - True: early stopping checked every epoch (train end) + every 3 epochs (validation end)
             log_rank_zero_only (bool, optional): If True, logs should only be printed from rank 0.
                 Defaults to False.
             warmup_iters (int, optional): Number of warmup iterations. Defaults to 100.

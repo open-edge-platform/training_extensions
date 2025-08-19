@@ -42,7 +42,9 @@ class OTXSegmentationModel(OTXModel):
     """Semantic Segmentation model used in OTX.
 
     Args:
-        label_info (LabelInfoTypes): Information about the hierarchical labels.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
         data_input_params (DataInputParams): Parameters for data input.
         model_name (str, optional): Name of the model. Defaults to "otx_segmentation_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
@@ -55,7 +57,7 @@ class OTXSegmentationModel(OTXModel):
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "otx_segmentation_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -186,7 +188,12 @@ class OTXSegmentationModel(OTXModel):
         ]
 
     @staticmethod
-    def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
+    def _dispatch_label_info(label_info: LabelInfo | int | list[str]) -> SegLabelInfo:
+        if isinstance(label_info, dict):
+            if "label_ids" not in label_info:
+                # NOTE: This is for backward compatibility
+                label_info["label_ids"] = label_info["label_names"]
+            return SegLabelInfo(**label_info)
         if isinstance(label_info, int):
             return SegLabelInfo.from_num_classes(num_classes=label_info)
         if isinstance(label_info, Sequence) and all(isinstance(name, str) for name in label_info):
@@ -196,8 +203,10 @@ class OTXSegmentationModel(OTXModel):
                 label_ids=[str(i) for i in range(len(label_info))],
             )
         if isinstance(label_info, SegLabelInfo):
+            if not hasattr(label_info, "label_ids"):
+                # NOTE: This is for backward compatibility
+                label_info.label_ids = label_info.label_names
             return label_info
-
         raise TypeError(label_info)
 
     def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> OTXPredBatch:

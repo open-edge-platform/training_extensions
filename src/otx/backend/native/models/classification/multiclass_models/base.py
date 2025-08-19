@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 from torch import Tensor
@@ -34,19 +34,21 @@ class OTXMulticlassClsModel(OTXModel):
     """Multiclass classification model used in OTX.
 
     Args:
-    label_info (LabelInfoTypes): Information about the hierarchical labels.
-    data_input_params (DataInputParams): Parameters for data input.
-    model_name (str, optional): Name of the model. Defaults to "multiclass_classification_model".
-    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
-    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
-    Defaults to DefaultSchedulerCallable.
-    metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
-    torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "multiclass_classification_model".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
+        torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
     """
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "multiclass_classification_model",
         freeze_backbone: bool = False,
