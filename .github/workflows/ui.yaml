@@ -31,15 +31,8 @@ jobs:
 
       - name: Install OpenCV dependencies
         run: |
-          sudo apt-get -o Acquire::http::Proxy="http://proxy-dmz.intel.com:912" \
-            -o Acquire::https::Proxy="http://proxy-dmz.intel.com:912" \
-            -o Acquire::ForceIPv4=true \
-            update
-          sudo apt-get -o Acquire::http::Proxy="http://proxy-dmz.intel.com:912" \
-            -o Acquire::https::Proxy="http://proxy-dmz.intel.com:912" \
-            install -y \
-            libgl1-mesa-glx \
-            libglib2.0-0
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 
       - name: Prepare venv and install Python dependencies
         run: |
