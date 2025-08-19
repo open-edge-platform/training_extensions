@@ -32,12 +32,16 @@ class TestImageClassifier:
             if isinstance(head, MultiLabelLinearClsHead)
             else torch.cat(fxt_input.labels, dim=0)
         )
-        return ImageClassifier(
-            backbone=backbone,
-            neck=neck,
-            head=head,
-            loss=loss,
-        ), fxt_input.images, fxt_label
+        return (
+            ImageClassifier(
+                backbone=backbone,
+                neck=neck,
+                head=head,
+                loss=loss,
+            ),
+            fxt_input.images,
+            fxt_label,
+        )
 
     def test_forward(self, fxt_model_and_inputs):
         model, images, labels = fxt_model_and_inputs

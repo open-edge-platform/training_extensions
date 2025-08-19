@@ -34,11 +34,14 @@ Supported sources include:
 - files (videos, images)
 
 The configuration of a source consists of a _type_ and a set of source-specific attributes. For example:
+
 ```yaml
 type: video_file
 video_path: videos/sports/golf.mp4
 ```
+
 or
+
 ```yaml
 type: ip_camera
 stream_url: rtsp://192.168.1.100:554/stream
@@ -54,6 +57,7 @@ Supported sinks include:
 - Messaging frameworks (MQTT, ROS2, ...)
 
 The configuration of a sink consists of a _type_ and a set of sink-specific attributes. For example:
+
 ```yaml
 type: mqtt
 broker_host: localhost
@@ -75,6 +79,7 @@ A model is identified by a unique id, and optionally a friendly name chosen by t
 A pipeline is a combination of a source, a model and a sink. These components can be replaced as needed.
 
 The configuration of a pipeline looks like the following:
+
 ```yaml
 source: <source_id>
 model: <model_id>
@@ -98,7 +103,7 @@ a physical camera requires exclusive access, whereas an IP camera or a topic doe
 ### Source configuration
 
 | Method   | Path                       | Payload       | Return          | Description                       |
-|----------|----------------------------|---------------|-----------------|-----------------------------------|
+| -------- | -------------------------- | ------------- | --------------- | --------------------------------- |
 | `POST`   | `/api/sources`             | source config | source id       | Create and configure a new source |
 | `GET`    | `/api/sources`             | -             | list of sources | List the available sources        |
 | `GET`    | `/api/sources/<id>`        | -             | source info     | Get info about a source           |
@@ -110,7 +115,7 @@ a physical camera requires exclusive access, whereas an IP camera or a topic doe
 ### Sink configuration
 
 | Method   | Path                     | Payload     | Return        | Description                     |
-|----------|--------------------------|-------------|---------------|---------------------------------|
+| -------- | ------------------------ | ----------- | ------------- | ------------------------------- |
 | `POST`   | `/api/sinks`             | sink config | sink id       | Create and configure a new sink |
 | `GET`    | `/api/sinks`             | -           | list of sinks | List the available sinks        |
 | `GET`    | `/api/sinks/<id>`        | -           | sink info     | Get info about a sink           |
@@ -121,18 +126,18 @@ a physical camera requires exclusive access, whereas an IP camera or a topic doe
 
 ### Model management
 
-| Method    | Path               | Payload              | Return          | Description                          |
-|-----------|--------------------|----------------------|-----------------|--------------------------------------|
-| `POST`    | `/api/models`      | .xml, .bin, metadata | model id        | Upload a new model                   |
-| `GET`     | `/api/models`      | -                    | list of models  | List the available models            |
-| `GET`     | `/api/models/<id>` | -                    | model info      | Get info about a model               |
-| `PATCH`   | `/api/models/<id>` | metadata             | -               | Update metadata of an existing model |
-| `DELETE`  | `/api/models/<id>` | -                    | -               | Remove a model                       |
+| Method   | Path               | Payload              | Return         | Description                          |
+| -------- | ------------------ | -------------------- | -------------- | ------------------------------------ |
+| `POST`   | `/api/models`      | .xml, .bin, metadata | model id       | Upload a new model                   |
+| `GET`    | `/api/models`      | -                    | list of models | List the available models            |
+| `GET`    | `/api/models/<id>` | -                    | model info     | Get info about a model               |
+| `PATCH`  | `/api/models/<id>` | metadata             | -              | Update metadata of an existing model |
+| `DELETE` | `/api/models/<id>` | -                    | -              | Remove a model                       |
 
 ### Pipeline management
 
 | Method   | Path                          | Payload                    | Return            | Description                         |
-|----------|-------------------------------|----------------------------|-------------------|-------------------------------------|
+| -------- | ----------------------------- | -------------------------- | ----------------- | ----------------------------------- |
 | `POST`   | `/api/pipelines`              | ids of source, sink, model | pipeline id       | Create and configure a new pipeline |
 | `GET`    | `/api/pipelines`              | -                          | list of pipelines | List the available pipelines        |
 | `GET`    | `/api/pipelines/<id>`         | -                          | pipeline info     | Get info about a given pipeline     |

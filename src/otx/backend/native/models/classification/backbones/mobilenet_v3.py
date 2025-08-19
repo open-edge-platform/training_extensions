@@ -6,6 +6,7 @@
 Original papers:
 - 'Searching for MobileNetV3,' https://arxiv.org/abs/1905.02244.
 """
+
 from __future__ import annotations
 
 import math

@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """This implementation replaces the functionality of mmcv.cnn.bricks.drop."""
+
 from __future__ import annotations
 
 from typing import Any
