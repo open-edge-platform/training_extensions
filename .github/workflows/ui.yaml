@@ -1,8 +1,8 @@
-name: UI checks
+name: Geti Tune UI checks
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 permissions: {} # No permissions by default on workflow level
@@ -10,7 +10,7 @@ permissions: {} # No permissions by default on workflow level
 jobs:
   generate-openapi-spec:
     name: Generate OpenAPI Spec
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
     steps:
@@ -170,7 +170,7 @@ jobs:
       - name: UI Unit tests
         working-directory: "ui"
         run: npm run test:unit
-  
+
   playwright-tests:
     name: Playwright Tests
     needs:

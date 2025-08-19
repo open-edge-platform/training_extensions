@@ -1,4 +1,4 @@
-name: Server tests
+name: Geti Tune server checks
 on:
   push:
     branches: ["main"]
@@ -8,7 +8,7 @@ permissions: {} # No permissions by default on workflow level
 
 jobs:
   python-checks:
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
     steps:

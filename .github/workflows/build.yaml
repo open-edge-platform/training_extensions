@@ -4,16 +4,15 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
-
 
 jobs:
   build:
     name: Build and upload docker image
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
@@ -37,7 +36,6 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-
 
       - name: Build images
         run: |
