@@ -8,7 +8,7 @@ FROM node:24-alpine3.22@sha256:7aaba6b13a55a1d78411a1162c1994428ed039c6bbef7b1d9
 WORKDIR /home/app/web_ui/
 
 COPY --link ./package.json .
-COPY --link --from=openapi_spec /openapi.json /home/app/web_ui/src/api/openapi-spec.json
+COPY --link /openapi.json /home/app/web_ui/src/api/openapi-spec.json
 RUN npm run build:api
 
 #############
@@ -17,7 +17,7 @@ RUN npm run build:api
 FROM node:24-alpine3.22@sha256:7aaba6b13a55a1d78411a1162c1994428ed039c6bbef7b1d9859c25ada1d7cc5 AS geti_ui_packags
 
 WORKDIR /home/app/web_ui/
-RUN apk add git
+RUN apk add --no-cache git=2.49.1-r0
 COPY --link package.json ./
 RUN npm run clone-geti-ui-packages
 
@@ -47,7 +47,7 @@ ENV PUBLIC_API_BASE_URL ${PUBLIC_API_BASE_URL}
 #############
 FROM base_web_ui as dev
 
-CMD npm run dev
+CMD ["npm", "run", "dev"]
 
 #############
 # web_ui build

@@ -12,13 +12,14 @@ services:
     image: geti-tune-backend:${TAG:-latest}
     restart: unless-stopped
     build:
-      dockerfile: Dockerfile
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
       <<: *proxies
     depends_on:
       - reverse-proxy
     working_dir: /app
     volumes:
-      - ./data/:/app/data/
+      - ../backend/data/:/app/data/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.geti-tune-server.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`) && (PathPrefix(`/api`))"
@@ -29,8 +30,8 @@ services:
     image: geti-tune-ui:${TAG:-latest}
     restart: unless-stopped
     build:
-      dockerfile: Dockerfile
-      context: ./ui
+      dockerfile: ../docker/Dockerfile.ui
+      context: ../ui
       <<: *proxies
     depends_on:
       - reverse-proxy
