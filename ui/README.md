@@ -13,7 +13,7 @@ npm install
 Start the dev server:
 
 ```bash
-npm run dev
+npm run devasdas
 ```
 
 Build the app for production:
