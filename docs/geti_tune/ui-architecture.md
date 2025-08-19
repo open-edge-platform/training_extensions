@@ -3,6 +3,7 @@
 The Geti Edge applications aim to provide a user experience and design language consistent with the main Geti application. To achieve this, we reuse many architectural decisions from Geti.
 
 ## Goals
+
 - **Developer Experience**: Setting up a developer environment for both the UI and server should take only seconds.
 - **API Adaptability**: Adapting the UI to REST API changes should require minimal effort.
 - **Consistency**: Maintain a unified look, feel, and user experience across the whole Geti ecosystem through shared design language, architectural patterns, and reusable components.
