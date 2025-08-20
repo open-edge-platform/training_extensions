@@ -1,8 +1,8 @@
-name: UI checks
+name: Geti Tune UI checks
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 permissions: {} # No permissions by default on workflow level
@@ -10,7 +10,7 @@ permissions: {} # No permissions by default on workflow level
 jobs:
   generate-openapi-spec:
     name: Generate OpenAPI Spec
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
     steps:
@@ -31,22 +31,17 @@ jobs:
 
       - name: Install OpenCV dependencies
         run: |
-          sudo apt-get -o Acquire::http::Proxy="http://proxy-dmz.intel.com:912" \
-            -o Acquire::https::Proxy="http://proxy-dmz.intel.com:912" \
-            -o Acquire::ForceIPv4=true \
-            update
-          sudo apt-get -o Acquire::http::Proxy="http://proxy-dmz.intel.com:912" \
-            -o Acquire::https::Proxy="http://proxy-dmz.intel.com:912" \
-            install -y \
-            libgl1-mesa-glx \
-            libglib2.0-0
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libglib2.0-0
 
       - name: Prepare venv and install Python dependencies
+        working-directory: backend
         run: |
           uv lock --check
           uv sync --frozen --all-extras
 
       - name: Get OpenAPI spec
+        working-directory: backend
         run: |
           export PYTHONPATH=.
           uv run app/cli.py gen-api --target-path openapi-spec.json
@@ -54,11 +49,11 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: openapi-spec
-          path: openapi-spec.json
+          path: backend/openapi-spec.json
 
   build:
     name: Build UI
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
     steps:
@@ -91,7 +86,7 @@ jobs:
 
   lint:
     name: Eslint checks
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
     needs: generate-openapi-spec
@@ -138,7 +133,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read # to checkout code
     needs: generate-openapi-spec
@@ -170,7 +165,7 @@ jobs:
       - name: UI Unit tests
         working-directory: "ui"
         run: npm run test:unit
-  
+
   playwright-tests:
     name: Playwright Tests
     needs:
@@ -179,7 +174,7 @@ jobs:
     permissions:
       contents: read # to checkout code
     timeout-minutes: 60
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.54.0-noble
     steps:

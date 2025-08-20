@@ -414,7 +414,7 @@ class ONNXNMSop(torch.autograd.Function):
 
     @staticmethod
     def symbolic(
-        g: torch.onnx._internal.git_utils.GraphContext,  # noqa: SLF001
+        g: torch.onnx._internal.git_utils.GraphContext,
         boxes: Tensor,
         scores: Tensor,
         max_output_boxes_per_class: int,

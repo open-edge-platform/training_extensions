@@ -1,6 +1,8 @@
 # Geti Tune
 
-## Setup
+## UI
+
+### Setup
 
 Install the dependencies:
 
@@ -8,7 +10,7 @@ Install the dependencies:
 npm install
 ```
 
-## Get started
+### Get started
 
 Start the dev server:
 
@@ -28,9 +30,9 @@ Preview the production build locally:
 npm run preview
 ```
 
-# Tauri project
+## Tauri project
 
-## Get started
+### Get started
 
 Please follow the [Tauri documentation](https://v2.tauri.app/start/prerequisites/) to set up your environment.
 

@@ -59,13 +59,13 @@ class MapperProtocol(Protocol[S, D]):
 
 
 @dataclass(frozen=True)
-class ServiceConfig(Generic[R]):  # noqa: UP046
+class ServiceConfig(Generic[R]):
     repository_class: type[R]
     mapper_class: MapperProtocol
     resource_type: ResourceType
 
 
-class GenericPersistenceService(Generic[S, D, R]):  # noqa: UP046
+class GenericPersistenceService(Generic[S, D, R]):
     """Generic service for CRUD operations on a repository."""
 
     def __init__(self, config: ServiceConfig[R]) -> None:

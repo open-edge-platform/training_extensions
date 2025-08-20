@@ -4,16 +4,15 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
-
 
 jobs:
   build:
     name: Build and upload docker image
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
@@ -38,8 +37,8 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
-
       - name: Build images
+        working-directory: docker
         run: |
           # Build and tag images using provided metadata
           for TAG in $TAGS ; do
@@ -53,6 +52,7 @@ jobs:
           PUBLIC_API_BASE_URL: "/"
 
       - name: Get Docker image sizes
+        working-directory: docker
         id: image-sizes
         if: github.event_name == 'pull_request'
         run: |
@@ -116,5 +116,5 @@ jobs:
         with:
           name: docker-images
           path: |
-            geti-tune-*.tar
+            docker/geti-tune-*.tar
           retention-days: 7

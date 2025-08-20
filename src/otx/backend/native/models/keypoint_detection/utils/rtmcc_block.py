@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Implementation of RTMCCBlock."""
+
 from __future__ import annotations
 
 import math

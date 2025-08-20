@@ -4,7 +4,7 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, File, UploadFile, status
+from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse
@@ -192,7 +192,8 @@ async def disable_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)
     },
 )
 async def export_pipeline(
-    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)], include_model: bool = False
+    # pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
+    # include_model: bool = False,
 ) -> FileResponse:
     """Export a pipeline to file"""
     raise NotImplementedError
@@ -200,9 +201,9 @@ async def export_pipeline(
 
 @router.post(":import", status_code=status.HTTP_204_NO_CONTENT)
 async def import_pipeline(
-    zip_file: Annotated[
-        UploadFile, File(description="ZIP file containing the pipeline configuration and optionally model binaries")
-    ],
+    # zip_file: Annotated[
+    #     UploadFile, File(description="ZIP file containing the pipeline configuration and optionally model binaries")
+    # ],
 ) -> None:
     """Import a pipeline from file"""
     raise NotImplementedError

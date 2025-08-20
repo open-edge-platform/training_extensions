@@ -37,4 +37,4 @@ fi
 
 echo "Starting FastAPI server..."
 
-exec $UV_CMD $APP_MODULE
+exec $UV_CMD "$APP_MODULE"
