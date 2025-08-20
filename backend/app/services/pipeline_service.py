@@ -1,9 +1,9 @@
+from multiprocessing.synchronize import Condition
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
 from app.db import get_db_session
-from app.db.schema import PipelineDB
 from app.repositories import PipelineRepository
 from app.schemas import Pipeline, PipelineStatus
 from app.services import ActivePipelineService
@@ -16,33 +16,28 @@ from app.services.base import (
 )
 from app.services.mappers import PipelineMapper
 from app.services.parent_process_guard import parent_process_only
-from app.utils import Singleton
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
 
-class PipelineService(metaclass=Singleton):
-    def __init__(self) -> None:
-        self._persistence: GenericPersistenceService[Pipeline, PipelineDB, PipelineRepository] = (
-            GenericPersistenceService(ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE))
+class PipelineService:
+    def __init__(self, active_pipeline_service: ActivePipelineService, config_changed_condition: Condition) -> None:
+        self._persistence: GenericPersistenceService[Pipeline, PipelineRepository] = GenericPersistenceService(
+            ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE)
         )
+        self._active_pipeline_service: ActivePipelineService = active_pipeline_service
+        self._config_changed_condition: Condition = config_changed_condition
 
-    @staticmethod
-    def _notify_source_changed() -> None:
-        from app.core import Scheduler  # cyclic-import
+    def _notify_source_changed(self) -> None:
+        with self._config_changed_condition:
+            self._config_changed_condition.notify_all()
 
-        config_changed_condition = Scheduler().mp_config_changed_condition
-        with config_changed_condition:
-            config_changed_condition.notify_all()
+    def _notify_sink_changed(self) -> None:
+        self._active_pipeline_service.reload()
 
-    @staticmethod
-    def _notify_sink_changed() -> None:
-        ActivePipelineService().reload()
-
-    @staticmethod
-    def _notify_pipeline_changed() -> None:
-        PipelineService._notify_source_changed()
-        PipelineService._notify_sink_changed()
+    def _notify_pipeline_changed(self) -> None:
+        self._notify_source_changed()
+        self._notify_sink_changed()
 
     def get_pipeline_by_id(self, pipeline_id: UUID, db: Session | None = None) -> Pipeline:
         """Retrieve a pipeline by its ID."""
@@ -62,8 +57,7 @@ class PipelineService(metaclass=Singleton):
             created = self._persistence.create(pipeline, db)
             db.commit()
             if created.status == PipelineStatus.RUNNING:
-                self._notify_source_changed()
-                self._notify_sink_changed()
+                self._notify_pipeline_changed()
             return created
 
     @parent_process_only

@@ -7,14 +7,13 @@ from app.db import get_db_session
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
 from app.services.mappers import SinkMapper, SourceMapper
-from app.utils import Singleton
 
 logger = logging.getLogger(__name__)
 
 
-class ActivePipelineService(metaclass=Singleton):
+class ActivePipelineService:
     """
-    A singleton service used in workers for loading pipeline-based application configuration from SQLite database.
+    A service used in workers for loading pipeline-based application configuration from SQLite database.
 
     This service handles loading and monitoring configuration changes based on the active pipeline.
     The configuration is built from Source -> Pipeline -> Sinks relationships.

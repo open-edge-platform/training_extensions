@@ -1,5 +1,5 @@
 from .active_pipeline_service import ActivePipelineService
-from .base import ResourceInUseError, ResourceNotFoundError, ResourceType
+from .base import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .configuration_service import ConfigurationService
 from .dispatch_service import DispatchService
 from .model_service import ModelAlreadyExistsError, ModelService
@@ -14,6 +14,7 @@ __all__ = [
     "ModelAlreadyExistsError",
     "ModelService",
     "PipelineService",
+    "ResourceAlreadyExistsError",
     "ResourceInUseError",
     "ResourceNotFoundError",
     "ResourceType",

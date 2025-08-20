@@ -10,10 +10,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
-from app.api.dependencies import get_source_id
+from app.api.dependencies import get_configuration_service, get_source_id
 from app.schemas import Source, SourceType
 from app.schemas.source import SourceAdapter
-from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError
+from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
@@ -91,12 +91,14 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
     responses={
         status.HTTP_201_CREATED: {"description": "Source created", "model": Source},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
+        status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
 async def create_source(
     source_config: Annotated[
         Source, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Create and configure a new source"""
     if source_config.source_type == SourceType.DISCONNECTED:
@@ -104,7 +106,10 @@ async def create_source(
             status_code=status.HTTP_400_BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
         )
 
-    return ConfigurationService().create_source(source_config)
+    try:
+        return configuration_service.create_source(source_config)
+    except ResourceAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.get(
@@ -113,9 +118,11 @@ async def create_source(
         status.HTTP_200_OK: {"description": "List of available source configurations", "model": list[Source]},
     },
 )
-async def list_sources() -> list[Source]:
+async def list_sources(
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> list[Source]:
     """List the available sources"""
-    return ConfigurationService().list_sources()
+    return configuration_service.list_sources()
 
 
 @router.get(
@@ -126,10 +133,13 @@ async def list_sources() -> list[Source]:
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def get_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Source:
+async def get_source(
+    source_id: Annotated[UUID, Depends(get_source_id)],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> Source:
     """Get info about a source"""
     try:
-        return ConfigurationService().get_source_by_id(source_id)
+        return configuration_service.get_source_by_id(source_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -157,12 +167,13 @@ async def update_source(
             openapi_examples=UPDATE_SOURCE_BODY_EXAMPLES,
         ),
     ],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Reconfigure an existing source"""
     if "source_type" in source_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
     try:
-        return ConfigurationService().update_source(source_id, source_config)
+        return configuration_service.update_source(source_id, source_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -181,9 +192,12 @@ async def update_source(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def export_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> Response:
+async def export_source(
+    source_id: Annotated[UUID, Depends(get_source_id)],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> Response:
     """Export a source to file"""
-    source = ConfigurationService().get_source_by_id(source_id)
+    source = configuration_service.get_source_by_id(source_id)
     if not source:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
 
@@ -206,6 +220,7 @@ async def export_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> R
 )
 async def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Import a source from file"""
     try:
@@ -218,7 +233,7 @@ async def import_source(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The source with source_type=DISCONNECTED cannot be imported",
             )
-        return ConfigurationService().create_source(source_config)
+        return configuration_service.create_source(source_config)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
 
@@ -235,10 +250,13 @@ async def import_source(
         status.HTTP_409_CONFLICT: {"description": "Source is used by at least one pipeline"},
     },
 )
-async def delete_source(source_id: Annotated[UUID, Depends(get_source_id)]) -> None:
+async def delete_source(
+    source_id: Annotated[UUID, Depends(get_source_id)],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> None:
     """Remove a source"""
     try:
-        ConfigurationService().delete_source_by_id(source_id)
+        configuration_service.delete_source_by_id(source_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

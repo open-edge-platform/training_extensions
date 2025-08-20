@@ -57,7 +57,7 @@ class Scheduler(metaclass=Singleton):
         dispatching_thread = threading.Thread(
             target=dispatching_routine,
             name="Dispatching thread",
-            args=(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event, self.mp_config_changed_condition),
+            args=(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event),
         )
 
         # Start all workers
