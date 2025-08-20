@@ -67,11 +67,13 @@ dev = [
     "onnxruntime==1.21.1",
 ]
 
-cuda = ["torch==2.7.0"]
+cuda = ["torch==2.8.0",
+        "torchvision==0.23.0"
+]
 xpu = [
-    "torch==2.7.0+xpu",
-    "pytorch-triton-xpu==3.3.0",
-    "torchvision==0.22.0+xpu"
+    "torch==2.8.0+xpu",
+    "pytorch-triton-xpu==3.4.0",
+    "torchvision==0.23.0"
 ]
 
 docs = [
@@ -117,7 +119,10 @@ torch = [
 pytorch-triton-xpu = [
     { index = "torch-xpu", extra = "xpu"},
 ]
-
+torchvision = [
+    { index = "torch-xpu", extra = "xpu"},
+    { index = "torch-cuda", extra = "cuda"},
+]
 
 [[tool.uv.index]]
 name = "torch-cuda"
