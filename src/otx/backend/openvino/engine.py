@@ -56,7 +56,9 @@ class OVEngine(Engine):
             task: OTXTaskType | None = self._derive_task_from_ir(model)
         elif isinstance(model, OVModel):
             task = model.task  # type: ignore[assignment]
-
+        else:
+            msg = "Please provide a valid OpenVINO model or a path to an OpenVINO IR XML file."
+            raise ValueError(msg)
         self._auto_configurator = AutoConfigurator(
             data_root=data if isinstance(data, (str, os.PathLike)) else None,
             task=task,
@@ -64,11 +66,16 @@ class OVEngine(Engine):
 
         if isinstance(data, OTXDataModule):
             if task is not None and data.task != task:
-                msg = (
-                    "The task of the provided datamodule does not match the task derived from the model. "
-                    f"datamodule.task={data.task}, model.task={task}"
-                )
-                raise ValueError(msg)
+                if "anomaly" in task.value.lower() and "anomaly" in data.task.value.lower():
+                    # Anomaly task can be derived from the model, but the datamodule may have a different task type
+                    # (e.g., anomaly_classification, anomaly_segmentation, etc.)
+                    pass
+                else:
+                    msg = (
+                        "The task of the provided datamodule does not match the task derived from the model. "
+                        f"datamodule.task={data.task}, model.task={task}"
+                    )
+                    raise ValueError(msg)
             self._datamodule: OTXDataModule | None = data
         else:
             self._datamodule = self._auto_configurator.get_datamodule()
