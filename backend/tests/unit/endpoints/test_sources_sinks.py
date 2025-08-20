@@ -130,16 +130,18 @@ class TestSourceAndSinkEndpoints:
         getattr(fxt_config_service, create_method).assert_not_called()
 
     @pytest.mark.parametrize(
-        "api_path, fixture_name, create_method",
+        "resource_type, api_path, fixture_name, create_method",
         [
-            (ConfigApiPath.SOURCES, "fxt_webcam_source", "create_source"),
-            (ConfigApiPath.SINKS, "fxt_folder_sink", "create_sink"),
+            (ResourceType.SOURCE, ConfigApiPath.SOURCES, "fxt_webcam_source", "create_source"),
+            (ResourceType.SINK, ConfigApiPath.SINKS, "fxt_folder_sink", "create_sink"),
         ],
     )
-    def test_create_config_exists(self, api_path, fixture_name, create_method, fxt_config_service, fxt_client, request):
+    def test_create_config_exists(
+        self, resource_type, api_path, fixture_name, create_method, fxt_config_service, fxt_client, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
-            resource_type=ResourceType.PIPELINE, resource_name="New Config"
+            resource_type=resource_type, resource_name="New Config"
         )
         response = fxt_client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
 

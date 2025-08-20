@@ -112,7 +112,7 @@ class GenericPersistenceService(Generic[S, R]):
                 return self.config.mapper_class.to_schema(item_db)
         except IntegrityError as e:
             if "unique constraint failed" in str(e).lower():
-                raise ResourceAlreadyExistsError(self.config.resource_type, getattr(item, "name"))
+                raise ResourceAlreadyExistsError(self.config.resource_type, getattr(item, "name", str(item.id)))
             raise
 
     def update(self, item: S, partial_config: dict, db: Session | None = None) -> S:
