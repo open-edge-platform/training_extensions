@@ -54,6 +54,7 @@ class OTXHlabelClsModel(OTXModel):
         label_info: HLabelInfo,
         data_input_params: DataInputParams,
         model_name: str = "hlabel_classification_model",
+        freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
@@ -69,6 +70,11 @@ class OTXHlabelClsModel(OTXModel):
             metric=metric,
             torch_compile=torch_compile,
         )
+
+        if freeze_backbone:
+            classification_layers = self._identify_classification_layers()
+            for name, param in self.named_parameters():
+                param.requires_grad = name in classification_layers
 
     @abstractmethod
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]

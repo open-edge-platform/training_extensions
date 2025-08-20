@@ -53,11 +53,27 @@ class TestDeitTiny:
         fxt_model.load_from_otx_v1_ckpt({})
         mock_load_ckpt.assert_called_once_with({}, "multiclass", "model.")
 
-    def test_freeze_backbone(self):
+    @pytest.mark.parametrize(
+        ("model_cls", "label_info_fxt_name"),
+        [
+            (VisionTransformerMulticlassCls, "fxt_multiclass_labelinfo"),
+            (VisionTransformerMultilabelCls, "fxt_multilabel_labelinfo"),
+            (VisionTransformerHLabelCls, "fxt_hlabel_cifar"),
+        ],
+        ids=["multiclass", "multilabel", "hlabel"],
+    )
+    def test_freeze_backbone(self, model_cls, label_info_fxt_name, request):
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        fxt_label_info = request.getfixturevalue(label_info_fxt_name)
 
+<<<<<<< HEAD
         model = VisionTransformerMulticlassCls(
             label_info=4,
+=======
+        # Test with freeze_backbone=True
+        model = model_cls(
+            label_info=fxt_label_info,
+>>>>>>> geti-classic
             data_input_params=data_input_params,
             freeze_backbone=True,
         )
@@ -65,8 +81,14 @@ class TestDeitTiny:
         classification_layers = model._identify_classification_layers()
         assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
 
+<<<<<<< HEAD
         model = VisionTransformerMulticlassCls(
             label_info=4,
+=======
+        # Test with freeze_backbone=False
+        model = model_cls(
+            label_info=fxt_label_info,
+>>>>>>> geti-classic
             data_input_params=data_input_params,
             freeze_backbone=False,
         )

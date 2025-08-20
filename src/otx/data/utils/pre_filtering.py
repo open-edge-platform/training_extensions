@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Pre filtering data for OTX."""
@@ -7,10 +7,13 @@ from __future__ import annotations
 
 import secrets
 import warnings
+from functools import partial
 from typing import TYPE_CHECKING
 
-from datumaro.components.annotation import Annotation, Bbox, Polygon
+from datumaro.components.annotation import Annotation, Bbox, Ellipse, Polygon
 from datumaro.components.dataset import Dataset as DmDataset
+
+from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.components.dataset_base import DatasetItem
@@ -20,6 +23,7 @@ def pre_filtering(
     dataset: DmDataset,
     data_format: str,
     unannotated_items_ratio: float,
+    task: OTXTaskType,
     ignore_index: int | None = None,
 ) -> DmDataset:
     """Pre-filtering function to filter the dataset based on certain criteria.
@@ -29,6 +33,7 @@ def pre_filtering(
         data_format (str): The format of the dataset.
         unannotated_items_ratio (float): The ratio of background unannotated items to be used.
             This must be a float between 0 and 1.
+        task (OTXTaskType): The task type of the dataset.
         ignore_index (int | None, optional): The index to be used for the ignored label. Defaults to None.
 
     Returns:
@@ -37,7 +42,7 @@ def pre_filtering(
     used_background_items = set()
     msg = f"There are empty annotation items in train set, Of these, only {unannotated_items_ratio*100}% are used."
     warnings.warn(msg, stacklevel=2)
-    dataset = DmDataset.filter(dataset, is_valid_annot, filter_annotations=True)
+    dataset = DmDataset.filter(dataset, partial(is_valid_anno_for_task, task=task), filter_annotations=True)
     dataset = remove_unused_labels(dataset, data_format, ignore_index)
     if unannotated_items_ratio > 0:
         empty_items = [
@@ -75,6 +80,27 @@ def is_valid_annot(item: DatasetItem, annotation: Annotation) -> bool:  # noqa: 
         msg = "There are invalid polygon, they will be filtered out before training."
         return False
     return True
+
+
+def is_valid_anno_for_task(item: DatasetItem, annotation: Annotation, task: OTXTaskType) -> bool:
+    """Return whether DatasetItem's annotation is valid for a specific task.
+
+    Args:
+        item (DatasetItem): The item to be checked.
+        annotation (Annotation): The annotation to be checked.
+        task (OTXTaskType): The task type of the dataset.
+
+    Returns:
+        bool: True if the annotation is valid for the task, False otherwise.
+    """
+    if task == OTXTaskType.DETECTION:
+        return isinstance(annotation, Bbox) and is_valid_annot(item, annotation)
+
+    # Rotated detection is a subset of instance segmentation
+    if task in [OTXTaskType.INSTANCE_SEGMENTATION, OTXTaskType.ROTATED_DETECTION]:
+        return isinstance(annotation, (Polygon, Bbox, Ellipse)) and is_valid_annot(item, annotation)
+
+    return is_valid_annot(item, annotation)
 
 
 def remove_unused_labels(

@@ -9,7 +9,6 @@ from __future__ import annotations
 from typing import Callable
 
 import torch
-import torch.distributed
 import torch.nn.functional as f
 from torch import Tensor, nn
 from torchvision.ops import box_convert
@@ -487,7 +486,7 @@ class DFINECriterion(nn.Module):
 
         loss = loss_left + loss_right
 
-        if iou_weight is not None:
+        if iou_weight is not None and iou_weight.sum() > 0:
             iou_weight = iou_weight.float()
             loss = loss * iou_weight
 

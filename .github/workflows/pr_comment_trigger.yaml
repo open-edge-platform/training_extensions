@@ -81,11 +81,11 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Install tox
         run: |
-          pip install '.[ci_tox]'
+          pip install '.[dev]'
 
       - name: Extract, Validate, and Run Integration Test
         id: tests

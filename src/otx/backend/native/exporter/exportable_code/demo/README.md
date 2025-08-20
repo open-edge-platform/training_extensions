@@ -33,7 +33,7 @@ Exportable code is a .zip archive that contains simple demo to get and visualize
 
 ## Prerequisites
 
-- [Python 3.10](https://www.python.org/downloads/)
+- [Python 3.11 or Python 3.12](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/)
 
 ## Install requirements to run demo

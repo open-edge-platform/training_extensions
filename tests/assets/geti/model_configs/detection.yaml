@@ -21,6 +21,7 @@ hyperparameters:
   dataset_preparation:
     augmentation:
       tiling:
+<<<<<<< HEAD
         enable: false
         adaptive_tiling: true
         tile_size: 800
@@ -63,6 +64,12 @@ hyperparameters:
         enable: false
         mean: 0.0
         sigma: 0.1
+=======
+        enable: true
+        adaptive_tiling: true
+        tile_size: 800
+        tile_overlap: 0.2
+>>>>>>> geti-classic
   training:
     max_epochs: 100
     early_stopping:

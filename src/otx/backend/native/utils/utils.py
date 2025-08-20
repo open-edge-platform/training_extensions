@@ -85,7 +85,11 @@ def mock_modules_for_chkpt() -> Iterator[None]:
         sys.modules["otx.core.types"] = otx.types
         sys.modules["otx.core.types.task"] = otx.types.task
         sys.modules["otx.core.types.label"] = otx.types.label
+<<<<<<< HEAD
         sys.modules["otx.core.model"] = otx.backend.native.models
+=======
+        sys.modules["otx.core.model"] = otx.backend.native.models  # type: ignore[attr-defined]
+>>>>>>> geti-classic
         sys.modules["otx.core.metrics"] = otx.metrics
 
         yield

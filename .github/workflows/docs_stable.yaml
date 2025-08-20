@@ -20,10 +20,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       - name: Install tox
         run: |
-          pip install '.[ci_tox]'
+          pip install '.[dev]'
       - name: Build-Docs
         run: tox -e build-doc
       - name: Create gh-pages branch

@@ -55,7 +55,6 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
 
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
-        lora (bool): Whether to use LoRA (Low-Rank Adaptation) for the model.
         model_name (str): Name of the Vision Transformer model to use.
         data_input_params (DataInputParams): Parameters for data input.
         optimizer (OptimizerCallable): Callable for the optimizer.
@@ -80,18 +79,19 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
             "dinov2-large",
             "dinov2-giant",
         ] = "vit-tiny",
-        lora: bool = False,
+        freeze_backbone: bool = False,
+        peft: Literal["lora", "dora"] | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-        self.lora = lora
-
+        self.peft = peft
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
             model_name=model_name,
+            freeze_backbone=freeze_backbone,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -122,7 +122,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
         vit_backbone = VisionTransformerBackbone(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
-            lora=self.lora,
+            peft=self.peft,
         )
         model = HLabelClassifier(
             backbone=vit_backbone,

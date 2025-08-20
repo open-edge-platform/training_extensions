@@ -12,6 +12,7 @@ import logging
 import os
 import time
 from contextlib import contextmanager
+from multiprocessing import Value
 from pathlib import Path
 from pickle import UnpicklingError  # nosec B403: UnpicklingError is used only for exception handling
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Iterator, Literal
@@ -24,6 +25,7 @@ from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger
 from lightning.pytorch.plugins.precision import MixedPrecision
 
 from otx.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
+from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback
 from otx.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
 from otx.backend.native.callbacks.iteration_timer import IterationTimer
 from otx.backend.native.models.base import DataInputParams, OTXModel
@@ -48,6 +50,7 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.types import EVAL_DATALOADERS
     from pytorch_lightning.trainer.connectors.accelerator_connector import _PRECISION_INPUT
 
+    from otx.data.dataset.base import OTXDataset
     from otx.metrics import MetricCallable
     from otx.types.types import DATA, MODEL
 
@@ -152,8 +155,7 @@ class OTXEngine(Engine):
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = None,
-        val_check_interval: int | float | None = None,
+        precision: _PRECISION_INPUT | None = 16,
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
         resume: bool = False,
@@ -162,6 +164,7 @@ class OTXEngine(Engine):
         adaptive_bs: Literal["None", "Safe", "Full"] = "None",
         check_val_every_n_epoch: int | None = 1,
         num_sanity_val_steps: int | None = 0,
+        gradient_clip_val: float | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         r"""Trains the model using the provided LightningModule and OTXDataModule.
@@ -174,7 +177,6 @@ class OTXEngine(Engine):
                 Also, can be set to `warn` to avoid failures, because some operations don't
                 support deterministic mode. Defaults to False.
             precision (_PRECISION_INPUT | None, optional): The precision of the model. Defaults to 16.
-            val_check_interval (int | float | None, optional): The validation check interval. Defaults to None.
             callbacks (list[Callback] | Callback | None, optional): The callbacks to be used during training.
             logger (Logger | Iterable[Logger] | bool | None, optional): The logger(s) to be used. Defaults to None.
             resume (bool, optional): If True, tries to resume training from existing checkpoint.
@@ -187,6 +189,7 @@ class OTXEngine(Engine):
                 Defaults to "None".
             check_val_every_n_epoch (int | None, optional): How often to check validation. Defaults to 1.
             num_sanity_val_steps (int | None, optional): Number of validation steps to run before training starts.
+            gradient_clip_val (float | None, optional): The value for gradient clipping. Defaults to None.
             **kwargs: Additional keyword arguments for pl.Trainer configuration.
 
         Returns:
@@ -242,9 +245,9 @@ class OTXEngine(Engine):
             max_epochs=max_epochs,
             min_epochs=min_epochs,
             deterministic=deterministic,
-            val_check_interval=val_check_interval,
             check_val_every_n_epoch=check_val_every_n_epoch,
             num_sanity_val_steps=num_sanity_val_steps,
+            gradient_clip_val=gradient_clip_val,
             **kwargs,
         )
         fit_kwargs: dict[str, Any] = {}
@@ -272,6 +275,9 @@ class OTXEngine(Engine):
             self.model.load_state_dict_incrementally(ckpt)
 
         with override_metric_callable(model=self.model, new_metric_callable=metric) as model:
+            # Setup DataAugSwitch for datasets before training starts
+            self._setup_data_aug_switch_for_datasets()
+
             self.trainer.fit(
                 model=model,
                 datamodule=self.datamodule,
@@ -875,13 +881,18 @@ class OTXEngine(Engine):
         """Apply parameter overrides based on the current local variables."""
         sig = inspect.signature(self.train)
         add_kwargs = param_kwargs.pop("kwargs", {})
-        self._cache.update(**add_kwargs)
         for param_name, param in sig.parameters.items():
-            if param_name in param_kwargs:
-                current_value = param_kwargs[param_name]
-                # Apply override if current value matches default and we have an override
-                if (current_value != param.default) or (param_name not in self._cache.args):
+            if param_name in param_kwargs and param_name in self._cache.args:
+                # if both `param_kwargs` and `_cache.args` have the same parameter,
+                # we will use the value from `param_kwargs` if it is different from the default
+                # value of the parameter.
+                # Otherwise, we will keep the value from `_cache.args`.
+                current_value = param_kwargs.pop(param_name)
+                if current_value != param.default:
                     self._cache.args[param_name] = current_value
+        # update the cache with the remaining parameters
+        self._cache.update(**param_kwargs)
+        self._cache.update(**add_kwargs)
 
     def configure_accelerator(self) -> None:
         """Updates the cache arguments based on the device type."""
@@ -958,6 +969,107 @@ class OTXEngine(Engine):
             callbacks.append(GPUMemMonitor())
 
         self._cache.args["callbacks"] = callbacks + config_callbacks
+
+        # Setup DataAugSwitch with shared multiprocessing.Value
+        self._setup_augmentation_scheduler()
+
+    def _setup_augmentation_scheduler(self) -> None:
+        """Set up shared memory for DataAugSwitch and AugmentationSchedulerCallback.
+
+        Why is this handled here in the engine?
+        -------------------------------------------------
+        Data augmentation scheduling is a cross-cutting concern that affects both the data pipeline
+        (datasets, dataloaders) and the training control flow (callbacks, epoch tracking). In
+        distributed or multi-process training (e.g., DDP, multi-worker dataloaders), each process or
+        worker may have its own copy of the dataset and augmentation logic. If the augmentation policy
+        (e.g., which transforms to apply at a given epoch) is not synchronized across all processes,
+        different workers may apply different augmentations for the same epoch, leading to
+        non-deterministic, irreproducible, or even incorrect training.
+
+        The engine is the only component with global visibility and control over:
+          - The full set of callbacks (including augmentation scheduling callbacks)
+          - The configuration and instantiation of datasets and dataloaders
+          - The orchestration of training, including distributed/multiprocessing setup
+
+        By handling augmentation scheduler setup here, we ensure:
+          - The current epoch (which determines augmentation policy) is stored in a shared
+            multiprocessing.Value, so all processes and workers see the same value.
+          - The DataAugSwitch instance used by the callback and (optionally) by datasets
+            is referencing the same shared epoch state.
+          - This setup is performed before training starts, so all components are properly
+            synchronized from the beginning.
+
+        Without this centralized setup, it would be easy for different parts of the system
+        to become unsynchronized, leading to subtle bugs that are hard to debug and reproduce.
+        By making the engine responsible for this, we guarantee correct, deterministic, and
+        reproducible augmentation scheduling across all training processes.
+
+        Implementation:
+        ----------------
+        This method locates the AugmentationSchedulerCallback among the configured callbacks,
+        and if it has a DataAugSwitch instance, it creates a shared integer value for the
+        epoch and assigns it to the DataAugSwitch. This must be done before training starts.
+
+        """
+        aug_scheduler_callback = None
+
+        # Find AugmentationSchedulerCallback in all callbacks
+        all_callbacks = self._cache.args.get("callbacks", [])
+        for callback in all_callbacks:
+            if isinstance(callback, AugmentationSchedulerCallback):
+                aug_scheduler_callback = callback
+                break
+
+        # If AugmentationSchedulerCallback exists and has a data_aug_switch, set up shared memory
+        if aug_scheduler_callback is not None and aug_scheduler_callback.data_aug_switch is not None:
+            # Create shared multiprocessing.Value for epoch tracking
+            shared_epoch = Value("i", 0)
+            aug_scheduler_callback.data_aug_switch.set_shared_epoch(shared_epoch)
+
+    def _setup_data_aug_switch_for_datasets(self) -> None:
+        """Set up DataAugSwitch for datasets before training starts, ensuring shared memory for augmentation policy.
+
+        By assigning the same DataAugSwitch instance (with its shared epoch value) to the training dataset(s),
+        we guarantee that all data loading workers and processes reference the same epoch state. This prevents
+        inconsistencies where different processes might otherwise apply different augmentation policies due to
+        unsynchronized epoch tracking. Without this setup, augmentation switching could become non-deterministic
+        or incorrect, leading to irreproducible results or degraded training performance.
+
+        This method locates the AugmentationSchedulerCallback and its DataAugSwitch, then attaches the switch
+        to any dataset that supports dynamic augmentation switching (i.e., implements DataAugSwitchMixin).
+        """
+        if self._trainer is None:
+            return
+
+        # Find AugmentationSchedulerCallback and its DataAugSwitch
+        data_aug_switch = None
+        for callback in self._trainer.callbacks:
+            if isinstance(callback, AugmentationSchedulerCallback) and callback.data_aug_switch is not None:
+                data_aug_switch = callback.data_aug_switch
+                break
+
+        if data_aug_switch is None:
+            msg = "DataAugSwitch not found in AugmentationSchedulerCallback"
+            logging.warning(msg)
+            return
+
+        def set_data_aug_switch_if_supported(dataset: OTXDataset) -> bool:
+            """Set data_aug_switch on a dataset if it supports it."""
+            from otx.data.dataset.mixins import DataAugSwitchMixin
+
+            if isinstance(dataset, DataAugSwitchMixin):
+                dataset.set_data_aug_switch(data_aug_switch)
+                return True
+            return False
+
+        # Set DataAugSwitch for the training dataset
+        if (
+            hasattr(self.datamodule, "subsets")
+            and "train" in self.datamodule.subsets
+            and set_data_aug_switch_if_supported(self.datamodule.subsets["train"])
+        ):
+            msg = "DataAugSwitch set for train_dataset"
+            logging.info(msg)
 
     @property
     def trainer_params(self) -> dict:

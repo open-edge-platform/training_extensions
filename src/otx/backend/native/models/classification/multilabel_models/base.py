@@ -50,6 +50,7 @@ class OTXMultilabelClsModel(OTXModel):
         label_info: LabelInfoTypes | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "multiclass_classification_model",
+        freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiLabelClsMetricCallable,
@@ -65,6 +66,11 @@ class OTXMultilabelClsModel(OTXModel):
             metric=metric,
             torch_compile=torch_compile,
         )
+
+        if freeze_backbone:
+            classification_layers = self._identify_classification_layers()
+            for name, param in self.named_parameters():
+                param.requires_grad = name in classification_layers
 
     def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
         if self.training:

@@ -69,18 +69,20 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
             "dinov2-large",
             "dinov2-giant",
         ] = "vit-tiny",
-        lora: bool = False,
+        freeze_backbone: bool = False,
+        peft: Literal["lora", "dora"] | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiLabelClsMetricCallable,
         torch_compile: bool = False,
     ) -> None:
-        self.lora = lora
+        self.peft = peft
 
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
             model_name=model_name,
+            freeze_backbone=freeze_backbone,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -105,7 +107,7 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         vit_backbone = VisionTransformerBackbone(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
-            lora=self.lora,
+            peft=self.peft,
         )
         model = ImageClassifier(
             backbone=vit_backbone,

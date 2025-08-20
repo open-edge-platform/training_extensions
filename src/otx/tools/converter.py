@@ -373,6 +373,7 @@ class GetiConfigConverter:
             config["data"]["input_size"] = (height, width)
 
         def update_augmentations(augmentation_params: dict) -> None:
+<<<<<<< HEAD
             """Update augmentations in the config.
 
             Example:
@@ -414,12 +415,26 @@ class GetiConfigConverter:
                 "random_hsv_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
                 "cached_mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
                 "cached_mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"],
+=======
+            """Update augmentations in the config."""
+            if not augmentation_params:
+                return
+
+            augs_mapping_list = {
+                "random_affine": "otx.data.transform_libs.torchvision.RandomAffine",
+                "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
+                "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
+                "gaussian_blur": "otx.data.transform_libs.torchvision.RandomGaussianBlur",
+                "gaussian_noise": "otx.data.transform_libs.torchvision.RandomGaussianNoise",
+                "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
+>>>>>>> geti-classic
             }
 
             for aug_name, aug_value in augmentation_params.items():
                 aug_class = augs_mapping_list[aug_name]
                 found = False
                 for aug_config in config["data"]["train_subset"]["transforms"]:
+<<<<<<< HEAD
                     if aug_config["class_path"] in aug_class:
                         found = True
                         if aug_name == "random_resize_crop" and not aug_value["enable"]:
@@ -446,6 +461,14 @@ class GetiConfigConverter:
                         break
                 if not found:
                     msg = f"Augmentation {aug_name} is not found for this model."
+=======
+                    if aug_class == aug_config["class_path"]:
+                        found = True
+                        aug_config["enable"] = aug_value["enable"]
+                        break
+                if not found:
+                    msg = f"augmentation {aug_class} is not found for this model"
+>>>>>>> geti-classic
                     raise ValueError(msg)
 
         augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})

@@ -12,17 +12,14 @@ import functools
 import inspect
 import itertools
 import weakref
-from typing import TYPE_CHECKING, Sequence
+from typing import Sequence
 
 import cv2
 import numpy as np
 import torch
+from datumaro import Polygon
 from shapely import geometry
 from torch import BoolTensor, Tensor
-
-if TYPE_CHECKING:
-    from datumaro import Polygon
-
 
 CV2_INTERP_CODES = {
     "nearest": cv2.INTER_NEAREST,
@@ -760,6 +757,52 @@ def project_bboxes(boxes: Tensor, homography_matrix: Tensor | np.ndarray) -> Ten
     # Convert to homogeneous coordinates by normalization
     corners = corners[..., :2] / corners[..., 2:3]
     return corner2hbox(corners)
+
+
+def project_polygons(
+    polygons: list[Polygon],
+    homography_matrix: np.ndarray,
+    out_shape: tuple[int, int],
+) -> list[Polygon]:
+    """Transform polygons using a homography matrix.
+
+    Args:
+        polygons (list[Polygon]): List of polygons to be transformed.
+        homography_matrix (np.ndarray): Homography matrix of shape (3, 3) for geometric transformation.
+        out_shape (tuple[int, int]): Output shape (height, width) for boundary clipping.
+
+    Returns:
+        list[Polygon]: List of transformed polygons.
+    """
+    if not polygons:
+        return polygons
+
+    height, width = out_shape
+    transformed_polygons = []
+
+    for polygon in polygons:
+        points = np.array(polygon.points, dtype=np.float32)
+
+        if len(points) % 2 != 0:
+            # Invalid polygon
+            transformed_polygons.append(Polygon(points=[0, 0, 0, 0, 0, 0]))
+            continue
+
+        points_2d = points.reshape(-1, 2)
+        points_h = np.hstack([points_2d, np.ones((points_2d.shape[0], 1), dtype=np.float32)])  # (N, 3)
+        proj = homography_matrix @ points_h.T  # (3, N)
+
+        denom = proj[2:3]
+        denom[denom == 0] = 1e-6  # avoid divide-by-zero
+        proj_cartesian = (proj[:2] / denom).T  # (N, 2)
+
+        # Clip
+        proj_cartesian[:, 0] = np.clip(proj_cartesian[:, 0], 0, width - 1)
+        proj_cartesian[:, 1] = np.clip(proj_cartesian[:, 1], 0, height - 1)
+
+        transformed_polygons.append(Polygon(points=proj_cartesian.flatten().tolist()))
+
+    return transformed_polygons
 
 
 def hbox2corner(boxes: Tensor) -> Tensor:

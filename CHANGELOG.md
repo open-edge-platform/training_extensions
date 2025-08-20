@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ## \[2.5.0\]
+<<<<<<< HEAD
+=======
+
+### New features
+
+- Add DoRA support for ViT classification model (DINOv2 and DeIT)
+  (https://github.com/open-edge-platform/training_extensions/pull/4466)
+>>>>>>> geti-classic
 
 ### Enhancements
 

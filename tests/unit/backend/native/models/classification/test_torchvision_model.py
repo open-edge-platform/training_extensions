@@ -112,12 +112,27 @@ class TestOTXTVModel:
             assert outputs.saliency_map[0].ndim == 3
             assert outputs.saliency_map[0].shape[-2:] != torch.Size([1, 1])
 
-    def test_freeze_backbone(self):
+    @pytest.mark.parametrize(
+        ("model_cls", "label_info_param"),
+        [
+            (TVModelMulticlassCls, 10),
+            (TVModelMultilabelCls, 10),
+            (TVModelHLabelCls, "fxt_hlabel_multilabel_info"),
+        ],
+        ids=["multiclass", "multilabel", "hlabel"],
+    )
+    def test_freeze_backbone(self, model_cls, label_info_param, request):
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
 
-        model = TVModelMulticlassCls(
+        if isinstance(label_info_param, str):
+            label_info = request.getfixturevalue(label_info_param)
+        else:
+            label_info = label_info_param
+
+        # Test with freeze_backbone=True
+        model = model_cls(
             model_name="mobilenet_v3_small",
-            label_info=10,
+            label_info=label_info,
             data_input_params=data_input_params,
             freeze_backbone=True,
         )
@@ -125,9 +140,10 @@ class TestOTXTVModel:
         classification_layers = model._identify_classification_layers()
         assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
 
-        model = TVModelMulticlassCls(
+        # Test with freeze_backbone=False
+        model = model_cls(
             model_name="mobilenet_v3_small",
-            label_info=10,
+            label_info=label_info,
             data_input_params=data_input_params,
             freeze_backbone=False,
         )
