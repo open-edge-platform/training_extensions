@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
 import { capitalize, isArray, startsWith } from 'lodash-es';
 

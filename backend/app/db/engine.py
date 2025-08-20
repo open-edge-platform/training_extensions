@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from collections.abc import Iterator
 from contextlib import contextmanager
 from sqlite3 import Connection

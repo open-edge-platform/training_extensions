@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { useEffect, useRef, useState } from 'react';
 
 import { ActionButton, Flex, Grid, Heading, View } from '@geti/ui';

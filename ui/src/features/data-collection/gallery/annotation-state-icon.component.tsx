@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { CanceledIcon, CheckCircleOutlined } from '@geti/ui/icons';
 
 import { AnnotationState } from '../../../routes/data-collection/provider';

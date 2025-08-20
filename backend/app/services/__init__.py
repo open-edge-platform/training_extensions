@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from .active_pipeline_service import ActivePipelineService
 from .base import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .configuration_service import ConfigurationService

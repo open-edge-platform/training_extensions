@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import io
 from enum import StrEnum
 from unittest.mock import MagicMock

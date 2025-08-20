@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # export no_proxy="localhost, 127.0.0.1, ::1"
 # Start with:
 #  - uv run app/main.py

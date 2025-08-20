@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vitest/config';

@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { LabelSelection } from './label-selection.component';

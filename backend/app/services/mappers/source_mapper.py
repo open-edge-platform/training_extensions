@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from app.db.schema import SourceDB
 from app.schemas.source import Source, SourceAdapter, SourceType
 

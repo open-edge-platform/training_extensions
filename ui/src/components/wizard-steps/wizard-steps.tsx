@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { ComponentProps, ReactNode } from 'react';
 
 import { Text } from '@geti/ui';

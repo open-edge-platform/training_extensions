@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { ComponentProps } from 'react';
 
 import { Tab as AriaTab, TabList, Tabs } from 'react-aria-components';

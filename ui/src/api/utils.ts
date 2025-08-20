@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { fromOpenApi } from '@mswjs/source/open-api';
 import { createOpenApiHttp, OpenApiHttpHandlers } from 'openapi-msw';
 

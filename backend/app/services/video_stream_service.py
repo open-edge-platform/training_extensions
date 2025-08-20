@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 
 from app.entities.images_folder_stream import ImagesFolderStream

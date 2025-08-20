@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { AriaComponentsListBox, GridLayout, ListBoxItem, Size, View, Virtualizer } from '@geti/ui';
 
 import { useSelectedData } from '../../../routes/data-collection/provider';

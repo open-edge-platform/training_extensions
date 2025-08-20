@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, ButtonGroup, Divider, Flex, Text } from '@geti/ui';
 
 import { LabelSelection } from '../../features/pipelines/models/label-selection.component';

@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { ReactNode } from 'react';
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Flex, Radio, RadioGroup, View } from '@geti/ui';

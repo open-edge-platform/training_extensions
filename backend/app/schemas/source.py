@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal

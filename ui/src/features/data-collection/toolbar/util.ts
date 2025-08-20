@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Key, Selection } from '@geti/ui';
 
 import { AnnotationState, MediaState } from '../../../routes/data-collection/provider';

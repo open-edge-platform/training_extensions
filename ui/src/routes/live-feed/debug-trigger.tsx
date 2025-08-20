@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Suspense } from 'react';
 
 import { Content, Dialog, DialogTrigger } from '@adobe/react-spectrum';
