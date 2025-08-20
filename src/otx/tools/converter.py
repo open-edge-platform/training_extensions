@@ -373,7 +373,6 @@ class GetiConfigConverter:
             config["data"]["input_size"] = (height, width)
 
         def update_augmentations(augmentation_params: dict) -> None:
-<<<<<<< HEAD
             """Update augmentations in the config.
 
             Example:
@@ -404,8 +403,8 @@ class GetiConfigConverter:
                 ],
                 "random_horizontal_flip": ["otx.data.transform_libs.torchvision.RandomFlip"],
                 "random_vertical_flip": ["torchvision.transforms.v2.RandomVerticalFlip"],
-                "gaussian_blur": ["torchvision.transforms.v2.GaussianBlur"],
-                "gaussian_noise": ["torchvision.transforms.v2.GaussianNoise"],
+                "gaussian_blur": ["otx.data.transform_libs.torchvision.RandomGaussianBlur"],
+                "gaussian_noise": ["otx.data.transform_libs.torchvision.RandomGaussianNoise"],
                 "color_jitter": ["torchvision.transforms.v2.RandomPhotometricDistort"],
                 "iou_random_crop": [
                     "otx.data.transform_libs.torchvision.MinIoURandomCrop",
@@ -415,27 +414,14 @@ class GetiConfigConverter:
                 "random_hsv_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
                 "cached_mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
                 "cached_mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"],
-=======
-            """Update augmentations in the config."""
-            if not augmentation_params:
-                return
-
-            augs_mapping_list = {
-                "random_affine": "otx.data.transform_libs.torchvision.RandomAffine",
-                "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
-                "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
-                "gaussian_blur": "otx.data.transform_libs.torchvision.RandomGaussianBlur",
-                "gaussian_noise": "otx.data.transform_libs.torchvision.RandomGaussianNoise",
-                "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
->>>>>>> geti-classic
+                "padding": ["otx.data.transform_libs.torchvision.Pad"]
             }
 
             for aug_name, aug_value in augmentation_params.items():
-                aug_class = augs_mapping_list[aug_name]
+                aug_classes = augs_mapping_list[aug_name]
                 found = False
                 for aug_config in config["data"]["train_subset"]["transforms"]:
-<<<<<<< HEAD
-                    if aug_config["class_path"] in aug_class:
+                    if aug_config["class_path"] in aug_classes:
                         found = True
                         if aug_name == "random_resize_crop" and not aug_value["enable"]:
                             # if random crop is disabled -> change this augmentation to simple Resize
@@ -444,31 +430,32 @@ class GetiConfigConverter:
                         if "TopdownAffine" in aug_config["class_path"] and (
                             not aug_value["enable"] or aug_value["affine_transforms_prob"] <= 0.7
                         ):
-                            aug_config["init_args"]["affine_transforms_prob"] = 0.0
+                            aug_config["init_args"]["affine_transforms_prob"] = (aug_value["affine_transforms_prob"] 
+                                                                                 if aug_value["enable"] 
+                                                                                 else 0.0)
                             for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
                                 if "Pad" in val_aug_cfg["class_path"]:
                                     val_aug_cfg["enable"] = False
-                            for test_aug_cfg in config["data"]["test_subset"]["transforms"]:
-                                if "Pad" in test_aug_cfg["class_path"]:
-                                    test_aug_cfg["enable"] = False
+
                             break
+                        if aug_name == "padding":
+                            # if padding is enabled, we need to add padding parameters to the val augmentation
+                            for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
+                                if "Pad" in val_aug_cfg["class_path"]:
+                                    for parameter in aug_value:
+                                        if "init_args" not in val_aug_cfg:
+                                            val_aug_cfg["init_args"] = {}
+                                    val_aug_cfg["init_args"][parameter] = aug_value[parameter]
+
                         aug_config["enable"] = aug_value.pop("enable")
                         for parameter in aug_value:
                             if "init_args" not in aug_config:
                                 aug_config["init_args"] = {}
                             aug_config["init_args"][parameter] = aug_value[parameter]
-
                         break
+
                 if not found:
                     msg = f"Augmentation {aug_name} is not found for this model."
-=======
-                    if aug_class == aug_config["class_path"]:
-                        found = True
-                        aug_config["enable"] = aug_value["enable"]
-                        break
-                if not found:
-                    msg = f"augmentation {aug_class} is not found for this model"
->>>>>>> geti-classic
                     raise ValueError(msg)
 
         augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})

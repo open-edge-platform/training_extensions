@@ -110,7 +110,7 @@ overrides:
               - 0.5
               - 1.5
             max_shear_degree: 2.0
-        - class_path: torchvision.transforms.v2.GaussianBlur
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
           enable: false
           init_args:
             kernel_size: 5
@@ -130,7 +130,7 @@ overrides:
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [255.0, 255.0, 255.0]
-        - class_path: torchvision.transforms.v2.GaussianNoise
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
           enable: false
           init_args:
             mean: 0.0

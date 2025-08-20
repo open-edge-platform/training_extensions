@@ -103,7 +103,7 @@ overrides:
           enable: false
           init_args:
             p: 0.5
-        - class_path: torchvision.transforms.v2.GaussianBlur
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
           enable: false
           init_args:
             kernel_size: 5
@@ -118,7 +118,7 @@ overrides:
           init_args:
             mean: [123.675, 116.28, 103.53]
             std: [58.395, 57.12, 57.375]
-        - class_path: torchvision.transforms.v2.GaussianNoise
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
           enable: false
           init_args:
             mean: 0.0

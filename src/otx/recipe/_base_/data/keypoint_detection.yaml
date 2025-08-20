@@ -31,7 +31,7 @@ train_subset:
         input_size: $(input_size)
         is_numpy_to_tvtensor: true
         affine_transforms_prob: 1.0
-    - class_path: torchvision.transforms.v2.GaussianBlur
+    - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
       enable: false
       init_args:
         kernel_size: 5
@@ -42,7 +42,7 @@ train_subset:
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
-    - class_path: torchvision.transforms.v2.GaussianNoise
+    - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
       enable: false
       init_args:
         mean: 0.0
