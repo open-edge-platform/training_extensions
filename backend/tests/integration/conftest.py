@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from collections.abc import Generator
 from multiprocessing.synchronize import Condition
 from unittest.mock import MagicMock

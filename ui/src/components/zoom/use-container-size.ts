@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { RefObject, useState } from 'react';
 
 import { useResizeObserver } from '@react-aria/utils';

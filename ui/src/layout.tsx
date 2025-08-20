@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Flex, Grid, Item, TabList, TabPanels, Tabs, View } from '@geti/ui';
 import { Outlet, useLocation } from 'react-router';
 

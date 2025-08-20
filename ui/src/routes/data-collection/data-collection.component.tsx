@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { dimensionValue, Flex } from '@geti/ui';
 
 import { Gallery } from '../../features/data-collection/gallery/gallery.component';

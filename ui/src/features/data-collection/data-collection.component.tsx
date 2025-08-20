@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { View } from '@geti/ui';
 
 import { Gallery } from './gallery/gallery.component';

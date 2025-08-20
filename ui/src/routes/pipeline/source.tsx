@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { FormEvent, useState } from 'react';
 
 import { Button, ButtonGroup, Divider, Flex, Form, Grid, Loading, NumberField, Text, TextField, View } from '@geti/ui';

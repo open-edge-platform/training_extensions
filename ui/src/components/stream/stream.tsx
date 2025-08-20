@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef } from 'react';
 
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';

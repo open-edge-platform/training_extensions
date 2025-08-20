@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import '@testing-library/jest-dom';
 
 import fetchPolyfill, { Request as RequestPolyfill } from 'node-fetch';

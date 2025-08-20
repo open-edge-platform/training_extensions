@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { noop } from 'lodash-es';
 
 import classes from './checkbox-input.module.scss';

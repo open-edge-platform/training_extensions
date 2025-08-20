@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 import { Selection } from '@geti/ui';

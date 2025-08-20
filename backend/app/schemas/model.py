@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from enum import StrEnum
 
 from app.schemas.base import BaseIDNameModel

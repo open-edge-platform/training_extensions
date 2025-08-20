@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """This script generates an OpenAPI JSON file for the FastAPI application."""
 
 import json

@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { ReactNode, useEffect, useMemo, useRef } from 'react';
 
 import { useContainerSize } from './use-container-size';

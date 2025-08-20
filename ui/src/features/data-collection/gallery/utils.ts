@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { API_BASE_URL } from '../../../api/client';
 
 const getBaseUrl = (src: string) => `${API_BASE_URL}/api/data-collection/${src}`;
