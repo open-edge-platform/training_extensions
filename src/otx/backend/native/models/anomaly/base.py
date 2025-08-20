@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
@@ -283,6 +284,10 @@ class OTXAnomaly(OTXModel):
             masks=torch.tensor(0),
         )
 
+    @staticmethod
+    def _dispatch_label_info(*args, **kwargs) -> AnomalyLabelInfo:  # noqa: ARG004
+        return AnomalyLabelInfo()
+
 
 class AnomalyMixin:
     """Mixin inherited before AnomalibModule to override OTXModel methods."""
@@ -376,9 +381,9 @@ class AnomalyMixin:
         # calls Anomalib's on_save_checkpoint
         super().on_save_checkpoint(checkpoint)  # type: ignore[misc]
 
-        checkpoint["label_info"] = self.label_info  # type: ignore[attr-defined]
+        checkpoint["hyper_parameters"]["label_info"] = asdict(self.label_info)  # type: ignore[attr-defined]
         checkpoint["otx_version"] = __version__
-        checkpoint["tile_config"] = self.tile_config  # type: ignore[attr-defined]
+        checkpoint["hyper_parameters"]["tile_config"] = asdict(self.tile_config)  # type: ignore[attr-defined]
 
         attrs = ["_input_shape", "image_threshold", "pixel_threshold"]
         checkpoint["anomaly"] = {key: getattr(self, key, None) for key in attrs}
@@ -390,3 +395,25 @@ class AnomalyMixin:
         if anomaly_attrs := checkpoint.get("anomaly"):
             for key, value in anomaly_attrs.items():
                 setattr(self, key, value)
+
+    def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
+        """Bypass OTXModel's load_state_dict_incrementally."""
+        return self.load_state_dict(ckpt, *args, **kwargs)
+
+    def load_state_dict(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
+        """Load state dictionary from checkpoint state dictionary.
+
+        If checkpoint's label_info and OTXLitModule's label_info are different,
+        load_state_pre_hook for smart weight loading will be registered.
+        """
+        self.on_load_checkpoint(ckpt)  # type: ignore[misc]
+        state_dict = ckpt["state_dict"]
+        if "label_info" in ckpt.get("hyper_parameters", {}):
+            label_info = self._dispatch_label_info(ckpt["hyper_parameters"]["label_info"])  # type: ignore[attr-defined]
+            if label_info != self.label_info:  # type: ignore[attr-defined]
+                msg = f"Checkpoint's label_info {label_info} "
+                "does not match with OTXLitModule's label_info {self.label_info}"  # type: ignore[attr-defined]
+                raise ValueError(
+                    msg,
+                )
+        return super().load_state_dict(state_dict, *args, **kwargs)  # type: ignore[misc]

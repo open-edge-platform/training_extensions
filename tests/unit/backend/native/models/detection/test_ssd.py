@@ -47,7 +47,11 @@ class TestSSD:
         assert isinstance(fxt_model._exporter, OTXModelExporter)
 
     def test_save_and_load_anchors(self, fxt_checkpoint) -> None:
-        loaded_model = SSD.load_from_checkpoint(checkpoint_path=fxt_checkpoint)
+        loaded_model = SSD.load_from_checkpoint(
+            checkpoint_path=fxt_checkpoint,
+            model_name="ssd_mobilenetv2",
+            label_info=3,
+        )
 
         assert loaded_model.model.bbox_head.anchor_generator.widths[0][0] == 40
         assert loaded_model.model.bbox_head.anchor_generator.heights[0][0] == 50

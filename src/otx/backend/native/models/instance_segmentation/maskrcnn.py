@@ -8,11 +8,8 @@ from __future__ import annotations
 from functools import partial
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-import cv2
 import torch
-from datumaro import Polygon
 from torch import nn
-from torchvision import tv_tensors
 from torchvision.ops import RoIAlign
 
 from otx.backend.native.exporter.base import OTXModelExporter
@@ -29,6 +26,7 @@ from otx.backend.native.models.instance_segmentation.backbones.swin import SwinT
 from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.backend.native.models.instance_segmentation.heads import ConvFCBBoxHead, FCNMaskHead, RoIHead, RPNHead
 from otx.backend.native.models.instance_segmentation.losses import ROICriterion, RPNCriterion
+from otx.backend.native.models.instance_segmentation.rotated_det import RotatedPredictMixin
 from otx.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.backend.native.models.instance_segmentation.utils.roi_extractors import SingleRoIExtractor
 from otx.backend.native.models.modules.norm import build_norm_layer
@@ -394,89 +392,10 @@ class MaskRCNN(OTXInstanceSegModel):
         return {}
 
 
-class RotatedMaskRCNNModel(MaskRCNN):
+class RotatedMaskRCNNModel(RotatedPredictMixin, MaskRCNN):
     """Base class for the rotated detection models used in OTX."""
 
     def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredBatch:
-        """Predict step for rotated detection task.
-
-        Note: This method is overridden to convert masks to rotated bounding boxes.
-
-        Returns:
-            TorchPredBatch: The predicted polygons (rboxes), scores, labels, masks.
-        """
+        """Perform prediction step for rotated detection."""
         preds = super().predict_step(*args, **kwargs)
-
-        batch_scores: list[torch.Tensor] = []
-        batch_bboxes: list[tv_tensors.BoundingBoxes] = []
-        batch_labels: list[torch.LongTensor] = []
-        batch_polygons: list[list[Polygon]] = []
-        batch_masks: list[tv_tensors.Mask] = []
-
-        for field_name, field in zip(
-            ["imgs_info", "bboxes", "scores", "labels", "masks"],
-            [preds.imgs_info, preds.bboxes, preds.scores, preds.labels, preds.masks],
-        ):
-            if field is None:
-                msg = f"Field '{field_name}' is None, which is not allowed."
-                raise ValueError(msg)
-
-        for img_info, pred_bboxes, pred_scores, pred_labels, pred_masks in zip(  # type: ignore[misc]
-            preds.imgs_info,  # type: ignore[arg-type]
-            preds.bboxes,  # type: ignore[arg-type]
-            preds.scores,  # type: ignore[arg-type]
-            preds.labels,  # type: ignore[arg-type]
-            preds.masks,  # type: ignore[arg-type]
-        ):
-            boxes = []
-            scores = []
-            labels = []
-            masks = []
-            polygons = []
-
-            for bbox, score, label, mask in zip(pred_bboxes, pred_scores, pred_labels, pred_masks):
-                if mask.sum() == 0:
-                    continue
-                np_mask = mask.detach().cpu().numpy().astype(int)
-                contours, hierarchies = cv2.findContours(np_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-                if hierarchies is None:
-                    continue
-                rbox_polygons = []
-                for contour, hierarchy in zip(contours, hierarchies[0]):
-                    # skip inner contours
-                    if hierarchy[3] != -1 or len(contour) <= 2:
-                        continue
-                    rbox_points = Polygon(cv2.boxPoints(cv2.minAreaRect(contour)).reshape(-1))
-                    rbox_polygons.append((rbox_points, rbox_points.get_area()))
-
-                # select the largest polygon
-                if len(rbox_polygons) > 0:
-                    rbox_polygons.sort(key=lambda x: x[1], reverse=True)
-                    polygons.append(rbox_polygons[0][0])
-                    scores.append(score)
-                    boxes.append(bbox)
-                    labels.append(label)
-                    masks.append(mask)
-
-            if len(boxes):
-                scores = torch.stack(scores)
-                boxes = tv_tensors.BoundingBoxes(torch.stack(boxes), format="XYXY", canvas_size=img_info.ori_shape)  # type: ignore[union-attr]
-                labels = torch.stack(labels)
-                masks = torch.stack(masks)
-
-            batch_scores.append(scores)
-            batch_bboxes.append(boxes)
-            batch_labels.append(labels)
-            batch_polygons.append(polygons)
-            batch_masks.append(masks)
-
-        return OTXPredBatch(
-            batch_size=preds.batch_size,
-            images=preds.images,
-            imgs_info=preds.imgs_info,
-            scores=batch_scores,
-            bboxes=batch_bboxes,
-            masks=batch_masks,
-            polygons=batch_polygons,
-            labels=batch_labels,
-        )
+        return self.rotated_predict_step(preds)

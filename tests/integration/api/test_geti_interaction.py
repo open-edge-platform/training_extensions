@@ -3,10 +3,7 @@
 
 from __future__ import annotations
 
-import shutil
-import zipfile
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
 import cv2
@@ -16,23 +13,18 @@ from model_api.models import Model
 from otx.backend.native.models.base import OTXModel
 from otx.data.module import OTXDataModule
 from otx.engine import create_engine
-from otx.tools.converter import ConfigConverter
+from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from tests.integration.api.geti_otx_config_utils import (
-    ExportFormat,
-    ExportParameter,
-    JobType,
     OTXConfig,
-    PrecisionType,
-    load_hyper_parameters,
 )
 
 if TYPE_CHECKING:
     from otx.backend.native.engine import OTXEngine
 
-TEST_ARROW_PATH = Path(__file__).parent.parent.parent / "assets" / "geti_config_arrow"
+TEST_ARROW_PATH = Path(__file__).parent.parent.parent / "assets" / "geti" / "arrow_configs"
 DEFAULT_GETI_CONFIG_PER_TASK = {
     # OTXTaskType.KEYPOINT_DETECTION: Not supported yet as we can't import KP dataset to Geti
     OTXTaskType.MULTI_CLASS_CLS: TEST_ARROW_PATH / "classification" / "multi_class_cls",
@@ -42,27 +34,9 @@ DEFAULT_GETI_CONFIG_PER_TASK = {
     OTXTaskType.DETECTION: TEST_ARROW_PATH / "detection",
     OTXTaskType.INSTANCE_SEGMENTATION: TEST_ARROW_PATH / "detection",
     OTXTaskType.SEMANTIC_SEGMENTATION: TEST_ARROW_PATH / "semantic_segmentation",
-    OTXTaskType.ANOMALY_CLASSIFICATION: TEST_ARROW_PATH / "anomaly",
+    OTXTaskType.ANOMALY: TEST_ARROW_PATH / "anomaly",
+    OTXTaskType.KEYPOINT_DETECTION: TEST_ARROW_PATH / "keypoint_detection",
 }
-
-
-def unzip_exportable_code(
-    work_dir: Path,
-    exported_path: Path,
-    dst_dir: Path,
-) -> Path:
-    """
-    Unzip exportable code.
-    Copied from Geti.
-    """
-    with zipfile.ZipFile(exported_path, mode="r") as zfp, TemporaryDirectory(prefix=str(work_dir)) as tmpdir:
-        zfp.extractall(tmpdir)
-        dirpath = Path(tmpdir)
-
-        shutil.move(dirpath / "model" / "model.xml", dst_dir / "exported_model.xml")
-        shutil.move(dirpath / "model" / "model.bin", dst_dir / "exported_model.bin")
-
-    shutil.move(exported_path, dst_dir / exported_path.name)
 
 
 class TestEngineAPI:
@@ -87,36 +61,22 @@ class TestEngineAPI:
     def _convert_config(
         self,
     ) -> dict:
-        model_template_id, hyper_parameters = load_hyper_parameters(self.geti_template_path)
+        otx_config = OTXConfig.from_yaml_file(self.geti_template_path)
 
         if self.tiling:
-            hyper_parameters["tiling_parameters"]["enable_tiling"]["default_value"] = True
-            hyper_parameters["tiling_parameters"]["enable_tiling"]["value"] = True
+            otx_config.hyper_parameters["dataset_preparation"]["augmentation"]["tiling"]["enable"] = True
 
         sub_task_type = (
             self.task_type
             if self.task_type in [OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
             else OTXTaskType.MULTI_CLASS_CLS
         )
-
-        # Matching geti config.json style
-        otx_config = OTXConfig(
-            job_type=JobType.TRAIN,
-            model_template_id=model_template_id,
-            hyper_parameters=hyper_parameters,
-            export_parameters=[
-                ExportParameter(ExportFormat.OPENVINO, PrecisionType.FP32, with_xai=True),
-                ExportParameter(ExportFormat.OPENVINO, PrecisionType.FP32),
-                ExportParameter(ExportFormat.OPENVINO, PrecisionType.FP16),
-                ExportParameter(ExportFormat.ONNX, PrecisionType.FP32),
-            ],
-            optimization_type=None,
-            sub_task_type=sub_task_type,
-        )
-        return otx_config.to_otx_config(self.tmp_path)
+        # patch sub_task_type for Geti
+        otx_config.sub_task_type = sub_task_type.value
+        return otx_config.to_otx_config()
 
     def _instantiate_engine(self) -> tuple[OTXEngine, dict[str, Any]]:
-        return ConfigConverter.instantiate(
+        return GetiConfigConverter.instantiate(
             config=self.otx_config,
             work_dir=self.tmp_path,
             data_root=self.arrow_file_path,
@@ -135,6 +95,26 @@ class TestEngineAPI:
         assert len(train_metric) > 0
         assert self.engine.checkpoint
 
+    def test_second_round(self):
+        """Test the second round of training."""
+        # Load the best checkpoint from the first round
+        # imitate Geti, recreate an engine
+        new_config = self._convert_config()
+        new_engine, train_kwargs = GetiConfigConverter.instantiate(
+            config=new_config,
+            work_dir=self.tmp_path / "second_round",
+            data_root=self.arrow_file_path,
+        )
+        train_kwargs["checkpoint"] = self.engine.checkpoint
+
+        # Check if the model is loaded correctly
+        assert isinstance(new_engine.model, OTXModel)
+
+        # sanity check for 1 epoch
+        train_kwargs["max_epochs"] = 1
+        train_metric = new_engine.train(**train_kwargs)
+        assert len(train_metric) > 0
+
     def test_predictions(self):
         """Test the prediction process. This is way to check that the model is valid."""
         predictions = self.engine.predict()
@@ -144,10 +124,11 @@ class TestEngineAPI:
     def test_export_and_infer_onnx(self):
         """Test exporting the model to ONNX."""
         for precision in [OTXPrecisionType.FP16, OTXPrecisionType.FP32]:
+            explain = False if self.task_type == OTXTaskType.KEYPOINT_DETECTION else precision == OTXPrecisionType.FP32
             exported_path = self.engine.export(
                 export_format=OTXExportFormatType.ONNX,
                 export_precision=precision,
-                explain=(precision == OTXPrecisionType.FP32),
+                explain=explain,
                 export_demo_package=False,
             )
             export_dir = exported_path.parent
@@ -166,25 +147,19 @@ class TestEngineAPI:
     def test_export_and_infer_openvino(self):
         """Test exporting the model to OpenVINO."""
         for precision in [OTXPrecisionType.FP16, OTXPrecisionType.FP32]:
+            explain = False if self.task_type == OTXTaskType.KEYPOINT_DETECTION else precision == OTXPrecisionType.FP32
             exported_path = self.engine.export(
                 export_format=OTXExportFormatType.OPENVINO,
                 export_precision=precision,
-                explain=(precision == OTXPrecisionType.FP32),
-                export_demo_package=True,
+                explain=explain,
             )
             export_dir = exported_path.parent
             assert export_dir.exists()
+            assert exported_path.exists()
+            assert exported_path.suffix == ".xml"
 
             # Test Model API
-            ov_export_dir = self.tmp_path / "ov_export"
-            ov_export_dir.mkdir(parents=True, exist_ok=True)
-            unzip_exportable_code(
-                work_dir=self.tmp_path,
-                exported_path=exported_path,
-                dst_dir=ov_export_dir,
-            )
-            xml_path = ov_export_dir / "exported_model.xml"
-            mapi_model = Model.create_model(xml_path)
+            mapi_model = Model.create_model(exported_path)
             assert mapi_model is not None
 
             predictions = mapi_model(self.image)
@@ -194,28 +169,20 @@ class TestEngineAPI:
 
     def test_optimize_and_infer_openvino_fp32(self):
         """Test optimizing the OpenVINO model with FP32 precision."""
-        fp32_export_dir = self.tmp_path / "fp32_export"
-        fp32_export_dir.mkdir(parents=True, exist_ok=True)
+        explain = self.task_type != OTXTaskType.KEYPOINT_DETECTION
         exported_path = self.engine.export(
             export_format=OTXExportFormatType.OPENVINO,
             export_precision=OTXPrecisionType.FP32,
-            explain=True,
-            export_demo_package=True,
+            explain=explain,
         )
-        unzip_exportable_code(
-            work_dir=self.tmp_path,
-            exported_path=exported_path,
-            dst_dir=fp32_export_dir,
-        )
+        assert exported_path.suffix == ".xml"
         # instantiate the OpenVINO engine
         ov_engine = create_engine(
-            model=fp32_export_dir / "exported_model.xml",
+            model=exported_path,
             data=self.engine.datamodule,
             work_dir=self.tmp_path,
         )
-        optimized_path = ov_engine.optimize(
-            checkpoint=fp32_export_dir / "exported_model.xml",
-        )
+        optimized_path = ov_engine.optimize()
         assert optimized_path.exists()
 
         # Test Model API
@@ -258,6 +225,7 @@ def test_engine_api(
     )
     tester.test_model_and_data_module()
     tester.test_training()
+    tester.test_second_round()
     tester.test_predictions()
     tester.test_export_and_infer_onnx()
     tester.test_export_and_infer_openvino()

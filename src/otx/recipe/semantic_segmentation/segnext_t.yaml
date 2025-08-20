@@ -35,7 +35,9 @@ data: ../_base_/data/semantic_segmentation.yaml
 callbacks:
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
-      warmup_iters: 100
+      monitor: val/Dice
+      min_delta: 0.001
+      mode: max
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: "" # use engine.work_dir

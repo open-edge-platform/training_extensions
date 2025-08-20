@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
 from torchmetrics import Metric, MetricCollection
@@ -42,21 +42,23 @@ class OTXDetectionModel(OTXModel):
     """Base class for the detection models used in OTX.
 
     Args:
-    label_info (LabelInfoTypes): Information about the labels.
-    data_input_params (DataInputParams): Parameters for data input.
-    model_name (str, optional): Name of the model. Defaults to "otx_detection_model".
-    optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
-    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
-    Defaults to DefaultSchedulerCallable.
-    metric (MetricCallable, optional): Metric callable. Defaults to MeanAveragePrecisionFMeasureCallable.
-    torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
-    tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
-    explain_mode (bool, optional): Whether to enable explain mode. Defaults to False.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "otx_detection_model".
+        optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
+        Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric callable. Defaults to MeanAveragePrecisionFMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        explain_mode (bool, optional): Whether to enable explain mode. Defaults to False.
     """
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "otx_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -80,15 +82,6 @@ class OTXDetectionModel(OTXModel):
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
-    def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """Perform a single validation step on a batch of data from the validation set.
-
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
-        """
-        return self._filter_outputs_by_threshold(super().validation_step(batch, batch_idx))
-
     def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
         """Perform a single test step on a batch of data from the test set.
 
@@ -96,7 +89,26 @@ class OTXDetectionModel(OTXModel):
             labels.
         :param batch_idx: The index of the current batch.
         """
-        return self._filter_outputs_by_threshold(super().test_step(batch, batch_idx))
+        preds = self.forward(inputs=batch)
+
+        if isinstance(preds, OTXBatchLossEntity):
+            raise TypeError(preds)
+
+        # 1. Filter outputs by threshold
+        preds = self._filter_outputs_by_threshold(preds)
+        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
+
+        # 2. Update metric
+        if isinstance(metric_inputs, dict):
+            self.metric.update(**metric_inputs)
+            return preds
+
+        if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
+            for inp in metric_inputs:
+                self.metric.update(**inp)
+            return preds
+
+        raise TypeError(metric_inputs)
 
     def predict_step(
         self,
@@ -116,6 +128,10 @@ class OTXDetectionModel(OTXModel):
         return outputs
 
     def _filter_outputs_by_threshold(self, outputs: OTXPredBatch) -> OTXPredBatch:
+        # NOTE: best_confidence_threshold comes from:
+        # 1. During validation: FMeasure metric computes optimal threshold, stored in hparams via _log_metrics
+        # 2. During test/predict: Uses the threshold computed during validation (from hparams)
+        # 3. If no threshold available: defaults to 0.5
         scores = []
         bboxes = []
         labels = []
@@ -209,7 +225,7 @@ class OTXDetectionModel(OTXModel):
                 scores=scores,
                 bboxes=bboxes,
                 labels=labels,
-                saliency_map=[saliency_map.detach().to(torch.float32) for saliency_map in outputs["saliency_map"]],
+                saliency_map=outputs["saliency_map"],
                 feature_vector=[
                     feature_vector.detach().unsqueeze(0).to(torch.float32)
                     for feature_vector in outputs["feature_vector"]
@@ -314,53 +330,64 @@ class OTXDetectionModel(OTXModel):
     def on_load_checkpoint(self, ckpt: dict[str, Any]) -> None:
         """Load state_dict from checkpoint.
 
-        For detection, it is need to update confidence threshold information when
+        For detection, it is needed to update confidence threshold and F1 score information when
         the metric is FMeasure.
         """
-        if best_confidence_threshold := ckpt.get("confidence_threshold") or (
-            (hyper_parameters := ckpt.get("hyper_parameters"))
-            and (best_confidence_threshold := hyper_parameters.get("best_confidence_threshold", None))
+        hyper_parameters = ckpt.get("hyper_parameters", {})
+
+        # Load best confidence threshold (legacy and new format)
+        if best_confidence_threshold := ckpt.get("confidence_threshold") or hyper_parameters.get(
+            "best_confidence_threshold",
+            None,
         ):
             self.hparams["best_confidence_threshold"] = best_confidence_threshold
         super().on_load_checkpoint(ckpt)
 
     def _log_metrics(self, meter: Metric, key: Literal["val", "test"], **compute_kwargs) -> None:
+        """This function is called every epoch.
+
+        Args:
+            meter: Metric object
+            key: "val" or "test"
+            compute_kwargs: Additional keyword arguments for the metric computation
+
+        """
         if key == "val":
-            retval = super()._log_metrics(meter, key)
+            super()._log_metrics(meter, key)
 
-            # NOTE: Validation metric logging can update `best_confidence_threshold`
-            if (
-                isinstance(meter, MetricCollection)
-                and (fmeasure := getattr(meter, "FMeasure", None))
-                and (best_confidence_threshold := getattr(fmeasure, "best_confidence_threshold", None))
-            ) or (
-                isinstance(meter, FMeasure)
-                and (best_confidence_threshold := getattr(meter, "best_confidence_threshold", None))
-            ):
-                self.hparams["best_confidence_threshold"] = best_confidence_threshold
+            fmeasure = None
+            if isinstance(meter, MetricCollection) and (fmeasure := getattr(meter, "FMeasure", None)):
+                pass  # fmeasure is set
+            elif isinstance(meter, FMeasure):
+                fmeasure = meter
 
-            return retval
+            if fmeasure is not None and hasattr(fmeasure, "best_confidence_threshold"):
+                self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
 
         if key == "test":
-            # NOTE: Test metric logging should use `best_confidence_threshold` found previously.
+            # NOTE: Test metric logging should use `best_confidence_threshold` in the loaded checkpoint.
             best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
             compute_kwargs = (
                 {"best_confidence_threshold": best_confidence_threshold} if best_confidence_threshold else {}
             )
 
-            return super()._log_metrics(meter, key, **compute_kwargs)
-
-        raise ValueError(key)
+            super()._log_metrics(meter, key, **compute_kwargs)
 
     @property
     def best_confidence_threshold(self) -> float:
-        """Best confidence threshold to filter outputs."""
-        if not hasattr(self, "_best_confidence_threshold"):
-            self._best_confidence_threshold = self.hparams.get("best_confidence_threshold", None)
-            if self._best_confidence_threshold is None:
+        """Best confidence threshold to filter outputs.
+
+        Always returns the current value from hparams, with 0.5 as fallback.
+        This ensures the threshold is always up-to-date after validation updates it.
+        """
+        threshold = self.hparams.get("best_confidence_threshold", None)
+        if threshold is None:
+            # Only log warning once to avoid spam
+            if not getattr(self, "_threshold_warning_logged", False):
                 log.warning("There is no predefined best_confidence_threshold, 0.5 will be used as default.")
-                self._best_confidence_threshold = 0.5
-        return self._best_confidence_threshold
+                self._threshold_warning_logged = True
+            return 0.5
+        return float(threshold)
 
     def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
         """Returns a dummy input for detection model."""

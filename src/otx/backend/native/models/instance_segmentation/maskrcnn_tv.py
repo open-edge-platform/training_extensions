@@ -23,6 +23,7 @@ from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.backend.native.models.instance_segmentation.heads import TVRoIHeads
+from otx.backend.native.models.instance_segmentation.rotated_det import RotatedPredictMixin
 from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import (
     FastRCNNConvFCHead,
     MaskRCNN,
@@ -267,3 +268,12 @@ class MaskRCNNTV(OTXInstanceSegModel):
         }
         meta_info_list = [meta_info] * len(inputs)
         return self.model.export(inputs, meta_info_list, explain_mode=self.explain_mode)
+
+
+class RotatedMaskRCNNModelV2(RotatedPredictMixin, MaskRCNNTV):
+    """Rotated MaskRCNN for Torchvision MaskRCNN model implementation."""
+
+    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredBatch:
+        """Perform prediction step for rotated detection."""
+        preds = super().predict_step(*args, **kwargs)
+        return self.rotated_predict_step(preds)

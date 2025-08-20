@@ -383,7 +383,9 @@ class PatchedConv2d(nn.Conv2d):
         x = super().forward(x)
 
         # Apply the fix to the output gradient of Conv2d.
-        return _patch_grad(x)
+        if is_xpu_available():
+            return _patch_grad(x)
+        return x
 
 
 class Conv2dModule(ConvModule):
@@ -392,7 +394,7 @@ class Conv2dModule(ConvModule):
     # Use the patched Conv2d if XPU is available.
     # This is to avoid issues with XPU performance.
     # TODO(kprokofi): Remove this when XPU performance is fixed.
-    _conv_nd = PatchedConv2d if is_xpu_available() else nn.Conv2d
+    _conv_nd = PatchedConv2d
 
 
 class Conv3dModule(ConvModule):

@@ -149,7 +149,10 @@ class LabelInfo:
     @classmethod
     def from_json(cls, serialized: str) -> LabelInfo:
         """Reconstruct it from the JSON serialized string."""
-        return cls(**json.loads(serialized))
+        labels_info = json.loads(serialized)
+        if "label_ids" not in labels_info:
+            labels_info["label_ids"] = labels_info["label_names"]
+        return cls(**labels_info)
 
 
 @dataclass
@@ -420,7 +423,7 @@ class SegLabelInfo(LabelInfo):
     ignore_index: int = 255
 
     @classmethod
-    def from_num_classes(cls, num_classes: int) -> LabelInfo:
+    def from_num_classes(cls, num_classes: int) -> SegLabelInfo:
         """Create this object from the number of classes.
 
         Args:
@@ -437,7 +440,7 @@ class SegLabelInfo(LabelInfo):
             label_names = ["background", "label_0"]
             return SegLabelInfo(label_names=label_names, label_groups=[label_names], label_ids=["0", "1"])
 
-        return super().from_num_classes(num_classes)
+        return super().from_num_classes(num_classes)  # type: ignore[return-value]
 
 
 @dataclass

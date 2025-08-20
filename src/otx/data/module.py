@@ -14,12 +14,10 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 from torchvision.transforms.v2 import Normalize
 
-from otx.backend.native.utils.instantiators import instantiate_sampler
-from otx.backend.native.utils.utils import get_adaptive_num_workers
 from otx.config.data import TileConfig
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
-from otx.data.utils import adapt_input_size_to_dataset, adapt_tile_config
+from otx.data.utils import adapt_input_size_to_dataset, adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType
 from otx.types.image import ImageColorChannel
@@ -107,6 +105,7 @@ class OTXDataModule(LightningDataModule):
                 dataset,
                 self.data_format,
                 self.unannotated_items_ratio,
+                self.task,
                 ignore_index=self.ignore_index if self.task == "SEMANTIC_SEGMENTATION" else None,
             )
         if isinstance(input_size, str) and input_size == "auto":

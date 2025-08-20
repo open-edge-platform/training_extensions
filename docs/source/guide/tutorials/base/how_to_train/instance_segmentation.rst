@@ -1,17 +1,16 @@
 Instance Segmentation model
 ================================
 
-This tutorial reveals end-to-end solution from installation to model export and optimization for instance segmentation task on a specific example.
-On this page, we show how to train, validate, export and optimize Mask-RCNN model on a toy dataset.
+This tutorial provides a step-by-step guide — from installation to model training — for the instance segmentation task using a specific example.
 
-To learn more about Instance Segmentation task, refer to :doc:`../../../explanation/algorithms/segmentation/instance_segmentation`.
+To learn more about the instance segmentation task, refer to :doc:`../../../explanation/algorithms/segmentation/instance_segmentation`.
 
+In this tutorial, we demonstrate how to train and validate the **MaskRCNN-R50** model on the publicly available **WGISD** dataset.
+For details on how to export, optimize, and deploy the trained model, refer to :doc:`../export`.
 
-.. note::
+To provide a concrete example, all commands in this tutorial use the **MaskRCNN-R50** model — a medium-sized architecture that offers a good trade-off between accuracy and inference speed.
 
-  To learn deeper how to manage training process of the model including additional parameters and its modification.
-
-The process has been tested on the following configuration.
+This process has been tested with the following configuration:
 
 - Ubuntu 20.04
 - NVIDIA GeForce RTX 3090
@@ -147,7 +146,7 @@ The list of supported recipes for instance segmentation is available with the co
 
         .. code-block:: python
 
-          from otx.engine.utils.api import list_models
+          from otx.backend.native.cli.utils import list_models
 
           model_lists = list_models(task="INSTANCE_SEGMENTATION")
           print(model_lists)
@@ -214,12 +213,6 @@ Here are the main outputs can expect with CLI:
 
 .. tab-set::
 
-    .. tab-item:: CLI (auto-config)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx train --data_root data/wgisd --task INSTANCE_SEGMENTATION
-
     .. tab-item:: CLI (with config)
 
         .. code-block:: shell
@@ -230,15 +223,29 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             data_root = "data/wgisd"
             recipe = "src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml"
 
-            engine = Engine.from_config(
+            engine = OTXEngine.from_config(
                       config_path=recipe,
                       data_root=data_root,
                       work_dir="otx-workspace",
+                    )
+
+            # it is also possible to pass a config as a model to the OTXEngine directly
+            engine = OTXEngine(
+                      model=recipe,
+                      data=data_root,
+                      work_dir="otx-workspace",
+                    )
+
+            # one more possibility to obtain the right engine by the given model/dataset
+            from otx.engine import create_engine
+            engine = create_engine(
+                      model=recipe,
+                      data=data_root,
                     )
 
             engine.train(...)
@@ -247,22 +254,36 @@ Here are the main outputs can expect with CLI:
 
         .. code-block:: python
 
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
+            from otx.backend.native.models import MaskRCNN
 
             data_root = "data/wgisd"
+            model = MaskRCNN(
+                      model_name="mackrcnn_resnet50",
+                      label_info = {"label_names": ["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"],
+                                     "label_id": [0, 1, 2, 3, 4],
+                                     "label_groups": [["Chardonnay", "Cabernet Franc", "Cabernet Sauvignon", "Sauvignon Blanc", "Syrah"]]},
+                      data_input_params = {"input_size": [1024, 1024],
+                                            "mean": [0.0, 0.0, 0.0],
+                                            "std": [255.0, 255.0, 255.0]}
+                    )
 
-            engine = Engine(
-                      model="maskrcnn_r50",
-                      task="INSTANCE_SEGMENTATION",
+            engine = OTXEngine(
+                      model=model,
                       data_root=data_root,
                       work_dir="otx-workspace",
                     )
 
+            # one more possibility to obtain the right engine by the given model/dataset
+            # using "create_engine" function
+            from otx.engine import create_engine
+            engine = create_engine(
+                      model=model,
+                      data=data_root,
+                    )
+
             engine.train(...)
 
-.. note::
-
-  Because the dataset structure is mostly the same as detection, INSTANCE_SEGMENTATION requires the task type to be specified to enable auto-configuration.
 
 The training time highly relies on the hardware characteristics, for example on 1 NVIDIA GeForce RTX 3090 the training took about 10 minutes with full dataset.
 
@@ -288,11 +309,11 @@ For example, to decrease the batch size to 4, fix the number of epochs to 100 an
 
             from otx.config.data import SubsetConfig
             from otx.data.module import OTXDataModule
-            from otx.engine import Engine
+            from otx.backend.native.engine import OTXEngine
 
             datamodule = OTXDataModule(..., train_subset=SubsetConfig(..., batch_size=4))
 
-            engine = Engine(..., datamodule=datamodule)
+            engine = OTXEngine(..., data=datamodule)
 
             engine.train(max_epochs=100)
 
@@ -317,6 +338,28 @@ while training logs can be found in the ``{work_dir}/{timestamp}`` dir.
   ...
 
 After that, we have the PyTorch instance segmentation model trained with OpenVINO™ Training Extensions, which we can use for evaluation, export, optimization and deployment.
+
+6. It is also possible to resume training from the last checkpoint.
+For this, we can use the ``--resume`` parameter with the path to the checkpoint file.
+
+.. tab-set::
+
+    .. tab-item:: CLI
+
+        .. code-block:: shell
+
+            (otx) ...$ otx train --config src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml \
+                                  --data_root data/flower_photos \
+                                  --checkpoint otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt \
+                                  --resume True
+
+    .. tab-item:: API
+
+        .. code-block:: python
+            from otx.backend.native.engine import OTXEngine
+            engine = OTXEngine(model="src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml", data="data/wgisd", work_dir="otx-workspace")
+            engine.train(resume=True,
+                         checkpoint="otx-workspace/20240403_134256/checkpoints/epoch_014.ckpt")
 
 ***********
 Validation
@@ -376,109 +419,4 @@ and save performance results in ``otx-workspace``:
 3. The output of ``{work_dir}/{timestamp}/csv/version_0/metrics.csv`` consists of
 a dict with target metric name and its value.
 
-
-*********
-Export
-*********
-
-1. ``otx export`` exports a trained Pytorch `.pth` model to the
-OpenVINO™ Intermediate Representation (IR) format.
-
-It allows running the model on the Intel hardware much more efficient, especially on the CPU. Also, the resulting IR model is required to run PTQ optimization. IR model consists of 2 files: ``exported_model.xml`` for weights and ``exported_model.bin`` for architecture.
-
-2. We can run the below command line to export the trained model
-and save the exported model to the ``{work_dir}/{timestamp}/`` folder.
-
-.. tab-set::
-
-    .. tab-item:: CLI (with work_dir)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export --work_dir otx-workspace
-            ...
-            Elapsed time: 0:00:06.588245
-
-    .. tab-item:: CLI (with config)
-
-        .. code-block:: shell
-
-            (otx) ...$ otx export ... --checkpoint otx-workspace/20240312_051135/checkpoints/epoch_033.ckpt
-            ...
-            Elapsed time: 0:00:06.588245
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            engine.export()
-
-
-*************
-Optimization
-*************
-
-1. We can further optimize the model with ``otx optimize``.
-It uses NNCF or PTQ depending on the model and transforms it to ``INT8`` format.
-
-Please, refer to :doc:`optimization explanation <../../../explanation/additional_features/models_optimization>` section to get the intuition of what we use under the hood for optimization purposes.
-
-2.  Command example for optimizing
-OpenVINO™ model (.xml) with OpenVINO™ PTQ.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx optimize  --work_dir otx-workspace \
-                                     --checkpoint otx-workspace/20240312_052847/exported_model.xml
-
-            ...
-            Statistics collection ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 • 0:00:14 • 0:00:00
-            Applying Fast Bias correction ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 58/58 • 0:00:02 • 0:00:00
-            Elapsed time: 0:00:24.958733
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            ckpt_path = "otx-workspace/20240312_052847/exported_model.xml"
-            engine.optimize(checkpoint=ckpt_path)
-
-Please note, that PTQ will take some time (generally less than NNCF optimization) without logging to optimize the model.
-
-.. note::
-
-    You can also pass `export_demo_package=True` parameter to obtain `exportable_code.zip` archive with packed optimized model and demo package. Please refer to :doc:`export tutorial <../export>`.
-
-3. Finally, we can also evaluate the optimized model by passing
-it to the ``otx test`` function.
-
-.. tab-set::
-
-    .. tab-item:: CLI
-
-        .. code-block:: shell
-
-            (otx) ...$ otx test --work_dir otx-workspace \
-                                --checkpoint otx-workspace/20240312_055042/optimized_model.xml \
-
-            ...
-            ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-            ┃        Test metric        ┃       DataLoader 0        ┃
-            ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-            │       test/map_50         │    0.5482384562492371     │
-            └───────────────────────────┴───────────────────────────┘
-            Elapsed time: 0:00:10.260521
-
-    .. tab-item:: API
-
-        .. code-block:: python
-
-            ckpt_path = "otx-workspace/20240312_055042/optimized_model.xml"
-            engine.test(checkpoint=ckpt_path)
-
-3. Now we have fully trained, optimized and exported an
-efficient model representation ready-to-use instance segmentation model.
+The next tutorial on how to export, optimize, and deploy the model is available at :doc:`../export`.

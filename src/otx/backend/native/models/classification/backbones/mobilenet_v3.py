@@ -269,8 +269,8 @@ class MobileNetV3Base(ModelInterface):
         return self.extract_features(x)
 
 
-class MobileNetV3(MobileNetV3Base):
-    """MobileNetV3 constructor.
+class MobileNetV3FeatureExtractor(MobileNetV3Base):
+    """MobileNetV3FeatureExtractor constructor.
 
     Args:
         layer_cfgs (list): List of layer configurations.
@@ -397,7 +397,7 @@ class MobileNetV3Backbone:
         width_mult: float = 1.0,
         pretrained: bool = True,
         **kwargs,
-    ) -> MobileNetV3:
+    ) -> MobileNetV3FeatureExtractor:
         """Create a new instance of the MobileNetV3 class.
 
         Args:
@@ -413,7 +413,7 @@ class MobileNetV3Backbone:
             msg = f"Unknown MobileNetV3 model: {model_name}"
             raise ValueError(msg)
 
-        model = MobileNetV3(
+        model = MobileNetV3FeatureExtractor(
             layer_cfgs=cls.MV3_CFG[model_name]["layer_cfgs"],
             width_mult=width_mult,
             **kwargs,

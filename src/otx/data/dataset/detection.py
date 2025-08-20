@@ -55,4 +55,5 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
         # Apply augmentation switch if available
         if self.has_dynamic_augmentation:
             self._apply_augmentation_switch()
+
         return self._apply_transforms(entity)

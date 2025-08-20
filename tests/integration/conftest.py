@@ -8,9 +8,8 @@ import inspect
 from pathlib import Path
 
 import pytest
-import yaml
 
-from otx.tools.converter import TEMPLATE_ID_DICT
+from otx.tools.converter import TEMPLATE_ID_MAPPING, ModelStatus
 from otx.types.task import OTXTaskType
 
 
@@ -62,7 +61,7 @@ def get_task_list(task: str) -> list[OTXTaskType]:
     return tasks
 
 
-def get_model_category_list(task: str, default_model_only: bool = False) -> list[str]:
+def get_model_category_list(task: str) -> list[str]:
     """
     Retrieve the list of model categories from `otx/tools/templates`.
 
@@ -73,51 +72,31 @@ def get_model_category_list(task: str, default_model_only: bool = False) -> list
     Args:
         task (str): The task for which to retrieve model categories.
         default_model_only (bool): If True, only include default models. Defaults to False.
-
     Raises:
-        FileNotFoundError: If no recipe is found for the specified task.
-
     Returns:
         list[str]: A list of recipe paths.
     """
 
     # Locate the OTX module and relevant directories
-    otx_module = importlib.import_module("otx")
-    otx_root = Path(inspect.getfile(otx_module)).parent
-    template_dir = otx_root / "tools" / "templates"
-
-    # Collect all template.yaml files
-    template_paths = template_dir.rglob("template.yaml")
+    task_list = get_task_list(task.lower())
     recipes = []
 
-    # Extract model categories from templates
-    task_list = get_task_list(task.lower())
-    for template_path in template_paths:
-        with template_path.open() as file:
-            template = yaml.safe_load(file)
-
-        if default_model_only and not template.get("is_default_for_task", False):
+    for meta_info in TEMPLATE_ID_MAPPING.values():
+        if meta_info["status"] not in [ModelStatus.BALANCE, ModelStatus.SPEED, ModelStatus.ACCURACY]:
             continue
 
-        model_id = template.get("model_template_id")
-        if not model_id or "model_category" not in template:
-            continue
+        recipe_path = meta_info["recipe_path"]
 
-        model_info = TEMPLATE_ID_DICT.get(model_id)
-        if not model_info:
-            continue
-
-        config_path = model_info["model_config_path"]
-        task = OTXTaskType(config_path.split("/")[-2].upper())  # Extract task from the path
+        task = OTXTaskType(str(recipe_path).split("/")[-2].upper())  # Extract task from the path
         if task in task_list:
-            recipes.append(config_path)
+            recipes.append(str(recipe_path))
 
         if task == OTXTaskType.MULTI_CLASS_CLS:
             # Add multi_label_cls and h_label_cls configs as well if they are in the list
             if OTXTaskType.MULTI_LABEL_CLS in task_list:
-                recipes.append(config_path.replace("multi_class_cls", "multi_label_cls"))
+                recipes.append(str(recipe_path).replace("multi_class_cls", "multi_label_cls"))
             if OTXTaskType.H_LABEL_CLS in task_list:
-                recipes.append(config_path.replace("multi_class_cls", "h_label_cls"))
+                recipes.append(str(recipe_path).replace("multi_class_cls", "h_label_cls"))
 
     return recipes
 

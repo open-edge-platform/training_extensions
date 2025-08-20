@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## \[Unreleased\]
+## \[2.5.0\]
 
 ### New features
 
@@ -11,12 +11,34 @@ All notable changes to this project will be documented in this file.
 
 ### Enhancements
 
+- Refactor GetiConfigConverter. Update integration tests
+  (<https://github.com/open-edge-platform/training_extensions/pull/4477>)
+- Refactor OTXModels
+  (<https://github.com/open-edge-platform/training_extensions/pull/4241>)
+- Introduce Native OTX Engine, refactor folders structure
+  (<https://github.com/open-edge-platform/training_extensions/pull/4414>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4408>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4339>)
+- Introduce OVEngine
+  (<https://github.com/open-edge-platform/training_extensions/pull/4374>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4436>)
+- Refactor OTX DataEntities
+  (<https://github.com/open-edge-platform/training_extensions/pull/4322>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4282>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4239>),
+  (<https://github.com/open-edge-platform/training_extensions/pull/4412>)
+- Introduce new preformance benchmark v2
+  (<https://github.com/open-edge-platform/training_extensions/pull/4435>,
+  <https://github.com/open-edge-platform/training_extensions/pull/4400>,
+  <https://github.com/open-edge-platform/training_extensions/pull/4435>)
+- Update documentation
+  (<https://github.com/open-edge-platform/training_extensions/pull/4447>)
 - Bump OV and NNCF to 2025.2
-  (https://github.com/open-edge-platform/training_extensions/pull/4423)
+  (<https://github.com/open-edge-platform/training_extensions/pull/4423>)
 - Bump torch to 2.7.0
-  (https://github.com/open-edge-platform/training_extensions/pull/4361)
+  (<https://github.com/open-edge-platform/training_extensions/pull/4361>)
 - Add model arch name to exported model metadata
-  (https://github.com/open-edge-platform/training_extensions/pull/4407)
+  (<https://github.com/open-edge-platform/training_extensions/pull/4407>)
 
 ### Bug fixes
 
@@ -28,11 +50,55 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/openvinotoolkit/training_extensions/pull/4300>)
 - Fix missing mAP score reporting for instance segmentation
   (<https://github.com/open-edge-platform/training_extensions/pull/4364>)
+- Provide XPU workarounds for object detection task
+  (<https://github.com/open-edge-platform/training_extensions/pull/4464>)
 
 ### Removed
 
 - Remove Visual Prompting
   (<https://github.com/openvinotoolkit/training_extensions/pull/4291>,<https://github.com/open-edge-platform/training_extensions/pull/4370>)
+
+## \[2.4.6\]
+
+### Bug fixes
+
+- Fix label info dispatching
+  (<https://github.com/open-edge-platform/training_extensions/pull/4443>)
+
+## \[2.4.5\]
+
+### Bug fixes
+
+- Fix UFlow by adding self.\_setup in UFlow model
+  (<https://github.com/open-edge-platform/training_extensions/pull/4431>)
+- Fix loading/saving checkpoints in OTX
+  (<https://github.com/open-edge-platform/training_extensions/pull/4433>,
+  <https://github.com/open-edge-platform/training_extensions/pull/4438>)
+
+## \[2.4.4\]
+
+### Bug fixes
+
+- Fix torch.load() to be able to load all OTX custom snapshots
+  (<https://github.com/open-edge-platform/training_extensions/pull/4392>)
+
+## \[2.4.3\]
+
+### Enhancements
+
+- Bump torch to 2.7.0
+
+## \[2.4.2\]
+
+### Bug fixes
+
+- Fix torchmetrics to 1.6.0
+
+## \[2.4.1\]
+
+### Bug fixes
+
+- Update Datumaro from 1.10.0rc0 to 1.10.0
 
 ## \[2.4.0\]
 

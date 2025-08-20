@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 def adapt_batch_size(
     engine: OTXEngine,
     not_increase: bool = True,
-    callbacks: list[Callback] | Callback | None = None,
     **train_args,
 ) -> None:
     """Change the actual batch size depending on the current GPU status.
@@ -39,11 +38,11 @@ def adapt_batch_size(
     Args:
         engine (OTXEngine): engine instnace.
         not_increase (bool) : Whether adapting batch size to larger value than default value or not.
-        callbacks (list[Callback] | Callback | None, optional): callbacks used during training. Defaults to None.
     """
     if not (is_cuda_available() or is_xpu_available()):
-        msg = "Adaptive batch size supports CUDA or XPU."
-        raise RuntimeError(msg)
+        msg = "Adaptive batch size supports only CUDA or XPU."
+        logger.warning(msg)
+        return
 
     engine.model.patch_optimizer_and_scheduler_for_adaptive_bs()
     default_bs = engine.datamodule.train_subset.batch_size
@@ -54,7 +53,7 @@ def adapt_batch_size(
             _apply_new_batch_size(engine, new_batch_size)
         return
 
-    train_func = partial(_train_model, engine=engine, callbacks=callbacks, **_adjust_train_args(train_args))
+    train_func = partial(_train_model, engine=engine, **_adjust_train_args(train_args))
     bs_search_algo = BsSearchAlgo(
         train_func=train_func,
         default_bs=default_bs,
@@ -84,11 +83,12 @@ def adapt_batch_size(
 def _adjust_train_args(train_args: dict[str, Any]) -> dict[str, Any]:
     train_args.update(train_args.pop("kwargs", {}))
     train_args.pop("self", None)
-    train_args.pop("adaptive_bs")
+    train_args.pop("adaptive_bs", None)
+    train_args.pop("callbacks", None)
     return train_args
 
 
-def _train_model(bs: int, engine: OTXEngine, callbacks: list[Callback] | Callback | None = None, **train_args) -> None:
+def _train_model(bs: int, engine: OTXEngine, **train_args) -> None:
     if bs <= 0:
         msg = f"Batch size should be greater than 0, but {bs} is given."
         raise ValueError(msg)
@@ -96,7 +96,11 @@ def _train_model(bs: int, engine: OTXEngine, callbacks: list[Callback] | Callbac
         engine._cache.update(devices=1)  # noqa: SLF001
 
     engine.datamodule.train_subset.batch_size = bs
-    engine.train(callbacks=_register_callback(callbacks), **train_args)
+    engine.datamodule.val_subset.batch_size = bs
+    engine.datamodule.test_subset.batch_size = bs
+    train_args["adaptive_bs"] = "None"
+    print(f"Runnning training trial with bs = {bs} ...")
+    engine.train(callbacks=_register_callback(), **train_args)
 
 
 def _register_callback(callbacks: list[Callback] | Callback | None = None) -> list[Callback]:
@@ -110,7 +114,13 @@ def _register_callback(callbacks: list[Callback] | Callback | None = None) -> li
 
 def _apply_new_batch_size(engine: OTXEngine, new_batch_size: int) -> None:
     origin_bs = engine.datamodule.train_subset.batch_size
+    if is_xpu_available() and new_batch_size != 1:
+        new_batch_size -= 1  # for safety reasons
     if new_batch_size == origin_bs:
         return
     engine.datamodule.train_subset.batch_size = new_batch_size
-    engine.model.optimizer_callable.optimizer_kwargs["lr"] *= sqrt(new_batch_size / origin_bs)  # type: ignore[attr-defined]
+    engine.datamodule.val_subset.batch_size = new_batch_size
+    engine.datamodule.test_subset.batch_size = new_batch_size
+    new_lr = engine.model.optimizer_callable.optimizer_kwargs["lr"] * sqrt(new_batch_size / origin_bs)  # type: ignore[attr-defined]
+    print(f"new batch size = {new_batch_size} with learning rate = {new_lr} is set for the training and validation.")
+    engine.model.optimizer_callable.optimizer_kwargs["lr"] = new_lr  # type: ignore[attr-defined]
