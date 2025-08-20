@@ -3,14 +3,13 @@ import logging
 import multiprocessing as mp
 import queue
 import time
-from multiprocessing.synchronize import Condition as ConditionClass
 from multiprocessing.synchronize import Event as EventClass
 
 from fastrtc import AdditionalOutputs
 
 from app.entities.stream_data import StreamData
 from app.schemas import Sink, SinkType
-from app.services import ActivePipelineService, DispatchService
+from app.services import DispatchService
 from app.services.dispatchers import Dispatcher
 
 logger = logging.getLogger(__name__)
@@ -20,10 +19,11 @@ def dispatching_routine(
     pred_queue: mp.Queue,
     rtc_stream_queue: queue.Queue,
     stop_event: EventClass,
-    config_changed_condition: ConditionClass,
 ) -> None:
     """Pull predictions from the queue and dispatch them to the configured outputs and WebRTC visualization stream."""
-    active_pipeline_service = ActivePipelineService(config_changed_condition=config_changed_condition)
+    from app.api.dependencies import get_active_pipeline_service  # Avoid circular import
+
+    active_pipeline_service = get_active_pipeline_service()
 
     prev_sink_config: Sink | None = None
     destinations: list[Dispatcher] = []

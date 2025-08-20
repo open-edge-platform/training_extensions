@@ -20,7 +20,6 @@ class TestActivePipelineServiceIntegration:
 
     def test_load_default_config(self):
         """Test default configuration settings."""
-
         active_pipeline_service = ActivePipelineService()
         source = active_pipeline_service.get_source_config()
         sink = active_pipeline_service.get_sink_config()

@@ -1,9 +1,7 @@
 import psutil
 
-from app.utils.singleton import Singleton
 
-
-class SystemService(metaclass=Singleton):
+class SystemService:
     """Service to get system information"""
 
     def __init__(self) -> None:

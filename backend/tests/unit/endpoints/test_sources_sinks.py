@@ -1,16 +1,24 @@
 import io
 from enum import StrEnum
-from unittest.mock import patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 import yaml
 from fastapi import status
 
+from app.api.dependencies import get_configuration_service
+from app.main import app
 from app.schemas import OutputFormat, SinkType, SourceType
 from app.schemas.sink import FolderSinkConfig, MqttSinkConfig
 from app.schemas.source import VideoFileSourceConfig, WebcamSourceConfig
-from app.services import ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.services import (
+    ConfigurationService,
+    ResourceAlreadyExistsError,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceType,
+)
 
 
 class ConfigApiPath(StrEnum):
@@ -59,6 +67,13 @@ def fxt_mqtt_sink() -> MqttSinkConfig:
     )
 
 
+@pytest.fixture
+def fxt_config_service() -> MagicMock:
+    config_service = MagicMock(spec=ConfigurationService)
+    app.dependency_overrides[get_configuration_service] = lambda: config_service
+    return config_service
+
+
 class TestSourceAndSinkEndpoints:
     @pytest.mark.parametrize(
         "fixture_name, api_path, create_method",
@@ -67,19 +82,19 @@ class TestSourceAndSinkEndpoints:
             ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
-    def test_create_config_success(self, fixture_name, api_path, create_method, fxt_client, request):
+    def test_create_config_success(
+        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
+        getattr(fxt_config_service, create_method).return_value = fxt_config
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, create_method).return_value = fxt_config
+        response = fxt_client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
 
-            response = fxt_client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
-
-            assert response.status_code == status.HTTP_201_CREATED
-            assert response.json()["id"] == config_id
-            assert response.json()["name"] == fxt_config.name
-            getattr(mock_service.return_value, create_method).assert_called_once()
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["id"] == config_id
+        assert response.json()["name"] == fxt_config.name
+        getattr(fxt_config_service, create_method).assert_called_once()
 
     @pytest.mark.parametrize(
         "api_path, create_method, config_data",
@@ -92,13 +107,14 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "create_sink", {"sink_type": SinkType.DISCONNECTED, "name": "Disconnected Sink"}),
         ],
     )
-    def test_create_config_disconnected_fails(self, api_path, create_method, config_data, fxt_client):
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            response = fxt_client.post(f"/api/{api_path}", json=config_data)
+    def test_create_config_disconnected_fails(
+        self, api_path, create_method, config_data, fxt_config_service, fxt_client
+    ):
+        response = fxt_client.post(f"/api/{api_path}", json=config_data)
 
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
-            assert "DISCONNECTED cannot be created" in response.json()["detail"]
-            getattr(mock_service.return_value, create_method).assert_not_called()
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "DISCONNECTED cannot be created" in response.json()["detail"]
+        getattr(fxt_config_service, create_method).assert_not_called()
 
     @pytest.mark.parametrize(
         "api_path, create_method",
@@ -107,12 +123,30 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "create_sink"),
         ],
     )
-    def test_create_sink_validation_error(self, api_path, create_method, fxt_client):
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            response = fxt_client.post(f"/api/{api_path}", json={"name": ""})
+    def test_create_sink_validation_error(self, api_path, create_method, fxt_config_service, fxt_client):
+        response = fxt_client.post(f"/api/{api_path}", json={"name": ""})
 
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
-            getattr(mock_service.return_value, create_method).assert_not_called()
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        getattr(fxt_config_service, create_method).assert_not_called()
+
+    @pytest.mark.parametrize(
+        "resource_type, api_path, fixture_name, create_method",
+        [
+            (ResourceType.SOURCE, ConfigApiPath.SOURCES, "fxt_webcam_source", "create_source"),
+            (ResourceType.SINK, ConfigApiPath.SINKS, "fxt_folder_sink", "create_sink"),
+        ],
+    )
+    def test_create_config_exists(
+        self, resource_type, api_path, fixture_name, create_method, fxt_config_service, fxt_client, request
+    ):
+        fxt_config = request.getfixturevalue(fixture_name)
+        getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
+            resource_type=resource_type, resource_name="New Config"
+        )
+        response = fxt_client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        getattr(fxt_config_service, create_method).assert_called_once()
 
     @pytest.mark.parametrize(
         "fixtures, api_path, list_method",
@@ -121,17 +155,15 @@ class TestSourceAndSinkEndpoints:
             (["fxt_folder_sink", "fxt_mqtt_sink"], ConfigApiPath.SINKS, "list_sinks"),
         ],
     )
-    def test_list_configs(self, fixtures, api_path, list_method, fxt_client, request):
+    def test_list_configs(self, fixtures, api_path, list_method, fxt_config_service, fxt_client, request):
         fxt_configs = [request.getfixturevalue(fixture) for fixture in fixtures]
+        getattr(fxt_config_service, list_method).return_value = fxt_configs
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, list_method).return_value = fxt_configs
+        response = fxt_client.get(f"/api/{api_path}")
 
-            response = fxt_client.get(f"/api/{api_path}")
-
-            assert response.status_code == status.HTTP_200_OK
-            assert len(response.json()) == 2
-            getattr(mock_service.return_value, list_method).assert_called_once()
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 2
+        getattr(fxt_config_service, list_method).assert_called_once()
 
     @pytest.mark.parametrize(
         "fixture_name, api_path, get_method",
@@ -140,18 +172,16 @@ class TestSourceAndSinkEndpoints:
             ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
-    def test_get_config_success(self, fixture_name, api_path, get_method, fxt_client, request):
+    def test_get_config_success(self, fixture_name, api_path, get_method, fxt_config_service, fxt_client, request):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
+        getattr(fxt_config_service, get_method).return_value = fxt_config
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, get_method).return_value = fxt_config
+        response = fxt_client.get(f"/api/{api_path}/{config_id}")
 
-            response = fxt_client.get(f"/api/{api_path}/{config_id}")
-
-            assert response.status_code == status.HTTP_200_OK
-            assert response.json()["id"] == config_id
-            getattr(mock_service.return_value, get_method).assert_called_once_with(fxt_config.id)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["id"] == config_id
+        getattr(fxt_config_service, get_method).assert_called_once_with(fxt_config.id)
 
     @pytest.mark.parametrize(
         "resource_type, api_path, get_method",
@@ -160,18 +190,14 @@ class TestSourceAndSinkEndpoints:
             (ResourceType.SINK, ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
-    def test_get_config_not_found(self, resource_type, api_path, get_method, fxt_client):
+    def test_get_config_not_found(self, resource_type, api_path, get_method, fxt_config_service, fxt_client):
         config_id = uuid4()
+        getattr(fxt_config_service, get_method).side_effect = ResourceNotFoundError(resource_type, str(config_id))
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, get_method).side_effect = ResourceNotFoundError(
-                resource_type, str(config_id)
-            )
+        response = fxt_client.get(f"/api/{api_path}/{str(config_id)}")
 
-            response = fxt_client.get(f"/api/{api_path}/{str(config_id)}")
-
-            assert response.status_code == status.HTTP_404_NOT_FOUND
-            getattr(mock_service.return_value, get_method).assert_called_once_with(config_id)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        getattr(fxt_config_service, get_method).assert_called_once_with(config_id)
 
     @pytest.mark.parametrize("api_path", [ConfigApiPath.SOURCES, ConfigApiPath.SINKS])
     def test_get_config_invalid_uuid(self, api_path, fxt_client):
@@ -185,20 +211,20 @@ class TestSourceAndSinkEndpoints:
             ("fxt_folder_sink", ConfigApiPath.SINKS, "update_sink", {"folder_path": "/new/path"}),
         ],
     )
-    def test_update_sink_success(self, fixture_name, api_path, update_method, update_data, fxt_client, request):
+    def test_update_sink_success(
+        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
+        updated_config = fxt_config.model_copy(update=update_data)
+        getattr(fxt_config_service, update_method).return_value = updated_config
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            updated_config = fxt_config.model_copy(update=update_data)
-            getattr(mock_service.return_value, update_method).return_value = updated_config
+        response = fxt_client.patch(f"/api/{api_path}/{config_id}", json=update_data)
 
-            response = fxt_client.patch(f"/api/{api_path}/{config_id}", json=update_data)
-
-            assert response.status_code == status.HTTP_200_OK
-            key, value = next(iter(update_data.items()))
-            assert response.json()[key] == value
-            getattr(mock_service.return_value, update_method).assert_called_once_with(fxt_config.id, update_data)
+        assert response.status_code == status.HTTP_200_OK
+        key, value = next(iter(update_data.items()))
+        assert response.json()[key] == value
+        getattr(fxt_config_service, update_method).assert_called_once_with(fxt_config.id, update_data)
 
     @pytest.mark.parametrize(
         "api_path, update_method, resource_type",
@@ -207,16 +233,13 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "update_sink", ResourceType.SINK),
         ],
     )
-    def test_update_config_not_found(self, api_path, update_method, resource_type, fxt_client):
+    def test_update_config_not_found(self, api_path, update_method, resource_type, fxt_config_service, fxt_client):
         config_id = str(uuid4())
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, update_method).side_effect = ResourceNotFoundError(
-                resource_type, config_id
-            )
+        getattr(fxt_config_service, update_method).side_effect = ResourceNotFoundError(resource_type, config_id)
 
-            response = fxt_client.patch(f"/api/{api_path}/{config_id}", json={"name": "Updated"})
+        response = fxt_client.patch(f"/api/{api_path}/{config_id}", json={"name": "Updated"})
 
-            assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.parametrize(
         "fixture_name, api_path, update_method, update_data",
@@ -226,17 +249,16 @@ class TestSourceAndSinkEndpoints:
         ],
     )
     def test_update_config_type_forbidden(
-        self, fixture_name, api_path, update_method, update_data, fxt_client, request
+        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            response = fxt_client.patch(f"/api/{api_path}/{config_id}", json=update_data)
+        response = fxt_client.patch(f"/api/{api_path}/{config_id}", json=update_data)
 
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
-            assert "_type" in response.json()["detail"]
-            getattr(mock_service.return_value, update_method).assert_not_called()
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "_type" in response.json()["detail"]
+        getattr(fxt_config_service, update_method).assert_not_called()
 
     @pytest.mark.parametrize(
         "fixture_name, api_path, delete_method",
@@ -245,16 +267,17 @@ class TestSourceAndSinkEndpoints:
             ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id"),
         ],
     )
-    def test_delete_config_success(self, fixture_name, api_path, delete_method, fxt_client, request):
+    def test_delete_config_success(
+        self, fixture_name, api_path, delete_method, fxt_config_service, fxt_client, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, delete_method).side_effect = None
+        getattr(fxt_config_service, delete_method).side_effect = None
 
-            response = fxt_client.delete(f"/api/{api_path}/{config_id}")
+        response = fxt_client.delete(f"/api/{api_path}/{config_id}")
 
-            assert response.status_code == status.HTTP_204_NO_CONTENT
-            getattr(mock_service.return_value, delete_method).assert_called_once_with(fxt_config.id)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        getattr(fxt_config_service, delete_method).assert_called_once_with(fxt_config.id)
 
     @pytest.mark.parametrize(
         "api_path, delete_method",
@@ -263,14 +286,13 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "delete_sink_by_id"),
         ],
     )
-    def test_delete_config_invalid_id(self, api_path, delete_method, fxt_client):
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, delete_method).side_effect = None
+    def test_delete_config_invalid_id(self, api_path, delete_method, fxt_config_service, fxt_client):
+        getattr(fxt_config_service, delete_method).side_effect = None
 
-            response = fxt_client.delete(f"/api/{api_path}/invalid-id")
+        response = fxt_client.delete(f"/api/{api_path}/invalid-id")
 
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
-            getattr(mock_service.return_value, delete_method).assert_not_called()
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        getattr(fxt_config_service, delete_method).assert_not_called()
 
     @pytest.mark.parametrize(
         "api_path, delete_method, resource_type",
@@ -279,16 +301,13 @@ class TestSourceAndSinkEndpoints:
             (ConfigApiPath.SINKS, "delete_sink_by_id", ResourceType.SINK),
         ],
     )
-    def test_delete_config_not_found(self, api_path, delete_method, resource_type, fxt_client):
+    def test_delete_config_not_found(self, api_path, delete_method, resource_type, fxt_config_service, fxt_client):
         config_id = str(uuid4())
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, delete_method).side_effect = ResourceNotFoundError(
-                resource_type, config_id
-            )
+        getattr(fxt_config_service, delete_method).side_effect = ResourceNotFoundError(resource_type, config_id)
 
-            response = fxt_client.delete(f"/api/{api_path}/{config_id}")
+        response = fxt_client.delete(f"/api/{api_path}/{config_id}")
 
-            assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.parametrize(
         "fixture_name, api_path, delete_method, resource_type",
@@ -297,18 +316,18 @@ class TestSourceAndSinkEndpoints:
             ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id", ResourceType.SINK),
         ],
     )
-    def test_delete_config_in_use(self, fixture_name, api_path, delete_method, resource_type, fxt_client, request):
+    def test_delete_config_in_use(
+        self, fixture_name, api_path, delete_method, resource_type, fxt_config_service, fxt_client, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
+        err = ResourceInUseError(resource_type, config_id)
+        getattr(fxt_config_service, delete_method).side_effect = err
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            err = ResourceInUseError(resource_type, config_id)
-            getattr(mock_service.return_value, delete_method).side_effect = err
+        response = fxt_client.delete(f"/api/{api_path}/{config_id}")
 
-            response = fxt_client.delete(f"/api/{api_path}/{config_id}")
-
-            assert response.status_code == status.HTTP_409_CONFLICT
-            assert str(err) == response.json()["detail"]
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert str(err) == response.json()["detail"]
 
     @pytest.mark.parametrize(
         "fixture_name,api_path,get_method, expected_yaml",
@@ -328,20 +347,20 @@ class TestSourceAndSinkEndpoints:
             ),
         ],
     )
-    def test_export_config_success(self, fixture_name, api_path, get_method, expected_yaml, fxt_client, request):
+    def test_export_config_success(
+        self, fixture_name, api_path, get_method, expected_yaml, fxt_config_service, fxt_client, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         config_id = str(fxt_config.id)
+        getattr(fxt_config_service, get_method).return_value = fxt_config
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, get_method).return_value = fxt_config
+        response = fxt_client.post(f"/api/{api_path}/{config_id}:export")
 
-            response = fxt_client.post(f"/api/{api_path}/{config_id}:export")
-
-            assert response.status_code == status.HTTP_200_OK
-            assert response.headers["content-type"] == "application/x-yaml"
-            assert f"{api_path[:-1]}_{config_id}.yaml" in response.headers["content-disposition"]
-            assert response.text == expected_yaml
-            getattr(mock_service.return_value, get_method).assert_called_once_with(fxt_config.id)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["content-type"] == "application/x-yaml"
+        assert f"{api_path[:-1]}_{config_id}.yaml" in response.headers["content-disposition"]
+        assert response.text == expected_yaml
+        getattr(fxt_config_service, get_method).assert_called_once_with(fxt_config.id)
 
     @pytest.mark.parametrize(
         "fixture_name,api_path, create_method",
@@ -350,20 +369,20 @@ class TestSourceAndSinkEndpoints:
             ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
-    def test_import_config_success(self, fixture_name, api_path, create_method, fxt_client, request):
+    def test_import_config_success(
+        self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, request
+    ):
         fxt_config = request.getfixturevalue(fixture_name)
         sink_data = fxt_config.model_dump(exclude={"id"}, mode="json")
         yaml_content = yaml.safe_dump(sink_data)
+        getattr(fxt_config_service, create_method).return_value = fxt_config
 
-        with patch(f"app.api.endpoints.{api_path}.ConfigurationService") as mock_service:
-            getattr(mock_service.return_value, create_method).return_value = fxt_config
+        files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
+        response = fxt_client.post(f"/api/{api_path}:import", files=files)
 
-            files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
-            response = fxt_client.post(f"/api/{api_path}:import", files=files)
-
-            assert response.status_code == status.HTTP_201_CREATED
-            assert response.json()["id"] == str(fxt_config.id)
-            getattr(mock_service.return_value, create_method).assert_called_once()
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["id"] == str(fxt_config.id)
+        getattr(fxt_config_service, create_method).assert_called_once()
 
     @pytest.mark.parametrize(
         "api_path",
@@ -371,8 +390,8 @@ class TestSourceAndSinkEndpoints:
     )
     def test_import_config_invalid_yaml(self, api_path, fxt_client):
         invalid_yaml = "invalid: yaml: content: ["
-
         files = {"yaml_file": ("test.yaml", io.BytesIO(invalid_yaml.encode()), "application/x-yaml")}
+
         response = fxt_client.post(f"/api/{api_path}:import", files=files)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -388,8 +407,8 @@ class TestSourceAndSinkEndpoints:
     def test_import_disconnected_config_fails(self, api_path, config_type, fxt_client):
         config_data = {config_type: "disconnected", "name": "Test"}
         yaml_content = yaml.safe_dump(config_data)
-
         files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
+
         response = fxt_client.post(f"/api/{api_path}:import", files=files)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -21,7 +21,6 @@ from app.schemas.model_activation import ModelActivationState
 from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
 from app.services.mappers.model_mapper import ModelMapper
 from app.services.parent_process_guard import parent_process_only
-from app.utils.singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +38,14 @@ class LoadedModel:
     model: Model
 
 
-class ModelService(metaclass=Singleton):
+class ModelService:
     """Service to register and activate models"""
 
     def __init__(self, mp_model_reload_event: EventClass | None = None) -> None:
         self.models_dir = Path("data/models")
         self._mp_model_reload_event = mp_model_reload_event
 
-        self._persistence: GenericPersistenceService[Model, ModelDB, ModelRepository] = GenericPersistenceService(
+        self._persistence: GenericPersistenceService[Model, ModelRepository] = GenericPersistenceService(
             ServiceConfig(ModelRepository, ModelMapper, ResourceType.MODEL)
         )
         self._model_activation_state: ModelActivationState = self._load_state()

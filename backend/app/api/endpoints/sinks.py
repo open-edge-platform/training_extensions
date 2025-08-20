@@ -10,10 +10,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
-from app.api.dependencies import get_sink_id
+from app.api.dependencies import get_configuration_service, get_sink_id
 from app.schemas import Sink, SinkType
 from app.schemas.sink import SinkAdapter
-from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError
+from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
@@ -76,12 +76,14 @@ UPDATE_SINK_BODY_EXAMPLES = {
     responses={
         status.HTTP_201_CREATED: {"description": "Sink created", "model": Sink},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID or request body"},
+        status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
 async def create_sink(
     sink_config: Annotated[
         Sink, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
     ],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Create and configure a new sink"""
     if sink_config.sink_type == SinkType.DISCONNECTED:
@@ -90,7 +92,10 @@ async def create_sink(
             detail="The sink with sink_type=DISCONNECTED cannot be created",
         )
 
-    return ConfigurationService().create_sink(sink_config)
+    try:
+        return configuration_service.create_sink(sink_config)
+    except ResourceAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.get(
@@ -99,9 +104,11 @@ async def create_sink(
         status.HTTP_200_OK: {"description": "List of available sink configurations", "model": list[Sink]},
     },
 )
-async def list_sinks() -> list[Sink]:
+async def list_sinks(
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> list[Sink]:
     """List the available sinks"""
-    return ConfigurationService().list_sinks()
+    return configuration_service.list_sinks()
 
 
 @router.get(
@@ -112,10 +119,13 @@ async def list_sinks() -> list[Sink]:
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
     },
 )
-async def get_sink(sink_id: Annotated[UUID, Depends(get_sink_id)]) -> Sink:
+async def get_sink(
+    sink_id: Annotated[UUID, Depends(get_sink_id)],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> Sink:
     """Get info about a sink"""
     try:
-        return ConfigurationService().get_sink_by_id(sink_id)
+        return configuration_service.get_sink_by_id(sink_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -143,12 +153,13 @@ async def update_sink(
             openapi_examples=UPDATE_SINK_BODY_EXAMPLES,
         ),
     ],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Reconfigure an existing sink"""
     if "sink_type" in sink_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'sink_type' field cannot be changed")
     try:
-        return ConfigurationService().update_sink(sink_id, sink_config)
+        return configuration_service.update_sink(sink_id, sink_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -167,9 +178,12 @@ async def update_sink(
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
     },
 )
-async def export_sink(sink_id: Annotated[UUID, Depends(get_sink_id)]) -> Response:
+async def export_sink(
+    sink_id: Annotated[UUID, Depends(get_sink_id)],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> Response:
     """Export a sink to file"""
-    sink = ConfigurationService().get_sink_by_id(sink_id)
+    sink = configuration_service.get_sink_by_id(sink_id)
     if not sink:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -195,6 +209,7 @@ async def export_sink(sink_id: Annotated[UUID, Depends(get_sink_id)]) -> Respons
 )
 async def import_sink(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the sink configuration")],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Import a sink from file"""
     try:
@@ -207,7 +222,7 @@ async def import_sink(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The sink with sink_type=DISCONNECTED cannot be imported",
             )
-        return ConfigurationService().create_sink(sink_config)
+        return configuration_service.create_sink(sink_config)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
 
@@ -224,10 +239,13 @@ async def import_sink(
         status.HTTP_409_CONFLICT: {"description": "Sink is used by at least one pipeline"},
     },
 )
-async def delete_sink(sink_id: Annotated[UUID, Depends(get_sink_id)]) -> None:
+async def delete_sink(
+    sink_id: Annotated[UUID, Depends(get_sink_id)],
+    configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
+) -> None:
     """Remove a sink"""
     try:
-        ConfigurationService().delete_sink_by_id(sink_id)
+        configuration_service.delete_sink_by_id(sink_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

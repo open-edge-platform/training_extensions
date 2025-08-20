@@ -10,9 +10,9 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
-from app.api.dependencies import get_pipeline_id
+from app.api.dependencies import get_pipeline_id, get_pipeline_service
 from app.schemas.pipeline import Pipeline, PipelineStatus
-from app.services import PipelineService, ResourceInUseError, ResourceNotFoundError
+from app.services import PipelineService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/pipelines", tags=["Pipelines"])
@@ -70,6 +70,7 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {"description": "Pipeline successfully created", "model": Pipeline},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline already exists"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid request body"},
     },
 )
@@ -77,9 +78,13 @@ async def create_pipeline(
     pipeline_config: Annotated[
         Pipeline, Body(description=CREATE_PIPELINE_BODY_DESCRIPTION, openapi_examples=CREATE_PIPELINE_BODY_EXAMPLES)
     ],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> Pipeline:
     """Create and configure a new pipeline"""
-    return PipelineService().create_pipeline(pipeline_config)
+    try:
+        return pipeline_service.create_pipeline(pipeline_config)
+    except ResourceAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.get(
@@ -88,9 +93,9 @@ async def create_pipeline(
         status.HTTP_200_OK: {"description": "List of available pipelines", "model": list[Pipeline]},
     },
 )
-async def list_pipelines() -> list[Pipeline]:
+async def list_pipelines(pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)]) -> list[Pipeline]:
     """List the available pipelines"""
-    return PipelineService().list_pipelines()
+    return pipeline_service.list_pipelines()
 
 
 @router.get(
@@ -101,10 +106,13 @@ async def list_pipelines() -> list[Pipeline]:
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
     },
 )
-async def get_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)]) -> Pipeline:
+async def get_pipeline(
+    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+) -> Pipeline:
     """Get info about a given pipeline"""
     try:
-        return PipelineService().get_pipeline_by_id(pipeline_id)
+        return pipeline_service.get_pipeline_by_id(pipeline_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -115,7 +123,7 @@ async def get_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)]) -
         status.HTTP_200_OK: {"description": "Pipeline successfully updated", "model": Pipeline},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
-        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be updated due to validation errors"},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be updated"},
     },
 )
 async def update_pipeline(
@@ -127,12 +135,13 @@ async def update_pipeline(
             openapi_examples=UPDATE_PIPELINE_BODY_EXAMPLES,
         ),
     ],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> Pipeline:
     """Reconfigure an existing pipeline"""
     if "status" in pipeline_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'status' field cannot be changed")
     try:
-        return PipelineService().update_pipeline(pipeline_id, pipeline_config)
+        return pipeline_service.update_pipeline(pipeline_id, pipeline_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValidationError as e:
@@ -146,16 +155,19 @@ async def update_pipeline(
         status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully enabled"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
-        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled due to validation errors"},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
     },
 )
-async def enable_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)]) -> None:
+async def enable_pipeline(
+    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+) -> None:
     """
     Activate a pipeline.
     The pipeline will start processing data from the source, run it through the model, and send results to the sink.
     """
     try:
-        PipelineService().update_pipeline(pipeline_id, {"status": PipelineStatus.RUNNING})
+        pipeline_service.update_pipeline(pipeline_id, {"status": PipelineStatus.RUNNING})
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValidationError as e:
@@ -171,10 +183,13 @@ async def enable_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)]
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
     },
 )
-async def disable_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)]) -> None:
+async def disable_pipeline(
+    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+) -> None:
     """Stop a pipeline. The pipeline will become idle, and it won't process any data until re-enabled."""
     try:
-        PipelineService().update_pipeline(pipeline_id, {"status": PipelineStatus.IDLE})
+        pipeline_service.update_pipeline(pipeline_id, {"status": PipelineStatus.IDLE})
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -193,6 +208,7 @@ async def disable_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)
 )
 async def export_pipeline(
     # pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
+    # pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
     # include_model: bool = False,
 ) -> FileResponse:
     """Export a pipeline to file"""
@@ -204,6 +220,7 @@ async def import_pipeline(
     # zip_file: Annotated[
     #     UploadFile, File(description="ZIP file containing the pipeline configuration and optionally model binaries")
     # ],
+    # pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> None:
     """Import a pipeline from file"""
     raise NotImplementedError
@@ -221,10 +238,13 @@ async def import_pipeline(
         status.HTTP_409_CONFLICT: {"description": "Pipeline is currently in running state and cannot be deleted"},
     },
 )
-async def delete_pipeline(pipeline_id: Annotated[UUID, Depends(get_pipeline_id)]) -> None:
+async def delete_pipeline(
+    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+) -> None:
     """Delete a pipeline. Pipelines must be first disabled (status must be idle) before deletion."""
     try:
-        PipelineService().delete_pipeline_by_id(pipeline_id)
+        pipeline_service.delete_pipeline_by_id(pipeline_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

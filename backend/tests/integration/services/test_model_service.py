@@ -85,24 +85,23 @@ class TestModelServiceIntegration:
             await fxt_model_service.add_model(model_name, fxt_upload_file, fxt_upload_file)
 
     @pytest.mark.asyncio
-    async def test_remove_model_success(self, fxt_upload_file):
+    async def test_remove_model_success(self, fxt_upload_file, fxt_model_service):
         """Test successfully removing a model."""
         model_name = "remove_model"
-        model_service = ModelService()
-        await model_service.add_model(model_name, fxt_upload_file, fxt_upload_file)
+        await fxt_model_service.add_model("model1", fxt_upload_file, fxt_upload_file)
+        await fxt_model_service.add_model(model_name, fxt_upload_file, fxt_upload_file)
 
-        model_service.remove_model(model_name)
-        assert model_name not in model_service.get_available_model_names()
-        assert not (model_service.models_dir / f"{model_name}.bin").exists()
-        assert not (model_service.models_dir / f"{model_name}.xml").exists()
+        fxt_model_service.remove_model(model_name)
+        assert model_name not in fxt_model_service.get_available_model_names()
+        assert not (fxt_model_service.models_dir / f"{model_name}.bin").exists()
+        assert not (fxt_model_service.models_dir / f"{model_name}.xml").exists()
 
-    def test_remove_model_not_found_error(self):
+    def test_remove_model_not_found_error(self, fxt_model_service):
         """Test removing a non-existent model raises error."""
         model_name = "non_existent_model"
-        model_service = ModelService()
 
         with pytest.raises(ResourceNotFoundError):
-            model_service.remove_model(model_name)
+            fxt_model_service.remove_model(model_name)
 
     @pytest.mark.asyncio
     async def test_activate_model_success(self, fxt_upload_file, fxt_model_service):
@@ -123,73 +122,68 @@ class TestModelServiceIntegration:
         with pytest.raises(ResourceNotFoundError):
             fxt_model_service.activate_model(model_name)
 
-    def test_list_models(self, fxt_db_models, db_session):
+    def test_list_models(self, fxt_db_models, fxt_model_service, db_session):
         """Test retrieving all models."""
-
         create_model_db(db_session, fxt_db_models)
 
-        models = ModelService().list_models()
+        models = fxt_model_service.list_models()
 
         assert len(models) == len(fxt_db_models)
         for i, model in enumerate(models):
             assert_model(model, fxt_db_models[i])
 
-    def test_get_model(self, fxt_db_models, db_session):
+    def test_get_model(self, fxt_db_models, fxt_model_service, db_session):
         """Test retrieving a model by ID."""
-
         db_model = fxt_db_models[0]
         create_model_db(db_session, [db_model])
 
-        model = ModelService().get_model_by_id(UUID(db_model.id))
+        model = fxt_model_service.get_model_by_id(UUID(db_model.id))
 
         assert model is not None
         assert_model(model, db_model)
 
-    def test_get_non_existent_model(self):
+    def test_get_non_existent_model(self, fxt_model_service):
         """Test retrieving a non-existent model raises error."""
-
         model_id = uuid4()
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            ModelService().get_model_by_id(model_id)
+            fxt_model_service.get_model_by_id(model_id)
 
         assert excinfo.value.resource_type == ResourceType.MODEL
         assert excinfo.value.resource_id == str(model_id)
 
-    def test_delete_model(self, fxt_db_models, db_session):
+    def test_delete_model(self, fxt_db_models, fxt_model_service, db_session):
         """Test deleting a model by ID."""
-
         db_model = fxt_db_models[0]
         create_model_db(db_session, models=[db_model])
 
-        ModelService().delete_model_by_id(UUID(db_model.id))
+        fxt_model_service.delete_model_by_id(UUID(db_model.id))
 
         assert db_session.query(ModelDB).count() == 0
 
-    def test_delete_non_existent_model(self):
+    def test_delete_non_existent_model(self, fxt_model_service):
         """Test deleting a non-existent model raises error."""
         model_id = uuid4()
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            ModelService().delete_model_by_id(model_id)
+            fxt_model_service.delete_model_by_id(model_id)
 
         assert excinfo.value.resource_type == ResourceType.MODEL
         assert excinfo.value.resource_id == str(model_id)
 
-    def test_update_model(self, fxt_db_models, db_session):
+    def test_update_model(self, fxt_db_models, fxt_model_service, db_session):
         """Test deleting a model by ID."""
-
         db_model = fxt_db_models[0]
         create_model_db(db_session, models=[db_model])
 
-        updated = ModelService().update_model(UUID(db_model.id), {"name": "Updated Model Name"})
+        updated = fxt_model_service.update_model(UUID(db_model.id), {"name": "Updated Model Name"})
         db_updated = db_session.query(ModelDB).filter_by(id=db_model.id).one()
 
         assert_model(updated, db_updated)
 
-    def test_update_non_existent_model(self):
+    def test_update_non_existent_model(self, fxt_model_service):
         """Test deleting a non-existent model raises error."""
         model_id = uuid4()
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            ModelService().update_model(model_id, {"name": "Updated Model Name"})
+            fxt_model_service.update_model(model_id, {"name": "Updated Model Name"})
 
         assert excinfo.value.resource_type == ResourceType.MODEL
         assert excinfo.value.resource_id == str(model_id)

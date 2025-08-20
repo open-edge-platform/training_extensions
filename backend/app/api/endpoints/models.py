@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.openapi.models import Example
 
-from app.api.dependencies import get_model_id
+from app.api.dependencies import get_model_id, get_model_service
 from app.schemas import Model
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
@@ -28,9 +28,9 @@ UPDATE_MODEL_BODY_EXAMPLES = {
         status.HTTP_200_OK: {"description": "List of available models", "model": list[Model]},
     },
 )
-async def list_models() -> list[Model]:
+async def list_models(model_service: Annotated[ModelService, Depends(get_model_service)]) -> list[Model]:
     """Get information about available models"""
-    return ModelService().list_models()
+    return model_service.list_models()
 
 
 @router.get(
@@ -41,10 +41,13 @@ async def list_models() -> list[Model]:
         status.HTTP_404_NOT_FOUND: {"description": "Model not found"},
     },
 )
-async def get_model(model_id: Annotated[UUID, Depends(get_model_id)]) -> Model:
+async def get_model(
+    model_id: Annotated[UUID, Depends(get_model_id)],
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> Model:
     """Get information about a specific model"""
     try:
-        return ModelService().get_model_by_id(model_id)
+        return model_service.get_model_by_id(model_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -60,12 +63,13 @@ async def get_model(model_id: Annotated[UUID, Depends(get_model_id)]) -> Model:
 async def update_model_metadata(
     model_id: Annotated[UUID, Depends(get_model_id)],
     model_metadata: Annotated[dict, Body(openapi_examples=UPDATE_MODEL_BODY_EXAMPLES)],
+    model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> Model:
     """Update the metadata of an existing model"""
     if "format" in model_metadata:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'format' field cannot be changed")
     try:
-        return ModelService().update_model(model_id, model_metadata)
+        return model_service.update_model(model_id, model_metadata)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -82,10 +86,13 @@ async def update_model_metadata(
         status.HTTP_409_CONFLICT: {"description": "Model is used by at least one pipeline"},
     },
 )
-async def delete_model(model_id: Annotated[UUID, Depends(get_model_id)]) -> None:
+async def delete_model(
+    model_id: Annotated[UUID, Depends(get_model_id)],
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> None:
     """Delete a model"""
     try:
-        ModelService().delete_model_by_id(model_id)
+        model_service.delete_model_by_id(model_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

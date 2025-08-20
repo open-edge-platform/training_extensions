@@ -23,24 +23,37 @@ class ResourceType(StrEnum):
     PIPELINE = "Pipeline"
 
 
-class ResourceNotFoundError(Exception):
+class ResourceError(Exception):
+    """Base exception for resource-related errors."""
+
+    def __init__(self, resource_type: ResourceType, resource_id: str, message: str):
+        super().__init__(message)
+        self.resource_type = resource_type
+        self.resource_id = resource_id
+
+
+class ResourceNotFoundError(ResourceError):
     """Exception raised when a resource is not found."""
 
     def __init__(self, resource_type: ResourceType, resource_id: str, message: str | None = None):
         msg = message or f"{resource_type} with ID {resource_id} not found."
-        super().__init__(msg)
-        self.resource_type = resource_type
-        self.resource_id = resource_id
+        super().__init__(resource_type, resource_id, msg)
 
 
-class ResourceInUseError(Exception):
+class ResourceInUseError(ResourceError):
     """Exception raised when trying to delete a resource that is currently in use."""
 
     def __init__(self, resource_type: ResourceType, resource_id: str, message: str | None = None):
         msg = message or f"{resource_type} with ID {resource_id} cannot be deleted because it is in use."
-        super().__init__(msg)
-        self.resource_type = resource_type
-        self.resource_id = resource_id
+        super().__init__(resource_type, resource_id, msg)
+
+
+class ResourceAlreadyExistsError(ResourceError):
+    """Exception raised when a resource with the same name already exists."""
+
+    def __init__(self, resource_type: ResourceType, resource_name: str, message: str | None = None):
+        msg = message or f"{resource_type} with name '{resource_name}' already exists."
+        super().__init__(resource_type, resource_name, msg)
 
 
 S = TypeVar("S", bound=BaseModel)  # Schema type e.g. Source or Sink
@@ -65,7 +78,7 @@ class ServiceConfig(Generic[R]):
     resource_type: ResourceType
 
 
-class GenericPersistenceService(Generic[S, D, R]):
+class GenericPersistenceService(Generic[S, R]):
     """Generic service for CRUD operations on a repository."""
 
     def __init__(self, config: ServiceConfig[R]) -> None:
@@ -92,10 +105,15 @@ class GenericPersistenceService(Generic[S, D, R]):
             return self.config.mapper_class.to_schema(item_db) if item_db else None
 
     def create(self, item: S, db: Session | None = None) -> S:
-        with self._get_repo(db) as repo:
-            item_db = self.config.mapper_class.from_schema(item)
-            repo.save(item_db)
-            return self.config.mapper_class.to_schema(item_db)
+        try:
+            with self._get_repo(db) as repo:
+                item_db = self.config.mapper_class.from_schema(item)
+                repo.save(item_db)
+                return self.config.mapper_class.to_schema(item_db)
+        except IntegrityError as e:
+            if "unique constraint failed" in str(e).lower():
+                raise ResourceAlreadyExistsError(self.config.resource_type, getattr(item, "name", str(item.id)))  # type: ignore[attr-defined]
+            raise
 
     def update(self, item: S, partial_config: dict, db: Session | None = None) -> S:
         with self._get_repo(db) as repo:
