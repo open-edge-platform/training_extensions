@@ -1,7 +1,8 @@
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
 
@@ -29,8 +30,16 @@ class Media(BaseIDNameModel):
         status.HTTP_200_OK: {"description": "List of available media", "model": list[Media]},
     },
 )
-async def list_media() -> list[Media]:
+async def list_media(
+    page: int = Query(default=1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(default=20, ge=1, le=100, description="Number of items per page (max 100)"),
+    start_date: date | None = Query(
+        default=None, description="Filter media created on or after this date (YYYY-MM-DD)"
+    ),
+    end_date: date | None = Query(default=None, description="Filter media created on or before this date (YYYY-MM-DD)"),
+) -> list[Media]:
     """List the available media"""
+    _ = page, page_size, start_date, end_date
     raise NotImplementedError
 
 
