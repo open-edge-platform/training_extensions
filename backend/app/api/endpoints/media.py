@@ -12,11 +12,11 @@ from app.schemas.base import BaseIDNameModel
 router = APIRouter(prefix="/api/media", tags=["Media"])
 
 
-def get_media_id(media_id: str) -> str:
+def get_media_id(media_id: str) -> UUID:
     """Initializes and validates a media ID"""
     if not is_valid_uuid(media_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid media ID")
-    return media_id
+    return UUID(media_id)
 
 
 # TODO: replace by a more specific model from .schema package
