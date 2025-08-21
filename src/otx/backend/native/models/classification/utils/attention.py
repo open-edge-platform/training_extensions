@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Copy from mmpretrain/models/utils/attention.py."""
+
 from __future__ import annotations
 
 from functools import partial

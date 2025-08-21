@@ -177,6 +177,21 @@ show_error_codes = true
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # RUFF CONFIGURATION                                                          #
 [tool.ruff]
+
+# Same as Black.
+line-length = 120
+
+# minimum target version
+target-version = "py38"
+
+# Enumerate all fixed violations.
+show-fixes = true
+
+# Allow imports relative to the "src" and "tests" directories.
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+
 # Enable rules
 select = [
     "F",    # Pyflakes (`F`)
@@ -234,11 +249,6 @@ select = [
     "RUF",  # Ruff-specific rules (`RUF`)
 ]
 
-# to be removed when updating to ruff>=2.0
-preview = true
-explicit-preview-rules = true
-extend-select = ["CPY001"]
-
 ignore = [
     # pydocstyle
     # On top of the Google convention, disable `D417`, which requires
@@ -257,6 +267,8 @@ ignore = [
     "ANN204",   # Missing return type annotation for special method `__init__`
 
     "ARG002",   # Unused method argument -> some function cannot use argument
+
+    "COM812",   # Missing trailing comma -> conflicts with ISC001
 
     # flake8-type-checking
     "TCH001",   # typing-only-first-party-import, Sometimes this causes an incorrect error.
@@ -315,20 +327,8 @@ exclude = [
     "src/otx/core/utils/jsonargparse.py"
 ]
 
-# Same as Black.
-line-length = 120
-
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-# minimum target version
-target-version = "py38"
-
-# Enumerate all fixed violations.
-show-fixes = true
-
-# Allow imports relative to the "src" and "tests" directories.
-src = ["src", "tests"]
 
 [tool.ruff.lint.flake8-bugbear]
 # Allow default arguments like, e.g., `data: List[str] = fastapi.Query(None)`.
@@ -344,11 +344,11 @@ extend-immutable-calls = [
     "otx.config.data.TileConfig",
 ]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
 max-complexity = 20
 
-[tool.ruff.pylint]
+[tool.ruff.lint.pylint]
 allow-magic-value-types = ["str", "bytes", "int", "float"]
 max-args = 20
 max-branches = 50
@@ -361,7 +361,7 @@ notice-rgx = """
 # SPDX-License-Identifier: Apache-2\\.0
 """
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 # Declare an additional exclude rule for test code
 "tests/**/*.py" = [
     "S101",     # pytest-style allows `assert` statements in tests.
@@ -382,7 +382,7 @@ notice-rgx = """
     "UP007"
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.pytest.ini_options]
