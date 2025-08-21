@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Module for OTX Dice metric used for the OTX semantic segmentation task."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

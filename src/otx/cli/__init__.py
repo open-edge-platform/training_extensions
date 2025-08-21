@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """CLI entrypoints."""
+
 from datetime import timedelta
 from time import time
 

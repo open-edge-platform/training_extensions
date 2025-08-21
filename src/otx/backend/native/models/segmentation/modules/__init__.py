@@ -3,7 +3,6 @@
 
 """Modules for semantic segmentation."""
 
-
 from .aggregators import IterativeAggregator
 from .utils import channel_shuffle, normalize, resize
 

@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Implementation of keypoint evaluation utilities."""
+
 from __future__ import annotations
 
 from itertools import product

@@ -1,0 +1,11 @@
+.accepted {
+    path {
+        fill: var(--spectrum-global-color-positive);
+    }
+}
+
+.rejected {
+    path {
+        fill: var(--spectrum-global-color-negative);
+    }
+}

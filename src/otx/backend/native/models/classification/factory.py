@@ -58,8 +58,7 @@ class MobileNetV3:
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
-    ) -> MobileNetV3MulticlassCls | MobileNetV3MultilabelCls | MobileNetV3HLabelCls:
-        ...
+    ) -> MobileNetV3MulticlassCls | MobileNetV3MultilabelCls | MobileNetV3HLabelCls: ...
 
     def __new__(
         cls,
@@ -139,8 +138,7 @@ class EfficientNet:
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
-    ) -> EfficientNetMulticlassCls | EfficientNetMultilabelCls | EfficientNetHLabelCls:
-        ...
+    ) -> EfficientNetMulticlassCls | EfficientNetMultilabelCls | EfficientNetHLabelCls: ...
 
     def __new__(
         cls,
@@ -202,8 +200,7 @@ class TimmModel:
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
-    ) -> TimmModelMulticlassCls | TimmModelMultilabelCls | TimmModelHLabelCls:
-        ...
+    ) -> TimmModelMulticlassCls | TimmModelMultilabelCls | TimmModelHLabelCls: ...
 
     def __new__(
         cls,
@@ -290,8 +287,7 @@ class TVModel:
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
-    ) -> TVModelMulticlassCls | TVModelMultilabelCls | TVModelHLabelCls:
-        ...
+    ) -> TVModelMulticlassCls | TVModelMultilabelCls | TVModelHLabelCls: ...
 
     def __new__(
         cls,
@@ -383,8 +379,7 @@ class VisionTransformer:
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MultiClassClsMetricCallable,
         torch_compile: bool = False,
-    ) -> VisionTransformerMulticlassCls | VisionTransformerMultilabelCls | VisionTransformerHLabelCls:
-        ...
+    ) -> VisionTransformerMulticlassCls | VisionTransformerMultilabelCls | VisionTransformerHLabelCls: ...
 
     def __new__(
         cls,

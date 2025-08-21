@@ -3,7 +3,6 @@
 
 """Test for otx.algo.accelerators.xpu"""
 
-
 import pytest
 import torch
 

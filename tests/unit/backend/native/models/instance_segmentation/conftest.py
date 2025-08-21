@@ -1,6 +1,7 @@
 # Copyright (C) 2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Test of custom algo modules of OTX Detection task."""
+
 import pytest
 from torchvision.transforms.v2 import Resize
 
