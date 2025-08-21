@@ -3,10 +3,9 @@
 
 import { useEffect, useState } from 'react';
 
-import { Button, Flex, Grid, Loading, View } from '@geti/ui';
+import { Button, Flex, Grid, Loading, toast, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
 
-import { Notification, notify } from '../../components/notification/notification.component';
 import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
 import { Stream } from './../../components/stream/stream';
 import { Aside } from './aside';
@@ -20,7 +19,7 @@ export const StreamContainer = () => {
 
     useEffect(() => {
         if (status === 'failed') {
-            notify('error', 'Failed to connect to the stream');
+            toast({ type: 'error', message: 'Failed to connect to the stream' });
         }
     }, [status]);
 
@@ -72,7 +71,6 @@ export const LiveFeed = () => {
             <Toolbar />
             <StreamContainer />
             <Aside />
-            <Notification />
         </Grid>
     );
 };
