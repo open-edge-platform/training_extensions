@@ -422,7 +422,7 @@ class OTXModel(LightningModule):
     def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         """Callback on loading checkpoint."""
         super().on_load_checkpoint(checkpoint)
-        hyper_parameters = checkpoint.get("hyper_parameters", None)
+        hyper_parameters = checkpoint.get("hyper_parameters")
         if hyper_parameters:
             if ckpt_label_info := hyper_parameters.get("label_info"):
                 self._label_info = self._dispatch_label_info(ckpt_label_info)
