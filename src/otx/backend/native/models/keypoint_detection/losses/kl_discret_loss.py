@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Implementation of KLDiscretLoss."""
+
 from __future__ import annotations
 
 import torch

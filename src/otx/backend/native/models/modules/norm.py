@@ -124,7 +124,7 @@ def infer_abbr(class_type: type) -> str:
         msg = f"class_type must be a type, but got {type(class_type)}"
         raise TypeError(msg)
     if hasattr(class_type, "_abbr_"):
-        return class_type._abbr_  # noqa: SLF001
+        return class_type._abbr_
     if issubclass(class_type, _InstanceNorm):  # IN is a subclass of BN
         return "in"
     if issubclass(class_type, _BatchNorm):
