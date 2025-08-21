@@ -1,7 +1,7 @@
 model:
   class_path: otx.backend.openvino.models.anomaly.OVAnomalyModel
   init_args:
-    model_name: openvino.xml
+    model_path: openvino.xml
     async_inference: True
     use_throughput_mode: False
     task: ANOMALY_DETECTION

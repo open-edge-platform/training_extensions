@@ -134,6 +134,21 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
+    "Object_Detection_Deim_DFine_M": {
+        "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_m.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Object_Detection_Deim_DFine_L": {
+        "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_l.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
+    "Object_Detection_Deim_DFine_X": {
+        "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_x.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
+    },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",

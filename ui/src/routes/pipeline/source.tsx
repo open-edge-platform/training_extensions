@@ -109,10 +109,8 @@ const ConnectionPreview = () => {
     );
 };
 
-const ConfigureDisconnectedSource = ({}: {
-    // eslint-disable-next-line react/no-unused-prop-types
+const ConfigureDisconnectedSource = (_: {
     source: SchemaDisconnectedSourceConfig;
-    // eslint-disable-next-line react/no-unused-prop-types
     setSource: (source: SchemaDisconnectedSourceConfig) => void;
 }) => {
     return null;
@@ -231,13 +229,14 @@ const DEFAULT_SOURCE_ITEMS = [
 ] satisfies Array<{ source_type: SourceType; name: string }>;
 
 export const Source = () => {
-    const { start, status } = useWebRTCConnection();
+    const { status } = useWebRTCConnection();
     const sources = $api.useSuspenseQuery('get', '/api/sources');
     const sourceMutation = $api.useMutation('post', '/api/sources', {
         onSuccess: async () => {
-            if (status !== 'connected') {
-                await start();
-            }
+            // TODO: Enable this once WebRTC connection works properly
+            // if (status !== 'connected') {
+            //     await start();
+            // }
         },
     });
 
@@ -304,7 +303,7 @@ export const Source = () => {
                         // TODO: disable only if there are no changes
                         isDisabled={submitIsDisabled && status === 'connected'}
                     >
-                        Save & connect
+                        Save
                     </Button>
                 </ButtonGroup>
             </Form>
@@ -316,7 +315,7 @@ export const Source = () => {
             </View>
             <View gridArea='buttons'>
                 <ButtonGroup align={'end'} width={'100%'}>
-                    <Button href={paths.pipeline.model({})} variant='accent' isDisabled={status !== 'connected'}>
+                    <Button href={paths.pipeline.model({})} variant='accent'>
                         Next
                     </Button>
                 </ButtonGroup>

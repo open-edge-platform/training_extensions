@@ -56,7 +56,9 @@ class OVEngine(Engine):
             task: OTXTaskType | None = self._derive_task_from_ir(model)
         elif isinstance(model, OVModel):
             task = model.task  # type: ignore[assignment]
-
+        else:
+            msg = "Please provide a valid OpenVINO model or a path to an OpenVINO IR XML file."
+            raise ValueError(msg)
         self._auto_configurator = AutoConfigurator(
             data_root=data if isinstance(data, (str, os.PathLike)) else None,
             task=task,
@@ -64,11 +66,16 @@ class OVEngine(Engine):
 
         if isinstance(data, OTXDataModule):
             if task is not None and data.task != task:
-                msg = (
-                    "The task of the provided datamodule does not match the task derived from the model. "
-                    f"datamodule.task={data.task}, model.task={task}"
-                )
-                raise ValueError(msg)
+                if "anomaly" in task.value.lower() and "anomaly" in data.task.value.lower():
+                    # Anomaly task can be derived from the model, but the datamodule may have a different task type
+                    # (e.g., anomaly_classification, anomaly_segmentation, etc.)
+                    pass
+                else:
+                    msg = (
+                        "The task of the provided datamodule does not match the task derived from the model. "
+                        f"datamodule.task={data.task}, model.task={task}"
+                    )
+                    raise ValueError(msg)
             self._datamodule: OTXDataModule | None = data
         else:
             self._datamodule = self._auto_configurator.get_datamodule()
@@ -95,9 +102,7 @@ class OVEngine(Engine):
             "detection": OTXTaskType.DETECTION,
             "instance_segmentation": OTXTaskType.INSTANCE_SEGMENTATION,
             "keypoint_detection": OTXTaskType.KEYPOINT_DETECTION,
-            "anomaly_classification": OTXTaskType.ANOMALY_CLASSIFICATION,
-            "anomaly_detection": OTXTaskType.ANOMALY_DETECTION,
-            "anomaly_segmentation": OTXTaskType.ANOMALY_SEGMENTATION,
+            "anomaly": OTXTaskType.ANOMALY,
         }
 
         tree = Elet.parse(ir_xml)
@@ -109,13 +114,21 @@ class OVEngine(Engine):
 
         task_type = rt_info.find(".//task_type")
         if task_type is None:
-            msg = (
-                "No <task_type> found in the IR model XML file. Please check the model file."
-                "Task cannot be derived from the model."
-            )
-            raise ValueError(msg)
+            # check old Anomaly models
+            model_info = rt_info.find(".//model_info")
+            if model_info:
+                model_type = model_info.find(".//model_type")
+                if model_type is not None and "anomaly" in model_type.attrib.get("value", "").lower():
+                    task_type = "anomaly"
+            if task_type is None:
+                msg = (
+                    "No <task_type> found in the IR model XML file. Please check the model file."
+                    "Task cannot be derived from the model."
+                )
+                raise ValueError(msg)
+        else:
+            task_type = task_type.attrib.get("value")
 
-        task_type = task_type.attrib.get("value")
         if task_type == "classification":
             if rt_info.find(".//hierarchical").attrib.get("value") == "True":
                 otx_task_name = task_type + "_hcl"
@@ -123,9 +136,6 @@ class OVEngine(Engine):
                 otx_task_name = task_type + "_mlc"
             else:
                 otx_task_name = task_type + "_mc"
-        elif task_type == "anomaly":
-            sub_type = rt_info.find(".//task").attrib.get("value")
-            otx_task_name = task_type + f"_{sub_type}"
         else:
             otx_task_name = task_type
 
