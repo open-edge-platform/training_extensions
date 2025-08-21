@@ -134,17 +134,17 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    "Object_Detection_Deim_DFine_m": {
+    "Object_Detection_Deim_DFine_M": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_m.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_Deim_DFine_l": {
+    "Object_Detection_Deim_DFine_L": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_l.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_Deim_DFine_x": {
+    "Object_Detection_Deim_DFine_X": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_x.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
