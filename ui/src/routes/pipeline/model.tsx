@@ -8,6 +8,10 @@ import { ModelSelectionGroup } from '../../features/pipelines/models/model-selec
 import { paths } from '../../router';
 
 export const Model = () => {
+    const handleSubmitSources = () => {
+        console.info('POST to /models');
+    };
+
     return (
         <Flex direction='column' gap='size-400'>
             <Text
@@ -26,10 +30,10 @@ export const Model = () => {
 
             <Flex justifyContent={'end'}>
                 <ButtonGroup>
-                    <Button href={paths.pipeline.source({})} type='submit' variant='secondary'>
+                    <Button href={paths.pipeline.source({})} variant='secondary'>
                         Back
                     </Button>
-                    <Button href={paths.pipeline.sink({})} type='submit' variant='primary'>
+                    <Button href={paths.pipeline.sink({})} onPress={handleSubmitSources} variant='primary'>
                         Next
                     </Button>
                 </ButtonGroup>
