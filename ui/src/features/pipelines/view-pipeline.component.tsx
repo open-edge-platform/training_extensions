@@ -5,6 +5,8 @@ import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View }
 import { capitalize, isArray, startsWith } from 'lodash-es';
 
 import { $api } from '../../api/client';
+import { NewPipeline } from '../../features/pipelines/modal/new-pipeline.component';
+import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
 type FieldProps = {
@@ -90,7 +92,8 @@ export const ViewPipeline = () => {
                         </Grid>
                         <Divider size='S' />
                         <ButtonGroup>
-                            <Button variant='secondary' marginStart='auto'>
+                            <NewPipeline />
+                            <Button href={paths.pipeline.source({})} variant='secondary' marginStart='auto'>
                                 Edit
                             </Button>
                         </ButtonGroup>
