@@ -16,8 +16,8 @@ export_parameters:
 hyperparameters:
   dataset_preparation:
     augmentation:
-      top_down_affine:
-        enable: false
+      random_affine:
+        enable: true
         affine_transforms_prob: 1.0
       color_jitter:
         enable: false

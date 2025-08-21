@@ -140,16 +140,16 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [103.53, 116.28, 123.675]
-            std: [57.375, 57.12, 58.395]
         - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
           enable: false
           init_args:
             mean: 0.0
             sigma: 0.1
             prob: 0.5
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [103.53, 116.28, 123.675]
+            std: [57.375, 57.12, 58.395]
 
     val_subset:
       batch_size: 8

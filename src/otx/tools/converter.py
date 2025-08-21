@@ -443,7 +443,7 @@ class GetiConfigConverter:
                         if aug_name == "padding":
                             # if padding is enabled, we need to add padding parameters to the val augmentation
                             for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
-                                if "Pad" in val_aug_cfg["class_path"]:
+                                if val_aug_cfg["class_path"] == "otx.data.transform_libs.torchvision.Pad":
                                     val_aug_cfg["enable"] = aug_enabled
                                     for parameter in aug_value:
                                         if "init_args" not in val_aug_cfg:
