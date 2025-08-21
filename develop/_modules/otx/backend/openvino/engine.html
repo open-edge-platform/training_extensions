@@ -313,7 +313,9 @@
             <span class="n">task</span><span class="p">:</span> <span class="n">OTXTaskType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive_task_from_ir</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">OVModel</span><span class="p">):</span>
             <span class="n">task</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">task</span>  <span class="c1"># type: ignore[assignment]</span>
-
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide a valid OpenVINO model or a path to an OpenVINO IR XML file.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span> <span class="o">=</span> <span class="n">AutoConfigurator</span><span class="p">(</span>
             <span class="n">data_root</span><span class="o">=</span><span class="n">data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">))</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span>
@@ -321,11 +323,16 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">OTXDataModule</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">task</span> <span class="o">!=</span> <span class="n">task</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;The task of the provided datamodule does not match the task derived from the model. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;datamodule.task=</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">task</span><span class="si">}</span><span class="s2">, model.task=</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;anomaly&quot;</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;anomaly&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="c1"># Anomaly task can be derived from the model, but the datamodule may have a different task type</span>
+                    <span class="c1"># (e.g., anomaly_classification, anomaly_segmentation, etc.)</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="s2">&quot;The task of the provided datamodule does not match the task derived from the model. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;datamodule.task=</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">task</span><span class="si">}</span><span class="s2">, model.task=</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_datamodule</span><span class="p">:</span> <span class="n">OTXDataModule</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">data</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_datamodule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auto_configurator</span><span class="o">.</span><span class="n">get_datamodule</span><span class="p">()</span>
@@ -352,9 +359,7 @@
             <span class="s2">&quot;detection&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">DETECTION</span><span class="p">,</span>
             <span class="s2">&quot;instance_segmentation&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">INSTANCE_SEGMENTATION</span><span class="p">,</span>
             <span class="s2">&quot;keypoint_detection&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">KEYPOINT_DETECTION</span><span class="p">,</span>
-            <span class="s2">&quot;anomaly_classification&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_CLASSIFICATION</span><span class="p">,</span>
-            <span class="s2">&quot;anomaly_detection&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_DETECTION</span><span class="p">,</span>
-            <span class="s2">&quot;anomaly_segmentation&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY_SEGMENTATION</span><span class="p">,</span>
+            <span class="s2">&quot;anomaly&quot;</span><span class="p">:</span> <span class="n">OTXTaskType</span><span class="o">.</span><span class="n">ANOMALY</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="n">tree</span> <span class="o">=</span> <span class="n">Elet</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">ir_xml</span><span class="p">)</span>
@@ -366,13 +371,21 @@
 
         <span class="n">task_type</span> <span class="o">=</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//task_type&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">task_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;No &lt;task_type&gt; found in the IR model XML file. Please check the model file.&quot;</span>
-                <span class="s2">&quot;Task cannot be derived from the model.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="c1"># check old Anomaly models</span>
+            <span class="n">model_info</span> <span class="o">=</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//model_info&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model_info</span><span class="p">:</span>
+                <span class="n">model_type</span> <span class="o">=</span> <span class="n">model_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//model_type&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">model_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;anomaly&quot;</span> <span class="ow">in</span> <span class="n">model_type</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="n">task_type</span> <span class="o">=</span> <span class="s2">&quot;anomaly&quot;</span>
+            <span class="k">if</span> <span class="n">task_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;No &lt;task_type&gt; found in the IR model XML file. Please check the model file.&quot;</span>
+                    <span class="s2">&quot;Task cannot be derived from the model.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">task_type</span> <span class="o">=</span> <span class="n">task_type</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 
-        <span class="n">task_type</span> <span class="o">=</span> <span class="n">task_type</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">task_type</span> <span class="o">==</span> <span class="s2">&quot;classification&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//hierarchical&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
                 <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot;_hcl&quot;</span>
@@ -380,9 +393,6 @@
                 <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot;_mlc&quot;</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="s2">&quot;_mc&quot;</span>
-        <span class="k">elif</span> <span class="n">task_type</span> <span class="o">==</span> <span class="s2">&quot;anomaly&quot;</span><span class="p">:</span>
-            <span class="n">sub_type</span> <span class="o">=</span> <span class="n">rt_info</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//task&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
-            <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">sub_type</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">otx_task_name</span> <span class="o">=</span> <span class="n">task_type</span>
 
