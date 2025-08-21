@@ -1,0 +1,70 @@
+@startuml "JSONB-Option1"
+!define table(x) class x << (T,#FFAAAA) >>
+!define pk(x) <u>x</u>
+!define fk(x) <i>x</i>
+
+title
+<size:16><b>Dataset Management - Database Schema</b></size>
+<size:12>JSONB Option</size>
+end title
+
+table(datasets) {
+  pk(id) : UUID
+  name : TEXT UNIQUE NOT NULL
+  created_at : TIMESTAMP NOT NULL
+  updated_at : TIMESTAMP NOT NULL
+}
+
+table(media) {
+  pk(id) : UUID
+  original_name: TEXT
+  format: TEXT NOT NULL
+  width: INTEGER NOT NULL
+  height: INTEGER NOT NULL
+  size: INTEGER NOT NULL
+  fk(from_source): UUID
+  thumbhash: BLOB NOT NULL
+  created_at : TIMESTAMP NOT NULL
+}
+
+table(dataset_media) {
+  fk(dataset_id) : UUID NOT NULL
+  fk(media_id) : UUID NOT NULL
+  subset: TEXT
+  assigned_at : TIMESTAMP NOT NULL
+}
+
+table(annotations) {
+  fk(media_id) : UUID UNIQUE NOT NULL
+  data: JSON NOT NULL
+  fk(from_model): UUID
+  user_reviewed: BOOLEAN NOT NULL
+  created_at : TIMESTAMP NOT NULL
+  updated_at : TIMESTAMP NOT NULL
+}
+
+datasets ||--o{ dataset_media : "datasets may have \nan arbitrary number of media"
+media ||--o{ dataset_media : "media can belong \nto multiple datasets"
+media ||--o| annotations : "media have an annotation, \na prediction or none"
+
+note right of media
+  Metadata about images
+end note
+
+note right of datasets
+  Metadata about datasets
+end note
+
+note right of dataset_media
+  Defines which media
+  belong to which dataset
+end note
+
+note right of annotations
+  Stores media annotations
+  and predictions in JSON format,
+  with additional info about
+  the source of the annotation
+end note
+
+@enduml

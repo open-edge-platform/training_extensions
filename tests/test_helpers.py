@@ -153,9 +153,8 @@ class CommonSemanticSegmentationExporter(Exporter):
                 x1, y1, w, h = (int(v) for v in ann.get_bbox())
                 index_map[y1 : y1 + h, x1 : x1 + w] = ann.label + 1
             else:
-                raise NotImplementedError(
-                    "Exporting %s is not supported" % ann.type,
-                )
+                exc_msg = f"Exporting {ann.type} is not supported"
+                raise NotImplementedError(exc_msg)
 
         # standardise item id
         item_id = item.id.replace("/", "_")

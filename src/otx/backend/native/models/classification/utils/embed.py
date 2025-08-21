@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Copy from mmpretrain/models/utils/embed.py."""
+
 import torch
 from torch.nn import functional
 
