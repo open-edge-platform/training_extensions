@@ -14,12 +14,13 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_configuration_service, get_sink_id
+from app.api.tags import Tags
 from app.schemas import Sink, SinkType
 from app.schemas.sink import SinkAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
+router = APIRouter(prefix="/api/sinks", tags=[Tags.SINKS])
 
 CREATE_SINK_BODY_DESCRIPTION = """
 Configuration for the new sink. The exact list of fields that can be configured depends on the sink type.

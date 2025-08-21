@@ -14,12 +14,13 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_configuration_service, get_source_id
+from app.api.tags import Tags
 from app.schemas import Source, SourceType
 from app.schemas.source import SourceAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/sources", tags=["Sources"])
+router = APIRouter(prefix="/api/sources", tags=[Tags.SOURCES])
 
 CREATE_SOURCE_BODY_DESCRIPTION = """
 Configuration for the new source. The exact list of fields that can be configured depends on the source type.

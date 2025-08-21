@@ -12,46 +12,37 @@ from app.services import ActivePipelineService, ConfigurationService, ModelServi
 from app.webrtc.manager import WebRTCManager
 
 
-def is_valid_uuid(identifier: str) -> bool:
-    """
-    Check if a given string identifier is formatted as a valid UUID
-
-    :param identifier: String to check
-    :return: True if valid UUID, False otherwise
-    """
+def validate_uuid(identifier: str, error_detail: str) -> UUID:
+    """Validates a string as UUID or raises HTTP 400 with a custom error message."""
     try:
-        UUID(identifier)
+        return UUID(identifier)
     except ValueError:
-        return False
-    return True
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_detail)
 
 
 def get_source_id(source_id: str) -> UUID:
     """Initializes and validates a source ID"""
-    if not is_valid_uuid(source_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid source ID")
-    return UUID(source_id)
+    return validate_uuid(source_id, "Invalid source ID")
 
 
 def get_sink_id(sink_id: str) -> UUID:
     """Initializes and validates a sink ID"""
-    if not is_valid_uuid(sink_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sink ID")
-    return UUID(sink_id)
+    return validate_uuid(sink_id, "Invalid sink ID")
 
 
 def get_model_id(model_id: str) -> UUID:
     """Initializes and validates a model ID"""
-    if not is_valid_uuid(model_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid model ID")
-    return UUID(model_id)
+    return validate_uuid(model_id, "Invalid model ID")
 
 
 def get_pipeline_id(pipeline_id: str) -> UUID:
     """Initializes and validates a pipeline ID"""
-    if not is_valid_uuid(pipeline_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid pipeline ID")
-    return UUID(pipeline_id)
+    return validate_uuid(pipeline_id, "Invalid pipeline ID")
+
+
+def get_media_id(media_id: str) -> UUID:
+    """Initializes and validates a media ID"""
+    return validate_uuid(media_id, "Invalid media ID")
 
 
 @lru_cache

@@ -8,10 +8,11 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.openapi.models import Example
 
 from app.api.dependencies import get_model_id, get_model_service
+from app.api.tags import Tags
 from app.schemas import Model
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
-router = APIRouter(prefix="/api/models", tags=["Models"])
+router = APIRouter(prefix="/api/models", tags=[Tags.MODELS])
 
 
 UPDATE_MODEL_BODY_EXAMPLES = {

@@ -14,11 +14,12 @@ from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_id, get_pipeline_service
+from app.api.tags import Tags
 from app.schemas.pipeline import Pipeline, PipelineStatus
 from app.services import PipelineService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/pipelines", tags=["Pipelines"])
+router = APIRouter(prefix="/api/pipelines", tags=[Tags.PIPELINES])
 
 CREATE_PIPELINE_BODY_DESCRIPTION = """
 Configuration for the new pipeline. Requires the IDs of a source, sink, and model to be combined into a pipeline.
