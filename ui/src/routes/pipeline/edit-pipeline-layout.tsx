@@ -7,6 +7,7 @@ import { Loading, View } from '@geti/ui';
 import { TabPanel } from 'react-aria-components';
 import { Outlet, useLocation } from 'react-router';
 
+import { $api } from '../../api/client';
 import { WizardSteps } from '../../components/wizard-steps/wizard-steps';
 import { WizardTabs } from '../../components/wizard-tabs/wizard-tabs';
 import { paths } from '../../router';
@@ -15,8 +16,8 @@ import Background from './../../assets/background.png';
 export const EditPipelineLayout = () => {
     const { pathname } = useLocation();
 
-    // TODO: Replace this hardcoded value by $api.useQuery('get', '/api/pipelines') once available
-    const hasActivePipeline = true;
+    const pipelines = $api.useSuspenseQuery('get', '/api/pipelines');
+    const hasActivePipeline = pipelines.data.length > 0;
 
     // TODO: update according to server state
     const wizardState = [
