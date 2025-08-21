@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from app.api.endpoints import models, pipelines, sinks, sources, system, webrtc
+from app.api.endpoints import media, models, pipelines, sinks, sources, system, webrtc
 from app.core import lifespan
 from app.settings import get_settings
 
@@ -54,6 +54,7 @@ app.include_router(pipelines.router)
 app.include_router(models.router)
 app.include_router(system.router)
 app.include_router(webrtc.router)
+app.include_router(media.router)
 
 cur_dir = Path(__file__).parent
 

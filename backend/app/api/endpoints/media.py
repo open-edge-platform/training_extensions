@@ -4,12 +4,52 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
+from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
 from app.api.dependencies import is_valid_uuid
 from app.schemas.base import BaseIDNameModel
 
 router = APIRouter(prefix="/api/media", tags=["Media"])
+
+MEDIA_RESPONSE_LIST_EXAMPLES = {
+    "basic": Example(
+        summary="Paginated list of media items",
+        description="A sample paginated response containing media items with metadata",
+        value={
+            "data": [
+                {
+                    "id": "b0feaabc-da2b-442e-9b3e-55c11c2c2ff2",
+                    "name": "cat.jpg",
+                },
+                {
+                    "id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
+                    "name": "dog.png",
+                },
+            ],
+            "pagination": {
+                "page": 1,
+                "page_size": 20,
+                "total_items": 2,
+                "total_pages": 1,
+            },
+        },
+    ),
+    "empty_response": Example(
+        summary="Empty result with pagination",
+        description="Response when no media items match the filter criteria",
+        value={
+            "data": [],
+            "pagination": {
+                "total_count": 0,
+                "page": 1,
+                "page_size": 20,
+                "total_pages": 0,
+            },
+        },
+    ),
+}
 
 
 def get_media_id(media_id: str) -> UUID:
@@ -19,15 +59,49 @@ def get_media_id(media_id: str) -> UUID:
     return UUID(media_id)
 
 
-# TODO: replace by a more specific model from .schema package
+# TODO: replace models with more specific variants from .schema package when defined
 class Media(BaseIDNameModel):
     """Model representing media information"""
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "b0feaabc-da2b-442e-9b3e-55c11c2c2ff2",
+                "name": "cat.jpg",
+            },
+        }
+    }
+
+
+class PaginationMetadata(BaseModel):
+    """Pagination metadata for list responses"""
+
+    total_count: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class MediaListResponse(BaseModel):
+    """Response model for paginated media list"""
+
+    data: list[Media]
+    pagination: PaginationMetadata
 
 
 @router.get(
     "",
+    response_model=MediaListResponse,
     responses={
-        status.HTTP_200_OK: {"description": "List of available media", "model": list[Media]},
+        status.HTTP_200_OK: {
+            "description": "List of available media",
+            "content": {
+                "application/json": {
+                    "examples": MEDIA_RESPONSE_LIST_EXAMPLES,
+                }
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid query parameters"},
     },
 )
 async def list_media(
@@ -38,15 +112,21 @@ async def list_media(
     ),
     end_date: date | None = Query(default=None, description="Filter media created on or before this date (YYYY-MM-DD)"),
 ) -> list[Media]:
-    """List the available media"""
-    _ = page, page_size, start_date, end_date
+    """List available media items with pagination and optional date filtering"""
+    _ = page, page_size
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Start date cannot be after end date",
+        )
     raise NotImplementedError
 
 
 @router.get(
     "/{media_id}",
+    response_model=Media,
     responses={
-        status.HTTP_200_OK: {"description": "Media found", "model": Media},
+        status.HTTP_200_OK: {"description": "Media found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Media not found"},
     },
@@ -54,7 +134,7 @@ async def list_media(
 async def get_media(
     media_id: Annotated[UUID, Depends(get_media_id)],
 ) -> Media:
-    """Get info about a media item"""
+    """Get detailed information about a specific media item"""
     _ = media_id
     raise NotImplementedError
 
@@ -65,8 +145,8 @@ async def get_media(
         status.HTTP_200_OK: {
             "description": "Media found",
             "content": {  # TODO: Indicate all supported binary formats
-                "image/jpeg": {},
-                "image/png": {},
+                "image/jpeg": {"example": "...binary data..."},
+                "image/png": {"example": "...binary data..."},
             },
         },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid media ID"},
@@ -78,7 +158,7 @@ async def get_full(
 ) -> FileResponse:
     # In Geti Classic media microservice, image was streamed from object storage, so `StreamingResponse` is appropriate.
     # Now, since binaries will be stored on the local file system, `FileResponse` is more suitable.
-    """Get the media binary data with full resolution"""
+    """Get the media file at full resolution"""
     _ = media_id
     raise NotImplementedError
 
@@ -94,7 +174,7 @@ async def get_full(
 async def get_thumbnail(
     media_id: Annotated[UUID, Depends(get_media_id)],
 ) -> FileResponse:  # If thumbnails are stored in SQLite as BLOB, `StreamingResponse` would be appropriate.
-    """Get a thumbnail of the media item"""
+    """Get a thumbnail preview of the media item"""
     _ = media_id
     raise NotImplementedError
 
@@ -102,12 +182,13 @@ async def get_thumbnail(
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
+    response_model=Media,
     responses={
-        status.HTTP_201_CREATED: {"description": "Media successfully uploaded", "model": Media},
+        status.HTTP_201_CREATED: {"description": "Media successfully uploaded"},
     },
 )
 async def upload_media(file: Annotated[UploadFile, File(description="Media file to upload")]) -> Media:
-    """Upload a new media item"""
+    """Upload a new media file to the system"""
     _ = file
     raise NotImplementedError
 
@@ -124,6 +205,11 @@ async def upload_media(file: Annotated[UploadFile, File(description="Media file 
 async def delete_media(
     media_id: Annotated[UUID, Depends(get_media_id)],
 ) -> None:
-    """Delete a media item"""
+    """
+    Permanently delete a media item from the system.
+
+    Removes both the media file and its associated metadata, including the thumbnail.
+    This operation cannot be undone.
+    """
     _ = media_id
     raise NotImplementedError
