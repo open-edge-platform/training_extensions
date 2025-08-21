@@ -20,7 +20,6 @@ export_parameters:
 hyperparameters:
   dataset_preparation:
     augmentation:
-<<<<<<< HEAD
       random_resize_crop:
         enable: true
         crop_ratio_range:
@@ -64,20 +63,6 @@ hyperparameters:
         enable: false
         mean: 0.0
         sigma: 0.1
-=======
-      random_affine:
-        enable: false
-      color_jitter:
-        enable: false
-      gaussian_blur:
-        enable: false
-      random_horizontal_flip:
-        enable: true
-      random_vertical_flip:
-        enable: false
-      gaussian_noise:
-        enable: false
->>>>>>> geti-classic
   training:
     max_epochs: 200
     early_stopping:

@@ -45,7 +45,6 @@ class TestGetiConfigConverter:
         with pytest.raises(FileNotFoundError):
             GetiConfigConverter.convert(asdict(otx_config))
 
-<<<<<<< HEAD
     def test_classification_augs(self, tmp_path):
         supported_augs_list_for_configuration = [
             "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
@@ -58,32 +57,15 @@ class TestGetiConfigConverter:
         ]
         cfg_path = "tests/assets/geti/model_configs/classification.yaml"
         otx_config = OTXConfig.from_yaml_file(cfg_path)
-=======
-    def test_augmentations(self, tmp_path):
-        supported_augs_list_for_configuration = [
-            "otx.data.transform_libs.torchvision.RandomAffine",
-            "torchvision.transforms.v2.RandomVerticalFlip",
-            "otx.data.transform_libs.torchvision.RandomGaussianBlur",
-            "otx.data.transform_libs.torchvision.RandomGaussianNoise",
-            "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
-        ]
-        otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/classification.yaml")
->>>>>>> geti-classic
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 9
         # default values
         list_of_all_augs = []
         for aug in default_config["data"]["train_subset"]["transforms"]:
-<<<<<<< HEAD
             if aug["class_path"] in [
                 "otx.data.transform_libs.torchvision.RandomFlip",
                 "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
             ]:
-=======
-            if aug["class_path"] in supported_augs_list_for_configuration:
-                assert not aug["enable"]
-            elif aug["class_path"] == "otx.data.transform_libs.torchvision.RandomFlip":
->>>>>>> geti-classic
                 assert aug["enable"]
             list_of_all_augs.append(aug["class_path"])
         # check if all supported augs are in the config
@@ -98,7 +80,6 @@ class TestGetiConfigConverter:
             if aug["class_path"] in supported_augs_list_for_configuration:
                 assert aug["enable"]
 
-<<<<<<< HEAD
         # disable EfficientNetRandomCrop
         for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].items():
             if aug_name == "random_resize_crop":
@@ -121,8 +102,6 @@ class TestGetiConfigConverter:
         assert found
 
         # instantiate
-=======
->>>>>>> geti-classic
         data_root = "tests/assets/classification_dataset"
         engine, _ = GetiConfigConverter.instantiate(
             config=default_config,
@@ -132,7 +111,6 @@ class TestGetiConfigConverter:
         assert len(engine.datamodule.train_subset.transforms) == 9
         assert engine.datamodule.train_dataloader().dataset.transforms is not None
         assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9
-<<<<<<< HEAD
 
     def test_detection_augs(self, tmp_path):
         supported_augs_list_for_configuration = [
@@ -197,8 +175,6 @@ class TestGetiConfigConverter:
         assert (
             len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9
         )  # 10 - disabled iou_random_crop
-=======
->>>>>>> geti-classic
 
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"
@@ -228,8 +204,5 @@ class TestGetiConfigConverter:
         if "logger" in train_kwargs and train_kwargs["logger"] is not None:
             assert len(train_kwargs["logger"]) == len(config["logger"])
         assert train_kwargs["max_epochs"] == 100
-<<<<<<< HEAD
-=======
         assert "adaptive_bs" in train_kwargs
         assert train_kwargs["adaptive_bs"] == "Safe"
->>>>>>> geti-classic

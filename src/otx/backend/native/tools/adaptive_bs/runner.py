@@ -99,12 +99,8 @@ def _train_model(bs: int, engine: OTXEngine, **train_args) -> None:
     engine.datamodule.val_subset.batch_size = bs
     engine.datamodule.test_subset.batch_size = bs
     train_args["adaptive_bs"] = "None"
-<<<<<<< HEAD
-    engine.train(callbacks=_register_callback(callbacks), **train_args)
-=======
     print(f"Runnning training trial with bs = {bs} ...")
     engine.train(callbacks=_register_callback(), **train_args)
->>>>>>> geti-classic
 
 
 def _register_callback(callbacks: list[Callback] | Callback | None = None) -> list[Callback]:
@@ -125,10 +121,6 @@ def _apply_new_batch_size(engine: OTXEngine, new_batch_size: int) -> None:
     engine.datamodule.train_subset.batch_size = new_batch_size
     engine.datamodule.val_subset.batch_size = new_batch_size
     engine.datamodule.test_subset.batch_size = new_batch_size
-<<<<<<< HEAD
-    engine.model.optimizer_callable.optimizer_kwargs["lr"] *= sqrt(new_batch_size / origin_bs)  # type: ignore[attr-defined]
-=======
     new_lr = engine.model.optimizer_callable.optimizer_kwargs["lr"] * sqrt(new_batch_size / origin_bs)  # type: ignore[attr-defined]
     print(f"new batch size = {new_batch_size} with learning rate = {new_lr} is set for the training and validation.")
     engine.model.optimizer_callable.optimizer_kwargs["lr"] = new_lr  # type: ignore[attr-defined]
->>>>>>> geti-classic

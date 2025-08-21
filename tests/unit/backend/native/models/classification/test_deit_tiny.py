@@ -66,14 +66,9 @@ class TestDeitTiny:
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
         fxt_label_info = request.getfixturevalue(label_info_fxt_name)
 
-<<<<<<< HEAD
-        model = VisionTransformerMulticlassCls(
-            label_info=4,
-=======
         # Test with freeze_backbone=True
         model = model_cls(
             label_info=fxt_label_info,
->>>>>>> geti-classic
             data_input_params=data_input_params,
             freeze_backbone=True,
         )
@@ -81,14 +76,9 @@ class TestDeitTiny:
         classification_layers = model._identify_classification_layers()
         assert all(param.requires_grad == (name in classification_layers) for name, param in model.named_parameters())
 
-<<<<<<< HEAD
-        model = VisionTransformerMulticlassCls(
-            label_info=4,
-=======
         # Test with freeze_backbone=False
         model = model_cls(
             label_info=fxt_label_info,
->>>>>>> geti-classic
             data_input_params=data_input_params,
             freeze_backbone=False,
         )

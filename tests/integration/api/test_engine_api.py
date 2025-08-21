@@ -14,10 +14,6 @@ from otx.backend.native.models.base import OTXModel
 from otx.data.module import OTXDataModule
 from otx.engine import create_engine
 from otx.tools.converter import TEMPLATE_ID_MAPPING
-<<<<<<< HEAD
-from otx.types.device import DeviceType
-=======
->>>>>>> geti-classic
 from otx.types.task import OTXTaskType
 from tests.test_helpers import CommonSemanticSegmentationExporter
 
@@ -40,15 +36,6 @@ def test_native_ov_engine(
     default_models = [str(template["recipe_path"]) for template in TEMPLATE_ID_MAPPING.values() if template["default"]]
     if recipe in default_models:
         pytest.skip("Default models are checked in geti interaction tests.")
-<<<<<<< HEAD
-    task = Path(recipe).parent.name.lower()
-    tmp_path_train = tmp_path / task
-    engine = OTXEngine(
-        model=recipe,
-        data=fxt_target_dataset_per_task[task],
-        work_dir=tmp_path_train,
-        device=DeviceType(fxt_accelerator),
-=======
     if "mobilenet_v4" in recipe:
         pytest.skip("MobileNetV4 is not supported yet.")
     task = Path(recipe).parent.name.lower()
@@ -59,7 +46,6 @@ def test_native_ov_engine(
         data_root=fxt_target_dataset_per_task[task],
         work_dir=tmp_path / task,
         device=fxt_accelerator,
->>>>>>> geti-classic
     )
 
     # Check OTXModel & OTXDataModule
