@@ -1,6 +1,7 @@
 default_language_version:
   node: 16.15.0
   ruby: 2.7.2
+  python: python3.12
 
 repos:
   # yaml formatting
@@ -8,6 +9,7 @@ repos:
     rev: v3.0.3
     hooks:
       - id: prettier
+        exclude: ^ui/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.6.1"
@@ -18,6 +20,7 @@ repos:
           [
             types-PyYAML,
             attrs==21.2.*,
+            types-aiofiles,
             types-requests,
             types-Deprecated,
             types-docutils,
@@ -49,7 +52,7 @@ repos:
 
   # Ruff
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.1.2"
+    rev: v0.4.10
     hooks:
       - id: ruff
         args: [--fix]

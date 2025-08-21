@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test of class incremental mixin of OTX segmentation task."""
 
-
 import torch
 
 from otx.backend.native.models.base import DataInputParams

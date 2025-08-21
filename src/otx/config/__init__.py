@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Config data type objects."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, _SpecialForm

@@ -2,3 +2,12 @@
 
 # These owners will be the default owners for everything in the repo.
 * @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
+
+# Backend
+backend/ @leoll2 @itallix @warrkan @A-Artemis
+
+# Frontend
+ui/ @jpggvilaca @camiloHimura
+
+# Docs
+docs/geti_tune/ @leoll2 @jpggvilaca

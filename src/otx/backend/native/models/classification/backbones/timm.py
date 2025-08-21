@@ -7,6 +7,7 @@ Original papers:
 - 'EfficientNetV2: Smaller Models and Faster Training,' https://arxiv.org/abs/2104.00298,
 - 'Adversarial Examples Improve Image Recognition,' https://arxiv.org/abs/1911.09665.
 """
+
 from __future__ import annotations
 
 import timm

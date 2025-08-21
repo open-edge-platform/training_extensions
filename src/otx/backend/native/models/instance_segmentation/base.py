@@ -340,7 +340,7 @@ class OTXInstanceSegModel(OTXModel):
         hyper_parameters = ckpt.get("hyper_parameters", {})
 
         # Load best confidence threshold (legacy and new format)
-        if best_confidence_threshold := ckpt.get("confidence_threshold", None) or hyper_parameters.get(
+        if best_confidence_threshold := ckpt.get("confidence_threshold") or hyper_parameters.get(
             "best_confidence_threshold",
             None,
         ):
