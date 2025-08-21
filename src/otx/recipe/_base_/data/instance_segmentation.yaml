@@ -79,12 +79,6 @@ train_subset:
       init_args:
         mean: [123.675, 116.28, 103.53]
         std: [58.395, 57.12, 57.375]
-    - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
-      enable: false
-      init_args:
-        mean: 0.0
-        sigma: 0.1
-        prob: 0.5
   sampler:
     class_path: torch.utils.data.RandomSampler
 
@@ -106,12 +100,6 @@ val_subset:
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
-    - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
-      enable: false
-      init_args:
-        mean: 0.0
-        sigma: 0.1
-        prob: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [123.675, 116.28, 103.53]
@@ -137,12 +125,6 @@ test_subset:
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
-    - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
-      enable: false
-      init_args:
-        mean: 0.0
-        sigma: 0.1
-        prob: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [123.675, 116.28, 103.53]

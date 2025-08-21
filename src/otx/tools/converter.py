@@ -438,16 +438,19 @@ class GetiConfigConverter:
                                     val_aug_cfg["enable"] = False
 
                             break
+
+                        aug_enabled = aug_value.pop("enable")
                         if aug_name == "padding":
                             # if padding is enabled, we need to add padding parameters to the val augmentation
                             for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
                                 if "Pad" in val_aug_cfg["class_path"]:
+                                    val_aug_cfg["enable"] = aug_enabled
                                     for parameter in aug_value:
                                         if "init_args" not in val_aug_cfg:
                                             val_aug_cfg["init_args"] = {}
                                     val_aug_cfg["init_args"][parameter] = aug_value[parameter]
 
-                        aug_config["enable"] = aug_value.pop("enable")
+                        aug_config["enable"] = aug_enabled
                         for parameter in aug_value:
                             if "init_args" not in aug_config:
                                 aug_config["init_args"] = {}
