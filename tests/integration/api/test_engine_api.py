@@ -13,14 +13,14 @@ from otx.backend.native.engine import OTXEngine
 from otx.backend.native.models.base import OTXModel
 from otx.data.module import OTXDataModule
 from otx.engine import create_engine
-from otx.tools.auto_configurator import DEFAULT_CONFIG_PER_TASK, OVMODEL_PER_TASK
+from otx.tools.converter import TEMPLATE_ID_MAPPING
 from otx.types.task import OTXTaskType
 from tests.test_helpers import CommonSemanticSegmentationExporter
 
 
-@pytest.mark.parametrize("task", pytest.TASK_LIST)
-def test_engine_from_config(
-    task: OTXTaskType,
+@pytest.mark.parametrize("recipe", pytest.RECIPE_LIST)
+def test_native_ov_engine(
+    recipe: str,
     tmp_path: Path,
     fxt_accelerator: str,
     fxt_target_dataset_per_task: dict,
@@ -33,18 +33,18 @@ def test_engine_from_config(
         fxt_accelerator (str): The accelerator used for training.
         fxt_target_dataset_per_task (dict): A dictionary mapping tasks to target datasets.
     """
-    if task not in DEFAULT_CONFIG_PER_TASK:
-        pytest.skip("Only the Task has Default config is tested to reduce unnecessary resources.")
-    if task.lower() in ("h_label_cls"):
-        pytest.skip(
-            reason="H-labels require num_multiclass_head, num_multilabel_classes, which skip until we have the ability to automate this.",
-        )
-
+    default_models = [str(template["recipe_path"]) for template in TEMPLATE_ID_MAPPING.values() if template["default"]]
+    if recipe in default_models:
+        pytest.skip("Default models are checked in geti interaction tests.")
+    if "mobilenet_v4" in recipe:
+        pytest.skip("MobileNetV4 is not supported yet.")
+    task = Path(recipe).parent.name.lower()
     tmp_path_train = tmp_path / task
+
     engine = OTXEngine.from_config(
-        config_path=DEFAULT_CONFIG_PER_TASK[task],
-        data_root=fxt_target_dataset_per_task[task.value.lower()],
-        work_dir=tmp_path_train,
+        config_path=recipe,
+        data_root=fxt_target_dataset_per_task[task],
+        work_dir=tmp_path / task,
         device=fxt_accelerator,
     )
 
@@ -62,18 +62,6 @@ def test_engine_from_config(
     predict_result = engine.predict()
     assert len(predict_result) > 0
 
-    # A Task that doesn't have Export implemented yet.
-    # [TODO]: Enable should progress for all Tasks.
-    if task in [
-        OTXTaskType.H_LABEL_CLS,
-        OTXTaskType.ROTATED_DETECTION,
-        OTXTaskType.ANOMALY,
-        OTXTaskType.ANOMALY_CLASSIFICATION,
-        OTXTaskType.ANOMALY_DETECTION,
-        OTXTaskType.ANOMALY_SEGMENTATION,
-    ]:
-        return
-
     # Export IR Model
     exported_model_path: Path | dict[str, Path] = engine.export()
     if isinstance(exported_model_path, Path):
@@ -85,10 +73,13 @@ def test_engine_from_config(
         AssertionError(f"Exported model path is not a Path or a dictionary of Paths: {exported_model_path}")
 
     # Test with IR Model and OVEngine
-    ov_engine = create_engine(data=engine.datamodule, model=exported_model_path)
-    if task in OVMODEL_PER_TASK:
-        test_metric_from_ov_model = ov_engine.test()
-        assert len(test_metric_from_ov_model) > 0
+    ov_engine = create_engine(
+        data=engine.datamodule,
+        model=exported_model_path,
+        work_dir=tmp_path_train / task / "export",
+    )
+    test_metric_from_ov_model = ov_engine.test()
+    assert len(test_metric_from_ov_model) > 0
 
     # List of models with explain supported.
     if task not in [

@@ -69,6 +69,7 @@ class ImageInfo(tv_tensors.TVTensor):
         norm_std: Standard deviation vector used to normalize this image
         image_color_channel: Color channel type of this image, RGB or BGR.
         ignored_labels: Label that should be ignored in this image. Default to None.
+        keep_ratio: If true, the image is resized while keeping the aspect ratio. Default to False.
     """
 
     img_idx: int
@@ -81,6 +82,7 @@ class ImageInfo(tv_tensors.TVTensor):
     norm_std: tuple[float, float, float] = (1.0, 1.0, 1.0)
     image_color_channel: ImageColorChannel = ImageColorChannel.RGB
     ignored_labels: list[int]
+    keep_ratio: bool = False
 
     @classmethod
     def _wrap(
@@ -97,6 +99,7 @@ class ImageInfo(tv_tensors.TVTensor):
         norm_std: tuple[float, float, float] = (1.0, 1.0, 1.0),
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         ignored_labels: list[int] | None = None,
+        keep_ratio: bool = False,
     ) -> ImageInfo:
         image_info = dummy_tensor.as_subclass(cls)
         image_info.img_idx = img_idx
@@ -109,6 +112,7 @@ class ImageInfo(tv_tensors.TVTensor):
         image_info.norm_std = norm_std
         image_info.image_color_channel = image_color_channel
         image_info.ignored_labels = ignored_labels if ignored_labels else []
+        image_info.keep_ratio = keep_ratio
         return image_info
 
     def __new__(  # noqa: D102
@@ -123,6 +127,7 @@ class ImageInfo(tv_tensors.TVTensor):
         norm_std: tuple[float, float, float] = (1.0, 1.0, 1.0),
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         ignored_labels: list[int] | None = None,
+        keep_ratio: bool = False,
     ) -> ImageInfo:
         return cls._wrap(
             dummy_tensor=Tensor(),
@@ -136,6 +141,7 @@ class ImageInfo(tv_tensors.TVTensor):
             norm_std=norm_std,
             image_color_channel=image_color_channel,
             ignored_labels=ignored_labels,
+            keep_ratio=keep_ratio,
         )
 
     @classmethod
@@ -169,6 +175,7 @@ class ImageInfo(tv_tensors.TVTensor):
                 norm_std=image_info.norm_std,
                 image_color_channel=image_info.image_color_channel,
                 ignored_labels=image_info.ignored_labels,
+                keep_ratio=image_info.keep_ratio,
             )
         elif isinstance(output, (tuple, list)):
             image_infos = [x for x in flat_params if isinstance(x, ImageInfo)]
@@ -185,6 +192,7 @@ class ImageInfo(tv_tensors.TVTensor):
                     norm_std=image_info.norm_std,
                     image_color_channel=image_info.image_color_channel,
                     ignored_labels=image_info.ignored_labels,
+                    keep_ratio=image_info.keep_ratio,
                 )
                 for dummy_tensor, image_info in zip(output, image_infos)
             )
@@ -202,7 +210,8 @@ class ImageInfo(tv_tensors.TVTensor):
             f"norm_mean={self.norm_mean}, "
             f"norm_std={self.norm_std}, "
             f"image_color_channel={self.image_color_channel}, "
-            f"ignored_labels={self.ignored_labels})"
+            f"ignored_labels={self.ignored_labels}, "
+            f"keep_ratio={self.keep_ratio})"
         )
 
 

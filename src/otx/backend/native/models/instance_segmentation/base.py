@@ -8,9 +8,10 @@
 from __future__ import annotations
 
 import copy
+import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
 from torch import Tensor
@@ -21,7 +22,6 @@ from torchvision.models.detection.image_list import ImageList
 from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
 from otx.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
-from otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
 from otx.backend.native.models.utils.utils import InstanceData, load_checkpoint
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.explain.explain_algo import InstSegExplainAlgo, feature_vector_fn
@@ -31,6 +31,7 @@ from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.tile import OTXTileBatchDataEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.entity.utils import stack_batch
+from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
 from otx.metrics import MetricInput
 from otx.metrics.fmeasure import FMeasure
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
@@ -49,8 +50,15 @@ if TYPE_CHECKING:
 class OTXInstanceSegModel(OTXModel):
     """Base class for the Instance Segmentation models used in OTX.
 
+    NOTE: OTXInstanceSegModel has many duplicate methods to OTXDetectionModel,
+    however, it is not a subclass of OTXDetectionModel because it has different
+    export parameters and different metric computation. Some refactor could be done
+    to reduce the code duplication in the future.
+
     Args:
-        label_info (LabelInfoTypes): Information about the labels used in the model.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
         data_input_params (DataInputParams): Parameters for the data input.
         model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
@@ -65,7 +73,7 @@ class OTXInstanceSegModel(OTXModel):
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "inst_segm_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -251,6 +259,7 @@ class OTXInstanceSegModel(OTXModel):
         # Instance segmentation needs to add empty label to satisfy MAPI wrapper requirements
         modified_label_info.label_names.insert(0, "otx_empty_lbl")
         modified_label_info.label_ids.insert(0, "None")
+        modified_label_info.label_groups[0].insert(0, "otx_empty_lbl")
 
         return super()._export_parameters.wrap(
             model_type="MaskRCNN",
@@ -261,35 +270,96 @@ class OTXInstanceSegModel(OTXModel):
             label_info=modified_label_info,
         )
 
+    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
+        """Perform a single test step on a batch of data from the test set.
+
+        :param batch: A batch of data (a tuple) containing the input tensor of images and target
+            labels.
+        :param batch_idx: The index of the current batch.
+        """
+        preds = self.forward(inputs=batch)
+
+        if isinstance(preds, OTXBatchLossEntity):
+            raise TypeError(preds)
+
+        # 1. Filter outputs by threshold
+        preds = self._filter_outputs_by_threshold(preds)
+        metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
+
+        # 2. Update metric
+        if isinstance(metric_inputs, dict):
+            self.metric.update(**metric_inputs)
+            return preds
+
+        if isinstance(metric_inputs, list) and all(isinstance(inp, dict) for inp in metric_inputs):
+            for inp in metric_inputs:
+                self.metric.update(**inp)
+            return preds
+
+        raise TypeError(metric_inputs)
+
+    def predict_step(
+        self,
+        batch: OTXDataBatch | OTXTileBatchDataEntity,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ) -> OTXPredBatch:
+        """Step function called during PyTorch Lightning Trainer's predict."""
+        if self.explain_mode:
+            return self._filter_outputs_by_threshold(self.forward_explain(inputs=batch))  # type: ignore[arg-type]
+
+        outputs = self._filter_outputs_by_threshold(self.forward(inputs=batch))  # type: ignore[arg-type]
+
+        if isinstance(outputs, OTXBatchLossEntity):
+            raise TypeError(outputs)
+
+        return outputs
+
+    @property
+    def best_confidence_threshold(self) -> float:
+        """Best confidence threshold to filter outputs.
+
+        Always returns the current value from hparams, with 0.5 as fallback.
+        This ensures the threshold is always up-to-date after validation updates it.
+        """
+        threshold = self.hparams.get("best_confidence_threshold", None)
+        if threshold is None:
+            # Only log warning once to avoid spam
+            if not getattr(self, "_threshold_warning_logged", False):
+                log.warning("There is no predefined best_confidence_threshold, 0.5 will be used as default.")
+                self._threshold_warning_logged = True
+            return 0.5
+        return float(threshold)
+
     def on_load_checkpoint(self, ckpt: dict[str, Any]) -> None:
         """Load state_dict from checkpoint.
 
-        For detection, it is need to update confidence threshold information when
+        For instance segmentation, it is needed to update confidence threshold and F1 score information when
         the metric is FMeasure.
         """
-        if best_confidence_threshold := ckpt.get("confidence_threshold") or (
-            (hyper_parameters := ckpt.get("hyper_parameters"))
-            and (best_confidence_threshold := hyper_parameters.get("best_confidence_threshold", None))
+        hyper_parameters = ckpt.get("hyper_parameters", {})
+
+        # Load best confidence threshold (legacy and new format)
+        if best_confidence_threshold := ckpt.get("confidence_threshold") or hyper_parameters.get(
+            "best_confidence_threshold",
+            None,
         ):
             self.hparams["best_confidence_threshold"] = best_confidence_threshold
         super().on_load_checkpoint(ckpt)
 
     def _log_metrics(self, meter: Metric, key: Literal["val", "test"], **compute_kwargs) -> None:
         if key == "val":
-            retval = super()._log_metrics(meter, key)
+            super()._log_metrics(meter, key)
 
-            # NOTE: Validation metric logging can update `best_confidence_threshold`
-            if (
-                isinstance(meter, MetricCollection)
-                and (fmeasure := getattr(meter, "FMeasure", None))
-                and (best_confidence_threshold := getattr(fmeasure, "best_confidence_threshold", None))
-            ) or (
-                isinstance(meter, FMeasure)
-                and (best_confidence_threshold := getattr(meter, "best_confidence_threshold", None))
-            ):
-                self.hparams["best_confidence_threshold"] = best_confidence_threshold
+            # NOTE: Only update best_confidence_threshold when we achieve a NEW best F1 score
+            fmeasure = None
+            if isinstance(meter, MetricCollection) and (fmeasure := getattr(meter, "FMeasure", None)):
+                pass  # fmeasure is set
+            elif isinstance(meter, FMeasure):
+                fmeasure = meter
 
-            return retval
+            if fmeasure is not None and hasattr(fmeasure, "best_confidence_threshold"):
+                self.hparams["best_confidence_threshold"] = fmeasure.best_confidence_threshold
 
         if key == "test":
             # NOTE: Test metric logging should use `best_confidence_threshold` found previously.
@@ -298,9 +368,38 @@ class OTXInstanceSegModel(OTXModel):
                 {"best_confidence_threshold": best_confidence_threshold} if best_confidence_threshold else {}
             )
 
-            return super()._log_metrics(meter, key, **compute_kwargs)
+            super()._log_metrics(meter, key, **compute_kwargs)
 
-        raise ValueError(key)
+    def _filter_outputs_by_threshold(self, outputs: OTXPredBatch) -> OTXPredBatch:
+        scores = []
+        bboxes = []
+        labels = []
+        masks = []
+        polygons = []
+
+        for i in range(len(outputs.imgs_info)):  # type: ignore[arg-type]
+            _scores = outputs.scores[i] if outputs.scores is not None else None
+            _bboxes = outputs.bboxes[i] if outputs.bboxes is not None else None
+            _masks = outputs.masks[i] if outputs.masks is not None else None
+            _polygons = outputs.polygons[i] if outputs.polygons is not None else None
+            _labels = outputs.labels[i] if outputs.labels is not None else None
+
+            filtered_idx = torch.where(_scores > self.best_confidence_threshold)
+            scores.append(_scores[filtered_idx])
+            bboxes.append(_bboxes[filtered_idx])
+            labels.append(_labels[filtered_idx])
+
+            if _masks is not None:
+                masks.append(_masks[filtered_idx])
+            if _polygons is not None:
+                polygons.append(_polygons[filtered_idx])
+
+        outputs.scores = scores
+        outputs.bboxes = bboxes
+        outputs.labels = labels
+        outputs.masks = masks
+        outputs.polygons = polygons
+        return outputs
 
     def _convert_pred_entity_to_compute_metric(
         self,

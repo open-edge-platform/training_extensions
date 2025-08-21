@@ -38,6 +38,9 @@ callbacks:
       min_lrschedule_patience: 3
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
+      mode: max
+      monitor: val/map_50
+      min_delta: 0.001
       warmup_iters: 100
       warmup_epochs: 7
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
@@ -78,7 +81,7 @@ overrides:
             is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.RandomVerticalFlip
           enable: false
-        - class_path: torchvision.transforms.v2.GaussianBlur
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
           enable: false
           init_args:
             kernel_size: 5
@@ -86,13 +89,14 @@ overrides:
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
             scale: false
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
+          enable: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [255.0, 255.0, 255.0]
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-        - class_path: torchvision.transforms.v2.GaussianNoise
-          enable: false
+
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 

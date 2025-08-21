@@ -3,42 +3,18 @@
 
 """Module for OTX classification models."""
 
-from .hlabel_models import (
-    EfficientNetHLabelCls,
-    MobileNetV3HLabelCls,
-    TimmModelHLabelCls,
-    TVModelHLabelCls,
-    VisionTransformerHLabelCls,
-)
-from .multiclass_models import (
-    EfficientNetMulticlassCls,
-    MobileNetV3MulticlassCls,
-    TimmModelMulticlassCls,
-    TVModelMulticlassCls,
-    VisionTransformerMulticlassCls,
-)
-from .multilabel_models import (
-    EfficientNetMultilabelCls,
-    MobileNetV3MultilabelCls,
-    TimmModelMultilabelCls,
-    TVModelMultilabelCls,
-    VisionTransformerMultilabelCls,
+from .factory import (
+    EfficientNet,
+    MobileNetV3,
+    TimmModel,
+    TVModel,
+    VisionTransformer,
 )
 
 __all__ = [
-    "EfficientNetMulticlassCls",
-    "TimmModelMulticlassCls",
-    "MobileNetV3MulticlassCls",
-    "TVModelMulticlassCls",
-    "VisionTransformerMulticlassCls",
-    "EfficientNetHLabelCls",
-    "TimmModelHLabelCls",
-    "MobileNetV3HLabelCls",
-    "TVModelHLabelCls",
-    "VisionTransformerHLabelCls",
-    "EfficientNetMultilabelCls",
-    "TimmModelMultilabelCls",
-    "MobileNetV3MultilabelCls",
-    "TVModelMultilabelCls",
-    "VisionTransformerMultilabelCls",
+    "EfficientNet",
+    "TimmModel",
+    "MobileNetV3",
+    "TVModel",
+    "VisionTransformer",
 ]

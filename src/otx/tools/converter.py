@@ -6,173 +6,239 @@
 from __future__ import annotations
 
 import argparse
-import json
-from copy import deepcopy
+import logging
+from enum import Enum
 from pathlib import Path
 from typing import Any
 from warnings import warn
 
+import yaml
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.backend.native.engine import OTXEngine
+from otx.backend.native.cli.utils import get_otx_root_path
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.data.module import OTXDataModule
 from otx.engine import Engine, create_engine
 from otx.tools.auto_configurator import AutoConfigurator
 from otx.types import PathLike
-from otx.types.task import OTXTaskType
 
-TEMPLATE_ID_DICT = {
+RECIPE_PATH = get_otx_root_path() / "recipe"
+
+
+class ModelStatus(str, Enum):
+    """Enum for model status."""
+
+    SPEED = "speed"
+    BALANCE = "balance"
+    ACCURACY = "accuracy"
+    DEPRECATED = "deprecated"
+    ACTIVE = "active"
+
+
+TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
     "Custom_Image_Classification_DeiT-Tiny": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/deit_tiny.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Custom_Image_Classification_EfficinetNet-B0": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_b0.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": True,
     },
     "Custom_Image_Classification_EfficientNet-V2-S": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/efficientnet_v2.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
     },
     "Custom_Image_Classification_MobileNet-V3-large-1x": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
     },
     "Custom_Image_Classification_EfficientNet-B3": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_b3.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Custom_Image_Classification_EfficientNet-V2-L": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_efficientnet_v2_l.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_v2_l.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Custom_Image_Classification_MobileNet-V3-small": {
-        "model_config_path": "src/otx/recipe/classification/multi_class_cls/tv_mobilenet_v3_small.yaml",
+        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_mobilenet_v3_small.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     # DETECTION
     "Custom_Object_Detection_Gen3_ATSS": {
-        "model_config_path": "src/otx/recipe/detection/atss_mobilenetv2.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": True,
     },
     "Object_Detection_ResNeXt101_ATSS": {
-        "model_config_path": "src/otx/recipe/detection/atss_resnext101.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Custom_Object_Detection_Gen3_SSD": {
-        "model_config_path": "src/otx/recipe/detection/ssd_mobilenetv2.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Object_Detection_YOLOX_X": {
-        "model_config_path": "src/otx/recipe/detection/yolox_x.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_x.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Object_Detection_YOLOX_L": {
-        "model_config_path": "src/otx/recipe/detection/yolox_l.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_l.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Object_Detection_YOLOX_S": {
-        "model_config_path": "src/otx/recipe/detection/yolox_s.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_s.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
     },
     "Custom_Object_Detection_YOLOX": {
-        "model_config_path": "src/otx/recipe/detection/yolox_tiny.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Object_Detection_RTDetr_18": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_18.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_18.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Object_Detection_RTDetr_50": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_50.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Object_Detection_RTDetr_101": {
-        "model_config_path": "src/otx/recipe/detection/rtdetr_101.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_101.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Object_Detection_RTMDet_tiny": {
-        "model_config_path": "src/otx/recipe/detection/rtmdet_tiny.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Object_Detection_DFine_X": {
-        "model_config_path": "src/otx/recipe/detection/dfine_x.yaml",
+        "recipe_path": RECIPE_PATH / "detection" / "dfine_x.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
     },
     # INSTANCE_SEGMENTATION
     "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50.yaml",
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_swint.yaml",
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
     },
     "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_efficientnetb2b.yaml",
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
     },
     "Custom_Instance_Segmentation_RTMDet_tiny": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/rtmdet_inst_tiny.yaml",
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
-        "model_config_path": "src/otx/recipe/instance_segmentation/maskrcnn_r50_tv.yaml",
+        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
     },
     # ROTATED_DETECTION
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_r50.yaml",
+        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "model_config_path": "src/otx/recipe/rotated_detection/maskrcnn_efficientnetb2b.yaml",
+        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_efficientnetb2b.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
+    },
+    "Rotated_Detection_MaskRCNN_ResNet50_V2": {
+        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
     },
     # SEMANTIC_SEGMENTATION
     "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
-    },
-    "Custom_Semantic_Segmentation_Lite-HRNet-18_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_18.yaml",
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": True,
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_s.yaml",
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_s.yaml",
+        "status": ModelStatus.SPEED,
+        "default": False,
     },
     "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/litehrnet_x.yaml",
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_x.yaml",
+        "status": ModelStatus.DEPRECATED,
+        "default": False,
     },
     "Custom_Semantic_Segmentation_SegNext_t": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_t.yaml",
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_t.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Custom_Semantic_Segmentation_SegNext_s": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_s.yaml",
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_s.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Custom_Semantic_Segmentation_SegNext_B": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/segnext_b.yaml",
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_b.yaml",
+        "status": ModelStatus.ACTIVE,
+        "default": False,
     },
     "Custom_Semantic_Segmentation_DINOV2_S": {
-        "model_config_path": "src/otx/recipe/semantic_segmentation/dino_v2.yaml",
+        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "dino_v2.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
     },
     # ANOMALY
     "ote_anomaly_padim": {
-        "model_config_path": "src/otx/recipe/anomaly/padim.yaml",
+        "recipe_path": RECIPE_PATH / "anomaly" / "padim.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
     },
     "ote_anomaly_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly/stfpm.yaml",
+        "recipe_path": RECIPE_PATH / "anomaly" / "stfpm.yaml",
+        "status": ModelStatus.BALANCE,
+        "default": False,
     },
     "ote_anomaly_uflow": {
-        "model_config_path": "src/otx/recipe/anomaly/uflow.yaml",
-    },
-    # ANOMALY CLASSIFICATION
-    "ote_anomaly_classification_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_classification/padim.yaml",
-    },
-    "ote_anomaly_classification_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_classification/stfpm.yaml",
-    },
-    # ANOMALY_DETECTION
-    "ote_anomaly_detection_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_detection/padim.yaml",
-    },
-    "ote_anomaly_detection_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_detection/stfpm.yaml",
-    },
-    # ANOMALY_SEGMENTATION
-    "ote_anomaly_segmentation_padim": {
-        "model_config_path": "src/otx/recipe/anomaly_segmentation/padim.yaml",
-    },
-    "ote_anomaly_segmentation_stfpm": {
-        "model_config_path": "src/otx/recipe/anomaly_segmentation/stfpm.yaml",
+        "recipe_path": RECIPE_PATH / "anomaly" / "uflow.yaml",
+        "status": ModelStatus.ACCURACY,
+        "default": False,
     },
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
-        "model_config_path": "src/otx/recipe/keypoint_detection/rtmpose_tiny.yaml",
+        "recipe_path": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
+        "status": ModelStatus.SPEED,
+        "default": True,
     },
 }
 
 
-class ConfigConverter:
-    """Convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.
-
-    This class is used to convert ModelTemplate for OTX v1 to OTX v2 recipe dictionary.
+class GetiConfigConverter:
+    """Convert Geti model manifest to OTXv2 recipe dictionary.
 
     Example:
         The following examples show how to use the Converter class.
@@ -180,8 +246,8 @@ class ConfigConverter:
 
         Convert template.json to dictionary::
 
-            converter = ConfigConverter()
-            config = converter.convert("template.json")
+            converter = GetiConfigConverter()
+            config = converter.convert("train_config.yaml")
 
         Instantiate an object from the configuration dictionary::
 
@@ -197,71 +263,38 @@ class ConfigConverter:
     """
 
     @staticmethod
-    def convert(config_path: str, task: OTXTaskType | None = None) -> dict:
-        """Convert a configuration file to a default configuration dictionary.
+    def convert(config: dict) -> dict:
+        """Convert a geti configuration file to a default configuration dictionary.
 
         Args:
-            config_path (str): The path to the configuration file.
+            config (dict): The path to the Geti yaml configuration file.
             task (OTXTaskType | None): Value to override the task.
 
         Returns:
             dict: The default configuration dictionary.
 
         """
-        with Path(config_path).open() as f:
-            template_config = json.load(f)
+        hyper_parameters = config["hyper_parameters"]
 
-        hyperparameters = template_config["hyperparameters"]
-        param_dict = ConfigConverter._get_params(hyperparameters)
-
-        task_info = TEMPLATE_ID_DICT[template_config["model_template_id"]]
-        model_config_path = Path(task_info["model_config_path"])
+        model_config_path: Path = TEMPLATE_ID_MAPPING[config["model_manifest_id"]]["recipe_path"]  # type: ignore[assignment]
         # override necessary parameters for config
-        if param_dict.get("enable_tiling", None) and "_tile" not in model_config_path.stem:
+        tile_enabled = hyper_parameters and hyper_parameters.get("dataset_preparation", {}).get("augmentation", {}).get(
+            "tiling",
+            {},
+        ).get("enable", False)
+        if tile_enabled and "_tile" not in model_config_path.stem:
             tile_name = model_config_path.stem + "_tile.yaml"
             model_config_path = model_config_path.parent / tile_name
         # classification task type can't be deducted from template name, try to extract from config
-        if "sub_task_type" in template_config and "_cls" in model_config_path.parent.name:
-            new_task = template_config["sub_task_type"].lower()
-            model_config_path = Path("src/otx/recipe/classification") / new_task / model_config_path.name
-        if task is not None:
-            # override the task for the given model
-            parent_path = (
-                model_config_path.parent.parent if "_cls" in model_config_path.parent.name else model_config_path.parent
-            )
-            name_of_model = model_config_path.name
-            model_config_path = parent_path / task.value.lower() / name_of_model
-            if not model_config_path.exists():
-                msg = (
-                    f"Overrided model config file: {model_config_path} "
-                    "with the given task: {task.value} does not exist."
-                )
-                raise FileNotFoundError(msg)
-        # assign back the modified model config path to the task_info
-        task_info["model_config_path"] = str(model_config_path)
-        default_config = ConfigConverter._get_default_config(task_info)
-        ConfigConverter._update_params(default_config, param_dict)
-        ConfigConverter._remove_unused_key(default_config)
+        if (sub_task_type := config["sub_task_type"]) and "_cls" in model_config_path.parent.name:
+            model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
+        if model_config_path.suffix != ".yaml":
+            model_config_path = model_config_path / ".yaml"
+        default_config = AutoConfigurator(model_config_path=model_config_path).config
+        if hyper_parameters:
+            GetiConfigConverter._update_params(default_config, hyper_parameters)
+        GetiConfigConverter._remove_unused_key(default_config)
         return default_config
-
-    @staticmethod
-    def _get_default_config(task_info: dict) -> dict:
-        """Return default otx conifg for template use."""
-        if Path(task_info["model_config_path"]).suffix != ".yaml":
-            task_info["model_config_path"] = str(task_info["model_config_path"]) + ".yaml"
-        if "task" in task_info:
-            # override the task with the same model
-            path_to_task_parent = Path(task_info["model_config_path"]).parent.parent
-            name_of_file = Path(task_info["model_config_path"]).name
-            task_info["model_config_path"] = path_to_task_parent / task_info["task"].lower() / name_of_file
-            if not task_info["model_config_path"].exists():
-                msg = (
-                    f"Overrided model config file: {task_info['model_config_path']} "
-                    "with the given task: {task_info['task']} does not exist."
-                )
-                raise FileNotFoundError(msg)
-
-        return AutoConfigurator(**task_info).config  # type: ignore[arg-type]
 
     @staticmethod
     def _get_params(hyperparameters: dict) -> dict:
@@ -272,126 +305,112 @@ class ConfigConverter:
                 if "value" in param_info:
                     param_dict[param_name] = param_info["value"]
                 else:
-                    param_dict = param_dict | ConfigConverter._get_params(param_info)
+                    param_dict = param_dict | GetiConfigConverter._get_params(param_info)
 
         return param_dict
 
     @staticmethod
-    def _update_params(config: dict, param_dict: dict) -> None:  # noqa: C901
+    def _update_params(config: dict, param_dict: dict) -> None:
         """Update params of OTX recipe from Geit configurable params."""
-        unused_params = deepcopy(param_dict)
 
-        def update_batch_size(param_value: int) -> None:
-            config["data"]["train_subset"]["batch_size"] = param_value
-
-        def update_inference_batch_size(param_value: int) -> None:
-            config["data"]["val_subset"]["batch_size"] = param_value
-            config["data"]["test_subset"]["batch_size"] = param_value
-
-        def update_learning_rate(param_value: float) -> None:
+        def update_learning_rate(param_value: float | None) -> None:
+            """Update learning rate in the config."""
+            if param_value is None:
+                logging.info("Learning rate is not provided, skipping update.")
+                return
             optimizer = config["model"]["init_args"]["optimizer"]
             if isinstance(optimizer, dict) and "init_args" in optimizer:
                 optimizer["init_args"]["lr"] = param_value
             else:
                 warn("Warning: learning_rate is not updated", stacklevel=1)
 
-        def update_learning_rate_warmup_iters(param_value: int) -> None:
-            scheduler = config["model"]["init_args"]["scheduler"]
-            if (
-                isinstance(scheduler, dict)
-                and "class_path" in scheduler
-                and scheduler["class_path"] == "otx.backend.native.schedulers.LinearWarmupSchedulerCallable"
-            ):
-                scheduler["init_args"]["num_warmup_steps"] = param_value
-            else:
-                warn("Warning: learning_rate_warmup_iters is not updated", stacklevel=1)
-
-        def update_num_iters(param_value: int) -> None:
+        def update_num_iters(param_value: int | None) -> None:
+            """Update max_epochs in the config."""
+            if param_value is None:
+                logging.info("Max epochs is not provided, skipping update.")
+                return
             config["max_epochs"] = param_value
 
-        def update_num_workers(param_value: int) -> None:
-            config["data"]["train_subset"]["num_workers"] = param_value
-            config["data"]["val_subset"]["num_workers"] = param_value
-            config["data"]["test_subset"]["num_workers"] = param_value
+        def update_early_stopping(early_stopping_cfg: dict | None) -> None:
+            """Update early stopping parameters in the config."""
+            if early_stopping_cfg is None:
+                logging.info("Early stopping parameters are not provided, skipping update.")
+                return
 
-        def update_enable_early_stopping(param_value: bool) -> None:
-            idx = ConfigConverter._get_callback_idx(
+            enable = early_stopping_cfg["enable"]
+            patience = early_stopping_cfg["patience"]
+
+            idx = GetiConfigConverter._get_callback_idx(
                 config["callbacks"],
                 "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
             )
-            if not param_value and idx > -1:
+            if not enable and idx > -1:
                 config["callbacks"].pop(idx)
+                return
 
-        def update_early_stop_patience(param_value: int) -> None:
-            if "callbacks" in config and config["callbacks"] is not None:
-                for callback in config["callbacks"]:
-                    if (
-                        callback["class_path"]
-                        == "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup"
-                    ):
-                        callback["init_args"]["patience"] = param_value
-                    break
+            config["callbacks"][idx]["init_args"]["patience"] = patience
 
-        def update_use_adaptive_interval(param_value: bool) -> None:
-            idx = ConfigConverter._get_callback_idx(
-                config["callbacks"],
-                "otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling",
-            )
-            if not param_value and idx > -1:
-                config["callbacks"].pop(idx)
+        def update_tiling(tiling_dict: dict | None) -> None:
+            """Update tiling parameters in the config."""
+            if tiling_dict is None:
+                logging.info("Tiling parameters are not provided, skipping update.")
+                return
 
-        def update_auto_num_workers(param_value: bool) -> None:
-            config["data"]["auto_num_workers"] = param_value
-
-        def update_auto_adapt_batch_size(param_value: str) -> None:
-            config["adaptive_bs"] = param_value
-
-        def update_enable_tiling(param_value: bool) -> None:
-            config["data"]["tile_config"]["enable_tiler"] = param_value
-            if param_value:
-                config["data"]["tile_config"]["enable_adaptive_tiling"] = param_dict["enable_adaptive_params"]
+            config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
+            if tiling_dict["enable"]:
+                config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["adaptive_tiling"]
                 config["data"]["tile_config"]["tile_size"] = (
-                    param_dict["tile_size"],
-                    param_dict["tile_size"],
+                    tiling_dict["tile_size"],
+                    tiling_dict["tile_size"],
                 )
-                config["data"]["tile_config"]["overlap"] = param_dict["tile_overlap"]
-                config["data"]["tile_config"]["max_num_instances"] = param_dict["tile_max_number"]
-                config["data"]["tile_config"]["sampling_ratio"] = param_dict["tile_sampling_ratio"]
-                config["data"]["tile_config"]["object_tile_ratio"] = param_dict["object_tile_ratio"]
-                tile_params = [
-                    "enable_adaptive_params",
-                    "tile_size",
-                    "tile_overlap",
-                    "tile_max_number",
-                    "tile_sampling_ratio",
-                    "object_tile_ratio",
-                ]
-                for tile_param in tile_params:
-                    unused_params.pop(tile_param)
+                config["data"]["tile_config"]["overlap"] = tiling_dict["tile_overlap"]
 
-        param_update_funcs = {
-            "batch_size": update_batch_size,
-            "inference_batch_size": update_inference_batch_size,
-            "learning_rate": update_learning_rate,
-            "learning_rate_warmup_iters": update_learning_rate_warmup_iters,
-            "num_iters": update_num_iters,
-            "num_workers": update_num_workers,
-            "enable_early_stopping": update_enable_early_stopping,
-            "early_stop_patience": update_early_stop_patience,
-            "use_adaptive_interval": update_use_adaptive_interval,
-            "auto_num_workers": update_auto_num_workers,
-            "enable_tiling": update_enable_tiling,
-            "auto_adapt_batch_size": update_auto_adapt_batch_size,
-        }
-        for param_name, param_value in param_dict.items():
-            update_func = param_update_funcs.get(param_name)
-            if update_func:
-                update_func(param_value)  # type: ignore[operator]
-                unused_params.pop(param_name)
+        def update_input_size(height: int | None, width: int | None) -> None:
+            """Update input size in the config."""
+            if height is None or width is None:
+                logging.info("Input size is not provided, skipping update.")
+                return
+            config["data"]["input_size"] = (height, width)
 
-        warn("Warning: These parameters are not updated", stacklevel=1)
-        for param_name, param_value in unused_params.items():
-            print(f"\t {param_name}: {param_value}")
+        def update_augmentations(augmentation_params: dict) -> None:
+            """Update augmentations in the config."""
+            if not augmentation_params:
+                return
+
+            augs_mapping_list = {
+                "random_affine": "otx.data.transform_libs.torchvision.RandomAffine",
+                "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
+                "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
+                "gaussian_blur": "otx.data.transform_libs.torchvision.RandomGaussianBlur",
+                "gaussian_noise": "otx.data.transform_libs.torchvision.RandomGaussianNoise",
+                "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
+            }
+
+            for aug_name, aug_value in augmentation_params.items():
+                aug_class = augs_mapping_list[aug_name]
+                found = False
+                for aug_config in config["data"]["train_subset"]["transforms"]:
+                    if aug_class == aug_config["class_path"]:
+                        found = True
+                        aug_config["enable"] = aug_value["enable"]
+                        break
+                if not found:
+                    msg = f"augmentation {aug_class} is not found for this model"
+                    raise ValueError(msg)
+
+        augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
+        tiling = augmentation_params.pop("tiling", None)
+        training_parameters = param_dict.get("training", {})
+
+        update_augmentations(augmentation_params)
+        update_tiling(tiling)
+        update_learning_rate(training_parameters.get("learning_rate", None))
+        update_num_iters(training_parameters.get("max_epochs", None))
+        update_early_stopping(training_parameters.get("early_stopping", None))
+        update_input_size(
+            training_parameters.get("input_size_height", None),
+            training_parameters.get("input_size_width", None),
+        )
 
     @staticmethod
     def _get_callback_idx(callbacks: list, name: str) -> int:
@@ -412,6 +431,27 @@ class ConfigConverter:
         config["data"].pop("__path__", None)  # Remove __path__ key that for CLI overriding
 
     @staticmethod
+    def instantiate_datamodule(config: dict, data_root: PathLike | None = None, **kwargs) -> OTXDataModule:
+        """Instantiate an OTXDataModule with arrow data format."""
+        config.update(kwargs)
+
+        # Instantiate datamodule
+        data_config = config.pop("data")
+        if data_root is not None:
+            data_config["data_root"] = data_root
+
+        train_config = data_config.pop("train_subset")
+        val_config = data_config.pop("val_subset")
+        test_config = data_config.pop("test_subset")
+        return OTXDataModule(
+            train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
+            val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
+            test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
+            tile_config=TileConfig(**data_config.pop("tile_config", {})),
+            **data_config,
+        )
+
+    @staticmethod
     def instantiate(
         config: dict,
         work_dir: PathLike | None = None,
@@ -428,22 +468,10 @@ class ConfigConverter:
         Returns:
             tuple: A tuple containing the engine and the train kwargs dictionary.
         """
-        config.update(kwargs)
-
-        # Instantiate datamodule
-        data_config = config.pop("data")
-        if data_root is not None:
-            data_config["data_root"] = data_root
-
-        train_config = data_config.pop("train_subset")
-        val_config = data_config.pop("val_subset")
-        test_config = data_config.pop("test_subset")
-        datamodule = OTXDataModule(
-            train_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
-            val_subset=SubsetConfig(sampler=SamplerConfig(**val_config.pop("sampler", {})), **val_config),
-            test_subset=SubsetConfig(sampler=SamplerConfig(**test_config.pop("sampler", {})), **test_config),
-            tile_config=TileConfig(**data_config.pop("tile_config", {})),
-            **data_config,
+        datamodule = GetiConfigConverter.instantiate_datamodule(
+            config=config,
+            data_root=data_root,
+            **kwargs,
         )
 
         # Update num_classes & Instantiate Model
@@ -469,7 +497,7 @@ class ConfigConverter:
         # Instantiate Engine.train Arguments
         engine_parser = ArgumentParser()
         train_arguments = engine_parser.add_method_arguments(
-            OTXEngine,
+            engine.__class__,
             "train",
             skip={"accelerator", "devices"},
             fail_untyped=False,
@@ -488,6 +516,8 @@ class ConfigConverter:
         instantiated_kwargs = engine_parser.instantiate_classes(Namespace(**config))
 
         train_kwargs = {k: v for k, v in instantiated_kwargs.items() if k in train_arguments}
+        # enable auto batch size for training
+        train_kwargs["adaptive_bs"] = "Safe"
 
         return engine, train_kwargs
 
@@ -498,8 +528,10 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--data_root", help="Input dataset root path")
     parser.add_argument("-o", "--work_dir", help="Input work directory path")
     args = parser.parse_args()
-    otx_config = ConfigConverter.convert(config_path=args.config)
-    engine, train_kwargs = ConfigConverter.instantiate(
+    with Path(args.config).open() as f:
+        config = yaml.safe_load(f)
+    otx_config = GetiConfigConverter.convert(config=config)
+    engine, train_kwargs = GetiConfigConverter.instantiate(
         config=otx_config,
         data_root=args.data_root,
         work_dir=args.work_dir,

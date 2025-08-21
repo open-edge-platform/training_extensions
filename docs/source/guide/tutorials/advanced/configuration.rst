@@ -9,6 +9,7 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
 
 .. code-block:: yaml
 
+  task: MULTI_CLASS_CLS
   model:
     class_path: otx.backend.native.models.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls
     init_args:
@@ -35,7 +36,6 @@ Example of ``recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``
               monitor: val/accuracy
 
   engine:
-    task: MULTI_CLASS_CLS
     device: auto
 
   callback_monitor: val/accuracy

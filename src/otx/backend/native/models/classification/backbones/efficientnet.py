@@ -404,8 +404,8 @@ class EffiInitBlock(nn.Module):
         return self.conv(x)
 
 
-class EfficientNet(nn.Module):
-    """EfficientNet.
+class EfficientNetFeatureExtractor(nn.Module):
+    """Implementation of the EfficientNet Feature Extactor.
 
     Args:
         channels : list of list of int. Number of output channels for each unit.
@@ -611,7 +611,7 @@ class EfficientNetBackbone:
         input_size: tuple[int, int] | None = None,
         pretrained: bool = True,
         **kwargs,
-    ) -> EfficientNet:
+    ) -> EfficientNetFeatureExtractor:
         """Create a new instance of the EfficientNet class.
 
         Args:
@@ -621,7 +621,7 @@ class EfficientNetBackbone:
             **kwargs: Additional keyword arguments to be passed to the EfficientNet constructor.
 
         Returns:
-            EfficientNet: The created EfficientNet model instance.
+            EfficientNetFeatureExtractor: The created EfficientNetFeatureExtractor model instance.
         """
         origin_input_size, depth_factor, width_factor = cls.EFFICIENTNET_CFG[model_name].values()
         input_size = input_size or origin_input_size
@@ -657,7 +657,7 @@ class EfficientNetBackbone:
         if width_factor > 1.0:
             final_block_channels = round_channels(final_block_channels * width_factor)
 
-        model = EfficientNet(
+        model = EfficientNetFeatureExtractor(
             channels=channels,
             init_block_channels=init_block_channels,
             final_block_channels=final_block_channels,

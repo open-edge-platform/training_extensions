@@ -80,7 +80,7 @@ class OTXAnomalyDataset(OTXDataset):
                 ori_shape=img_shape,
                 image_color_channel=self.image_color_channel,
             ),
-            label=torch.tensor(label, dtype=torch.long),
+            label=label.to(dtype=torch.long),
             masks=Mask(self._get_mask(datumaro_item, label, img_shape)),
         )
 
@@ -159,7 +159,7 @@ class OTXAnomalyDataset(OTXDataset):
         mask_file_path = (
             Path("/".join(datumaro_item.media.path.split("/")[:-3]))
             / "ground_truth"
-            / f"{('/'.join(datumaro_item.media.path.split('/')[-2:])).replace('.png','_mask.png')}"
+            / f"{('/'.join(datumaro_item.media.path.split('/')[-2:])).replace('.png', '_mask.png')}"
         )
         if mask_file_path.exists():
             return (io.read_image(str(mask_file_path), mode=io.ImageReadMode.GRAY) / 255).to(torch.uint8)

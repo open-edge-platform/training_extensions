@@ -8,7 +8,7 @@ from copy import deepcopy
 import pytest
 import torch
 
-from otx.backend.native.models.classification.backbones import VisionTransformer
+from otx.backend.native.models.classification.backbones import VisionTransformerBackbone
 from otx.backend.native.models.utils.utils import load_checkpoint_to_model
 
 
@@ -20,7 +20,7 @@ class TestVisionTransformer:
     def test_init_weights(self, tmp_path, config):
         # test weight init cfg
         cfg = deepcopy(config)
-        model = VisionTransformer(**cfg)
+        model = VisionTransformerBackbone(**cfg)
         ori_weight = model.patch_embed.proj.weight.clone().detach()
         # The pos_embed is all zero before initialize
         assert torch.allclose(model.pos_embed, torch.tensor(0.0))
@@ -36,7 +36,7 @@ class TestVisionTransformer:
         torch.save(model.state_dict(), str(checkpoint))
 
         cfg = deepcopy(config)
-        model = VisionTransformer(**cfg)
+        model = VisionTransformerBackbone(**cfg)
         state_dict = torch.load(str(checkpoint), None)
         load_checkpoint_to_model(model, state_dict, strict=True)
         assert torch.allclose(model.pos_embed, pretrain_pos_embed)
@@ -48,7 +48,7 @@ class TestVisionTransformer:
 
         # test with output cls_token
         cfg = deepcopy(config)
-        model = VisionTransformer(**cfg)
+        model = VisionTransformerBackbone(**cfg)
         outs = model(imgs)
         assert isinstance(outs, tuple)
         assert len(outs) == 1
@@ -68,7 +68,7 @@ class TestVisionTransformer:
 
         for method in peft_methods:
             cfg = deepcopy(config)
-            model = VisionTransformer(**cfg, peft=method)
+            model = VisionTransformerBackbone(**cfg, peft=method)
 
             # check PEFT parameters are created
             peft_param_names = [n for n, _ in model.named_parameters() if method in n]

@@ -12,7 +12,7 @@ import torch.nn.functional as f
 from torch import Tensor
 from torchvision.models.detection.roi_heads import RoIHeads, fastrcnn_loss, maskrcnn_inference
 
-from otx.backend.native.models.instance_segmentation.utils.structures.mask import mask_target
+from otx.data.utils.structures.mask import mask_target
 
 if TYPE_CHECKING:
     from datumaro import Polygon

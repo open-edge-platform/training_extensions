@@ -99,7 +99,6 @@ class BsSearchAlgo:
 
         while True:
             oom, max_memory_reserved = self._try_batch_size(current_bs)
-
             # If memory usage is too close to limit, OOM can be raised during training
             if oom or max_memory_reserved > self._mem_upper_bound:
                 if current_bs < lowest_unavailable_bs:
@@ -258,14 +257,20 @@ class BsSearchAlgo:
 
 def _run_trial(train_func: Callable[[int], Any], bs: int, trial_queue: mp.Queue) -> None:
     mp.set_start_method(None, True)  # reset mp start method
-
     oom = False
     try:
         train_func(bs)
     except RuntimeError as e:
-        if str(e).startswith("CUDA out of memory.") or str(e).startswith(  # CUDA OOM
-            "Allocation is out of device memory on current platform.",  # XPU OOM
-        ):
+        if (
+            str(e).startswith("CUDA out of memory.")
+            or str(e).startswith(  # CUDA OOM
+                "Allocation is out of device memory on current platform.",
+            )
+            or "XPU out of memory" in str(e)
+            or "UR_RESULT_ERROR_OUT_OF_DEVICE_MEMORY" in str(e)
+            or "UR error" in str(e)
+            or "UR_RESULT_ERROR_UNKNOWN" in str(e)
+        ):  # XPU OOM
             oom = True
         else:
             raise

@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from torch.hub import download_url_to_file
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformer
+from otx.backend.native.models.classification.backbones.vision_transformer import VisionTransformerBackbone
 from otx.backend.native.models.classification.classifier import ImageClassifier
 from otx.backend.native.models.classification.heads import (
     MultiLabelLinearClsHead,
@@ -59,7 +59,16 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str = "vit-tiny",
+        model_name: Literal[
+            "vit-tiny",
+            "vit-small",
+            "vit-base",
+            "vit-large",
+            "dinov2-small",
+            "dinov2-base",
+            "dinov2-large",
+            "dinov2-giant",
+        ] = "vit-tiny",
         freeze_backbone: bool = False,
         peft: Literal["lora", "dora"] | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -95,7 +104,7 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes
-        vit_backbone = VisionTransformer(
+        vit_backbone = VisionTransformerBackbone(
             model_name=self.model_name,
             img_size=self.data_input_params.input_size,
             peft=self.peft,
