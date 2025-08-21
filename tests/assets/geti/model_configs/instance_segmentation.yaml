@@ -46,9 +46,6 @@ hyperparameters:
           - 0.05
           - 0.05
         p: 0.5
-      padding:
-        enable: true
-        pad_to_square: true
       gaussian_blur:
         enable: false
         kernel_size: 5

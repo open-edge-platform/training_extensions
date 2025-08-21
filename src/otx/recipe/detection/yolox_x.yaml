@@ -136,7 +136,7 @@ overrides:
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [1.0, 1.0, 1.0]
-            
+
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 

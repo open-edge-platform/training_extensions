@@ -41,7 +41,7 @@ hyperparameters:
       gaussian_noise:
         enable: false
         mean: 0.0
-        sigma: 0.1    
+        sigma: 0.1
   training:
     max_epochs: 200
     early_stopping:

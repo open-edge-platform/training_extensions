@@ -176,25 +176,11 @@ class TestGetiConfigConverter:
             len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 9
         )  # 10 - disabled iou_random_crop
 
-    def test_padding_aug_instance_seg(self, tmp_path):
+    def test_instance_seg_augs(self, tmp_path):
         cfg_path = "tests/assets/geti/model_configs/instance_segmentation.yaml"
         otx_config = OTXConfig.from_yaml_file(cfg_path)
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 10
-        # switch off padding
-        for aug_name, aug_conf in otx_config.hyper_parameters["dataset_preparation"]["augmentation"].items():
-            if aug_name == "padding":
-                aug_conf["enable"] = False
-                aug_conf["pad_to_square"] = False
-        default_config = GetiConfigConverter.convert(asdict(otx_config))
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] == "otx.data.transform_libs.torchvision.Pad":
-                assert not aug["enable"]
-                assert not aug["init_args"]["pad_to_square"]
-        for aug in default_config["data"]["val_subset"]["transforms"]:
-            if aug["class_path"] == "otx.data.transform_libs.torchvision.Pad":
-                assert not aug["enable"]
-                assert not aug["init_args"]["pad_to_square"]
 
         # instantiate
         data_root = "tests/assets/car_tree_bug"
@@ -205,16 +191,10 @@ class TestGetiConfigConverter:
         )
         assert len(engine.datamodule.train_subset.transforms) == 10
         assert engine.datamodule.train_dataloader().dataset.transforms is not None
-        assert (
-            len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 4
+        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 5
+        assert (  # Resize, ToDtype, Pad, Normalize
+            len(engine.datamodule.val_dataloader().dataset.transforms.transforms) == 4
         )
-        assert ( # Resize, ToDtype, Normalize
-            len(engine.datamodule.val_dataloader().dataset.transforms.transforms) == 3
-        ) 
-        for aug in engine.datamodule.train_dataloader().dataset.transforms.transforms:
-            assert aug.__class__.__name__ != "otx.data.transform_libs.torchvision.Pad"
-        for aug in engine.datamodule.val_dataloader().dataset.transforms.transforms:
-            assert aug.__class__.__name__ != "otx.data.transform_libs.torchvision.Pad"
 
     def test_semantic_segmentation_augs(self, tmp_path):
         cfg_path = "tests/assets/geti/model_configs/semantic_segmentation.yaml"
