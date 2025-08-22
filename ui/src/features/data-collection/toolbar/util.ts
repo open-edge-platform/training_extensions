@@ -3,7 +3,7 @@
 
 import { Key, Selection } from '@geti/ui';
 
-import { AnnotationState, MediaState } from '../../../routes/data-collection/provider';
+import { AnnotationState, MediaState } from '../../../routes/dataset/provider';
 
 export const toggleMultipleSelection =
     (items: Key[]) =>

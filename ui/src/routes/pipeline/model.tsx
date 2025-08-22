@@ -3,9 +3,8 @@
 
 import { Button, ButtonGroup, Divider, Flex, Text } from '@geti/ui';
 
-import { LabelSelection } from '../../features/pipelines/models/label-selection.component';
-import { ModelSelectionGroup } from '../../features/pipelines/models/model-selection-group.component';
-import { paths } from '../../router';
+import { LabelSelection } from '../../features/pipelines/label-selection.component';
+import { ModelSelectionGroup } from '../../features/pipelines/model-selection-group.component';
 
 export const Model = () => {
     const handleSubmitSources = () => {
@@ -30,10 +29,8 @@ export const Model = () => {
 
             <Flex justifyContent={'end'}>
                 <ButtonGroup>
-                    <Button href={paths.pipeline.source({})} variant='secondary'>
-                        Back
-                    </Button>
-                    <Button href={paths.pipeline.sink({})} onPress={handleSubmitSources} variant='primary'>
+                    <Button variant='secondary'>Back</Button>
+                    <Button onPress={handleSubmitSources} variant='primary'>
                         Next
                     </Button>
                 </ButtonGroup>

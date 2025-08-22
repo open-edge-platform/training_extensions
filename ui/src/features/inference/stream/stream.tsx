@@ -3,8 +3,8 @@
 
 import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef } from 'react';
 
-import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
-import { ZoomTransform } from '../zoom/zoom-transform';
+import { ZoomTransform } from '../../../components/zoom/zoom-transform';
+import { useWebRTCConnection } from './web-rtc-connection-provider';
 
 const useSetTargetSizeBasedOnVideo = (
     setSize: Dispatch<SetStateAction<{ width: number; height: number }>>,

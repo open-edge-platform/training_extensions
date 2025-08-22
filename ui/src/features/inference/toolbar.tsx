@@ -7,9 +7,9 @@ import { StatusLight } from '@adobe/react-spectrum';
 import { Button, Divider, Flex, Text, View } from '@geti/ui';
 
 import { $api } from '../../api/client';
-import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
 import { paths } from '../../router';
 import { DebugTrigger } from './debug-trigger';
+import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
 const ActiveModel = () => {
     const modelsQuery = $api.useSuspenseQuery('get', '/api/models');

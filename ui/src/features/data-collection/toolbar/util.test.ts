@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { MediaState } from '../../../routes/data-collection/provider';
+import { MediaState } from '../../../routes/dataset/provider';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 describe('toggleMultipleSelection', () => {

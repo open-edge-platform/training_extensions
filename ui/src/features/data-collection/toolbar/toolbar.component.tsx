@@ -3,7 +3,7 @@
 
 import { Button, Divider, Flex, Heading, Text } from '@geti/ui';
 
-import { useSelectedData } from '../../../routes/data-collection/provider';
+import { useSelectedData } from '../../../routes/dataset/provider';
 import { CheckboxInput } from '../checkbox-input';
 import { response } from '../mock-response';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';

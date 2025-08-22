@@ -276,7 +276,7 @@ export const Sink = () => {
             body: forms[selectedSinkType],
         });
 
-        navigate(paths.liveFeed.index({}));
+        navigate(paths.inference.index({}));
     };
 
     return (

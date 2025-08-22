@@ -15,15 +15,16 @@ import {
     SchemaWebcamSourceConfig,
 } from '../../api/openapi-spec';
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
-import { Stream } from '../../components/stream/stream';
-import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
+import { Stream } from '../../features/inference/stream/stream';
+import { useWebRTCConnection } from '../../features/inference/stream/web-rtc-connection-provider';
 import { paths } from '../../router';
 import { ReactComponent as Image } from './../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCamera } from './../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from './../../assets/icons/video-file.svg';
 import { ReactComponent as Webcam } from './../../assets/icons/webcam.svg';
 
-import classes from './../live-feed/live-feed.module.css';
+// TODO: create a new module scss for this file
+const classes = { canvasContainer: '' };
 
 type SourceConfig =
     | SchemaDisconnectedSourceConfig
