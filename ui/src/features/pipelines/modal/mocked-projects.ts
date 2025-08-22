@@ -1,4 +1,4 @@
-export const pipelines = [
+export const mockedProjects = [
     {
         id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         model_id: 'b0feaabc-da2b-442e-9b3e-55c11c2c2ff2',
@@ -6,6 +6,10 @@ export const pipelines = [
         sink_id: 'b5787c06-964b-4097-8eca-238b8cf79fc8',
         source_id: 'd2cbd8d0-17b8-463e-85a2-4aaed031674d',
         status: 'running',
+        labels: ['Box', 'Paper', 'Blocks'],
+        type: 'Object Detection',
+        images: 5000,
+        date: '04 March 2021, 3:34 PM',
     },
     {
         id: 'e2f3g4h5-i6j7-8901-bcde-fg2345678901',
@@ -14,6 +18,10 @@ export const pipelines = [
         sink_id: 'c6787c06-964b-4097-8eca-238b8cf79fc9',
         source_id: 'e3cbd8d0-17b8-463e-85a2-4aaed031674e',
         status: 'stopped',
+        labels: ['Box', 'Paper', 'Blocks'],
+        type: 'Object Detection',
+        images: 5000,
+        date: '04 March 2021, 3:34 PM',
     },
     {
         id: 'i3j4k5l6-m7n8-9012-cdef-hi3456789012',
@@ -22,6 +30,10 @@ export const pipelines = [
         sink_id: 'd7897c06-964b-4097-8eca-238b8cf79fca',
         source_id: 'f4cbd8d0-17b8-463e-85a2-4aaed031674f',
         status: 'paused',
+        labels: ['Box', 'Paper', 'Blocks'],
+        type: 'Object Detection',
+        images: 5000,
+        date: '04 March 2021, 3:34 PM',
     },
     {
         id: 'm4n5o6p7-q8r9-0123-defg-jk4567890123',
@@ -30,6 +42,10 @@ export const pipelines = [
         sink_id: 'e8907c06-964b-4097-8eca-238b8cf79fcb',
         source_id: 'g5cbd8d0-17b8-463e-85a2-4aaed0316750',
         status: 'running',
+        labels: ['Box', 'Paper', 'Blocks'],
+        type: 'Object Detection',
+        images: 5000,
+        date: '04 March 2021, 3:34 PM',
     },
     {
         id: 's5t6u7v8-w9x0-1234-efgh-lm5678901234',
@@ -38,5 +54,9 @@ export const pipelines = [
         sink_id: 'f9017c06-964b-4097-8eca-238b8cf79fcc',
         source_id: 'h6cbd8d0-17b8-463e-85a2-4aaed0316751',
         status: 'error',
+        labels: ['Box', 'Paper', 'Blocks'],
+        type: 'Object Detection',
+        images: 5000,
+        date: '04 March 2021, 3:34 PM',
     },
 ];
