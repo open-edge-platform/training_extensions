@@ -10,10 +10,12 @@ import { path } from 'static-path';
 
 import { ZoomProvider } from './components/zoom/zoom';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
+import { ViewPipeline } from './features/pipelines/view-pipeline.component';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
 import { Inference } from './routes/inference/inference';
+import { EditPipelineLayout } from './routes/pipeline/edit-pipeline-layout';
 import { Model } from './routes/pipeline/model';
 
 const root = path('/');
@@ -25,7 +27,8 @@ export const paths = {
     root,
     pipeline: {
         index: pipeline,
-        model: pipeline.path('/model'),
+        new: pipeline.path('/new'),
+        edit: pipeline.path('/edit/:pipelineId'),
     },
     inference: {
         index: inference,
@@ -48,9 +51,9 @@ export const router = createBrowserRouter([
             {
                 index: true,
                 loader: () => {
-                    // TODO: if no pipeline configured then redirect to create-pipeline
+                    // TODO: if no pipeline configured then redirect to new pipeline
                     // else redirect to inference
-                    return redirect(paths.pipeline.model({}));
+                    return redirect(paths.pipeline.new({}));
                 },
             },
             {
@@ -58,8 +61,16 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        path: paths.pipeline.model.pattern,
+                        path: paths.pipeline.index.pattern,
+                        element: <ViewPipeline />,
+                    },
+                    {
+                        path: paths.pipeline.new.pattern,
                         element: <Model />,
+                    },
+                    {
+                        path: paths.pipeline.edit.pattern,
+                        element: <EditPipelineLayout />,
                     },
                 ],
             },

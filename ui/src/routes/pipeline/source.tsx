@@ -17,7 +17,6 @@ import {
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
 import { Stream } from '../../features/inference/stream/stream';
 import { useWebRTCConnection } from '../../features/inference/stream/web-rtc-connection-provider';
-import { paths } from '../../router';
 import { ReactComponent as Image } from './../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCamera } from './../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from './../../assets/icons/video-file.svg';
@@ -316,9 +315,7 @@ export const Source = () => {
             </View>
             <View gridArea='buttons'>
                 <ButtonGroup align={'end'} width={'100%'}>
-                    <Button href={paths.pipeline.model({})} variant='accent'>
-                        Next
-                    </Button>
+                    <Button variant='accent'>Next</Button>
                 </ButtonGroup>
             </View>
         </Grid>

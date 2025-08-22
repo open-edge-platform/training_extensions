@@ -318,9 +318,7 @@ export const Sink = () => {
 
                 <Flex justifyContent={'end'}>
                     <ButtonGroup>
-                        <Button href={paths.pipeline.model({})} variant='secondary'>
-                            Back
-                        </Button>
+                        <Button variant='secondary'>Back</Button>
                         <Button type='submit' variant='accent' isPending={sinkMutation.isPending}>
                             Submit & run
                         </Button>
