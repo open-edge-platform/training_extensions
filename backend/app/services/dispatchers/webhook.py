@@ -3,8 +3,8 @@
 
 """This module contains the WebhookDispatcher class for dispatching images and predictions to a webhook endpoint."""
 
-import json
 import logging
+from collections import defaultdict
 from datetime import datetime
 from typing import Any
 
@@ -16,7 +16,7 @@ from urllib3.util.retry import Retry
 
 from app.schemas import OutputFormat
 from app.schemas.sink import WebhookSinkConfig
-from app.services.dispatchers.base import BaseDispatcher
+from app.services.dispatchers.base import BaseDispatcher, numpy_to_base64
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class WebhookDispatcher(BaseDispatcher):
     def __send_to_webhook(self, payload: dict[str, Any]) -> None:
         logger.debug("Sending payload to webhook at %s", self.webhook_url)
         response = self.session.request(
-            self.http_method, self.webhook_url, headers=self.headers, data=json.dumps(payload), timeout=self.timeout
+            self.http_method, self.webhook_url, headers=self.headers, json=payload, timeout=self.timeout
         )
         response.raise_for_status()
         logger.debug("Response from webhook: %s", response.json())
@@ -62,14 +62,13 @@ class WebhookDispatcher(BaseDispatcher):
         image_with_visualization: np.ndarray,
         predictions: Result,
     ) -> None:
-        payload = {"timestamp": datetime.now().isoformat(), "result": {}}
+        inference_result: dict[str, str] = defaultdict(str)
+        payload = {"timestamp": datetime.now().isoformat(), "result": inference_result}
         if OutputFormat.PREDICTIONS in self.output_formats:
-            setattr(payload["result"], OutputFormat.PREDICTIONS, str(predictions))
+            inference_result[OutputFormat.PREDICTIONS] = str(predictions)
         if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
-            setattr(payload["result"], OutputFormat.IMAGE_ORIGINAL, self._numpy_to_base64(original_image))
+            inference_result[OutputFormat.IMAGE_ORIGINAL] = numpy_to_base64(original_image)
         if OutputFormat.IMAGE_WITH_PREDICTIONS in self.output_formats:
-            setattr(
-                payload["result"], OutputFormat.IMAGE_WITH_PREDICTIONS, self._numpy_to_base64(image_with_visualization)
-            )
+            inference_result[OutputFormat.IMAGE_WITH_PREDICTIONS] = numpy_to_base64(image_with_visualization)
 
         self.__send_to_webhook(payload)

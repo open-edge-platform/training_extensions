@@ -14,6 +14,19 @@ from model_api.models.result import Result
 from app.schemas import Sink
 
 
+def numpy_to_base64(image: np.ndarray, fmt: str = ".jpg") -> str:
+    """Convert a numpy array image to a base64 string."""
+    success, img_buf = cv2.imencode(fmt, image)
+    if success:
+        return base64.b64encode(img_buf).decode("utf-8")
+    raise ValueError(f"Failed to encode image in format {fmt}")
+
+
+def create_json_payload(data_type: str, **kwargs) -> dict[str, Any]:
+    """Create a JSON payload with a timestamp and additional data."""
+    return {"timestamp": datetime.now().isoformat(), "type": data_type, **kwargs}
+
+
 class DispatchError(Exception):
     """Exception raised when there is an error in dispatching."""
 
@@ -83,14 +96,3 @@ class BaseDispatcher(metaclass=ABCMeta):
             self._dispatch(original_image, image_with_visualization, predictions)
         except Exception as e:
             raise DispatchError from e
-
-    @staticmethod
-    def _numpy_to_base64(image: np.ndarray, fmt: str = ".jpg") -> str:
-        success, img_buf = cv2.imencode(fmt, image)
-        if success:
-            return base64.b64encode(img_buf).decode("utf-8")
-        raise ValueError(f"Failed to encode image in format {fmt}")
-
-    @staticmethod
-    def _create_json_payload(data_type: str, **kwargs) -> dict[str, Any]:
-        return {"timestamp": datetime.now().isoformat(), "type": data_type, **kwargs}

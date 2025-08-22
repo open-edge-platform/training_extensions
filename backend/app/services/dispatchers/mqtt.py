@@ -12,7 +12,7 @@ import numpy as np
 from model_api.models.result import Result
 
 from app.schemas.sink import MqttSinkConfig, OutputFormat
-from app.services.dispatchers.base import BaseDispatcher
+from app.services.dispatchers.base import BaseDispatcher, create_json_payload, numpy_to_base64
 
 try:
     import paho.mqtt.client as mqtt
@@ -106,7 +106,7 @@ class MqttDispatcher(BaseDispatcher):
     def is_connected(self) -> bool:
         return self._connected
 
-    def __publish_message(self, topic: str, payload: dict[str, Any]) -> bool:
+    def _publish_message(self, topic: str, payload: dict[str, Any]) -> bool:
         if not self._connected:
             logger.warning("Client not connected. Reconnecting...")
             try:
@@ -126,34 +126,34 @@ class MqttDispatcher(BaseDispatcher):
             logger.exception("Publish exception")
         return False
 
-    def __dispatch_image(self, image: np.ndarray, data_type: str):
+    def _dispatch_image(self, image: np.ndarray, data_type: str):
         try:
-            image_b64 = self._numpy_to_base64(image)
-            payload = self._create_json_payload(
+            image_b64 = numpy_to_base64(image)
+            payload = create_json_payload(
                 data_type=data_type,
                 image=image_b64,
                 format="jpeg",
             )
-            self.__publish_message(self.topic, payload)
+            self._publish_message(self.topic, payload)
         except Exception:
             logger.exception("Failed to dispatch %s", data_type)
 
-    def __dispatch_predictions(self, predictions: Result):
+    def _dispatch_predictions(self, predictions: Result):
         try:
-            payload = self._create_json_payload(data_type=OutputFormat.PREDICTIONS, predictions=str(predictions))
-            self.__publish_message(self.topic, payload)
+            payload = create_json_payload(data_type=OutputFormat.PREDICTIONS, predictions=str(predictions))
+            self._publish_message(self.topic, payload)
         except Exception:
             logger.exception("Failed to dispatch predictions")
 
     def _dispatch(self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result) -> None:
         if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
-            self.__dispatch_image(original_image, OutputFormat.IMAGE_ORIGINAL)
+            self._dispatch_image(original_image, OutputFormat.IMAGE_ORIGINAL)
 
         if OutputFormat.IMAGE_WITH_PREDICTIONS in self.output_formats:
-            self.__dispatch_image(image_with_visualization, OutputFormat.IMAGE_WITH_PREDICTIONS)
+            self._dispatch_image(image_with_visualization, OutputFormat.IMAGE_WITH_PREDICTIONS)
 
         if OutputFormat.PREDICTIONS in self.output_formats:
-            self.__dispatch_predictions(predictions)
+            self._dispatch_predictions(predictions)
 
     def get_published_messages(self) -> list:
         return self._published_messages.copy()
