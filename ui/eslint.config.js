@@ -16,7 +16,6 @@ const compat = new FlatCompat({
     allConfig: js.configs.all,
 });
 
-// Custom ESLint configuration for this project
 export default [
     {
         ignores: [...sharedEslintConfig[0].ignores, 'src/api/openapi-spec.d.ts'],
