@@ -5,7 +5,7 @@ import { createContext, ReactNode, RefObject, useCallback, useContext, useEffect
 
 import { WebRTCConnection, WebRTCConnectionStatus } from './web-rtc-connection';
 
-export type WebRTCConnectionState = null | {
+type WebRTCConnectionState = null | {
     status: WebRTCConnectionStatus;
     start: () => Promise<void>;
     stop: () => Promise<void>;

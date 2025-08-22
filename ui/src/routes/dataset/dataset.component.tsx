@@ -3,8 +3,8 @@
 
 import { dimensionValue, Flex } from '@geti/ui';
 
-import { Gallery } from '../../features/data-collection/gallery/gallery.component';
-import { Toolbar } from '../../features/data-collection/toolbar/toolbar.component';
+import { Gallery } from '../../features/dataset/gallery/gallery.component';
+import { Toolbar } from '../../features/dataset/toolbar/toolbar.component';
 
 export const Dataset = () => {
     return (
