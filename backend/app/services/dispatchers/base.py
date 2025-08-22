@@ -1,9 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import base64
 import time
 from abc import ABCMeta, abstractmethod
+from datetime import datetime
+from typing import Any
 
+import cv2
 import numpy as np
 from model_api.models.result import Result
 
@@ -79,3 +83,14 @@ class BaseDispatcher(metaclass=ABCMeta):
             self._dispatch(original_image, image_with_visualization, predictions)
         except Exception as e:
             raise DispatchError from e
+
+    @staticmethod
+    def _numpy_to_base64(image: np.ndarray, fmt: str = ".jpg") -> str:
+        success, img_buf = cv2.imencode(fmt, image)
+        if success:
+            return base64.b64encode(img_buf).decode("utf-8")
+        raise ValueError(f"Failed to encode image in format {fmt}")
+
+    @staticmethod
+    def _create_json_payload(data_type: str, **kwargs) -> dict[str, Any]:
+        return {"timestamp": datetime.now().isoformat(), "type": data_type, **kwargs}

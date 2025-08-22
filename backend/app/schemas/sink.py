@@ -102,9 +102,16 @@ class RosSinkConfig(BaseSinkConfig):
     }
 
 
+HttpMethod = Literal["POST", "PUT", "PATCH"]
+HttpHeaders = dict[str, str]
+
+
 class WebhookSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.WEBHOOK]
     webhook_url: str
+    http_method: HttpMethod = "POST"
+    headers: HttpHeaders | None = None
+    timeout: int = 10  # seconds
 
     model_config = {
         "json_schema_extra": {
@@ -113,6 +120,8 @@ class WebhookSinkConfig(BaseSinkConfig):
                 "sink_type": "webhook",
                 "name": "Webhook Endpoint",
                 "webhook_url": "https://example.com/webhook",
+                "http_method": "PUT",
+                "headers": {"Authorization": "Bearer YOUR_TOKEN"},
                 "output_formats": ["predictions"],
             }
         }
