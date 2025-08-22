@@ -16,6 +16,7 @@ const compat = new FlatCompat({
     allConfig: js.configs.all,
 });
 
+// Custom ESLint configuration for this project
 export default [
     {
         ignores: [...sharedEslintConfig[0].ignores, 'src/api/openapi-spec.d.ts'],
@@ -42,7 +43,14 @@ export default [
                     ],
                 },
             ],
-            'header/header': 'off',
+            'header/header': [
+                'warn',
+                'line',
+                [
+                    ' Copyright (C) 2025 Intel Corporation',
+                    ' SPDX-License-Identifier: Apache-2.0',
+                ],
+            ],
         },
     },
     ...compat.extends('plugin:playwright/playwright-test').map((config) => ({
