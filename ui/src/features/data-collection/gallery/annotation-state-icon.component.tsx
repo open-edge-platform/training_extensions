@@ -3,7 +3,7 @@
 
 import { CanceledIcon, CheckCircleOutlined } from '@geti/ui/icons';
 
-import { AnnotationState } from '../../../routes/data-collection/provider';
+import { AnnotationState } from '../../../routes/dataset/provider';
 
 import classes from './annotation-state-icon.module.scss';
 

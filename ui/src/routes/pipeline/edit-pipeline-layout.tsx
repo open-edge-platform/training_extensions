@@ -21,13 +21,13 @@ export const EditPipelineLayout = () => {
 
     // TODO: update according to server state
     const wizardState = [
-        {
-            href: paths.pipeline.source({}),
-            name: 'Source configuration',
-            isCompleted: false,
-            isDisabled: false,
-            isSelected: true,
-        },
+        // {
+        //     href: paths.pipeline.source({}),
+        //     name: 'Source configuration',
+        //     isCompleted: false,
+        //     isDisabled: false,
+        //     isSelected: true,
+        // },
         {
             href: paths.pipeline.model({}),
             name: 'Model configuration',
@@ -35,13 +35,13 @@ export const EditPipelineLayout = () => {
             isDisabled: false,
             isSelected: false,
         },
-        {
-            href: paths.pipeline.sink({}),
-            name: 'Sink & Integration configuration',
-            isCompleted: false,
-            isDisabled: false,
-            isSelected: false,
-        },
+        // {
+        //     href: paths.pipeline.sink({}),
+        //     name: 'Sink & Integration configuration',
+        //     isCompleted: false,
+        //     isDisabled: false,
+        //     isSelected: false,
+        // },
     ];
 
     const tabPanelStyles: CSSProperties = {
@@ -55,15 +55,15 @@ export const EditPipelineLayout = () => {
         content: (
             <View width={'100%'} height={'100%'} marginTop={'size-150'} maxWidth={'1320px'}>
                 <Suspense fallback={<Loading mode='inline' />}>
-                    <TabPanel id={paths.pipeline.source({})}>
+                    {/* <TabPanel id={paths.pipeline.source({})}>
                         <Outlet />
-                    </TabPanel>
+                    </TabPanel> */}
                     <TabPanel id={paths.pipeline.model({})} style={tabPanelStyles}>
                         <Outlet />
                     </TabPanel>
-                    <TabPanel id={paths.pipeline.sink({})}>
+                    {/* <TabPanel id={paths.pipeline.sink({})}>
                         <Outlet />
-                    </TabPanel>
+                    </TabPanel> */}
                 </Suspense>
             </View>
         ),

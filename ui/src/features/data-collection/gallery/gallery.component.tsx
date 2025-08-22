@@ -3,7 +3,7 @@
 
 import { AriaComponentsListBox, GridLayout, ListBoxItem, Size, View, Virtualizer } from '@geti/ui';
 
-import { useSelectedData } from '../../../routes/data-collection/provider';
+import { useSelectedData } from '../../../routes/dataset/provider';
 import { CheckboxInput } from '../checkbox-input';
 import { response } from '../mock-response';
 import { AnnotationStateIcon } from './annotation-state-icon.component';

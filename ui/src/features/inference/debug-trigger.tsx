@@ -7,7 +7,7 @@ import { Content, Dialog, DialogTrigger } from '@adobe/react-spectrum';
 import { ActionButton, Button, Divider, Flex, Item, Picker } from '@geti/ui';
 
 import { $api } from '../../api/client';
-import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
+import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
 const DebugTooltip = () => {
     const modelsQuery = $api.useSuspenseQuery('get', '/api/models');

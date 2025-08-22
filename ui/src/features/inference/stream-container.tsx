@@ -1,17 +1,12 @@
-// Copyright (C) 2025 Intel Corporation
-// SPDX-License-Identifier: Apache-2.0
-
 import { useEffect, useState } from 'react';
 
-import { Button, Flex, Grid, Loading, toast, View } from '@geti/ui';
+import { Button, Flex, Loading, toast, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
 
-import { useWebRTCConnection } from '../../components/stream/web-rtc-connection-provider';
-import { Stream } from './../../components/stream/stream';
-import { Aside } from './aside';
-import { Toolbar } from './toolbar';
+import { Stream } from './stream/stream';
+import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
-import classes from './live-feed.module.css';
+import classes from './inference.module.css';
 
 export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
@@ -53,24 +48,5 @@ export const StreamContainer = () => {
                 </div>
             )}
         </View>
-    );
-};
-
-export const LiveFeed = () => {
-    return (
-        <Grid
-            areas={['toolbar aside', 'canvas aside']}
-            UNSAFE_style={{
-                gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
-                gridTemplateColumns: 'auto min-content',
-                height: '100%',
-                overflow: 'hidden',
-                gap: '1px',
-            }}
-        >
-            <Toolbar />
-            <StreamContainer />
-            <Aside />
-        </Grid>
     );
 };

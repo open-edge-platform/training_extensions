@@ -5,7 +5,6 @@ import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View }
 import { capitalize, isArray, startsWith } from 'lodash-es';
 
 import { $api } from '../../api/client';
-import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
 type FieldProps = {
@@ -29,7 +28,7 @@ const Field = ({ field, value }: FieldProps) => {
     );
 };
 
-export const Index = () => {
+export const ViewPipeline = () => {
     // TODO: Replace this by /pipeline once available and maybe extract it to a hook
     const sources = $api.useQuery('get', '/api/sources');
     const sinks = $api.useQuery('get', '/api/sinks');
@@ -91,7 +90,7 @@ export const Index = () => {
                         </Grid>
                         <Divider size='S' />
                         <ButtonGroup>
-                            <Button href={paths.pipeline.source({})} variant='secondary' marginStart='auto'>
+                            <Button variant='secondary' marginStart='auto'>
                                 Edit
                             </Button>
                         </ButtonGroup>

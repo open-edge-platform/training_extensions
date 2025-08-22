@@ -25,22 +25,22 @@ const Header = () => {
                 >
                     <Item
                         textValue='"Live feed page showing live inference on your pipeline'
-                        key={paths.liveFeed.index({})}
-                        href={paths.liveFeed.index({})}
+                        key={paths.inference.index({})}
+                        href={paths.inference.index({})}
                     >
                         <Flex alignItems='center' gap='size-100'>
                             <LiveFeedIcon />
-                            Livefeed
+                            Inference
                         </Flex>
                     </Item>
                     <Item
                         textValue='Data collection page to visualise your media items'
-                        key={paths.dataCollection.index({})}
-                        href={paths.dataCollection.index({})}
+                        key={paths.dataset.index({})}
+                        href={paths.dataset.index({})}
                     >
                         <Flex alignItems='center' gap='size-100'>
                             <BuildIcon />
-                            Data collection
+                            Dataset
                         </Flex>
                     </Item>
                 </TabList>
@@ -74,10 +74,10 @@ export const Layout = () => {
                         <Item textValue='index' key={paths.pipeline.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='live-feed' key={paths.liveFeed.index({})}>
+                        <Item textValue='live-feed' key={paths.inference.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='data-collection' key={paths.dataCollection.index({})}>
+                        <Item textValue='data-collection' key={paths.dataset.index({})}>
                             <Outlet />
                         </Item>
                     </TabPanels>

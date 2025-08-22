@@ -9,34 +9,29 @@ import { createBrowserRouter } from 'react-router-dom';
 import { path } from 'static-path';
 
 import { ZoomProvider } from './components/zoom/zoom';
+import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { Layout } from './layout';
-import { DataCollection } from './routes/data-collection/data-collection.component';
-import { SelectedDataProvider } from './routes/data-collection/provider';
-import { LiveFeed } from './routes/live-feed/live-feed';
-import { EditPipelineLayout } from './routes/pipeline/edit-pipeline-layout';
-import { Index as PipelineIndex } from './routes/pipeline/index';
-import { Model as PipelineModel } from './routes/pipeline/model';
-import { Sink as PipelineSink } from './routes/pipeline/sink';
-import { Source as PipelineSource } from './routes/pipeline/source';
+import { Dataset } from './routes/dataset/dataset.component';
+import { SelectedDataProvider } from './routes/dataset/provider';
+import { Inference } from './routes/inference/inference';
+import { Model } from './routes/pipeline/model';
 
 const root = path('/');
 const pipeline = root.path('/pipeline');
-const liveFeed = root.path('/live-feed');
-const dataCollection = root.path('/data-collection');
+const inference = root.path('/inference');
+const dataset = root.path('/dataset');
 
 export const paths = {
     root,
     pipeline: {
         index: pipeline,
-        source: pipeline.path('/source'),
         model: pipeline.path('/model'),
-        sink: pipeline.path('/sink'),
     },
-    liveFeed: {
-        index: liveFeed,
+    inference: {
+        index: inference,
     },
-    dataCollection: {
-        index: dataCollection,
+    dataset: {
+        index: dataset,
     },
 };
 
@@ -53,9 +48,9 @@ export const router = createBrowserRouter([
             {
                 index: true,
                 loader: () => {
-                    // TODO: if no pipeline configured then redirect to source
-                    // else redirect to live-feed
-                    return redirect('/pipeline/source');
+                    // TODO: if no pipeline configured then redirect to create-pipeline
+                    // else redirect to inference
+                    return redirect(paths.pipeline.model({}));
                 },
             },
             {
@@ -63,39 +58,25 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        path: paths.pipeline.index.pattern,
-                        element: <PipelineIndex />,
-                    },
-                    {
-                        element: <EditPipelineLayout />,
-                        children: [
-                            {
-                                path: paths.pipeline.source.pattern,
-                                element: <PipelineSource />,
-                            },
-
-                            {
-                                path: paths.pipeline.model.pattern,
-                                element: <PipelineModel />,
-                            },
-                            {
-                                path: paths.pipeline.sink.pattern,
-                                element: <PipelineSink />,
-                            },
-                        ],
+                        path: paths.pipeline.model.pattern,
+                        element: <Model />,
                     },
                 ],
             },
             {
-                path: paths.liveFeed.index.pattern,
-                element: <LiveFeed />,
+                path: paths.inference.index.pattern,
+                element: (
+                    <WebRTCConnectionProvider>
+                        <Inference />
+                    </WebRTCConnectionProvider>
+                ),
             },
             {
-                path: paths.dataCollection.index.pattern,
+                path: paths.dataset.index.pattern,
                 element: (
                     <ZoomProvider>
                         <SelectedDataProvider>
-                            <DataCollection />
+                            <Dataset />
                         </SelectedDataProvider>
                     </ZoomProvider>
                 ),
