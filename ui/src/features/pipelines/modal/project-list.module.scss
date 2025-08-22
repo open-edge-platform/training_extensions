@@ -36,7 +36,7 @@
 }
 
 .activeCard {
-    border: 2px solid var(--energy-blue);
+    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
 
     h3 {
         color: var(--energy-blue);
