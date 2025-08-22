@@ -355,6 +355,11 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
                     # if random crop is disabled -> change this augmentation to simple Resize
                     aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
                     break
+                if aug_name == "cached_mosaic" and not aug_value["enable"]:
+                    # if cached_mosaic is disabled (yolox) -> change this augmentation to simple Resize
+                    aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
+                    aug_config["init_args"]["transform_bbox"] = True
+                    break
                 if "TopdownAffine" in aug_config["class_path"] and (
                     not aug_value["enable"] or aug_value["affine_transforms_prob"] <= 0.7
                 ):

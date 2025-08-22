@@ -83,7 +83,6 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.RandomCrop
           init_args:
             crop_size: $(input_size)
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:
@@ -127,7 +126,6 @@ overrides:
             max_cached_images: 10
             random_pop: false
             prob: 0.5
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.RandomVerticalFlip
           enable: false
           init_args:
@@ -153,7 +151,6 @@ overrides:
           init_args:
             mean: [123.675, 116.28, 103.53]
             std: [58.395, 57.12, 57.375]
-
     val_subset:
       num_workers: 4
       transforms:
@@ -163,7 +160,6 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.Pad
           init_args:
             pad_val: 114
-
     test_subset:
       num_workers: 4
       transforms:

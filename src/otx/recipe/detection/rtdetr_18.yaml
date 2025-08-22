@@ -63,9 +63,6 @@ overrides:
       batch_size: 4
       transforms:
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
-          init_args:
-            p: 0.5
-        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:
             brightness:
@@ -98,7 +95,6 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.RandomFlip
           init_args:
             prob: 0.5
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.RandomVerticalFlip
           enable: false
           init_args:
@@ -126,7 +122,6 @@ overrides:
             mean: [0.0, 0.0, 0.0]
             std: [255.0, 255.0, 255.0]
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
@@ -137,7 +132,6 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -146,7 +140,6 @@ overrides:
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [255.0, 255.0, 255.0]
-
     test_subset:
       batch_size: 8
       transforms:
@@ -154,7 +147,6 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}

@@ -28,12 +28,10 @@ overrides:
       to_tv_image: true
       transforms:
         - class_path: torchvision.transforms.v2.ToImage
-
     val_subset:
       to_tv_image: true
       transforms:
         - class_path: torchvision.transforms.v2.ToImage
-
     test_subset:
       to_tv_image: true
       batch_size: 24

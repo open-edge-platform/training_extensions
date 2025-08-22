@@ -88,7 +88,6 @@ overrides:
             scale: $(input_size)
             transform_bbox: true
             keep_ratio: false
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:
@@ -154,7 +153,6 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -163,7 +161,6 @@ overrides:
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [255.0, 255.0, 255.0]
-
     test_subset:
       batch_size: 8
       to_tv_image: true
@@ -172,7 +169,6 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}

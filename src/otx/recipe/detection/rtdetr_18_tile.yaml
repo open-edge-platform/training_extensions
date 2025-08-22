@@ -80,8 +80,6 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true
-
     test_subset:
       batch_size: 8
       transforms:
@@ -89,4 +87,3 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true

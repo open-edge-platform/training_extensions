@@ -47,7 +47,6 @@ train_subset:
       enable: true
       init_args:
         prob: 0.5
-        is_numpy_to_tvtensor: true
     - class_path: torchvision.transforms.v2.RandomVerticalFlip
       enable: false
       init_args:
@@ -59,6 +58,7 @@ train_subset:
         sigma:
           - 0.1
           - 2.0
+        prob: 0.5
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
@@ -67,11 +67,11 @@ train_subset:
       init_args:
         mean: 0.0
         sigma: 0.1
+        prob: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [0.0, 0.0, 0.0]
         std: [255.0, 255.0, 255.0]
-
   sampler:
     class_path: torch.utils.data.RandomSampler
 
@@ -85,7 +85,6 @@ val_subset:
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         scale: $(input_size)
-        is_numpy_to_tvtensor: true
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
@@ -106,7 +105,6 @@ test_subset:
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         scale: $(input_size)
-        is_numpy_to_tvtensor: true
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}

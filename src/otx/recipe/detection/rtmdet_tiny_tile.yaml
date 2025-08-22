@@ -68,7 +68,6 @@ overrides:
           init_args:
             mean: [103.53, 116.28, 123.675]
             std: [57.375, 57.12, 58.395]
-
     val_subset:
       batch_size: 8
       transforms:
@@ -79,7 +78,6 @@ overrides:
           init_args:
             mean: [103.53, 116.28, 123.675]
             std: [57.375, 57.12, 58.395]
-
     test_subset:
       batch_size: 8
       transforms:

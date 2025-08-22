@@ -12,11 +12,9 @@ overrides:
     train_subset:
       transforms:
         - class_path: torchvision.transforms.v2.ToImage
-
     val_subset:
       transforms:
         - class_path: torchvision.transforms.v2.ToImage
-
     test_subset:
       batch_size: 64
       transforms:

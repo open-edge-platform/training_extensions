@@ -67,7 +67,6 @@ callbacks:
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     prob: 0.5
-                    is_numpy_to_tvtensor: true
                 - class_path: torchvision.transforms.v2.ToDtype
                   init_args:
                     dtype: ${as_torch_dtype:torch.float32}
@@ -76,7 +75,6 @@ callbacks:
                   init_args:
                     mean: [0.0, 0.0, 0.0]
                     std: [255.0, 255.0, 255.0]
-
             light_aug:
               to_tv_image: true
               transforms:
@@ -105,7 +103,6 @@ callbacks:
                     scale: [640, 640]
                     transform_bbox: true
                     keep_ratio: false
-                    is_numpy_to_tvtensor: true
                 - class_path: torchvision.transforms.v2.ToDtype
                   init_args:
                     dtype: ${as_torch_dtype:torch.float32}
@@ -114,7 +111,6 @@ callbacks:
                   init_args:
                     mean: [0.0, 0.0, 0.0]
                     std: [255.0, 255.0, 255.0]
-
             strong_aug_1:
               to_tv_image: false
               transforms:
@@ -144,7 +140,6 @@ callbacks:
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     prob: 0.5
-                    is_numpy_to_tvtensor: true
                 - class_path: torchvision.transforms.v2.ToDtype
                   init_args:
                     dtype: ${as_torch_dtype:torch.float32}
@@ -153,7 +148,6 @@ callbacks:
                   init_args:
                     mean: [0.0, 0.0, 0.0]
                     std: [255.0, 255.0, 255.0]
-
             strong_aug_2:
               to_tv_image: true
               transforms:
@@ -191,7 +185,6 @@ callbacks:
                     scale: [640, 640]
                     transform_bbox: true
                     keep_ratio: false
-                    is_numpy_to_tvtensor: true
                 - class_path: torchvision.transforms.v2.ToDtype
                   init_args:
                     dtype: ${as_torch_dtype:torch.float32}
@@ -200,7 +193,6 @@ callbacks:
                   init_args:
                     mean: [0.0, 0.0, 0.0]
                     std: [255.0, 255.0, 255.0]
-
 data: ../_base_/data/torchvision_base.yaml
 overrides:
   callbacks:
@@ -233,7 +225,6 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -242,7 +233,6 @@ overrides:
           init_args:
             mean: [0.0, 0.0, 0.0]
             std: [255.0, 255.0, 255.0]
-
     test_subset:
       batch_size: 8
       transforms:
@@ -250,7 +240,6 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
-            is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}

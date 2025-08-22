@@ -138,7 +138,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         min_ious: Sequence[float] = (0.1, 0.3, 0.5, 0.7, 0.9),
         min_crop_size: float = 0.3,
         bbox_clip_border: bool = True,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
         prob: float = 1.0,
     ) -> None:
         super().__init__()
@@ -274,7 +274,7 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         transform_bbox: bool = False,
         transform_keypoints: bool = False,
         transform_mask: bool = False,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -434,7 +434,7 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         max_attempts: int = 10,
         interpolation: str = "bilinear",
         transform_mask: bool = False,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
         if isinstance(scale, Sequence):
@@ -816,7 +816,7 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
         self,
         prob: float | Iterable[float] | None = None,
         direction: str | Sequence[str | None] = "horizontal",
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -992,7 +992,8 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
         contrast_range: Sequence[int | float] = (0.5, 1.5),
         saturation_range: Sequence[int | float] = (0.5, 1.5),
         hue_delta: int = 18,
-        is_numpy_to_tvtensor: bool = False,
+        swap_channels: bool = True,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -1000,6 +1001,7 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.contrast_lower, self.contrast_upper = contrast_range
         self.saturation_lower, self.saturation_upper = saturation_range
         self.hue_delta = hue_delta
+        self.swap_channels = swap_channels
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
     @cache_randomness
@@ -1152,7 +1154,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         transform_polygon: bool = True,
         recompute_bbox: bool = True,
         mask_fill_value: int = 0,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
         self._validate_parameters(max_translate_ratio, scaling_ratio_range)
@@ -1593,7 +1595,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         prob: float = 1.0,
         max_cached_images: int = 40,
         random_pop: bool = True,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -1901,7 +1903,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         max_cached_images: int = 20,
         random_pop: bool = True,
         prob: float = 1.0,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -2150,7 +2152,7 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
         hue_delta: int = 5,
         saturation_delta: int = 30,
         value_delta: int = 30,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -2254,7 +2256,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
         padding_mode: str = "constant",
         transform_point: bool = False,
         transform_mask: bool = False,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -2384,7 +2386,7 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
         self,
         scale: Sequence[int | tuple[int, int]],  # (H, W)
         ratio_range: tuple[float, float] | None = None,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
         **resize_kwargs,
     ) -> None:
         super().__init__()
@@ -2515,7 +2517,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         recompute_bbox: bool = False,
         bbox_clip_border: bool = True,
         ignore_index: int = 255,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
         if crop_type not in ["relative_range", "relative", "absolute", "absolute_range"]:
@@ -2751,7 +2753,7 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         self,
         input_size: tuple[int, int],
         affine_transforms_prob: float = 1.0,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
         shift_factor: float = 0.16,
         shift_prob: float = 0.3,
         scale_factor: tuple[float, float] = (0.5, 1.5),

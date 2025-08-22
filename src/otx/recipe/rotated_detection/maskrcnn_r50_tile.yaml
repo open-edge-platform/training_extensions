@@ -73,7 +73,6 @@ overrides:
           init_args:
             pad_to_square: false
             size_divisor: 32
-
     val_subset:
       num_workers: 4
       transforms:
@@ -85,7 +84,6 @@ overrides:
           init_args:
             pad_to_square: false
             size_divisor: 32
-
     test_subset:
       num_workers: 4
       transforms:

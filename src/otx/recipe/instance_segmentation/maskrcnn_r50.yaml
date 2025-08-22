@@ -62,14 +62,12 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.Pad
           init_args:
             size_divisor: 32
-
     val_subset:
       num_workers: 4
       transforms:
         - class_path: otx.data.transform_libs.torchvision.Pad
           init_args:
             size_divisor: 32
-
     test_subset:
       num_workers: 4
       transforms:

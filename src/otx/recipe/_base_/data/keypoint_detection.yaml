@@ -9,6 +9,7 @@ train_subset:
   subset_name: train
   batch_size: 32
   num_workers: 2
+  to_tv_image: true
   transforms:
     - class_path: torchvision.transforms.v2.RandomPhotometricDistort
       enable: false
@@ -29,7 +30,6 @@ train_subset:
     - class_path: otx.data.transform_libs.torchvision.TopdownAffine
       init_args:
         input_size: $(input_size)
-        is_numpy_to_tvtensor: true
         affine_transforms_prob: 1.0
     - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
       enable: false
@@ -62,11 +62,11 @@ val_subset:
         scale: $(input_size)
         keep_ratio: true
         transform_keypoints: false
+        is_numpy_to_tv: false
     - class_path: otx.data.transform_libs.torchvision.Pad
       init_args:
         size: $(input_size)
         pad_val: 0
-        is_numpy_to_tvtensor: true
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
@@ -84,11 +84,11 @@ test_subset:
         scale: $(input_size)
         keep_ratio: true
         transform_keypoints: false
+        is_numpy_to_tv: false
     - class_path: otx.data.transform_libs.torchvision.Pad
       init_args:
         size: $(input_size)
         pad_val: 0
-        is_numpy_to_tvtensor: true
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
