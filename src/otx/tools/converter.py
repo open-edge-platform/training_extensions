@@ -393,8 +393,8 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
         if not found and not tiling:
             msg = f"Augmentation {aug_name} is not found for this model."
             raise ValueError(msg)
-        elif tiling:
-            logging.info("This augmentation is not applicable in Tiling pipeline")
+        logging.info("This augmentation is not applicable in Tiling pipeline")
+
 
 class GetiConfigConverter:
     """Convert Geti model manifest to OTXv2 recipe dictionary.

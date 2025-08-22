@@ -62,6 +62,7 @@ overrides:
       - 864
     train_subset:
       batch_size: 8
+      to_tv_image: true
       transforms:
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false

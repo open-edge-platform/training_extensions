@@ -69,6 +69,7 @@ CLS_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "_cls" in recipe and "
 DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/detection/" in recipe and "deim" not in recipe]
 INST_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/instance_segmentation/" in recipe]
 SEM_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/semantic_segmentation/" in recipe]
+KP_DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/keypoint_detection/" in recipe]
 
 
 @pytest.mark.parametrize("recipe", CLS_RECIPES + DET_RECIPES + INST_SEG_RECIPES + SEM_SEG_RECIPES)
@@ -84,4 +85,37 @@ def test_augmentation(
         "RandomFlip",
         "RandomGaussianNoise",
     ]
+    _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
+
+
+def test_augmentation_yolo(
+    fxt_target_dataset_per_task: dict,
+):
+    configurable_augs = [
+        "RandomPhotometricDistort",
+        "RandomAffine",
+        "RandomVerticalFlip",
+        "RandomGaussianBlur",
+        "RandomFlip",
+        "RandomGaussianNoise",
+        "CachedMosaic",
+        "CachedMixUp",
+        "YOLOXHSVRandomAug",
+    ]
+    yolox_recipe = next(r for r in DET_RECIPES if "yolox_s.yaml" in r)
+    _test_augmentation(yolox_recipe, fxt_target_dataset_per_task, configurable_augs)
+
+
+@pytest.mark.parametrize("recipe", KP_DET_RECIPES)
+def test_augmentation_kp_det(
+    recipe: str,
+    fxt_target_dataset_per_task: dict,
+):
+    configurable_augs = [
+        "TopdownAffine",
+        "RandomPhotometricDistort",
+        "RandomGaussianBlur",
+        "RandomGaussianNoise",
+    ]
+    _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
     _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
