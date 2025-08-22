@@ -5,21 +5,8 @@
 
 from __future__ import annotations
 
-import importlib
-from collections import defaultdict
-from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Any
-
-import torch
-from datumaro.components.annotation import AnnotationType, LabelCategories
-
-from otx.utils.device import is_xpu_available
-
-if TYPE_CHECKING:
-    from datumaro import Dataset as DmDataset
-
-
-from typing import Callable, TypeVar
+from contextlib import contextmanager
+from typing import Any, Callable, Iterator, TypeVar
 
 _T = TypeVar("_T")
 _V = TypeVar("_V")
@@ -34,7 +21,7 @@ def is_ckpt_from_otx_v1(ckpt: dict) -> bool:
     Returns:
         bool: True means the checkpoint comes from otx1
     """
-    return "model" in ckpt and ckpt["VERSION"] == 1
+    return "model" in ckpt and "VERSION" in ckpt and ckpt["VERSION"] == 1
 
 
 def is_ckpt_for_finetuning(ckpt: dict) -> bool:
@@ -47,37 +34,6 @@ def is_ckpt_for_finetuning(ckpt: dict) -> bool:
         bool: True means the checkpoint will be used to finetune.
     """
     return "state_dict" in ckpt
-
-
-def get_adaptive_num_workers(num_dataloader: int = 1) -> int | None:
-    """Measure appropriate num_workers value and return it."""
-    num_devices = torch.xpu.device_count() if is_xpu_available() else torch.cuda.device_count()
-    if num_devices == 0:
-        return None
-    return min(cpu_count() // (num_dataloader * num_devices), 8)  # max available num_workers is 8
-
-
-def get_idx_list_per_classes(dm_dataset: DmDataset, use_string_label: bool = False) -> dict[int | str, list[int]]:
-    """Compute class statistics."""
-    stats: dict[int | str, list[int]] = defaultdict(list)
-    labels = dm_dataset.categories().get(AnnotationType.label, LabelCategories())
-    for item_idx, item in enumerate(dm_dataset):
-        for ann in item.annotations:
-            if use_string_label:
-                stats[labels.items[ann.label].name].append(item_idx)
-            else:
-                stats[ann.label].append(item_idx)
-    # Remove duplicates in label stats idx: O(n)
-    for k in stats:
-        stats[k] = list(dict.fromkeys(stats[k]))
-    return stats
-
-
-def import_object_from_module(obj_path: str) -> Any:  # noqa: ANN401
-    """Get object from import format string."""
-    module_name, obj_name = obj_path.rsplit(".", 1)
-    module = importlib.import_module(module_name)
-    return getattr(module, obj_name)
 
 
 def remove_state_dict_prefix(state_dict: dict[str, Any], prefix: str) -> dict[str, Any]:
@@ -94,3 +50,45 @@ def ensure_callable(func: Callable[[_T], _V]) -> Callable[[_T], _V]:
     if not callable(func):
         raise TypeError(func)
     return func
+
+
+@contextmanager
+def mock_modules_for_chkpt() -> Iterator[None]:
+    """Context manager to mock modules for OTX v2.2-2.4 checkpoint loading and restore sys.modules after."""
+    import sys
+    import types
+
+    import otx
+    from otx.types.label import AnomalyLabelInfo, HLabelInfo, LabelInfo, SegLabelInfo
+
+    # Save original sys.modules
+    original_sys_modules = dict(sys.modules)
+
+    try:
+        # Fake modules
+        OTXTrainType = type("OTXTrainType", (object,), {"__init__": lambda *_: None})  # noqa: N806
+        UnlabeledDataConfig = type("UnlabeledDataConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+        VisualPromptingConfig = type("VisualPromptingConfig", (object,), {"__init__": lambda *_: None})  # noqa: N806
+
+        # Register all missing modules in sys.modules
+        setattr(sys.modules["otx.config.data"], "UnlabeledDataConfig", UnlabeledDataConfig)  # noqa: B010
+        setattr(sys.modules["otx.config.data"], "VisualPromptingConfig", VisualPromptingConfig)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "LabelInfo", LabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "HLabelInfo", HLabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "SegLabelInfo", SegLabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.label"], "AnomalyLabelInfo", AnomalyLabelInfo)  # noqa: B010
+        setattr(sys.modules["otx.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
+
+        sys.modules["otx.core"] = types.ModuleType("otx.core")
+        sys.modules["otx.core.config"] = otx.config
+        sys.modules["otx.core.config.data"] = otx.config.data
+        sys.modules["otx.core.types"] = otx.types
+        sys.modules["otx.core.types.task"] = otx.types.task
+        sys.modules["otx.core.types.label"] = otx.types.label
+        sys.modules["otx.core.model"] = otx.backend.native.models  # type: ignore[attr-defined]
+        sys.modules["otx.core.metrics"] = otx.metrics
+
+        yield
+    finally:
+        sys.modules.clear()
+        sys.modules.update(original_sys_modules)

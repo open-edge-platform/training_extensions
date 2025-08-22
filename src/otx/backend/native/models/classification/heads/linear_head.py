@@ -10,7 +10,6 @@ you can refer https://github.com/open-mmlab/mmpretrain/blob/main/mmpretrain/mode
 
 """
 
-
 from __future__ import annotations
 
 import copy

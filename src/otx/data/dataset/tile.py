@@ -29,7 +29,6 @@ from datumaro.plugins.tiling.util import (
 )
 from torchvision import tv_tensors
 
-from otx.backend.native.models.instance_segmentation.utils.structures.mask.mask_util import polygon_to_bitmap
 from otx.data.dataset.segmentation import _extract_class_mask
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.tile import (
@@ -41,6 +40,7 @@ from otx.data.entity.tile import (
     TileSegDataEntity,
 )
 from otx.data.entity.torch import OTXDataItem
+from otx.data.utils.structures.mask.mask_util import polygon_to_bitmap
 from otx.types.task import OTXTaskType
 
 from .base import OTXDataset

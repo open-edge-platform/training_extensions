@@ -60,5 +60,6 @@ class XPUAccelerator(Accelerator):
 AcceleratorRegistry.register(
     XPUAccelerator.accelerator_name,
     XPUAccelerator,
+    override=True,
     description="Accelerator supports XPU devices",
 )

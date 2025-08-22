@@ -1,0 +1,42 @@
+#######
+# Base
+#######
+FROM python:3.13-slim@sha256:6f79e7a10bb7d0b0a50534a70ebc78823f941fba26143ecd7e6c5dca9d7d7e8a AS base
+COPY --from=docker.io/astral/uv:0.8.8@sha256:67b2bcccdc103d608727d1b577e58008ef810f751ed324715eb60b3f0c040d30 /uv /uvx /bin/
+
+# Set working directory
+WORKDIR /app
+
+ENV PYTHONPATH=/app
+
+# Install system dependencies required for OpenCV
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx=22.3.6-1+deb12u1 \
+    libglib2.0-0=2.74.6-2+deb12u6 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-dev --no-install-project
+
+# Copy project files
+COPY pyproject.toml uv.lock ./
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-editable
+
+COPY app ./app
+
+#######
+# Server
+#######
+FROM base AS server
+
+# Expose port
+EXPOSE 7860
+
+# Set the entry point
+CMD ["uv", "run", "./app/main.py"]

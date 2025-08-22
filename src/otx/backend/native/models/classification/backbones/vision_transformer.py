@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Copy from mmpretrain/models/backbones/vision_transformer.py."""
+
 from __future__ import annotations
 
 import math
@@ -39,7 +40,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-class VisionTransformer(BaseModule):
+class VisionTransformerBackbone(BaseModule):
     """Implementation of Vision Transformer from Timm.
 
     A PyTorch impl of : `An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale`
@@ -235,7 +236,7 @@ class VisionTransformer(BaseModule):
         num_heads = num_heads or arch_settings.get("num_heads", 12)
         no_embed_class = no_embed_class or arch_settings.get("no_embed_class", False)
         reg_tokens = reg_tokens or arch_settings.get("reg_tokens", 0)
-        init_values = init_values or arch_settings.get("init_values", None)
+        init_values = init_values or arch_settings.get("init_values")
         mlp_layer = mlp_layer or arch_settings.get("mlp_layer", Mlp)
         mlp_ratio = mlp_ratio or arch_settings.get("mlp_ratio", 4.0)
         norm_layer = get_norm_layer(norm_layer) or arch_settings.get("norm_layer", partial(nn.LayerNorm, eps=1e-6))
@@ -565,7 +566,7 @@ class VisionTransformer(BaseModule):
     @torch.no_grad()
     def _load_npz_weights(  # noqa: C901
         self,
-        model: VisionTransformer,
+        model: VisionTransformerBackbone,
         checkpoint_path: str,
         prefix: str = "",
     ) -> None:

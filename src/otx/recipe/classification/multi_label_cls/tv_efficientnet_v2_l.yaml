@@ -54,14 +54,27 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.EfficientNetRandomCrop
           init_args:
             scale: $(input_size)
+        - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
+          enable: false
+        - class_path: otx.data.transform_libs.torchvision.RandomAffine
+          enable: false
         - class_path: otx.data.transform_libs.torchvision.RandomFlip
+          enable: true
           init_args:
             prob: 0.5
             is_numpy_to_tvtensor: true
+        - class_path: torchvision.transforms.v2.RandomVerticalFlip
+          enable: false
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
+          enable: false
+          init_args:
+            kernel_size: 5
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
             scale: false
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
+          enable: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [123.675, 116.28, 103.53]

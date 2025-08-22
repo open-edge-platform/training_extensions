@@ -37,6 +37,3 @@ training_targets:
 # Stats.
 gigaflops: 533.8
 size: 177.9
-
-# Model spec
-model_category: ACCURACY

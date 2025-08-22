@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from copy import copy
 from math import ceil
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from torch import nn
@@ -42,7 +42,7 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
         self,
         label_info: HLabelInfo,
         data_input_params: DataInputParams,
-        model_name: str = "mobilenetv3_large",
+        model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

@@ -39,6 +39,7 @@ def test_process_all(postprocess) -> None:
             ORI_IMG_SHAPES,
             IMAGE_SHAPE,
             PADDINDS,
+            keep_ratio=False,
         )
 
     processed_saliency_maps = process_saliency_maps(
@@ -48,6 +49,7 @@ def test_process_all(postprocess) -> None:
         ORI_IMG_SHAPES,
         IMAGE_SHAPE,
         PADDINDS,
+        keep_ratio=False,
     )
 
     assert len(processed_saliency_maps) == BATCH_SIZE
@@ -75,6 +77,7 @@ def test_process_predictions(postprocess) -> None:
             ORI_IMG_SHAPES,
             IMAGE_SHAPE,
             PADDINDS,
+            keep_ratio=False,
         )
 
     processed_saliency_maps = process_saliency_maps(
@@ -84,6 +87,7 @@ def test_process_predictions(postprocess) -> None:
         ORI_IMG_SHAPES,
         IMAGE_SHAPE,
         PADDINDS,
+        keep_ratio=False,
     )
 
     assert len(processed_saliency_maps) == BATCH_SIZE
@@ -115,6 +119,7 @@ def test_process_image(postprocess) -> None:
             ORI_IMG_SHAPES,
             IMAGE_SHAPE,
             PADDINDS,
+            keep_ratio=False,
         )
 
     processed_saliency_maps = process_saliency_maps(
@@ -124,6 +129,7 @@ def test_process_image(postprocess) -> None:
         ORI_IMG_SHAPES,
         IMAGE_SHAPE,
         PADDINDS,
+        keep_ratio=False,
     )
     assert len(processed_saliency_maps) == BATCH_SIZE
     assert all(len(s_map_dict) == 1 for s_map_dict in processed_saliency_maps)
@@ -244,6 +250,7 @@ def test_process_crop_padded_map() -> None:
         ORI_IMG_SHAPES,
         IMAGE_SHAPE,
         paddings,
+        keep_ratio=True,
     )
 
     assert len(processed_saliency_maps) == BATCH_SIZE

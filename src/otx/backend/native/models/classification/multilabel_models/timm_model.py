@@ -52,7 +52,7 @@ class TimmModelMultilabelCls(OTXMultilabelClsModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams,
-        model_name: str,
+        model_name: str = "tf_efficientnetv2_s.in21k",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

@@ -3,7 +3,6 @@
 
 """D-FINE criterion implementations. Modified from https://github.com/Peterande/D-FINE."""
 
-
 from __future__ import annotations
 
 from typing import Callable
