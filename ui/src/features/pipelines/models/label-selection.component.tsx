@@ -9,11 +9,9 @@ import {
     ColorPicker as SpectrumColorPicker,
     SpectrumColorPickerProps,
 } from '@adobe/react-spectrum';
-import { ActionButton, Button, ColorEditor, Flex, Grid, Text } from '@geti/ui';
+import { ActionButton, Button, ColorEditor, Flex, Grid, Text, toast } from '@geti/ui';
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
-
-import { Notification, notify } from '../../../components/notification/notification.component';
 
 import classes from './label-selection.module.scss';
 
@@ -89,7 +87,7 @@ export const LabelSelection = () => {
         if (items.length > 1) {
             setItems(items.filter((item) => item.id !== id));
         } else {
-            notify('info', 'At least one object is required');
+            toast({ type: 'info', message: 'At least one object is required' });
         }
     };
 
@@ -118,8 +116,6 @@ export const LabelSelection = () => {
                     <Add fill='white' />
                 </Button>
             </Flex>
-
-            <Notification />
         </Flex>
     );
 };

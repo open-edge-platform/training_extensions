@@ -1,19 +1,29 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Toast } from '@geti/ui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { LabelSelection } from './label-selection.component';
 
+const renderLabelSelection = () => {
+    return render(
+        <>
+            <LabelSelection />
+            <Toast />
+        </>
+    );
+};
+
 describe('LabelSelection', () => {
     it('renders initial label item', () => {
-        render(<LabelSelection />);
+        renderLabelSelection();
 
         expect(screen.getByDisplayValue('Car')).toBeInTheDocument();
     });
 
     it('adds a new label item when "Add next object" is clicked', () => {
-        render(<LabelSelection />);
+        renderLabelSelection();
 
         const addButton = screen.getByRole('button', { name: /add next object/i });
         fireEvent.click(addButton);
@@ -23,7 +33,7 @@ describe('LabelSelection', () => {
     });
 
     it('deletes a label item when delete is clicked', () => {
-        render(<LabelSelection />);
+        renderLabelSelection();
 
         const addButton = screen.getByRole('button', { name: /add next object/i });
         fireEvent.click(addButton);
@@ -36,7 +46,7 @@ describe('LabelSelection', () => {
     });
 
     it('does not delete the last remaining label item', async () => {
-        render(<LabelSelection />);
+        renderLabelSelection();
 
         const deleteButton = screen.getByRole('button', { name: /delete label car/i });
         fireEvent.click(deleteButton);
@@ -49,7 +59,7 @@ describe('LabelSelection', () => {
     });
 
     it('can edit the label name', () => {
-        render(<LabelSelection />);
+        renderLabelSelection();
 
         const input = screen.getByLabelText('Label input for Car');
         fireEvent.change(input, { target: { value: 'Truck' } });
