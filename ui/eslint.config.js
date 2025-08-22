@@ -42,7 +42,14 @@ export default [
                     ],
                 },
             ],
-            'header/header': 'off',
+            'header/header': [
+                'warn',
+                'line',
+                [
+                    ' Copyright (C) 2025 Intel Corporation',
+                    ' SPDX-License-Identifier: Apache-2.0',
+                ],
+            ],
         },
     },
     ...compat.extends('plugin:playwright/playwright-test').map((config) => ({

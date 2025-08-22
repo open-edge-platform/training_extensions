@@ -1,74 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, Suspense } from 'react';
+import { View } from '@geti/ui';
 
-import { Loading, View } from '@geti/ui';
-import { TabPanel } from 'react-aria-components';
-import { Outlet, useLocation } from 'react-router';
-
-import { $api } from '../../api/client';
-import { WizardSteps } from '../../components/wizard-steps/wizard-steps';
-import { WizardTabs } from '../../components/wizard-tabs/wizard-tabs';
-import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
 export const EditPipelineLayout = () => {
-    const { pathname } = useLocation();
-
-    const pipelines = $api.useSuspenseQuery('get', '/api/pipelines');
-    const hasActivePipeline = pipelines.data.length > 0;
-
-    // TODO: update according to server state
-    const wizardState = [
-        // {
-        //     href: paths.pipeline.source({}),
-        //     name: 'Source configuration',
-        //     isCompleted: false,
-        //     isDisabled: false,
-        //     isSelected: true,
-        // },
-        {
-            href: paths.pipeline.model({}),
-            name: 'Model configuration',
-            isCompleted: false,
-            isDisabled: false,
-            isSelected: false,
-        },
-        // {
-        //     href: paths.pipeline.sink({}),
-        //     name: 'Sink & Integration configuration',
-        //     isCompleted: false,
-        //     isDisabled: false,
-        //     isSelected: false,
-        // },
-    ];
-
-    const tabPanelStyles: CSSProperties = {
-        overflowY: 'auto',
-        maxHeight: '85vh',
-    };
-
-    const tabsContent = {
-        pathname,
-        state: wizardState,
-        content: (
-            <View width={'100%'} height={'100%'} marginTop={'size-150'} maxWidth={'1320px'}>
-                <Suspense fallback={<Loading mode='inline' />}>
-                    {/* <TabPanel id={paths.pipeline.source({})}>
-                        <Outlet />
-                    </TabPanel> */}
-                    <TabPanel id={paths.pipeline.model({})} style={tabPanelStyles}>
-                        <Outlet />
-                    </TabPanel>
-                    {/* <TabPanel id={paths.pipeline.sink({})}>
-                        <Outlet />
-                    </TabPanel> */}
-                </Suspense>
-            </View>
-        ),
-    };
-
     return (
         <View
             backgroundColor={'gray-100'}
@@ -89,7 +26,7 @@ export const EditPipelineLayout = () => {
                     maxWidth={'1320px'}
                     marginX='auto'
                 >
-                    {hasActivePipeline ? <WizardTabs {...tabsContent} /> : <WizardSteps {...tabsContent} />}
+                    TBD
                 </View>
             </View>
         </View>

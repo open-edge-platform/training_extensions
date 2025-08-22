@@ -8,7 +8,6 @@ import { Button, Divider, Flex, Text, View } from '@geti/ui';
 
 import { $api } from '../../api/client';
 import { paths } from '../../router';
-import { DebugTrigger } from './debug-trigger';
 import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
 const ActiveModel = () => {
@@ -113,8 +112,6 @@ export const Toolbar = () => {
                 <Divider orientation='vertical' size='S' />
 
                 <Flex marginStart='auto' gap='size-100'>
-                    <DebugTrigger />
-
                     <Button href={paths.pipeline.index({})} variant='secondary'>
                         View pipeline
                     </Button>
