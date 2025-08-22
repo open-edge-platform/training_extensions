@@ -44,7 +44,7 @@ train_subset:
           - 0.5
           - 1.5
         max_shear_degree: 2.0
-        is_numpy_to_tv: false
+        is_numpy_to_tvtensor: false
     - class_path: otx.data.transform_libs.torchvision.Pad
       enable: true
       init_args:
@@ -93,7 +93,7 @@ val_subset:
       init_args:
         keep_ratio: true
         scale: $(input_size)
-        is_numpy_to_tv: false
+        is_numpy_to_tvtensor: false
     - class_path: otx.data.transform_libs.torchvision.Pad
       init_args:
         pad_to_square: true
@@ -118,7 +118,7 @@ test_subset:
       init_args:
         keep_ratio: true
         scale: $(input_size)
-        is_numpy_to_tv: false
+        is_numpy_to_tvtensor: false
     - class_path: otx.data.transform_libs.torchvision.Pad
       init_args:
         pad_to_square: true

@@ -335,6 +335,7 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
     if not augmentation_params:
         return
 
+    tiling = config["data"]["tile_config"]["enable_tiler"]
     # this list maps Geti user frendly naming to OTX aug classes
     augs_mapping_list = {
         "random_resize_crop": [
@@ -370,11 +371,6 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
                     # if random crop is disabled -> change this augmentation to simple Resize
                     aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
                     break
-                if aug_name == "cached_mosaic" and not aug_value["enable"]:
-                    # if cached_mosaic is disabled (yolox) -> change this augmentation to simple Resize
-                    aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
-                    aug_config["init_args"]["transform_bbox"] = True
-                    break
                 if "TopdownAffine" in aug_config["class_path"] and (
                     not aug_value["enable"] or aug_value["affine_transforms_prob"] <= 0.7
                 ):
@@ -394,10 +390,11 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
                     aug_config["init_args"][parameter] = aug_value[parameter]
                 break
 
-        if not found:
+        if not found and not tiling:
             msg = f"Augmentation {aug_name} is not found for this model."
             raise ValueError(msg)
-
+        elif tiling:
+            logging.info("This augmentation is not applicable in Tiling pipeline")
 
 class GetiConfigConverter:
     """Convert Geti model manifest to OTXv2 recipe dictionary.
@@ -478,8 +475,8 @@ class GetiConfigConverter:
         tiling = augmentation_params.pop("tiling", None)
         training_parameters = param_dict.get("training", {})
 
-        update_augmentations(augmentation_params, config)
         update_tiling(tiling, config)
+        update_augmentations(augmentation_params, config)
         update_learning_rate(training_parameters.get("learning_rate", None), config)
         update_num_iters(training_parameters.get("max_epochs", None), config)
         update_early_stopping(training_parameters.get("early_stopping", None), config)

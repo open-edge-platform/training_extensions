@@ -63,6 +63,11 @@ overrides:
     train_subset:
       batch_size: 8
       transforms:
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size) * 1.538 # 640x640
+            keep_ratio: true
+            transform_bbox: true
         - class_path: otx.data.transform_libs.torchvision.CachedMosaic
           init_args:
             random_pop: false
@@ -87,15 +92,10 @@ overrides:
               - -0.05
               - 0.05
             p: 0.5
-        - class_path: otx.data.transform_libs.torchvision.Resize
-          init_args:
-            scale: $(input_size) * 1.538 # 640x640
-            keep_ratio: true
-            transform_bbox: true
         - class_path: otx.data.transform_libs.torchvision.RandomFlip
           init_args:
             prob: 0.5
-            is_numpy_to_tv: false
+            is_numpy_to_tvtensor: false
         - class_path: otx.data.transform_libs.torchvision.Pad
           init_args:
             pad_to_square: true
@@ -135,7 +135,7 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: true
-            is_numpy_to_tv: false
+            is_numpy_to_tvtensor: false
         - class_path: otx.data.transform_libs.torchvision.Pad
           init_args:
             pad_to_square: true
@@ -154,7 +154,7 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: true
-            is_numpy_to_tv: false
+            is_numpy_to_tvtensor: false
         - class_path: otx.data.transform_libs.torchvision.Pad
           init_args:
             pad_to_square: true

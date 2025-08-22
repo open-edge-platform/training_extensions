@@ -91,7 +91,7 @@ val_subset:
       init_args:
         scale: $(input_size)
         keep_ratio: true
-        is_numpy_to_tv: false
+        is_numpy_to_tvtensor: false
     - class_path: otx.data.transform_libs.torchvision.Pad
       init_args:
         size: $(input_size)
@@ -117,7 +117,7 @@ test_subset:
       init_args:
         scale: $(input_size)
         keep_ratio: true
-        is_numpy_to_tv: false
+        is_numpy_to_tvtensor: false
     - class_path: otx.data.transform_libs.torchvision.Pad
       init_args:
         size: $(input_size)
