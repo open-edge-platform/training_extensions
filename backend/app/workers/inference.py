@@ -19,7 +19,7 @@ from app.utils import Visualizer, flush_queue, log_threads
 logger = logging.getLogger(__name__)
 
 
-def inference_routine(  # noqa: C901
+def inference_routine(  # noqa: C901, PLR0915
     frame_queue: mp.Queue, pred_queue: mp.Queue, stop_event: EventClass, model_reload_event: EventClass
 ) -> None:
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""

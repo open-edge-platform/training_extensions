@@ -21,7 +21,7 @@ from app.services.base import (
     ServiceConfig,
 )
 from app.services.mappers import PipelineMapper
-from app.services.metrics_collector import get_metrics_collector
+from app.services.metrics_collector import MetricsCollector
 from app.services.parent_process_guard import parent_process_only
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
@@ -99,15 +99,14 @@ class PipelineService:
         """Calculate metrics for a pipeline over a specified time window."""
         # First check if pipeline exists
         pipeline = self.get_pipeline_by_id(pipeline_id)
-        pipeline.model_id
 
         # Calculate time window
         end_time = datetime.now(UTC)
         start_time = end_time - timedelta(seconds=duration_seconds)
 
         # Get actual latency measurements from the metrics collector
-        metrics_collector = get_metrics_collector()
-        latency_samples = metrics_collector.get_latency_measurements(pipeline.id, duration_seconds)
+        metrics_collector = MetricsCollector()
+        latency_samples = metrics_collector.get_latency_measurements(pipeline.model_id, duration_seconds)
 
         # Calculate latency metrics
         if latency_samples:
