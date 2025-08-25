@@ -219,8 +219,7 @@ async def get_pipeline_metrics(
     """
     if duration_seconds <= 0 or duration_seconds > 3600:  # Limit to 1 hour max
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Duration must be between 1 and 3600 seconds"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Duration must be between 1 and 3600 seconds"
         )
 
     try:

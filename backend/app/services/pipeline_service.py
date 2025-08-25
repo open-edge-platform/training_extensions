@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import statistics
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from multiprocessing.synchronize import Condition
 from uuid import UUID
 
@@ -102,7 +102,7 @@ class PipelineService:
         pipeline.model_id
 
         # Calculate time window
-        end_time = datetime.now(timezone.utc)
+        end_time = datetime.now(UTC)
         start_time = end_time - timedelta(seconds=duration_seconds)
 
         # Get actual latency measurements from the metrics collector
