@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Flex, Heading, Tag, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 

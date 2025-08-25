@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, ButtonGroup, Content, Dialog, DialogTrigger, Grid, Heading, Text } from '@geti/ui';
 import { CloseSmall } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';

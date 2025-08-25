@@ -93,7 +93,11 @@ export const ViewPipeline = () => {
                         <Divider size='S' />
                         <ButtonGroup>
                             <ProjectList />
-                            <Button href={paths.pipeline.source({})} variant='secondary' marginStart='auto'>
+                            <Button
+                                href={paths.pipeline.edit({ pipelineId: '' })}
+                                variant='secondary'
+                                marginStart='auto'
+                            >
                                 Edit
                             </Button>
                         </ButtonGroup>

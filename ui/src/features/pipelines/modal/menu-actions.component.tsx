@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { ActionButton, Item, Menu, MenuTrigger } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
