@@ -47,6 +47,7 @@ SUPPORTED_SINKS_MAPPING = [
             broker_host="localhost",
             broker_port=1883,
             topic="topic",
+            auth_required=False,
         ),
         SinkDB(
             sink_type=SinkType.MQTT,
@@ -57,7 +58,7 @@ SUPPORTED_SINKS_MAPPING = [
                 OutputFormat.IMAGE_WITH_PREDICTIONS,
                 OutputFormat.PREDICTIONS,
             ],
-            config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
+            config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic", "auth_required": False},
         ),
     ),
     (

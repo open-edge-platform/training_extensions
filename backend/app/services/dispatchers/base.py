@@ -67,8 +67,8 @@ class BaseDispatcher(metaclass=ABCMeta):
         self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result
     ) -> dict[str, Any]:
         """Create a JSON payload with the requested output formats."""
-        payload = {"timestamp": datetime.now().isoformat(), "result": {}}
-        result = payload["result"]
+        result: dict[str, Any] = {}
+        payload = {"timestamp": datetime.now().isoformat(), "result": result}
 
         if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
             result[OutputFormat.IMAGE_ORIGINAL] = {

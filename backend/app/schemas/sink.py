@@ -2,11 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
+from os import getenv
 from typing import Annotated, Literal
 
 from pydantic import Field, TypeAdapter
 
 from app.schemas.base import BaseIDNameModel
+
+MQTT_USERNAME = "MQTT_USERNAME"
+MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105
 
 
 class SinkType(StrEnum):
@@ -67,8 +71,7 @@ class MqttSinkConfig(BaseSinkConfig):
     broker_host: str
     broker_port: int
     topic: str
-    username: str | None = None
-    password: str | None = None
+    auth_required: bool = False
 
     model_config = {
         "json_schema_extra": {
@@ -80,9 +83,23 @@ class MqttSinkConfig(BaseSinkConfig):
                 "broker_port": 1883,
                 "topic": "predictions",
                 "output_formats": ["predictions"],
+                "auth_required": True,
             }
         }
     }
+
+    def get_credentials(self) -> tuple[str | None, str | None]:
+        """Configure stream URL with authentication if required."""
+        if not self.auth_required:
+            return None, None
+
+        username = getenv(MQTT_USERNAME)
+        password = getenv(MQTT_PASSWORD)
+
+        if not username or not password:
+            raise RuntimeError("MQTT credentials not provided.")
+
+        return username, password
 
 
 class RosSinkConfig(BaseSinkConfig):

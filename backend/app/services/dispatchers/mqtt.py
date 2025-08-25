@@ -51,8 +51,7 @@ class MqttDispatcher(BaseDispatcher):
         self.broker_host = output_config.broker_host
         self.broker_port = output_config.broker_port
         self.topic = output_config.topic
-        self.username = output_config.username
-        self.password = output_config.password
+        self.username, self.password = output_config.get_credentials()
 
         self._connected = False
         self._connection_lock = threading.Lock()
@@ -68,7 +67,7 @@ class MqttDispatcher(BaseDispatcher):
         client = mqtt.Client(client_id=client_id)
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
-        if self.username and self.password:
+        if self.username is not None and self.password is not None:
             client.username_pw_set(self.username, self.password)
         return client
 

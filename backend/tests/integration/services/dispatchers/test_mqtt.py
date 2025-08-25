@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import os
 import re
 import time
 from datetime import datetime
@@ -13,7 +14,7 @@ import paho.mqtt.client as mqtt
 import pytest
 from testcontainers.compose import DockerCompose
 
-from app.schemas.sink import MqttSinkConfig, OutputFormat, SinkType
+from app.schemas.sink import MQTT_PASSWORD, MQTT_USERNAME, MqttSinkConfig, OutputFormat, SinkType
 from app.services.dispatchers.base import numpy_to_base64
 from app.services.dispatchers.mqtt import MqttDispatcher
 
@@ -54,8 +55,6 @@ def mqtt_config(mqtt_broker) -> MqttSinkConfig:
         broker_host=host,
         broker_port=port,
         topic="topic",
-        username=None,
-        password=None,
         output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
     )
 
@@ -69,8 +68,7 @@ def mqtt_config_with_auth(mqtt_broker) -> MqttSinkConfig:
         broker_host=host,
         broker_port=port,
         topic="topic",
-        username="testuser",
-        password="testpass",
+        auth_required=True,
         output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
     )
 
@@ -144,6 +142,7 @@ class TestMqttDispatcher:
 
         dispatcher.close()
 
+    @patch.dict(os.environ, {MQTT_USERNAME: "testuser", MQTT_PASSWORD: "testpass"})
     def test_init_with_authentication(self, mqtt_config_with_auth):
         """Test initialization with username/password."""
         dispatcher = MqttDispatcher(mqtt_config_with_auth, track_messages=True)
