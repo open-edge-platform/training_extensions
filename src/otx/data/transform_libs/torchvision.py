@@ -989,29 +989,29 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
     def __init__(
         self,
         brightness_delta: int = 32,
-        contrast_range: Sequence[int | float] = (0.5, 1.5),
-        saturation_range: Sequence[int | float] = (0.5, 1.5),
+        contrast: Sequence[int | float] = (0.5, 1.5),
+        saturation: Sequence[int | float] = (0.5, 1.5),
         hue_delta: int = 18,
-        swap_channels: bool = True,
+        p: float = 0.5,
         is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
         self.brightness_delta = brightness_delta
-        self.contrast_lower, self.contrast_upper = contrast_range
-        self.saturation_lower, self.saturation_upper = saturation_range
+        self.contrast_lower, self.contrast_upper = contrast
+        self.saturation_lower, self.saturation_upper = saturation
         self.hue_delta = hue_delta
-        self.swap_channels = swap_channels
+        self.prob = p
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
     @cache_randomness
     def _random_flags(self) -> Sequence[int | float]:
-        mode = random.randint(2)
-        brightness_flag = random.randint(2)
-        contrast_flag = random.randint(2)
-        saturation_flag = random.randint(2)
-        hue_flag = random.randint(2)
-        swap_flag = random.randint(2)
+        mode = random.rand() > self.prob
+        brightness_flag = random.rand() > self.prob
+        contrast_flag = random.rand() > self.prob
+        saturation_flag = random.rand() > self.prob
+        hue_flag = random.rand() > self.prob
+        swap_flag = random.rand() > self.prob
         delta_value = random.uniform(-self.brightness_delta, self.brightness_delta)
         alpha_value = random.uniform(self.contrast_lower, self.contrast_upper)
         saturation_value = random.uniform(self.saturation_lower, self.saturation_upper)

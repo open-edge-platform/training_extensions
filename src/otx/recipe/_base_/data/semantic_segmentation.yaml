@@ -24,21 +24,13 @@ train_subset:
           - 0.5
           - 2.0
         transform_mask: true
-    - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+    - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
       enable: true
       init_args:
-        brightness:
-          - 0.875
-          - 1.125
-        contrast:
-          - 0.5
-          - 1.5
-        saturation:
-          - 0.5
-          - 1.5
-        hue:
-          - -0.05
-          - 0.05
+        brightness_delta: 32
+        contrast: [0.5, 1.5]
+        saturation: [0.5, 1.5]
+        hue_delta: 18
         p: 0.5
     - class_path: otx.data.transform_libs.torchvision.RandomAffine
       enable: false

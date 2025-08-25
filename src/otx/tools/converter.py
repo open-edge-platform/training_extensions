@@ -350,7 +350,8 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
         "random_vertical_flip": ["torchvision.transforms.v2.RandomVerticalFlip"],
         "gaussian_blur": ["otx.data.transform_libs.torchvision.RandomGaussianBlur"],
         "gaussian_noise": ["otx.data.transform_libs.torchvision.RandomGaussianNoise"],
-        "color_jitter": ["torchvision.transforms.v2.RandomPhotometricDistort"],
+        "color_jitter": ["torchvision.transforms.v2.RandomPhotometricDistort",
+                         "otx.data.transform_libs.torchvision.PhotoMetricDistortion"],
         "iou_random_crop": [
             "otx.data.transform_libs.torchvision.MinIoURandomCrop",
             "otx.data.transform_libs.torchvision.RandomIoUCrop",
