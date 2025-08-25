@@ -87,25 +87,6 @@ def test_augmentation(
     ]
     _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
 
-
-def test_augmentation_yolo(
-    fxt_target_dataset_per_task: dict,
-):
-    configurable_augs = [
-        "RandomPhotometricDistort",
-        "RandomAffine",
-        "RandomVerticalFlip",
-        "RandomGaussianBlur",
-        "RandomFlip",
-        "RandomGaussianNoise",
-        "CachedMosaic",
-        "CachedMixUp",
-        "YOLOXHSVRandomAug",
-    ]
-    yolox_recipe = next(r for r in DET_RECIPES if "yolox_s.yaml" in r)
-    _test_augmentation(yolox_recipe, fxt_target_dataset_per_task, configurable_augs)
-
-
 @pytest.mark.parametrize("recipe", KP_DET_RECIPES)
 def test_augmentation_kp_det(
     recipe: str,

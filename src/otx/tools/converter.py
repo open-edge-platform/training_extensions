@@ -356,9 +356,9 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
             "otx.data.transform_libs.torchvision.RandomIoUCrop",
         ],
         "random_zoom_out": ["torchvision.transforms.v2.RandomZoomOut"],
-        "random_hsv_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
-        "cached_mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
-        "cached_mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"],
+        "hsv_random_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
+        "mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
+        "mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"],
     }
 
     for aug_name, aug_value in augmentation_params.items():

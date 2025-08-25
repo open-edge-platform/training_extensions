@@ -64,6 +64,8 @@ overrides:
     train_subset:
       batch_size: 8
       transforms:
+        - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
+          enable: false
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
