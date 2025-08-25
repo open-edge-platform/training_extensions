@@ -66,7 +66,7 @@ class ModelService:
             available_models = repo.list_all()
             return ModelActivationState(
                 active_model=active_model.name if active_model is not None else None,
-                active_model_id=active_model.id if active_model is not None else None,
+                active_model_id=UUID(active_model.id) if active_model is not None else None,
                 available_models=[m.name for m in available_models],
             )
 
@@ -199,7 +199,7 @@ class ModelService:
             if self._mp_model_reload_event:
                 self._mp_model_reload_event.set()
 
-    def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel:
+    def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
         """
         Get the currently active model for inference.
 
@@ -215,6 +215,9 @@ class ModelService:
                 self._loaded_model = None
 
         if self._model_activation_state.active_model is None:
+            return None
+
+        if self._model_activation_state.active_model_id is None:
             return None
 
         if self._loaded_model is None or self._loaded_model.name != self._model_activation_state.active_model:

@@ -59,14 +59,12 @@ def inference_routine(  # noqa: C901, PLR0915
                     model_reload_event.clear()
                     loaded_model = model_service.get_loaded_inference_model(force_reload=True)
 
-            if loaded_model:
-                model = loaded_model.model
-
-            if model is None:
+            if loaded_model is None:
                 logger.debug("No model available... retrying in 1 second")
                 time.sleep(1)
                 continue
 
+            model = loaded_model.model
             # Install the callback if it's the first iteration with this model
             if id(model) != last_model_id:
                 model.set_callback(on_inference_completed)
