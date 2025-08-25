@@ -51,7 +51,7 @@ class WebhookDispatcher(BaseDispatcher):
             self.http_method, self.webhook_url, headers=self.headers, json=payload, timeout=self.timeout
         )
         response.raise_for_status()
-        logger.debug("Response from webhook: %s", response.json())
+        logger.debug("Response from webhook: %s", response.text)
 
     def _dispatch(
         self,
