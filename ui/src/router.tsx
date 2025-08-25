@@ -14,6 +14,7 @@ import { ViewPipeline } from './features/pipelines/view-pipeline.component';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
+import { ErrorPage } from './routes/error-page/error-page';
 import { Inference } from './routes/inference/inference';
 import { EditPipelineLayout } from './routes/pipeline/edit-pipeline-layout';
 import { Model } from './routes/pipeline/model';
@@ -46,7 +47,7 @@ export const router = createBrowserRouter([
                 <Layout />
             </Suspense>
         ),
-        errorElement: <div>Oh no</div>,
+        errorElement: <ErrorPage />,
         children: [
             {
                 index: true,
