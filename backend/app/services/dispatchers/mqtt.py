@@ -5,14 +5,13 @@ import json
 import logging
 import threading
 import time
-from datetime import datetime
 from typing import Any
 
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.sink import MqttSinkConfig, OutputFormat
-from app.services.dispatchers.base import BaseDispatcher, create_json_payload, numpy_to_base64
+from app.schemas.sink import MqttSinkConfig
+from app.services.dispatchers.base import BaseDispatcher
 
 try:
     import paho.mqtt.client as mqtt
@@ -106,54 +105,26 @@ class MqttDispatcher(BaseDispatcher):
     def is_connected(self) -> bool:
         return self._connected
 
-    def _publish_message(self, topic: str, payload: dict[str, Any]) -> bool:
+    def __publish_message(self, topic: str, payload: dict[str, Any]) -> None:
         if not self._connected:
             logger.warning("Client not connected. Reconnecting...")
             try:
                 self._connect()
-            except Exception:
+            except ConnectionError:
                 logger.exception("Reconnect failed")
-                return False
 
         try:
             result = self.client.publish(topic, json.dumps(payload))
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                if self._track_messages:
-                    self._published_messages.append({"topic": topic, "payload": payload, "timestamp": datetime.now()})
-                return True
+            if result.rc == mqtt.MQTT_ERR_SUCCESS and self._track_messages:
+                self._published_messages.append({"topic": topic, "payload": payload})
             logger.error(f"Publish failed: {mqtt.error_string(result.rc)}")
-        except Exception:
-            logger.exception("Publish exception")
-        return False
-
-    def _dispatch_image(self, image: np.ndarray, data_type: str):
-        try:
-            image_b64 = numpy_to_base64(image)
-            payload = create_json_payload(
-                data_type=data_type,
-                image=image_b64,
-                format="jpeg",
-            )
-            self._publish_message(self.topic, payload)
-        except Exception:
-            logger.exception("Failed to dispatch %s", data_type)
-
-    def _dispatch_predictions(self, predictions: Result):
-        try:
-            payload = create_json_payload(data_type=OutputFormat.PREDICTIONS, predictions=str(predictions))
-            self._publish_message(self.topic, payload)
-        except Exception:
-            logger.exception("Failed to dispatch predictions")
+        except ValueError:
+            logger.exception("Invalid payload for MQTT publish")
 
     def _dispatch(self, original_image: np.ndarray, image_with_visualization: np.ndarray, predictions: Result) -> None:
-        if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
-            self._dispatch_image(original_image, OutputFormat.IMAGE_ORIGINAL)
+        payload = self._create_payload(original_image, image_with_visualization, predictions)
 
-        if OutputFormat.IMAGE_WITH_PREDICTIONS in self.output_formats:
-            self._dispatch_image(image_with_visualization, OutputFormat.IMAGE_WITH_PREDICTIONS)
-
-        if OutputFormat.PREDICTIONS in self.output_formats:
-            self._dispatch_predictions(predictions)
+        self.__publish_message(self.topic, payload)
 
     def get_published_messages(self) -> list:
         return self._published_messages.copy()
@@ -162,11 +133,11 @@ class MqttDispatcher(BaseDispatcher):
         self._published_messages.clear()
 
     def close(self) -> None:
-        try:
-            self.client.loop_stop()
-            self.client.disconnect()
-        except Exception:
-            logger.exception("Error closing dispatcher")
-        finally:
-            self._connected = False
-            self._connection_event.clear()
+        err = self.client.loop_stop()
+        if err != mqtt.MQTT_ERR_SUCCESS:
+            logger.warning(f"Error stopping MQTT loop: {mqtt.error_string(err)}")
+        err = self.client.disconnect()
+        if err != mqtt.MQTT_ERR_SUCCESS:
+            logger.warning(f"Error disconnecting MQTT client: {mqtt.error_string(err)}")
+        self._connected = False
+        self._connection_event.clear()

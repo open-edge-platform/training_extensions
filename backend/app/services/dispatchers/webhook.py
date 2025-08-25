@@ -4,8 +4,6 @@
 """This module contains the WebhookDispatcher class for dispatching images and predictions to a webhook endpoint."""
 
 import logging
-from collections import defaultdict
-from datetime import datetime
 from typing import Any
 
 import numpy as np
@@ -14,9 +12,8 @@ from model_api.models.result import Result
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from app.schemas import OutputFormat
 from app.schemas.sink import WebhookSinkConfig
-from app.services.dispatchers.base import BaseDispatcher, numpy_to_base64
+from app.services.dispatchers.base import BaseDispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -62,13 +59,6 @@ class WebhookDispatcher(BaseDispatcher):
         image_with_visualization: np.ndarray,
         predictions: Result,
     ) -> None:
-        inference_result: dict[str, str] = defaultdict(str)
-        payload = {"timestamp": datetime.now().isoformat(), "result": inference_result}
-        if OutputFormat.PREDICTIONS in self.output_formats:
-            inference_result[OutputFormat.PREDICTIONS] = str(predictions)
-        if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
-            inference_result[OutputFormat.IMAGE_ORIGINAL] = numpy_to_base64(original_image)
-        if OutputFormat.IMAGE_WITH_PREDICTIONS in self.output_formats:
-            inference_result[OutputFormat.IMAGE_WITH_PREDICTIONS] = numpy_to_base64(image_with_visualization)
+        payload = self._create_payload(original_image, image_with_visualization, predictions)
 
         self.__send_to_webhook(payload)
