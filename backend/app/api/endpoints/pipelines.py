@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_id, get_pipeline_service
+from app.schemas.metrics import PipelineMetrics
 from app.schemas.pipeline import Pipeline, PipelineStatus
 from app.services import PipelineService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
@@ -193,6 +194,37 @@ async def disable_pipeline(
     """Stop a pipeline. The pipeline will become idle, and it won't process any data until re-enabled."""
     try:
         pipeline_service.update_pipeline(pipeline_id, {"status": PipelineStatus.IDLE})
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get(
+    "/{pipeline_id}/metrics",
+    responses={
+        status.HTTP_200_OK: {"description": "Pipeline metrics successfully calculated", "model": PipelineMetrics},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID or duration parameter"},
+        status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
+    },
+)
+async def get_pipeline_metrics(
+    pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    duration_seconds: int = 10,
+) -> PipelineMetrics:
+    """
+    Calculate model metrics for a pipeline over a specified time window.
+
+    Returns inference latency metrics including average, min, max, 95th percentile,
+    and latest latency measurements over the specified duration.
+    """
+    if duration_seconds <= 0 or duration_seconds > 3600:  # Limit to 1 hour max
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Duration must be between 1 and 3600 seconds"
+        )
+
+    try:
+        return pipeline_service.get_pipeline_metrics(pipeline_id, duration_seconds)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

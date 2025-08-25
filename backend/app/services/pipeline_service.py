@@ -1,6 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import statistics
+from datetime import datetime, timedelta, timezone
 from multiprocessing.synchronize import Condition
 from uuid import UUID
 
@@ -9,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db_session
 from app.repositories import PipelineRepository
 from app.schemas import Pipeline, PipelineStatus
+from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from app.services import ActivePipelineService
 from app.services.base import (
     GenericPersistenceService,
@@ -18,6 +21,7 @@ from app.services.base import (
     ServiceConfig,
 )
 from app.services.mappers import PipelineMapper
+from app.services.metrics_collector import get_metrics_collector
 from app.services.parent_process_guard import parent_process_only
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
@@ -90,3 +94,58 @@ class PipelineService:
                 raise ResourceInUseError(ResourceType.PIPELINE, str(pipeline_id), MSG_ERR_DELETE_RUNNING_PIPELINE)
             self._persistence.delete_by_id(pipeline_id, db)
             db.commit()
+
+    def get_pipeline_metrics(self, pipeline_id: UUID, duration_seconds: int = 60) -> PipelineMetrics:
+        """Calculate metrics for a pipeline over a specified time window."""
+        # First check if pipeline exists
+        pipeline = self.get_pipeline_by_id(pipeline_id)
+        pipeline.model_id
+
+        # Calculate time window
+        end_time = datetime.now(timezone.utc)
+        start_time = end_time - timedelta(seconds=duration_seconds)
+
+        # Get actual latency measurements from the metrics collector
+        metrics_collector = get_metrics_collector()
+        latency_samples = metrics_collector.get_latency_measurements(pipeline.id, duration_seconds)
+
+        # Calculate latency metrics
+        if latency_samples:
+            avg_ms = statistics.mean(latency_samples)
+            min_ms = min(latency_samples)
+            max_ms = max(latency_samples)
+            p95_ms = self._calculate_percentile(latency_samples, 95)
+            latest_ms = latency_samples[-1]
+        else:
+            # No data available
+            avg_ms = min_ms = max_ms = p95_ms = latest_ms = 0.0
+
+        latency_metrics = LatencyMetrics(
+            avg_ms=avg_ms,
+            min_ms=min_ms,
+            max_ms=max_ms,
+            p95_ms=p95_ms,
+            latest_ms=latest_ms,
+        )
+
+        time_window = TimeWindow(start=start_time, end=end_time, duration_seconds=duration_seconds)
+        inference_metrics = InferenceMetrics(latency=latency_metrics)
+        return PipelineMetrics(time_window=time_window, inference=inference_metrics)
+
+    @staticmethod
+    def _calculate_percentile(data: list[float], percentile: int) -> float:
+        """Calculate the specified percentile of the data."""
+        if not data:
+            return 0.0
+
+        sorted_data = sorted(data)
+        k = (len(sorted_data) - 1) * (percentile / 100.0)
+        floor_k = int(k)
+        ceil_k = floor_k + 1
+
+        if ceil_k >= len(sorted_data):
+            return sorted_data[-1]
+
+        # Linear interpolation
+        fraction = k - floor_k
+        return sorted_data[floor_k] + fraction * (sorted_data[ceil_k] - sorted_data[floor_k])
