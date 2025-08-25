@@ -29,10 +29,9 @@ MEDIA_RESPONSE_LIST_EXAMPLES = {
                 },
             ],
             "pagination": {
-                "page": 1,
-                "page_size": 20,
-                "total_items": 2,
-                "total_pages": 1,
+                "offset": 0,
+                "limit": 100,
+                "total_count": 2,
             },
         },
     ),
@@ -42,10 +41,9 @@ MEDIA_RESPONSE_LIST_EXAMPLES = {
         value={
             "data": [],
             "pagination": {
+                "offset": 0,
+                "limit": 100,
                 "total_count": 0,
-                "page": 1,
-                "page_size": 20,
-                "total_pages": 0,
             },
         },
     ),
@@ -76,10 +74,9 @@ class Media(BaseIDNameModel):
 class PaginationMetadata(BaseModel):
     """Pagination metadata for list responses"""
 
+    offset: int
+    limit: int
     total_count: int
-    page: int
-    page_size: int
-    total_pages: int
 
 
 class MediaListResponse(BaseModel):
@@ -105,15 +102,15 @@ class MediaListResponse(BaseModel):
     },
 )
 async def list_media(
-    page: int = Query(default=1, ge=1, description="Page number (starts from 1)"),
-    page_size: int = Query(default=20, ge=1, le=100, description="Number of items per page (max 100)"),
+    offset: int = Query(default=0, ge=0, description="Number if items to skip"),
+    limit: int = Query(default=20, ge=1, le=100, description="Maximum number of items to return"),
     start_date: date | None = Query(
         default=None, description="Filter media created on or after this date (YYYY-MM-DD)"
     ),
     end_date: date | None = Query(default=None, description="Filter media created on or before this date (YYYY-MM-DD)"),
 ) -> list[Media]:
     """List available media items with pagination and optional date filtering"""
-    _ = page, page_size
+    _ = offset, limit
     if start_date and end_date and start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -156,8 +153,8 @@ async def get_media(
 async def get_full(
     media_id: Annotated[UUID, Depends(get_media_id)],
 ) -> FileResponse:
-    # In Geti Classic media microservice, image was streamed from object storage, so `StreamingResponse` is appropriate.
-    # Now, since binaries will be stored on the local file system, `FileResponse` is more suitable.
+    # Prefer `FileResponse` when serving files from local disk over `StreamingResponse` for better performance and
+    # simplicity.
     """Get the media file at full resolution"""
     _ = media_id
     raise NotImplementedError
