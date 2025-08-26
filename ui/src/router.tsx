@@ -15,6 +15,8 @@ import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
 import { Inference } from './routes/inference/inference';
+import { Labels } from './routes/labels/labels';
+import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
 import { EditProject } from './routes/project/edit-project';
 
@@ -22,6 +24,8 @@ const root = path('/');
 const project = root.path('/project');
 const inference = root.path('/inference');
 const dataset = root.path('/dataset');
+const models = root.path('/models');
+const labels = root.path('/labels');
 
 export const paths = {
     root,
@@ -35,6 +39,12 @@ export const paths = {
     },
     dataset: {
         index: dataset,
+    },
+    models: {
+        index: models,
+    },
+    labels: {
+        index: labels,
     },
 };
 
@@ -91,6 +101,14 @@ export const router = createBrowserRouter([
                         </SelectedDataProvider>
                     </ZoomProvider>
                 ),
+            },
+            {
+                path: paths.models.index.pattern,
+                element: <Models />,
+            },
+            {
+                path: paths.labels.index.pattern,
+                element: <Labels />,
             },
         ],
     },
