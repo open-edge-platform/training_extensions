@@ -366,27 +366,30 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
         for aug_config in config["data"]["train_subset"]["transforms"]:
             if aug_config["class_path"] in aug_classes:
                 found = True
+                if "init_args" not in aug_config:
+                    aug_config["init_args"] = {}
                 if aug_name == "random_resize_crop" and not aug_value["enable"]:
                     # if random crop is disabled -> change this augmentation to simple Resize
                     aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
                     break
-                if "TopdownAffine" in aug_config["class_path"] and (
-                    not aug_value["enable"] or aug_value["affine_transforms_prob"] <= 0.7
-                ):
-                    aug_config["init_args"]["affine_transforms_prob"] = (
-                        aug_value["affine_transforms_prob"] if aug_value["enable"] else 0.0
-                    )
-                    for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
-                        if "Pad" in val_aug_cfg["class_path"]:
-                            val_aug_cfg["enable"] = False
+                if "TopdownAffine" in aug_config["class_path"]:
+                    affine_transforms_prob = aug_value.pop("affine_transforms_prob", 1.0)
+                    if affine_transforms_prob is not None:
+                        aug_config["init_args"]["affine_transforms_prob"] = (
+                            affine_transforms_prob if aug_value["enable"] else 0.0
+                        )
+                        if aug_config["init_args"]["affine_transforms_prob"] < 0.7:
+                            for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
+                                if "Pad" in val_aug_cfg["class_path"]:
+                                    val_aug_cfg["enable"] = False
 
                     break
 
                 aug_config["enable"] = aug_value.pop("enable")
                 for parameter in aug_value:
-                    if "init_args" not in aug_config:
-                        aug_config["init_args"] = {}
-                    aug_config["init_args"][parameter] = aug_value[parameter]
+                    value = aug_value[parameter]
+                    if value is not None:
+                        aug_config["init_args"][parameter] = value
                 break
 
         if not found and not tiling:
