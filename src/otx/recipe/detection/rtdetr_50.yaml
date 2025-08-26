@@ -64,7 +64,7 @@ overrides:
       batch_size: 4
       transforms:
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
-          enable: true
+          enable: false
           init_args:
             brightness:
               - 0.875
