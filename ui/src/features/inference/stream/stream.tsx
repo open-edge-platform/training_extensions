@@ -15,11 +15,15 @@ const useSetTargetSizeBasedOnVideo = (
         if (!video) return;
 
         const onLoaded = () => {
-            if (video.videoWidth && video.videoHeight) setSize({ width: video.videoWidth, height: video.videoHeight });
+            if (video.videoWidth && video.videoHeight) {
+                setSize({ width: video.videoWidth, height: video.videoHeight });
+            }
         };
 
         const resizeObserver = new ResizeObserver(() => {
-            if (video.videoWidth && video.videoHeight) setSize({ width: video.videoWidth, height: video.videoHeight });
+            if (video.videoWidth && video.videoHeight) {
+                setSize({ width: video.videoWidth, height: video.videoHeight });
+            }
         });
 
         video.addEventListener('loadedmetadata', onLoaded);
