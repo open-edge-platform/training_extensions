@@ -24,7 +24,6 @@ interface ResizeAnchorProps {
     onComplete: () => void;
     type?: ResizeAnchorType;
     fill?: string;
-    angle?: number;
     stroke?: string;
     strokeWidth?: number;
     Anchor?: ReactNode;
@@ -53,7 +52,6 @@ export const ResizeAnchor = ({
     label,
     fill = 'white',
     type = ResizeAnchorType.SQUARE,
-    angle = 0,
     cursor = 'all-scroll',
     stroke = 'var(--energy-blue)',
     strokeWidth = 1,
@@ -83,7 +81,7 @@ export const ResizeAnchor = ({
             moveAnchorTo={moveAnchorTo}
         >
             {type === ResizeAnchorType.SQUARE ? (
-                <g fillOpacity={1.0} transform={`rotate(${angle})`} transform-origin={`${x}px ${y}px`}>
+                <g fillOpacity={1.0} transform-origin={`${x}px ${y}px`}>
                     <rect x={x - size / 2} y={y - size / 2} width={size} height={size} {...visualAnchorProps} />
                 </g>
             ) : (

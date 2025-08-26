@@ -11,10 +11,9 @@ interface ShapeFactoryProps {
     ariaLabel: string;
 }
 export const ShapeFactory = ({ shape, styles, ariaLabel }: ShapeFactoryProps) => {
-    switch (shape.shapeType) {
-        case 'rect':
-            return <Rectangle rect={shape} styles={styles} ariaLabel={ariaLabel} />;
-        case 'polygon':
-            return <Polygon polygon={shape} styles={styles} ariaLabel={ariaLabel} />;
+    if (shape.shapeType === 'rect') {
+        return <Rectangle rect={shape} styles={styles} ariaLabel={ariaLabel} />;
+    } else {
+        return <Polygon polygon={shape} styles={styles} ariaLabel={ariaLabel} />;
     }
 };
