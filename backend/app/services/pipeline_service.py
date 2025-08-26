@@ -99,7 +99,7 @@ class PipelineService:
         """Calculate metrics for a pipeline over a specified time window."""
         # First check if pipeline exists
         pipeline = self.get_pipeline_by_id(pipeline_id)
-        if not pipeline.status != PipelineStatus.RUNNING:
+        if pipeline.status != PipelineStatus.RUNNING:
             raise ValueError("Cannot get metrics for a pipeline that is not running.")
 
         # Calculate time window

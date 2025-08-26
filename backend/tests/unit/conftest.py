@@ -2,8 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import multiprocessing as mp
+from multiprocessing.synchronize import Condition
+from unittest.mock import MagicMock
 
 import pytest
+
+from app.services import ActivePipelineService
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -12,3 +16,13 @@ def set_multiprocessing_start_method():
     # from the parent process are inherited by child processes. The default 'spawn'
     # method creates isolated child processes that don't inherit mocked state.
     mp.set_start_method("fork", force=True)
+
+
+@pytest.fixture
+def fxt_active_pipeline_service() -> MagicMock:
+    return MagicMock(spec=ActivePipelineService)
+
+
+@pytest.fixture
+def fxt_condition() -> MagicMock:
+    return MagicMock(spec=Condition)
