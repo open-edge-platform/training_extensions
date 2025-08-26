@@ -118,7 +118,8 @@ def main() -> None:
         app,
         host=settings.host,
         port=settings.port,
-        reload=settings.debug and settings.environment == "dev",
+        # FIXME: reload mode currently does not work with multiple workers
+        # reload=settings.debug and settings.environment == "dev",
         log_level="debug" if settings.debug else "info",
     )
 

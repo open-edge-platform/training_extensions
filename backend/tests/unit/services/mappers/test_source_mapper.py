@@ -15,73 +15,72 @@ from app.schemas.source import (
 )
 from app.services.mappers.source_mapper import SourceMapper
 
+SUPPORTED_SOURCES_MAPPING = [
+    (
+        VideoFileSourceConfig(
+            source_type=SourceType.VIDEO_FILE,
+            name="Test Video Source",
+            video_path="/path/to/video.mp4",
+        ),
+        SourceDB(
+            source_type=SourceType.VIDEO_FILE,
+            name="Test Video Source",
+            config_data={"video_path": "/path/to/video.mp4"},
+        ),
+    ),
+    (
+        WebcamSourceConfig(
+            source_type=SourceType.WEBCAM,
+            name="Test Webcam Source",
+            device_id=1,
+        ),
+        SourceDB(
+            source_type=SourceType.WEBCAM,
+            name="Test Webcam Source",
+            config_data={
+                "device_id": 1,
+            },
+        ),
+    ),
+    (
+        IPCameraSourceConfig(
+            source_type=SourceType.IP_CAMERA,
+            name="Test IPCamera Source",
+            stream_url="rtsp://192.168.1.100:554/stream",
+            auth_required=False,
+        ),
+        SourceDB(
+            source_type=SourceType.IP_CAMERA,
+            name="Test IPCamera Source",
+            config_data={
+                "stream_url": "rtsp://192.168.1.100:554/stream",
+                "auth_required": False,
+            },
+        ),
+    ),
+    (
+        ImagesFolderSourceConfig(
+            source_type=SourceType.IMAGES_FOLDER,
+            name="Test Images Folder Source",
+            images_folder_path="/path/to/images",
+            ignore_existing_images=True,
+        ),
+        SourceDB(
+            source_type=SourceType.IMAGES_FOLDER,
+            name="Test Images Folder Source",
+            config_data={
+                "images_folder_path": "/path/to/images",
+                "ignore_existing_images": True,
+            },
+        ),
+    ),
+]
+
 
 class TestSourceMapper:
     """Test cases for SourceMapper."""
 
-    @pytest.mark.parametrize(
-        "schema_instance, expected_model",
-        [
-            (
-                VideoFileSourceConfig(
-                    source_type=SourceType.VIDEO_FILE,
-                    name="Test Video Source",
-                    video_path="/path/to/video.mp4",
-                ),
-                SourceDB(
-                    source_type=SourceType.VIDEO_FILE.value,
-                    name="Test Video Source",
-                    config_data={"video_path": "/path/to/video.mp4"},
-                ),
-            ),
-            (
-                WebcamSourceConfig(
-                    source_type=SourceType.WEBCAM,
-                    name="Test Webcam Source",
-                    device_id=1,
-                ),
-                SourceDB(
-                    source_type=SourceType.WEBCAM.value,
-                    name="Test Webcam Source",
-                    config_data={
-                        "device_id": 1,
-                    },
-                ),
-            ),
-            (
-                IPCameraSourceConfig(
-                    source_type=SourceType.IP_CAMERA,
-                    name="Test IPCamera Source",
-                    stream_url="rtsp://192.168.1.100:554/stream",
-                    auth_required=False,
-                ),
-                SourceDB(
-                    source_type=SourceType.IP_CAMERA.value,
-                    name="Test IPCamera Source",
-                    config_data={
-                        "stream_url": "rtsp://192.168.1.100:554/stream",
-                        "auth_required": False,
-                    },
-                ),
-            ),
-            (
-                ImagesFolderSourceConfig(
-                    source_type=SourceType.IMAGES_FOLDER,
-                    name="Test Images Folder Source",
-                    images_folder_path="/path/to/images",
-                    ignore_existing_images=True,
-                ),
-                SourceDB(
-                    source_type=SourceType.IMAGES_FOLDER.value,
-                    name="Test Images Folder Source",
-                    config_data={
-                        "images_folder_path": "/path/to/images",
-                        "ignore_existing_images": True,
-                    },
-                ),
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("schema_instance, expected_model", SUPPORTED_SOURCES_MAPPING)
     def test_from_schema_valid_source_types(self, schema_instance, expected_model):
         """Test from_schema with valid source types."""
         source_id = uuid4()
@@ -99,69 +98,7 @@ class TestSourceMapper:
         with pytest.raises(ValueError, match="Source config cannot be None"):
             SourceMapper.from_schema(None)
 
-    @pytest.mark.parametrize(
-        "db_instance,expected_schema",
-        [
-            (
-                SourceDB(
-                    source_type=SourceType.VIDEO_FILE.value,
-                    name="Test Video Source",
-                    config_data={"video_path": "/path/to/video.mp4"},
-                ),
-                VideoFileSourceConfig(
-                    source_type=SourceType.VIDEO_FILE,
-                    name="Test Video Source",
-                    video_path="/path/to/video.mp4",
-                ),
-            ),
-            (
-                SourceDB(
-                    source_type=SourceType.WEBCAM.value,
-                    name="Test Webcam Source",
-                    config_data={
-                        "device_id": 1,
-                    },
-                ),
-                WebcamSourceConfig(
-                    source_type=SourceType.WEBCAM,
-                    name="Test Webcam Source",
-                    device_id=1,
-                ),
-            ),
-            (
-                SourceDB(
-                    source_type=SourceType.IP_CAMERA.value,
-                    name="Test IPCamera Source",
-                    config_data={
-                        "stream_url": "rtsp://192.168.1.100:554/stream",
-                        "auth_required": False,
-                    },
-                ),
-                IPCameraSourceConfig(
-                    source_type=SourceType.IP_CAMERA,
-                    name="Test IPCamera Source",
-                    stream_url="rtsp://192.168.1.100:554/stream",
-                    auth_required=False,
-                ),
-            ),
-            (
-                SourceDB(
-                    source_type=SourceType.IMAGES_FOLDER.value,
-                    name="Test Images Folder Source",
-                    config_data={
-                        "images_folder_path": "/path/to/images",
-                        "ignore_existing_images": True,
-                    },
-                ),
-                ImagesFolderSourceConfig(
-                    source_type=SourceType.IMAGES_FOLDER,
-                    name="Test Images Folder Source",
-                    images_folder_path="/path/to/images",
-                    ignore_existing_images=True,
-                ),
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_SOURCES_MAPPING])
     def test_to_schema_valid_source_types(self, db_instance, expected_schema):
         """Test to_schema with valid source types."""
         source_id = uuid4()
