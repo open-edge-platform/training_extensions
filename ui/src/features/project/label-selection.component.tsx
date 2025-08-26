@@ -17,7 +17,7 @@ import classes from './label-selection.module.scss';
 
 const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
     return (
-        <SpectrumColorPicker value={value} onChange={onChange}>
+        <SpectrumColorPicker value={value} onChange={onChange} rounding={'none'}>
             <Flex direction='column' gap='size-300'>
                 <ColorEditor />
                 <ColorSwatchPicker>
@@ -103,7 +103,20 @@ export const LabelSelection = () => {
     };
 
     return (
-        <Flex direction={'column'} alignItems={'center'} width={'100%'}>
+        <Flex
+            direction={'column'}
+            alignItems={'center'}
+            height={'100%'}
+            width={'100%'}
+            gap={'size-300'}
+            UNSAFE_style={{ overflow: 'auto' }}
+        >
+            <Flex>
+                <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
+                    What objects should the model learn to detect?
+                </Text>
+            </Flex>
+
             <Flex direction={'column'} alignItems={'center'} gap={'size-100'} width={'100%'}>
                 {items.map((item) => {
                     return <LabelItem key={item.id} onDelete={handleDeleteItem} {...item} />;
@@ -111,7 +124,7 @@ export const LabelSelection = () => {
             </Flex>
 
             <Flex gap={'size-200'}>
-                <Button width={'size-2000'} variant={'secondary'} marginTop={'size-400'} onPress={handleAddItem}>
+                <Button width={'size-2000'} variant={'secondary'} onPress={handleAddItem}>
                     <Text>Add next object</Text>
                     <Add fill='white' />
                 </Button>

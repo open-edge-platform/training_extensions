@@ -1,0 +1,12 @@
+.grid {
+    background-color: var(--spectrum-global-color-gray-100);
+    background-blend-mode: luminosity;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.buttonGroup {
+    padding: var(--spectrum-global-dimension-size-300);
+    border-top: var(--spectrum-global-dimension-size-10) solid var(--spectrum-global-color-gray-300);
+}
