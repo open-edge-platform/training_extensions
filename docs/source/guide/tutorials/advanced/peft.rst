@@ -56,10 +56,52 @@ How to Use PEFT in OpenVINO™ Training Extensions
             init_args:
                label_info: 1000
                model_name: "dinov2-small"
-               peft: ""
+               peft: "dora"
 
                optimizer:
                   class_path: torch.optim.AdamW
                   init_args:
                      lr: 0.0001
                      weight_decay: 0.05
+
+Alternative
+-----------
+
+- **Linear Fine-Tuning**: Train only the classification head while keeping all backbone frozen.
+  This approach works with *all* classification backbones.
+
+How to Use Linear Fine-Tuning
+-----------------------------
+
+.. tab-set::
+
+   .. tab-item:: API
+
+      .. code-block:: python
+
+         from training_extensions.src.otx.backend.native.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
+
+         # Linear FT = freeze_backbone=True, no PEFT
+         model = VisionTransformerMulticlassCls(
+             ...,
+             freeze_backbone=True,
+         )
+
+   .. tab-item:: CLI
+
+      .. code-block:: bash
+
+         (otx) $ otx train ... --model.freeze_backbone true
+
+   .. tab-item:: YAML
+
+      .. code-block:: yaml
+
+         task: MULTI_CLASS_CLS
+         model:
+            class_path: otx.backend.native.models.classification.multiclass_models.vit.VisionTransformerMulticlassCls
+            init_args:
+               label_info: 1000
+               model_name: "dinov2-small"
+               peft: ""
+               freeze_backbone: true
