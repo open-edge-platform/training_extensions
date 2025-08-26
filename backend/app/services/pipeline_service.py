@@ -101,6 +101,8 @@ class PipelineService:
         pipeline = self.get_pipeline_by_id(pipeline_id)
         if pipeline.status != PipelineStatus.RUNNING:
             raise ValueError("Cannot get metrics for a pipeline that is not running.")
+        if pipeline.model_id is None:
+            raise ValueError("Cannot get metrics for a pipeline with not model, please check a model is assigned.")
 
         # Calculate time window
         end_time = datetime.now(UTC)
@@ -112,26 +114,20 @@ class PipelineService:
 
         # Calculate latency metrics
         if latency_samples:
-            avg_ms = statistics.mean(latency_samples)
-            min_ms = min(latency_samples)
-            max_ms = max(latency_samples)
-            p95_ms = self._calculate_percentile(latency_samples, 95)
-            latest_ms = latency_samples[-1]
+            latency_metrics = LatencyMetrics(
+                avg_ms=statistics.mean(latency_samples),
+                min_ms=min(latency_samples),
+                max_ms=max(latency_samples),
+                p95_ms=self._calculate_percentile(latency_samples, 95),
+                latest_ms=latency_samples[-1],
+            )
         else:
             # No data available
-            avg_ms = min_ms = max_ms = p95_ms = latest_ms = None
+            latency_metrics = LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None)
 
-        latency_metrics = LatencyMetrics(
-            avg_ms=avg_ms,
-            min_ms=min_ms,
-            max_ms=max_ms,
-            p95_ms=p95_ms,
-            latest_ms=latest_ms,
-        )
-
-        time_window = TimeWindow(start=start_time, end=end_time, time_window=time_window)
+        window = TimeWindow(start=start_time, end=end_time, time_window=time_window)
         inference_metrics = InferenceMetrics(latency=latency_metrics)
-        return PipelineMetrics(time_window=time_window, inference=inference_metrics)
+        return PipelineMetrics(time_window=window, inference=inference_metrics)
 
     @staticmethod
     def _calculate_percentile(data: list[float], percentile: int) -> float:

@@ -7,6 +7,7 @@ import queue
 import time
 from multiprocessing.synchronize import Event as EventClass
 from typing import Any
+from uuid import UUID
 
 from model_api.models import DetectionResult
 
@@ -27,8 +28,9 @@ def inference_routine(  # noqa: C901, PLR0915
     metrics_collector = MetricsCollector()
 
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
-        start_time = userdata["inference_start_time"]
-        metrics_collector.record_inference_end(model_id=loaded_model.id, start_time=start_time)
+        start_time = float(userdata["inference_start_time"])
+        model_id = UUID(userdata["model_id"])
+        metrics_collector.record_inference_end(model_id=model_id, start_time=start_time)
 
         stream_data: StreamData = userdata["stream_data"]
         frame_with_predictions = Visualizer.overlay_predictions(
@@ -86,6 +88,7 @@ def inference_routine(  # noqa: C901, PLR0915
                     user_data={
                         "stream_data": queue_data,
                         "model_name": model_service.get_active_model_name(),
+                        "model_id": str(loaded_model.id),
                         "inference_start_time": inference_start_time,
                     },
                 )
