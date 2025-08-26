@@ -70,7 +70,7 @@ export const CreateProject = () => {
 
             <Flex justifyContent={'end'} UNSAFE_className={classes.buttonGroup}>
                 <ButtonGroup>
-                    <Button onPress={handleCreateProject} variant='primary'>
+                    <Button onPress={handleCreateProject} variant='accent'>
                         Create project
                     </Button>
                 </ButtonGroup>
