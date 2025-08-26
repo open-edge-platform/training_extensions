@@ -209,7 +209,7 @@ async def disable_pipeline(
 async def get_pipeline_metrics(
     pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
-    duration_seconds: int = 60,
+    time_window: int = 60,
 ) -> PipelineMetrics:
     """
     Calculate model metrics for a pipeline over a specified time window.
@@ -217,13 +217,13 @@ async def get_pipeline_metrics(
     Returns inference latency metrics including average, min, max, 95th percentile,
     and latest latency measurements over the specified duration.
     """
-    if duration_seconds <= 0 or duration_seconds > 3600:  # Limit to 1 hour max
+    if time_window <= 0 or time_window > 3600:  # Limit to 1 hour max
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Duration must be between 1 and 3600 seconds"
         )
 
     try:
-        return pipeline_service.get_pipeline_metrics(pipeline_id, duration_seconds)
+        return pipeline_service.get_pipeline_metrics(pipeline_id, time_window)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:

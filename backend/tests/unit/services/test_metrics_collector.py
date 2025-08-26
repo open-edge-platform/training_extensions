@@ -56,11 +56,11 @@ class TestMetricsCollector:
             self.collector.record_inference_end(model_id=model_id, start_time=start_time)
 
         # Get measurements from last 60 seconds
-        measurements = self.collector.get_latency_measurements(model_id=model_id, duration_seconds=60)
+        measurements = self.collector.get_latency_measurements(model_id=model_id, time_window=60)
         assert len(measurements) == 3
 
         # Get measurements from last 0 seconds (should be empty)
-        measurements = self.collector.get_latency_measurements(model_id=model_id, duration_seconds=0)
+        measurements = self.collector.get_latency_measurements(model_id=model_id, time_window=0)
         assert len(measurements) == 0
 
     def test_get_latency_measurements_different_models(self):

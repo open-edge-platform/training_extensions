@@ -340,10 +340,10 @@ class TestPipelineServiceIntegration:
             "app.services.metrics_collector.MetricsCollector.get_latency_measurements"
         ) as mock_metrics_collector:
             mock_metrics_collector.return_value = [10.0, 15.0, 20.0, 25.0, 30.0]
-            metrics = fxt_pipeline_service.get_pipeline_metrics(pipeline_id, duration_seconds=60)
+            metrics = fxt_pipeline_service.get_pipeline_metrics(pipeline_id, time_window=60)
 
         mock_metrics_collector.assert_called_once_with(UUID(model_id), 60)
-        assert metrics.time_window.duration_seconds == 60
+        assert metrics.time_window.time_window == 60
         assert metrics.inference.latency.avg_ms == 20.0
         assert metrics.inference.latency.min_ms == 10.0
         assert metrics.inference.latency.max_ms == 30.0
@@ -370,10 +370,10 @@ class TestPipelineServiceIntegration:
             "app.services.metrics_collector.MetricsCollector.get_latency_measurements"
         ) as mock_metrics_collector:
             mock_metrics_collector.return_value = []
-            metrics = fxt_pipeline_service.get_pipeline_metrics(pipeline_id, duration_seconds=60)
+            metrics = fxt_pipeline_service.get_pipeline_metrics(pipeline_id, time_window=60)
 
         mock_metrics_collector.assert_called_once_with(UUID(model_id), 60)
-        assert metrics.time_window.duration_seconds == 60
+        assert metrics.time_window.time_window == 60
         assert metrics.inference.latency.avg_ms == 0.0
         assert metrics.inference.latency.min_ms == 0.0
         assert metrics.inference.latency.max_ms == 0.0

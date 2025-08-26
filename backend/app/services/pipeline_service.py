@@ -95,7 +95,7 @@ class PipelineService:
             self._persistence.delete_by_id(pipeline_id, db)
             db.commit()
 
-    def get_pipeline_metrics(self, pipeline_id: UUID, duration_seconds: int = 60) -> PipelineMetrics:
+    def get_pipeline_metrics(self, pipeline_id: UUID, time_window: int = 60) -> PipelineMetrics:
         """Calculate metrics for a pipeline over a specified time window."""
         # First check if pipeline exists
         pipeline = self.get_pipeline_by_id(pipeline_id)
@@ -104,11 +104,11 @@ class PipelineService:
 
         # Calculate time window
         end_time = datetime.now(UTC)
-        start_time = end_time - timedelta(seconds=duration_seconds)
+        start_time = end_time - timedelta(seconds=time_window)
 
         # Get actual latency measurements from the metrics collector
         metrics_collector = MetricsCollector()
-        latency_samples = metrics_collector.get_latency_measurements(pipeline.model_id, duration_seconds)
+        latency_samples = metrics_collector.get_latency_measurements(pipeline.model_id, time_window)
 
         # Calculate latency metrics
         if latency_samples:
@@ -129,7 +129,7 @@ class PipelineService:
             latest_ms=latest_ms,
         )
 
-        time_window = TimeWindow(start=start_time, end=end_time, duration_seconds=duration_seconds)
+        time_window = TimeWindow(start=start_time, end=end_time, time_window=time_window)
         inference_metrics = InferenceMetrics(latency=latency_metrics)
         return PipelineMetrics(time_window=time_window, inference=inference_metrics)
 

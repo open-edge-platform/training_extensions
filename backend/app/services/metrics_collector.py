@@ -53,9 +53,9 @@ class MetricsCollector(metaclass=Singleton):
             self._measurements.append(measurement)
             self._cleanup_old_measurements()
 
-    def get_latency_measurements(self, model_id: UUID, duration_seconds: int = 60) -> list[float]:
+    def get_latency_measurements(self, model_id: UUID, time_window: int = 60) -> list[float]:
         """Get latency measurements for a specific model within the time window"""
-        cutoff_time = datetime.now(UTC).timestamp() - duration_seconds
+        cutoff_time = datetime.now(UTC).timestamp() - time_window
 
         with self._lock:
             self._cleanup_old_measurements()
