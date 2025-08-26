@@ -43,7 +43,6 @@ class TestPipelineServiceUnit:
 
     def test_get_pipeline_metrics_success(self, fxt_pipeline_service, fxt_pipeline, fxt_model):
         """Test successfully retrieving pipeline metrics."""
-        # Mock metrics collector
         with (
             patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
             patch("app.services.metrics_collector.MetricsCollector.get_latency_measurements") as mock_metrics_collector,
@@ -62,7 +61,6 @@ class TestPipelineServiceUnit:
 
     def test_get_pipeline_metrics_no_data(self, fxt_pipeline_service, fxt_pipeline, fxt_model):
         """Test retrieving pipeline metrics when no latency data is available."""
-        # Mock metrics collector
         with (
             patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
             patch("app.services.metrics_collector.MetricsCollector.get_latency_measurements") as mock_metrics_collector,
