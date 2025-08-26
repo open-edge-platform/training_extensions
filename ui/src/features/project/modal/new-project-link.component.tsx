@@ -11,7 +11,7 @@ import classes from './new-project-link.module.scss';
 
 export const NewProjectLink = () => {
     return (
-        <Link to={paths.pipeline.new.pattern} className={classes.link}>
+        <Link to={paths.project.new.pattern} className={classes.link}>
             <AddCircle />
             <Text>Add another project</Text>
         </Link>
