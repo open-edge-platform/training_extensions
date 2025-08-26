@@ -209,7 +209,7 @@ async def disable_pipeline(
 async def get_pipeline_metrics(
     pipeline_id: Annotated[UUID, Depends(get_pipeline_id)],
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
-    duration_seconds: int = 10,
+    duration_seconds: int = 60,
 ) -> PipelineMetrics:
     """
     Calculate model metrics for a pipeline over a specified time window.
@@ -226,6 +226,8 @@ async def get_pipeline_metrics(
         return pipeline_service.get_pipeline_metrics(pipeline_id, duration_seconds)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post(

@@ -82,7 +82,6 @@ def inference_routine(  # noqa: C901, PLR0915
                     queue_data.frame_data,
                     user_data={"stream_data": queue_data, "model_name": model_service.get_active_model_name()},
                 )
-                model_service.get_loaded_inference_model()
                 metrics_collector.record_inference_end(model_id=loaded_model.id, start_time=inference_start_time)
             else:
                 model.inference_adapter.await_any()

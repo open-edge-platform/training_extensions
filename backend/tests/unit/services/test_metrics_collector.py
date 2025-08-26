@@ -138,7 +138,7 @@ class TestMetricsCollector:
         assert 10.0 <= latency_ms <= 11.0
 
     def test_max_age_initialization(self):
-        """Test that max_age_seconds is properly initialized an updated"""
+        """Test that max_age_seconds is properly initialized and updated"""
         self.reset_collector()
         assert self.collector._max_age_seconds == 60
 
