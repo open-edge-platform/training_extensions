@@ -9,11 +9,11 @@ from pydantic import BaseModel, Field
 class LatencyMetrics(BaseModel):
     """Latency metrics for inference operations"""
 
-    avg_ms: float = Field(..., description="Average latency in milliseconds")
-    min_ms: float = Field(..., description="Minimum latency in milliseconds")
-    max_ms: float = Field(..., description="Maximum latency in milliseconds")
-    p95_ms: float = Field(..., description="95th percentile latency in milliseconds")
-    latest_ms: float = Field(..., description="Latest recorded latency in milliseconds")
+    avg_ms: float | None = Field(..., description="Average latency in milliseconds")
+    min_ms: float | None = Field(..., description="Minimum latency in milliseconds")
+    max_ms: float | None = Field(..., description="Maximum latency in milliseconds")
+    p95_ms: float | None = Field(..., description="95th percentile latency in milliseconds")
+    latest_ms: float | None = Field(..., description="Latest recorded latency in milliseconds")
 
 
 class InferenceMetrics(BaseModel):

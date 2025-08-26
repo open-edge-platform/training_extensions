@@ -119,7 +119,7 @@ class PipelineService:
             latest_ms = latency_samples[-1]
         else:
             # No data available
-            avg_ms = min_ms = max_ms = p95_ms = latest_ms = 0.0
+            avg_ms = min_ms = max_ms = p95_ms = latest_ms = None
 
         latency_metrics = LatencyMetrics(
             avg_ms=avg_ms,
