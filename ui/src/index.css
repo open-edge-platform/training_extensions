@@ -1,7 +1,7 @@
 :root {
     height: 100vh;
     box-sizing: border-box;
-    
+
     --background: #313236;
     --background-inverse: #3c3e42;
     --coral: #ff5662;
@@ -58,7 +58,8 @@ html {
     box-sizing: border-box;
 }
 
-#root, #theme-provider {
+#root,
+#theme-provider {
     height: 100%;
     box-sizing: border-box;
 }
