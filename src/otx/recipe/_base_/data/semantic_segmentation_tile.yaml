@@ -26,11 +26,11 @@ train_subset:
       enable: true
       init_args:
         brightness_delta: 32
-        contrast: 
-          - 0.5 
+        contrast:
+          - 0.5
           - 1.5
-        saturation: 
-          - 0.5 
+        saturation:
+          - 0.5
           - 1.5
         hue_delta: 18
         p: 0.5

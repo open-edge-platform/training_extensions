@@ -87,6 +87,7 @@ def test_augmentation(
     ]
     _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
 
+
 @pytest.mark.parametrize("recipe", KP_DET_RECIPES)
 def test_augmentation_kp_det(
     recipe: str,

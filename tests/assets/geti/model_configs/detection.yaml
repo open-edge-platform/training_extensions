@@ -27,7 +27,6 @@ hyperparameters:
         tile_overlap: 0.2
       iou_random_crop:
         enable: true
-        prob: 0.8
       random_affine:
         enable: false
         max_rotate_degree: 10.0
