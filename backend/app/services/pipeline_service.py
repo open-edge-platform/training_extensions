@@ -99,8 +99,8 @@ class PipelineService:
         """Calculate metrics for a pipeline over a specified time window."""
         # First check if pipeline exists
         pipeline = self.get_pipeline_by_id(pipeline_id)
-        if not pipeline.model_id:
-            raise ValueError("Cannot get metrics for a pipeline without an associated model.")
+        if not pipeline.status != PipelineStatus.RUNNING:
+            raise ValueError("Cannot get metrics for a pipeline that is not running.")
 
         # Calculate time window
         end_time = datetime.now(UTC)
