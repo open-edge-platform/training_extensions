@@ -60,6 +60,7 @@ const DEFAULT_SINK_FORMS: SinkFormRecord = {
     },
     mqtt: {
         sink_type: 'mqtt',
+        auth_required: false,
         name: 'MQTT',
         broker_host: '',
         broker_port: 1883,
@@ -77,6 +78,8 @@ const DEFAULT_SINK_FORMS: SinkFormRecord = {
         sink_type: 'webhook',
         webhook_url: '',
         output_formats: [],
+        http_method: 'POST',
+        timeout: 30,
     },
 };
 
@@ -133,21 +136,6 @@ const ConfigureMQTTSink = ({
                 name='topic'
                 value={sink.topic}
                 onChange={(topic) => setSink({ ...sink, topic })}
-            />
-
-            <TextField
-                label='Password'
-                name='password'
-                type='password'
-                value={sink.password ?? undefined}
-                onChange={(password) => setSink({ ...sink, password })}
-            />
-
-            <TextField
-                label='Username'
-                name='username'
-                value={sink.username ?? undefined}
-                onChange={(username) => setSink({ ...sink, username })}
             />
         </Flex>
     );
