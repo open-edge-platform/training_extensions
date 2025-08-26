@@ -10,25 +10,25 @@ import { path } from 'static-path';
 
 import { ZoomProvider } from './components/zoom/zoom';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
-import { ViewPipeline } from './features/pipelines/view-pipeline.component';
+import { ProjectDetails } from './features/project/project-details.component';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
 import { Inference } from './routes/inference/inference';
-import { EditPipelineLayout } from './routes/pipeline/edit-pipeline-layout';
-import { Model } from './routes/pipeline/model';
+import { CreateProject } from './routes/project/create-project';
+import { EditProject } from './routes/project/edit-project';
 
 const root = path('/');
-const pipeline = root.path('/pipeline');
+const project = root.path('/project');
 const inference = root.path('/inference');
 const dataset = root.path('/dataset');
 
 export const paths = {
     root,
-    pipeline: {
-        index: pipeline,
-        new: pipeline.path('/new'),
-        edit: pipeline.path('/edit/:pipelineId'),
+    project: {
+        index: project,
+        new: project.path('/new'),
+        edit: project.path('/edit/:projectId'),
     },
     inference: {
         index: inference,
@@ -39,6 +39,10 @@ export const paths = {
 };
 
 export const router = createBrowserRouter([
+    {
+        path: paths.project.new.pattern,
+        element: <CreateProject />,
+    },
     {
         path: paths.root.pattern,
         element: (
@@ -51,26 +55,22 @@ export const router = createBrowserRouter([
             {
                 index: true,
                 loader: () => {
-                    // TODO: if no pipeline configured then redirect to new pipeline
+                    // TODO: If there is no project configured then redirect to new project creation
                     // else redirect to inference
-                    return redirect(paths.pipeline.new({}));
+                    return redirect(paths.project.new({}));
                 },
             },
             {
-                path: paths.pipeline.index.pattern,
+                path: paths.project.index.pattern,
                 children: [
                     {
                         index: true,
-                        path: paths.pipeline.index.pattern,
-                        element: <ViewPipeline />,
+                        path: paths.project.index.pattern,
+                        element: <ProjectDetails />,
                     },
                     {
-                        path: paths.pipeline.new.pattern,
-                        element: <Model />,
-                    },
-                    {
-                        path: paths.pipeline.edit.pattern,
-                        element: <EditPipelineLayout />,
+                        path: paths.project.edit.pattern,
+                        element: <EditProject />,
                     },
                 ],
             },

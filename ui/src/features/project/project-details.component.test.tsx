@@ -7,9 +7,9 @@ import { HttpResponse } from 'msw';
 import { http } from '../../api/utils';
 import { server } from '../../msw-node-setup';
 import { TestProviders } from '../../providers';
-import { ViewPipeline } from './view-pipeline.component';
+import { ProjectDetails } from './project-details.component';
 
-describe('View pipeline', () => {
+describe('ProjectDetails', () => {
     it('renders the correct values for each resource', async () => {
         server.use(
             http.get('/api/sources', () => {
@@ -39,7 +39,7 @@ describe('View pipeline', () => {
 
         render(
             <TestProviders>
-                <ViewPipeline />
+                <ProjectDetails />
             </TestProviders>
         );
 

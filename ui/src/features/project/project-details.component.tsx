@@ -30,7 +30,7 @@ const Field = ({ field, value }: FieldProps) => {
     );
 };
 
-export const ViewPipeline = () => {
+export const ProjectDetails = () => {
     // TODO: Replace this by /pipeline once available and maybe extract it to a hook
     const sources = $api.useQuery('get', '/api/sources');
     const sinks = $api.useQuery('get', '/api/sinks');
@@ -93,11 +93,7 @@ export const ViewPipeline = () => {
                         <Divider size='S' />
                         <ButtonGroup>
                             <ProjectList />
-                            <Button
-                                href={paths.pipeline.edit({ pipelineId: '' })}
-                                variant='secondary'
-                                marginStart='auto'
-                            >
+                            <Button href={paths.project.edit({ projectId: '' })} variant='secondary' marginStart='auto'>
                                 Edit
                             </Button>
                         </ButtonGroup>

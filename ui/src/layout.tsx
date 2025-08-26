@@ -24,7 +24,7 @@ const Header = () => {
                     }}
                 >
                     <Item
-                        textValue='"Live feed page showing live inference on your pipeline'
+                        textValue='Inference page showing live inference on your project'
                         key={paths.inference.index({})}
                         href={paths.inference.index({})}
                     >
@@ -51,6 +51,7 @@ const Header = () => {
 
 const getFirstPathSegment = (path: string): string => {
     const segments = path.split('/');
+
     return segments.length > 1 ? `/${segments[1]}` : '/';
 };
 
@@ -71,13 +72,13 @@ export const Layout = () => {
                 <Header />
                 <View backgroundColor={'gray-50'} gridArea={'content'}>
                     <TabPanels height={'100%'} UNSAFE_style={{ border: 'none' }}>
-                        <Item textValue='index' key={paths.pipeline.index({})}>
+                        <Item textValue='index' key={paths.project.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='live-feed' key={paths.inference.index({})}>
+                        <Item textValue='inference' key={paths.inference.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='data-collection' key={paths.dataset.index({})}>
+                        <Item textValue='dataset' key={paths.dataset.index({})}>
                             <Outlet />
                         </Item>
                     </TabPanels>
