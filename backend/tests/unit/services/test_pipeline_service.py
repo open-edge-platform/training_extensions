@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.schemas import Model, Pipeline, PipelineStatus
-from app.services import PipelineService, ResourceNotFoundError, ResourceType
+from app.services import PipelineService
 
 
 @pytest.fixture
@@ -71,21 +71,22 @@ class TestPipelineServiceUnit:
 
         mock_metrics_collector.assert_called_once_with(fxt_model.id, 60)
         assert metrics.time_window.time_window == 60
-        assert metrics.inference.latency.avg_ms == 0.0
-        assert metrics.inference.latency.min_ms == 0.0
-        assert metrics.inference.latency.max_ms == 0.0
-        assert metrics.inference.latency.p95_ms == 0.0
-        assert metrics.inference.latency.latest_ms == 0.0
+        assert metrics.inference.latency.avg_ms is None
+        assert metrics.inference.latency.min_ms is None
+        assert metrics.inference.latency.max_ms is None
+        assert metrics.inference.latency.p95_ms is None
+        assert metrics.inference.latency.latest_ms is None
 
-    def test_get_pipeline_metrics_pipeline_not_found(self, fxt_pipeline_service):
+    def test_get_pipeline_metrics_model_not_found(self, fxt_pipeline_service, fxt_pipeline):
         """Test retrieving metrics for non-existent pipeline raises error."""
-        pipeline_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_pipeline_service.get_pipeline_metrics(pipeline_id)
-
-        assert excinfo.value.resource_type == ResourceType.PIPELINE
-        assert excinfo.value.resource_id == str(pipeline_id)
+        with (
+            patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
+            pytest.raises(
+                ValueError, match="Cannot get metrics for a pipeline with not model, please check a model is assigned."
+            ),
+        ):
+            mock_get_pipeline_by_id.return_value = fxt_pipeline.model_copy(update={"model_id": None})
+            fxt_pipeline_service.get_pipeline_metrics(fxt_pipeline.id)
 
     def test_get_pipeline_metrics_not_running(self, fxt_pipeline_service, fxt_pipeline):
         """Test retrieving metrics for pipeline that is not running raises error."""
