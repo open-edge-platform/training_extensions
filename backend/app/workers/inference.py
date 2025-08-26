@@ -8,7 +8,7 @@ import time
 from multiprocessing.synchronize import Event as EventClass
 from typing import Any
 
-from model_api.models import DetectionResult, Model
+from model_api.models import DetectionResult
 
 from app.entities.stream_data import InferenceData, StreamData
 from app.services import ModelService
@@ -24,7 +24,12 @@ def inference_routine(  # noqa: C901, PLR0915
 ) -> None:
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
 
+    metrics_collector = MetricsCollector()
+
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
+        start_time = userdata["inference_start_time"]
+        metrics_collector.record_inference_end(model_id=loaded_model.id, start_time=start_time)
+
         stream_data: StreamData = userdata["stream_data"]
         frame_with_predictions = Visualizer.overlay_predictions(
             original_image=stream_data.frame_data, predictions=inf_result
@@ -42,9 +47,7 @@ def inference_routine(  # noqa: C901, PLR0915
             except queue.Full:
                 logger.debug("Prediction queue is full, retrying...")
 
-    metrics_collector = MetricsCollector()
     model_service = ModelService()
-    model: Model | None = None
     loaded_model: LoadedModel | None = None
     last_model_id: int = 0  # track the id of the Model object to install the callback only once
 
@@ -80,9 +83,12 @@ def inference_routine(  # noqa: C901, PLR0915
                 inference_start_time = metrics_collector.record_inference_start()
                 model.infer_async(
                     queue_data.frame_data,
-                    user_data={"stream_data": queue_data, "model_name": model_service.get_active_model_name()},
+                    user_data={
+                        "stream_data": queue_data,
+                        "model_name": model_service.get_active_model_name(),
+                        "inference_start_time": inference_start_time,
+                    },
                 )
-                metrics_collector.record_inference_end(model_id=loaded_model.id, start_time=inference_start_time)
             else:
                 model.inference_adapter.await_any()
     finally:
