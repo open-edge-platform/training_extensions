@@ -45,7 +45,9 @@ def fxt_model_service(fxt_default_pipeline):
     with TemporaryDirectory(suffix="models") as tmpdir:
         service = ModelService()
         service.models_dir = Path(tmpdir)
-        service._model_activation_state = ModelActivationState(active_model=None, available_models=[])
+        service._model_activation_state = ModelActivationState(
+            active_model=None, active_model_id=None, available_models=[]
+        )
         yield service
 
 
