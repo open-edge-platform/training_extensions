@@ -30,6 +30,12 @@ class MetricsCollector(metaclass=Singleton):
         self._measurements: deque[LatencyMeasurement] = deque()
         self._lock = Lock()
 
+    def update_max_age(self, max_age_seconds: int) -> None:
+        """Update the maximum age for stored measurements"""
+        with self._lock:
+            self._max_age_seconds = max_age_seconds
+            self._cleanup_old_measurements()
+
     @staticmethod
     def record_inference_start() -> float:
         """Record the start of an inference operation and return the start timestamp"""
@@ -65,3 +71,9 @@ class MetricsCollector(metaclass=Singleton):
 
         while self._measurements and self._measurements[0].timestamp.timestamp() < cutoff_time:
             self._measurements.popleft()
+
+    def reset(self) -> None:
+        """Reset the metrics collector"""
+        with self._lock:
+            self._max_age_seconds = 60
+            self._measurements.clear()
