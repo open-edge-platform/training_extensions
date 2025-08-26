@@ -5,6 +5,7 @@ import { Button, ButtonGroup, Divider, Flex, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
 
 import { LabelSelection } from '../../features/pipelines/label-selection.component';
+import { ProjectList } from '../../features/pipelines/modal/project-list.component';
 import { ModelSelectionGroup } from '../../features/pipelines/model-selection-group.component';
 import { paths } from '../../router';
 
@@ -35,6 +36,7 @@ export const Model = () => {
 
             <Flex justifyContent={'end'}>
                 <ButtonGroup>
+                    <ProjectList />
                     <Button variant='secondary'>Back</Button>
                     <Button onPress={handleSubmitSources} variant='primary'>
                         Next

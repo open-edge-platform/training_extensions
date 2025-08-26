@@ -5,7 +5,9 @@ import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View }
 import { capitalize, isArray, startsWith } from 'lodash-es';
 
 import { $api } from '../../api/client';
+import { paths } from '../../router';
 import Background from './../../assets/background.png';
+import { ProjectList } from './modal/project-list.component';
 
 type FieldProps = {
     field: string;
@@ -90,7 +92,12 @@ export const ViewPipeline = () => {
                         </Grid>
                         <Divider size='S' />
                         <ButtonGroup>
-                            <Button variant='secondary' marginStart='auto'>
+                            <ProjectList />
+                            <Button
+                                href={paths.pipeline.edit({ pipelineId: '' })}
+                                variant='secondary'
+                                marginStart='auto'
+                            >
                                 Edit
                             </Button>
                         </ButtonGroup>
