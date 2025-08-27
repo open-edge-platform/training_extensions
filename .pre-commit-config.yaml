@@ -1,7 +1,7 @@
 default_language_version:
   node: 16.15.0
   ruby: 2.7.2
-  python: python3.11
+  python: python3.12
 
 repos:
   # yaml formatting
