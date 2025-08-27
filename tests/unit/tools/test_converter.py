@@ -232,7 +232,7 @@ class TestGetiConfigConverter:
         # resize, pad, normalize, to_dtype
         assert len(engine.datamodule.val_dataloader().dataset.transforms.transforms) == 4
 
-        otx_config.hyper_parameters["dataset_preparation"]["augmentation"]["random_affine"]["enable"] = False
+        otx_config.hyper_parameters["dataset_preparation"]["augmentation"]["topdown_affine"]["enable"] = False
         default_config = GetiConfigConverter.convert(asdict(otx_config))
         assert len(default_config["data"]["train_subset"]["transforms"]) == 6
         for aug in default_config["data"]["train_subset"]["transforms"]:

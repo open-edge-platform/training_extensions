@@ -2396,7 +2396,7 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.ratio_range = ratio_range
         self.resize_kwargs = resize_kwargs
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
-        self.resize = Resize(scale=0, **resize_kwargs)
+        self.resize = Resize(scale=0, **resize_kwargs, is_numpy_to_tvtensor=is_numpy_to_tvtensor)
 
     @staticmethod
     def _random_sample(scales: Sequence[tuple[int, int]]) -> tuple:
