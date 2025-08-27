@@ -73,8 +73,8 @@ tox -vv -e pre-commit
 4. **Pass Tests and Quality Checks:** Ensure the test suite passes and that your code meets quality standards by running:
 
    ```bash
-   tox -vv -e pre-commit
    cd lib
+   tox -vv -e pre-commit
    pytest tests/unit
    pytest tests/integration
    ```
