@@ -63,7 +63,7 @@ class WebRTCManager:
 
     async def cleanup(self) -> None:
         """Clean up all connections"""
-        for pc in self._pcs.values():
+        for pc in list(self._pcs.values()):
             await pc.close()
         self._pcs.clear()
         self._input_data.clear()
