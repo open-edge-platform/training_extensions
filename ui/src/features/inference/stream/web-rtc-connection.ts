@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { v4 as uuid } from 'uuid';
+
 import { fetchClient } from '../../../api/client';
 
 export type WebRTCConnectionStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'failed';
@@ -37,8 +39,7 @@ export class WebRTCConnection {
     private timeoutId?: ReturnType<typeof setTimeout>;
 
     constructor() {
-        // TODO: replace with uuid
-        this.webrtcId = Math.random().toString(36).substring(7);
+        this.webrtcId = uuid();
     }
 
     public getStatus(): WebRTCConnectionStatus {
@@ -80,9 +81,11 @@ export class WebRTCConnection {
         } catch (err) {
             clearTimeout(this.timeoutId);
             console.error('Error setting up WebRTC:', err);
+
             this.emit({ type: 'error', error: err as Error });
             this.updateStatus('failed');
-            this.stop();
+
+            await this.stop();
         }
 
         if (this.peerConnection) {
@@ -109,21 +112,26 @@ export class WebRTCConnection {
     }
 
     private async waitForIceGathering(): Promise<void> {
-        await new Promise<void>((resolve) => {
-            if (!this.peerConnection || this.peerConnection.iceGatheringState === 'complete') {
-                resolve();
-                return;
-            }
-
-            const checkState = () => {
-                if (this.peerConnection && this.peerConnection.iceGatheringState === 'complete') {
-                    this.peerConnection.removeEventListener('icegatheringstatechange', checkState);
+        await Promise.race([
+            new Promise<void>((resolve) => {
+                if (!this.peerConnection || this.peerConnection.iceGatheringState === 'complete') {
                     resolve();
+                    return;
                 }
-            };
 
-            this.peerConnection?.addEventListener('icegatheringstatechange', checkState);
-        });
+                const checkState = () => {
+                    if (this.peerConnection && this.peerConnection.iceGatheringState === 'complete') {
+                        this.peerConnection.removeEventListener('icegatheringstatechange', checkState);
+                        resolve();
+                    }
+                };
+
+                this.peerConnection?.addEventListener('icegatheringstatechange', checkState);
+            }),
+            new Promise<void>((_, reject) =>
+                setTimeout(() => reject(new Error('ICE gathering timed out')), CONNECTION_TIMEOUT)
+            ),
+        ]);
     }
 
     private async sendOffer(): Promise<SessionData | undefined> {

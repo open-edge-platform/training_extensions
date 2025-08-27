@@ -2,11 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Grid, Item, TabList, TabPanels, Tabs, View } from '@geti/ui';
+import { Tag } from '@geti/ui/icons';
 import { Outlet, useLocation } from 'react-router';
 
 import { ReactComponent as BuildIcon } from './assets/icons/build-icon.svg';
 import { ReactComponent as LiveFeedIcon } from './assets/icons/live-feed-icon.svg';
+import { ReactComponent as Webhook } from './assets/icons/webhook.svg';
 import { paths } from './router';
+
+const iconStyles = {
+    width: 'var(--spectrum-global-dimension-size-200)',
+    height: 'var(--spectrum-global-dimension-size-200)',
+};
 
 const Header = () => {
     return (
@@ -24,12 +31,12 @@ const Header = () => {
                     }}
                 >
                     <Item
-                        textValue='"Live feed page showing live inference on your pipeline'
+                        textValue='Inference page showing live inference on your project'
                         key={paths.inference.index({})}
                         href={paths.inference.index({})}
                     >
                         <Flex alignItems='center' gap='size-100'>
-                            <LiveFeedIcon />
+                            <LiveFeedIcon style={iconStyles} />
                             Inference
                         </Flex>
                     </Item>
@@ -39,8 +46,28 @@ const Header = () => {
                         href={paths.dataset.index({})}
                     >
                         <Flex alignItems='center' gap='size-100'>
-                            <BuildIcon />
+                            <BuildIcon style={iconStyles} />
                             Dataset
+                        </Flex>
+                    </Item>
+                    <Item
+                        textValue='Models page to visualise your models'
+                        key={paths.models.index({})}
+                        href={paths.models.index({})}
+                    >
+                        <Flex alignItems='center' gap='size-100'>
+                            <Webhook style={iconStyles} />
+                            Models
+                        </Flex>
+                    </Item>
+                    <Item
+                        textValue='Labels page to visualise your labels'
+                        key={paths.labels.index({})}
+                        href={paths.labels.index({})}
+                    >
+                        <Flex alignItems='center' gap='size-100'>
+                            <Tag style={iconStyles} />
+                            Labels
                         </Flex>
                     </Item>
                 </TabList>
@@ -51,6 +78,7 @@ const Header = () => {
 
 const getFirstPathSegment = (path: string): string => {
     const segments = path.split('/');
+
     return segments.length > 1 ? `/${segments[1]}` : '/';
 };
 
@@ -71,13 +99,19 @@ export const Layout = () => {
                 <Header />
                 <View backgroundColor={'gray-50'} gridArea={'content'}>
                     <TabPanels height={'100%'} UNSAFE_style={{ border: 'none' }}>
-                        <Item textValue='index' key={paths.pipeline.index({})}>
+                        <Item textValue='index' key={paths.project.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='live-feed' key={paths.inference.index({})}>
+                        <Item textValue='inference' key={paths.inference.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='data-collection' key={paths.dataset.index({})}>
+                        <Item textValue='dataset' key={paths.dataset.index({})}>
+                            <Outlet />
+                        </Item>
+                        <Item textValue='models' key={paths.models.index({})}>
+                            <Outlet />
+                        </Item>
+                        <Item textValue='labels' key={paths.labels.index({})}>
                             <Outlet />
                         </Item>
                     </TabPanels>

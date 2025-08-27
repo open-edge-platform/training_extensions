@@ -12,31 +12,26 @@ const useSetTargetSizeBasedOnVideo = (
 ) => {
     useEffect(() => {
         const video = videoRef.current;
+        if (!video) return;
 
-        const onsize = video?.addEventListener('loadedmetadata', (event) => {
-            const target = event.currentTarget as HTMLVideoElement;
+        const onLoaded = () => {
+            if (video.videoWidth && video.videoHeight) {
+                setSize({ width: video.videoWidth, height: video.videoHeight });
+            }
+        };
 
-            if (target.videoWidth && target.videoHeight) {
-                setSize({ width: target.videoWidth, height: target.videoHeight });
+        const resizeObserver = new ResizeObserver(() => {
+            if (video.videoWidth && video.videoHeight) {
+                setSize({ width: video.videoWidth, height: video.videoHeight });
             }
         });
 
-        const onresize = video?.addEventListener('resize', (event) => {
-            const target = event.currentTarget as HTMLVideoElement;
-
-            if (target.videoWidth && target.videoHeight) {
-                setSize({ width: target.videoWidth, height: target.videoHeight });
-            }
-        });
+        video.addEventListener('loadedmetadata', onLoaded);
+        resizeObserver.observe(video);
 
         return () => {
-            if (onsize) {
-                video?.removeEventListener('loadedmetadata', onsize);
-            }
-
-            if (onresize) {
-                video?.removeEventListener('resize', onresize);
-            }
+            video.removeEventListener('loadedmetadata', onLoaded);
+            resizeObserver.disconnect();
         };
     }, [setSize, videoRef]);
 };
@@ -56,7 +51,7 @@ const useStreamToVideo = () => {
         }
 
         const receivers = peerConnection.getReceivers() ?? [];
-        const stream = new MediaStream(receivers.map((receiver) => receiver.track));
+        const stream = new MediaStream(receivers.map((receiver) => receiver.track).filter(Boolean));
 
         if (videoOutput && videoOutput.srcObject !== stream) {
             videoOutput.srcObject = stream;

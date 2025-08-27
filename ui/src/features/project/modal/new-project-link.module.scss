@@ -1,0 +1,13 @@
+.link {
+    cursor: pointer;
+    border: 1px dashed var(--spectrum-gray-700) !important;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: regular;
+    background-color: var(--spectrum-global-color-gray-300);
+    gap: var(--spectrum-global-dimension-size-200);
+    padding: var(--spectrum-global-dimension-size-275);
+    min-height: var(--spectrum-global-dimension-size-1000);
+}

@@ -42,7 +42,7 @@ const ModelOption = ({ imageSrc, title, description, value, onPress }: ModelOpti
     return (
         <div onClick={onPress} className={classes.option} aria-label={`Model option: ${title}`}>
             <View maxWidth={'344px'}>
-                <Image height={'size-4600'} src={imageSrc} alt={title} />
+                <Image height={'size-3000'} src={imageSrc} alt={title} />
             </View>
 
             <View padding={'size-300'} backgroundColor={'gray-100'}>

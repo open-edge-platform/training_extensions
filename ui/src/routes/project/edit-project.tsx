@@ -5,7 +5,7 @@ import { View } from '@geti/ui';
 
 import Background from './../../assets/background.png';
 
-export const EditPipelineLayout = () => {
+export const EditProject = () => {
     return (
         <View
             backgroundColor={'gray-100'}

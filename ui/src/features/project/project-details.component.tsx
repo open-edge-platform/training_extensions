@@ -5,7 +5,9 @@ import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View }
 import { capitalize, isArray, startsWith } from 'lodash-es';
 
 import { $api } from '../../api/client';
+import { paths } from '../../router';
 import Background from './../../assets/background.png';
+import { ProjectList } from './modal/project-list.component';
 
 type FieldProps = {
     field: string;
@@ -28,7 +30,7 @@ const Field = ({ field, value }: FieldProps) => {
     );
 };
 
-export const ViewPipeline = () => {
+export const ProjectDetails = () => {
     // TODO: Replace this by /pipeline once available and maybe extract it to a hook
     const sources = $api.useQuery('get', '/api/sources');
     const sinks = $api.useQuery('get', '/api/sinks');
@@ -90,7 +92,8 @@ export const ViewPipeline = () => {
                         </Grid>
                         <Divider size='S' />
                         <ButtonGroup>
-                            <Button variant='secondary' marginStart='auto'>
+                            <ProjectList />
+                            <Button href={paths.project.edit({ projectId: '' })} variant='secondary' marginStart='auto'>
                                 Edit
                             </Button>
                         </ButtonGroup>

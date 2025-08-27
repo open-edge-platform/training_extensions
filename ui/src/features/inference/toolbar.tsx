@@ -112,8 +112,8 @@ export const Toolbar = () => {
                 <Divider orientation='vertical' size='S' />
 
                 <Flex marginStart='auto' gap='size-100'>
-                    <Button href={paths.pipeline.index({})} variant='secondary'>
-                        View pipeline
+                    <Button href={paths.project.index({})} variant='secondary'>
+                        View project
                     </Button>
                 </Flex>
             </Flex>

@@ -34,11 +34,13 @@ dev = [
     "pytest~=8.4",
     "pytest-asyncio~=1.1.0",
     "types-aiofiles==24.1.0.20240626",
+    "freezegun~=1.5.5",
 ]
 lint = [
     "ruff==0.9.3",
     "mypy~=1.17",
     "types-PyYAML~=6.0.12",
+    "types-requests~=2.32.4",
 ]
 
 [tool.uv]
