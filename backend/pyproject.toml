@@ -7,7 +7,6 @@ requires-python = ">=3.13"
 
 dependencies = [
     "fastapi[standard]~=0.115.12",
-    "fastrtc~=0.0.28",
     "openvino-model-api~=0.3.0.2",
     "opencv-python~=4.11",
     "pillow~=11.2",
@@ -21,6 +20,7 @@ dependencies = [
     "alembic~=1.16.4",
     "aiofiles==24.1.0",
     "pydantic-settings~=2.10.1",
+    "aiortc~=1.13.0",
 ]
 
 [project.optional-dependencies]
