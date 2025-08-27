@@ -84,10 +84,12 @@ jobs:
           python-version: "3.12"
 
       - name: Install tox
+        working-directory: lib
         run: |
           pip install '.[dev]'
 
       - name: Extract, Validate, and Run Integration Test
+        working-directory: lib
         id: tests
         run: |
           ALLOWED_TASKS=("all" "detection" "instance_segmentation" "semantic_segmentation" "multi_class_cls" "multi_label_cls" "h_label_cls" "anomaly_classification" "keypoint_detection")

@@ -25,10 +25,12 @@ jobs:
         with:
           python-version: "3.12"
       - name: Freeze dependencies
+        working-directory: lib
         run: |
           pip install '.[docs]'
           pip freeze > requirements.txt
       - name: Run Trivy Scan (vuln)
+        working-directory: lib
         uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
         with:
           scan-type: fs
@@ -38,12 +40,14 @@ jobs:
           output: trivy-results-vuln.sarif
 
       - name: Upload SARIF file
+        working-directory: lib
         if: ${{ always() }}
         uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.28.8
         with:
           sarif_file: "trivy-results-vuln.sarif"
 
       - name: Run Trivy Scan (spdx)
+        working-directory: lib
         uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
         with:
           scan-type: fs
@@ -52,6 +56,7 @@ jobs:
           output: trivy-results-spdx.json
 
       - name: Upload Trivy results artifact
+        working-directory: lib
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -60,6 +65,7 @@ jobs:
           retention-days: 7
 
       - name: Upload deps list
+        working-directory: lib
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
@@ -76,6 +82,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Trivy Scan (dockerfile and secrets)
+        working-directory: lib
         uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4 # v0.32.0
         with:
           scan-type: fs
@@ -85,12 +92,14 @@ jobs:
           output: trivy-results-misconfig.sarif
 
       - name: Upload SARIF file
+        working-directory: lib
         if: ${{ always() }}
         uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.28.8
         with:
           sarif_file: "trivy-results-misconfig.sarif"
 
       - name: Upload Trivy results artifact
+        working-directory: lib
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -110,18 +119,22 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install tox
+        working-directory: lib
         run: |
           pip install '.[dev]'
       - name: Bandit Scanning
+        working-directory: lib
         run: tox -e bandit-scan
 
       - name: Upload SARIF file
+        working-directory: lib
         if: ${{ always() }}
         uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.28.8
         with:
           sarif_file: .tox/bandit-results.sarif
 
       - name: Upload Bandit artifact
+        working-directory: lib
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
