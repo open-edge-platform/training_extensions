@@ -42,6 +42,7 @@ Set up your development environment to start contributing. This involves install
 1. Create and activate a new python environment:
 
    ```bash
+   cd lib
    python -m venv .otx
    source .otx/bin/activate
    ```
@@ -73,6 +74,7 @@ tox -vv -e pre-commit
 
    ```bash
    tox -vv -e pre-commit
+   cd lib
    pytest tests/unit
    pytest tests/integration
    ```

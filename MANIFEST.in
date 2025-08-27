@@ -1,10 +1,10 @@
-recursive-include src/otx *.patch
-recursive-include src/otx *.pyx
-recursive-include src/otx *.yaml
-recursive-include src/otx *.json
-recursive-include src/otx requirements.txt
-recursive-include src/otx README.md
-recursive-include src/otx LICENSE
-recursive-exclude src/otx *.c
+recursive-include lib/src/otx *.patch
+recursive-include lib/src/otx *.pyx
+recursive-include lib/src/otx *.yaml
+recursive-include lib/src/otx *.json
+recursive-include lib/src/otx requirements.txt
+recursive-include lib/src/otx README.md
+recursive-include lib/src/otx LICENSE
+recursive-exclude lib/src/otx *.c
 graft tests
 global-exclude *.py[cod]
