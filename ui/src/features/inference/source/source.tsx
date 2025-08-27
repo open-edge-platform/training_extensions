@@ -21,8 +21,7 @@ import { RadioDisclosure } from '../../../components/radio-disclosure-group/radi
 import { Stream } from '../stream/stream';
 import { useWebRTCConnection } from '../stream/web-rtc-connection-provider';
 
-// TODO: create a new module scss for this file
-const classes = { canvasContainer: '' };
+import classes from '../inference.module.scss';
 
 type SourceConfig =
     | SchemaDisconnectedSourceConfig
