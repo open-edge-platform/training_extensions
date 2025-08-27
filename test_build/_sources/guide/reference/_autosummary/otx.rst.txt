@@ -27,13 +27,15 @@
    :toctree:
    :recursive:
 
-   otx.algo
+   otx.backend
    otx.cli
-   otx.core
+   otx.config
    otx.data
    otx.engine
-   otx.hpo
+   otx.metrics
+   otx.models
    otx.recipe
    otx.tools
+   otx.types
    otx.utils
 

@@ -8,7 +8,7 @@ For demonstration purposes we will use the Object Detection ATSS model with `WGI
 
 .. note::
 
-    To start with we need to `install OpenVINO™ Training Extensions <https://github.com/openvinotoolkit/training_extensions/blob/develop/QUICK_START_GUIDE.md#setup-openvino-training-extensions>`_.
+    To start with we need to `install OpenVINO™ Training Extensions <https://github.com/open-edge-platform/training_extensions/blob/develop/QUICK_START_GUIDE.md#setup-openvino-training-extensions>`_.
 
 *******************
 Dataset preparation
@@ -80,21 +80,31 @@ If you want to use other models offered by OpenVINO™ Training Extension beside
 
             '''
             [
-                'yolox_tiny_tile',
-                'yolox_x',
-                'yolox_l_tile',
-                'yolox_x_tile', 'yolox_l',
-                'atss_r50_fpn',
-                'ssd_mobilenetv2',
                 'yolox_s',
-                'yolox_tiny',
-                'openvino_model',
-                'atss_mobilenetv2',
-                'yolox_s_tile',
-                'rtmdet_tiny',
-                'atss_mobilenetv2_tile',
+                'yolox_tiny_tile',
+                'ssd_mobilenetv2',
                 'atss_resnext101',
+                'yolox_tiny',
+                'rtdetr_18',
+                'atss_resnext101_tile',
+                'yolox_s_tile',
+                'rtmdet_tiny_tile',
+                'yolox_l_tile',
                 'ssd_mobilenetv2_tile',
+                'dfine_x',
+                'rtmdet_tiny',
+                'yolox_l',
+                'rtdetr_50',
+                'atss_mobilenetv2_tile',
+                'yolox_x_tile',
+                'yolox_x',
+                'rtdetr_18_tile',
+                'atss_mobilenetv2',
+                'openvino_model',
+                'rtdetr_101',
+                'rtdetr_50_tile',
+                'rtdetr_101_tile',
+                'dfine_x_tile'
             ]
             '''
 
@@ -107,10 +117,10 @@ If you want to use other models offered by OpenVINO™ Training Extension beside
             model_lists = list_models(task="DETECTION", print_table=True)
 
             '''
-            ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓            
-            ┃ Task      ┃ Model Name            ┃ Recipe Path                                                    ┃            
-            ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩            
-            │ DETECTION │ yolox_tiny            │ src/otx/recipe/detection/yolox_tiny.yaml                       │            
+            ┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+            ┃ Task      ┃ Model Name            ┃ Recipe Path                                                    ┃
+            ┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+            │ DETECTION │ yolox_tiny            │ src/otx/recipe/detection/yolox_tiny.yaml                       │
             │ ...       │                       │                                                                │
             └───────────┴───────────────────────┴────────────────────────────────────────────────────────────────┘
             '''
@@ -128,11 +138,17 @@ If you want to use other models offered by OpenVINO™ Training Extension beside
         '''
         [
             'yolox_tiny_tile',
-            'ssd_mobilenetv2_tile',
-            'yolox_l_tile',
-            'yolox_s_tile',
-            'yolox_x_tile',
             'atss_mobilenetv2_tile',
+            'atss_resnext101_tile',
+            'yolox_x_tile',
+            'yolox_s_tile',
+            'rtmdet_tiny_tile',
+            'rtdetr_50_tile',
+            'yolox_l_tile',
+            'ssd_mobilenetv2_tile',
+            'rtdetr_18_tile',
+            'rtdetr_101_tile',
+            'dfine_x_tile'
         ]
         '''
 
@@ -148,12 +164,12 @@ The ``otx.engine.Engine`` class is the main entry point for using OpenVINO™ Tr
 1. Setting ``task``
 
 Specify ``task``. This is the task type for that ``Engine`` usage.
-You can set the task by referencing the ``OTXTaskType`` in ``otx.core.types.task``.
+You can set the task by referencing the ``OTXTaskType`` in ``otx.types.task``.
 If no task is specified, the task is detected and used via ``datamodule`` or ``data_root``.
 
 .. code-block:: python
 
-    from otx.core.types.task import OTXTaskType
+    from otx.types.task import OTXTaskType
     from otx.engine import Engine
 
     engine = Engine(task=OTXTaskType.DETECTION)
@@ -174,12 +190,12 @@ The default value is currently ``./otx-workspace``.
 
 3. Setting device
 
-You can set the device by referencing the ``DeviceType`` in ``otx.core.types.device``.
+You can set the device by referencing the ``DeviceType`` in ``otx.types.device``.
 The current default setting is ``auto``.
 
 .. code-block:: python
 
-    from otx.core.types.device import DeviceType
+    from otx.types.device import DeviceType
     from otx.engine import Engine
 
     engine = Engine(device=DeviceType.gpu)
@@ -237,7 +253,7 @@ Create an output model and start actual training:
 
 3. If you want to specify the model, you can do so as shown below:
 
-The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
+The model used by the Engine is of type ``otx.model.entity.base.OTXModel``.
 
 .. tab-set::
 
@@ -245,10 +261,10 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
         .. code-block:: python
 
-            from otx.algo.detection.atss import ATSS
+            from otx.backend.native.models.detection.atss import ATSS
             from otx.engine import Engine
 
-            model = ATSS(num_classes=5, variant="mobilenetv2")
+            model = ATSS(label_info=5, model_name="mobilenetv2", data_input_params=DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)))
 
             engine = Engine(data_root="data/wgisd", model=model)
             engine.train()
@@ -257,10 +273,10 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
         .. code-block:: python
 
-            from otx.algo.detection.atss import ATSS
+            from otx.backend.native.models.detection.atss import ATSS
             from otx.engine import Engine
 
-            model = ATSS(num_classes=5, variant="mobilenetv2")
+            model = ATSS(label_info=5, model_name="mobilenetv2")
 
             engine = Engine(data_root="data/wgisd", model=model, checkpoint="<path/to/checkpoint>")
             engine.train()
@@ -271,10 +287,10 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
             from torch.optim import SGD
             from torch.optim.lr_scheduler import CosineAnnealingLR
-            from otx.algo.detection.atss import ATSS
+            from otx.backend.native.models.detection.atss import ATSS
             from otx.engine import Engine
 
-            model = ATSS(num_classes=5, variant="mobilenetv2")
+            model = ATSS(label_info=5, model_name="mobilenetv2")
             optimizer = SGD(model.parameters(), lr=0.01, weight_decay=1e-4, momentum=0.9)
             scheduler = CosineAnnealingLR(optimizer, T_max=10000, eta_min=0)
 
@@ -288,14 +304,14 @@ The model used by the Engine is of type ``otx.core.model.entity.base.OTXModel``.
 
 4. If you want to specify the datamodule, you can do so as shown below:
 
-The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModule``.
+The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
 
 .. code-block:: python
 
-    from otx.core.data.module import OTXDataModule
+    from otx.data.module import OTXDataModule
     from otx.engine import Engine
 
-    datamodule = OTXDataModule(data_root="data/wgisd")
+    datamodule = OTXDataModule(data_root="data/wgisd", ...)
 
     engine = Engine(datamodule=datamodule)
     engine.train()
@@ -304,6 +320,15 @@ The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModul
 
     If both ``data_root`` and ``datamodule`` enter ``Engine`` as input, ``Engine`` uses datamodule as the base.
 
+.. tip::
+
+    You can get DataModule more easily using AutoConfigurator.
+
+    .. code-block:: python
+
+        from otx.tools.auto_configuration import AutoConfigurator
+
+        datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
 
 5. You can use train-specific arguments with ``train()`` function.
 
@@ -325,21 +350,21 @@ The datamodule used by the Engine is of type ``otx.core.data.module.OTXDataModul
 
         .. code-block:: python
 
-            engine.train(precision="16")
+            engine.train(precision="bf16")
 
         .. note::
-            
+
             This uses lightning's precision value. You can use the values below:
-            - "64", "32", "16", "bf16",
-            - 64, 32, 16
+            - "64", "32", "bf16",
+            - 64, 32, bf16
 
     .. tab-item:: Change Validation Metric
 
         .. code-block:: python
 
-            from otx.core.metrics.fmeasure import FMeasure
+            from otx.metrics.fmeasure import FMeasure
 
-            metric = FMeasue(num_classes=5)
+            metric = FMeasure(label_info=5)
             engine.train(metric=metric)
 
     .. tab-item:: Set Callbacks & Logger
@@ -360,12 +385,6 @@ For example, if you want to use the ``limit_val_batches`` feature provided by Tr
 
     # disable validation
     engine.train(limit_val_batches=0)
-
-6. It's also easy to use HPOs.
-
-.. code-block:: python
-
-    engine.train(run_hpo=True)
 
 
 ***********
@@ -396,7 +415,7 @@ If the training is already in place, we just need to use the code below:
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(data_root="data/wgisd")
             engine.test(datamodule=datamodule)
@@ -405,9 +424,9 @@ If the training is already in place, we just need to use the code below:
 
         .. code-block:: python
 
-            from otx.core.metrics.fmeasure import FMeasure
+            from otx.metrics.fmeasure import FMeasure
 
-            metric = FMeasue(num_classes=5)
+            metric = FMeasure(label_info=5)
             engine.test(metric=metric)
 
 
@@ -469,23 +488,25 @@ To run the XAI with the OpenVINO™ IR model, we need to create an output model 
     .. tab-item:: Run XAI
 
         .. code-block:: python
-
-            engine.explain(checkpoint="<path/to/ir/xml>")
+            engine = OVEngine(model="exported_model.xml", ...)
+            engine.predict(explain=True)
 
     .. tab-item:: Evaluate Model with different datamodule or dataloader
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(data_root="data/wgisd")
-            engine.explain(..., datamodule=datamodule)
+            engine.predict(..., datamodule=datamodule, explain=True)
 
-    .. tab-item:: Dump saliency_map
+    .. tab-item:: Use ExplainConfig
 
         .. code-block:: python
 
-            engine.explain(..., dump=True)
+            from otx.config.explain import ExplainConfig
+            
+            engine.predict(..., explain=True, explain_config=ExplainConfig(postprocess=True))
 
 
 ************
@@ -506,7 +527,7 @@ To run the optimization with PTQ on the OpenVINO™ IR model, we need to create 
 
         .. code-block:: python
 
-            from otx.core.data.module import OTXDataModule
+            from otx.data.module import OTXDataModule
 
             datamodule = OTXDataModule(data_root="data/wgisd")
             engine.optimize(..., datamodule=datamodule)
@@ -518,4 +539,32 @@ You can validate the optimized model as the usual model. For example for the NNC
 
     engine.test(checkpoint="<path/to/optimized/ir/xml>")
 
-That's it. Now, we can use OpenVINO™ Training Extensions APIs to create, train, and deploy deep learning models using the OpenVINO™ Training Extension.
+************
+Benchmarking
+************
+
+``Engine`` allows to perform benchmarking of the trained model, and provide theoretical complexity information in case of torch model.
+The estimated by ``Engine.benchmark()`` performance may differ from the performance of the deployed model, since the measurements are conducted
+via OTX inference API, which can introduce additional burden.
+
+.. tab-set::
+
+    .. tab-item:: Benchmark Model
+
+        .. code-block:: python
+
+            engine.benchmark()
+
+    .. tab-item:: Benchmark OpenVINO™ IR model
+
+        .. code-block:: python
+
+            engine.benchmark(checkpoint="<path/to/exported_model.xml>")
+
+        .. note::
+
+            Specifying a checkpoint only makes sense for OpenVINO™ IR models.
+
+Conclusion
+"""""""""""
+That's it! Now, we can use OpenVINO™ Training Extensions APIs to create, train, and deploy deep learning models using the OpenVINO™ Training Extensions.

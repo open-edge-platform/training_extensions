@@ -17,7 +17,16 @@ otx.data
 
    .. autosummary::
    
-      AnomalyDataModule
+      OTXDataModule
+      OTXAnomalyDataset
+      OTXMulticlassClsDataset
+      OTXHlabelClsDataset
+      OTXMultilabelClsDataset
+      OTXDetectionDataset
+      OTXInstanceSegDataset
+      OTXKeypointDetectionDataset
+      OTXSegmentationDataset
+      OTXTileDatasetFactory
    
    
 

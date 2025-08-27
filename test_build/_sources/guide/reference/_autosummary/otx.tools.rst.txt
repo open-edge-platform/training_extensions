@@ -27,5 +27,7 @@ otx.tools
    :toctree:
    :recursive:
 
-   otx.tools.translate_mmrecipe
+   otx.tools.auto_configurator
+   otx.tools.converter
+   otx.tools.templates
 

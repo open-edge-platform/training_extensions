@@ -38,8 +38,8 @@ Dataset Format
 **************
 .. _hierarchical_dataset:
 
-For hierarchical image classification, we created our custom dataset format that is supported by `Datumaro <https://github.com/openvinotoolkit/datumaro>`_.
-An example of the annotations format and dataset structure can be found in our `sample <https://github.com/openvinotoolkit/training_extensions/tree/develop/tests/assets/hlabel_classification>`_.
+For hierarchical image classification, we created our custom dataset format that is supported by `Datumaro <https://github.com/open-edge-platform/datumaro>`_.
+An example of the annotations format and dataset structure can be found in our `sample <https://github.com/open-edge-platform/training_extensions/tree/develop/tests/assets/hlabel_classification>`_.
 
 .. note::
 
@@ -56,9 +56,3 @@ To see which models are available for the task, the following command can be exe
 .. code-block:: shell
 
         (otx) ...$ otx find --task H_LABEL_CLS
-
-.. ********************
-.. Incremental Learning
-.. ********************
-
-.. To be added soon

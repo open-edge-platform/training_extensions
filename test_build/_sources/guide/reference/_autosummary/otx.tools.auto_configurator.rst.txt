@@ -1,0 +1,29 @@
+otx.tools.auto\_configurator
+============================
+
+.. automodule:: otx.tools.auto_configurator
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AutoConfigurator
+   
+   
+
+   
+   
+   
+
+
+

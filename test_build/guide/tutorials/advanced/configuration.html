@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>How to write OTX Configuration (recipe) &#8212; OpenVINO™ Training Extensions 2.0.0 documentation</title>
+    <title>How to write OTX Configuration (recipe) &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
   
   
   
@@ -25,26 +25,25 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=949a1ff5" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=d626d52b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=6232a102" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../_static/documentation_options.js?v=79f5c508"></script>
+    <script src="../../../_static/documentation_options.js?v=477152fe"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../../../_static/copybutton.js?v=ff8fa330"></script>
-    <script src="../../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'guide/tutorials/advanced/configuration';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Algorithms" href="../../explanation/algorithms/index.html" />
+    <link rel="next" title="Multi-GPU Support" href="multi_gpu.html" />
     <link rel="prev" title="Advanced Tutorials" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
@@ -72,7 +71,7 @@
       
 <form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
   <i class="fa-solid fa-magnifying-glass"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form>
     </div>
@@ -125,6 +124,15 @@
       
       
       <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
         <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
     <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
     <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
@@ -142,7 +150,8 @@
           
           
           
-          <a href="https://github.com/openvinotoolkit/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><img src="../../../_static/logos/github_icon.png" class="icon-link-image" alt="GitHub"/></a>
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
         </li>
       </ul>
       </div>
@@ -185,6 +194,15 @@
     <div class="sidebar-header-items__end">
       
       <div class="navbar-end-item">
+        
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search" aria-label="Search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </div>
+      
+      <div class="navbar-end-item">
         <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
     <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
     <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
@@ -202,7 +220,8 @@
           
           
           
-          <a href="https://github.com/openvinotoolkit/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><img src="../../../_static/logos/github_icon.png" class="icon-link-image" alt="GitHub"/></a>
+          <a href="https://github.com/open-edge-platform/training_extensions" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
         </li>
       </ul>
       </div>
@@ -221,117 +240,112 @@
     <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/installation.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-package" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M8.878.392a1.75 1.75 0 00-1.756 0l-5.25 3.045A1.75 1.75 0 001 4.951v6.098c0 .624.332 1.2.872 1.514l5.25 3.045a1.75 1.75 0 001.756 0l5.25-3.045c.54-.313.872-.89.872-1.514V4.951c0-.624-.332-1.2-.872-1.514L8.878.392zM7.875 1.69a.25.25 0 01.25 0l4.63 2.685L8 7.133 3.245 4.375l4.63-2.685zM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432L2.5 5.677zm6.25 8.271l4.625-2.683a.25.25 0 00.125-.216V5.677L8.75 8.432v5.516z" fill-rule="evenodd"></path></svg> Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/cli_commands.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-terminal" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M0 2.75C0 1.784.784 1 1.75 1h12.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0114.25 15H1.75A1.75 1.75 0 010 13.25V2.75zm1.75-.25a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V2.75a.25.25 0 00-.25-.25H1.75zM7.25 8a.75.75 0 01-.22.53l-2.25 2.25a.75.75 0 11-1.06-1.06L5.44 8 3.72 6.28a.75.75 0 111.06-1.06l2.25 2.25c.141.14.22.331.22.53zm1.5 1.5a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" fill-rule="evenodd"></path></svg> CLI Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/api_tutorial.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-code-square" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M1.75 1.5a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V1.75a.25.25 0 00-.25-.25H1.75zM0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75 0 0114.25 16H1.75A1.75 1.75 0 010 14.25V1.75zm9.22 3.72a.75.75 0 000 1.06L10.69 8 9.22 9.47a.75.75 0 101.06 1.06l2-2a.75.75 0 000-1.06l-2-2a.75.75 0 00-1.06 0zM6.78 6.53a.75.75 0 00-1.06-1.06l-2 2a.75.75 0 000 1.06l2 2a.75.75 0 101.06-1.06L5.31 8l1.47-1.47z" fill-rule="evenodd"></path></svg> API Quick-Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/installation.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-package" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="m8.878.392 5.25 3.045c.54.314.872.89.872 1.514v6.098a1.75 1.75 0 0 1-.872 1.514l-5.25 3.045a1.75 1.75 0 0 1-1.756 0l-5.25-3.045A1.75 1.75 0 0 1 1 11.049V4.951c0-.624.332-1.201.872-1.514L7.122.392a1.75 1.75 0 0 1 1.756 0ZM7.875 1.69l-4.63 2.685L8 7.133l4.755-2.758-4.63-2.685a.248.248 0 0 0-.25 0ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432Z"></path></svg> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cli_commands.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-terminal" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M0 2.75C0 1.784.784 1 1.75 1h12.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Zm1.75-.25a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25ZM7.25 8a.749.749 0 0 1-.22.53l-2.25 2.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L5.44 8 3.72 6.28a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l2.25 2.25c.141.14.22.331.22.53Zm1.5 1.5h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1 0-1.5Z"></path></svg> CLI Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/api_tutorial.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-code-square" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75 0 0 1 14.25 16H1.75A1.75 1.75 0 0 1 0 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25Zm7.47 3.97a.75.75 0 0 1 1.06 0l2 2a.75.75 0 0 1 0 1.06l-2 2a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L10.69 8 9.22 6.53a.75.75 0 0 1 0-1.06ZM6.78 6.53 5.31 8l1.47 1.47a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215l-2-2a.75.75 0 0 1 0-1.06l2-2a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042Z"></path></svg> API Quick-Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../base/index.html">Base Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../base/how_to_train/index.html">Training to deployment tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../base/index.html">Base Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../base/how_to_train/index.html">Training to deployment tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/classification.html">Classification  model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/detection.html">Object Detection model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/instance_segmentation.html">Instance Segmentation model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/semantic_segmentation.html">Semantic Segmentation model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/anomaly_detection.html">Anomaly Detection Tutorial</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/action_classification.html">Action Classification model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/action_detection.html">Action Detection model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../base/how_to_train/visual_prompting.html">Visual Prompting model</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../base/explain.html">XAI Tutorial</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../base/export.html">Deploy &amp; Demo</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Advanced Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Advanced Tutorials</a><input checked class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">How to write OTX Configuration (recipe)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multi_gpu.html">Multi-GPU Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peft.html">PEFT: Parameter-Efficient Fine-Tuning (LoRA &amp; DoRA) for Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch_compile.html">[BETA] Enable torch.compile</a></li>
 </ul>
 </li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/algorithms/index.html">Algorithms</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/classification/index.html">Classification</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/algorithms/index.html">Algorithms</a><input checked class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/classification/index.html">Classification</a><input checked class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/classification/multi_class_classification.html">Multi-class Classification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/classification/multi_label_classification.html">Multi-label Classification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/classification/hierarhical_classification.html">Hierarchical Classification</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/object_detection/index.html">Object Detection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/object_detection/index.html">Object Detection</a><input checked class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/object_detection/object_detection.html">Object Detection</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/segmentation/index.html">Segmentation</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/segmentation/index.html">Segmentation</a><input checked class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/segmentation/semantic_segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/segmentation/instance_segmentation.html">Instance Segmentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/algorithms/anomaly/index.html">Anomaly Detection</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/action/index.html">Action Recognition</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/action/action_classification.html">Action Classification</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/action/action_detection.html">Action Detection</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../explanation/algorithms/visual_prompting/index.html">Visual Prompting</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/visual_prompting/fine_tuning.html">Visual Prompting (Fine-tuning)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../explanation/algorithms/visual_prompting/zero_shot.html">Visual Prompting (Zero-shot learning)</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/additional_features/index.html">Additional Features</a><input checked class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/models_optimization.html">Models Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/hpo.html">Hyperparameters Optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/auto_configuration.html">Auto-configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/adaptive_training.html">Adaptive Training</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/xai.html">Explainable AI (XAI)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/fast_data_loading.html">Fast Data Loading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/tiling.html">Improve Small Object Detection with Image Tiling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/class_incremental_sampler.html">Class-Incremental Sampler</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/additional_features/configurable_input_size.html">Configurable Input Size</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../explanation/product_design.html">Product Design</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API reference</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.html">otx</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.algo.html">otx.algo</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.action_classification.html">otx.algo.action_classification</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.classification.html">otx.algo.classification</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.detection.html">otx.algo.detection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.segmentation.html">otx.algo.segmentation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.visual_prompting.html">otx.algo.visual_prompting</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.strategies.html">otx.algo.strategies</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.accelerators.html">otx.algo.accelerators</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.algo.plugins.html">otx.algo.plugins</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/index.html">API reference</a><input checked class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.html">otx</a><input checked class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.html">otx.backend</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.html">otx.backend.native</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.accelerators.html">otx.backend.native.accelerators</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.native.strategies.html">otx.backend.native.strategies</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.backend.openvino.html">otx.backend.openvino</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-13"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.openvino.engine.html">otx.backend.openvino.engine</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.backend.openvino.models.html">otx.backend.openvino.models</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.cli.html">otx.cli</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-14"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.cli.cli.html">otx.cli.cli</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.cli.install.html">otx.cli.install</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.html">otx.cli.utils</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.help_formatter.html">otx.cli.utils.help_formatter</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.jsonargparse.html">otx.cli.utils.jsonargparse</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/_autosummary/otx.cli.utils.workspace.html">otx.cli.utils.workspace</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.core.html">otx.core</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-15"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.core.config.html">otx.core.config</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.core.data.html">otx.core.data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.core.exporter.html">otx.core.exporter</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.core.metrics.html">otx.core.metrics</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.core.model.html">otx.core.model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.core.types.html">otx.core.types</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.core.utils.html">otx.core.utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.config.html">otx.config</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.config.data.html">otx.config.data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.config.device.html">otx.config.device</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.config.explain.html">otx.config.explain</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.data.html">otx.data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.engine.html">otx.engine</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.hpo.html">otx.hpo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.metrics.html">otx.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.models.html">otx.models</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.recipe.html">otx.recipe</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-16"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.tools.translate_mmrecipe.html">otx.tools.translate_mmrecipe</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../reference/_autosummary/otx.tools.html">otx.tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.tools.auto_configurator.html">otx.tools.auto_configurator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.tools.converter.html">otx.tools.converter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/_autosummary/otx.tools.templates.html">otx.tools.templates</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.types.html">otx.types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/_autosummary/otx.utils.html">otx.utils</a></li>
 </ul>
 </li>
@@ -340,7 +354,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Release Notes</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-17"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../release_notes/index.html">Releases</a><input checked class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-18"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -378,35 +392,46 @@
 <h1>How to write OTX Configuration (recipe)<a class="headerlink" href="#how-to-write-otx-configuration-recipe" title="Link to this heading">#</a></h1>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
-<p>Example of <code class="docutils literal notranslate"><span class="pre">recipe/classification/multi_class_cls</span></code></p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">model</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.algo.classification.mobilenet_v3_large.MobileNetV3ForMulticlassCls</span>
-<span class="w">    </span><span class="nt">init_args</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">num_classes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
-<span class="w">        </span><span class="nt">light</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<p>Example of <a href="#id1"><span class="problematic" id="id2">``</span></a>recipe/classification/multi_class_cls/mobilenet_v3_large.yaml ``</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MULTI_CLASS_CLS</span>
+<span class="nt">model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.backend.native.models.classification.multiclass_models.mobilenet_v3.MobileNetV3MulticlassCls</span>
+<span class="w">  </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mobilenetv3_large</span>
+<span class="w">    </span><span class="nt">label_info</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
 
-<span class="nt">optimizer</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">torch.optim.SGD</span>
-<span class="w">    </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">optimizer</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">torch.optim.SGD</span>
+<span class="w">      </span><span class="nt">init_args</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">lr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0058</span>
 <span class="w">        </span><span class="nt">momentum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.9</span>
 <span class="w">        </span><span class="nt">weight_decay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0001</span>
 
-<span class="nt">scheduler</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.algo.schedulers.WarmupReduceLROnPlateau</span>
-<span class="w">    </span><span class="nt">init_args</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">warmup_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
-<span class="w">        </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">max</span>
-<span class="w">        </span><span class="nt">factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
-<span class="w">        </span><span class="nt">patience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-<span class="w">        </span><span class="nt">monitor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">val/accuracy</span>
+<span class="w">    </span><span class="nt">scheduler</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.backend.native.schedulers.LinearWarmupSchedulerCallable</span>
+<span class="w">      </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">num_warmup_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">        </span><span class="nt">main_scheduler_callable</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lightning.pytorch.cli.ReduceLROnPlateau</span>
+<span class="w">          </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">max</span>
+<span class="w">            </span><span class="nt">factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">            </span><span class="nt">patience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">            </span><span class="nt">monitor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">val/accuracy</span>
 
 <span class="nt">engine</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MULTI_CLASS_CLS</span>
-<span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+<span class="w">  </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
 
 <span class="nt">callback_monitor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">val/accuracy</span>
-<span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">../../_base_/data/mmpretrain_base.yaml</span>
+
+<span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">../../_base_/data/classification.yaml</span>
+<span class="nt">overrides</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">max_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">90</span>
+
+<span class="w">  </span><span class="nt">callbacks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup</span>
+<span class="w">      </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">patience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 </pre></div>
 </div>
 <p>We can use the <code class="docutils literal notranslate"><span class="pre">~.yaml</span></code> with the above values configured.</p>
@@ -418,42 +443,152 @@
 </ul>
 <p>The basic configuration is the same as the configuration configuration format for jsonargparse.
 <cite>Jsonargparse Documentation &lt;https://jsonargparse.readthedocs.io/en/v4.27.4/#configuration-files&gt;_</cite></p>
-<p>### Configuration overrides</p>
-<p>Here we provide a feature called <code class="docutils literal notranslate"><span class="pre">overrides</span></code>.</p>
+</section>
+<section id="configuration-overrides">
+<h2>Configuration Overrides<a class="headerlink" href="#configuration-overrides" title="Link to this heading">#</a></h2>
+<p>Here we provide a feature called <code class="docutils literal notranslate"><span class="pre">overrides</span></code>.
+This feature allows you to override the values need from the default configuration.
+Currently, you can overrides <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">callbacks</span></code>, <code class="docutils literal notranslate"><span class="pre">logger</span></code>, and other single value configurations.
+Also, you can use <code class="docutils literal notranslate"><span class="pre">reset</span></code> to reset the configurations from the default values to the new values.</p>
+<p>To update single value configurations, just set them in the overrides.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
-
 <span class="nt">overrides</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">data</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">config</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">train_subset</span><span class="p">:</span>
-<span class="w">            </span><span class="nt">transforms</span><span class="p">:</span>
-<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LoadImageFromFile</span>
-<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cv2</span>
-<span class="w">                </span><span class="l l-Scalar l-Scalar-Plain">scale</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">224</span>
-<span class="w">                </span><span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RandomResizedCrop</span>
-<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">direction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">horizontal</span>
-<span class="w">                </span><span class="l l-Scalar l-Scalar-Plain">prob</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
-<span class="w">                </span><span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RandomFlip</span>
-<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PackInputs</span>
+<span class="w">  </span><span class="nt">max_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"> </span><span class="c1"># update to 10</span>
+<span class="w">  </span><span class="nt">data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image_color_channel</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BGR</span><span class="w"> </span><span class="c1"># update to BGR</span>
 <span class="nn">...</span>
 </pre></div>
 </div>
-<p>This feature allows you to override the values need from the default configuration.
-You can see the final configuration with the command below.</p>
+<p>If you want to add new configuration which isn’t set before, just set them in the overrides and it will be appended.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">overrides</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">new_configuration</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span><span class="c1"># add new_configuration with 1</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can see the final configuration with the command below.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>otx<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>&lt;config-file-path&gt;<span class="w"> </span>--print_config
 </pre></div>
 </div>
-<p>### Callbacks &amp; Logger overrides</p>
-<p><code class="docutils literal notranslate"><span class="pre">callbacks</span></code> and <code class="docutils literal notranslate"><span class="pre">logger</span></code> can currently be provided as a list of different callbacks and loggers. The way to override this is as follows.</p>
+</div>
+<section id="data-overrides">
+<h3>Data overrides<a class="headerlink" href="#data-overrides" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">data</span></code> can currently be provided as a list of different transforms.
+The way to override this is as follows.</p>
+<p>Let’s try to change the size of Resize and the prob of RandomFlip which are already set in <a class="reference external" href="https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/_base_/data/instance_segmentation.yaml">base data configuration of instance segmentation</a>.
+To change them, you can just set the values in the overrides.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">overrides</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">train_subset</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">transforms</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.data.transform_libs.torchvision.Resize</span>
+<span class="w">          </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="c1"># update `size` from 1024 to 512</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">        </span><span class="c1"># Pad is used as is because it is not set here</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">otx.data.transform_libs.torchvision.RandomFlip</span>
+<span class="w">          </span><span class="nt">init_args</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">prob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"> </span><span class="c1"># update `prob` from 0.5 to 0</span>
+<span class="w">        </span><span class="c1"># ToDtype and Normalize are used as is because they are not set here</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+<p>Like single value configurations, when adding new transforms in overrides it will be appended.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">overrides</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">train_subset</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">transforms</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</section>
+<section id="callbacks-logger-overrides">
+<h3>Callbacks &amp; Logger overrides<a class="headerlink" href="#callbacks-logger-overrides" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">callbacks</span></code> and <code class="docutils literal notranslate"><span class="pre">logger</span></code> can currently be provided as a list of different callbacks and loggers.
+The way to override this is as follows.</p>
 <p>For example, if you want to change the patience of EarlyStopping, you can configure the overrides like this</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">overrides</span><span class="p">:</span>
 <span class="nn">...</span>
 <span class="w">    </span><span class="nt">callbacks</span><span class="p">:</span>
-<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ligthning.pytorch.callbacks.EarlyStopping</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ligthning.pytorch.callbacks.EarlyStopping</span>
 <span class="w">        </span><span class="nt">init_args</span><span class="p">:</span>
-<span class="w">            </span><span class="nt">patience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">          </span><span class="nt">patience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
 </pre></div>
 </div>
+</section>
+<section id="reset-overrides">
+<h3>Reset overrides<a class="headerlink" href="#reset-overrides" title="Link to this heading">#</a></h3>
+<p>If you want to <strong>reset</strong> the configurations to the default values, especially <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">callbacks</span></code>, or <code class="docutils literal notranslate"><span class="pre">logger</span></code> that are difficult to be reset, you can use the <code class="docutils literal notranslate"><span class="pre">reset</span></code> keyword.
+The way to override this is as follows.</p>
+<p>Let’s try to reset all transforms which are already set in <a class="reference external" href="https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/recipe/_base_/data/instance_segmentation.yaml">base data configuration of instance segmentation</a>.
+To reset them, you can just add the keys in <code class="docutils literal notranslate"><span class="pre">reset</span></code> in the overrides.
+<code class="docutils literal notranslate"><span class="pre">reset</span></code> also supports both types, string and list.
+If you want to reset single one, string or list can be used.
+But if you want to reset multiple ones, list should be used.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+single one</label><div class="sd-tab-content docutils">
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">overrides</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">reset</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data.train_subset.transforms</span>
+<span class="w">  </span><span class="c1"># or</span>
+<span class="w">  </span><span class="c1"># reset: data.train_subset.transforms</span>
+<span class="w">  </span><span class="nt">data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">train_subset</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">transforms</span><span class="p">:</span>
+<span class="w">        </span><span class="c1"># previous ones are not used anymore</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_1</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_2</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+multiple ones</label><div class="sd-tab-content docutils">
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">overrides</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">reset</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data.train_subset.transforms</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data.val_subset.transforms</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data.test_subset.transforms</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">callbacks</span>
+<span class="w">  </span><span class="c1"># reset: data.train_subset.transforms cannot be used because there are multiple resets</span>
+<span class="w">  </span><span class="nt">data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">train_subset</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">transforms</span><span class="p">:</span>
+<span class="w">        </span><span class="c1"># previous ones are not used anymore</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_1</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_2</span>
+<span class="w">    </span><span class="nt">val_subset</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">transforms</span><span class="p">:</span>
+<span class="w">        </span><span class="c1"># previous ones are not used anymore</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_1</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_2</span>
+<span class="w">    </span><span class="nt">test_subset</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">transforms</span><span class="p">:</span>
+<span class="w">        </span><span class="c1"># previous ones are not used anymore</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_1</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_transform_2</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="w">  </span><span class="nt">callbacks</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># previous ones are not used anymore</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_callback_1</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">class_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">new_callback_2</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
 </section>
 </section>
 
@@ -472,10 +607,10 @@ You can see the final configuration with the command below.</p>
           <p class="prev-next-title">Advanced Tutorials</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="../../explanation/algorithms/index.html" title="next page">
+  <a class='right-next' id="next-link" href="multi_gpu.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Algorithms</p>
+      <p class="prev-next-title">Multi-GPU Support</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -500,6 +635,28 @@ You can see the final configuration with the command below.</p>
    Configuration
   </a>
  </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#configuration-overrides">
+   Configuration Overrides
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#data-overrides">
+     Data overrides
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#callbacks-logger-overrides">
+     Callbacks &amp; Logger overrides
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#reset-overrides">
+     Reset overrides
+    </a>
+   </li>
+  </ul>
+ </li>
 </ul>
 
 </nav>
@@ -512,6 +669,13 @@ You can see the final configuration with the command below.</p>
 
 <div class="toc-item">
   
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/open-edge-platform/training_extensions/edit/master/docs/source/guide/tutorials/advanced/configuration.rst">
+        <i class="fa-solid fa-pencil"></i> Edit this page
+    </a>
+</div>
+
 </div>
 
 <div class="toc-item">
@@ -568,10 +732,6 @@ You can see the final configuration with the command below.</p>
   
   <div class="footer-item">
     
-<p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 7.2.6.<br>
-</p>
-
   </div>
   
 </div>

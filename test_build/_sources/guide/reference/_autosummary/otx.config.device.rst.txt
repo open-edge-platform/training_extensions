@@ -1,0 +1,29 @@
+otx.config.device
+=================
+
+.. automodule:: otx.config.device
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DeviceConfig
+   
+   
+
+   
+   
+   
+
+
+
