@@ -4,11 +4,10 @@
 import { Suspense } from 'react';
 
 import { StatusLight } from '@adobe/react-spectrum';
-import { Button, Content, Dialog, DialogTrigger, Divider, Flex, Heading, Text, View } from '@geti/ui';
+import { Button, Divider, Flex, Text, View } from '@geti/ui';
 
 import { $api } from '../../api/client';
-import { ReactComponent as Camera } from '../../assets/icons/camera.svg';
-import { ConnectionPreview, Source } from './source/source';
+import { SourceModal } from './source/source-modal';
 import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
 const ActiveModel = () => {
@@ -90,27 +89,6 @@ const WebRTCConnectionStatus = () => {
     }
 };
 
-const InputSourceModal = () => {
-    return (
-        <DialogTrigger>
-            <Button width={'size-2000'} variant={'secondary'}>
-                <Text>Input source</Text>
-                <Camera fill='white' />
-            </Button>
-            {(_close) => (
-                <Dialog>
-                    <Heading>
-                        <ConnectionPreview />
-                    </Heading>
-                    <Content>
-                        <Source />
-                    </Content>
-                </Dialog>
-            )}
-        </DialogTrigger>
-    );
-};
-
 export const Toolbar = () => {
     return (
         <View
@@ -133,8 +111,8 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <Flex marginStart='auto' gap='size-100'>
-                    <InputSourceModal />
+                <Flex marginStart='auto'>
+                    <SourceModal />
                 </Flex>
             </Flex>
         </View>

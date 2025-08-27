@@ -4,7 +4,7 @@
 import { Grid } from '@geti/ui';
 
 import { Aside } from '../../features/inference/aside';
-import { StreamContainer } from '../../features/inference/stream-container';
+import { StreamContainer } from '../../features/inference/stream/stream-container';
 import { Toolbar } from '../../features/inference/toolbar';
 
 export const Inference = () => {

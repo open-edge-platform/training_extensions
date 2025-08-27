@@ -1,12 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
-import { Flex, Loading, NumberField, Text, TextField, View } from '@geti/ui';
-import { isEqual } from 'lodash-es';
+import { Button, ButtonGroup, Divider, Flex, Loading, NumberField, Text, TextField } from '@geti/ui';
 
-import { $api } from '../../../api/client';
 import {
     SchemaDisconnectedSourceConfig,
     SchemaImagesFolderSourceConfig,
@@ -14,6 +12,7 @@ import {
     SchemaVideoFileSourceConfig,
     SchemaWebcamSourceConfig,
 } from '../../../api/openapi-spec';
+import { ReactComponent as CameraOff } from '../../../assets/icons/camera-off.svg';
 import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCamera } from '../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
@@ -73,30 +72,37 @@ export const ConnectionPreview = () => {
     const { status } = useWebRTCConnection();
 
     return (
-        <>
+        <Flex
+            alignItems={'center'}
+            justifyContent={'center'}
+            width={'100%'}
+            height={'size-3000'}
+            UNSAFE_style={{
+                backgroundColor: 'var(--spectrum-global-color-gray-200)',
+            }}
+        >
             {status === 'idle' && (
                 <div className={classes.canvasContainer}>
-                    <View backgroundColor={'gray-200'} width='100%' height='100%'>
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Text
-                                UNSAFE_style={{
-                                    color: 'var(--spectrum-global-color-gray-800)',
-                                }}
-                            >
-                                Save camera settings to establish a connection and view the preview.
-                            </Text>
-                        </Flex>
-                    </View>
+                    <Flex direction={'column'} justifyContent={'center'} alignItems={'center'} gap={'size-200'}>
+                        <CameraOff />
+                        <Text
+                            UNSAFE_style={{
+                                color: 'var(--spectrum-global-color-gray-700)',
+                                fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+                                lineHeight: 'var(--spectrum-global-dimension-size-225)',
+                            }}
+                        >
+                            Configure your input source
+                        </Text>
+                    </Flex>
                 </div>
             )}
 
             {status === 'connecting' && (
                 <div className={classes.canvasContainer}>
-                    <View backgroundColor={'gray-200'} width='100%' height='100%'>
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Loading mode='inline' />
-                        </Flex>
-                    </View>
+                    <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                        <Loading mode='inline' />
+                    </Flex>
                 </div>
             )}
 
@@ -105,7 +111,7 @@ export const ConnectionPreview = () => {
                     <Stream size={size} setSize={setSize} />
                 </div>
             )}
-        </>
+        </Flex>
     );
 };
 
@@ -208,14 +214,21 @@ const ConfigureSource = ({
 
 const Label = ({ item }: { item: { name: string; source_type: SourceType } }) => {
     return (
-        <Flex alignItems='center' gap='size-200'>
+        <Flex alignItems='center' gap='size-200' margin={0}>
             <Flex alignItems='center' justifyContent={'center'}>
                 {item.source_type === 'video_file' && <Video width='32px' />}
                 {item.source_type === 'webcam' && <Webcam width='32px' />}
                 {item.source_type === 'ip_camera' && <IpCamera width='32px' />}
                 {item.source_type === 'images_folder' && <Image width='32px' />}
             </Flex>
-            {item.name}
+            <Text
+                UNSAFE_style={{
+                    fontSize: 'var(--spectrum-global-dimension-font-size-100)',
+                    lineHeight: 'var(--spectrum-global-dimension-size-300)',
+                }}
+            >
+                {item.name}
+            </Text>
         </Flex>
     );
 };
@@ -229,49 +242,55 @@ const DEFAULT_SOURCE_ITEMS = [
 ] satisfies Array<{ source_type: SourceType; name: string }>;
 
 export const Source = () => {
-    const { status } = useWebRTCConnection();
-    const sourceMutation = $api.useMutation('post', '/api/sources', {
-        onSuccess: async () => {
-            // TODO: Enable this once WebRTC connection works properly
-            // if (status !== 'connected') {
-            //     await start();
-            // }
-        },
-    });
-
     const [selectedSourceType, setSelectedSourceType] = useState<SourceType>(DEFAULT_SOURCE_ITEMS[0].source_type);
     const [forms, setForms] = useState<SourceFormRecord>(() => {
         return DEFAULT_SOURCE_FORMS;
     });
 
-    const submitIsDisabled = isEqual(forms[selectedSourceType], DEFAULT_SOURCE_FORMS[selectedSourceType]);
-    const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        sourceMutation.mutateAsync({ body: forms[selectedSourceType] });
+    const handleSaveSource = (sourceType: SourceType) => {
+        setSelectedSourceType(sourceType);
     };
 
+    const handleSubmit = () => {};
+
     return (
-        <RadioDisclosure
-            ariaLabel={'Select your source'}
-            value={selectedSourceType}
-            setValue={setSelectedSourceType}
-            items={DEFAULT_SOURCE_ITEMS.map((item) => {
-                return {
-                    value: item.source_type,
-                    label: <Label item={item} />,
-                    content: (
-                        <ConfigureSource
-                            source={forms[item.source_type]}
-                            setSource={(newSource) => {
-                                setForms((oldSource) => {
-                                    return { ...oldSource, [item.source_type]: newSource };
-                                });
-                            }}
-                        />
-                    ),
-                };
-            })}
-        />
+        <Flex direction={'column'} gap={'size-200'}>
+            <RadioDisclosure
+                ariaLabel={'Select your source'}
+                value={selectedSourceType}
+                setValue={setSelectedSourceType}
+                items={DEFAULT_SOURCE_ITEMS.map((item) => {
+                    return {
+                        value: item.source_type,
+                        label: <Label item={item} />,
+                        content: (
+                            <Flex direction={'column'} gap={'size-200'}>
+                                <ConfigureSource
+                                    source={forms[item.source_type]}
+                                    setSource={(newSource) => {
+                                        setForms((oldSource) => {
+                                            return { ...oldSource, [item.source_type]: newSource };
+                                        });
+                                    }}
+                                />
+                                <ButtonGroup>
+                                    <Button variant={'accent'} onPress={() => handleSaveSource(item.source_type)}>
+                                        Save & connect
+                                    </Button>
+                                </ButtonGroup>
+                            </Flex>
+                        ),
+                    };
+                })}
+            />
+
+            <Divider size={'S'} />
+
+            <ButtonGroup alignSelf={'end'}>
+                <Button variant={'primary'} onPress={handleSubmit}>
+                    Submit
+                </Button>
+            </ButtonGroup>
+        </Flex>
     );
 };
