@@ -25,7 +25,6 @@ class WebRTCManager:
     async def handle_offer(self, offer: Offer) -> Answer:
         """Create an SDP offer for a new WebRTC connection."""
         pc = RTCPeerConnection()
-        pc._id = offer.webrtc_id  # type: ignore[attr-defined]
         self._pcs[offer.webrtc_id] = pc
 
         # Add video track
@@ -35,7 +34,7 @@ class WebRTCManager:
         @pc.on("connectionstatechange")
         async def connection_state_change() -> None:
             if pc.connectionState in ["failed", "closed"]:
-                await self.cleanup_connection(pc._id)  # type: ignore[attr-defined]
+                await self.cleanup_connection(offer.webrtc_id)
 
         # Set remote description from client's offer
         await pc.setRemoteDescription(RTCSessionDescription(sdp=offer.sdp, type=offer.type))

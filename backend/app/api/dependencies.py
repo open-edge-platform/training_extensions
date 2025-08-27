@@ -107,5 +107,5 @@ def get_model_service(
 
 @lru_cache
 def get_webrtc_manager(request: Request) -> WebRTCManager:
-    """Provides"""
+    """Provides the global WebRTCManager instance from FastAPI application's state."""
     return request.app.state.webrtc_manager

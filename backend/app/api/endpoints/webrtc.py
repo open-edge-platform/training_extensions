@@ -1,3 +1,8 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""WebRTC API Endpoints"""
+
 import logging
 from typing import Annotated
 
