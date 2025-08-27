@@ -106,7 +106,7 @@ jobs:
           python-version: "3.12"
       - name: Install build tools
         run: |
-          sudo apt-get update && sudo apt-get install -y build-essential
+          sudo -n apt-get update && sudo -n apt-get install -y build-essential
       - name: Install tox
         run: |
           pip install '.[dev]'
