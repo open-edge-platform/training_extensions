@@ -8,15 +8,12 @@ from __future__ import annotations
 from typing import Callable, List, Type, Union, Iterable
 
 import numpy as np
-import torch
 from datumaro.experimental import Dataset
-from datumaro.experimental.type_registry import convert_image_type
 from torch.utils.data import Dataset as TorchDataset
 
 from otx.data.entity.sample import ClassificationSample
 from otx.data.transform_libs.torchvision import Compose
 from otx.types.image import ImageColorChannel
-from otx.types.label import NullLabelInfo
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
@@ -49,11 +46,11 @@ class OTXDataset(TorchDataset):
         self.stack_images = stack_images
         self.to_tv_image = to_tv_image
         self.sample_type = sample_type
-
+        self.max_refetch = max_refetch
         self.data_format = data_format
 
         # TODO: Properly reinit label_info
-        self.label_info = dm_subset.categories()
+        self.label_info = dm_subset.categories
 
         self.dataset = dm_subset
 
@@ -66,7 +63,7 @@ class OTXDataset(TorchDataset):
     def _apply_transforms(self, entity: ClassificationSample) -> ClassificationSample | None:
         if isinstance(self.transforms, Compose):
             if self.to_tv_image:
-                entity = convert_image_type(entity, torch.Tensor)
+                entity.as_tv_image()
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):
             return self._iterable_transforms(entity)
@@ -88,7 +85,20 @@ class OTXDataset(TorchDataset):
         return results
 
     def __getitem__(self, index: int) -> ClassificationSample:
-        return self.dataset[index]
+        for _ in range(self.max_refetch):
+            results = self._get_item_impl(index)
+
+            if results is not None:
+                return results
+
+            index = self._sample_another_idx()
+
+        msg = f"Reach the maximum refetch number ({self.max_refetch})"
+        raise RuntimeError(msg)
+
+    def _get_item_impl(self, index: int) -> ClassificationSample | None:
+        return self._apply_transforms(self.dataset[index])
+
 
     @property
     def collate_fn(self) -> Callable:

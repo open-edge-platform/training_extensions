@@ -21,10 +21,6 @@ class OTXMulticlassClsDataset(OTXDataset):
         kwargs["sample_type"] = ClassificationSample
         super().__init__(**kwargs)
 
-    def _get_item_impl(self, index: int) -> ClassificationSample | None:
-        return self.dataset[index]
-
-
 # class OTXMultilabelClsDataset(OTXDataset):
 #     """OTXDataset class for multi-label classification task using new Datumaro experimental Dataset."""
 #
