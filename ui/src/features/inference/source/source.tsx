@@ -3,24 +3,24 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Grid, Loading, NumberField, Text, TextField, View } from '@geti/ui';
+import { Flex, Loading, NumberField, Text, TextField, View } from '@geti/ui';
 import { isEqual } from 'lodash-es';
 
-import { $api } from '../../api/client';
+import { $api } from '../../../api/client';
 import {
     SchemaDisconnectedSourceConfig,
     SchemaImagesFolderSourceConfig,
     SchemaIpCameraSourceConfig,
     SchemaVideoFileSourceConfig,
     SchemaWebcamSourceConfig,
-} from '../../api/openapi-spec';
-import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
-import { Stream } from '../../features/inference/stream/stream';
-import { useWebRTCConnection } from '../../features/inference/stream/web-rtc-connection-provider';
-import { ReactComponent as Image } from './../../assets/icons/images-folder.svg';
-import { ReactComponent as IpCamera } from './../../assets/icons/ip-camera.svg';
-import { ReactComponent as Video } from './../../assets/icons/video-file.svg';
-import { ReactComponent as Webcam } from './../../assets/icons/webcam.svg';
+} from '../../../api/openapi-spec';
+import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
+import { ReactComponent as IpCamera } from '../../../assets/icons/ip-camera.svg';
+import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
+import { ReactComponent as Webcam } from '../../../assets/icons/webcam.svg';
+import { RadioDisclosure } from '../../../components/radio-disclosure-group/radio-disclosure-group';
+import { Stream } from '../stream/stream';
+import { useWebRTCConnection } from '../stream/web-rtc-connection-provider';
 
 // TODO: create a new module scss for this file
 const classes = { canvasContainer: '' };
@@ -68,7 +68,7 @@ const DEFAULT_SOURCE_FORMS: SourceFormRecord = {
     },
 };
 
-const ConnectionPreview = () => {
+export const ConnectionPreview = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
     const { status } = useWebRTCConnection();
 
@@ -230,7 +230,6 @@ const DEFAULT_SOURCE_ITEMS = [
 
 export const Source = () => {
     const { status } = useWebRTCConnection();
-    const sources = $api.useSuspenseQuery('get', '/api/sources');
     const sourceMutation = $api.useMutation('post', '/api/sources', {
         onSuccess: async () => {
             // TODO: Enable this once WebRTC connection works properly
@@ -240,14 +239,12 @@ export const Source = () => {
         },
     });
 
-    const [selectedSourceType, setSelectedSourceType] = useState<SourceType>(
-        sources.data[0]?.source_type ?? DEFAULT_SOURCE_ITEMS[0].source_type
-    );
+    const [selectedSourceType, setSelectedSourceType] = useState<SourceType>(DEFAULT_SOURCE_ITEMS[0].source_type);
     const [forms, setForms] = useState<SourceFormRecord>(() => {
         return DEFAULT_SOURCE_FORMS;
     });
 
-    const submitIsDisabled = isEqual(forms[selectedSourceType], sources.data);
+    const submitIsDisabled = isEqual(forms[selectedSourceType], DEFAULT_SOURCE_FORMS[selectedSourceType]);
     const onSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -255,69 +252,26 @@ export const Source = () => {
     };
 
     return (
-        <Grid
-            areas={['text text', 'form canvas', 'divider divider', 'buttons buttons']}
-            columns={['auto', '1fr']}
-            gap='size-200'
-        >
-            <View
-                gridArea='text'
-                UNSAFE_style={{
-                    color: 'var(--spectrum-global-color-gray-700)',
-                    textAlign: 'center',
-                }}
-            >
-                <Text>
-                    Please configure the source for your system. Select the appropriate source type and provide the
-                    necessary connection details below.
-                </Text>
-            </View>
-            <Form gridArea={'form'} onSubmit={onSubmit}>
-                <RadioDisclosure
-                    ariaLabel={'Select your source'}
-                    value={selectedSourceType}
-                    setValue={setSelectedSourceType}
-                    items={DEFAULT_SOURCE_ITEMS.map((item) => {
-                        return {
-                            value: item.source_type,
-                            label: <Label item={item} />,
-                            content: (
-                                <ConfigureSource
-                                    source={forms[item.source_type]}
-                                    setSource={(newSource) => {
-                                        setForms((oldSource) => {
-                                            return { ...oldSource, [item.source_type]: newSource };
-                                        });
-                                    }}
-                                />
-                            ),
-                        };
-                    })}
-                />
-
-                <ButtonGroup marginTop={'size-400'} marginX='size-200'>
-                    <Button
-                        type='submit'
-                        variant='accent'
-                        isPending={sourceMutation.isPending}
-                        // TODO: disable only if there are no changes
-                        isDisabled={submitIsDisabled && status === 'connected'}
-                    >
-                        Save
-                    </Button>
-                </ButtonGroup>
-            </Form>
-            <View gridArea={'canvas'} height={'100%'} UNSAFE_style={{ backgroundColor: 'rgba(0, 0, 0, 0.20)' }}>
-                <ConnectionPreview />
-            </View>
-            <View gridArea={'divider'} paddingY='size-400'>
-                <Divider size='S' orientation='horizontal' />
-            </View>
-            <View gridArea='buttons'>
-                <ButtonGroup align={'end'} width={'100%'}>
-                    <Button variant='accent'>Next</Button>
-                </ButtonGroup>
-            </View>
-        </Grid>
+        <RadioDisclosure
+            ariaLabel={'Select your source'}
+            value={selectedSourceType}
+            setValue={setSelectedSourceType}
+            items={DEFAULT_SOURCE_ITEMS.map((item) => {
+                return {
+                    value: item.source_type,
+                    label: <Label item={item} />,
+                    content: (
+                        <ConfigureSource
+                            source={forms[item.source_type]}
+                            setSource={(newSource) => {
+                                setForms((oldSource) => {
+                                    return { ...oldSource, [item.source_type]: newSource };
+                                });
+                            }}
+                        />
+                    ),
+                };
+            })}
+        />
     );
 };
