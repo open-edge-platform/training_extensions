@@ -1,6 +1,26 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Annotation } from '../annotator/types';
+
+const mockedAnnotation: Annotation = {
+    id: 'mocked-prediction-1',
+    shape: {
+        type: 'bounding-box',
+        x: 21,
+        y: 21,
+        width: 168,
+        height: 168,
+    },
+    labels: [
+        {
+            id: 'label-1',
+            name: 'Mock Label',
+            color: '#FF0000',
+            isPrediction: true,
+        },
+    ],
+};
 export const response = {
     page: 1,
     page_size: 1500,
@@ -11,11 +31,12 @@ export const response = {
             id: '20250708_152104_749',
             original_name: '20250708_152104_749-pred.jpg',
             format: 'jpg',
-            width: 1920,
-            height: 1080,
+            width: 210,
+            height: 210,
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [mockedAnnotation],
         },
         {
             id: '20250708_152103_749',
@@ -26,6 +47,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_152102_738',
@@ -36,6 +58,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_152101_732',
@@ -46,6 +69,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_152100_652',
@@ -56,6 +80,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_152059_597',
@@ -66,6 +91,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_152058_526',
@@ -76,6 +102,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_152057_441',
@@ -86,6 +113,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_152056_349',
@@ -96,6 +124,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151547_121',
@@ -106,6 +135,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151545_916',
@@ -116,6 +146,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151544_724',
@@ -126,6 +157,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151543_538',
@@ -136,6 +168,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151542_341',
@@ -146,6 +179,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151541_313',
@@ -156,6 +190,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151540_120',
@@ -166,6 +201,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151538_901',
@@ -176,6 +212,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151537_731',
@@ -186,6 +223,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151536_574',
@@ -196,6 +234,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151535_350',
@@ -206,6 +245,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151534_154',
@@ -216,6 +256,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151532_926',
@@ -226,6 +267,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151531_712',
@@ -236,6 +278,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151530_522',
@@ -246,6 +289,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151529_344',
@@ -256,6 +300,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151528_191',
@@ -266,6 +311,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151527_000',
@@ -276,6 +322,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151525_837',
@@ -286,6 +333,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151524_676',
@@ -296,6 +344,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
         {
             id: '20250708_151523_494',
@@ -306,6 +355,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
+            annotations: [],
         },
     ],
 };

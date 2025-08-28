@@ -4,6 +4,7 @@
 import { AriaComponentsListBox, GridLayout, ListBoxItem, Size, View, Virtualizer } from '@geti/ui';
 
 import { useSelectedData } from '../../../routes/dataset/provider';
+import { ImageAnnotations } from '../../annotator/image-annotation';
 import { CheckboxInput } from '../checkbox-input';
 import { response } from '../mock-response';
 import { AnnotationStateIcon } from './annotation-state-icon.component';
@@ -29,7 +30,7 @@ export const Gallery = () => {
                     aria-label='data-collection-grid'
                     className={classes.container}
                     selectedKeys={selectedKeys}
-                    selectionMode='multiple'
+                    selectionMode={'multiple'}
                     onSelectionChange={setSelectedKeys}
                 >
                     {response.items.map((item) => (
@@ -42,7 +43,7 @@ export const Gallery = () => {
                             data-rejected={mediaState.get(item.id) === 'rejected'}
                         >
                             <MediaItem
-                                item={item}
+                                contentElement={() => <ImageAnnotations mediaItem={item} />}
                                 topRightElement={() => <AnnotationStateIcon state={mediaState.get(item.id)} />}
                                 topLeftElement={() => (
                                     <CheckboxInput
