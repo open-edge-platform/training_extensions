@@ -299,21 +299,16 @@
           }
 
           try {
-            const ok = await makeRequest("/api/webrtc/input_hook", {
+            await makeRequest("/api/webrtc/input_hook", {
               webrtc_id: this.webrtcId,
               conf_threshold: confThreshold,
             });
-
-            if (ok) {
-              this.log(
-                `Confidence threshold updated to: ${confThreshold}`,
-                "success",
-              );
-            } else {
-              this.log("Failed to update confidence threshold", "error");
-            }
+            this.log(
+              `Confidence threshold updated to: ${confThreshold}`,
+              "success",
+            );
           } catch (error) {
-            this.log(`Error updating input: ${error.message}`, "error");
+            this.log("Failed to update confidence threshold", "error");
           }
         }
 
