@@ -41,7 +41,7 @@ class ClassificationSample(Sample):
         label = item.annotations[0].label if item.annotations else None
         return cls(image=image, label=torch.as_tensor(label, dtype=torch.long))
 
-    def as_tv_image(self):
+    def as_tv_image(self) -> None:
         """Convert image to torchvision tv_tensors Image format."""
         if isinstance(self.image, np.ndarray):
             self.image = tv_tensors.Image(self.image)
