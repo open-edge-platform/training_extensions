@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import torch
 from datumaro import LabelCategories
+from datumaro.experimental.categories import LabelGroup
 from lightning import LightningModule, Trainer
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ConstantLR
@@ -883,6 +884,14 @@ class OTXModel(LightningModule):
                 label_names=label_info,
                 label_groups=[label_info],
                 label_ids=[str(i) for i in range(len(label_info))],
+            )
+        if isinstance(label_info, LabelGroup):
+            # Handle LabelGroup objects from datumaro
+            labels = label_info.labels
+            return LabelInfo(
+                label_names=labels,
+                label_groups=[labels],
+                label_ids=[str(i) for i in range(len(labels))],
             )
         if isinstance(label_info, LabelInfo):
             if not hasattr(label_info, "label_ids"):
