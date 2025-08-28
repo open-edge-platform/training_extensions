@@ -5,82 +5,19 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Sequence, Union
+from typing import Callable, Iterable, List, Union
 
 import numpy as np
 import torch
 from datumaro.experimental import Dataset
 from torch.utils.data import Dataset as TorchDataset
-from torchvision import tv_tensors
 
 from otx.data.entity.sample import ClassificationSample
-from otx.data.entity.torch.validations import ValidateBatchMixin
+from otx.data.entity.torch.torch import OTXDataBatch
 from otx.data.transform_libs.torchvision import Compose
 from otx.types.image import ImageColorChannel
 
-if TYPE_CHECKING:
-    from datumaro import Polygon
-    from torchvision.tv_tensors import BoundingBoxes, Mask
-
-    from otx.data.entity.base import ImageInfo
-
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
-
-
-@dataclass
-class ClassificationBatch(ValidateBatchMixin):
-    """Classification batch implementation based on ClassificationSample."""
-
-    batch_size: int
-    images: torch.Tensor | list[torch.Tensor]
-    labels: list[torch.Tensor] | None = None
-    masks: list[Mask] | None = None
-    bboxes: list[BoundingBoxes] | None = None
-    keypoints: list[torch.Tensor] | None = None
-    polygons: list[list[Polygon]] | None = None
-    imgs_info: Sequence[ImageInfo | None] | None = None
-
-    def pin_memory(self) -> "ClassificationBatch":
-        """Pin memory for member tensor variables."""
-        kwargs = {}
-
-        def maybe_pin(x: Any) -> Any:  # noqa: ANN401
-            if isinstance(x, torch.Tensor):
-                return x.pin_memory()
-            return x
-
-        def maybe_wrap_tv(x: Any) -> Any:  # noqa: ANN401
-            if isinstance(x, tv_tensors.TVTensor):
-                return tv_tensors.wrap(x.pin_memory(), like=x)
-            return maybe_pin(x)
-
-        # Handle images separately because of tv_tensors wrapping
-        if self.images is not None:
-            if isinstance(self.images, list):
-                kwargs["images"] = [maybe_wrap_tv(img) for img in self.images]
-            else:
-                kwargs["images"] = maybe_wrap_tv(self.images)
-
-        # Generic handler for all other fields
-        for field in ["labels", "bboxes", "keypoints", "masks"]:
-            value = getattr(self, field)
-            if value is not None:
-                kwargs[field] = [maybe_wrap_tv(v) if v is not None else None for v in value]
-
-        return self.wrap(**kwargs)
-
-    def wrap(self, **kwargs) -> "ClassificationBatch":
-        """Wrap this dataclass with the given keyword arguments.
-
-        Args:
-            **kwargs: Keyword arguments to be overwritten on top of this dataclass
-        Returns:
-            Updated dataclass
-        """
-        updated_kwargs = asdict(self)
-        updated_kwargs.update(**kwargs)
-        return self.__class__(**updated_kwargs)
 
 
 class OTXDataset(TorchDataset):
@@ -169,9 +106,10 @@ class OTXDataset(TorchDataset):
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect samples into a batch in data loader."""
-        def _collate_fn(items: list[ClassificationSample]) -> ClassificationBatch:
-            """Collate ClassificationSample items into a ClassificationBatch.
-            
+
+        def _collate_fn(items: list[ClassificationSample]) -> OTXDataBatch:
+            """Collate ClassificationSample items into an OTXDataBatch.
+
             Args:
                 items: List of ClassificationSample items to batch
             Returns:
@@ -184,16 +122,21 @@ class OTXDataset(TorchDataset):
                 # Keep as list if shapes differ (e.g., for OV inference)
                 images = [item.image for item in items]
 
-            return ClassificationBatch(
+            return OTXDataBatch(
                 batch_size=len(items),
                 images=images,
                 labels=[item.label for item in items] if items[0].label is not None else None,
                 masks=[item.masks for item in items] if any(item.masks is not None for item in items) else None,
                 bboxes=[item.bboxes for item in items] if any(item.bboxes is not None for item in items) else None,
-                keypoints=[item.keypoints for item in items] if any(item.keypoints is not None for item in items) else None,
-                polygons=[item.polygons for item in items] if any(item.polygons is not None for item in items) else None,
-                imgs_info=[item.img_info for item in items] if any(item.img_info is not None for item in items) else None,
+                keypoints=[item.keypoints for item in items]
+                if any(item.keypoints is not None for item in items)
+                else None,
+                polygons=[item.polygons for item in items]
+                if any(item.polygons is not None for item in items)
+                else None,
+                imgs_info=[item.img_info for item in items]
+                if any(item.img_info is not None for item in items)
+                else None,
             )
-        
+
         return _collate_fn
-        
