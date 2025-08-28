@@ -14,6 +14,7 @@ import { ProjectDetails } from './features/project/project-details.component';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
+import { ErrorPage } from './routes/error-page/error-page';
 import { Inference } from './routes/inference/inference';
 import { Labels } from './routes/labels/labels';
 import { Models } from './routes/models/models';
@@ -60,7 +61,7 @@ export const router = createBrowserRouter([
                 <Layout />
             </Suspense>
         ),
-        errorElement: <div>Oh no</div>,
+        errorElement: <ErrorPage />,
         children: [
             {
                 index: true,
