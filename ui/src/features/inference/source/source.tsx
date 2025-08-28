@@ -1,29 +1,27 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Grid, Loading, NumberField, Text, TextField, View } from '@geti/ui';
-import { isEqual } from 'lodash-es';
+import { Button, ButtonGroup, Divider, Flex, Loading, NumberField, Text, TextField } from '@geti/ui';
 
-import { $api } from '../../api/client';
 import {
     SchemaDisconnectedSourceConfig,
     SchemaImagesFolderSourceConfig,
     SchemaIpCameraSourceConfig,
     SchemaVideoFileSourceConfig,
     SchemaWebcamSourceConfig,
-} from '../../api/openapi-spec';
-import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
-import { Stream } from '../../features/inference/stream/stream';
-import { useWebRTCConnection } from '../../features/inference/stream/web-rtc-connection-provider';
-import { ReactComponent as Image } from './../../assets/icons/images-folder.svg';
-import { ReactComponent as IpCamera } from './../../assets/icons/ip-camera.svg';
-import { ReactComponent as Video } from './../../assets/icons/video-file.svg';
-import { ReactComponent as Webcam } from './../../assets/icons/webcam.svg';
+} from '../../../api/openapi-spec';
+import { ReactComponent as CameraOff } from '../../../assets/icons/camera-off.svg';
+import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
+import { ReactComponent as IpCamera } from '../../../assets/icons/ip-camera.svg';
+import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
+import { ReactComponent as Webcam } from '../../../assets/icons/webcam.svg';
+import { RadioDisclosure } from '../../../components/radio-disclosure-group/radio-disclosure-group';
+import { Stream } from '../stream/stream';
+import { useWebRTCConnection } from '../stream/web-rtc-connection-provider';
 
-// TODO: create a new module scss for this file
-const classes = { canvasContainer: '' };
+import classes from '../inference.module.scss';
 
 type SourceConfig =
     | SchemaDisconnectedSourceConfig
@@ -68,35 +66,42 @@ const DEFAULT_SOURCE_FORMS: SourceFormRecord = {
     },
 };
 
-const ConnectionPreview = () => {
+export const ConnectionPreview = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
     const { status } = useWebRTCConnection();
 
     return (
-        <>
+        <Flex
+            alignItems={'center'}
+            justifyContent={'center'}
+            width={'100%'}
+            height={'size-3000'}
+            UNSAFE_style={{
+                backgroundColor: 'var(--spectrum-global-color-gray-200)',
+            }}
+        >
             {status === 'idle' && (
                 <div className={classes.canvasContainer}>
-                    <View backgroundColor={'gray-200'} width='100%' height='100%'>
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Text
-                                UNSAFE_style={{
-                                    color: 'var(--spectrum-global-color-gray-800)',
-                                }}
-                            >
-                                Save camera settings to establish a connection and view the preview.
-                            </Text>
-                        </Flex>
-                    </View>
+                    <Flex direction={'column'} justifyContent={'center'} alignItems={'center'} gap={'size-200'}>
+                        <CameraOff />
+                        <Text
+                            UNSAFE_style={{
+                                color: 'var(--spectrum-global-color-gray-700)',
+                                fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+                                lineHeight: 'var(--spectrum-global-dimension-size-225)',
+                            }}
+                        >
+                            Configure your input source
+                        </Text>
+                    </Flex>
                 </div>
             )}
 
             {status === 'connecting' && (
                 <div className={classes.canvasContainer}>
-                    <View backgroundColor={'gray-200'} width='100%' height='100%'>
-                        <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Loading mode='inline' />
-                        </Flex>
-                    </View>
+                    <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
+                        <Loading mode='inline' />
+                    </Flex>
                 </div>
             )}
 
@@ -105,7 +110,7 @@ const ConnectionPreview = () => {
                     <Stream size={size} setSize={setSize} />
                 </div>
             )}
-        </>
+        </Flex>
     );
 };
 
@@ -208,14 +213,21 @@ const ConfigureSource = ({
 
 const Label = ({ item }: { item: { name: string; source_type: SourceType } }) => {
     return (
-        <Flex alignItems='center' gap='size-200'>
+        <Flex alignItems='center' gap='size-200' margin={0}>
             <Flex alignItems='center' justifyContent={'center'}>
                 {item.source_type === 'video_file' && <Video width='32px' />}
                 {item.source_type === 'webcam' && <Webcam width='32px' />}
                 {item.source_type === 'ip_camera' && <IpCamera width='32px' />}
                 {item.source_type === 'images_folder' && <Image width='32px' />}
             </Flex>
-            {item.name}
+            <Text
+                UNSAFE_style={{
+                    fontSize: 'var(--spectrum-global-dimension-font-size-100)',
+                    lineHeight: 'var(--spectrum-global-dimension-size-300)',
+                }}
+            >
+                {item.name}
+            </Text>
         </Flex>
     );
 };
@@ -229,59 +241,29 @@ const DEFAULT_SOURCE_ITEMS = [
 ] satisfies Array<{ source_type: SourceType; name: string }>;
 
 export const Source = () => {
-    const { status } = useWebRTCConnection();
-    const sources = $api.useSuspenseQuery('get', '/api/sources');
-    const sourceMutation = $api.useMutation('post', '/api/sources', {
-        onSuccess: async () => {
-            // TODO: Enable this once WebRTC connection works properly
-            // if (status !== 'connected') {
-            //     await start();
-            // }
-        },
-    });
-
-    const [selectedSourceType, setSelectedSourceType] = useState<SourceType>(
-        sources.data[0]?.source_type ?? DEFAULT_SOURCE_ITEMS[0].source_type
-    );
+    const [selectedSourceType, setSelectedSourceType] = useState<SourceType>(DEFAULT_SOURCE_ITEMS[0].source_type);
     const [forms, setForms] = useState<SourceFormRecord>(() => {
         return DEFAULT_SOURCE_FORMS;
     });
 
-    const submitIsDisabled = isEqual(forms[selectedSourceType], sources.data);
-    const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        sourceMutation.mutateAsync({ body: forms[selectedSourceType] });
+    const handleSaveSource = (sourceType: SourceType) => {
+        setSelectedSourceType(sourceType);
     };
 
+    const handleSubmit = () => {};
+
     return (
-        <Grid
-            areas={['text text', 'form canvas', 'divider divider', 'buttons buttons']}
-            columns={['auto', '1fr']}
-            gap='size-200'
-        >
-            <View
-                gridArea='text'
-                UNSAFE_style={{
-                    color: 'var(--spectrum-global-color-gray-700)',
-                    textAlign: 'center',
-                }}
-            >
-                <Text>
-                    Please configure the source for your system. Select the appropriate source type and provide the
-                    necessary connection details below.
-                </Text>
-            </View>
-            <Form gridArea={'form'} onSubmit={onSubmit}>
-                <RadioDisclosure
-                    ariaLabel={'Select your source'}
-                    value={selectedSourceType}
-                    setValue={setSelectedSourceType}
-                    items={DEFAULT_SOURCE_ITEMS.map((item) => {
-                        return {
-                            value: item.source_type,
-                            label: <Label item={item} />,
-                            content: (
+        <Flex direction={'column'} gap={'size-200'}>
+            <RadioDisclosure
+                ariaLabel={'Select your source'}
+                value={selectedSourceType}
+                setValue={setSelectedSourceType}
+                items={DEFAULT_SOURCE_ITEMS.map((item) => {
+                    return {
+                        value: item.source_type,
+                        label: <Label item={item} />,
+                        content: (
+                            <Flex direction={'column'} gap={'size-200'}>
                                 <ConfigureSource
                                     source={forms[item.source_type]}
                                     setSource={(newSource) => {
@@ -290,34 +272,24 @@ export const Source = () => {
                                         });
                                     }}
                                 />
-                            ),
-                        };
-                    })}
-                />
+                                <ButtonGroup>
+                                    <Button variant={'accent'} onPress={() => handleSaveSource(item.source_type)}>
+                                        Save & connect
+                                    </Button>
+                                </ButtonGroup>
+                            </Flex>
+                        ),
+                    };
+                })}
+            />
 
-                <ButtonGroup marginTop={'size-400'} marginX='size-200'>
-                    <Button
-                        type='submit'
-                        variant='accent'
-                        isPending={sourceMutation.isPending}
-                        // TODO: disable only if there are no changes
-                        isDisabled={submitIsDisabled && status === 'connected'}
-                    >
-                        Save
-                    </Button>
-                </ButtonGroup>
-            </Form>
-            <View gridArea={'canvas'} height={'100%'} UNSAFE_style={{ backgroundColor: 'rgba(0, 0, 0, 0.20)' }}>
-                <ConnectionPreview />
-            </View>
-            <View gridArea={'divider'} paddingY='size-400'>
-                <Divider size='S' orientation='horizontal' />
-            </View>
-            <View gridArea='buttons'>
-                <ButtonGroup align={'end'} width={'100%'}>
-                    <Button variant='accent'>Next</Button>
-                </ButtonGroup>
-            </View>
-        </Grid>
+            <Divider size={'S'} />
+
+            <ButtonGroup alignSelf={'end'}>
+                <Button variant={'primary'} onPress={handleSubmit}>
+                    Submit
+                </Button>
+            </ButtonGroup>
+        </Flex>
     );
 };

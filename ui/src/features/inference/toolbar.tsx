@@ -7,7 +7,7 @@ import { StatusLight } from '@adobe/react-spectrum';
 import { Button, Divider, Flex, Text, View } from '@geti/ui';
 
 import { $api } from '../../api/client';
-import { paths } from '../../router';
+import { SourceModal } from './source/source-modal';
 import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
 const ActiveModel = () => {
@@ -111,10 +111,8 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <Flex marginStart='auto' gap='size-100'>
-                    <Button href={paths.project.index({})} variant='secondary'>
-                        View project
-                    </Button>
+                <Flex marginStart='auto'>
+                    <SourceModal />
                 </Flex>
             </Flex>
         </View>
