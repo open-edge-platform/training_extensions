@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """Implementation of ScaleNorm."""
+
 import torch
 from torch import nn
 

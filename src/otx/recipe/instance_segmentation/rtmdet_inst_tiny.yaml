@@ -108,7 +108,7 @@ overrides:
             is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.RandomVerticalFlip
           enable: false
-        - class_path: torchvision.transforms.v2.GaussianBlur
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
           enable: false
           init_args:
             kernel_size: 5
@@ -119,7 +119,7 @@ overrides:
           init_args:
             mean: [123.675, 116.28, 103.53]
             std: [58.395, 57.12, 57.375]
-        - class_path: torchvision.transforms.v2.GaussianNoise
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
           enable: false
 
     val_subset:

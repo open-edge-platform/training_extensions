@@ -4,6 +4,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 """This implementation replaces the functionality of mmengine.model.weight_init."""
+
 from __future__ import annotations
 
 import copy

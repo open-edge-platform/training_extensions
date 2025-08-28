@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 
@@ -28,21 +28,23 @@ if TYPE_CHECKING:
 class OTXKeypointDetectionModel(OTXModel):
     """Base class for the keypoint detection models used in OTX.
 
-    label_info (LabelInfoTypes): Information about the labels.
-    data_input_params (DataInputParams): Parameters for data input.
-    model_name (str, optional): Name of the model. Defaults to "keypoint_detection_model".
-    optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
-    scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
-        Defaults to DefaultSchedulerCallable.
-    metric (MetricCallable, optional): Callable for the metric. Defaults to PCKMeasureCallable.
-    torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+    Args:
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
+        data_input_params (DataInputParams): Parameters for data input.
+        model_name (str, optional): Name of the model. Defaults to "keypoint_detection_model".
+        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Callable for the metric. Defaults to PCKMeasureCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
 
-    Base class for the keypoint detection models used in OTX.
     """
 
     def __init__(
         self,
-        label_info: LabelInfoTypes,
+        label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "keypoint_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

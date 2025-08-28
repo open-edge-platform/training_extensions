@@ -44,10 +44,8 @@ FROM python_base_cuda as otx_development_env
 
 RUN mkdir actions-runner
 WORKDIR /home/validation/actions-runner
-ARG ACTIONS_RUNNER_VER=2.317.0
+ARG ACTIONS_RUNNER_VER=2.327.1
 # download actions-runner and extract it
 RUN curl -o actions-runner-linux-x64.tar.gz -L https://github.com/actions/runner/releases/download/v${ACTIONS_RUNNER_VER}/actions-runner-linux-x64-${ACTIONS_RUNNER_VER}.tar.gz && \
     tar xzf ./actions-runner-linux-x64.tar.gz && \
     rm actions-runner-linux-x64.tar.gz
-
-WORKDIR /home/validation

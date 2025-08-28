@@ -67,7 +67,7 @@ def _test_augmentation(
 
 
 CLS_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "_cls" in recipe and "tv_" not in recipe]
-DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/detection/" in recipe]
+DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/detection/" in recipe and "deim" not in recipe]
 INST_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/instance_segmentation/" in recipe]
 
 

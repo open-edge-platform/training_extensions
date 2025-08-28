@@ -1,0 +1,59 @@
+.dialog {
+    background-color: var(--spectrum-gray-100);
+    background-image: url('./../../../assets/background.png');
+    background-blend-mode: luminosity;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.button {
+    path {
+        fill: currentColor;
+    }
+}
+
+.description {
+    display: block;
+    text-align: center;
+    margin: auto;
+    max-width: 50rem;
+    font-size: var(--spectrum-global-dimension-font-size-200);
+    line-height: var(--spectrum-global-dimension-font-size-500);
+    margin-bottom: var(--spectrum-global-dimension-font-size-1000);
+}
+
+.card {
+    border-width: var(--spectrum-global-dimension-size-thin);
+    border-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-global-color-gray-50);
+
+    img {
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.activeCard {
+    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
+
+    h3 {
+        color: var(--energy-blue);
+    }
+}
+
+.tag {
+    width: fit-content;
+    color: var(--spectrum-gray-50);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--spectrum-global-color-gray-800);
+    padding: var(--spectrum-global-dimension-size-25);
+    border-radius: var(--spectrum-global-dimension-size-50);
+}
+
+.activeTag {
+    color: var(--spectrum-gray-50);
+
+    background-color: var(--energy-blue) !important;
+}

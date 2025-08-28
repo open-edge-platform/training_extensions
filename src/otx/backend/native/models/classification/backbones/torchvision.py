@@ -3,7 +3,6 @@
 
 """Torchvison model's Backbone Class."""
 
-
 import torch
 from torch import nn
 from torchvision.models import get_model, get_model_weights

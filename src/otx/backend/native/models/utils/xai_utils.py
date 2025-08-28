@@ -26,7 +26,6 @@ from otx.types.label import HLabelInfo, LabelInfoTypes
 if TYPE_CHECKING:
     from torch import LongTensor, Tensor
 
-    from otx.data.module import OTXDataModule
 
 ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
 
@@ -37,13 +36,10 @@ def process_saliency_maps_in_pred_entity(
     label_info: LabelInfoTypes,
 ) -> list[OTXPredBatch]:
     """Process saliency maps in PredEntity."""
-
-    def _process(
-        predict_result_per_batch: OTXPredBatch,
-        label_info: LabelInfoTypes,
-    ) -> OTXPredBatch:
-        if predict_result_per_batch.saliency_map is None:  # skip empty saliency maps
-            return predict_result_per_batch
+    processed_predict_result = []
+    for predict_result_per_batch in predict_result:
+        if predict_result_per_batch.saliency_map is None or len(predict_result_per_batch.saliency_map) == 0:
+            continue
 
         # Extract batch data with proper type handling
         labels = predict_result_per_batch.labels if predict_result_per_batch.labels is not None else []
@@ -60,6 +56,7 @@ def process_saliency_maps_in_pred_entity(
         # Add additional conf threshold for saving maps with predicted classes,
         # since predictions can have less than 0.05 confidence
         conf_thr = explain_config.predicted_maps_conf_thr
+        keep_ratio = imgs_info[0].keep_ratio  # type: ignore[union-attr, index]
 
         pred_labels = []
         for labels, scores in zip(predict_result_per_batch.labels, predict_result_per_batch.scores):  # type: ignore[union-attr, arg-type]
@@ -81,11 +78,12 @@ def process_saliency_maps_in_pred_entity(
             ori_img_shapes,
             image_shape,
             paddings,
+            keep_ratio,
         )
         predict_result_per_batch.saliency_map = processed_saliency_maps
-        return predict_result_per_batch
+        processed_predict_result.append(predict_result_per_batch)
 
-    return [_process(predict_result_per_batch, label_info) for predict_result_per_batch in predict_result]
+    return processed_predict_result
 
 
 def process_saliency_maps(
@@ -95,6 +93,7 @@ def process_saliency_maps(
     ori_img_shapes: list,
     image_shape: tuple[int, int],
     paddings: list[tuple[int, int, int, int]],
+    keep_ratio: bool,
 ) -> ProcessedSaliencyMaps:
     """Perform saliency map convertion to dict and post-processing."""
     if explain_config.target_explain_group == TargetExplainGroup.ALL:
@@ -107,7 +106,7 @@ def process_saliency_maps(
         msg = f"Target explain group {explain_config.target_explain_group} is not supported."
         raise ValueError(msg)
 
-    if explain_config.crop_padded_map:
+    if keep_ratio:
         processed_saliency_maps = _crop_padded_map(processed_saliency_maps, image_shape, paddings)
 
     if explain_config.postprocess:
@@ -221,12 +220,3 @@ def _convert_labels_from_hcls_format(
                 pred_labels.append(label_info.label_to_idx[label_str])
 
     return pred_labels
-
-
-def set_crop_padded_map_flag(explain_config: ExplainConfig, datamodule: OTXDataModule) -> ExplainConfig:
-    """If resize with keep_ratio = True was used, set crop_padded_map flag to True."""
-    for transform in datamodule.test_subset.transforms:
-        tranf_name = transform["class_path"].split(".")[-1]
-        if tranf_name == "Resize" and transform["init_args"].get("keep_ratio", False):
-            explain_config.crop_padded_map = True
-    return explain_config

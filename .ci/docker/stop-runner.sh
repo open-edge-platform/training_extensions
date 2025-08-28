@@ -35,7 +35,7 @@ docker inspect "$CONTAINER_NAME"; RET=$?
 
 if [ $RET -eq 0 ]; then
     docker exec -it "$CONTAINER_NAME" bash -c \
-        "./actions-runner/config.sh remove \
+        "./config.sh remove \
         --token $GITHUB_TOKEN" ; RET=$?
 
     if [ $RET -ne 0 ]; then

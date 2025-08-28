@@ -1,10 +1,11 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2024-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Algorithms for calculcalating XAI branch for Explainable AI."""
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Callable
 
 import torch
@@ -267,6 +268,14 @@ class DetClassProbabilityMap(BaseExplainAlgo):
         self._num_classes = num_classes
         self._num_anchors = num_anchors
         # Should be switched off for tiling
+        if num_classes == 1 and use_cls_softmax:
+            # softmax would result in all 1.0 values if there's only 1 class
+            warnings.warn(
+                "use_cls_softmax is automatically disabled when num_classes=1 to prevent degenerate softmax behavior",
+                UserWarning,
+                stacklevel=2,
+            )
+            use_cls_softmax = False
         self.use_cls_softmax = use_cls_softmax
 
     def func(

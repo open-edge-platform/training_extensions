@@ -7,7 +7,7 @@ Advanced Tutorials
    configuration
    huggingface_model
    multi_gpu
-   low_rank_adaptation
+   peft
    torch_compile
 
 .. Once we have enough material, we might need to categorize these into `data`, `model learning` sections.

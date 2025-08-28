@@ -36,6 +36,7 @@ callbacks:
       mode: max
       patience: 10
       check_on_train_epoch_end: false
+      monitor: val/map_50
       min_delta: 0.001
       warmup_iters: 30
       warmup_epochs: 3
@@ -91,7 +92,7 @@ overrides:
             is_numpy_to_tvtensor: true
         - class_path: torchvision.transforms.v2.RandomVerticalFlip
           enable: false
-        - class_path: torchvision.transforms.v2.GaussianBlur
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
           enable: false
           init_args:
             kernel_size: 5
@@ -112,12 +113,12 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
+          enable: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [103.53, 116.28, 123.675]
             std: [57.375, 57.12, 58.395]
-        - class_path: torchvision.transforms.v2.GaussianNoise
-          enable: false
 
     val_subset:
       batch_size: 8

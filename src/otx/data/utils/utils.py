@@ -5,21 +5,28 @@
 
 from __future__ import annotations
 
+import importlib
+import inspect
 import logging
 from collections import defaultdict
+from multiprocessing import cpu_count
 from typing import TYPE_CHECKING, Any
 
 import cv2
 import numpy as np
-from datumaro.components.annotation import AnnotationType, Bbox, Polygon
+import torch
+from datumaro.components.annotation import AnnotationType, Bbox, ExtractedMask, LabelCategories, Polygon
 from datumaro.components.annotation import Shape as _Shape
 
 from otx.types import OTXTaskType
+from otx.utils.device import is_xpu_available
 
 if TYPE_CHECKING:
-    from datumaro import Dataset, DatasetSubset
+    from datumaro import Dataset as DmDataset
+    from datumaro import DatasetSubset
+    from torch.utils.data import Dataset, Sampler
 
-    from otx.config.data import TileConfig
+    from otx.config.data import SamplerConfig, TileConfig
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +145,7 @@ def compute_robust_dataset_statistics(
         data = dataset.get(id=idx, subset=dataset.name)
         annotations: dict[str, list] = defaultdict(list)
         for ann in data.annotations:
-            if task is OTXTaskType.SEMANTIC_SEGMENTATION:
+            if task is OTXTaskType.SEMANTIC_SEGMENTATION and isinstance(ann, ExtractedMask):
                 # Skip background class
                 if label_names and label_names[AnnotationType.label][ann.label].name == "background":
                     continue
@@ -283,3 +290,56 @@ def adapt_tile_config(tile_config: TileConfig, dataset: Dataset, task: OTXTaskTy
         tile_config.tile_size = (tile_size, tile_size)
         tile_config.max_num_instances = max_num_objects
         tile_config.overlap = tile_overlap
+
+
+def instantiate_sampler(sampler_config: SamplerConfig, dataset: Dataset, **kwargs) -> Sampler:
+    """Instantiate a sampler object based on the provided configuration.
+
+    Args:
+        sampler_config (SamplerConfig): The configuration object for the sampler.
+        dataset (Dataset): The dataset object to be sampled.
+        **kwargs: Additional keyword arguments to be passed to the sampler's constructor.
+
+    Returns:
+        Sampler: The instantiated sampler object.
+    """
+    class_module, class_name = sampler_config.class_path.rsplit(".", 1)
+    module = __import__(class_module, fromlist=[class_name])
+    sampler_class = getattr(module, class_name)
+    init_signature = list(inspect.signature(sampler_class.__init__).parameters.keys())
+    if "batch_size" not in init_signature:
+        kwargs.pop("batch_size", None)
+    sampler_kwargs = {**sampler_config.init_args, **kwargs}
+
+    return sampler_class(dataset, **sampler_kwargs)
+
+
+def get_adaptive_num_workers(num_dataloader: int = 1) -> int | None:
+    """Measure appropriate num_workers value and return it."""
+    num_devices = torch.xpu.device_count() if is_xpu_available() else torch.cuda.device_count()
+    if num_devices == 0:
+        return None
+    return min(cpu_count() // (num_dataloader * num_devices), 8)  # max available num_workers is 8
+
+
+def get_idx_list_per_classes(dm_dataset: DmDataset, use_string_label: bool = False) -> dict[int | str, list[int]]:
+    """Compute class statistics."""
+    stats: dict[int | str, list[int]] = defaultdict(list)
+    labels = dm_dataset.categories().get(AnnotationType.label, LabelCategories())
+    for item_idx, item in enumerate(dm_dataset):
+        for ann in item.annotations:
+            if use_string_label:
+                stats[labels.items[ann.label].name].append(item_idx)
+            else:
+                stats[ann.label].append(item_idx)
+    # Remove duplicates in label stats idx: O(n)
+    for k in stats:
+        stats[k] = list(dict.fromkeys(stats[k]))
+    return stats
+
+
+def import_object_from_module(obj_path: str) -> Any:  # noqa: ANN401
+    """Get object from import format string."""
+    module_name, obj_name = obj_path.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    return getattr(module, obj_name)

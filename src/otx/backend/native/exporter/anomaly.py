@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Class definition for anomaly models exporter used in OTX."""
+
 from __future__ import annotations
 
 from typing import Any
