@@ -375,9 +375,7 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
                 if "TopdownAffine" in aug_config["class_path"]:
                     affine_transforms_prob = aug_value.pop("probability", 1.0)
                     if affine_transforms_prob is not None:
-                        aug_config["init_args"]["probability"] = (
-                            affine_transforms_prob if aug_value["enable"] else 0.0
-                        )
+                        aug_config["init_args"]["probability"] = affine_transforms_prob if aug_value["enable"] else 0.0
                         if aug_config["init_args"]["probability"] < 0.7:
                             for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
                                 if "Pad" in val_aug_cfg["class_path"]:
@@ -389,9 +387,12 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
                 for parameter in aug_value:
                     value = aug_value[parameter]
                     if value is not None:
-                        if parameter == "probability" and "torchvision.transforms.v2" in aug_config["class_path"]:
-                            parameter = "p" # Geti consistency fix
-                        aug_config["init_args"][parameter] = value
+                        override_parameter = (
+                            "p"
+                            if parameter == "probability" and "torchvision.transforms.v2" in aug_config["class_path"]
+                            else parameter
+                        )  # Geti consistency fix
+                        aug_config["init_args"][override_parameter] = value
                 break
 
         if not found and not tiling:
