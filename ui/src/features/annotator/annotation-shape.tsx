@@ -17,12 +17,21 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     const color = annotation.labels[0].color;
 
     if (shape.type === 'bounding-box') {
-        return <rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} fill={color} />;
+        return (
+            <rect
+                aria-label='annotation bounding-box'
+                x={shape.x}
+                y={shape.y}
+                width={shape.width}
+                height={shape.height}
+                fill={color}
+            />
+        );
     }
 
     if (shape.type === 'polygon') {
-        return <polygon points={getFormattedPoints(shape.points)} fill={color} />;
+        return <polygon aria-label='annotation polygon' points={getFormattedPoints(shape.points)} fill={color} />;
     }
 
-    return <circle cx={shape.cx} cy={shape.cy} r={shape.r} fill={color} />;
+    return <circle aria-label='annotation circle' cx={shape.cx} cy={shape.cy} r={shape.r} fill={color} />;
 };
