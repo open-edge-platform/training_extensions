@@ -48,7 +48,7 @@ through the full pipeline.
 
      - Introduces more complexity: workers logic should be extended, new configuration types.
      - New orchestration phases should consider dummy types.
-     - Unintended data flow (it will still write to the queues that are not needed for preview flow).
+     - Unintended data flow (it will still write to the queues that are not needed for preview).
 
 3. **Preview source only:**
 
@@ -113,6 +113,8 @@ The Preview thread operates only alongside the "Stream loader" process, as other
 - Is there any benefit to having a separate WebRTC queue for preview mode, or should we reuse the existing queue?
 - Should the Preview thread be created on demand when the pipeline enters preview mode, rather than always running after
   being created by the Scheduler during server startup?
+- Would it make sense to add an explicit boolean parameter, such as `preview`, to the Pipeline, so that preview mode is
+  controlled directly rather than inferred implicitly from the pipeline configuration?
 
 ## Links <!-- optional -->
 
