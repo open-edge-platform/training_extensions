@@ -40,4 +40,9 @@ export interface Circle {
     readonly r: number;
 }
 
+export interface ClipperPoint {
+    X: number;
+    Y: number;
+}
+
 export type Shape = Rect | Polygon;

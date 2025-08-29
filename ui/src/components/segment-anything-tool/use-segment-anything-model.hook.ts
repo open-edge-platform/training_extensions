@@ -9,8 +9,13 @@ import { Remote } from 'comlink';
 
 import { AlgorithmType } from '../../webworkers/algorithm.interface';
 import { useLoadAIWebworker } from '../../webworkers/use-load-ai-webworker.hook';
-import { convertToolShapeToGetiShape } from '../utils';
+import { convertToolShapeToGetiShape } from '../shapes/utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
+
+const selectedMediaItem = {
+    identifier: 'id',
+    image: new ImageData(0, 0),
+};
 
 const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding: EncodingOutput | undefined) => {
     const shapeType = 'polygon';
@@ -45,7 +50,7 @@ const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding
 
 const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, mediaItem: unknown) => {
     return useQuery({
-        queryKey: ['segment-anything-model', 'encoding', mediaItem?.identifier],
+        queryKey: ['segment-anything-model', 'encoding', selectedMediaItem?.identifier],
         queryFn: async () => {
             if (model === undefined) {
                 throw new Error('Model not yet initialized');
@@ -55,7 +60,7 @@ const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, media
                 throw new Error('Media item not selected');
             }
 
-            return await model.processEncoder(mediaItem.image);
+            return await model.processEncoder(selectedMediaItem.image);
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
@@ -99,12 +104,10 @@ export const useSegmentAnythingModel = () => {
     const decoderModel = useSegmentAnythingWorker(AlgorithmType.SEGMENT_ANYTHING_DECODER);
     const isLoading = encoderModel === undefined || decoderModel === undefined;
 
-    const { selectedMediaItem } = useSelectedMediaItem();
     const encodingQuery = useEncodingQuery(encoderModel, selectedMediaItem);
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
-    const nextSelectedMediaItem = useNextMediaItemWithImage();
-    useEncodingQuery(encoderModel, encodingQuery.isFetching ? undefined : nextSelectedMediaItem);
+    useEncodingQuery(encoderModel, encodingQuery.isFetching ? undefined : selectedMediaItem);
 
     return { isLoading, encodingQuery, decodingQueryFn };
 };

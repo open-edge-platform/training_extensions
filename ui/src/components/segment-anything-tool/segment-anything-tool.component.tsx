@@ -5,24 +5,14 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
-import { Annotation } from '../../../../core/annotations/annotation.interface';
-import { Point, Shape } from '../../../../core/annotations/shapes.interface';
-import { useThrottledCallback } from '../../../../hooks/use-throttled-callback/use-throttled-callback.hook';
-import { isRightButton } from '../../../buttons-utils';
-import { getRelativePoint } from '../../../utils';
-import { AnnotationsMask } from '../../annotation/annotations-mask.component';
-import { ShapeFactory } from '../../annotation/shapes/factory.component';
-import { ToolType } from '../../core/annotation-tool-context.interface';
-import { useAnnotationToolContext } from '../../providers/annotation-tool-provider/annotation-tool-provider.component';
-import { useROI } from '../../providers/region-of-interest-provider/region-of-interest-provider.component';
-import { useZoom } from '../../zoom/zoom-provider.component';
-import { SvgToolCanvas } from '../svg-tool-canvas.component';
-import { PointerType } from '../tools.interface';
-import { removeOffLimitPoints, SELECT_ANNOTATION_STYLES } from '../utils';
+import { Point, RegionOfInterest, Shape } from '../shapes/interfaces';
+import { removeOffLimitPoints } from '../shapes/utils';
+import { useZoom } from '../zoom/zoom';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
+import { useThrottledCallback } from './use-throttled-callback.hook';
 
 import classes from './segment-anything.module.scss';
 
@@ -41,13 +31,24 @@ const isPositivePoint = (point: Point, shapes: Shape[], isRightClick: boolean, r
 // the user's cpu with too many decoding requests
 const THROTTLE_TIME = 150;
 
+const selectedMediaItem = {
+    identifier: 'id',
+    image: new ImageData(100, 100),
+};
+
+const roi: RegionOfInterest = {
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+};
+
 export const SegmentAnythingTool = () => {
-    const { image, roi } = useROI();
     const {
         zoomState: { zoom },
     } = useZoom();
 
-    const clampPoint = clampPointBetweenImage(image);
+    const clampPoint = clampPointBetweenImage(selectedMediaItem.image);
 
     const ref = useRef<SVGRectElement>(null);
 

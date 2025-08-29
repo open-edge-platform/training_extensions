@@ -3,16 +3,25 @@
 
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 
-import { Shape } from '../shapes/interfaces';
+import { RegionOfInterest, Shape } from '../shapes/interfaces';
+import { removeOffLimitPoints } from '../shapes/utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
+
+const selectedMediaItem = {
+    identifier: 'id',
+};
+
+const roi: RegionOfInterest = {
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+};
 
 export const useDecodingQueryOptions = (
     points: InteractiveAnnotationPoint[],
     queryFn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>
 ) => {
-    const { selectedMediaItem } = useSelectedMediaItem();
-    const { roi } = useROI();
-
     // Round points so that when the user slightly moves their mouse we do not
     // immediately recompute the decoding
     const roundedPoints = points.map((point) => ({
@@ -31,10 +40,6 @@ export const useDecodingQueryOptions = (
             });
         },
         staleTime: Infinity,
-        // TODO: Investigate why unit tests fail when keepPreviousData is used
-        // One thing that I noticed is that when keepPreviousData is used, the result of the latest queryFn call
-        // is not returned as `data`.
-        // placeholderData: keepPreviousData,
         retry: 0,
     });
 };
@@ -49,9 +54,6 @@ export const useDecodingQuery = (
 };
 
 export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>) => {
-    const { roi } = useROI();
-    const { addShapes } = useAnnotationScene();
-
     return useMutation({
         mutationFn: async (points: InteractiveAnnotationPoint[]) => {
             // Round points so that when the user slightly moves their mouse we do not
@@ -66,7 +68,8 @@ export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint
                 return removeOffLimitPoints(shape, roi);
             });
 
-            addShapes(shapes);
+            // Add the shapes to the canvas here
+            // addShapes(shapes);
         },
     });
 };
