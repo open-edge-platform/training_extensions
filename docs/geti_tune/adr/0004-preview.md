@@ -89,7 +89,7 @@ through the full pipeline.
 The Scheduler is responsible for creating and cleaning up processes, threads, IPC resources, and related components.
 The Scheduler should create a new thread called "Preview":
 
-![Preview Thread Diagram](../media/adr0004_scheduler.jpg)
+![Preview Thread Diagram](../media/0004-scheduler.jpg)
 
 **Preview Thread Behavior:**
 
@@ -103,7 +103,7 @@ It reads frames from the source frame queue and pushes them to the existing WebR
 - The pipeline does not have a sink configured.
 - The pipeline is in the running state.
 
-![Preview Flow Diagram](../media/adr0004_preview_flow.jpg)
+![Preview Flow Diagram](../media/0004-preview-flow.jpg)
 
 **Note:**
 The Preview thread operates only alongside the "Stream loader" process, as other workers are inactive in preview mode.
