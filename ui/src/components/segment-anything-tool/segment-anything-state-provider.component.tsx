@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { EncodingOutput } from '@geti/smart-tools/segment-anything';
 import { toast } from '@geti/ui';
@@ -34,10 +34,11 @@ interface SegmentAnythingStateContextProps {
 
 const SegmentAnythingStateContext = createContext<SegmentAnythingStateContextProps | undefined>(undefined);
 
-export const SegmentAnythingStateProvider = ({ children }: StateProviderProps) => {
-    const [state, setState, undoRedoActions] = useUndoRedoState<SegmentAnythingState>({
+export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode }) => {
+    const [state, setState] = useState<SegmentAnythingState>({
         points: [],
     });
+    const [_, setIsDrawing] = useState(false);
 
     const queryClient = useQueryClient();
     const { encodingQuery, decodingQueryFn, isLoading } = useSegmentAnythingModel();
@@ -57,31 +58,15 @@ export const SegmentAnythingStateProvider = ({ children }: StateProviderProps) =
             }
         }
     }, [decodingQuery.data, decodingQuery.isPlaceholderData, state.points]);
-    const decodingMutation = useDecodingMutation(decodingQueryFn);
 
-    const { addShapes, setIsDrawing } = useAnnotationScene();
+    const decodingMutation = useDecodingMutation(decodingQueryFn);
 
     const reset = async () => {
         queryClient.removeQueries({ queryKey: decodingQueryOptions.queryKey });
-        undoRedoActions.reset({ points: [] });
 
         setIsDrawing(false);
     };
 
-    useAddUnfinishedShape({
-        shapes: state.points.length > 0 && decodingQuery.data ? decodingQuery.data : [],
-        addShapes: (unfinishedShapes) => {
-            reset();
-
-            if (unfinishedShapes.length === 0) {
-                return [];
-            }
-
-            const shapes = addShapes(unfinishedShapes as Shape[]);
-            return shapes;
-        },
-        reset,
-    });
     useEffect(() => {
         return () => setIsDrawing(false);
     }, [setIsDrawing]);
@@ -114,19 +99,11 @@ export const SegmentAnythingStateProvider = ({ children }: StateProviderProps) =
         if (keepPreviousData) {
             setState((r) => ({ points: [...r.points, point] }));
         } else {
-            undoRedoActions.reset({ points: [] });
             decodingMutation.mutateAsync([point]).then(() => {
                 setIsDrawing(false);
             });
         }
     };
-
-    const annotationToolContext = useAnnotationToolContext();
-    useApplyLabelToPendingAnnotations({
-        applyAnnotations: handleConfirmAnnotation,
-        annotationToolContext,
-        tool: ToolType.SegmentAnythingTool,
-    });
 
     return (
         <SegmentAnythingStateContext.Provider
@@ -142,7 +119,7 @@ export const SegmentAnythingStateProvider = ({ children }: StateProviderProps) =
                 decodingQueryFn,
             }}
         >
-            <UndoRedoProvider state={undoRedoActions}>{children}</UndoRedoProvider>
+            {children}
         </SegmentAnythingStateContext.Provider>
     );
 };

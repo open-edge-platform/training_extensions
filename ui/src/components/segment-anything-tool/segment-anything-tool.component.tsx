@@ -166,8 +166,8 @@ export const SegmentAnythingTool = () => {
             }}
             style={{
                 cursor: interactiveMode
-                    ? `url("/icons/cursor/pencil-plus.svg") 16 16, auto`
-                    : `url("/icons/cursor/selection.svg") 8 8, auto`,
+                    ? `url("/icons/pencil-plus.svg") 16 16, auto`
+                    : `url("/icons/selection.svg") 8 8, auto`,
             }}
         >
             <AnnotationsMask
